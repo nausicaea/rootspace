@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::time::Duration;
+use failure::Error;
 use system::SystemTrait;
 use loop_stage::LoopStage;
 use event::EventTrait;
@@ -13,14 +14,14 @@ pub trait WorldTrait {
     fn handle_events(&mut self) -> Result<bool, Error>;
 }
 
-pub struct World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventTrait, S: SystemTrait<E, A, D> {
+pub struct World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventTrait, S: SystemTrait<A, D, E> {
     systems: Vec<S>,
     database: D,
     auxiliary: A,
     event_queue: VecDeque<E>,
 }
 
-impl<A, D, E, S> World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventTrait, S: SystemTrait<E, A, D> {
+impl<A, D, E, S> World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventTrait, S: SystemTrait<A, D, E> {
     pub fn add_system<T: Into<S>>(&mut self, system: T) {
         self.systems.push(system.into());
     }
@@ -31,7 +32,7 @@ impl<A, D, E, S> World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventT
         for system in &mut self.systems {
             if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) {
                 if event.matches_filter(system.get_event_filter()) {
-                    system.handle_event(&mut self.database, &mut self.auxiliary, &event);
+                    system.handle_event(&mut self.database, &mut self.auxiliary, &event)?;
                 }
             }
         }
@@ -39,7 +40,7 @@ impl<A, D, E, S> World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventT
     }
 }
 
-impl<A, D, E, S> Default for World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventTrait, S: SystemTrait<E, A, D> {
+impl<A, D, E, S> Default for World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventTrait, S: SystemTrait<A, D, E> {
     fn default() -> Self {
         World {
             systems: Default::default(),
@@ -50,17 +51,17 @@ impl<A, D, E, S> Default for World<A, D, E, S> where A: Default, D: DatabaseTrai
     }
 }
 
-impl<A, D, E, S> Debug for World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventTrait, S: SystemTrait<E, A, D> {
+impl<A, D, E, S> Debug for World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventTrait, S: SystemTrait<A, D, E> {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "World(systems: {})", self.systems.len())
     }
 }
 
-impl<A, D, E, S> WorldTrait for World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventTrait, S: SystemTrait<E, A, D> {
+impl<A, D, E, S> WorldTrait for World<A, D, E, S> where A: Default, D: DatabaseTrait, E: EventTrait, S: SystemTrait<A, D, E> {
     fn update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         for system in &mut self.systems {
             if system.get_stage_filter().contains(LoopStage::UPDATE) {
-                system.update(&mut self.database, &mut self.auxiliary, time, delta_time);
+                system.update(&mut self.database, &mut self.auxiliary, time, delta_time)?;
             }
         }
         Ok(())
@@ -68,7 +69,7 @@ impl<A, D, E, S> WorldTrait for World<A, D, E, S> where A: Default, D: DatabaseT
     fn dynamic_update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         for system in &mut self.systems {
             if system.get_stage_filter().contains(LoopStage::DYNAMIC_UPDATE) {
-                system.dynamic_update(&mut self.database, &mut self.auxiliary, time, delta_time);
+                system.dynamic_update(&mut self.database, &mut self.auxiliary, time, delta_time)?;
             }
         }
         Ok(())
@@ -76,7 +77,7 @@ impl<A, D, E, S> WorldTrait for World<A, D, E, S> where A: Default, D: DatabaseT
     fn render(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         for system in &mut self.systems {
             if system.get_stage_filter().contains(LoopStage::RENDER) {
-                system.render(&self.database, &mut self.auxiliary, time, delta_time);
+                system.render(&self.database, &mut self.auxiliary, time, delta_time)?;
             }
         }
         Ok(())
@@ -91,12 +92,6 @@ impl<A, D, E, S> WorldTrait for World<A, D, E, S> where A: Default, D: DatabaseT
         warn!("Issuing the signal to terminate the main loop.");
         Ok(false)
     }
-}
-
-#[derive(Debug, Fail)]
-pub enum Error {
-    #[fail(display = "Unspecified error")]
-    UnspecifiedError,
 }
 
 #[cfg(test)]
@@ -145,7 +140,7 @@ mod tests {
     }
 
     #[derive(Clone, PartialEq, Debug)]
-    struct MockSystem<E, A, D> where E: EventTrait, D: DatabaseTrait {
+    struct MockSystem<A, D, E> where E: EventTrait, D: DatabaseTrait {
         update_calls: usize,
         update_arguments: Vec<(Duration, Duration)>,
         dynamic_update_calls: usize,
@@ -156,27 +151,29 @@ mod tests {
         handle_event_arguments: Vec<E>,
         stage_filter: LoopStage,
         event_filter: E::EventFlag,
+        error_out: bool,
         phantom_a: PhantomData<A>,
         phantom_b: PhantomData<D>,
     }
 
-    impl<E, A, D> MockSystem<E, A, D> where E: EventTrait, D: DatabaseTrait {
-        pub fn new(stage_filter: LoopStage, event_filter: E::EventFlag) -> Self {
+    impl<A, D, E> MockSystem<A, D, E> where E: EventTrait, D: DatabaseTrait {
+        pub fn new(stage_filter: LoopStage, event_filter: E::EventFlag, error_out: bool) -> Self {
             MockSystem {
                 stage_filter: stage_filter,
                 event_filter: event_filter,
+                error_out: error_out,
                 .. Default::default()
             }
         }
     }
 
-    impl<E, A, D> From<(LoopStage, E::EventFlag)> for MockSystem<E, A, D> where E: EventTrait, D: DatabaseTrait {
-        fn from(value: (LoopStage, E::EventFlag)) -> Self {
-            MockSystem::new(value.0, value.1)
+    impl<A, D, E> From<(LoopStage, E::EventFlag, bool)> for MockSystem<A, D, E> where E: EventTrait, D: DatabaseTrait {
+        fn from(value: (LoopStage, E::EventFlag, bool)) -> Self {
+            MockSystem::new(value.0, value.1, value.2)
         }
     }
 
-    impl<E, A, D> Default for MockSystem<E, A, D> where E: EventTrait, D: DatabaseTrait {
+    impl<A, D, E> Default for MockSystem<A, D, E> where E: EventTrait, D: DatabaseTrait {
         fn default() -> Self {
             MockSystem {
                 update_calls: 0,
@@ -187,50 +184,71 @@ mod tests {
                 render_arguments: Vec::new(),
                 handle_event_calls: 0,
                 handle_event_arguments: Vec::new(),
-                stage_filter: LoopStage::empty(),
+                stage_filter: Default::default(),
                 event_filter: Default::default(),
+                error_out: Default::default(),
                 phantom_a: Default::default(),
                 phantom_b: Default::default(),
             }
         }
     }
 
-    impl<E, A, D> SystemTrait<E, A, D> for MockSystem<E, A, D> where E: EventTrait, D: DatabaseTrait {
+    impl<A, D, E> SystemTrait<A, D, E> for MockSystem<A, D, E> where E: EventTrait, D: DatabaseTrait {
         fn get_stage_filter(&self) -> LoopStage {
             self.stage_filter
         }
         fn get_event_filter(&self) -> E::EventFlag {
             self.event_filter
         }
-        fn update(&mut self, _db: &mut D, _aux: &mut A, time: &Duration, delta_time: &Duration) {
+        fn update(&mut self, _db: &mut D, _aux: &mut A, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
             self.update_arguments.push((*time, *delta_time));
             self.update_calls += 1;
+            if self.error_out {
+                Err(format_err!("Update had an error"))
+            } else {
+                Ok(())
+            }
         }
-        fn dynamic_update(&mut self, _db: &mut D, _aux: &mut A, time: &Duration, delta_time: &Duration) {
+        fn dynamic_update(&mut self, _db: &mut D, _aux: &mut A, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
             self.dynamic_update_arguments.push((*time, *delta_time));
             self.dynamic_update_calls += 1;
+            if self.error_out {
+                Err(format_err!("Dynamic update had an error"))
+            } else {
+                Ok(())
+            }
         }
-        fn render(&mut self, _db: &D, _aux: &mut A, time: &Duration, delta_time: &Duration) {
+        fn render(&mut self, _db: &D, _aux: &mut A, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
             self.render_arguments.push((*time, *delta_time));
             self.render_calls += 1;
+            if self.error_out {
+                Err(format_err!("Render had an error"))
+            } else {
+                Ok(())
+            }
         }
-        fn handle_event(&mut self, _db: &mut D, _aux: &mut A, event: &E) {
+        fn handle_event(&mut self, _db: &mut D, _aux: &mut A, event: &E) -> Result<(), Error> {
             self.handle_event_arguments.push(event.clone());
             self.handle_event_calls += 1;
+            if self.error_out {
+                Err(format_err!("Handle event had an error"))
+            } else {
+                Ok(())
+            }
         }
     }
 
-    fn create_populated_world() -> World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockEvent, MockAuxiliary, MockDatabase>> {
-        let mut w: World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockEvent, MockAuxiliary, MockDatabase>> = World::default();
+    fn create_populated_world() -> World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockAuxiliary, MockDatabase, MockEvent>> {
+        let mut w: World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockAuxiliary, MockDatabase, MockEvent>> = World::default();
         w.systems = [
-            MockSystem::new(LoopStage::UPDATE, MockEventFlag::empty()),
-            MockSystem::new(LoopStage::UPDATE, MockEventFlag::empty()),
-            MockSystem::new(LoopStage::DYNAMIC_UPDATE, MockEventFlag::empty()),
-            MockSystem::new(LoopStage::DYNAMIC_UPDATE, MockEventFlag::empty()),
-            MockSystem::new(LoopStage::RENDER, MockEventFlag::empty()),
-            MockSystem::new(LoopStage::RENDER, MockEventFlag::empty()),
-            MockSystem::new(LoopStage::HANDLE_EVENTS, MockEventFlag::TEST_EVENT_A),
-            MockSystem::new(LoopStage::HANDLE_EVENTS, MockEventFlag::TEST_EVENT_B),
+            MockSystem::new(LoopStage::UPDATE, MockEventFlag::empty(), false),
+            MockSystem::new(LoopStage::UPDATE, MockEventFlag::empty(), false),
+            MockSystem::new(LoopStage::DYNAMIC_UPDATE, MockEventFlag::empty(), false),
+            MockSystem::new(LoopStage::DYNAMIC_UPDATE, MockEventFlag::empty(), false),
+            MockSystem::new(LoopStage::RENDER, MockEventFlag::empty(), false),
+            MockSystem::new(LoopStage::RENDER, MockEventFlag::empty(), false),
+            MockSystem::new(LoopStage::HANDLE_EVENTS, MockEventFlag::TEST_EVENT_A, false),
+            MockSystem::new(LoopStage::HANDLE_EVENTS, MockEventFlag::TEST_EVENT_B, false),
         ].iter().cloned().collect();
         w.event_queue = [
             MockEvent::TestEventA("lala-land".into()),
@@ -241,25 +259,35 @@ mod tests {
 
     #[test]
     fn add_system() {
-        let mut w: World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockEvent, MockAuxiliary, MockDatabase>> = World::default();
+        let mut w: World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockAuxiliary, MockDatabase, MockEvent>> = World::default();
         assert!(w.systems.is_empty());
-        let sys = MockSystem::new(LoopStage::UPDATE, MockEventFlag::empty());
+        let sys = MockSystem::new(LoopStage::UPDATE, MockEventFlag::empty(), false);
         w.add_system(sys.clone());
         assert_eq!(w.systems.len(), 1);
         assert_eq!(w.systems.last().unwrap(), &sys);
-        let into_sys = (LoopStage::UPDATE, MockEventFlag::empty());
+        let into_sys = (LoopStage::UPDATE, MockEventFlag::empty(), false);
         w.add_system(into_sys);
         assert_eq!(w.systems.len(), 2);
         assert_eq!(w.systems.last().unwrap(), &sys);
     }
     #[test]
     fn dispatch_later() {
-        let mut w: World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockEvent, MockAuxiliary, MockDatabase>> = World::default();
+        let mut w: World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockAuxiliary, MockDatabase, MockEvent>> = World::default();
         assert!(w.event_queue.is_empty());
         let evt = MockEvent::TestEventA("hello".into());
         w.dispatch_later(evt.clone());
         assert_eq!(w.event_queue.len(), 1);
         assert_eq!(w.event_queue.front().unwrap(), &evt);
+    }
+    #[test]
+    fn dispatch_now() {
+        let mut w = create_populated_world();
+        let evt = MockEvent::TestEventA("hello".into());
+        let r = w.dispatch_now(evt.clone());
+
+        assert!(r.is_ok(), "Got an unexpected error '{}'", r.unwrap_err());
+        assert!(w.systems.iter().filter(|s| s.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) && s.get_event_filter().contains(MockEventFlag::TEST_EVENT_A)).all(|s| s.handle_event_calls == 1));
+        assert!(w.systems.iter().filter(|s| s.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) && s.get_event_filter().contains(MockEventFlag::TEST_EVENT_A)).all(|s| s.handle_event_arguments.iter().all(|e| e == &evt)));
     }
     #[test]
     fn update_calls() {
@@ -280,6 +308,13 @@ mod tests {
         })));
     }
     #[test]
+    fn update_error() {
+        let mut w: World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockAuxiliary, MockDatabase, MockEvent>> = World::default();
+        w.systems.push(MockSystem::new(LoopStage::UPDATE, MockEventFlag::empty(), true));
+        let r = w.update(&Duration::new(1, 0), &Duration::new(0, 1));
+        assert!(r.is_err());
+    }
+    #[test]
     fn dynamic_update_calls() {
         let mut w = create_populated_world();
         let r = w.dynamic_update(&Duration::default(), &Duration::default());
@@ -296,6 +331,13 @@ mod tests {
         assert!(w.systems.iter().filter(|s| s.get_stage_filter().contains(LoopStage::DYNAMIC_UPDATE)).all(|s| s.dynamic_update_arguments.iter().all(|&(t, dt)| {
             t == Duration::new(1, 0) && dt == Duration::new(0, 1)
         })));
+    }
+    #[test]
+    fn dynamic_update_error() {
+        let mut w: World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockAuxiliary, MockDatabase, MockEvent>> = World::default();
+        w.systems.push(MockSystem::new(LoopStage::DYNAMIC_UPDATE, MockEventFlag::empty(), true));
+        let r = w.dynamic_update(&Duration::new(1, 0), &Duration::new(0, 1));
+        assert!(r.is_err());
     }
     #[test]
     fn render_calls() {
@@ -316,6 +358,13 @@ mod tests {
         })));
     }
     #[test]
+    fn render_error() {
+        let mut w: World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockAuxiliary, MockDatabase, MockEvent>> = World::default();
+        w.systems.push(MockSystem::new(LoopStage::RENDER, MockEventFlag::empty(), true));
+        let r = w.render(&Duration::new(1, 0), &Duration::new(0, 1));
+        assert!(r.is_err());
+    }
+    #[test]
     fn handle_event_calls() {
         let mut w = create_populated_world();
         let r = w.handle_events();
@@ -332,5 +381,13 @@ mod tests {
 
         assert!(w.systems.iter().filter(|s| s.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) && s.get_event_filter().contains(MockEventFlag::TEST_EVENT_A)).all(|s| s.handle_event_arguments.iter().all(|e| e.as_flag() == MockEventFlag::TEST_EVENT_A)));
         assert!(w.systems.iter().filter(|s| s.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) && s.get_event_filter().contains(MockEventFlag::TEST_EVENT_B)).all(|s| s.handle_event_arguments.iter().all(|e| e.as_flag() == MockEventFlag::TEST_EVENT_B)));
+    }
+    #[test]
+    fn handle_event_error() {
+        let mut w: World<MockAuxiliary, MockDatabase, MockEvent, MockSystem<MockAuxiliary, MockDatabase, MockEvent>> = World::default();
+        w.systems.push(MockSystem::new(LoopStage::HANDLE_EVENTS, MockEventFlag::TEST_EVENT_A, true));
+        w.event_queue.push_back(MockEvent::TestEventA("hello".into()));
+        let r = w.handle_events();
+        assert!(r.is_err());
     }
 }

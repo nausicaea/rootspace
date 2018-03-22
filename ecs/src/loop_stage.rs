@@ -1,4 +1,5 @@
 bitflags! {
+    #[derive(Default)]
     pub struct LoopStage: u8 {
         const UPDATE = 0x01;
         const DYNAMIC_UPDATE = 0x02;

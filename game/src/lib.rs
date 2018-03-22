@@ -1,6 +1,5 @@
 extern crate log;
 extern crate failure;
-#[macro_use] extern crate failure_derive;
 #[macro_use] extern crate bitflags;
 extern crate ecs;
 extern crate engine;
@@ -11,10 +10,9 @@ mod auxiliary;
 
 use std::path::Path;
 use std::time::Duration;
-
+use failure::Error;
 use ecs::world::World;
 use ecs::database::Database;
-use engine::error::Error as RootEngineError;
 use engine::orchestrator::Orchestrator;
 use engine::file_manipulation::FileError;
 use self::event::Event;
@@ -37,18 +35,6 @@ impl Game {
         self.orchestrator.run(iterations)?;
 
         Ok(())
-    }
-}
-
-#[derive(Debug, Fail)]
-pub enum Error {
-    #[fail(display = "{}", _0)]
-    EngineError(#[cause] RootEngineError),
-}
-
-impl From<RootEngineError> for Error {
-    fn from(value: RootEngineError) -> Self {
-        Error::EngineError(value)
     }
 }
 

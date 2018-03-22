@@ -1,6 +1,5 @@
 #[macro_use] extern crate log;
-extern crate failure;
-#[macro_use] extern crate failure_derive;
+#[cfg_attr(test, macro_use)] extern crate failure;
 #[macro_use] extern crate bitflags;
 
 pub mod loop_stage;

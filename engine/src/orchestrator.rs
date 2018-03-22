@@ -2,8 +2,8 @@ use std::cmp;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
+use failure::Error;
 use ecs::world::WorldTrait;
-use error::Error;
 use file_manipulation::{VerifyPath, FileError};
 
 #[derive(Debug)]
@@ -66,7 +66,6 @@ mod tests {
     use std::env;
     use std::thread;
     use tempfile::NamedTempFileOptions;
-    use ecs::world::Error as RootEcsError;
     use super::*;
 
     #[derive(Debug)]
@@ -99,17 +98,17 @@ mod tests {
     }
 
     impl WorldTrait for MockWorld {
-        fn update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), RootEcsError> {
+        fn update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
             self.update_arguments.push((*time, *delta_time));
             self.update_calls += 1;
             Ok(())
         }
-        fn dynamic_update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), RootEcsError> {
+        fn dynamic_update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
             self.dynamic_update_arguments.push((*time, *delta_time));
             self.dynamic_update_calls += 1;
             Ok(())
         }
-        fn render(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), RootEcsError> {
+        fn render(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
             self.render_arguments.push((*time, *delta_time));
             self.render_calls += 1;
 
@@ -118,7 +117,7 @@ mod tests {
             }
             Ok(())
         }
-        fn handle_events(&mut self) -> Result<bool, RootEcsError> {
+        fn handle_events(&mut self) -> Result<bool, Error> {
             self.handle_events_calls += 1;
             Ok(self.handle_events_calls < self.max_iterations)
         }
