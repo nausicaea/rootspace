@@ -72,12 +72,16 @@ mod tests {
     pub struct MockWorld {
         max_iterations: usize,
         render_duration: Option<Duration>,
+        update_error_out: bool,
         update_calls: usize,
         update_arguments: Vec<(Duration, Duration)>,
+        dynamic_update_error_out: bool,
         dynamic_update_calls: usize,
         dynamic_update_arguments: Vec<(Duration, Duration)>,
+        render_error_out: bool,
         render_calls: usize,
         render_arguments: Vec<(Duration, Duration)>,
+        handle_events_error_out: bool,
         handle_events_calls: usize,
     }
 
@@ -86,12 +90,16 @@ mod tests {
             MockWorld {
                 max_iterations: 10,
                 render_duration: None,
+                update_error_out: false,
                 update_calls: 0,
                 update_arguments: Vec::new(),
+                dynamic_update_error_out: false,
                 dynamic_update_calls: 0,
                 dynamic_update_arguments: Vec::new(),
+                render_error_out: false,
                 render_calls: 0,
                 render_arguments: Vec::new(),
+                handle_events_error_out: false,
                 handle_events_calls: 0,
             }
         }
@@ -101,12 +109,20 @@ mod tests {
         fn update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
             self.update_arguments.push((*time, *delta_time));
             self.update_calls += 1;
-            Ok(())
+            if self.update_error_out {
+                Err(format_err!("MockWorld.update() had an error."))
+            } else {
+                Ok(())
+            }
         }
         fn dynamic_update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
             self.dynamic_update_arguments.push((*time, *delta_time));
             self.dynamic_update_calls += 1;
-            Ok(())
+            if self.dynamic_update_error_out {
+                Err(format_err!("MockWorld.dynamic_update() had an error."))
+            } else {
+                Ok(())
+            }
         }
         fn render(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
             self.render_arguments.push((*time, *delta_time));
@@ -115,11 +131,19 @@ mod tests {
             if let Some(d) = self.render_duration {
                 thread::sleep(d);
             }
-            Ok(())
+            if self.render_error_out {
+                Err(format_err!("MockWorld.render() had an error."))
+            } else {
+                Ok(())
+            }
         }
         fn handle_events(&mut self) -> Result<bool, Error> {
             self.handle_events_calls += 1;
-            Ok(self.handle_events_calls < self.max_iterations)
+            if self.handle_events_error_out {
+                Err(format_err!("MockWorld.handle_events() had an error."))
+            } else {
+                Ok(self.handle_events_calls < self.max_iterations)
+            }
         }
     }
 
@@ -206,10 +230,6 @@ mod tests {
         assert!(check_update_calls(10, Duration::from_millis(50), Duration::from_millis(250)));
     }
     #[test]
-    fn check_update_calls_c() {
-        assert!(check_update_calls(10, Duration::from_millis(10), Duration::from_millis(250)));
-    }
-    #[test]
     fn check_update_calls_d() {
         assert!(check_update_calls(50, Duration::from_millis(100), Duration::from_millis(250)));
     }
@@ -220,6 +240,18 @@ mod tests {
     #[test]
     fn check_update_calls_f() {
         assert!(check_update_calls(50, Duration::from_millis(10), Duration::from_millis(250)));
+    }
+    #[test]
+    fn update_error() {
+        let base = env::temp_dir();
+        let delta_time = Duration::from_millis(50);
+        let max_frame_time = Duration::from_millis(250);
+        let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+        o.world.update_error_out = true;
+        o.world.render_duration = Some(Duration::from_millis(20));
+
+        let r = o.run(None);
+        assert!(r.is_err());
     }
     quickcheck! {
         fn check_dynamic_update_calls(iterations: usize) -> bool {
@@ -233,6 +265,17 @@ mod tests {
             o.world.dynamic_update_calls == iterations
         }
     }
+    #[test]
+    fn dynamic_update_error() {
+        let base = env::temp_dir();
+        let delta_time = Duration::from_millis(50);
+        let max_frame_time = Duration::from_millis(250);
+        let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+        o.world.dynamic_update_error_out = true;
+
+        let r = o.run(None);
+        assert!(r.is_err());
+    }
     quickcheck! {
         fn check_render_calls(iterations: usize) -> bool {
             let base = env::temp_dir();
@@ -245,6 +288,17 @@ mod tests {
             o.world.render_calls == iterations
         }
     }
+    #[test]
+    fn render_error() {
+        let base = env::temp_dir();
+        let delta_time = Duration::from_millis(50);
+        let max_frame_time = Duration::from_millis(250);
+        let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+        o.world.render_error_out = true;
+
+        let r = o.run(None);
+        assert!(r.is_err());
+    }
     quickcheck! {
         fn check_handle_events_calls(iterations: usize) -> bool {
             let base = env::temp_dir();
@@ -256,6 +310,17 @@ mod tests {
             o.run(Some(iterations)).unwrap();
             o.world.handle_events_calls == iterations
         }
+    }
+    #[test]
+    fn handle_events_error() {
+        let base = env::temp_dir();
+        let delta_time = Duration::from_millis(50);
+        let max_frame_time = Duration::from_millis(250);
+        let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+        o.world.handle_events_error_out = true;
+
+        let r = o.run(None);
+        assert!(r.is_err());
     }
     #[test]
     fn check_update_arguments() {

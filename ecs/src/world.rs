@@ -141,6 +141,9 @@ mod tests {
 
     #[derive(Clone, PartialEq, Debug)]
     struct MockSystem<A, D, E> where E: EventTrait, D: DatabaseTrait {
+        stage_filter: LoopStage,
+        event_filter: E::EventFlag,
+        error_out: bool,
         update_calls: usize,
         update_arguments: Vec<(Duration, Duration)>,
         dynamic_update_calls: usize,
@@ -149,9 +152,6 @@ mod tests {
         render_arguments: Vec<(Duration, Duration)>,
         handle_event_calls: usize,
         handle_event_arguments: Vec<E>,
-        stage_filter: LoopStage,
-        event_filter: E::EventFlag,
-        error_out: bool,
         phantom_a: PhantomData<A>,
         phantom_b: PhantomData<D>,
     }
@@ -176,6 +176,9 @@ mod tests {
     impl<A, D, E> Default for MockSystem<A, D, E> where E: EventTrait, D: DatabaseTrait {
         fn default() -> Self {
             MockSystem {
+                stage_filter: Default::default(),
+                event_filter: Default::default(),
+                error_out: Default::default(),
                 update_calls: 0,
                 update_arguments: Vec::new(),
                 dynamic_update_calls: 0,
@@ -184,9 +187,6 @@ mod tests {
                 render_arguments: Vec::new(),
                 handle_event_calls: 0,
                 handle_event_arguments: Vec::new(),
-                stage_filter: Default::default(),
-                event_filter: Default::default(),
-                error_out: Default::default(),
                 phantom_a: Default::default(),
                 phantom_b: Default::default(),
             }
@@ -204,7 +204,7 @@ mod tests {
             self.update_arguments.push((*time, *delta_time));
             self.update_calls += 1;
             if self.error_out {
-                Err(format_err!("Update had an error"))
+                Err(format_err!("MockSystem.update() had an error"))
             } else {
                 Ok(())
             }
@@ -213,7 +213,7 @@ mod tests {
             self.dynamic_update_arguments.push((*time, *delta_time));
             self.dynamic_update_calls += 1;
             if self.error_out {
-                Err(format_err!("Dynamic update had an error"))
+                Err(format_err!("MockSystem.dynamic_update() had an error"))
             } else {
                 Ok(())
             }
@@ -222,7 +222,7 @@ mod tests {
             self.render_arguments.push((*time, *delta_time));
             self.render_calls += 1;
             if self.error_out {
-                Err(format_err!("Render had an error"))
+                Err(format_err!("MockSystem.render() had an error"))
             } else {
                 Ok(())
             }
@@ -231,7 +231,7 @@ mod tests {
             self.handle_event_arguments.push(event.clone());
             self.handle_event_calls += 1;
             if self.error_out {
-                Err(format_err!("Handle event had an error"))
+                Err(format_err!("MockSystem.handle_event() had an error"))
             } else {
                 Ok(())
             }
