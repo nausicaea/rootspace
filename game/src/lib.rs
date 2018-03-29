@@ -15,12 +15,12 @@ use ecs::world::World;
 use ecs::database::Database;
 use engine::orchestrator::Orchestrator;
 use engine::file_manipulation::FileError;
-use self::event::Event;
+use self::event::{Event, EventManager};
 use self::systems::SystemGroup;
 use self::auxiliary::Auxiliary;
 
 pub struct Game {
-    orchestrator: Orchestrator<World<Auxiliary, Database, Event, SystemGroup>>,
+    orchestrator: Orchestrator<World<EventManager, Auxiliary, Database, Event, SystemGroup>>,
 }
 
 impl Game {

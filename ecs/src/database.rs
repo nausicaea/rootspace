@@ -30,7 +30,10 @@ impl Database {
     pub fn has_entity(&self, entity: &Entity) -> bool {
         self.entities.contains_key(entity)
     }
-    pub fn add_component<C>(&mut self, entity: &Entity, component: C) -> Result<(), Error> where C: Any {
+    pub fn entities(&self) -> usize {
+        self.entities.len()
+    }
+    pub fn add<C>(&mut self, entity: &Entity, component: C) -> Result<(), Error> where C: Any {
         self.entities.get_mut(entity)
             .ok_or(Error::EntityNotFound)
             .and_then(|g| if !g.contains_key(&TypeId::of::<C>()) {
@@ -39,6 +42,25 @@ impl Database {
             } else {
                 Err(Error::CannotOverwriteComponent)
             })
+    }
+    pub fn remove<C>(&mut self, entity: &Entity) -> Result<C, Error> where C: Any {
+        self.entities.get_mut(entity)
+            .ok_or(Error::EntityNotFound)
+            .and_then(|g| {
+                g.remove(&TypeId::of::<C>())
+                    .ok_or(Error::ComponentNotFound)
+                    .map(|h| *h.downcast().unwrap_or_else(|_| unreachable!()))
+            })
+    }
+    pub fn has<C>(&self, entity: &Entity) -> bool where C: Any {
+        self.entities.get(entity)
+            .map(|g| g.contains_key(&TypeId::of::<C>()))
+            .unwrap_or_default()
+    }
+    pub fn components(&self, entity: &Entity) -> usize {
+        self.entities.get(entity)
+            .map(|g| g.len())
+            .unwrap_or_default()
     }
     pub fn borrow<C>(&self, entity: &Entity) -> Result<&C, Error> where C: Any {
         self.entities.get(entity)
@@ -97,101 +119,163 @@ mod tests {
 
     #[test]
     fn create_entity() {
-        let mut d: Database = Database::default();
-        assert!(d.entities.is_empty());
+        let mut d: Database = Default::default();
+        assert_eq!(d.entities(), 0);
         let e = d.create_entity();
-        assert!(d.entities.get(&e).is_some());
+        assert_eq!(d.entities(), 1);
+        assert_eq!(d.components(&e), 0);
     }
+
     #[test]
     fn destroy_known_entity() {
-        let mut d: Database = Database::default();
+        let mut d: Database = Default::default();
+        assert_eq!(d.entities(), 0);
         let e = d.create_entity();
+        assert_eq!(d.entities(), 1);
         let r = d.destroy_entity(&e);
         assert!(r.is_ok());
-        assert!(d.entities.is_empty());
+        assert_eq!(d.entities(), 0);
     }
+
     #[test]
     fn destroy_unknown_entity() {
-        let mut d: Database = Database::default();
+        let mut d: Database = Default::default();
+        assert_eq!(d.entities(), 0);
+        let _e = d.create_entity();
+        assert_eq!(d.entities(), 1);
         let r = d.destroy_entity(&Default::default());
         assert!(r.is_err());
+        assert_eq!(d.entities(), 1);
     }
+
     #[test]
     fn has_known_entity() {
-        let mut d: Database = Database::default();
+        let mut d: Database = Default::default();
         let e = d.create_entity();
         assert!(d.has_entity(&e));
     }
+
     #[test]
     fn has_unknown_entity() {
-        let d: Database = Database::default();
-        let e = Entity::default();
+        let d: Database = Default::default();
+        let e: Entity = Default::default();
         assert!(!d.has_entity(&e));
     }
+
     #[test]
     fn add_new_component() {
-        let mut d: Database = Database::default();
+        let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        let r = d.add_component(&e, c.clone());
-        assert!(r.is_ok());
-        assert_eq!(d.entities.get(&e).map(|g| g.len()), Some(1));
+        assert!(d.add(&e, c.clone()).is_ok());
+        assert_eq!(d.components(&e), 1);
         let c = TestTypeB::new(true);
-        let r = d.add_component(&e, c.clone());
-        assert!(r.is_ok());
-        assert_eq!(d.entities.get(&e).map(|g| g.len()), Some(2));
+        assert!(d.add(&e, c.clone()).is_ok());
+        assert_eq!(d.components(&e), 2);
     }
+
     #[test]
     fn add_existing_component() {
-        let mut d: Database = Database::default();
+        let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        let r = d.add_component(&e, c.clone());
-        assert!(r.is_ok());
-        assert_eq!(d.entities.get(&e).map(|g| g.len()), Some(1));
-        let r = d.add_component(&e, TestTypeA::new(2));
-        assert!(r.is_err());
-        assert_eq!(d.entities.get(&e).map(|g| g.len()), Some(1));
+        assert!(d.add(&e, c.clone()).is_ok());
+        assert_eq!(d.components(&e), 1);
+        assert!(d.add(&e, TestTypeA::new(2)).is_err());
+        assert_eq!(d.components(&e), 1);
+        assert_eq!(d.borrow::<TestTypeA>(&e).unwrap(), &c);
     }
+
     #[test]
     fn add_component_unknown_entity() {
-        let mut d: Database = Database::default();
-        let e = Entity::default();
+        let mut d: Database = Default::default();
+        let e: Entity = Default::default();
         let c = TestTypeA::new(1);
-        let r = d.add_component(&e, c.clone());
-        assert!(r.is_err());
-        assert!(d.entities.get(&e).is_none());
+        assert!(d.add(&e, c.clone()).is_err());
+        assert_eq!(d.components(&e), 0);
     }
+
     #[test]
-    fn borrow_known_component() {
-        let mut d: Database = Database::default();
+    fn remove_known_component() {
+        let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        d.add_component(&e, c.clone()).unwrap();
+        d.add(&e, c.clone()).unwrap();
+        assert_eq!(d.components(&e), 1);
+        let r = d.remove::<TestTypeA>(&e);
+        assert!(r.is_ok());
+        assert_eq!(r.unwrap(), c);
+        assert_eq!(d.components(&e), 0);
+    }
+
+    #[test]
+    fn remove_unknown_component() {
+        let mut d: Database = Default::default();
+        let e = d.create_entity();
+        assert!(d.remove::<TestTypeA>(&e).is_err());
+    }
+
+    #[test]
+    fn remove_component_unknown_entity() {
+        let mut d: Database = Default::default();
+        let e: Entity = Default::default();
+        assert!(d.remove::<TestTypeA>(&e).is_err());
+    }
+
+    #[test]
+    fn has_known_component() {
+        let mut d: Database = Default::default();
+        let e = d.create_entity();
+        let c = TestTypeA::new(1);
+        d.add(&e, c.clone()).unwrap();
+        assert!(d.has::<TestTypeA>(&e));
+    }
+
+    #[test]
+    fn has_unknown_component() {
+        let mut d: Database = Default::default();
+        let e = d.create_entity();
+        assert!(!d.has::<TestTypeA>(&e));
+    }
+
+    #[test]
+    fn has_component_unknown_entity() {
+        let d: Database = Default::default();
+        let e: Entity = Default::default();
+        assert!(!d.has::<TestTypeA>(&e));
+    }
+
+    #[test]
+    fn borrow_known_component() {
+        let mut d: Database = Default::default();
+        let e = d.create_entity();
+        let c = TestTypeA::new(1);
+        d.add(&e, c.clone()).unwrap();
         let r = d.borrow::<TestTypeA>(&e);
         assert!(r.is_ok());
         assert_eq!(r.unwrap(), &c);
     }
+
     #[test]
     fn borrow_unknown_component() {
-        let mut d: Database = Database::default();
+        let mut d: Database = Default::default();
         let e = d.create_entity();
-        let r = d.borrow::<TestTypeA>(&e);
-        assert!(r.is_err());
+        assert!(d.borrow::<TestTypeA>(&e).is_err());
     }
+
     #[test]
-    fn borrow_unknown_entity() {
-        let d: Database = Database::default();
-        let e = Entity::default();
-        let r = d.borrow::<TestTypeA>(&e);
-        assert!(r.is_err());
+    fn borrow_component_unknown_entity() {
+        let d: Database = Default::default();
+        let e: Entity = Default::default();
+        assert!(d.borrow::<TestTypeA>(&e).is_err());
     }
+
     #[test]
-    fn borrow_mut() {
-        let mut d: Database = Database::default();
+    fn borrow_mut_known_component() {
+        let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        d.add_component(&e, c.clone()).unwrap();
+        d.add(&e, c.clone()).unwrap();
         {
             let r = d.borrow_mut::<TestTypeA>(&e);
             assert!(r.is_ok());
@@ -205,5 +289,19 @@ mod tests {
             let cb = r.unwrap();
             assert_eq!(cb, &TestTypeA(200));
         }
+    }
+
+    #[test]
+    fn borrow_mut_unknown_component() {
+        let mut d: Database = Default::default();
+        let e = d.create_entity();
+        assert!(d.borrow_mut::<TestTypeA>(&e).is_err());
+    }
+
+    #[test]
+    fn borrow_mut_unknown_entity() {
+        let mut d: Database = Default::default();
+        let e: Entity = Default::default();
+        assert!(d.borrow_mut::<TestTypeA>(&e).is_err());
     }
 }
