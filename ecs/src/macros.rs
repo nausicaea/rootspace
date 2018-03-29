@@ -180,10 +180,10 @@ mod tests {
 
     impl SystemTrait<MockEvtMgr, MockAux, MockDb, MockEvt> for SystemA {
         fn get_stage_filter(&self) -> LoopStage {
-            Default::default()
+            LoopStage::HANDLE_EVENTS
         }
         fn get_event_filter(&self) -> MockEvtFlag {
-            Default::default()
+            MockEvtFlag::TEST_EVENT_B
         }
         fn update(&mut self, _db: &mut MockDb, _evt_mgr: &mut MockEvtMgr, _aux: &mut MockAux, _time: &Duration, _delta_time: &Duration) -> Result<(), Error> {
             self.update_calls += 1;
@@ -213,7 +213,7 @@ mod tests {
 
     impl SystemTrait<MockEvtMgr, MockAux, MockDb, MockEvt> for SystemB {
         fn get_stage_filter(&self) -> LoopStage {
-            Default::default()
+            LoopStage::UPDATE | LoopStage::RENDER
         }
         fn get_event_filter(&self) -> MockEvtFlag {
             Default::default()
@@ -242,6 +242,19 @@ mod tests {
             A(SystemA),
             B(SystemB),
         }
+    }
+
+    #[test]
+    fn system_group_filters() {
+        let g = SystemGroup::A(Default::default());
+        assert_eq!(g.get_stage_filter(), SystemA::default().get_stage_filter());
+        let g = SystemGroup::B(Default::default());
+        assert_eq!(g.get_stage_filter(), SystemB::default().get_stage_filter());
+
+        let g = SystemGroup::A(Default::default());
+        assert_eq!(g.get_event_filter(), SystemA::default().get_event_filter());
+        let g = SystemGroup::B(Default::default());
+        assert_eq!(g.get_event_filter(), SystemB::default().get_event_filter());
     }
 
     #[test]
