@@ -1,14 +1,56 @@
 #[macro_export]
 macro_rules! impl_system_group {
     (
+        $(#[$outer:meta])*
+        pub enum $name:ident<$h:ty, $a:ty, $d:ty, $e:ty, $ef:ty> {
+            $(
+                $(#[$inner:ident $(args:tt)*])*
+                $variant:ident($type:path),
+            )+
+        }
+    ) => {
+        impl_system_group! {
+            $(#[$outer])*
+            (pub) enum $name<$h, $a, $d, $e, $ef> {
+                $(
+                    $(#[$inner $($args)*])*
+                    $variant($type),
+                )+
+            }
+        }
+    };
+    (
+        $(#[$outer:meta])*
         enum $name:ident<$h:ty, $a:ty, $d:ty, $e:ty, $ef:ty> {
             $(
+                $(#[$inner:ident $(args:tt)*])*
+                $variant:ident($type:path),
+            )+
+        }
+    ) => {
+        impl_system_group! {
+            $(#[$outer])*
+            () enum $name<$h, $a, $d, $e, $ef> {
+                $(
+                    $(#[$inner $($args)*])*
+                    $variant($type),
+                )+
+            }
+        }
+    };
+    (
+        $(#[$outer:meta])*
+        ($($vis:tt)*) enum $name:ident<$h:ty, $a:ty, $d:ty, $e:ty, $ef:ty> {
+            $(
+            $(#[$inner:ident $(args:tt)*])*
             $variant:ident($type:path),
             )+
         }
     ) => {
-        enum $name {
+        $(#[$outer])*
+        $($vis)* enum $name {
             $(
+            $(#[$inner $($args)*])*
             $variant($type),
             )+
         }
@@ -195,6 +237,7 @@ mod tests {
     }
 
     impl_system_group! {
+        /// This is a doc comment for testing.
         enum SystemGroup<MockEvtMgr, MockAux, MockDb, MockEvt, MockEvtFlag> {
             A(SystemA),
             B(SystemB),
@@ -271,100 +314,3 @@ mod tests {
         }
     }
 }
-
-// #[macro_export]
-// macro_rules! impl_group_trait {
-//     (
-//         $(#[$outer:meta])*
-//         pub enum $name:ident {
-//             $(
-//                 $(#[$inner:ident $(args:tt)*])*
-//                 $variant:ident($type:path),
-//             )+
-//         }
-//     ) => {
-//         impl_group_trait! {
-//             $(#[$outer])*
-//             (pub) enum $name {
-//                 $(
-//                     $(#[$inner $($args)*])*
-//                     $variant($type),
-//                 )+
-//             }
-//         }
-//     };
-//     (
-//         $(#[$outer:meta])*
-//         enum $name:ident {
-//             $(
-//                 $(#[$inner:ident $(args:tt)*])*
-//                 $variant:ident($type:path),
-//             )+
-//         }
-//     ) => {
-//         impl_group_trait! {
-//             $(#[$outer])*
-//             () enum $name {
-//                 $(
-//                     $(#[$inner $($args)*])*
-//                     $variant($type),
-//                 )+
-//             }
-//         }
-//     };
-//     (
-//         $(#[$outer:meta])*
-//         ($($vis:tt)*) enum $name:ident {
-//             $(
-//                 $(#[$inner:ident $(args:tt)*])*
-//                 $variant:ident($type:path),
-//             )+
-//         }
-//     ) => {
-//         $(#[$outer])*
-//         $($vis)* enum $name {
-//             $(
-//                 $(#[$inner $($args)*])*
-//                 $variant($type),
-//             )+
-//         }
-//
-//         use std::mem;
-//
-//         $(
-//         impl From<$type> for $name {
-//             fn from(value: $type) -> Self {
-//                 $name::$variant(value)
-//             }
-//         }
-//         )+
-//
-//         impl $crate::database::GroupTrait for $name {
-//             fn borrow<T: Any>(&self) -> Option<&T> {
-//                 match *self {
-//                     $(
-//                     $name::$variant(ref i) => Any::downcast_ref(i),
-//                     )+
-//                 }
-//             }
-//             fn borrow_mut<T: Any>(&mut self) -> Option<&mut T> {
-//                 match *self {
-//                     $(
-//                     $name::$variant(ref mut i) => Any::downcast_mut(i),
-//                     )+
-//                 }
-//             }
-//             fn take<T: Any>(self) -> Result<T, Self> where Self: Sized {
-//                 match self {
-//                     $(
-//                     $name::$variant(i) => if Any::is::<T>(&i) {
-//                         Ok(unsafe { mem::transmute::<$type, T>(i) })
-//                     } else {
-//                         Err(self)
-//                     },
-//                     )+
-//                 }
-//             }
-//         }
-//     };
-// }
