@@ -11,3 +11,4 @@ pub mod entity;
 pub mod database;
 pub mod system;
 pub mod world;
+pub mod mock;

@@ -78,17 +78,17 @@ macro_rules! impl_system_group {
                     )+
                 }
             }
+            fn fixed_update(&mut self, db: &mut $d, evt_mgr: &mut $h, aux: &mut $a, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+                match *self {
+                    $(
+                    $name::$variant(ref mut s) => s.fixed_update(db, evt_mgr, aux, time, delta_time),
+                    )+
+                }
+            }
             fn update(&mut self, db: &mut $d, evt_mgr: &mut $h, aux: &mut $a, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
                 match *self {
                     $(
                     $name::$variant(ref mut s) => s.update(db, evt_mgr, aux, time, delta_time),
-                    )+
-                }
-            }
-            fn dynamic_update(&mut self, db: &mut $d, evt_mgr: &mut $h, aux: &mut $a, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
-                match *self {
-                    $(
-                    $name::$variant(ref mut s) => s.dynamic_update(db, evt_mgr, aux, time, delta_time),
                     )+
                 }
             }
@@ -116,151 +116,49 @@ mod tests {
     use failure::Error;
     use loop_stage::LoopStage;
     use system::SystemTrait;
-    use database::DatabaseTrait;
-    use event::{EventTrait, EventManagerTrait};
-
-    #[derive(Clone, Debug, PartialEq)]
-    pub enum MockEvt {
-        TestEventB(u32),
-    }
-
-    impl MockEvt {
-        fn as_flag(&self) -> MockEvtFlag {
-            match *self {
-                MockEvt::TestEventB(_) => MockEvtFlag::TEST_EVENT_B,
-            }
-        }
-    }
-
-    bitflags! {
-        #[derive(Default)]
-        pub struct MockEvtFlag: u8 {
-            const TEST_EVENT_B = 0x02;
-        }
-    }
-
-    impl EventTrait for MockEvt {
-        type EventFlag = MockEvtFlag;
-
-        fn matches_filter(&self, flag: Self::EventFlag) -> bool {
-            flag.contains(self.as_flag())
-        }
-    }
-
-
-    #[derive(Default, Clone, Debug, PartialEq)]
-    struct MockAux;
-
-    #[derive(Default, Clone, Debug, PartialEq)]
-    struct MockDb;
-
-    impl DatabaseTrait for MockDb {}
-
-    #[derive(Debug, Default, Clone, PartialEq)]
-    struct MockEvtMgr;
-
-    impl EventManagerTrait<MockEvt> for MockEvtMgr {
-        fn dispatch_later(&mut self, _event: MockEvt) {
-        }
-        fn handle_events<F>(&mut self, _handler: F) -> Result<bool, Error>
-        where
-            F: FnMut(&mut Self, &MockEvt) -> Result<bool, Error>,
-        {
-            Ok(true)
-        }
-    }
-
-    #[derive(Default)]
-    struct SystemA {
-        update_calls: usize,
-        dynamic_update_calls: usize,
-        render_calls: usize,
-        handle_event_calls: usize,
-    }
-
-    impl SystemTrait<MockEvtMgr, MockAux, MockDb, MockEvt> for SystemA {
-        fn get_stage_filter(&self) -> LoopStage {
-            LoopStage::HANDLE_EVENTS
-        }
-        fn get_event_filter(&self) -> MockEvtFlag {
-            MockEvtFlag::TEST_EVENT_B
-        }
-        fn update(&mut self, _db: &mut MockDb, _evt_mgr: &mut MockEvtMgr, _aux: &mut MockAux, _time: &Duration, _delta_time: &Duration) -> Result<(), Error> {
-            self.update_calls += 1;
-            Ok(())
-        }
-        fn dynamic_update(&mut self, _db: &mut MockDb, _evt_mgr: &mut MockEvtMgr, _aux: &mut MockAux, _time: &Duration, _delta_time: &Duration) -> Result<(), Error> {
-            self.dynamic_update_calls += 1;
-            Ok(())
-        }
-        fn render(&mut self, _db: &MockDb, _aux: &mut MockAux, _time: &Duration, _delta_time: &Duration) -> Result<(), Error> {
-            self.render_calls += 1;
-            Ok(())
-        }
-        fn handle_event(&mut self, _db: &mut MockDb, _evt_mgr: &mut MockEvtMgr, _aux: &mut MockAux, _event: &MockEvt) -> Result<(), Error> {
-            self.handle_event_calls += 1;
-            Ok(())
-        }
-    }
-
-    #[derive(Default)]
-    struct SystemB {
-        update_calls: usize,
-        dynamic_update_calls: usize,
-        render_calls: usize,
-        handle_event_calls: usize,
-    }
-
-    impl SystemTrait<MockEvtMgr, MockAux, MockDb, MockEvt> for SystemB {
-        fn get_stage_filter(&self) -> LoopStage {
-            LoopStage::UPDATE | LoopStage::RENDER
-        }
-        fn get_event_filter(&self) -> MockEvtFlag {
-            Default::default()
-        }
-        fn update(&mut self, _db: &mut MockDb, _evt_mgr: &mut MockEvtMgr, _aux: &mut MockAux, _time: &Duration, _delta_time: &Duration) -> Result<(), Error> {
-            self.update_calls += 1;
-            Ok(())
-        }
-        fn dynamic_update(&mut self, _db: &mut MockDb, _evt_mgr: &mut MockEvtMgr, _aux: &mut MockAux, _time: &Duration, _delta_time: &Duration) -> Result<(), Error> {
-            self.dynamic_update_calls += 1;
-            Ok(())
-        }
-        fn render(&mut self, _db: &MockDb, _aux: &mut MockAux, _time: &Duration, _delta_time: &Duration) -> Result<(), Error> {
-            self.render_calls += 1;
-            Ok(())
-        }
-        fn handle_event(&mut self, _db: &mut MockDb, _evt_mgr: &mut MockEvtMgr, _aux: &mut MockAux, _event: &MockEvt) -> Result<(), Error> {
-            self.handle_event_calls += 1;
-            Ok(())
-        }
-    }
+    use mock::{MockEvt, MockEvtFlag, MockEvtMgr, MockAux, MockDb, MockSysA, MockSysB};
 
     impl_system_group! {
         /// This is a doc comment for testing.
-        enum SystemGroup<MockEvtMgr, MockAux, MockDb, MockEvt, MockEvtFlag> {
-            A(SystemA),
-            B(SystemB),
+        enum SystemGroup<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockEvtFlag> {
+            A(MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>),
+            B(MockSysB<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>),
         }
     }
 
     #[test]
     fn system_group_filters() {
         let g = SystemGroup::A(Default::default());
-        assert_eq!(g.get_stage_filter(), SystemA::default().get_stage_filter());
+        assert_eq!(g.get_stage_filter(), MockSysA::<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>::default().get_stage_filter());
         let g = SystemGroup::B(Default::default());
-        assert_eq!(g.get_stage_filter(), SystemB::default().get_stage_filter());
+        assert_eq!(g.get_stage_filter(), MockSysB::<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>::default().get_stage_filter());
 
         let g = SystemGroup::A(Default::default());
-        assert_eq!(g.get_event_filter(), SystemA::default().get_event_filter());
+        assert_eq!(g.get_event_filter(), MockSysA::<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>::default().get_event_filter());
         let g = SystemGroup::B(Default::default());
-        assert_eq!(g.get_event_filter(), SystemB::default().get_event_filter());
+        assert_eq!(g.get_event_filter(), MockSysB::<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>::default().get_event_filter());
     }
 
     #[test]
     fn system_group_coersion() {
-        let _g: SystemGroup = SystemA::default().into();
-        let _h: SystemGroup = SystemB::default().into();
+        let _g: SystemGroup = MockSysA::default().into();
+        let _h: SystemGroup = MockSysB::default().into();
+    }
+
+    #[test]
+    fn system_group_fixed_update() {
+        let mut g = SystemGroup::A(Default::default());
+        g.fixed_update(&mut Default::default(), &mut Default::default(), &mut Default::default(), &Default::default(), &Default::default()).unwrap();
+        match g {
+            SystemGroup::A(ref s) => assert_eq!(s.fixed_update_calls, 1),
+            _ => unreachable!(),
+        }
+        let mut g = SystemGroup::B(Default::default());
+        g.fixed_update(&mut Default::default(), &mut Default::default(), &mut Default::default(), &Default::default(), &Default::default()).unwrap();
+        match g {
+            SystemGroup::B(ref s) => assert_eq!(s.fixed_update_calls, 1),
+            _ => unreachable!(),
+        }
     }
 
     #[test]
@@ -275,22 +173,6 @@ mod tests {
         g.update(&mut Default::default(), &mut Default::default(), &mut Default::default(), &Default::default(), &Default::default()).unwrap();
         match g {
             SystemGroup::B(ref s) => assert_eq!(s.update_calls, 1),
-            _ => unreachable!(),
-        }
-    }
-
-    #[test]
-    fn system_group_dynamic_update() {
-        let mut g = SystemGroup::A(Default::default());
-        g.dynamic_update(&mut Default::default(), &mut Default::default(), &mut Default::default(), &Default::default(), &Default::default()).unwrap();
-        match g {
-            SystemGroup::A(ref s) => assert_eq!(s.dynamic_update_calls, 1),
-            _ => unreachable!(),
-        }
-        let mut g = SystemGroup::B(Default::default());
-        g.dynamic_update(&mut Default::default(), &mut Default::default(), &mut Default::default(), &Default::default(), &Default::default()).unwrap();
-        match g {
-            SystemGroup::B(ref s) => assert_eq!(s.dynamic_update_calls, 1),
             _ => unreachable!(),
         }
     }

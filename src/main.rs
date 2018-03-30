@@ -19,7 +19,7 @@ fn main() {
                 message
             ))
         })
-        .level(LevelFilter::Debug)
+        .level(LevelFilter::Trace)
         .chain(io::stdout())
         .apply()
         .unwrap_or_else(|e| error!("Error setting up the logger: {}", e));

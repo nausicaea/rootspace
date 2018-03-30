@@ -1,8 +1,9 @@
 extern crate log;
 extern crate failure;
 #[macro_use] extern crate bitflags;
-extern crate ecs;
+#[macro_use] extern crate ecs;
 extern crate engine;
+#[cfg(test)] #[macro_use] extern crate quickcheck;
 
 mod event;
 mod systems;
@@ -13,8 +14,10 @@ use std::time::Duration;
 use failure::Error;
 use ecs::world::World;
 use ecs::database::Database;
+use ecs::event::EventManagerTrait;
 use engine::orchestrator::Orchestrator;
 use engine::file_manipulation::FileError;
+use engine::event_monitor::EventMonitor;
 use self::event::{Event, EventManager};
 use self::systems::SystemGroup;
 use self::auxiliary::Auxiliary;
@@ -32,6 +35,9 @@ impl Game {
         })
     }
     pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
+        self.orchestrator.world.add_system(EventMonitor::default());
+        self.orchestrator.world.event_manager.dispatch_later(Event::Ready);
+
         self.orchestrator.run(iterations)?;
 
         Ok(())

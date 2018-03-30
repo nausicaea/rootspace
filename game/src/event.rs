@@ -2,23 +2,28 @@ use std::collections::VecDeque;
 use failure::Error;
 use ecs::event::{EventTrait, EventManagerTrait};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Event {
-    UnspecifiedEvent,
+    Ready,
 }
 
 impl Event {
     fn as_flag(&self) -> EventFlag {
         match *self {
-            Event::UnspecifiedEvent => EventFlag::UNSPECIFIED_EVENT,
+            Event::Ready => EventFlag::READY,
         }
     }
 }
 
 bitflags! {
-    #[derive(Default)]
     pub struct EventFlag: u64 {
-        const UNSPECIFIED_EVENT = 0x01;
+        const READY = 0x01;
+    }
+}
+
+impl Default for EventFlag {
+    fn default() -> Self {
+        EventFlag::all()
     }
 }
 
@@ -58,5 +63,33 @@ impl EventManagerTrait<Event> for EventManager {
         }
 
         Ok(true)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_event_flag() {
+        assert_eq!(EventFlag::default(), EventFlag::all());
+    }
+
+    quickcheck! {
+        fn event_manager(num_events: usize) -> bool {
+            let mut mgr = EventManager::default();
+
+            for _ in 0..num_events {
+                mgr.dispatch_later(Event::Ready);
+            }
+
+            let mut call_count = 0;
+            let running = mgr.handle_events(|_, _| {
+                call_count += 1;
+                Ok(true)
+            }).unwrap();
+
+            running && call_count == num_events
+        }
     }
 }

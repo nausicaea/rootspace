@@ -1,6 +1,7 @@
+use std::fmt::Debug;
 use failure::Error;
 
-pub trait EventTrait: Clone {
+pub trait EventTrait: Clone + Debug {
     type EventFlag: Default + Clone + Copy;
 
     fn matches_filter(&self, flag: Self::EventFlag) -> bool;
