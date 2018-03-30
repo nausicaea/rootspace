@@ -84,7 +84,7 @@ where
 {
     fn fixed_update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         for system in &mut self.systems {
-            if system.get_stage_filter().contains(LoopStage::UPDATE) {
+            if system.get_stage_filter().contains(LoopStage::FIXED_UPDATE) {
                 system.fixed_update(&mut self.database, &mut self.event_manager, &mut self.auxiliary, time, delta_time)?;
             }
         }
@@ -92,7 +92,7 @@ where
     }
     fn update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         for system in &mut self.systems {
-            if system.get_stage_filter().contains(LoopStage::DYNAMIC_UPDATE) {
+            if system.get_stage_filter().contains(LoopStage::UPDATE) {
                 system.update(&mut self.database, &mut self.event_manager, &mut self.auxiliary, time, delta_time)?;
             }
         }
@@ -132,10 +132,10 @@ mod tests {
         let mut w: World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> = World::default();
 
         w.systems = [
+            MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false),
+            MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false),
             MockSysA::new(LoopStage::UPDATE, MockEvtFlag::empty(), false),
             MockSysA::new(LoopStage::UPDATE, MockEvtFlag::empty(), false),
-            MockSysA::new(LoopStage::DYNAMIC_UPDATE, MockEvtFlag::empty(), false),
-            MockSysA::new(LoopStage::DYNAMIC_UPDATE, MockEvtFlag::empty(), false),
             MockSysA::new(LoopStage::RENDER, MockEvtFlag::empty(), false),
             MockSysA::new(LoopStage::RENDER, MockEvtFlag::empty(), false),
             MockSysA::new(LoopStage::HANDLE_EVENTS, MockEvtFlag::TEST_EVENT_A, false),
@@ -152,11 +152,11 @@ mod tests {
     fn add_system() {
         let mut w: World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> = World::default();
         assert!(w.systems.is_empty());
-        let sys = MockSysA::new(LoopStage::UPDATE, MockEvtFlag::empty(), false);
+        let sys = MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false);
         w.add_system(sys.clone());
         assert_eq!(w.systems.len(), 1);
         assert_eq!(w.systems.last().unwrap(), &sys);
-        let into_sys = (LoopStage::UPDATE, MockEvtFlag::empty(), false);
+        let into_sys = (LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false);
         w.add_system(into_sys);
         assert_eq!(w.systems.len(), 2);
         assert_eq!(w.systems.last().unwrap(), &sys);
@@ -168,7 +168,7 @@ mod tests {
 
         assert!(r.is_ok(), "Got an unexpected error '{}'", r.unwrap_err());
         for system in &w.systems {
-            if system.get_stage_filter().contains(LoopStage::UPDATE) {
+            if system.get_stage_filter().contains(LoopStage::FIXED_UPDATE) {
                 assert_eq!(system.fixed_update_calls, 1);
             } else {
                 assert_eq!(system.fixed_update_calls, 0);
@@ -181,7 +181,7 @@ mod tests {
         w.fixed_update(&Duration::new(1, 0), &Duration::new(0, 1)).unwrap();
 
         for system in &w.systems {
-            if system.get_stage_filter().contains(LoopStage::UPDATE) {
+            if system.get_stage_filter().contains(LoopStage::FIXED_UPDATE) {
                 assert!(system.fixed_update_arguments.len() > 0);
                 for &(t, dt) in &system.fixed_update_arguments {
                     assert_eq!(t, Duration::new(1, 0));
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn fixed_update_error() {
         let mut w: World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> = World::default();
-        w.systems.push(MockSysA::new(LoopStage::UPDATE, MockEvtFlag::empty(), true));
+        w.systems.push(MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), true));
         let r = w.fixed_update(&Duration::new(1, 0), &Duration::new(0, 1));
         assert!(r.is_err());
     }
@@ -204,7 +204,7 @@ mod tests {
 
         assert!(r.is_ok(), "Got an unexpected error '{}'", r.unwrap_err());
         for system in &w.systems {
-            if system.get_stage_filter().contains(LoopStage::DYNAMIC_UPDATE) {
+            if system.get_stage_filter().contains(LoopStage::UPDATE) {
                 assert_eq!(system.update_calls, 1);
             } else {
                 assert_eq!(system.update_calls, 0);
@@ -217,7 +217,7 @@ mod tests {
         w.update(&Duration::new(1, 0), &Duration::new(0, 1)).unwrap();
 
         for system in &w.systems {
-            if system.get_stage_filter().contains(LoopStage::DYNAMIC_UPDATE) {
+            if system.get_stage_filter().contains(LoopStage::UPDATE) {
                 assert!(system.update_arguments.len() > 0);
                 for &(t, dt) in &system.update_arguments {
                     assert_eq!(t, Duration::new(1, 0));
@@ -229,7 +229,7 @@ mod tests {
     #[test]
     fn update_error() {
         let mut w: World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> = World::default();
-        w.systems.push(MockSysA::new(LoopStage::DYNAMIC_UPDATE, MockEvtFlag::empty(), true));
+        w.systems.push(MockSysA::new(LoopStage::UPDATE, MockEvtFlag::empty(), true));
         let r = w.update(&Duration::new(1, 0), &Duration::new(0, 1));
         assert!(r.is_err());
     }
