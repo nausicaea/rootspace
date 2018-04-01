@@ -7,7 +7,7 @@ pub trait EventTrait: Clone + Debug {
     fn matches_filter(&self, flag: Self::EventFlag) -> bool;
 }
 
-pub trait EventManagerTrait<E: EventTrait>: Default {
+pub trait EventManagerTrait<E: EventTrait> {
     fn dispatch_later(&mut self, event: E);
     fn handle_events<F>(&mut self, handler: F) -> Result<bool, Error>
         where F: FnMut(&mut Self, &E) -> Result<bool, Error>;

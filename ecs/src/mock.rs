@@ -46,6 +46,51 @@ impl EventTrait for MockEvt {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct MockCtx<E>
+where
+    E: EventTrait,
+{
+    pub events: VecDeque<E>,
+    pub handle_events_calls: usize,
+}
+
+impl<E> Default for MockCtx<E>
+where
+    E: EventTrait,
+{
+    fn default() -> Self {
+        MockCtx {
+            events: Default::default(),
+            handle_events_calls: 0,
+        }
+    }
+}
+
+impl<E> EventManagerTrait<E> for MockCtx<E>
+where
+    E: EventTrait,
+{
+    fn dispatch_later(&mut self, event: E) {
+        self.events.push_back(event)
+    }
+    fn handle_events<F>(&mut self, mut handler: F) -> Result<bool, Error>
+        where
+            F: FnMut(&mut Self, &E) -> Result<bool, Error>,
+        {
+            self.handle_events_calls += 1;
+
+            let tmp = self.events.iter().cloned().collect::<Vec<_>>();
+            self.events.clear();
+
+            for event in tmp {
+                handler(self, &event)?;
+            }
+
+            Ok(true)
+        }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct MockEvtMgr<E>
 where
     E: EventTrait,
@@ -99,7 +144,10 @@ pub struct MockDb;
 impl DatabaseTrait for MockDb {}
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct MockSysA<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D: DatabaseTrait {
+pub struct MockSysA<C, E>
+where
+    E: EventTrait,
+{
     pub stage_filter: LoopStage,
     pub event_filter: E::EventFlag,
     pub error_out: bool,
@@ -111,12 +159,13 @@ pub struct MockSysA<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D:
     pub render_arguments: Vec<(Duration, Duration)>,
     pub handle_event_calls: usize,
     pub handle_event_arguments: Vec<E>,
-    phantom_a: PhantomData<A>,
-    phantom_b: PhantomData<D>,
-    phantom_c: PhantomData<H>,
+    phantom_c: PhantomData<C>,
 }
 
-impl<H, A, D, E> MockSysA<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D: DatabaseTrait {
+impl<C, E> MockSysA<C, E>
+where
+    E: EventTrait,
+{
     pub fn new(stage_filter: LoopStage, event_filter: E::EventFlag, error_out: bool) -> Self {
         MockSysA {
             stage_filter: stage_filter,
@@ -127,13 +176,19 @@ impl<H, A, D, E> MockSysA<H, A, D, E> where H: EventManagerTrait<E>, E: EventTra
     }
 }
 
-impl<H, A, D, E> From<(LoopStage, E::EventFlag, bool)> for MockSysA<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D: DatabaseTrait {
+impl<C, E> From<(LoopStage, E::EventFlag, bool)> for MockSysA<C, E>
+where
+    E: EventTrait,
+{
     fn from(value: (LoopStage, E::EventFlag, bool)) -> Self {
         MockSysA::new(value.0, value.1, value.2)
     }
 }
 
-impl<H, A, D, E> Default for MockSysA<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D: DatabaseTrait {
+impl<C, E> Default for MockSysA<C, E>
+where
+    E: EventTrait,
+{
     fn default() -> Self {
         MockSysA {
             stage_filter: Default::default(),
@@ -147,21 +202,22 @@ impl<H, A, D, E> Default for MockSysA<H, A, D, E> where H: EventManagerTrait<E>,
             render_arguments: Vec::new(),
             handle_event_calls: 0,
             handle_event_arguments: Vec::new(),
-            phantom_a: Default::default(),
-            phantom_b: Default::default(),
             phantom_c: Default::default(),
         }
     }
 }
 
-impl<H, A, D, E> SystemTrait<H, A, D, E> for MockSysA<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D: DatabaseTrait {
+impl<C, E> SystemTrait<C, E> for MockSysA<C, E>
+where
+    E: EventTrait,
+{
     fn get_stage_filter(&self) -> LoopStage {
         self.stage_filter
     }
     fn get_event_filter(&self) -> E::EventFlag {
         self.event_filter
     }
-    fn fixed_update(&mut self, _db: &mut D, _evt_mgr: &mut H, _aux: &mut A, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn fixed_update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.fixed_update_arguments.push((*time, *delta_time));
         self.fixed_update_calls += 1;
         if self.error_out {
@@ -170,7 +226,7 @@ impl<H, A, D, E> SystemTrait<H, A, D, E> for MockSysA<H, A, D, E> where H: Event
             Ok(())
         }
     }
-    fn update(&mut self, _db: &mut D, _evt_mgr: &mut H, _aux: &mut A, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.update_arguments.push((*time, *delta_time));
         self.update_calls += 1;
         if self.error_out {
@@ -179,7 +235,7 @@ impl<H, A, D, E> SystemTrait<H, A, D, E> for MockSysA<H, A, D, E> where H: Event
             Ok(())
         }
     }
-    fn render(&mut self, _db: &D, _aux: &mut A, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn render(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.render_arguments.push((*time, *delta_time));
         self.render_calls += 1;
         if self.error_out {
@@ -188,7 +244,7 @@ impl<H, A, D, E> SystemTrait<H, A, D, E> for MockSysA<H, A, D, E> where H: Event
             Ok(())
         }
     }
-    fn handle_event(&mut self, _db: &mut D, _evt_mgr: &mut H, _aux: &mut A, event: &E) -> Result<(), Error> {
+    fn handle_event(&mut self, _ctx: &mut C, event: &E) -> Result<(), Error> {
         self.handle_event_arguments.push(event.clone());
         self.handle_event_calls += 1;
         if self.error_out {
@@ -200,7 +256,10 @@ impl<H, A, D, E> SystemTrait<H, A, D, E> for MockSysA<H, A, D, E> where H: Event
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct MockSysB<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D: DatabaseTrait {
+pub struct MockSysB<C, E>
+where
+    E: EventTrait,
+{
     pub stage_filter: LoopStage,
     pub event_filter: E::EventFlag,
     pub error_out: bool,
@@ -212,12 +271,13 @@ pub struct MockSysB<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D:
     pub render_arguments: Vec<(Duration, Duration)>,
     pub handle_event_calls: usize,
     pub handle_event_arguments: Vec<E>,
-    phantom_a: PhantomData<A>,
-    phantom_b: PhantomData<D>,
-    phantom_c: PhantomData<H>,
+    phantom_c: PhantomData<C>,
 }
 
-impl<H, A, D, E> MockSysB<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D: DatabaseTrait {
+impl<C, E> MockSysB<C, E>
+where
+    E: EventTrait,
+{
     pub fn new(stage_filter: LoopStage, event_filter: E::EventFlag, error_out: bool) -> Self {
         MockSysB {
             stage_filter: stage_filter,
@@ -228,13 +288,19 @@ impl<H, A, D, E> MockSysB<H, A, D, E> where H: EventManagerTrait<E>, E: EventTra
     }
 }
 
-impl<H, A, D, E> From<(LoopStage, E::EventFlag, bool)> for MockSysB<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D: DatabaseTrait {
+impl<C, E> From<(LoopStage, E::EventFlag, bool)> for MockSysB<C, E>
+where
+    E: EventTrait,
+{
     fn from(value: (LoopStage, E::EventFlag, bool)) -> Self {
         MockSysB::new(value.0, value.1, value.2)
     }
 }
 
-impl<H, A, D, E> Default for MockSysB<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D: DatabaseTrait {
+impl<C, E> Default for MockSysB<C, E>
+where
+    E: EventTrait,
+{
     fn default() -> Self {
         MockSysB {
             stage_filter: Default::default(),
@@ -248,52 +314,53 @@ impl<H, A, D, E> Default for MockSysB<H, A, D, E> where H: EventManagerTrait<E>,
             render_arguments: Vec::new(),
             handle_event_calls: 0,
             handle_event_arguments: Vec::new(),
-            phantom_a: Default::default(),
-            phantom_b: Default::default(),
             phantom_c: Default::default(),
         }
     }
 }
 
-impl<H, A, D, E> SystemTrait<H, A, D, E> for MockSysB<H, A, D, E> where H: EventManagerTrait<E>, E: EventTrait, D: DatabaseTrait {
+impl<C, E> SystemTrait<C, E> for MockSysB<C, E>
+where
+    E: EventTrait,
+{
     fn get_stage_filter(&self) -> LoopStage {
         self.stage_filter
     }
     fn get_event_filter(&self) -> E::EventFlag {
         self.event_filter
     }
-    fn fixed_update(&mut self, _db: &mut D, _evt_mgr: &mut H, _aux: &mut A, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn fixed_update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.fixed_update_arguments.push((*time, *delta_time));
         self.fixed_update_calls += 1;
         if self.error_out {
-            Err(format_err!("MockSysB.update() had an error"))
+            Err(format_err!("MockSysA.update() had an error"))
         } else {
             Ok(())
         }
     }
-    fn update(&mut self, _db: &mut D, _evt_mgr: &mut H, _aux: &mut A, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.update_arguments.push((*time, *delta_time));
         self.update_calls += 1;
         if self.error_out {
-            Err(format_err!("MockSysB.update() had an error"))
+            Err(format_err!("MockSysA.update() had an error"))
         } else {
             Ok(())
         }
     }
-    fn render(&mut self, _db: &D, _aux: &mut A, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn render(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.render_arguments.push((*time, *delta_time));
         self.render_calls += 1;
         if self.error_out {
-            Err(format_err!("MockSysB.render() had an error"))
+            Err(format_err!("MockSysA.render() had an error"))
         } else {
             Ok(())
         }
     }
-    fn handle_event(&mut self, _db: &mut D, _evt_mgr: &mut H, _aux: &mut A, event: &E) -> Result<(), Error> {
+    fn handle_event(&mut self, _ctx: &mut C, event: &E) -> Result<(), Error> {
         self.handle_event_arguments.push(event.clone());
         self.handle_event_calls += 1;
         if self.error_out {
-            Err(format_err!("MockSysB.handle_event() had an error"))
+            Err(format_err!("MockSysA.handle_event() had an error"))
         } else {
             Ok(())
         }

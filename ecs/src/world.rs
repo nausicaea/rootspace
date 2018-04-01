@@ -5,7 +5,6 @@ use failure::Error;
 use system::SystemTrait;
 use loop_stage::LoopStage;
 use event::{EventTrait, EventManagerTrait};
-use database::DatabaseTrait;
 
 pub trait WorldTrait {
     fn fixed_update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error>;
@@ -14,107 +13,81 @@ pub trait WorldTrait {
     fn handle_events(&mut self) -> Result<bool, Error>;
 }
 
-pub struct World<H, A, D, E, S>
+pub struct World<E, C, S>
 where
-    H: EventManagerTrait<E>,
-    A: Default,
-    D: DatabaseTrait,
     E: EventTrait,
-    S: SystemTrait<H, A, D, E>,
+    C: Default + EventManagerTrait<E>,
+    S: SystemTrait<C, E>,
 {
-    pub event_manager: H,
-    pub auxiliary: A,
-    pub database: D,
-    phantom: PhantomData<E>,
+    pub context: C,
     systems: Vec<S>,
+    phantom: PhantomData<E>,
 }
 
-impl<H, A, D, E, S> World<H, A, D, E, S>
+impl<E, C, S> World<E, C, S>
 where
-    H: EventManagerTrait<E>,
-    A: Default,
-    D: DatabaseTrait,
     E: EventTrait,
-    S: SystemTrait<H, A, D, E>,
+    C: Default + EventManagerTrait<E>,
+    S: SystemTrait<C, E>,
 {
     pub fn add_system<T: Into<S>>(&mut self, system: T) {
         self.systems.push(system.into());
     }
 }
 
-impl<H, A, D, E, S> Default for World<H, A, D, E, S>
+impl<E, C, S> Default for World<E, C, S>
 where
-    H: EventManagerTrait<E>,
-    A: Default,
-    D: DatabaseTrait,
     E: EventTrait,
-    S: SystemTrait<H, A, D, E>,
+    C: Default + EventManagerTrait<E>,
+    S: SystemTrait<C, E>,
 {
     fn default() -> Self {
         World {
-            event_manager: Default::default(),
-            auxiliary: Default::default(),
-            database: Default::default(),
-            phantom: Default::default(),
+            context: Default::default(),
             systems: Default::default(),
+            phantom: Default::default()
         }
     }
 }
 
-impl<H, A, D, E, S> Debug for World<H, A, D, E, S>
+impl<E, C, S> WorldTrait for World<E, C, S>
 where
-    H: EventManagerTrait<E>,
-    A: Default,
-    D: DatabaseTrait,
     E: EventTrait,
-    S: SystemTrait<H, A, D, E>,
+    C: Default + EventManagerTrait<E>,
+    S: SystemTrait<C, E>,
 {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f, "World(systems: {})", self.systems.len())
-    }
-}
-
-impl<H, A, D, E, S> WorldTrait for World<H, A, D, E, S>
-where
-    H: EventManagerTrait<E>,
-    A: Default,
-    D: DatabaseTrait,
-    E: EventTrait,
-    S: SystemTrait<H, A, D, E>,
-{
-    fn fixed_update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn fixed_update(&mut self, t: &Duration, dt: &Duration) -> Result<(), Error> {
         for system in &mut self.systems {
             if system.get_stage_filter().contains(LoopStage::FIXED_UPDATE) {
-                system.fixed_update(&mut self.database, &mut self.event_manager, &mut self.auxiliary, time, delta_time)?;
+                system.fixed_update(&mut self.context, t, dt)?;
             }
         }
         Ok(())
     }
-    fn update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn update(&mut self, t: &Duration, dt: &Duration) -> Result<(), Error> {
         for system in &mut self.systems {
             if system.get_stage_filter().contains(LoopStage::UPDATE) {
-                system.update(&mut self.database, &mut self.event_manager, &mut self.auxiliary, time, delta_time)?;
+                system.update(&mut self.context, t, dt)?;
             }
         }
         Ok(())
     }
-    fn render(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn render(&mut self, t: &Duration, dt: &Duration) -> Result<(), Error> {
         for system in &mut self.systems {
             if system.get_stage_filter().contains(LoopStage::RENDER) {
-                system.render(&self.database, &mut self.auxiliary, time, delta_time)?;
+                system.render(&mut self.context, t, dt)?;
             }
         }
         Ok(())
     }
     fn handle_events(&mut self) -> Result<bool, Error> {
         let systems = &mut self.systems;
-        let database = &mut self.database;
-        let auxiliary = &mut self.auxiliary;
-        self.event_manager.handle_events(|mgr, event| {
+
+        self.context.handle_events(|ctx, event| {
             for system in systems.iter_mut() {
                 if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) {
                     if event.matches_filter(system.get_event_filter()) {
-                        system.handle_event(database, mgr, auxiliary, event)?;
+                        system.handle_event(ctx, event)?;
                     }
                 }
             }
@@ -125,11 +98,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use mock::{MockEvt, MockEvtFlag, MockEvtMgr, MockDb, MockAux, MockSysA};
+    use mock::{MockEvt, MockEvtFlag, MockCtx, MockSysA};
     use super::*;
 
-    fn create_populated_world() -> World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> {
-        let mut w: World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> = World::default();
+    fn create_populated_world() -> World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> {
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = Default::default();
 
         w.systems = [
             MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false),
@@ -142,15 +115,15 @@ mod tests {
             MockSysA::new(LoopStage::HANDLE_EVENTS, MockEvtFlag::TEST_EVENT_B, false),
         ].iter().cloned().collect();
 
-        w.event_manager.dispatch_later(MockEvt::TestEventA("lala-land".into()));
-        w.event_manager.dispatch_later(MockEvt::TestEventB(100));
+        w.context.dispatch_later(MockEvt::TestEventA("lala-land".into()));
+        w.context.dispatch_later(MockEvt::TestEventB(100));
 
         w
     }
 
     #[test]
     fn add_system() {
-        let mut w: World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> = World::default();
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         assert!(w.systems.is_empty());
         let sys = MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false);
         w.add_system(sys.clone());
@@ -192,7 +165,7 @@ mod tests {
     }
     #[test]
     fn fixed_update_error() {
-        let mut w: World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> = World::default();
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         w.systems.push(MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), true));
         let r = w.fixed_update(&Duration::new(1, 0), &Duration::new(0, 1));
         assert!(r.is_err());
@@ -228,7 +201,7 @@ mod tests {
     }
     #[test]
     fn update_error() {
-        let mut w: World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> = World::default();
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         w.systems.push(MockSysA::new(LoopStage::UPDATE, MockEvtFlag::empty(), true));
         let r = w.update(&Duration::new(1, 0), &Duration::new(0, 1));
         assert!(r.is_err());
@@ -264,7 +237,7 @@ mod tests {
     }
     #[test]
     fn render_error() {
-        let mut w: World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> = World::default();
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         w.systems.push(MockSysA::new(LoopStage::RENDER, MockEvtFlag::empty(), true));
         let r = w.render(&Duration::new(1, 0), &Duration::new(0, 1));
         assert!(r.is_err());
@@ -275,7 +248,7 @@ mod tests {
         let r = w.handle_events();
 
         assert!(r.is_ok(), "Got an unexpected error '{}'", r.unwrap_err());
-        assert_eq!(w.event_manager.handle_events_calls, 1);
+        assert_eq!(w.context.handle_events_calls, 1);
         for system in &w.systems {
             if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) {
                 if system.get_event_filter().contains(MockEvtFlag::TEST_EVENT_A) {
@@ -315,9 +288,9 @@ mod tests {
     }
     #[test]
     fn handle_events_error() {
-        let mut w: World<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt, MockSysA<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>> = World::default();
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         w.systems.push(MockSysA::new(LoopStage::HANDLE_EVENTS, MockEvtFlag::TEST_EVENT_A, true));
-        w.event_manager.dispatch_later(MockEvt::TestEventA("hello".into()));
+        w.context.dispatch_later(MockEvt::TestEventA("hello".into()));
         assert!(w.handle_events().is_err());
     }
 }

@@ -1,42 +1,31 @@
 use std::marker::PhantomData;
 use failure::Error;
-use ecs::database::DatabaseTrait;
-use ecs::event::{EventTrait, EventManagerTrait};
+use ecs::event::EventTrait;
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
 
-pub struct EventMonitor<H, A, D, E>
+pub struct EventMonitor<C, E>
 where
-    H: EventManagerTrait<E>,
-    D: DatabaseTrait,
     E: EventTrait,
 {
-    phantom_h: PhantomData<H>,
-    phantom_a: PhantomData<A>,
-    phantom_d: PhantomData<D>,
+    phantom_c: PhantomData<C>,
     phantom_e: PhantomData<E>,
 }
 
-impl<H, A, D, E> Default for EventMonitor<H, A, D, E>
+impl<C, E> Default for EventMonitor<C, E>
 where
-    H: EventManagerTrait<E>,
-    D: DatabaseTrait,
     E: EventTrait,
 {
     fn default() -> Self {
         EventMonitor {
-            phantom_h: Default::default(),
-            phantom_a: Default::default(),
-            phantom_d: Default::default(),
+            phantom_c: Default::default(),
             phantom_e: Default::default(),
         }
     }
 }
 
-impl<H, A, D, E> SystemTrait<H, A, D, E> for EventMonitor<H, A, D, E>
+impl<C, E> SystemTrait<C, E> for EventMonitor<C, E>
 where
-    H: EventManagerTrait<E>,
-    D: DatabaseTrait,
     E: EventTrait,
 {
     fn get_stage_filter(&self) -> LoopStage {
@@ -45,7 +34,7 @@ where
     fn get_event_filter(&self) -> E::EventFlag {
         Default::default()
     }
-    fn handle_event(&mut self, _db: &mut D, _evt_mgr: &mut H, _aux: &mut A, event: &E) -> Result<(), Error> {
+    fn handle_event(&mut self, _ctx: &mut C, event: &E) -> Result<(), Error> {
         trace!("Received event {:?}", event);
         Ok(())
     }
@@ -53,31 +42,31 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ecs::mock::{MockEvt, MockEvtFlag, MockEvtMgr, MockAux, MockDb};
+    use ecs::mock::{MockEvt, MockEvtFlag, MockCtx};
     use super::*;
 
     #[test]
     fn default() {
-        let _s = EventMonitor::<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>::default();
+        let _s = EventMonitor::<MockCtx<MockEvt>, MockEvt>::default();
     }
 
     #[test]
     fn stage_filter() {
-        let s = EventMonitor::<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>::default();
+        let s = EventMonitor::<MockCtx<MockEvt>, MockEvt>::default();
 
         assert_eq!(s.get_stage_filter(), LoopStage::HANDLE_EVENTS);
     }
 
     #[test]
     fn event_filter() {
-        let s = EventMonitor::<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>::default();
+        let s = EventMonitor::<MockCtx<MockEvt>, MockEvt>::default();
 
         assert_eq!(s.get_event_filter(), MockEvtFlag::all());
     }
 
     #[test]
     fn handle_event() {
-        let mut s = EventMonitor::<MockEvtMgr<MockEvt>, MockAux, MockDb, MockEvt>::default();
-        assert!(s.handle_event(&mut Default::default(), &mut Default::default(), &mut Default::default(), &MockEvt::TestEventB(0)).is_ok());
+        let mut s = EventMonitor::<MockCtx<MockEvt>, MockEvt>::default();
+        assert!(s.handle_event(&mut Default::default(), &MockEvt::TestEventB(0)).is_ok());
     }
 }

@@ -1,5 +1,4 @@
 use std::cmp;
-use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 use failure::Error;
@@ -7,14 +6,20 @@ use ecs::world::WorldTrait;
 use file_manipulation::{VerifyPath, FileError};
 
 #[derive(Debug)]
-pub struct Orchestrator<W> where W: WorldTrait + Default + Debug {
+pub struct Orchestrator<W>
+where
+    W: Default + WorldTrait,
+{
     pub world: W,
     resource_path: PathBuf,
     delta_time: Duration,
     max_frame_time: Duration,
 }
 
-impl<W> Orchestrator<W> where W: WorldTrait + Default + Debug {
+impl<W> Orchestrator<W>
+where
+    W: Default + WorldTrait,
+{
     pub fn new(resource_path: &Path, delta_time: Duration, max_frame_time: Duration) -> Result<Self, FileError> {
         let rp = resource_path.to_path_buf()
             .ensure_accessible_directory()?;
