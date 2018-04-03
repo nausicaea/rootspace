@@ -7,4 +7,4 @@ extern crate ecs;
 pub mod file_manipulation;
 pub mod orchestrator;
 pub mod event_monitor;
-//pub mod event_interface;
+pub mod event_interface;
