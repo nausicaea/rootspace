@@ -1,4 +1,3 @@
-use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::marker::PhantomData;
 use std::time::Duration;
 use failure::Error;
