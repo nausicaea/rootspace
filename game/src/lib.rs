@@ -1,13 +1,7 @@
 extern crate log;
 extern crate failure;
-#[macro_use] extern crate bitflags;
-#[macro_use] extern crate ecs;
+extern crate ecs;
 extern crate engine;
-
-mod event;
-mod systems;
-mod auxiliary;
-mod context;
 
 use std::path::Path;
 use std::time::Duration;
@@ -17,9 +11,9 @@ use ecs::event::EventManagerTrait;
 use engine::orchestrator::Orchestrator;
 use engine::file_manipulation::FileError;
 use engine::event_monitor::EventMonitor;
-use self::event::Event;
-use self::systems::SystemGroup;
-use self::context::Context;
+use engine::event::Event;
+use engine::context::Context;
+use engine::systems::SystemGroup;
 
 pub struct Game {
     orchestrator: Orchestrator<World<Event, Context<Event>, SystemGroup>>,

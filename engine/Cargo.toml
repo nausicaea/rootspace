@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Eleanore Young"]
 
 [dependencies]
+bitflags = "^1.0.1"
 failure = "^0.1.1"
 log = "^0.4.1"
 ecs = {path = "../ecs"}
