@@ -4,27 +4,27 @@ use ecs::event::EventTrait;
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
 
-pub struct EventMonitor<C, E>
+pub struct EventMonitor<E, C>
 where
     E: EventTrait,
 {
-    phantom_c: PhantomData<C>,
     phantom_e: PhantomData<E>,
+    phantom_c: PhantomData<C>,
 }
 
-impl<C, E> Default for EventMonitor<C, E>
+impl<E, C> Default for EventMonitor<E, C>
 where
     E: EventTrait,
 {
     fn default() -> Self {
         EventMonitor {
-            phantom_c: Default::default(),
             phantom_e: Default::default(),
+            phantom_c: Default::default(),
         }
     }
 }
 
-impl<C, E> SystemTrait<C, E> for EventMonitor<C, E>
+impl<E, C> SystemTrait<C, E> for EventMonitor<E, C>
 where
     E: EventTrait,
 {
@@ -47,26 +47,26 @@ mod tests {
 
     #[test]
     fn default() {
-        let _s = EventMonitor::<MockCtx<MockEvt>, MockEvt>::default();
+        let _s = EventMonitor::<MockEvt, MockCtx<MockEvt>>::default();
     }
 
     #[test]
     fn stage_filter() {
-        let s = EventMonitor::<MockCtx<MockEvt>, MockEvt>::default();
+        let s = EventMonitor::<MockEvt, MockCtx<MockEvt>>::default();
 
         assert_eq!(s.get_stage_filter(), LoopStage::HANDLE_EVENTS);
     }
 
     #[test]
     fn event_filter() {
-        let s = EventMonitor::<MockCtx<MockEvt>, MockEvt>::default();
+        let s = EventMonitor::<MockEvt, MockCtx<MockEvt>>::default();
 
         assert_eq!(s.get_event_filter(), MockEvtFlag::all());
     }
 
     #[test]
     fn handle_event() {
-        let mut s = EventMonitor::<MockCtx<MockEvt>, MockEvt>::default();
+        let mut s = EventMonitor::<MockEvt, MockCtx<MockEvt>>::default();
         assert!(s.handle_event(&mut Default::default(), &MockEvt::TestEventB(0)).is_ok());
     }
 }

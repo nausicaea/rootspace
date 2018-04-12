@@ -1,22 +1,25 @@
 extern crate log;
 extern crate failure;
+extern crate winit;
 extern crate ecs;
 extern crate engine;
 
 use std::path::Path;
 use std::time::Duration;
 use failure::Error;
+use winit::EventsLoop;
 use ecs::world::World;
 use ecs::event::EventManagerTrait;
 use engine::orchestrator::Orchestrator;
 use engine::file_manipulation::FileError;
 use engine::event_monitor::EventMonitor;
+use engine::event_interface::EventInterface;
 use engine::event::Event;
 use engine::context::Context;
 use engine::systems::SystemGroup;
 
 pub struct Game {
-    orchestrator: Orchestrator<World<Event, Context<Event>, SystemGroup>>,
+    orchestrator: Orchestrator<World<Event, Context, SystemGroup>>,
 }
 
 impl Game {
@@ -29,6 +32,7 @@ impl Game {
     }
     pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
         self.orchestrator.world.add_system(EventMonitor::default());
+        self.orchestrator.world.add_system(EventInterface::new(EventsLoop::new()));
         self.orchestrator.world.context.dispatch_later(Event::Ready);
 
         self.orchestrator.run(iterations)?;
