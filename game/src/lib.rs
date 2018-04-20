@@ -12,11 +12,11 @@ use ecs::world::World;
 use ecs::event::EventManagerTrait;
 use engine::orchestrator::Orchestrator;
 use engine::file_manipulation::FileError;
-use engine::event_monitor::EventMonitor;
-use engine::event_interface::EventInterface;
 use engine::event::Event;
 use engine::context::Context;
 use engine::systems::SystemGroup;
+use engine::systems::event_monitor::EventMonitor;
+use engine::systems::event_interface::EventInterface;
 
 pub struct Game {
     orchestrator: Orchestrator<World<Event, Context, SystemGroup>>,

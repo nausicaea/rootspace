@@ -14,5 +14,3 @@ pub mod auxiliary;
 pub mod context;
 pub mod systems;
 pub mod orchestrator;
-pub mod event_monitor;
-pub mod event_interface;

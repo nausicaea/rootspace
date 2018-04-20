@@ -7,6 +7,7 @@ authors = ["Eleanore Young"]
 bitflags = "^1.0.1"
 failure = "^0.1.1"
 log = "^0.4.1"
+glium = "^0.20.0"
 winit = "^0.11.3"
 ecs = {path = "../ecs"}
 

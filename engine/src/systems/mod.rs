@@ -1,3 +1,6 @@
+pub mod event_monitor;
+pub mod event_interface;
+
 use std::time::Duration;
 use failure::Error;
 use winit::EventsLoop;
@@ -5,8 +8,8 @@ use ecs::system::SystemTrait;
 use ecs::loop_stage::LoopStage;
 use event::{Event, EventFlag};
 use context::Context;
-use event_monitor::EventMonitor;
-use event_interface::EventInterface;
+use self::event_monitor::EventMonitor;
+use self::event_interface::EventInterface;
 
 impl_system_group! {
     pub enum SystemGroup<Context, Event, EventFlag> {
