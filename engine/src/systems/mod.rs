@@ -1,5 +1,6 @@
 pub mod event_monitor;
 pub mod event_interface;
+pub mod renderer;
 
 use std::time::Duration;
 use failure::Error;
