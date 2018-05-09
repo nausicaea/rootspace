@@ -2,8 +2,8 @@
 
 #[cfg(test)] #[macro_use] extern crate assertions;
 #[macro_use] extern crate bitflags;
-extern crate daggy;
 #[macro_use] extern crate failure;
+extern crate hierarchy;
 extern crate glium;
 #[macro_use] extern crate log;
 #[cfg(test)] #[macro_use] extern crate quickcheck;
@@ -16,6 +16,5 @@ pub mod auxiliary;
 pub mod context;
 pub mod event;
 pub mod file_manipulation;
-pub mod hierarchy;
 pub mod orchestrator;
 pub mod systems;

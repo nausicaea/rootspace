@@ -154,10 +154,10 @@ version = "0.1.0"
 dependencies = [
  "assertions 0.1.0",
  "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "daggy 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ecs 0.1.0",
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "glium 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hierarchy 0.1.0",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "quickcheck 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "tempfile 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -309,6 +309,15 @@ dependencies = [
 name = "half"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "hierarchy"
+version = "0.1.0"
+dependencies = [
+ "assertions 0.1.0",
+ "daggy 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "humantime"
@@ -559,6 +568,7 @@ dependencies = [
  "engine 0.1.0",
  "fern 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "game 0.1.0",
+ "hierarchy 0.1.0",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

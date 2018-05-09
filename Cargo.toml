@@ -9,6 +9,7 @@ authors = ["Eleanore Young"]
 log = "^0.4.1"
 fern = "^0.5.4"
 ecs = {path = "ecs"}
+hierarchy = {path = "hierarchy"}
 engine = {path = "engine"}
 game = {path = "game"}
 

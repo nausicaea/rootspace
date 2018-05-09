@@ -1,0 +1,11 @@
+[package]
+name = "hierarchy"
+version = "0.1.0"
+authors = ["Eleanore Young"]
+
+[dependencies]
+failure = "^0.1.1"
+daggy = "^0.6.0"
+
+[dev-dependencies]
+assertions = {path = "../assertions"}
