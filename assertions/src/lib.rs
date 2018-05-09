@@ -2,6 +2,15 @@
 
 /// Asserts that the supplied expression is a `Option::Some(_)` value. Otherwise,
 /// panics and prints an appropriate message.
+///
+/// # Example
+///
+/// ```
+/// #[macro_use] extern crate assertions;
+///
+/// let some: Option<u32> = Some(100);
+/// assert_some!(some);
+/// ```
 #[macro_export]
 macro_rules! assert_some {
     ($option:expr) => {
@@ -14,6 +23,15 @@ macro_rules! assert_some {
 
 /// Asserts that the supplied expression is a `Option::None` value. Otherwise,
 /// panics and prints an appropriate message.
+///
+/// # Example
+///
+/// ```
+/// #[macro_use] extern crate assertions;
+///
+/// let none: Option<u32> = None;
+/// assert_none!(none);
+/// ```
 #[macro_export]
 macro_rules! assert_none {
     ($option:expr) => {
@@ -26,6 +44,15 @@ macro_rules! assert_none {
 
 /// Asserts that the supplied expression is a `Result::Ok(_)` value. Otherwise,
 /// panics and prints an appropriate message.
+///
+/// # Example
+///
+/// ```
+/// #[macro_use] extern crate assertions;
+///
+/// let ok: Result<u32, String> = Ok(100);
+/// assert_ok!(ok);
+/// ```
 #[macro_export]
 macro_rules! assert_ok {
     ($result:expr) => {
@@ -38,6 +65,15 @@ macro_rules! assert_ok {
 
 /// Asserts that the supplied expression is a `Result::Err(_)` value. Otherwise,
 /// panics and prints an appropriate message.
+///
+/// # Example
+///
+/// ```
+/// #[macro_use] extern crate assertions;
+///
+/// let err: Result<u32, String> = Err("Hello".into());
+/// assert_err!(err);
+/// ```
 #[macro_export]
 macro_rules! assert_err {
     ($result:expr) => {
