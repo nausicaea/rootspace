@@ -7,7 +7,7 @@ where
     K: Default + Clone + Eq + Hash,
 {
     graph: Dag<K, V>,
-    root: NodeIndex,
+    root: K,
     node_index: HashMap<K, NodeIndex>,
 }
 
@@ -18,13 +18,17 @@ where
     fn default() -> Self {
         // Create the root node.
         let root_node: K = Default::default();
-        let mut graph: Dag<K, V> = Default::default();
-        let root_idx = graph.add_node(root_node);
+
+        let mut graph = Dag::new();
+        let root_idx = graph.add_node(root_node.clone());
+
+        let mut index = HashMap::new();
+        index.insert(root_node.clone(), root_idx);
 
         Hierarchy {
             graph: graph,
-            root: root_idx,
-            node_index: Default::default(),
+            root: root_node,
+            node_index: index,
         }
     }
 }
@@ -34,17 +38,21 @@ where
     K: Default + Clone + Eq + Hash,
 {
     pub fn insert(&mut self, child: K, data: V) {
-        let root = self.root;
-        self.insert_child_internal(root, child, data)
+        let parent = self.root.clone();
+        self.insert_child(&parent, child, data).unwrap_or_else(|_| unreachable!())
     }
 
     pub fn insert_child(&mut self, parent: &K, child: K, data: V) -> Result<(), GraphError> {
         let parent_idx = self.get_node_index(parent)?;
-        self.insert_child_internal(parent_idx, child, data);
+        let (_, child_idx) = self.graph.add_child(parent_idx, data, child.clone());
+        self.node_index.insert(child, child_idx);
         Ok(())
     }
 
     pub fn remove(&mut self, child: &K) -> Result<(), GraphError> {
+        if child == &self.root {
+            return Err(GraphError::CannotRemoveRootNode);
+        }
         let child_idx = self.get_node_index(child)?;
         self.graph.remove_node(child_idx);
         self.rebuild_node_index();
@@ -60,11 +68,6 @@ where
         for<'r> F: Fn(&'r K, Option<&'r V>) -> Option<V>,
     {
         Ok(())
-    }
-
-    fn insert_child_internal(&mut self, parent_idx: NodeIndex, child: K, data: V) {
-        let (_, child_idx) = self.graph.add_child(parent_idx, data, child.clone());
-        self.node_index.insert(child, child_idx);
     }
 
     fn rebuild_node_index(&mut self) {
@@ -84,14 +87,15 @@ where
 
 #[derive(Debug, Fail)]
 pub enum GraphError {
-    #[fail(display = "The key was not found.")] KeyNotFound,
+    #[fail(display = "The key was not found")] KeyNotFound,
+    #[fail(display = "The root node may not be removed")] CannotRemoveRootNode,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[derive(Default, Clone, Hash, PartialEq, Eq)]
+    #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
     struct MockKey(usize);
 
     #[test]
