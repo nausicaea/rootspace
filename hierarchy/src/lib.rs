@@ -1,3 +1,5 @@
+//! Provides a hierarchical data structure, called `Hierarchy`.
+
 #[cfg(test)] #[macro_use] extern crate assertions;
 #[macro_use] extern crate failure;
 extern crate daggy;
