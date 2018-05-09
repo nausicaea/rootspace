@@ -14,5 +14,6 @@ winit = "^0.11.3"
 ecs = {path = "../ecs"}
 
 [dev-dependencies]
+assertions = {path = "../assertions"}
 tempfile = "^2.2.0"
 quickcheck = "^0.6.2"

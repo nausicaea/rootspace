@@ -1,5 +1,6 @@
 #![feature(try_from)]
 
+#[cfg(test)] #[macro_use] extern crate assertions;
 #[macro_use] extern crate bitflags;
 extern crate daggy;
 #[macro_use] extern crate failure;

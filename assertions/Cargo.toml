@@ -1,0 +1,7 @@
+[package]
+name = "assertions"
+version = "0.1.0"
+authors = ["Eleanore Young"]
+description = "This crate provides assertions for testing Result and Option types."
+
+[dependencies]
