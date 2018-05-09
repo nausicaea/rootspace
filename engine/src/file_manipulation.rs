@@ -54,31 +54,31 @@ mod tests {
 
         let tf_path = tf.path().to_path_buf();
         let r = tf_path.ensure_accessible_file();
-        assert!(r.is_ok(), "Expected a path, but got the error '{}' instead", r.unwrap_err());
+        assert_ok!(r);
 
         let r = r.unwrap();
         assert_eq!(r, tf.path(), "Expected the path '{}', but got '{}' instead", tf.path().display(), r.display());
 
         let bad_file = env::temp_dir().join("blabla.ext");
         let r = bad_file.ensure_accessible_file();
-        assert!(r.is_err(), "Expected an error, but got the path '{}' instead", r.unwrap().display());
+        assert_err!(r);
 
         let bad_dir = env::temp_dir().join(".");
         let r = bad_dir.ensure_accessible_file();
-        assert!(r.is_err(), "Expected an error, but got the path '{}' instead", r.unwrap().display());
+        assert_err!(r);
     }
     #[test]
     fn ensure_accessible_directory_for_path_buf() {
         let good_dir = env::temp_dir();
         let r = good_dir.ensure_accessible_directory();
-        assert!(r.is_ok(), "Expected a path, but got the error '{}' instead", r.unwrap_err());
+        assert_ok!(r);
 
         let r = r.unwrap();
         assert_eq!(r, env::temp_dir(), "Expected the path '{}' but got '{}' instead", env::temp_dir().display(), r.display());
 
         let bad_dir = env::temp_dir().join("blabla");
         let r = bad_dir.ensure_accessible_directory();
-        assert!(r.is_err(), "Expected an error, but got the path '{}' instead", r.unwrap().display());
+        assert_err!(r);
 
         let tf = NamedTempFileOptions::new()
             .create()
@@ -86,6 +86,6 @@ mod tests {
 
         let tf_path = tf.path().to_path_buf();
         let r = tf_path.ensure_accessible_directory();
-        assert!(r.is_err(), "Expected an error, but got the path '{}' instead", r.unwrap().display());
+        assert_err!(r);
     }
 }

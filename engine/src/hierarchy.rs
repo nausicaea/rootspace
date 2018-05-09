@@ -128,6 +128,6 @@ mod tests {
             }
         });
 
-        assert!(r.is_ok(), "{}", r.unwrap_err());
+        assert_ok!(r);
     }
 }

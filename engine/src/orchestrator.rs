@@ -100,16 +100,16 @@ mod tests {
     #[test]
     fn create_orchestrator() {
         let r = Orchestrator::<MockWorld>::new(&env::temp_dir(), Default::default(), Default::default());
-        assert!(r.is_ok(), "Expected an orchestrator instance, got the error '{}' instead", r.unwrap_err());
+        assert_ok!(r);
 
         let r = Orchestrator::<MockWorld>::new(&PathBuf::from("blablablabla"), Default::default(), Default::default());
-        assert!(r.is_err(), "Expected an error, got an orchestrator instance instead");
+        assert_err!(r);
 
         let tf = NamedTempFileOptions::new()
             .create()
             .unwrap();
         let r = Orchestrator::<MockWorld>::new(tf.path(), Default::default(), Default::default());
-        assert!(r.is_err(), "Expected an error, got an orchestrator instance instead");
+        assert_err!(r);
     }
     #[test]
     fn get_resource_path() {
@@ -123,19 +123,19 @@ mod tests {
         let o = Orchestrator::<MockWorld>::new(&base, Default::default(), Default::default()).unwrap();
 
         let r = o.get_file(dir_name, &tf.path().file_name().unwrap().to_string_lossy());
-        assert!(r.is_ok(), "Expected a path, got the error '{}' instead", r.unwrap_err());
+        assert_ok!(r);
 
         let r = r.unwrap();
         assert_eq!(r, tf.path(), "Expected the path '{}', got '{}' instead", tf.path().display(), r.display());
 
         let r = o.get_file("blabla", &tf.path().file_name().unwrap().to_string_lossy());
-        assert!(r.is_err(), "Expected an error, got the path '{}' instead", r.unwrap().display());
+        assert_err!(r);
 
         let r = o.get_file(dir_name, "blabla.a");
-        assert!(r.is_err(), "Expected an error, got the path '{}' instead", r.unwrap().display());
+        assert_err!(r);
 
         let r = o.get_file(dir_name, "..");
-        assert!(r.is_err(), "Expected an error, got the path '{}' instead", r.unwrap().display());
+        assert_err!(r);
     }
     #[test]
     fn run_orchestrator_unrestrained() {

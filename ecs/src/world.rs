@@ -138,7 +138,7 @@ mod tests {
         let mut w = create_populated_world();
         let r = w.fixed_update(&Duration::default(), &Duration::default());
 
-        assert!(r.is_ok(), "Got an unexpected error '{}'", r.unwrap_err());
+        assert_ok!(r);
         for system in &w.systems {
             if system.get_stage_filter().contains(LoopStage::FIXED_UPDATE) {
                 assert_eq!(system.fixed_update_calls, 1);
@@ -174,7 +174,7 @@ mod tests {
         let mut w = create_populated_world();
         let r = w.update(&Duration::default(), &Duration::default());
 
-        assert!(r.is_ok(), "Got an unexpected error '{}'", r.unwrap_err());
+        assert_ok!(r);
         for system in &w.systems {
             if system.get_stage_filter().contains(LoopStage::UPDATE) {
                 assert_eq!(system.update_calls, 1);
@@ -210,7 +210,7 @@ mod tests {
         let mut w = create_populated_world();
         let r = w.render(&Duration::default(), &Duration::default());
 
-        assert!(r.is_ok(), "Got an unexpected error '{}'", r.unwrap_err());
+        assert_ok!(r);
         for system in &w.systems {
             if system.get_stage_filter().contains(LoopStage::RENDER) {
                 assert_eq!(system.render_calls, 1);
@@ -246,7 +246,7 @@ mod tests {
         let mut w = create_populated_world();
         let r = w.handle_events();
 
-        assert!(r.is_ok(), "Got an unexpected error '{}'", r.unwrap_err());
+        assert_ok!(r);
         assert_eq!(w.context.handle_events_calls, 1);
         for system in &w.systems {
             if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) {
