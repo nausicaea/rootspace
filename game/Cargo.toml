@@ -6,6 +6,6 @@ authors = ["Eleanore Young"]
 [dependencies]
 log = "^0.4.1"
 failure = "^0.1.1"
-winit = "^0.11.3"
+winit = "^0.13.1"
 ecs = {path = "../ecs"}
 engine = {path = "../engine"}
