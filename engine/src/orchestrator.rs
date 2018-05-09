@@ -177,7 +177,7 @@ mod tests {
         o.world.render_duration = Some(Duration::from_millis(20));
 
         let r = o.run(None);
-        assert!(r.is_err());
+        assert_err!(r);
     }
     quickcheck! {
         fn check_update_calls(iterations: usize) -> bool {
@@ -200,7 +200,7 @@ mod tests {
         o.world.update_error_out = true;
 
         let r = o.run(None);
-        assert!(r.is_err());
+        assert_err!(r);
     }
     quickcheck! {
         fn check_render_calls(iterations: usize) -> bool {
@@ -223,7 +223,7 @@ mod tests {
         o.world.render_error_out = true;
 
         let r = o.run(None);
-        assert!(r.is_err());
+        assert_err!(r);
     }
     quickcheck! {
         fn check_handle_events_calls(iterations: usize) -> bool {
@@ -246,7 +246,7 @@ mod tests {
         o.world.handle_events_error_out = true;
 
         let r = o.run(None);
-        assert!(r.is_err());
+        assert_err!(r);
     }
     #[test]
     fn check_fixed_update_arguments() {

@@ -102,16 +102,18 @@ mod tests {
     #[test]
     fn insertion_existence_and_deletion() {
         let mut h: Hierarchy<MockKey, f32> = Default::default();
-
         let key = MockKey(1);
-
         assert!(!h.has(&key));
 
         h.insert(key.clone(), 2.0);
         assert!(h.has(&key));
 
-        assert!(h.remove(&key).is_ok());
+        let r = h.remove(&key);
+        assert_ok!(r);
         assert!(!h.has(&key));
+
+        let r = h.remove(&key);
+        assert_err!(r);
     }
 
     #[test]

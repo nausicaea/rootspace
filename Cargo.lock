@@ -140,6 +140,7 @@ dependencies = [
 name = "ecs"
 version = "0.1.0"
 dependencies = [
+ "assertions 0.1.0",
  "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",

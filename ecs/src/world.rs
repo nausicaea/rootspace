@@ -167,7 +167,7 @@ mod tests {
         let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         w.systems.push(MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), true));
         let r = w.fixed_update(&Duration::new(1, 0), &Duration::new(0, 1));
-        assert!(r.is_err());
+        assert_err!(r);
     }
     #[test]
     fn update_calls() {
@@ -203,7 +203,7 @@ mod tests {
         let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         w.systems.push(MockSysA::new(LoopStage::UPDATE, MockEvtFlag::empty(), true));
         let r = w.update(&Duration::new(1, 0), &Duration::new(0, 1));
-        assert!(r.is_err());
+        assert_err!(r);
     }
     #[test]
     fn render_calls() {
@@ -239,7 +239,7 @@ mod tests {
         let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         w.systems.push(MockSysA::new(LoopStage::RENDER, MockEvtFlag::empty(), true));
         let r = w.render(&Duration::new(1, 0), &Duration::new(0, 1));
-        assert!(r.is_err());
+        assert_err!(r);
     }
     #[test]
     fn handle_events_calls() {
@@ -290,6 +290,6 @@ mod tests {
         let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         w.systems.push(MockSysA::new(LoopStage::HANDLE_EVENTS, MockEvtFlag::TEST_EVENT_A, true));
         w.context.dispatch_later(MockEvt::TestEventA("hello".into()));
-        assert!(w.handle_events().is_err());
+        assert_err!(w.handle_events());
     }
 }

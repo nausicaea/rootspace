@@ -115,7 +115,7 @@ mod tests {
         s.events_loop.events.push_back(MockOsEvent::TestEventB(100));
         s.events_loop.events.push_back(MockOsEvent::TestEventC(1.0));
 
-        assert!(s.update(&mut ctx, &Default::default(), &Default::default()).is_ok());
+        assert_ok!(s.update(&mut ctx, &Default::default(), &Default::default()));
         assert!(s.events_loop.events.is_empty());
         assert_eq!(ctx.events.len(), 2);
     }

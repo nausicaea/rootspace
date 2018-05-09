@@ -67,6 +67,6 @@ mod tests {
     #[test]
     fn handle_event() {
         let mut s = EventMonitor::<MockEvt, MockCtx<MockEvt>>::default();
-        assert!(s.handle_event(&mut Default::default(), &MockEvt::TestEventB(0)).is_ok());
+        assert_ok!(s.handle_event(&mut Default::default(), &MockEvt::TestEventB(0)));
     }
 }

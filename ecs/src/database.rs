@@ -133,7 +133,7 @@ mod tests {
         let e = d.create_entity();
         assert_eq!(d.entities(), 1);
         let r = d.destroy_entity(&e);
-        assert!(r.is_ok());
+        assert_ok!(r);
         assert_eq!(d.entities(), 0);
     }
 
@@ -144,7 +144,7 @@ mod tests {
         let _e = d.create_entity();
         assert_eq!(d.entities(), 1);
         let r = d.destroy_entity(&Default::default());
-        assert!(r.is_err());
+        assert_err!(r);
         assert_eq!(d.entities(), 1);
     }
 
@@ -167,10 +167,10 @@ mod tests {
         let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        assert!(d.add(&e, c.clone()).is_ok());
+        assert_ok!(d.add(&e, c.clone()));
         assert_eq!(d.components(&e), 1);
         let c = TestTypeB::new(true);
-        assert!(d.add(&e, c.clone()).is_ok());
+        assert_ok!(d.add(&e, c.clone()));
         assert_eq!(d.components(&e), 2);
     }
 
@@ -179,9 +179,9 @@ mod tests {
         let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        assert!(d.add(&e, c.clone()).is_ok());
+        assert_ok!(d.add(&e, c.clone()));
         assert_eq!(d.components(&e), 1);
-        assert!(d.add(&e, TestTypeA::new(2)).is_err());
+        assert_err!(d.add(&e, TestTypeA::new(2)));
         assert_eq!(d.components(&e), 1);
         assert_eq!(d.borrow::<TestTypeA>(&e).unwrap(), &c);
     }
@@ -191,7 +191,7 @@ mod tests {
         let mut d: Database = Default::default();
         let e: Entity = Default::default();
         let c = TestTypeA::new(1);
-        assert!(d.add(&e, c.clone()).is_err());
+        assert_err!(d.add(&e, c.clone()));
         assert_eq!(d.components(&e), 0);
     }
 
@@ -203,7 +203,7 @@ mod tests {
         d.add(&e, c.clone()).unwrap();
         assert_eq!(d.components(&e), 1);
         let r = d.remove::<TestTypeA>(&e);
-        assert!(r.is_ok());
+        assert_ok!(r);
         assert_eq!(r.unwrap(), c);
         assert_eq!(d.components(&e), 0);
     }
@@ -212,14 +212,14 @@ mod tests {
     fn remove_unknown_component() {
         let mut d: Database = Default::default();
         let e = d.create_entity();
-        assert!(d.remove::<TestTypeA>(&e).is_err());
+        assert_err!(d.remove::<TestTypeA>(&e));
     }
 
     #[test]
     fn remove_component_unknown_entity() {
         let mut d: Database = Default::default();
         let e: Entity = Default::default();
-        assert!(d.remove::<TestTypeA>(&e).is_err());
+        assert_err!(d.remove::<TestTypeA>(&e));
     }
 
     #[test]
@@ -252,7 +252,7 @@ mod tests {
         let c = TestTypeA::new(1);
         d.add(&e, c.clone()).unwrap();
         let r = d.borrow::<TestTypeA>(&e);
-        assert!(r.is_ok());
+        assert_ok!(r);
         assert_eq!(r.unwrap(), &c);
     }
 
@@ -260,14 +260,14 @@ mod tests {
     fn borrow_unknown_component() {
         let mut d: Database = Default::default();
         let e = d.create_entity();
-        assert!(d.borrow::<TestTypeA>(&e).is_err());
+        assert_err!(d.borrow::<TestTypeA>(&e));
     }
 
     #[test]
     fn borrow_component_unknown_entity() {
         let d: Database = Default::default();
         let e: Entity = Default::default();
-        assert!(d.borrow::<TestTypeA>(&e).is_err());
+        assert_err!(d.borrow::<TestTypeA>(&e));
     }
 
     #[test]
@@ -278,14 +278,14 @@ mod tests {
         d.add(&e, c.clone()).unwrap();
         {
             let r = d.borrow_mut::<TestTypeA>(&e);
-            assert!(r.is_ok());
+            assert_ok!(r);
             let cb = r.unwrap();
             assert_eq!(cb, &c);
             cb.0 = 200;
         }
         {
             let r = d.borrow::<TestTypeA>(&e);
-            assert!(r.is_ok());
+            assert_ok!(r);
             let cb = r.unwrap();
             assert_eq!(cb, &TestTypeA(200));
         }
@@ -295,13 +295,13 @@ mod tests {
     fn borrow_mut_unknown_component() {
         let mut d: Database = Default::default();
         let e = d.create_entity();
-        assert!(d.borrow_mut::<TestTypeA>(&e).is_err());
+        assert_err!(d.borrow_mut::<TestTypeA>(&e));
     }
 
     #[test]
     fn borrow_mut_unknown_entity() {
         let mut d: Database = Default::default();
         let e: Entity = Default::default();
-        assert!(d.borrow_mut::<TestTypeA>(&e).is_err());
+        assert_err!(d.borrow_mut::<TestTypeA>(&e));
     }
 }

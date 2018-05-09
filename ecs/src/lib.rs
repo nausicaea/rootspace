@@ -1,3 +1,4 @@
+#[cfg(test)] #[macro_use] extern crate assertions;
 extern crate log;
 #[macro_use] extern crate failure;
 #[macro_use] extern crate bitflags;
