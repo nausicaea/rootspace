@@ -130,25 +130,9 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
 
         Ok(())
     }
-    /// Borrows the data from the `HierNode` identified by the specified key.
-    pub fn borrow(&self, key: &K) -> Result<&V, GraphError> {
-        let node_idx = self.get_index(key)?;
-        self.graph
-            .node_weight(node_idx)
-            .map(|n| &n.data)
-            .ok_or(GraphError::KeyNotFound)
-    }
-    /// Mutably borrows the data from the `HierNode` defined by the specified key.
-    pub fn borrow_mut(&mut self, key: &K) -> Result<&mut V, GraphError> {
-        let node_idx = self.get_index(key)?;
-        self.graph
-            .node_weight_mut(node_idx)
-            .map(|n| &mut n.data)
-            .ok_or(GraphError::KeyNotFound)
-    }
     /// Returns an iterator over all `HierNode`s in the `Hierarchy`.
-    pub fn iter(&self) -> GraphIter<K, V> {
-        GraphIter::new(self)
+    pub fn iter(&self) -> HierIter<K, V> {
+        HierIter::new(self)
     }
     /// Returns the `NodeIndex` for a particular key.
     fn get_index(&self, key: &K) -> Result<NodeIndex, GraphError> {
@@ -198,22 +182,22 @@ impl<K, V: Clone + Default> HierNode<K, V> {
 }
 
 /// Provides the ability to iterate over all `HierNode`s stored within a `Hierarchy`.
-pub struct GraphIter<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> {
+pub struct HierIter<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> {
     index: usize,
     data: &'a [Node<HierNode<K, V>, DefaultIx>],
 }
 
-impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> GraphIter<'a, K, V> {
+impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> HierIter<'a, K, V> {
     /// Creates a new `Hierarchy`.
     pub fn new(hierarchy: &'a Hierarchy<K, V>) -> Self {
-        GraphIter {
+        HierIter {
             index: 0,
             data: hierarchy.graph.raw_nodes(),
         }
     }
 }
 
-impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> Iterator for GraphIter<'a, K, V> {
+impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> Iterator for HierIter<'a, K, V> {
     type Item = (&'a K, &'a V);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -287,5 +271,22 @@ mod tests {
         });
 
         assert_ok!(r);
+    }
+
+    #[test]
+    fn iteration() {
+        let mut h: Hierarchy<MockKey, f32> = Default::default();
+
+        h.insert(MockKey(1), 1.0);
+        h.insert(MockKey(2), 2.0);
+        h.insert_child(&MockKey(1), MockKey(3), 3.0).unwrap();
+        h.insert_child(&MockKey(1), MockKey(4), 4.0).unwrap();
+        h.insert_child(&MockKey(2), MockKey(5), 5.0).unwrap();
+        h.insert_child(&MockKey(2), MockKey(6), 6.0).unwrap();
+
+        // The node count will be the number of inserted nodes plus 1, because the root node will
+        // always be in the hierarchy.
+        assert_eq!(h.iter().count(), 7);
+        assert_eq!(h.iter().map(|(_, v)| v).sum::<f32>(), 21.0);
     }
 }
