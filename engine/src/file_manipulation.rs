@@ -43,14 +43,12 @@ pub enum FileError {
 #[cfg(test)]
 mod tests {
     use std::env;
-    use tempfile::NamedTempFileOptions;
+    use tempfile::NamedTempFile;
     use super::*;
 
     #[test]
     fn ensure_accessible_file_for_path_buf() {
-        let tf = NamedTempFileOptions::new()
-            .create()
-            .unwrap();
+        let tf = NamedTempFile::new().unwrap();
 
         let tf_path = tf.path().to_path_buf();
         let r = tf_path.ensure_accessible_file();
@@ -80,9 +78,7 @@ mod tests {
         let r = bad_dir.ensure_accessible_directory();
         assert_err!(r);
 
-        let tf = NamedTempFileOptions::new()
-            .create()
-            .unwrap();
+        let tf = NamedTempFile::new().unwrap();
 
         let tf_path = tf.path().to_path_buf();
         let r = tf_path.ensure_accessible_directory();

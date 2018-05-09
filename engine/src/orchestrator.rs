@@ -69,7 +69,7 @@ where
 #[cfg(test)]
 mod tests {
     use std::env;
-    use tempfile::NamedTempFileOptions;
+    use tempfile::NamedTempFile;
     use ecs::mock::MockWorld;
     use super::*;
 
@@ -105,9 +105,7 @@ mod tests {
         let r = Orchestrator::<MockWorld>::new(&PathBuf::from("blablablabla"), Default::default(), Default::default());
         assert_err!(r);
 
-        let tf = NamedTempFileOptions::new()
-            .create()
-            .unwrap();
+        let tf = NamedTempFile::new().unwrap();
         let r = Orchestrator::<MockWorld>::new(tf.path(), Default::default(), Default::default());
         assert_err!(r);
     }
@@ -116,9 +114,7 @@ mod tests {
         let dir_name = ".";
 
         let base = env::temp_dir();
-        let tf = NamedTempFileOptions::new()
-            .create_in(&base)
-            .unwrap();
+        let tf = NamedTempFile::new_in(&base).unwrap();
 
         let o = Orchestrator::<MockWorld>::new(&base, Default::default(), Default::default()).unwrap();
 
