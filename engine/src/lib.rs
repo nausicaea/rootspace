@@ -13,6 +13,7 @@ extern crate winit;
 #[macro_use] extern crate ecs;
 
 pub mod auxiliary;
+pub mod components;
 pub mod context;
 pub mod event;
 pub mod file_manipulation;

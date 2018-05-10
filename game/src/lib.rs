@@ -17,6 +17,7 @@ use engine::context::Context;
 use engine::systems::SystemGroup;
 use engine::systems::event_monitor::EventMonitor;
 use engine::systems::event_interface::EventInterface;
+use engine::systems::open_gl_renderer::OpenGlRenderer;
 
 pub struct Game {
     orchestrator: Orchestrator<World<Event, Context, SystemGroup>>,
@@ -33,6 +34,7 @@ impl Game {
     pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
         self.orchestrator.world.add_system(EventMonitor::default());
         self.orchestrator.world.add_system(EventInterface::new(EventsLoop::new()));
+        self.orchestrator.world.add_system(OpenGlRenderer::new());
         self.orchestrator.world.context.dispatch_later(Event::Ready);
 
         self.orchestrator.run(iterations)?;
