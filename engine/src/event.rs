@@ -1,5 +1,3 @@
-use std::convert::{TryInto, TryFrom};
-use winit::{Event as WinitEvent, EventsLoop as WinitEventsLoop};
 use ecs::event::EventTrait;
 
 #[derive(Clone, Debug)]
@@ -32,35 +30,6 @@ impl EventTrait for Event {
 
     fn matches_filter(&self, flag: Self::EventFlag) -> bool {
         flag.contains(self.as_flag())
-    }
-}
-
-pub trait EventsLoopTrait<E>
-where
-    E: EventTrait,
-{
-    type OsEvent: TryInto<E>;
-
-    fn poll<F>(&mut self, f: F) where F: FnMut(Self::OsEvent);
-}
-
-impl TryFrom<WinitEvent> for Event {
-    type Error = ();
-
-    fn try_from(value: WinitEvent) -> Result<Event, Self::Error> {
-        if let WinitEvent::WindowEvent { event: _we, .. } = value {
-            unimplemented!()
-        } else {
-            Err(())
-        }
-    }
-}
-
-impl EventsLoopTrait<Event> for WinitEventsLoop {
-    type OsEvent = WinitEvent;
-
-    fn poll<F>(&mut self, f: F) where F: FnMut(Self::OsEvent) {
-        self.poll_events(f)
     }
 }
 

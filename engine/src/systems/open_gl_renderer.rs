@@ -1,36 +1,39 @@
 use std::marker::PhantomData;
 use std::time::Duration;
 use failure::Error;
-use ecs::entity::Entity;
-use ecs::event::{EventTrait, EventManagerTrait};
+use ecs::event::EventTrait;
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
-use hierarchy::Hierarchy;
-use components::model::Model;
+use wrappers::{FrameTrait, DisplayTrait};
 
-pub struct OpenGlRenderer<E, C>
+pub struct OpenGlRenderer<E, C, D>
 where
     E: EventTrait,
+    D: DisplayTrait,
 {
     phantom_e: PhantomData<E>,
     phantom_c: PhantomData<C>,
+    phantom_d: PhantomData<D>,
 }
 
-impl<E, C> OpenGlRenderer<E, C>
+impl<E, C, D> OpenGlRenderer<E, C, D>
 where
     E: EventTrait,
+    D: DisplayTrait,
 {
     pub fn new() -> Self {
         OpenGlRenderer {
             phantom_e: Default::default(),
             phantom_c: Default::default(),
+            phantom_d: Default::default(),
         }
     }
 }
 
-impl<E, C> SystemTrait<C, E> for OpenGlRenderer<E, C>
+impl<E, C, D> SystemTrait<C, E> for OpenGlRenderer<E, C, D>
 where
     E: EventTrait,
+    D: DisplayTrait,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::RENDER
@@ -70,21 +73,66 @@ mod test {
     use ecs::mock::{MockEvt, MockCtx};
     use super::*;
 
+    #[derive(Default)]
+    struct MockFrame {
+        pub error_out: bool,
+    }
+
+    impl MockFrame {
+        pub fn new(error_out: bool) -> Self {
+            MockFrame {
+                error_out: error_out,
+            }
+        }
+    }
+
+    impl FrameTrait for MockFrame {
+        type Error = ();
+
+        fn finalize(self) -> Result<(), Self::Error> {
+            if self.error_out {
+                Err(())
+            } else {
+                Ok(())
+            }
+        }
+    }
+
+    struct MockDisplay {
+        pub cause_frame_to_error: bool,
+    }
+
+    impl MockDisplay {
+        pub fn new(cause_frame_to_error: bool) -> Self {
+            MockDisplay {
+                cause_frame_to_error: cause_frame_to_error,
+            }
+        }
+    }
+
+    impl DisplayTrait for MockDisplay {
+        type Frame = MockFrame;
+
+        fn create_frame(&self) -> Self::Frame {
+            MockFrame::new(self.cause_frame_to_error)
+        }
+    }
+
     #[test]
     fn new_renderer() {
-        let _s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>> = OpenGlRenderer::new();
+        let _s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay> = OpenGlRenderer::new();
     }
 
     #[test]
     fn stage_filter() {
-        let s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>> = OpenGlRenderer::new();
+        let s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay> = OpenGlRenderer::new();
         assert_eq!(s.get_stage_filter(), LoopStage::RENDER);
     }
 
     #[test]
     fn render() {
         let mut ctx: MockCtx<MockEvt> = Default::default();
-        let mut s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>> = OpenGlRenderer::new();
+        let mut s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay> = OpenGlRenderer::new();
 
         assert_ok!(s.render(&mut ctx, &Default::default(), &Default::default()));
     }

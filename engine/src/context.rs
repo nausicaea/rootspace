@@ -1,20 +1,15 @@
 use std::collections::VecDeque;
 use failure::Error;
 use ecs::event::EventManagerTrait;
-use ecs::entity::Entity;
-use hierarchy::Hierarchy;
 use event::Event;
-use components::model::Model;
 
 pub struct Context {
-    scene_graph: Hierarchy<Entity, Model>,
     events: VecDeque<Event>,
 }
 
 impl Default for Context {
     fn default() -> Self {
         Context {
-            scene_graph: Default::default(),
             events: Default::default(),
         }
     }

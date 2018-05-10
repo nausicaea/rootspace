@@ -5,7 +5,7 @@ use failure::Error;
 use ecs::event::{EventTrait, EventManagerTrait};
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
-use event::EventsLoopTrait;
+use wrappers::EventsLoopTrait;
 
 pub struct EventInterface<E, C, Z>
 where
