@@ -13,7 +13,7 @@ where
     C: EventManagerTrait<E>,
     Z: EventsLoopTrait<E>,
 {
-    events_loop: Z,
+    pub events_loop: Z,
     phantom_e: PhantomData<E>,
     phantom_c: PhantomData<C>,
 }
@@ -56,44 +56,8 @@ where
 mod tests {
     use std::collections::VecDeque;
     use ecs::mock::{MockEvt, MockCtx};
+    use mock::{MockOsEvent, MockEventsLoop};
     use super::*;
-
-    #[derive(Clone)]
-    enum MockOsEvent {
-        TestEventA(String),
-        TestEventB(u32),
-        TestEventC(f32),
-    }
-
-    impl TryInto<MockEvt> for MockOsEvent {
-        type Error = ();
-
-        fn try_into(self) -> Result<MockEvt, Self::Error> {
-            match self {
-                MockOsEvent::TestEventA(s) => Ok(MockEvt::TestEventA(s)),
-                MockOsEvent::TestEventB(d) => Ok(MockEvt::TestEventB(d)),
-                MockOsEvent::TestEventC(_) => Err(()),
-            }
-        }
-    }
-
-    #[derive(Default)]
-    struct MockEventsLoop {
-        events: VecDeque<MockOsEvent>,
-    }
-
-    impl EventsLoopTrait<MockEvt> for MockEventsLoop {
-        type OsEvent = MockOsEvent;
-
-        fn poll<F>(&mut self, mut handler: F) where F: FnMut(Self::OsEvent) {
-            let tmp = self.events.iter().cloned().collect::<Vec<_>>();
-            self.events.clear();
-
-            for event in tmp {
-                handler(event);
-            }
-        }
-    }
 
     #[test]
     fn default() {

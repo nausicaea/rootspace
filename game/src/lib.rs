@@ -32,9 +32,14 @@ impl Game {
         })
     }
     pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
-        self.orchestrator.world.add_system(EventMonitor::default());
-        self.orchestrator.world.add_system(EventInterface::new(EventsLoop::new()));
-        self.orchestrator.world.add_system(OpenGlRenderer::new());
+        let event_monitor = EventMonitor::default();
+        let event_interface = EventInterface::new(EventsLoop::new());
+        let renderer = OpenGlRenderer::new(&event_interface.events_loop, "Title", &[1024, 768], true, 4, &[0.2, 0.3, 0.0, 1.0]).unwrap();
+
+        self.orchestrator.world.add_system(event_monitor);
+        self.orchestrator.world.add_system(event_interface);
+        self.orchestrator.world.add_system(renderer);
+
         self.orchestrator.world.context.dispatch_later(Event::Ready);
 
         self.orchestrator.run(iterations)?;

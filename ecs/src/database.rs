@@ -2,7 +2,18 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use entity::Entity;
 
-pub trait DatabaseTrait: Default {}
+pub trait DatabaseTrait: Default {
+    fn create_entity(&mut self) -> Entity;
+    fn destroy_entity(&mut self, entity: &Entity) -> Result<(), Error>;
+    fn has_entity(&self, entity: &Entity) -> bool;
+    fn entities(&self) -> usize;
+    fn add<C: Any>(&mut self, entity: Entity, component: C) -> Result<(), Error>;
+    fn remove<C: Any>(&mut self, entity: &Entity) -> Result<C, Error>;
+    fn has<C: Any>(&self, entity: &Entity) -> bool;
+    fn components(&self, entity: &Entity) -> usize;
+    fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, Error>;
+    fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, Error>;
+}
 
 pub struct Database {
     entities: HashMap<Entity, HashMap<TypeId, Box<Any>>>,
@@ -16,25 +27,29 @@ impl Default for Database {
     }
 }
 
-impl Database {
-    pub fn create_entity(&mut self) -> Entity {
+impl DatabaseTrait for Database {
+    fn create_entity(&mut self) -> Entity {
         let e = Entity::default();
         self.entities.insert(e.clone(), Default::default());
         e
     }
-    pub fn destroy_entity(&mut self, entity: &Entity) -> Result<(), Error> {
+
+    fn destroy_entity(&mut self, entity: &Entity) -> Result<(), Error> {
         self.entities.remove(entity)
             .map(|_| ())
             .ok_or(Error::EntityNotFound)
     }
-    pub fn has_entity(&self, entity: &Entity) -> bool {
+
+    fn has_entity(&self, entity: &Entity) -> bool {
         self.entities.contains_key(entity)
     }
-    pub fn entities(&self) -> usize {
+
+    fn entities(&self) -> usize {
         self.entities.len()
     }
-    pub fn add<C>(&mut self, entity: &Entity, component: C) -> Result<(), Error> where C: Any {
-        self.entities.get_mut(entity)
+
+    fn add<C: Any>(&mut self, entity: Entity, component: C) -> Result<(), Error> {
+        self.entities.get_mut(&entity)
             .ok_or(Error::EntityNotFound)
             .and_then(|g| if !g.contains_key(&TypeId::of::<C>()) {
                 g.insert(TypeId::of::<C>(), Box::new(component));
@@ -43,7 +58,8 @@ impl Database {
                 Err(Error::CannotOverwriteComponent)
             })
     }
-    pub fn remove<C>(&mut self, entity: &Entity) -> Result<C, Error> where C: Any {
+
+    fn remove<C: Any>(&mut self, entity: &Entity) -> Result<C, Error> {
         self.entities.get_mut(entity)
             .ok_or(Error::EntityNotFound)
             .and_then(|g| {
@@ -52,17 +68,20 @@ impl Database {
                     .map(|h| *h.downcast().unwrap_or_else(|_| unreachable!()))
             })
     }
-    pub fn has<C>(&self, entity: &Entity) -> bool where C: Any {
+
+    fn has<C: Any>(&self, entity: &Entity) -> bool {
         self.entities.get(entity)
             .map(|g| g.contains_key(&TypeId::of::<C>()))
             .unwrap_or_default()
     }
-    pub fn components(&self, entity: &Entity) -> usize {
+
+    fn components(&self, entity: &Entity) -> usize {
         self.entities.get(entity)
             .map(|g| g.len())
             .unwrap_or_default()
     }
-    pub fn borrow<C>(&self, entity: &Entity) -> Result<&C, Error> where C: Any {
+
+    fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, Error> {
         self.entities.get(entity)
             .ok_or(Error::EntityNotFound)
             .and_then(|g| {
@@ -71,7 +90,8 @@ impl Database {
                     .map(|h| h.downcast_ref().unwrap_or_else(|| unreachable!()))
             })
     }
-    pub fn borrow_mut<C>(&mut self, entity: &Entity) -> Result<&mut C, Error> where C: Any {
+
+    fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, Error> {
         self.entities.get_mut(entity)
             .ok_or(Error::EntityNotFound)
             .and_then(|g| {
@@ -80,9 +100,6 @@ impl Database {
                     .map(|h| h.downcast_mut().unwrap_or_else(|| unreachable!()))
             })
     }
-}
-
-impl DatabaseTrait for Database {
 }
 
 #[derive(Debug, Fail)]
@@ -167,10 +184,10 @@ mod tests {
         let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        assert_ok!(d.add(&e, c.clone()));
+        assert_ok!(d.add(e.clone(), c.clone()));
         assert_eq!(d.components(&e), 1);
         let c = TestTypeB::new(true);
-        assert_ok!(d.add(&e, c.clone()));
+        assert_ok!(d.add(e.clone(), c.clone()));
         assert_eq!(d.components(&e), 2);
     }
 
@@ -179,9 +196,9 @@ mod tests {
         let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        assert_ok!(d.add(&e, c.clone()));
+        assert_ok!(d.add(e.clone(), c.clone()));
         assert_eq!(d.components(&e), 1);
-        assert_err!(d.add(&e, TestTypeA::new(2)));
+        assert_err!(d.add(e.clone(), TestTypeA::new(2)));
         assert_eq!(d.components(&e), 1);
         assert_eq!(d.borrow::<TestTypeA>(&e).unwrap(), &c);
     }
@@ -191,7 +208,7 @@ mod tests {
         let mut d: Database = Default::default();
         let e: Entity = Default::default();
         let c = TestTypeA::new(1);
-        assert_err!(d.add(&e, c.clone()));
+        assert_err!(d.add(e.clone(), c.clone()));
         assert_eq!(d.components(&e), 0);
     }
 
@@ -200,7 +217,7 @@ mod tests {
         let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        d.add(&e, c.clone()).unwrap();
+        d.add(e.clone(), c.clone()).unwrap();
         assert_eq!(d.components(&e), 1);
         let r = d.remove::<TestTypeA>(&e);
         assert_ok!(r);
@@ -227,7 +244,7 @@ mod tests {
         let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        d.add(&e, c.clone()).unwrap();
+        d.add(e.clone(), c.clone()).unwrap();
         assert!(d.has::<TestTypeA>(&e));
     }
 
@@ -250,7 +267,7 @@ mod tests {
         let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        d.add(&e, c.clone()).unwrap();
+        d.add(e.clone(), c.clone()).unwrap();
         let r = d.borrow::<TestTypeA>(&e);
         assert_ok!(r);
         assert_eq!(r.unwrap(), &c);
@@ -275,7 +292,7 @@ mod tests {
         let mut d: Database = Default::default();
         let e = d.create_entity();
         let c = TestTypeA::new(1);
-        d.add(&e, c.clone()).unwrap();
+        d.add(e.clone(), c.clone()).unwrap();
         {
             let r = d.borrow_mut::<TestTypeA>(&e);
             assert_ok!(r);

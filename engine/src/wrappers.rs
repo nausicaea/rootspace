@@ -1,6 +1,6 @@
 use std::convert::{TryInto, TryFrom};
 use winit::{Event as WinitEvent, EventsLoop as WinitEventsLoop};
-use glium::{Frame as GliumFrame, Display as GliumDisplay, SwapBuffersError};
+use glium::{Frame as GliumFrame, Display as GliumDisplay, SwapBuffersError, backend::glutin::DisplayCreationError};
 use ecs::event::EventTrait;
 use event::Event;
 
@@ -47,14 +47,26 @@ impl FrameTrait for GliumFrame {
     }
 }
 
-pub trait DisplayTrait {
+pub trait DisplayTrait
+where
+    Self: Sized,
+{
+    type Error;
+    type EventsLoop;
     type Frame: FrameTrait;
 
+    fn create(events_loop: &Self::EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16) -> Result<Self, Self::Error>;
     fn create_frame(&self) -> Self::Frame;
 }
 
 impl DisplayTrait for GliumDisplay {
+    type Error = DisplayCreationError;
+    type EventsLoop = WinitEventsLoop;
     type Frame = GliumFrame;
+
+    fn create(events_loop: &Self::EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16) -> Result<Self, Self::Error> {
+        unimplemented!()
+    }
 
     fn create_frame(&self) -> Self::Frame {
         self.draw()

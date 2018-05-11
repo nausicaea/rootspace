@@ -17,6 +17,7 @@ pub mod components;
 pub mod context;
 pub mod event;
 pub mod file_manipulation;
+pub mod mock;
 pub mod orchestrator;
 pub mod systems;
 pub mod wrappers;

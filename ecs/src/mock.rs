@@ -3,7 +3,6 @@ use std::marker::PhantomData;
 use std::time::Duration;
 use std::thread;
 use failure::Error;
-use database::DatabaseTrait;
 use event::{EventTrait, EventManagerTrait};
 use loop_stage::LoopStage;
 use system::SystemTrait;
@@ -137,11 +136,6 @@ where
 
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct MockAux;
-
-#[derive(Default, Clone, Debug, PartialEq)]
-pub struct MockDb;
-
-impl DatabaseTrait for MockDb {}
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct MockSysA<C, E>
