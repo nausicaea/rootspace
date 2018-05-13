@@ -54,7 +54,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::collections::VecDeque;
     use ecs::mock::{MockEvt, MockCtx};
     use mock::{MockOsEvent, MockEventsLoop};
     use super::*;
@@ -75,12 +74,12 @@ mod tests {
         let mut ctx = MockCtx::<MockEvt>::default();
         let mut s = EventInterface::<MockEvt, MockCtx<MockEvt>, MockEventsLoop>::new(MockEventsLoop::default());
 
-        s.events_loop.events.push_back(MockOsEvent::TestEventA("hello".into()));
-        s.events_loop.events.push_back(MockOsEvent::TestEventB(100));
-        s.events_loop.events.push_back(MockOsEvent::TestEventC(1.0));
+        s.events_loop.enqueue(MockOsEvent::TestEventA("hello".into()));
+        s.events_loop.enqueue(MockOsEvent::TestEventB(100));
+        s.events_loop.enqueue(MockOsEvent::TestEventC(1.0));
 
         assert_ok!(s.update(&mut ctx, &Default::default(), &Default::default()));
-        assert!(s.events_loop.events.is_empty());
+        assert!(s.events_loop.is_empty());
         assert_eq!(ctx.events.len(), 2);
     }
 }

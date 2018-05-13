@@ -4,7 +4,7 @@ use failure::Error;
 use ecs::event::EventTrait;
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
-use wrappers::{FrameTrait, DisplayTrait, EventsLoopTrait};
+use wrappers::{FrameTrait, DisplayTrait};
 
 pub struct OpenGlRenderer<E, C, D>
 where
@@ -85,19 +85,19 @@ mod test {
 
     #[test]
     fn new_renderer() {
-        let _s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay> = OpenGlRenderer::new();
+        let _s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay> = OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, &[1.0, 1.0, 1.0, 1.0]).unwrap();
     }
 
     #[test]
     fn stage_filter() {
-        let s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay> = OpenGlRenderer::new();
+        let s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay> = OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, &[1.0, 1.0, 1.0, 1.0]).unwrap();
         assert_eq!(s.get_stage_filter(), LoopStage::RENDER);
     }
 
     #[test]
     fn render() {
         let mut ctx: MockCtx<MockEvt> = Default::default();
-        let mut s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay> = OpenGlRenderer::new();
+        let mut s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay> = OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, &[1.0, 1.0, 1.0, 1.0]).unwrap();
 
         assert_ok!(s.render(&mut ctx, &Default::default(), &Default::default()));
     }
