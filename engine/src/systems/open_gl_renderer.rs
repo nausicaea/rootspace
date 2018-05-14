@@ -37,6 +37,31 @@ where
             phantom_c: Default::default(),
         })
     }
+
+    pub fn initialize_frame(&self) -> D::Frame {
+        let mut target = self.display.draw();
+        target.clear_color_and_depth(self.clear_color, 1.0);
+        target
+    }
+
+    pub fn get_graph_nodes(&self, ctx: &mut C, sort_nodes: bool) -> Result<Vec<()>, Error> {
+        ctx.scene_graph
+            .update(&|entity, _, parent_model| {
+                let current_model = ctx.borrow_component(entity).ok()?;
+                Some(parent_model * current_model)
+            })?;
+
+        let mut nodes = ctx.scene_graph.iter().collect::<Vec<_>>();
+        if sort_nodes {
+            self.sort_graph_nodes(&mut nodes);
+        }
+
+        Ok(nodes)
+    }
+
+    pub fn sort_graph_nodes(&self, nodes: &mut Vec<()>) {
+        nodes.sort_unstable_by_key(|(_, model)| (model.translation().z / f32::EPSILON).round() as i32);
+    }
 }
 
 impl<E, C, D> SystemTrait<C, E> for OpenGlRenderer<E, C, D>
@@ -48,32 +73,22 @@ where
         LoopStage::RENDER
     }
 
-    fn render(&mut self, _ctx: &mut C, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
-        // // Create the current frame.
-        // let mut target = self.display.draw();
-        // target.clear_color_and_depth(self.clear_color, 1.0);
+    fn render(&mut self, ctx: &mut C, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
+        // Create the current frame.
+        let mut target = self.initialize_frame();
 
-        // // Update the scene graph.
-        // ctx.scene_graph
-        //     .update(&|entity, _, parent_model| {
-        //         let current_model = ctx.borrow_component(entity).ok()?;
-        //         Some(parent_model * current_model)
-        //     })
-        //     .unwrap();
+        // Update the scene graph and sort the nodes according to their z-value.
+        let _nodes = self.get_graph_nodes(ctx, true)?;
+
         // // Get a reference to the camera.
         // // Get a reference to the Ui state
-        // // Sort the nodes according to their z-value
-        // let mut nodes = ctx.scene_graph.iter().collect::<Vec<_>>();
-        // nodes.sort_unstable_by_key(|(_, model)| (model.translation().z / f32::EPSILON).round() as i32);
 
         // // Render all entities
         // for (entity, model) in nodes {
         // }
 
         // // Finalize the frame
-        // target.finish().unwrap();
-
-        Ok(())
+        target.finish()?;
     }
 }
 
