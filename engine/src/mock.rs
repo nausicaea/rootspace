@@ -27,6 +27,16 @@ pub struct MockEventsLoop {
     events: VecDeque<MockOsEvent>,
 }
 
+impl MockEventsLoop {
+    pub fn enqueue(&mut self, event: MockOsEvent) {
+        self.events.push_back(event);
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.events.is_empty()
+    }
+}
+
 impl EventsLoopTrait<MockEvt> for MockEventsLoop {
     type OsEvent = MockOsEvent;
 
