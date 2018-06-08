@@ -53,18 +53,24 @@ impl EventsLoopTrait<MockEvt> for MockEventsLoop {
 #[derive(Default)]
 pub struct MockFrame {
     pub error_out: bool,
+    pub clear_call_count: usize,
 }
 
 impl MockFrame {
     pub fn new(error_out: bool) -> Self {
         MockFrame {
             error_out: error_out,
+            clear_call_count: 0,
         }
     }
 }
 
 impl FrameTrait for MockFrame {
     type Error = ();
+
+    fn clear(&mut self, color: &[f32; 4], depth: f32) {
+        self.clear_call_count += 1
+    }
 
     fn finalize(self) -> Result<(), Self::Error> {
         if self.error_out {

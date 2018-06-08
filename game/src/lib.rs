@@ -1,13 +1,13 @@
 extern crate log;
 extern crate failure;
-extern crate winit;
+extern crate glium;
 extern crate ecs;
 extern crate engine;
 
 use std::path::Path;
 use std::time::Duration;
 use failure::Error;
-use winit::EventsLoop;
+use glium::glutin::EventsLoop;
 use ecs::world::World;
 use ecs::event::EventManagerTrait;
 use engine::orchestrator::Orchestrator;
@@ -34,7 +34,7 @@ impl Game {
     pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
         let event_monitor = EventMonitor::default();
         let event_interface = EventInterface::new(EventsLoop::new());
-        let renderer = OpenGlRenderer::new(&event_interface.events_loop, "Title", &[1024, 768], true, 4, &[0.2, 0.3, 0.0, 1.0]).unwrap();
+        let renderer = OpenGlRenderer::new(&event_interface.events_loop, "Title", &[1024, 768], true, 4, [0.2, 0.3, 0.0, 1.0]).unwrap();
 
         self.orchestrator.world.add_system(event_monitor);
         self.orchestrator.world.add_system(event_interface);

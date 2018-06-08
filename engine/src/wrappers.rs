@@ -1,6 +1,6 @@
 use std::convert::{TryInto, TryFrom};
-use winit::{Event as WinitEvent, EventsLoop as WinitEventsLoop};
-use glium::{Frame as GliumFrame, Display as GliumDisplay, SwapBuffersError, backend::glutin::DisplayCreationError};
+use glium::glutin::{Event as WinitEvent, EventsLoop as WinitEventsLoop};
+use glium::{Surface as GliumSurface, Frame as GliumFrame, Display as GliumDisplay, SwapBuffersError, backend::glutin::DisplayCreationError};
 use ecs::event::EventTrait;
 use event::Event;
 
@@ -36,14 +36,19 @@ impl EventsLoopTrait<Event> for WinitEventsLoop {
 pub trait FrameTrait {
     type Error;
 
-    fn finalize(self) -> Result<(), Self::Error>;
+    fn clear(&mut self, color: &[f32; 4], depth: f32);
+    fn finalize(self) -> Result<(), failure::Error>;
 }
 
 impl FrameTrait for GliumFrame {
     type Error = SwapBuffersError;
 
-    fn finalize(self) -> Result<(), Self::Error> {
-        self.finish()
+    fn clear(&mut self, color: &[f32; 4], depth: f32) {
+        self.clear_color_and_depth((color[0], color[1], color[2], color[3]), depth)
+    }
+
+    fn finalize(self) -> Result<(), failure::Error> {
+        self.finish()?
     }
 }
 

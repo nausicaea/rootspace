@@ -8,8 +8,6 @@ extern crate glium;
 #[macro_use] extern crate log;
 #[cfg(test)] #[macro_use] extern crate quickcheck;
 #[cfg(test)] extern crate tempfile;
-extern crate vulkano;
-extern crate winit;
 #[macro_use] extern crate ecs;
 
 pub mod auxiliary;
