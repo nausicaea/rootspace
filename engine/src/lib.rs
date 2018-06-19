@@ -10,11 +10,12 @@ extern crate glium;
 #[cfg(test)] extern crate tempfile;
 #[macro_use] extern crate ecs;
 
-pub mod auxiliary;
+//pub mod auxiliary;
 pub mod components;
 pub mod context;
 pub mod event;
 pub mod file_manipulation;
+pub mod math;
 pub mod mock;
 pub mod orchestrator;
 pub mod systems;

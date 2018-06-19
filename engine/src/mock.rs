@@ -1,7 +1,22 @@
-use std::convert::TryInto;
 use std::collections::VecDeque;
-use ecs::mock::MockEvt;
+use std::convert::TryInto;
+use std::f32;
+use std::ops::Mul;
+use failure::Error as FailureError;
+use ecs::entity::Entity;
+use ecs::mock::{MockEvt, MockCtx};
+use math::DepthOrderingTrait;
 use wrappers::{FrameTrait, DisplayTrait, EventsLoopTrait};
+use context::SceneGraphTrait;
+
+impl SceneGraphTrait<Entity, MockModel> for MockCtx<MockEvt> {
+    fn get_current_nodes(&mut self, _sort_nodes: bool) -> Result<Vec<(&Entity, &MockModel)>, FailureError> {
+        Ok(Vec::new())
+    }
+
+    fn sort_graph_nodes(&self, _nodes: &mut [(&Entity, &MockModel)]) {
+    }
+}
 
 #[derive(Clone)]
 pub enum MockOsEvent {
@@ -50,6 +65,23 @@ impl EventsLoopTrait<MockEvt> for MockEventsLoop {
     }
 }
 
+#[derive(Clone, Default)]
+pub struct MockModel(f32);
+
+impl DepthOrderingTrait for MockModel {
+    fn depth_index(&self) -> i32 {
+        (self.0 / f32::EPSILON).round() as i32
+    }
+}
+
+impl<'a, 'b> Mul<&'b MockModel> for &'a MockModel {
+    type Output = MockModel;
+
+    fn mul(self, rhs: &'b MockModel) -> Self::Output {
+        MockModel(self.0 * rhs.0)
+    }
+}
+
 #[derive(Default)]
 pub struct MockFrame {
     pub error_out: bool,
@@ -66,15 +98,13 @@ impl MockFrame {
 }
 
 impl FrameTrait for MockFrame {
-    type Error = ();
-
-    fn clear(&mut self, color: &[f32; 4], depth: f32) {
+    fn clear(&mut self, _color: &[f32; 4], _depth: f32) {
         self.clear_call_count += 1
     }
 
-    fn finalize(self) -> Result<(), Self::Error> {
+    fn finalize(self) -> Result<(), FailureError> {
         if self.error_out {
-            Err(())
+            Err(format_err!("MockFrame had an error."))
         } else {
             Ok(())
         }
@@ -94,11 +124,10 @@ impl MockDisplay {
 }
 
 impl DisplayTrait for MockDisplay {
-    type Error = ();
     type EventsLoop = ();
     type Frame = MockFrame;
 
-    fn create(_events_loop: &Self::EventsLoop, _title: &str, _dimensions: &[u32; 2], _vsync: bool, _msaa: u16) -> Result<Self, Self::Error> {
+    fn create(_events_loop: &Self::EventsLoop, _title: &str, _dimensions: &[u32; 2], _vsync: bool, _msaa: u16) -> Result<Self, FailureError> {
         Ok(MockDisplay::new(false))
     }
 

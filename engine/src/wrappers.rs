@@ -1,6 +1,7 @@
 use std::convert::{TryInto, TryFrom};
+use failure::Error as FailureError;
 use glium::glutin::{Event as WinitEvent, EventsLoop as WinitEventsLoop};
-use glium::{Surface as GliumSurface, Frame as GliumFrame, Display as GliumDisplay, SwapBuffersError, backend::glutin::DisplayCreationError};
+use glium::{Surface as GliumSurface, Frame as GliumFrame, Display as GliumDisplay};
 use ecs::event::EventTrait;
 use event::Event;
 
@@ -34,21 +35,21 @@ impl EventsLoopTrait<Event> for WinitEventsLoop {
 }
 
 pub trait FrameTrait {
-    type Error;
-
     fn clear(&mut self, color: &[f32; 4], depth: f32);
-    fn finalize(self) -> Result<(), failure::Error>;
+    fn finalize(self) -> Result<(), FailureError>;
 }
 
 impl FrameTrait for GliumFrame {
-    type Error = SwapBuffersError;
-
     fn clear(&mut self, color: &[f32; 4], depth: f32) {
         self.clear_color_and_depth((color[0], color[1], color[2], color[3]), depth)
     }
 
-    fn finalize(self) -> Result<(), failure::Error> {
-        self.finish()?
+    fn finalize(self) -> Result<(), FailureError> {
+        if let Err(e) = self.finish() {
+            Err(Into::into(e))
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -56,20 +57,18 @@ pub trait DisplayTrait
 where
     Self: Sized,
 {
-    type Error;
     type EventsLoop;
     type Frame: FrameTrait;
 
-    fn create(events_loop: &Self::EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16) -> Result<Self, Self::Error>;
+    fn create(events_loop: &Self::EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16) -> Result<Self, FailureError>;
     fn create_frame(&self) -> Self::Frame;
 }
 
 impl DisplayTrait for GliumDisplay {
-    type Error = DisplayCreationError;
     type EventsLoop = WinitEventsLoop;
     type Frame = GliumFrame;
 
-    fn create(events_loop: &Self::EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16) -> Result<Self, Self::Error> {
+    fn create(_events_loop: &Self::EventsLoop, _title: &str, _dimensions: &[u32; 2], _vsync: bool, _msaa: u16) -> Result<Self, FailureError> {
         unimplemented!()
     }
 

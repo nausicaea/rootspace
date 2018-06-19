@@ -1,15 +1,19 @@
+use std::any::Any;
 use std::collections::VecDeque;
 use std::hash::Hash;
 use failure::Error;
 use hierarchy::Hierarchy;
+use ecs::database::{DatabaseTrait, Database, Error as DatabaseError};
 use ecs::event::EventManagerTrait;
 use ecs::entity::Entity;
 use event::Event;
 use components::model::Model;
+use math::DepthOrderingTrait;
 
 pub struct Context {
     events: VecDeque<Event>,
     scene_graph: Hierarchy<Entity, Model>,
+    database: Database,
 }
 
 impl Default for Context {
@@ -17,6 +21,7 @@ impl Default for Context {
         Context {
             events: Default::default(),
             scene_graph: Default::default(),
+            database: Default::default(),
         }
     }
 }
@@ -45,16 +50,70 @@ where
     K: Clone + Default + Eq + Hash,
     V: Clone + Default,
 {
-    fn scene_graph(&self) -> &Hierarchy<K, V>;
-    fn scene_graph_mut(&mut self) -> &mut Hierarchy<K, V>;
+    fn get_current_nodes(&mut self, sort_nodes: bool) -> Result<Vec<(&Entity, &V)>, Error>;
+    fn sort_graph_nodes(&self, nodes: &mut [(&Entity, &V)]);
 }
 
 impl SceneGraphTrait<Entity, Model> for Context {
-    fn scene_graph(&self) -> &Hierarchy<Entity, Model> {
-        &self.scene_graph
+    fn get_current_nodes(&mut self, sort_nodes: bool) -> Result<Vec<(&Entity, &Model)>, Error> {
+        let db = &self.database;
+        self.scene_graph
+            .update(&|entity, _, parent_model| {
+                let current_model = db.borrow(entity).ok()?;
+                Some(parent_model * current_model)
+            })?;
+
+        let mut nodes = self.scene_graph.iter().collect::<Vec<_>>();
+        if sort_nodes {
+            self.sort_graph_nodes(&mut nodes);
+        }
+
+        Ok(nodes)
     }
 
-    fn scene_graph_mut(&mut self) -> &mut Hierarchy<Entity, Model> {
-        &mut self.scene_graph
+    fn sort_graph_nodes(&self, nodes: &mut [(&Entity, &Model)]) {
+        nodes.sort_unstable_by_key(|(_, v)| v.depth_index());
+    }
+}
+
+impl DatabaseTrait for Context {
+    fn create_entity(&mut self) -> Entity {
+        self.database.create_entity()
+    }
+
+    fn destroy_entity(&mut self, entity: &Entity) -> Result<(), DatabaseError> {
+        self.database.destroy_entity(entity)
+    }
+
+    fn has_entity(&self, entity: &Entity) -> bool {
+        self.database.has_entity(entity)
+    }
+
+    fn entities(&self) -> usize {
+        self.database.entities()
+    }
+
+    fn add<C: Any>(&mut self, entity: Entity, component: C) -> Result<(), DatabaseError> {
+        self.database.add::<C>(entity, component)
+    }
+
+    fn remove<C: Any>(&mut self, entity: &Entity) -> Result<C, DatabaseError> {
+        self.database.remove(entity)
+    }
+
+    fn has<C: Any>(&self, entity: &Entity) -> bool {
+        self.database.has::<C>(entity)
+    }
+
+    fn components(&self, entity: &Entity) -> usize {
+        self.database.components(entity)
+    }
+
+    fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, DatabaseError> {
+        self.database.borrow::<C>(entity)
+    }
+
+    fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, DatabaseError> {
+        self.database.borrow_mut::<C>(entity)
     }
 }
