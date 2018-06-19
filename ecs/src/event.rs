@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use failure::Error;
+use std::fmt::Debug;
 
 pub trait EventTrait: Clone + Debug {
     type EventFlag: Default + Clone + Copy;
@@ -10,5 +10,6 @@ pub trait EventTrait: Clone + Debug {
 pub trait EventManagerTrait<E: EventTrait> {
     fn dispatch_later(&mut self, event: E);
     fn handle_events<F>(&mut self, handler: F) -> Result<bool, Error>
-        where F: FnMut(&mut Self, &E) -> Result<bool, Error>;
+    where
+        F: FnMut(&mut Self, &E) -> Result<bool, Error>;
 }

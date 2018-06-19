@@ -1,8 +1,8 @@
-use std::marker::PhantomData;
-use failure::Error;
 use ecs::event::EventTrait;
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
+use failure::Error;
+use std::marker::PhantomData;
 
 pub struct EventMonitor<E, C>
 where
@@ -42,8 +42,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ecs::mock::{MockEvt, MockEvtFlag, MockCtx};
     use super::*;
+    use ecs::mock::{MockCtx, MockEvt, MockEvtFlag};
 
     #[test]
     fn default() {

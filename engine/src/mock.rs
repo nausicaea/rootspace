@@ -1,21 +1,23 @@
+use context::SceneGraphTrait;
+use ecs::entity::Entity;
+use ecs::mock::{MockCtx, MockEvt};
+use failure::Error as FailureError;
+use math::DepthOrderingTrait;
 use std::collections::VecDeque;
 use std::convert::TryInto;
 use std::f32;
 use std::ops::Mul;
-use failure::Error as FailureError;
-use ecs::entity::Entity;
-use ecs::mock::{MockEvt, MockCtx};
-use math::DepthOrderingTrait;
-use wrappers::{FrameTrait, DisplayTrait, EventsLoopTrait};
-use context::SceneGraphTrait;
+use wrappers::{DisplayTrait, EventsLoopTrait, FrameTrait};
 
 impl SceneGraphTrait<Entity, MockModel> for MockCtx<MockEvt> {
-    fn get_current_nodes(&mut self, _sort_nodes: bool) -> Result<Vec<(&Entity, &MockModel)>, FailureError> {
+    fn get_current_nodes(
+        &mut self,
+        _sort_nodes: bool,
+    ) -> Result<Vec<(&Entity, &MockModel)>, FailureError> {
         Ok(Vec::new())
     }
 
-    fn sort_graph_nodes(&self, _nodes: &mut [(&Entity, &MockModel)]) {
-    }
+    fn sort_graph_nodes(&self, _nodes: &mut [(&Entity, &MockModel)]) {}
 }
 
 #[derive(Clone)]
@@ -55,7 +57,10 @@ impl MockEventsLoop {
 impl EventsLoopTrait<MockEvt> for MockEventsLoop {
     type OsEvent = MockOsEvent;
 
-    fn poll<F>(&mut self, mut handler: F) where F: FnMut(Self::OsEvent) {
+    fn poll<F>(&mut self, mut handler: F)
+    where
+        F: FnMut(Self::OsEvent),
+    {
         let tmp = self.events.iter().cloned().collect::<Vec<_>>();
         self.events.clear();
 
@@ -127,7 +132,13 @@ impl DisplayTrait for MockDisplay {
     type EventsLoop = ();
     type Frame = MockFrame;
 
-    fn create(_events_loop: &Self::EventsLoop, _title: &str, _dimensions: &[u32; 2], _vsync: bool, _msaa: u16) -> Result<Self, FailureError> {
+    fn create(
+        _events_loop: &Self::EventsLoop,
+        _title: &str,
+        _dimensions: &[u32; 2],
+        _vsync: bool,
+        _msaa: u16,
+    ) -> Result<Self, FailureError> {
         Ok(MockDisplay::new(false))
     }
 
@@ -135,4 +146,3 @@ impl DisplayTrait for MockDisplay {
         MockFrame::new(self.cause_frame_to_error)
     }
 }
-

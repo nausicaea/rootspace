@@ -7,4 +7,3 @@ bitflags! {
         const HANDLE_EVENTS = 0x08;
     }
 }
-

@@ -1,14 +1,14 @@
+use components::model::Model;
+use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
+use ecs::entity::Entity;
+use ecs::event::EventManagerTrait;
+use event::Event;
+use failure::Error;
+use hierarchy::Hierarchy;
+use math::DepthOrderingTrait;
 use std::any::Any;
 use std::collections::VecDeque;
 use std::hash::Hash;
-use failure::Error;
-use hierarchy::Hierarchy;
-use ecs::database::{DatabaseTrait, Database, Error as DatabaseError};
-use ecs::event::EventManagerTrait;
-use ecs::entity::Entity;
-use event::Event;
-use components::model::Model;
-use math::DepthOrderingTrait;
 
 pub struct Context {
     events: VecDeque<Event>,
@@ -57,11 +57,10 @@ where
 impl SceneGraphTrait<Entity, Model> for Context {
     fn get_current_nodes(&mut self, sort_nodes: bool) -> Result<Vec<(&Entity, &Model)>, Error> {
         let db = &self.database;
-        self.scene_graph
-            .update(&|entity, _, parent_model| {
-                let current_model = db.borrow(entity).ok()?;
-                Some(parent_model * current_model)
-            })?;
+        self.scene_graph.update(&|entity, _, parent_model| {
+            let current_model = db.borrow(entity).ok()?;
+            Some(parent_model * current_model)
+        })?;
 
         let mut nodes = self.scene_graph.iter().collect::<Vec<_>>();
         if sort_nodes {

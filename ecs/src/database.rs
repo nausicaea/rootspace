@@ -1,6 +1,6 @@
+use entity::Entity;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
-use entity::Entity;
 
 pub trait DatabaseTrait: Default {
     fn create_entity(&mut self) -> Entity;
@@ -35,7 +35,8 @@ impl DatabaseTrait for Database {
     }
 
     fn destroy_entity(&mut self, entity: &Entity) -> Result<(), Error> {
-        self.entities.remove(entity)
+        self.entities
+            .remove(entity)
             .map(|_| ())
             .ok_or(Error::EntityNotFound)
     }
@@ -49,18 +50,22 @@ impl DatabaseTrait for Database {
     }
 
     fn add<C: Any>(&mut self, entity: Entity, component: C) -> Result<(), Error> {
-        self.entities.get_mut(&entity)
+        self.entities
+            .get_mut(&entity)
             .ok_or(Error::EntityNotFound)
-            .and_then(|g| if !g.contains_key(&TypeId::of::<C>()) {
-                g.insert(TypeId::of::<C>(), Box::new(component));
-                Ok(())
-            } else {
-                Err(Error::CannotOverwriteComponent)
+            .and_then(|g| {
+                if !g.contains_key(&TypeId::of::<C>()) {
+                    g.insert(TypeId::of::<C>(), Box::new(component));
+                    Ok(())
+                } else {
+                    Err(Error::CannotOverwriteComponent)
+                }
             })
     }
 
     fn remove<C: Any>(&mut self, entity: &Entity) -> Result<C, Error> {
-        self.entities.get_mut(entity)
+        self.entities
+            .get_mut(entity)
             .ok_or(Error::EntityNotFound)
             .and_then(|g| {
                 g.remove(&TypeId::of::<C>())
@@ -70,19 +75,22 @@ impl DatabaseTrait for Database {
     }
 
     fn has<C: Any>(&self, entity: &Entity) -> bool {
-        self.entities.get(entity)
+        self.entities
+            .get(entity)
             .map(|g| g.contains_key(&TypeId::of::<C>()))
             .unwrap_or_default()
     }
 
     fn components(&self, entity: &Entity) -> usize {
-        self.entities.get(entity)
+        self.entities
+            .get(entity)
             .map(|g| g.len())
             .unwrap_or_default()
     }
 
     fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, Error> {
-        self.entities.get(entity)
+        self.entities
+            .get(entity)
             .ok_or(Error::EntityNotFound)
             .and_then(|g| {
                 g.get(&TypeId::of::<C>())
@@ -92,7 +100,8 @@ impl DatabaseTrait for Database {
     }
 
     fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, Error> {
-        self.entities.get_mut(entity)
+        self.entities
+            .get_mut(entity)
             .ok_or(Error::EntityNotFound)
             .and_then(|g| {
                 g.get_mut(&TypeId::of::<C>())

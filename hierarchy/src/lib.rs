@@ -1,14 +1,17 @@
 //! Provides a hierarchical data structure, called `Hierarchy`.
 
-#[cfg(test)] #[macro_use] extern crate assertions;
-#[macro_use] extern crate failure;
+#[cfg(test)]
+#[macro_use]
+extern crate assertions;
+#[macro_use]
+extern crate failure;
 extern crate daggy;
 
-use std::collections::HashMap;
-use std::hash::Hash;
-use daggy::{Dag, NodeIndex};
 use daggy::petgraph::graph::{DefaultIx, Node};
 use daggy::petgraph::visit::{Bfs, Walker};
+use daggy::{Dag, NodeIndex};
+use std::collections::HashMap;
+use std::hash::Hash;
 
 /// Given a set of identifying keys and corresponding data, `Hierarchy` allows users to establish
 /// hierarchical relationships between individual instances of the data type.
@@ -88,7 +91,8 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
     /// Inserts a `HierNode` as child of the root `HierNode`.
     pub fn insert(&mut self, child: K, data: V) {
         let parent = self.root_key.clone();
-        self.insert_child(&parent, child, data).unwrap_or_else(|_| unreachable!())
+        self.insert_child(&parent, child, data)
+            .unwrap_or_else(|_| unreachable!())
     }
     /// Inserts a `HierNode` as child of another `HierNode` identified by its key.
     pub fn insert_child(&mut self, parent: &K, child: K, data: V) -> Result<(), GraphError> {
@@ -116,7 +120,8 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
         while let Some(nidx) = bfs.next(self.graph.graph()) {
             let mut parents = self.graph.parents(nidx);
             if let Some((_, parent_idx)) = parents.walk_next(&self.graph) {
-                let parent_data = self.graph
+                let parent_data = self
+                    .graph
                     .node_weight(parent_idx)
                     .map(|n| n.data.clone())
                     .ok_or(GraphError::NodeNotFound)?;
@@ -142,7 +147,8 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
     fn rebuild_index(&mut self) {
         self.index.clear();
         for idx in self.graph.graph().node_indices() {
-            let node = self.graph
+            let node = self
+                .graph
                 .node_weight(idx)
                 .unwrap_or_else(|| unreachable!());
             self.index.insert(node.key.clone(), idx);
@@ -197,7 +203,9 @@ impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> HierIter<
     }
 }
 
-impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> Iterator for HierIter<'a, K, V> {
+impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> Iterator
+    for HierIter<'a, K, V>
+{
     type Item = (&'a K, &'a V);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -213,10 +221,14 @@ impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> Iterator 
 
 #[derive(Debug, Fail)]
 pub enum GraphError {
-    #[fail(display = "The key was not found.")] KeyNotFound,
-    #[fail(display = "The key was found more than once.")] MultipleKeysFound,
-    #[fail(display = "The root node may not be removed.")] CannotRemoveRootNode,
-    #[fail(display = "The specified node was not found.")] NodeNotFound,
+    #[fail(display = "The key was not found.")]
+    KeyNotFound,
+    #[fail(display = "The key was found more than once.")]
+    MultipleKeysFound,
+    #[fail(display = "The root node may not be removed.")]
+    CannotRemoveRootNode,
+    #[fail(display = "The specified node was not found.")]
+    NodeNotFound,
 }
 
 #[cfg(test)]
@@ -259,9 +271,7 @@ mod tests {
         h.insert_child(&MockKey(2), MockKey(5), 5.0).unwrap();
         h.insert_child(&MockKey(2), MockKey(6), 6.0).unwrap();
 
-        let r = h.update(&|_id, _value, parent_value| {
-            Some(parent_value + 1.0)
-        });
+        let r = h.update(&|_id, _value, parent_value| Some(parent_value + 1.0));
 
         assert_ok!(r);
 

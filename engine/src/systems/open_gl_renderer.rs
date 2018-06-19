@@ -1,15 +1,15 @@
-use std::f32;
-use std::marker::PhantomData;
-use std::ops::Mul;
-use std::time::Duration;
-use failure::Error;
+use context::SceneGraphTrait;
 use ecs::entity::Entity;
 use ecs::event::EventTrait;
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
-use context::SceneGraphTrait;
+use failure::Error;
 use math::DepthOrderingTrait;
-use wrappers::{FrameTrait, DisplayTrait};
+use std::f32;
+use std::marker::PhantomData;
+use std::ops::Mul;
+use std::time::Duration;
+use wrappers::{DisplayTrait, FrameTrait};
 
 pub struct OpenGlRenderer<E, C, D, V>
 where
@@ -34,7 +34,14 @@ where
     C: SceneGraphTrait<Entity, V>,
     D: DisplayTrait,
 {
-    pub fn new(events_loop: &D::EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16, clear_color: [f32; 4]) -> Result<Self, Error> {
+    pub fn new(
+        events_loop: &D::EventsLoop,
+        title: &str,
+        dimensions: &[u32; 2],
+        vsync: bool,
+        msaa: u16,
+        clear_color: [f32; 4],
+    ) -> Result<Self, Error> {
         let display = D::create(events_loop, title, dimensions, vsync, msaa)?;
 
         Ok(OpenGlRenderer {
@@ -86,25 +93,28 @@ where
 
 #[cfg(test)]
 mod test {
-    use ecs::mock::{MockEvt, MockCtx};
-    use mock::{MockDisplay, MockModel};
     use super::*;
+    use ecs::mock::{MockCtx, MockEvt};
+    use mock::{MockDisplay, MockModel};
 
     #[test]
     fn new_renderer() {
-        let _s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> = OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let _s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
+            OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
     }
 
     #[test]
     fn stage_filter() {
-        let s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> = OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
+            OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
         assert_eq!(s.get_stage_filter(), LoopStage::RENDER);
     }
 
     #[test]
     fn render() {
         let mut ctx: MockCtx<MockEvt> = Default::default();
-        let mut s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> = OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let mut s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
+            OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
 
         assert_ok!(s.render(&mut ctx, &Default::default(), &Default::default()));
     }

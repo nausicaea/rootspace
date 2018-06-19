@@ -1,12 +1,19 @@
 use std::path::PathBuf;
 
 pub trait VerifyPath {
-    fn ensure_accessible_file(self) -> Result<Self, FileError> where Self: Sized;
-    fn ensure_accessible_directory(self) -> Result<Self, FileError> where Self: Sized;
+    fn ensure_accessible_file(self) -> Result<Self, FileError>
+    where
+        Self: Sized;
+    fn ensure_accessible_directory(self) -> Result<Self, FileError>
+    where
+        Self: Sized;
 }
 
 impl VerifyPath for PathBuf {
-    fn ensure_accessible_file(self) -> Result<Self, FileError> where Self: Sized {
+    fn ensure_accessible_file(self) -> Result<Self, FileError>
+    where
+        Self: Sized,
+    {
         if self.exists() {
             if self.is_file() {
                 Ok(self)
@@ -14,10 +21,16 @@ impl VerifyPath for PathBuf {
                 Err(FileError::NotAFile(format!("{}", self.display())))
             }
         } else {
-            Err(FileError::FileOrDirectoryNotFound(format!("{}", self.display())))
+            Err(FileError::FileOrDirectoryNotFound(format!(
+                "{}",
+                self.display()
+            )))
         }
     }
-    fn ensure_accessible_directory(self) -> Result<Self, FileError> where Self: Sized {
+    fn ensure_accessible_directory(self) -> Result<Self, FileError>
+    where
+        Self: Sized,
+    {
         if self.exists() {
             if self.is_dir() {
                 Ok(self)
@@ -25,7 +38,10 @@ impl VerifyPath for PathBuf {
                 Err(FileError::NotADirectory(format!("{}", self.display())))
             }
         } else {
-            Err(FileError::FileOrDirectoryNotFound(format!("{}", self.display())))
+            Err(FileError::FileOrDirectoryNotFound(format!(
+                "{}",
+                self.display()
+            )))
         }
     }
 }
@@ -42,9 +58,9 @@ pub enum FileError {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use std::env;
     use tempfile::NamedTempFile;
-    use super::*;
 
     #[test]
     fn ensure_accessible_file_for_path_buf() {
@@ -55,7 +71,13 @@ mod tests {
         assert_ok!(r);
 
         let r = r.unwrap();
-        assert_eq!(r, tf.path(), "Expected the path '{}', but got '{}' instead", tf.path().display(), r.display());
+        assert_eq!(
+            r,
+            tf.path(),
+            "Expected the path '{}', but got '{}' instead",
+            tf.path().display(),
+            r.display()
+        );
 
         let bad_file = env::temp_dir().join("blabla.ext");
         let r = bad_file.ensure_accessible_file();
@@ -72,7 +94,13 @@ mod tests {
         assert_ok!(r);
 
         let r = r.unwrap();
-        assert_eq!(r, env::temp_dir(), "Expected the path '{}' but got '{}' instead", env::temp_dir().display(), r.display());
+        assert_eq!(
+            r,
+            env::temp_dir(),
+            "Expected the path '{}' but got '{}' instead",
+            env::temp_dir().display(),
+            r.display()
+        );
 
         let bad_dir = env::temp_dir().join("blabla");
         let r = bad_dir.ensure_accessible_directory();

@@ -1,6 +1,6 @@
+use math::DepthOrderingTrait;
 use std::f32;
 use std::ops::Mul;
-use math::DepthOrderingTrait;
 
 #[derive(Clone, Default)]
 pub struct Model(f32);

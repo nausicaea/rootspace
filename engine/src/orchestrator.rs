@@ -1,9 +1,9 @@
+use ecs::world::WorldTrait;
+use failure::Error;
+use file_manipulation::{FileError, VerifyPath};
 use std::cmp;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
-use failure::Error;
-use ecs::world::WorldTrait;
-use file_manipulation::{VerifyPath, FileError};
 
 #[derive(Debug)]
 pub struct Orchestrator<W>
@@ -20,9 +20,12 @@ impl<W> Orchestrator<W>
 where
     W: Default + WorldTrait,
 {
-    pub fn new(resource_path: &Path, delta_time: Duration, max_frame_time: Duration) -> Result<Self, FileError> {
-        let rp = resource_path.to_path_buf()
-            .ensure_accessible_directory()?;
+    pub fn new(
+        resource_path: &Path,
+        delta_time: Duration,
+        max_frame_time: Duration,
+    ) -> Result<Self, FileError> {
+        let rp = resource_path.to_path_buf().ensure_accessible_directory()?;
 
         Ok(Orchestrator {
             world: W::default(),
@@ -68,15 +71,19 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use ecs::mock::MockWorld;
     use std::env;
     use tempfile::NamedTempFile;
-    use ecs::mock::MockWorld;
-    use super::*;
 
     /// Danger! This test works with thread::sleep() to test fixed loop timing. Note that the
     /// estimate of update calls is not always accurate, that's why this test is fuzzy by +/-1
     /// iteration. Because of this, the test will bust quickcheck's shrinking algorithm.
-    fn check_fixed_update_calls(iterations: u32, delta_time: Duration, max_frame_time: Duration) -> bool {
+    fn check_fixed_update_calls(
+        iterations: u32,
+        delta_time: Duration,
+        max_frame_time: Duration,
+    ) -> bool {
         let base = env::temp_dir();
         let render_duration = Duration::from_millis(20);
 
@@ -93,16 +100,25 @@ mod tests {
         }
 
         let abs_error = (fixed_update_calls as f64 - o.world.fixed_update_calls as f64).abs();
-        let rel_error = (fixed_update_calls as f64 - o.world.fixed_update_calls as f64) / fixed_update_calls as f64;
+        let rel_error = (fixed_update_calls as f64 - o.world.fixed_update_calls as f64)
+            / fixed_update_calls as f64;
         abs_error <= 1.0 || rel_error <= 0.1
     }
 
     #[test]
     fn create_orchestrator() {
-        let r = Orchestrator::<MockWorld>::new(&env::temp_dir(), Default::default(), Default::default());
+        let r = Orchestrator::<MockWorld>::new(
+            &env::temp_dir(),
+            Default::default(),
+            Default::default(),
+        );
         assert_ok!(r);
 
-        let r = Orchestrator::<MockWorld>::new(&PathBuf::from("blablablabla"), Default::default(), Default::default());
+        let r = Orchestrator::<MockWorld>::new(
+            &PathBuf::from("blablablabla"),
+            Default::default(),
+            Default::default(),
+        );
         assert_err!(r);
 
         let tf = NamedTempFile::new().unwrap();
@@ -116,13 +132,20 @@ mod tests {
         let base = env::temp_dir();
         let tf = NamedTempFile::new_in(&base).unwrap();
 
-        let o = Orchestrator::<MockWorld>::new(&base, Default::default(), Default::default()).unwrap();
+        let o =
+            Orchestrator::<MockWorld>::new(&base, Default::default(), Default::default()).unwrap();
 
         let r = o.get_file(dir_name, &tf.path().file_name().unwrap().to_string_lossy());
         assert_ok!(r);
 
         let r = r.unwrap();
-        assert_eq!(r, tf.path(), "Expected the path '{}', got '{}' instead", tf.path().display(), r.display());
+        assert_eq!(
+            r,
+            tf.path(),
+            "Expected the path '{}', got '{}' instead",
+            tf.path().display(),
+            r.display()
+        );
 
         let r = o.get_file("blabla", &tf.path().file_name().unwrap().to_string_lossy());
         assert_err!(r);
@@ -141,27 +164,51 @@ mod tests {
         let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
         o.run(None).unwrap();
-        assert_eq!(o.world.handle_events_calls, o.world.max_iterations, "Expected {} iterations, got {} instead", o.world.max_iterations, o.world.handle_events_calls);
+        assert_eq!(
+            o.world.handle_events_calls, o.world.max_iterations,
+            "Expected {} iterations, got {} instead",
+            o.world.max_iterations, o.world.handle_events_calls
+        );
     }
     #[test]
     fn check_fixed_update_calls_a() {
-        assert!(check_fixed_update_calls(10, Duration::from_millis(100), Duration::from_millis(250)));
+        assert!(check_fixed_update_calls(
+            10,
+            Duration::from_millis(100),
+            Duration::from_millis(250)
+        ));
     }
     #[test]
     fn check_fixed_update_calls_b() {
-        assert!(check_fixed_update_calls(10, Duration::from_millis(50), Duration::from_millis(250)));
+        assert!(check_fixed_update_calls(
+            10,
+            Duration::from_millis(50),
+            Duration::from_millis(250)
+        ));
     }
     #[test]
     fn check_fixed_update_calls_d() {
-        assert!(check_fixed_update_calls(50, Duration::from_millis(100), Duration::from_millis(250)));
+        assert!(check_fixed_update_calls(
+            50,
+            Duration::from_millis(100),
+            Duration::from_millis(250)
+        ));
     }
     #[test]
     fn check_fixed_update_calls_e() {
-        assert!(check_fixed_update_calls(50, Duration::from_millis(50), Duration::from_millis(250)));
+        assert!(check_fixed_update_calls(
+            50,
+            Duration::from_millis(50),
+            Duration::from_millis(250)
+        ));
     }
     #[test]
     fn check_fixed_update_calls_f() {
-        assert!(check_fixed_update_calls(50, Duration::from_millis(10), Duration::from_millis(250)));
+        assert!(check_fixed_update_calls(
+            50,
+            Duration::from_millis(10),
+            Duration::from_millis(250)
+        ));
     }
     #[test]
     fn fixed_update_error() {

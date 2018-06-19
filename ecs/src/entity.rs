@@ -1,5 +1,5 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
 use snowflake::ProcessUniqueId;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Default, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Entity(ProcessUniqueId);
@@ -12,8 +12,8 @@ impl Display for Entity {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
     use super::*;
+    use std::collections::HashSet;
 
     quickcheck! {
         fn entities_are_unique(num_entities: usize) -> bool {

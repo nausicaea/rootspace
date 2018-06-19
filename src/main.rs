@@ -1,13 +1,14 @@
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate fern;
 extern crate game;
 
+use fern::Dispatch;
+use game::Game;
+use log::LevelFilter;
 use std::env;
 use std::io;
 use std::time::Duration;
-use log::LevelFilter;
-use fern::Dispatch;
-use game::Game;
 
 fn main() {
     Dispatch::new()
@@ -24,7 +25,12 @@ fn main() {
         .apply()
         .unwrap_or_else(|e| error!("Error setting up the logger: {}", e));
 
-    match Game::new(&env::temp_dir(), Duration::from_millis(50), Duration::from_millis(250)) {
+    let r = Game::new(
+        &env::temp_dir(),
+        Duration::from_millis(50),
+        Duration::from_millis(250),
+    );
+    match r {
         Ok(mut game) => if let Err(e) = game.run(None) {
             error!("The game aborted with a runtime error: {}", e)
         },

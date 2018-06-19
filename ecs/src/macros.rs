@@ -112,11 +112,11 @@ macro_rules! impl_system_group {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
     use failure::Error;
     use loop_stage::LoopStage;
+    use mock::{MockCtx, MockEvt, MockEvtFlag, MockSysA, MockSysB};
+    use std::time::Duration;
     use system::SystemTrait;
-    use mock::{MockEvt, MockEvtFlag, MockCtx, MockSysA, MockSysB};
 
     impl_system_group! {
         /// This is a doc comment for testing.
@@ -129,14 +129,26 @@ mod tests {
     #[test]
     fn system_group_filters() {
         let g = SystemGroup::A(Default::default());
-        assert_eq!(g.get_stage_filter(), MockSysA::<MockCtx<MockEvt>, MockEvt>::default().get_stage_filter());
+        assert_eq!(
+            g.get_stage_filter(),
+            MockSysA::<MockCtx<MockEvt>, MockEvt>::default().get_stage_filter()
+        );
         let g = SystemGroup::B(Default::default());
-        assert_eq!(g.get_stage_filter(), MockSysB::<MockCtx<MockEvt>, MockEvt>::default().get_stage_filter());
+        assert_eq!(
+            g.get_stage_filter(),
+            MockSysB::<MockCtx<MockEvt>, MockEvt>::default().get_stage_filter()
+        );
 
         let g = SystemGroup::A(Default::default());
-        assert_eq!(g.get_event_filter(), MockSysA::<MockCtx<MockEvt>, MockEvt>::default().get_event_filter());
+        assert_eq!(
+            g.get_event_filter(),
+            MockSysA::<MockCtx<MockEvt>, MockEvt>::default().get_event_filter()
+        );
         let g = SystemGroup::B(Default::default());
-        assert_eq!(g.get_event_filter(), MockSysB::<MockCtx<MockEvt>, MockEvt>::default().get_event_filter());
+        assert_eq!(
+            g.get_event_filter(),
+            MockSysB::<MockCtx<MockEvt>, MockEvt>::default().get_event_filter()
+        );
     }
 
     #[test]
@@ -148,13 +160,21 @@ mod tests {
     #[test]
     fn system_group_fixed_update() {
         let mut g = SystemGroup::A(Default::default());
-        g.fixed_update(&mut Default::default(), &Default::default(), &Default::default()).unwrap();
+        g.fixed_update(
+            &mut Default::default(),
+            &Default::default(),
+            &Default::default(),
+        ).unwrap();
         match g {
             SystemGroup::A(ref s) => assert_eq!(s.fixed_update_calls, 1),
             _ => unreachable!(),
         }
         let mut g = SystemGroup::B(Default::default());
-        g.fixed_update(&mut Default::default(), &Default::default(), &Default::default()).unwrap();
+        g.fixed_update(
+            &mut Default::default(),
+            &Default::default(),
+            &Default::default(),
+        ).unwrap();
         match g {
             SystemGroup::B(ref s) => assert_eq!(s.fixed_update_calls, 1),
             _ => unreachable!(),
@@ -164,13 +184,21 @@ mod tests {
     #[test]
     fn system_group_update() {
         let mut g = SystemGroup::A(Default::default());
-        g.update(&mut Default::default(), &Default::default(), &Default::default()).unwrap();
+        g.update(
+            &mut Default::default(),
+            &Default::default(),
+            &Default::default(),
+        ).unwrap();
         match g {
             SystemGroup::A(ref s) => assert_eq!(s.update_calls, 1),
             _ => unreachable!(),
         }
         let mut g = SystemGroup::B(Default::default());
-        g.update(&mut Default::default(), &Default::default(), &Default::default()).unwrap();
+        g.update(
+            &mut Default::default(),
+            &Default::default(),
+            &Default::default(),
+        ).unwrap();
         match g {
             SystemGroup::B(ref s) => assert_eq!(s.update_calls, 1),
             _ => unreachable!(),
@@ -180,13 +208,21 @@ mod tests {
     #[test]
     fn system_group_render() {
         let mut g = SystemGroup::A(Default::default());
-        g.render(&mut Default::default(), &Default::default(), &Default::default()).unwrap();
+        g.render(
+            &mut Default::default(),
+            &Default::default(),
+            &Default::default(),
+        ).unwrap();
         match g {
             SystemGroup::A(ref s) => assert_eq!(s.render_calls, 1),
             _ => unreachable!(),
         }
         let mut g = SystemGroup::B(Default::default());
-        g.render(&mut Default::default(), &Default::default(), &Default::default()).unwrap();
+        g.render(
+            &mut Default::default(),
+            &Default::default(),
+            &Default::default(),
+        ).unwrap();
         match g {
             SystemGroup::B(ref s) => assert_eq!(s.render_calls, 1),
             _ => unreachable!(),
@@ -196,13 +232,15 @@ mod tests {
     #[test]
     fn system_group_handle_event() {
         let mut g = SystemGroup::A(Default::default());
-        g.handle_event(&mut Default::default(), &MockEvt::TestEventB(0)).unwrap();
+        g.handle_event(&mut Default::default(), &MockEvt::TestEventB(0))
+            .unwrap();
         match g {
             SystemGroup::A(ref s) => assert_eq!(s.handle_event_calls, 1),
             _ => unreachable!(),
         }
         let mut g = SystemGroup::B(Default::default());
-        g.handle_event(&mut Default::default(), &MockEvt::TestEventB(0)).unwrap();
+        g.handle_event(&mut Default::default(), &MockEvt::TestEventB(0))
+            .unwrap();
         match g {
             SystemGroup::B(ref s) => assert_eq!(s.handle_event_calls, 1),
             _ => unreachable!(),

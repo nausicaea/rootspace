@@ -1,2 +1,1 @@
-pub struct Renderable {
-}
+pub struct Renderable {}

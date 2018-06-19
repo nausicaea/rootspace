@@ -1,7 +1,7 @@
-use std::time::Duration;
+use event::EventTrait;
 use failure::Error;
 use loop_stage::LoopStage;
-use event::EventTrait;
+use std::time::Duration;
 
 pub trait SystemTrait<C, E>
 where

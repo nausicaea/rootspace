@@ -1,10 +1,10 @@
+use ecs::event::{EventManagerTrait, EventTrait};
+use ecs::loop_stage::LoopStage;
+use ecs::system::SystemTrait;
+use failure::Error;
 use std::convert::TryInto;
 use std::marker::PhantomData;
 use std::time::Duration;
-use failure::Error;
-use ecs::event::{EventTrait, EventManagerTrait};
-use ecs::loop_stage::LoopStage;
-use ecs::system::SystemTrait;
 use wrappers::EventsLoopTrait;
 
 pub struct EventInterface<E, C, Z>
@@ -42,7 +42,12 @@ where
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::UPDATE
     }
-    fn update(&mut self, ctx: &mut C, _time: &Duration, _delta_time: &Duration) -> Result<(), Error> {
+    fn update(
+        &mut self,
+        ctx: &mut C,
+        _time: &Duration,
+        _delta_time: &Duration,
+    ) -> Result<(), Error> {
         self.events_loop.poll(|os_event| {
             if let Ok(event) = os_event.try_into() {
                 ctx.dispatch_later(event);
@@ -54,27 +59,34 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ecs::mock::{MockEvt, MockCtx};
-    use mock::{MockOsEvent, MockEventsLoop};
     use super::*;
+    use ecs::mock::{MockCtx, MockEvt};
+    use mock::{MockEventsLoop, MockOsEvent};
 
     #[test]
     fn default() {
-        let _s = EventInterface::<MockEvt, MockCtx<MockEvt>, MockEventsLoop>::new(MockEventsLoop::default());
+        let _s = EventInterface::<MockEvt, MockCtx<MockEvt>, MockEventsLoop>::new(
+            MockEventsLoop::default(),
+        );
     }
 
     #[test]
     fn stage_filter() {
-        let s = EventInterface::<MockEvt, MockCtx<MockEvt>, MockEventsLoop>::new(MockEventsLoop::default());
+        let s = EventInterface::<MockEvt, MockCtx<MockEvt>, MockEventsLoop>::new(
+            MockEventsLoop::default(),
+        );
         assert_eq!(s.get_stage_filter(), LoopStage::UPDATE);
     }
 
     #[test]
     fn update() {
         let mut ctx = MockCtx::<MockEvt>::default();
-        let mut s = EventInterface::<MockEvt, MockCtx<MockEvt>, MockEventsLoop>::new(MockEventsLoop::default());
+        let mut s = EventInterface::<MockEvt, MockCtx<MockEvt>, MockEventsLoop>::new(
+            MockEventsLoop::default(),
+        );
 
-        s.events_loop.enqueue(MockOsEvent::TestEventA("hello".into()));
+        s.events_loop
+            .enqueue(MockOsEvent::TestEventA("hello".into()));
         s.events_loop.enqueue(MockOsEvent::TestEventB(100));
         s.events_loop.enqueue(MockOsEvent::TestEventC(1.0));
 

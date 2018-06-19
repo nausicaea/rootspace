@@ -1,10 +1,10 @@
+use event::{EventManagerTrait, EventTrait};
+use failure::Error;
+use loop_stage::LoopStage;
 use std::collections::VecDeque;
 use std::marker::PhantomData;
-use std::time::Duration;
 use std::thread;
-use failure::Error;
-use event::{EventTrait, EventManagerTrait};
-use loop_stage::LoopStage;
+use std::time::Duration;
 use system::SystemTrait;
 use world::WorldTrait;
 
@@ -73,20 +73,20 @@ where
         self.events.push_back(event)
     }
     fn handle_events<F>(&mut self, mut handler: F) -> Result<bool, Error>
-        where
-            F: FnMut(&mut Self, &E) -> Result<bool, Error>,
-        {
-            self.handle_events_calls += 1;
+    where
+        F: FnMut(&mut Self, &E) -> Result<bool, Error>,
+    {
+        self.handle_events_calls += 1;
 
-            let tmp = self.events.iter().cloned().collect::<Vec<_>>();
-            self.events.clear();
+        let tmp = self.events.iter().cloned().collect::<Vec<_>>();
+        self.events.clear();
 
-            for event in tmp {
-                handler(self, &event)?;
-            }
-
-            Ok(true)
+        for event in tmp {
+            handler(self, &event)?;
         }
+
+        Ok(true)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -118,20 +118,20 @@ where
         self.events.push_back(event)
     }
     fn handle_events<F>(&mut self, mut handler: F) -> Result<bool, Error>
-        where
-            F: FnMut(&mut Self, &E) -> Result<bool, Error>,
-        {
-            self.handle_events_calls += 1;
+    where
+        F: FnMut(&mut Self, &E) -> Result<bool, Error>,
+    {
+        self.handle_events_calls += 1;
 
-            let tmp = self.events.iter().cloned().collect::<Vec<_>>();
-            self.events.clear();
+        let tmp = self.events.iter().cloned().collect::<Vec<_>>();
+        self.events.clear();
 
-            for event in tmp {
-                handler(self, &event)?;
-            }
-
-            Ok(true)
+        for event in tmp {
+            handler(self, &event)?;
         }
+
+        Ok(true)
+    }
 }
 
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -165,7 +165,7 @@ where
             stage_filter: stage_filter,
             event_filter: event_filter,
             error_out: error_out,
-            .. Default::default()
+            ..Default::default()
         }
     }
 }
@@ -211,7 +211,12 @@ where
     fn get_event_filter(&self) -> E::EventFlag {
         self.event_filter
     }
-    fn fixed_update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn fixed_update(
+        &mut self,
+        _ctx: &mut C,
+        time: &Duration,
+        delta_time: &Duration,
+    ) -> Result<(), Error> {
         self.fixed_update_arguments.push((*time, *delta_time));
         self.fixed_update_calls += 1;
         if self.error_out {
@@ -220,7 +225,12 @@ where
             Ok(())
         }
     }
-    fn update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn update(
+        &mut self,
+        _ctx: &mut C,
+        time: &Duration,
+        delta_time: &Duration,
+    ) -> Result<(), Error> {
         self.update_arguments.push((*time, *delta_time));
         self.update_calls += 1;
         if self.error_out {
@@ -229,7 +239,12 @@ where
             Ok(())
         }
     }
-    fn render(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn render(
+        &mut self,
+        _ctx: &mut C,
+        time: &Duration,
+        delta_time: &Duration,
+    ) -> Result<(), Error> {
         self.render_arguments.push((*time, *delta_time));
         self.render_calls += 1;
         if self.error_out {
@@ -277,7 +292,7 @@ where
             stage_filter: stage_filter,
             event_filter: event_filter,
             error_out: error_out,
-            .. Default::default()
+            ..Default::default()
         }
     }
 }
@@ -323,7 +338,12 @@ where
     fn get_event_filter(&self) -> E::EventFlag {
         self.event_filter
     }
-    fn fixed_update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn fixed_update(
+        &mut self,
+        _ctx: &mut C,
+        time: &Duration,
+        delta_time: &Duration,
+    ) -> Result<(), Error> {
         self.fixed_update_arguments.push((*time, *delta_time));
         self.fixed_update_calls += 1;
         if self.error_out {
@@ -332,7 +352,12 @@ where
             Ok(())
         }
     }
-    fn update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn update(
+        &mut self,
+        _ctx: &mut C,
+        time: &Duration,
+        delta_time: &Duration,
+    ) -> Result<(), Error> {
         self.update_arguments.push((*time, *delta_time));
         self.update_calls += 1;
         if self.error_out {
@@ -341,7 +366,12 @@ where
             Ok(())
         }
     }
-    fn render(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+    fn render(
+        &mut self,
+        _ctx: &mut C,
+        time: &Duration,
+        delta_time: &Duration,
+    ) -> Result<(), Error> {
         self.render_arguments.push((*time, *delta_time));
         self.render_calls += 1;
         if self.error_out {

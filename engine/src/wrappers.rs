@@ -1,9 +1,9 @@
-use std::convert::{TryInto, TryFrom};
-use failure::Error as FailureError;
-use glium::glutin::{Event as WinitEvent, EventsLoop as WinitEventsLoop};
-use glium::{Surface as GliumSurface, Frame as GliumFrame, Display as GliumDisplay};
 use ecs::event::EventTrait;
 use event::Event;
+use failure::Error as FailureError;
+use glium::glutin::{Event as WinitEvent, EventsLoop as WinitEventsLoop};
+use glium::{Display as GliumDisplay, Frame as GliumFrame, Surface as GliumSurface};
+use std::convert::{TryFrom, TryInto};
 
 pub trait EventsLoopTrait<E>
 where
@@ -11,7 +11,9 @@ where
 {
     type OsEvent: TryInto<E>;
 
-    fn poll<F>(&mut self, f: F) where F: FnMut(Self::OsEvent);
+    fn poll<F>(&mut self, f: F)
+    where
+        F: FnMut(Self::OsEvent);
 }
 
 impl TryFrom<WinitEvent> for Event {
@@ -29,7 +31,10 @@ impl TryFrom<WinitEvent> for Event {
 impl EventsLoopTrait<Event> for WinitEventsLoop {
     type OsEvent = WinitEvent;
 
-    fn poll<F>(&mut self, f: F) where F: FnMut(Self::OsEvent) {
+    fn poll<F>(&mut self, f: F)
+    where
+        F: FnMut(Self::OsEvent),
+    {
         self.poll_events(f)
     }
 }
@@ -60,7 +65,13 @@ where
     type EventsLoop;
     type Frame: FrameTrait;
 
-    fn create(events_loop: &Self::EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16) -> Result<Self, FailureError>;
+    fn create(
+        events_loop: &Self::EventsLoop,
+        title: &str,
+        dimensions: &[u32; 2],
+        vsync: bool,
+        msaa: u16,
+    ) -> Result<Self, FailureError>;
     fn create_frame(&self) -> Self::Frame;
 }
 
@@ -68,7 +79,13 @@ impl DisplayTrait for GliumDisplay {
     type EventsLoop = WinitEventsLoop;
     type Frame = GliumFrame;
 
-    fn create(_events_loop: &Self::EventsLoop, _title: &str, _dimensions: &[u32; 2], _vsync: bool, _msaa: u16) -> Result<Self, FailureError> {
+    fn create(
+        _events_loop: &Self::EventsLoop,
+        _title: &str,
+        _dimensions: &[u32; 2],
+        _vsync: bool,
+        _msaa: u16,
+    ) -> Result<Self, FailureError> {
         unimplemented!()
     }
 

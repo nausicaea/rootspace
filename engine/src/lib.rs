@@ -1,14 +1,23 @@
 #![feature(try_from)]
 
-#[cfg(test)] #[macro_use] extern crate assertions;
-#[macro_use] extern crate bitflags;
-#[macro_use] extern crate failure;
-extern crate hierarchy;
+#[cfg(test)]
+#[macro_use]
+extern crate assertions;
+#[macro_use]
+extern crate bitflags;
+#[macro_use]
+extern crate failure;
 extern crate glium;
-#[macro_use] extern crate log;
-#[cfg(test)] #[macro_use] extern crate quickcheck;
-#[cfg(test)] extern crate tempfile;
-#[macro_use] extern crate ecs;
+extern crate hierarchy;
+#[macro_use]
+extern crate log;
+#[cfg(test)]
+#[macro_use]
+extern crate quickcheck;
+#[cfg(test)]
+extern crate tempfile;
+#[macro_use]
+extern crate ecs;
 
 //pub mod auxiliary;
 pub mod components;

@@ -35,7 +35,11 @@ macro_rules! assert_some {
 #[macro_export]
 macro_rules! assert_none {
     ($option:expr) => {
-        assert!($option.is_none(), "Expected 'None', got 'Some({:?})'", $option.unwrap());
+        assert!(
+            $option.is_none(),
+            "Expected 'None', got 'Some({:?})'",
+            $option.unwrap()
+        );
     };
     ($option:expr,) => {
         assert_none!($option);
@@ -56,7 +60,11 @@ macro_rules! assert_none {
 #[macro_export]
 macro_rules! assert_ok {
     ($result:expr) => {
-        assert!($result.is_ok(), "Expected 'Ok(_)', got 'Err({:?})'", $result.unwrap_err());
+        assert!(
+            $result.is_ok(),
+            "Expected 'Ok(_)', got 'Err({:?})'",
+            $result.unwrap_err()
+        );
     };
     ($result:expr,) => {
         assert_ok!($result);
@@ -77,11 +85,15 @@ macro_rules! assert_ok {
 #[macro_export]
 macro_rules! assert_err {
     ($result:expr) => {
-        assert!($result.is_err(), "Expected 'Err(_)', got 'Ok({:?})'", $result.unwrap());
+        assert!(
+            $result.is_err(),
+            "Expected 'Err(_)', got 'Ok({:?})'",
+            $result.unwrap()
+        );
     };
     ($result:expr,) => {
         assert_err!($result);
-    }
+    };
 }
 
 #[cfg(test)]
