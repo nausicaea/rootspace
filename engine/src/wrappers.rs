@@ -39,6 +39,16 @@ impl EventsLoopTrait<Event> for WinitEventsLoop {
     }
 }
 
+impl EventsLoopTrait<Event> for () {
+    type OsEvent = Event;
+
+    fn poll<F>(&mut self, _f: F)
+    where
+        F: FnMut(Self::OsEvent),
+    {
+    }
+}
+
 pub trait FrameTrait {
     fn clear(&mut self, color: &[f32; 4], depth: f32);
     fn finalize(self) -> Result<(), FailureError>;

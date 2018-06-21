@@ -31,7 +31,7 @@ fn main() {
         Duration::from_millis(250),
     );
     match r {
-        Ok(mut game) => if let Err(e) = game.run(None) {
+        Ok(mut game) => if let Err(e) = game.run(false, None) {
             error!("The game aborted with a runtime error: {}", e)
         },
         Err(e) => error!("Creation of the game failed with: {}", e),
