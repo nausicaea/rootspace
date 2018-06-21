@@ -12,7 +12,7 @@ use engine::file_manipulation::FileError;
 use engine::orchestrator::Orchestrator;
 use engine::systems::event_interface::EventInterface;
 use engine::systems::event_monitor::EventMonitor;
-use engine::systems::open_gl_renderer::OpenGlRenderer;
+use engine::systems::renderer::Renderer;
 use engine::systems::SystemGroup;
 use failure::Error;
 use glium::glutin::EventsLoop;
@@ -36,7 +36,7 @@ impl Game {
     pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
         let event_monitor = EventMonitor::default();
         let event_interface = EventInterface::new(EventsLoop::new());
-        let renderer = OpenGlRenderer::new(
+        let renderer = Renderer::new(
             &event_interface.events_loop,
             "Title",
             &[1024, 768],

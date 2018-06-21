@@ -11,7 +11,7 @@ use std::ops::Mul;
 use std::time::Duration;
 use wrappers::{DisplayTrait, FrameTrait};
 
-pub struct OpenGlRenderer<E, C, D, V>
+pub struct Renderer<E, C, D, V>
 where
     V: DepthOrderingTrait + Clone + Default + 'static,
     for<'r> &'r V: Mul<Output = V>,
@@ -26,7 +26,7 @@ where
     phantom_v: PhantomData<V>,
 }
 
-impl<E, C, D, V> OpenGlRenderer<E, C, D, V>
+impl<E, C, D, V> Renderer<E, C, D, V>
 where
     V: DepthOrderingTrait + Clone + Default + 'static,
     for<'r> &'r V: Mul<Output = V>,
@@ -44,7 +44,7 @@ where
     ) -> Result<Self, Error> {
         let display = D::create(events_loop, title, dimensions, vsync, msaa)?;
 
-        Ok(OpenGlRenderer {
+        Ok(Renderer {
             display: display,
             clear_color: clear_color,
             phantom_e: Default::default(),
@@ -54,7 +54,7 @@ where
     }
 }
 
-impl<E, C, D, V> SystemTrait<C, E> for OpenGlRenderer<E, C, D, V>
+impl<E, C, D, V> SystemTrait<C, E> for Renderer<E, C, D, V>
 where
     V: DepthOrderingTrait + Clone + Default + 'static,
     for<'r> &'r V: Mul<Output = V>,
@@ -91,22 +91,22 @@ mod test {
 
     #[test]
     fn new_renderer() {
-        let _s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
-            OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let _s: Renderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
+            Renderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
     }
 
     #[test]
     fn stage_filter() {
-        let s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
-            OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let s: Renderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
+            Renderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
         assert_eq!(s.get_stage_filter(), LoopStage::RENDER);
     }
 
     #[test]
     fn render() {
         let mut ctx: MockCtx<MockEvt> = Default::default();
-        let mut s: OpenGlRenderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
-            OpenGlRenderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let mut s: Renderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
+            Renderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
 
         assert_ok!(s.render(&mut ctx, &Default::default(), &Default::default()));
     }

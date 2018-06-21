@@ -1,10 +1,10 @@
 pub mod event_interface;
 pub mod event_monitor;
-pub mod open_gl_renderer;
+pub mod renderer;
 
 use self::event_interface::EventInterface;
 use self::event_monitor::EventMonitor;
-use self::open_gl_renderer::OpenGlRenderer;
+use self::renderer::Renderer;
 use components::model::Model;
 use context::Context;
 use ecs::loop_stage::LoopStage;
@@ -19,6 +19,6 @@ impl_system_group! {
     pub enum SystemGroup<Context, Event, EventFlag> {
         A(EventMonitor<Event, Context>),
         B(EventInterface<Event, Context, EventsLoop>),
-        C(OpenGlRenderer<Event, Context, Display, Model>),
+        C(Renderer<Event, Context, Display, Model>),
     }
 }
