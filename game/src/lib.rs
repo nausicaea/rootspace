@@ -65,7 +65,7 @@ mod tests {
     /// This test is effectively an integration test, because it causes the entire game to run for
     /// one iteration.
     #[test]
-    #[ignore]
+    #[cfg_attr(not(windows), ignore)]
     fn create_and_run_game() {
         let resource_path = env::temp_dir();
         let delta_time = Duration::from_millis(50);

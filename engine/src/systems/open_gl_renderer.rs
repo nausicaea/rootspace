@@ -52,12 +52,6 @@ where
             phantom_v: Default::default(),
         })
     }
-
-    pub fn initialize_frame(&self) -> D::Frame {
-        let mut target = self.display.create_frame();
-        target.clear(&self.clear_color, 1.0);
-        target
-    }
 }
 
 impl<E, C, D, V> SystemTrait<C, E> for OpenGlRenderer<E, C, D, V>
@@ -74,15 +68,13 @@ where
 
     fn render(&mut self, ctx: &mut C, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
         // Create the current frame.
-        let target = self.initialize_frame();
+        let mut target = self.display.create_frame();
+        target.clear(&self.clear_color, 1.0);
 
         // Update the scene graph and sort the nodes according to their z-value.
         let _nodes = ctx.get_current_nodes(true)?;
 
-        // // Get a reference to the camera.
-        // // Get a reference to the Ui state
-
-        // // Render all entities
+        // Render all entities
         // for (entity, model) in nodes {
         // }
 
