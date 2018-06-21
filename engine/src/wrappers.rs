@@ -1,7 +1,7 @@
 use ecs::event::EventTrait;
 use event::Event;
 use failure::Error as FailureError;
-use glium::glutin::{Event as WinitEvent, EventsLoop as WinitEventsLoop};
+use glium::glutin::{Event as WinitEvent, EventsLoop as WinitEventsLoop, WindowBuilder, ContextBuilder, Api, GlProfile, GlRequest};
 use glium::{Display as GliumDisplay, Frame as GliumFrame, Surface as GliumSurface};
 use std::convert::{TryFrom, TryInto};
 
@@ -80,13 +80,26 @@ impl DisplayTrait for GliumDisplay {
     type Frame = GliumFrame;
 
     fn create(
-        _events_loop: &Self::EventsLoop,
-        _title: &str,
-        _dimensions: &[u32; 2],
-        _vsync: bool,
-        _msaa: u16,
+        events_loop: &Self::EventsLoop,
+        title: &str,
+        dimensions: &[u32; 2],
+        vsync: bool,
+        msaa: u16,
     ) -> Result<Self, FailureError> {
-        unimplemented!()
+        let window = WindowBuilder::new()
+            .with_title(title)
+            .with_dimensions(dimensions[0], dimensions[1]);
+
+        let context = ContextBuilder::new()
+            .with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
+            .with_gl_profile(GlProfile::Core)
+            .with_vsync(vsync)
+            .with_multisampling(msaa);
+
+        match GliumDisplay::new(window, context, events_loop) {
+            Ok(d) => Ok(d),
+            Err(e) => Err(format_err!("{}", e)),
+        }
     }
 
     fn create_frame(&self) -> Self::Frame {
