@@ -23,7 +23,7 @@ fn main() {
         .level(LevelFilter::Trace)
         .chain(io::stdout())
         .apply()
-        .unwrap_or_else(|e| error!("Error setting up the logger: {}", e));
+        .expect("Error setting up the logger");
 
     let r = Game::new(
         &env::temp_dir(),
