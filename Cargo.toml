@@ -6,6 +6,7 @@ authors = ["Eleanore Young"]
 [workspace]
 
 [dependencies]
+clap = "^2.31.2"
 log = "^0.4.1"
 fern = "^0.5.5"
 ecs = {path = "ecs"}
