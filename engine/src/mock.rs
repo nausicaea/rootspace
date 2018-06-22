@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 use std::convert::TryInto;
 use std::f32;
 use std::ops::Mul;
-use wrappers::{DisplayTrait, EventsLoopTrait, FrameTrait};
+use wrappers::glium::EventsLoopTrait;
 
 impl SceneGraphTrait<Entity, MockModel> for MockCtx<MockEvt> {
     fn get_current_nodes(
@@ -84,65 +84,5 @@ impl<'a, 'b> Mul<&'b MockModel> for &'a MockModel {
 
     fn mul(self, rhs: &'b MockModel) -> Self::Output {
         MockModel(self.0 * rhs.0)
-    }
-}
-
-#[derive(Default)]
-pub struct MockFrame {
-    pub error_out: bool,
-    pub clear_call_count: usize,
-}
-
-impl MockFrame {
-    pub fn new(error_out: bool) -> Self {
-        MockFrame {
-            error_out: error_out,
-            clear_call_count: 0,
-        }
-    }
-}
-
-impl FrameTrait for MockFrame {
-    fn clear(&mut self, _color: &[f32; 4], _depth: f32) {
-        self.clear_call_count += 1
-    }
-
-    fn finalize(self) -> Result<(), FailureError> {
-        if self.error_out {
-            Err(format_err!("MockFrame had an error."))
-        } else {
-            Ok(())
-        }
-    }
-}
-
-pub struct MockDisplay {
-    pub cause_frame_to_error: bool,
-}
-
-impl MockDisplay {
-    pub fn new(cause_frame_to_error: bool) -> Self {
-        MockDisplay {
-            cause_frame_to_error: cause_frame_to_error,
-        }
-    }
-}
-
-impl DisplayTrait for MockDisplay {
-    type EventsLoop = ();
-    type Frame = MockFrame;
-
-    fn create(
-        _events_loop: &Self::EventsLoop,
-        _title: &str,
-        _dimensions: &[u32; 2],
-        _vsync: bool,
-        _msaa: u16,
-    ) -> Result<Self, FailureError> {
-        Ok(MockDisplay::new(false))
-    }
-
-    fn create_frame(&self) -> Self::Frame {
-        MockFrame::new(self.cause_frame_to_error)
     }
 }

@@ -10,7 +10,7 @@ use engine::components::model::Model;
 use engine::context::Context;
 use engine::event::Event;
 use engine::file_manipulation::FileError;
-use engine::mock::MockDisplay;
+use engine::wrappers::glium::{HeadlessDisplay, HeadlessEventsLoop};
 use engine::orchestrator::Orchestrator;
 use engine::systems::event_interface::EventInterface;
 use engine::systems::event_monitor::EventMonitor;
@@ -40,8 +40,8 @@ impl Game {
     pub fn run(&mut self, headless: bool, iterations: Option<usize>) -> Result<(), Error> {
         // Create and register the systems that depend on a graphics backend.
         if headless {
-            let event_interface = EventInterface::new(());
-            let renderer: Renderer<Event, Context, MockDisplay, Model> = Renderer::new(
+            let event_interface = EventInterface::new(HeadlessEventsLoop::default());
+            let renderer: Renderer<Event, Context, HeadlessDisplay, Model> = Renderer::new(
                 &event_interface.events_loop,
                 "Title",
                 &[1024, 768],

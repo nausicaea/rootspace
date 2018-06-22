@@ -16,6 +16,82 @@ where
         F: FnMut(Self::OsEvent);
 }
 
+pub trait FrameTrait {
+    fn clear(&mut self, color: &[f32; 4], depth: f32);
+    fn finalize(self) -> Result<(), FailureError>;
+}
+
+pub trait DisplayTrait
+where
+    Self: Sized,
+{
+    type EventsLoop;
+    type Frame: FrameTrait;
+
+    fn create(
+        events_loop: &Self::EventsLoop,
+        title: &str,
+        dimensions: &[u32; 2],
+        vsync: bool,
+        msaa: u16,
+    ) -> Result<Self, FailureError>;
+    fn create_frame(&self) -> Self::Frame;
+}
+
+#[derive(Default)]
+pub struct HeadlessEventsLoop;
+
+impl EventsLoopTrait<Event> for HeadlessEventsLoop {
+    type OsEvent = ();
+
+    fn poll<F>(&mut self, _f: F)
+    where
+        F: FnMut(Self::OsEvent),
+    {
+    }
+}
+
+impl TryFrom<()> for Event {
+    type Error = ();
+
+    fn try_from(_value: ()) -> Result<Event, Self::Error> {
+        Err(())
+    }
+}
+
+#[derive(Default)]
+pub struct HeadlessFrame;
+
+impl FrameTrait for HeadlessFrame {
+    fn clear(&mut self, _color: &[f32; 4], _depth: f32) {}
+
+    fn finalize(self) -> Result<(), FailureError> {
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+pub struct HeadlessDisplay;
+
+impl DisplayTrait for HeadlessDisplay {
+    type EventsLoop = HeadlessEventsLoop;
+    type Frame = HeadlessFrame;
+
+    fn create(
+        _events_loop: &Self::EventsLoop,
+        _title: &str,
+        _dimensions: &[u32; 2],
+        _vsync: bool,
+        _msaa: u16,
+    ) -> Result<Self, FailureError> {
+        Ok(Default::default())
+    }
+
+    fn create_frame(&self) -> Self::Frame {
+        Default::default()
+    }
+}
+
 impl TryFrom<WinitEvent> for Event {
     type Error = ();
 
@@ -39,21 +115,6 @@ impl EventsLoopTrait<Event> for WinitEventsLoop {
     }
 }
 
-impl EventsLoopTrait<Event> for () {
-    type OsEvent = Event;
-
-    fn poll<F>(&mut self, _f: F)
-    where
-        F: FnMut(Self::OsEvent),
-    {
-    }
-}
-
-pub trait FrameTrait {
-    fn clear(&mut self, color: &[f32; 4], depth: f32);
-    fn finalize(self) -> Result<(), FailureError>;
-}
-
 impl FrameTrait for GliumFrame {
     fn clear(&mut self, color: &[f32; 4], depth: f32) {
         self.clear_color_and_depth((color[0], color[1], color[2], color[3]), depth)
@@ -66,23 +127,6 @@ impl FrameTrait for GliumFrame {
             Ok(())
         }
     }
-}
-
-pub trait DisplayTrait
-where
-    Self: Sized,
-{
-    type EventsLoop;
-    type Frame: FrameTrait;
-
-    fn create(
-        events_loop: &Self::EventsLoop,
-        title: &str,
-        dimensions: &[u32; 2],
-        vsync: bool,
-        msaa: u16,
-    ) -> Result<Self, FailureError>;
-    fn create_frame(&self) -> Self::Frame;
 }
 
 impl DisplayTrait for GliumDisplay {

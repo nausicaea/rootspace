@@ -9,7 +9,7 @@ use std::f32;
 use std::marker::PhantomData;
 use std::ops::Mul;
 use std::time::Duration;
-use wrappers::{DisplayTrait, FrameTrait};
+use wrappers::glium::{DisplayTrait, FrameTrait};
 
 pub struct Renderer<E, C, D, V>
 where
@@ -87,26 +87,27 @@ where
 mod test {
     use super::*;
     use ecs::mock::{MockCtx, MockEvt};
-    use mock::{MockDisplay, MockModel};
+    use mock::MockModel;
+    use wrappers::glium::{HeadlessDisplay, HeadlessEventsLoop};
 
     #[test]
     fn new_renderer() {
-        let _s: Renderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
-            Renderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let _s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel> =
+            Renderer::new(&HeadlessEventsLoop::default(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
     }
 
     #[test]
     fn stage_filter() {
-        let s: Renderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
-            Renderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel> =
+            Renderer::new(&HeadlessEventsLoop::default(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
         assert_eq!(s.get_stage_filter(), LoopStage::RENDER);
     }
 
     #[test]
     fn render() {
         let mut ctx: MockCtx<MockEvt> = Default::default();
-        let mut s: Renderer<MockEvt, MockCtx<MockEvt>, MockDisplay, MockModel> =
-            Renderer::new(&(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let mut s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel> =
+            Renderer::new(&HeadlessEventsLoop::default(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
 
         assert_ok!(s.render(&mut ctx, &Default::default(), &Default::default()));
     }
