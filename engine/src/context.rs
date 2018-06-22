@@ -51,6 +51,7 @@ where
     V: Clone + Default,
 {
     fn update_graph(&mut self) -> Result<(), Error>;
+    fn insert_node(&mut self, entity: Entity);
     fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &V)>;
     fn sort_nodes(&self, nodes: &mut [(&Entity, &V)]);
 }
@@ -63,6 +64,10 @@ impl SceneGraphTrait<Entity, Model> for Context {
             Some(parent_model * current_model)
         })?;
         Ok(())
+    }
+
+    fn insert_node(&mut self, entity: Entity) {
+        self.scene_graph.insert(entity, Default::default())
     }
 
     fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &Model)> {

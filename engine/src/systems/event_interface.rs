@@ -60,8 +60,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::mock::{MockCtx, MockEvt};
-    use mock::{MockEventsLoop, MockOsEvent};
+    use ecs::mock::MockEvt;
+    use mock::{MockEventsLoop, MockOsEvent, MockCtx};
 
     #[test]
     fn default() {

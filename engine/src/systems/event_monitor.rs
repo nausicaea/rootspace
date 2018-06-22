@@ -43,7 +43,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::mock::{MockCtx, MockEvt, MockEvtFlag};
+    use ecs::mock::{MockEvt, MockEvtFlag};
+    use mock::MockCtx;
 
     #[test]
     fn default() {
