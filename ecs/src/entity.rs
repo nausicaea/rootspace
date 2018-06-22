@@ -1,7 +1,7 @@
 use snowflake::ProcessUniqueId;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-#[derive(Default, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Entity(ProcessUniqueId);
 
 impl Display for Entity {

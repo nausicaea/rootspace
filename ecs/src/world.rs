@@ -128,14 +128,15 @@ mod tests {
         let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> =
             World::default();
         assert!(w.systems.is_empty());
+
         let sys = MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false);
         w.add_system(sys.clone());
         assert_eq!(w.systems.len(), 1);
-        assert_eq!(w.systems.last().unwrap(), &sys);
-        let into_sys = (LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false);
+
+        let into_sys = (LoopStage::UPDATE, MockEvtFlag::empty(), false);
         w.add_system(into_sys);
         assert_eq!(w.systems.len(), 2);
-        assert_eq!(w.systems.last().unwrap(), &sys);
+        assert_eq!(w.systems.last().unwrap().get_stage_filter(), LoopStage::UPDATE);
     }
     #[test]
     fn fixed_update_calls() {
@@ -144,6 +145,8 @@ mod tests {
 
         assert_ok!(r);
         for system in &w.systems {
+            assert_eq!(*system.stage_filter_calls.read().unwrap(), 1);
+            assert_eq!(*system.event_filter_calls.read().unwrap(), 0);
             if system.get_stage_filter().contains(LoopStage::FIXED_UPDATE) {
                 assert_eq!(system.fixed_update_calls, 1);
             } else {
@@ -186,6 +189,8 @@ mod tests {
 
         assert_ok!(r);
         for system in &w.systems {
+            assert_eq!(*system.stage_filter_calls.read().unwrap(), 1);
+            assert_eq!(*system.event_filter_calls.read().unwrap(), 0);
             if system.get_stage_filter().contains(LoopStage::UPDATE) {
                 assert_eq!(system.update_calls, 1);
             } else {
@@ -225,6 +230,8 @@ mod tests {
 
         assert_ok!(r);
         for system in &w.systems {
+            assert_eq!(*system.stage_filter_calls.read().unwrap(), 1);
+            assert_eq!(*system.event_filter_calls.read().unwrap(), 0);
             if system.get_stage_filter().contains(LoopStage::RENDER) {
                 assert_eq!(system.render_calls, 1);
             } else {
@@ -265,7 +272,9 @@ mod tests {
         assert_ok!(r);
         assert_eq!(w.context.handle_events_calls, 1);
         for system in &w.systems {
+            assert_eq!(*system.stage_filter_calls.read().unwrap(), 2);
             if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) {
+                assert_eq!(*system.event_filter_calls.read().unwrap(), 2);
                 if system
                     .get_event_filter()
                     .contains(MockEvtFlag::TEST_EVENT_A)

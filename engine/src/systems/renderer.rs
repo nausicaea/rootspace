@@ -83,7 +83,7 @@ where
         let nodes = ctx.get_nodes(true);
 
         // Render all entities
-        for (entity, model) in nodes {
+        for (entity, _model) in nodes {
             if let Ok(r) = ctx.borrow::<R>(entity) {
                 r.draw();
             }
@@ -117,6 +117,15 @@ mod test {
     #[test]
     fn render() {
         let mut ctx: MockCtx<MockEvt> = Default::default();
+        let a = ctx.create_entity();
+        ctx.add(a, MockModel::new(100.0)).unwrap();
+        ctx.add(a, MockRenderable::default()).unwrap();
+        let b = ctx.create_entity();
+        ctx.add(b, MockModel::new(50.0)).unwrap();
+        let c = ctx.create_entity();
+        ctx.add(c, MockRenderable::default()).unwrap();
+        let d = ctx.create_entity();
+
         let mut s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel, MockRenderable> =
             Renderer::new(&HeadlessEventsLoop::default(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
 

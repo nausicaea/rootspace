@@ -1,4 +1,5 @@
 //! Provides a hierarchical data structure, called `Hierarchy`.
+#![deny(missing_docs)]
 
 #[cfg(test)]
 #[macro_use]
@@ -78,9 +79,9 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
         Default::default()
     }
     /// Deletes the `HierNode` defined by the specified key.
-    pub fn remove(&mut self, key: &K) -> Result<(), GraphError> {
+    pub fn remove(&mut self, key: &K) -> Result<(), HierarchyError> {
         if key == &self.root_key {
-            return Err(GraphError::CannotRemoveRootNode);
+            return Err(HierarchyError::CannotRemoveRootNode);
         }
 
         let node_idx = self.get_index(key)?;
@@ -95,7 +96,7 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
             .unwrap_or_else(|_| unreachable!())
     }
     /// Inserts a `HierNode` as child of another `HierNode` identified by its key.
-    pub fn insert_child(&mut self, parent: &K, child: K, data: V) -> Result<(), GraphError> {
+    pub fn insert_child(&mut self, parent: &K, child: K, data: V) -> Result<(), HierarchyError> {
         let parent_idx = self.get_index(parent)?;
         let child_node = HierNode::new(child.clone(), data);
         let (_, child_idx) = self.graph.add_child(parent_idx, (), child_node);
@@ -108,7 +109,7 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
     }
     /// Updates each node in breadth first search order. Refer to `HierNode.update` for more
     /// information.
-    pub fn update<F>(&mut self, merge_fn: &F) -> Result<(), GraphError>
+    pub fn update<F>(&mut self, merge_fn: &F) -> Result<(), HierarchyError>
     where
         for<'r> F: Fn(&'r K, &'r V, &'r V) -> Option<V>,
     {
@@ -124,12 +125,12 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
                     .graph
                     .node_weight(parent_idx)
                     .map(|n| n.data.clone())
-                    .ok_or(GraphError::NodeNotFound)?;
+                    .ok_or(HierarchyError::NodeNotFound)?;
 
                 self.graph
                     .node_weight_mut(nidx)
                     .map(|n| n.update(&parent_data, merge_fn))
-                    .ok_or(GraphError::NodeNotFound)?;
+                    .ok_or(HierarchyError::NodeNotFound)?;
             }
         }
 
@@ -140,8 +141,8 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
         HierIter::new(self)
     }
     /// Returns the `NodeIndex` for a particular key.
-    fn get_index(&self, key: &K) -> Result<NodeIndex, GraphError> {
-        self.index.get(key).cloned().ok_or(GraphError::KeyNotFound)
+    fn get_index(&self, key: &K) -> Result<NodeIndex, HierarchyError> {
+        self.index.get(key).cloned().ok_or(HierarchyError::KeyNotFound)
     }
     /// Rebuilds the `Key`-`HierNode` index from the underlying `Graph`.
     fn rebuild_index(&mut self) {
@@ -219,14 +220,19 @@ impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> Iterator
     }
 }
 
+/// Describes possible errors when interacting with `Hierarchy`.
 #[derive(Debug, Fail)]
-pub enum GraphError {
+pub enum HierarchyError {
+    /// Returned when the requested key of type `K` was not found.
     #[fail(display = "The key was not found.")]
     KeyNotFound,
+    /// Returned when the requested key was found more than once.
     #[fail(display = "The key was found more than once.")]
     MultipleKeysFound,
+    /// Returned if users try to remove the root node.
     #[fail(display = "The root node may not be removed.")]
     CannotRemoveRootNode,
+    /// Returned if the requested node was not found.
     #[fail(display = "The specified node was not found.")]
     NodeNotFound,
 }

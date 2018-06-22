@@ -1,4 +1,5 @@
 //! This crate provides assertions for testing `Result` and `Option` types.
+#![deny(missing_docs)]
 
 /// Asserts that the supplied expression is a `Option::Some(_)` value. Otherwise,
 /// panics and prints an appropriate message.
