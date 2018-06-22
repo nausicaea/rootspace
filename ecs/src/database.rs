@@ -15,6 +15,7 @@ pub trait DatabaseTrait: Default {
     fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, Error>;
 }
 
+#[derive(Debug)]
 pub struct Database {
     entities: HashMap<Entity, HashMap<TypeId, Box<Any>>>,
 }

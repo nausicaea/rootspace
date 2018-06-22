@@ -7,6 +7,7 @@ extern crate log;
 use ecs::event::EventManagerTrait;
 use ecs::world::World;
 use engine::components::model::Model;
+use engine::components::renderable::Renderable;
 use engine::context::Context;
 use engine::event::Event;
 use engine::file_manipulation::FileError;
@@ -47,7 +48,7 @@ impl Game {
         // Create and register the systems that depend on a graphics backend.
         if headless {
             let event_interface = EventInterface::new(HeadlessEventsLoop::default());
-            let renderer: Renderer<Event, Context, HeadlessDisplay, Model> = Renderer::new(
+            let renderer: Renderer<Event, Context, HeadlessDisplay, Model, Renderable> = Renderer::new(
                 &event_interface.events_loop,
                 title,
                 &dimensions,
@@ -61,7 +62,7 @@ impl Game {
 
         } else {
             let event_interface = EventInterface::new(EventsLoop::new());
-            let renderer: Renderer<Event, Context, Display, Model> = Renderer::new(
+            let renderer: Renderer<Event, Context, Display, Model, Renderable> = Renderer::new(
                 &event_interface.events_loop,
                 title,
                 &dimensions,

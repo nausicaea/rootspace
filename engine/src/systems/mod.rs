@@ -6,6 +6,7 @@ use self::event_interface::EventInterface;
 use self::event_monitor::EventMonitor;
 use self::renderer::Renderer;
 use components::model::Model;
+use components::renderable::Renderable;
 use context::Context;
 use wrappers::glium::{HeadlessDisplay, HeadlessEventsLoop};
 use ecs::loop_stage::LoopStage;
@@ -20,8 +21,8 @@ impl_system_group! {
     pub enum SystemGroup<Context, Event, EventFlag> {
         A(EventMonitor<Event, Context>),
         B(EventInterface<Event, Context, EventsLoop>),
-        C(Renderer<Event, Context, Display, Model>),
+        C(Renderer<Event, Context, Display, Model, Renderable>),
         D(EventInterface<Event, Context, HeadlessEventsLoop>),
-        E(Renderer<Event, Context, HeadlessDisplay, Model>),
+        E(Renderer<Event, Context, HeadlessDisplay, Model, Renderable>),
     }
 }

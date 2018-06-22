@@ -1,6 +1,9 @@
+use database::{Database, DatabaseTrait, Error as DatabaseError};
+use entity::Entity;
 use event::{EventManagerTrait, EventTrait};
 use failure::Error;
 use loop_stage::LoopStage;
+use std::any::Any;
 use std::collections::VecDeque;
 use std::marker::PhantomData;
 use std::thread;
@@ -44,13 +47,14 @@ impl EventTrait for MockEvt {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct MockCtx<E>
 where
     E: EventTrait,
 {
     pub events: VecDeque<E>,
     pub handle_events_calls: usize,
+    pub database: Database,
 }
 
 impl<E> Default for MockCtx<E>
@@ -61,6 +65,7 @@ where
         MockCtx {
             events: Default::default(),
             handle_events_calls: 0,
+            database: Default::default(),
         }
     }
 }
@@ -86,6 +91,51 @@ where
         }
 
         Ok(true)
+    }
+}
+
+impl<E> DatabaseTrait for MockCtx<E>
+where
+    E: EventTrait,
+{
+    fn create_entity(&mut self) -> Entity {
+        self.database.create_entity()
+    }
+
+    fn destroy_entity(&mut self, entity: &Entity) -> Result<(), DatabaseError> {
+        self.database.destroy_entity(entity)
+    }
+
+    fn has_entity(&self, entity: &Entity) -> bool {
+        self.database.has_entity(entity)
+    }
+
+    fn entities(&self) -> usize {
+        self.database.entities()
+    }
+
+    fn add<C: Any>(&mut self, entity: Entity, component: C) -> Result<(), DatabaseError> {
+        self.database.add::<C>(entity, component)
+    }
+
+    fn remove<C: Any>(&mut self, entity: &Entity) -> Result<C, DatabaseError> {
+        self.database.remove(entity)
+    }
+
+    fn has<C: Any>(&self, entity: &Entity) -> bool {
+        self.database.has::<C>(entity)
+    }
+
+    fn components(&self, entity: &Entity) -> usize {
+        self.database.components(entity)
+    }
+
+    fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, DatabaseError> {
+        self.database.borrow::<C>(entity)
+    }
+
+    fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, DatabaseError> {
+        self.database.borrow_mut::<C>(entity)
     }
 }
 
@@ -137,7 +187,7 @@ where
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct MockAux;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Debug)]
 pub struct MockSysA<C, E>
 where
     E: EventTrait,
@@ -154,6 +204,44 @@ where
     pub handle_event_calls: usize,
     pub handle_event_arguments: Vec<E>,
     phantom_c: PhantomData<C>,
+}
+
+impl<C, E> Clone for MockSysA<C, E>
+where
+    E: EventTrait,
+{
+    fn clone(&self) -> MockSysA<C, E> {
+        MockSysA {
+            stage_filter: self.stage_filter,
+            event_filter: self.event_filter.clone(),
+            error_out: self.error_out,
+            fixed_update_calls: self.fixed_update_calls,
+            fixed_update_arguments: self.fixed_update_arguments.clone(),
+            update_calls: self.update_calls,
+            update_arguments: self.update_arguments.clone(),
+            render_calls: self.render_calls,
+            render_arguments: self.render_arguments.clone(),
+            handle_event_calls: self.handle_event_calls,
+            handle_event_arguments: self.handle_event_arguments.clone(),
+            phantom_c: Default::default(),
+        }
+    }
+}
+
+impl<C, E> PartialEq for MockSysA<C, E>
+where
+    E: EventTrait,
+{
+    fn eq(&self, other: &MockSysA<C, E>) -> bool {
+        self.stage_filter.eq(&other.stage_filter) &&
+            self.event_filter.eq(&other.event_filter) &&
+            self.error_out.eq(&other.error_out) &&
+            self.fixed_update_calls.eq(&other.fixed_update_calls) &&
+            self.update_calls.eq(&other.update_calls) &&
+            self.render_calls.eq(&other.render_calls) &&
+            self.handle_event_calls.eq(&other.handle_event_calls) &&
+            self.phantom_c.eq(&other.phantom_c)
+    }
 }
 
 impl<C, E> MockSysA<C, E>
@@ -264,7 +352,7 @@ where
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Debug)]
 pub struct MockSysB<C, E>
 where
     E: EventTrait,
@@ -281,6 +369,44 @@ where
     pub handle_event_calls: usize,
     pub handle_event_arguments: Vec<E>,
     phantom_c: PhantomData<C>,
+}
+
+impl<C, E> PartialEq for MockSysB<C, E>
+where
+    E: EventTrait,
+{
+    fn eq(&self, other: &MockSysB<C, E>) -> bool {
+        self.stage_filter.eq(&other.stage_filter) &&
+            self.event_filter.eq(&other.event_filter) &&
+            self.error_out.eq(&other.error_out) &&
+            self.fixed_update_calls.eq(&other.fixed_update_calls) &&
+            self.update_calls.eq(&other.update_calls) &&
+            self.render_calls.eq(&other.render_calls) &&
+            self.handle_event_calls.eq(&other.handle_event_calls) &&
+            self.phantom_c.eq(&other.phantom_c)
+    }
+}
+
+impl<C, E> Clone for MockSysB<C, E>
+where
+    E: EventTrait,
+{
+    fn clone(&self) -> MockSysB<C, E> {
+        MockSysB {
+            stage_filter: self.stage_filter,
+            event_filter: self.event_filter.clone(),
+            error_out: self.error_out,
+            fixed_update_calls: self.fixed_update_calls,
+            fixed_update_arguments: self.fixed_update_arguments.clone(),
+            update_calls: self.update_calls,
+            update_arguments: self.update_arguments.clone(),
+            render_calls: self.render_calls,
+            render_arguments: self.render_arguments.clone(),
+            handle_event_calls: self.handle_event_calls,
+            handle_event_arguments: self.handle_event_arguments.clone(),
+            phantom_c: Default::default(),
+        }
+    }
 }
 
 impl<C, E> MockSysB<C, E>

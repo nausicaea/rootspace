@@ -105,7 +105,7 @@ mod tests {
         let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> =
             Default::default();
 
-        w.systems = [
+        w.systems = vec![
             MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false),
             MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false),
             MockSysA::new(LoopStage::UPDATE, MockEvtFlag::empty(), false),
@@ -114,9 +114,7 @@ mod tests {
             MockSysA::new(LoopStage::RENDER, MockEvtFlag::empty(), false),
             MockSysA::new(LoopStage::HANDLE_EVENTS, MockEvtFlag::TEST_EVENT_A, false),
             MockSysA::new(LoopStage::HANDLE_EVENTS, MockEvtFlag::TEST_EVENT_B, false),
-        ].iter()
-            .cloned()
-            .collect();
+        ];
 
         w.context
             .dispatch_later(MockEvt::TestEventA("lala-land".into()));

@@ -1,4 +1,5 @@
 use context::SceneGraphTrait;
+use ecs::database::DatabaseTrait;
 use ecs::entity::Entity;
 use ecs::event::EventTrait;
 use ecs::loop_stage::LoopStage;
@@ -10,29 +11,33 @@ use std::marker::PhantomData;
 use std::ops::Mul;
 use std::time::Duration;
 use wrappers::glium::{DisplayTrait, FrameTrait};
+use components::renderable::RenderTrait;
 
-pub struct Renderer<E, C, D, V>
+pub struct Renderer<E, C, D, M, R>
 where
-    V: DepthOrderingTrait + Clone + Default + 'static,
-    for<'r> &'r V: Mul<Output = V>,
     E: EventTrait,
-    C: SceneGraphTrait<Entity, V>,
+    C: SceneGraphTrait<Entity, M> + DatabaseTrait,
     D: DisplayTrait,
+    M: DepthOrderingTrait + Clone + Default + 'static,
+    for<'r> &'r M: Mul<Output = M>,
+    R: RenderTrait + 'static,
 {
     pub display: D,
     clear_color: [f32; 4],
     phantom_e: PhantomData<E>,
     phantom_c: PhantomData<C>,
-    phantom_v: PhantomData<V>,
+    phantom_m: PhantomData<M>,
+    phantom_r: PhantomData<R>,
 }
 
-impl<E, C, D, V> Renderer<E, C, D, V>
+impl<E, C, D, M, R> Renderer<E, C, D, M, R>
 where
-    V: DepthOrderingTrait + Clone + Default + 'static,
-    for<'r> &'r V: Mul<Output = V>,
     E: EventTrait,
-    C: SceneGraphTrait<Entity, V>,
+    C: SceneGraphTrait<Entity, M> + DatabaseTrait,
     D: DisplayTrait,
+    M: DepthOrderingTrait + Clone + Default + 'static,
+    for<'r> &'r M: Mul<Output = M>,
+    R: RenderTrait + 'static,
 {
     pub fn new(
         events_loop: &D::EventsLoop,
@@ -49,18 +54,20 @@ where
             clear_color: clear_color,
             phantom_e: Default::default(),
             phantom_c: Default::default(),
-            phantom_v: Default::default(),
+            phantom_m: Default::default(),
+            phantom_r: Default::default(),
         })
     }
 }
 
-impl<E, C, D, V> SystemTrait<C, E> for Renderer<E, C, D, V>
+impl<E, C, D, M, R> SystemTrait<C, E> for Renderer<E, C, D, M, R>
 where
-    V: DepthOrderingTrait + Clone + Default + 'static,
-    for<'r> &'r V: Mul<Output = V>,
     E: EventTrait,
-    C: SceneGraphTrait<Entity, V>,
+    C: SceneGraphTrait<Entity, M> + DatabaseTrait,
     D: DisplayTrait,
+    M: DepthOrderingTrait + Clone + Default + 'static,
+    for<'r> &'r M: Mul<Output = M>,
+    R: RenderTrait + 'static,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::RENDER
@@ -72,13 +79,17 @@ where
         target.clear(&self.clear_color, 1.0);
 
         // Update the scene graph and sort the nodes according to their z-value.
-        let _nodes = ctx.get_current_nodes(true)?;
+        ctx.update_graph()?;
+        let nodes = ctx.get_nodes(true);
 
         // Render all entities
-        // for (entity, model) in nodes {
-        // }
+        for (entity, model) in nodes {
+            if let Ok(r) = ctx.borrow::<R>(entity) {
+                r.draw();
+            }
+        }
 
-        // // Finalize the frame
+        // Finalize the frame
         target.finalize()
     }
 }
@@ -87,18 +98,18 @@ where
 mod test {
     use super::*;
     use ecs::mock::{MockCtx, MockEvt};
-    use mock::MockModel;
+    use mock::{MockModel, MockRenderable};
     use wrappers::glium::{HeadlessDisplay, HeadlessEventsLoop};
 
     #[test]
     fn new_renderer() {
-        let _s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel> =
+        let _s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel, MockRenderable> =
             Renderer::new(&HeadlessEventsLoop::default(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
     }
 
     #[test]
     fn stage_filter() {
-        let s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel> =
+        let s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel, MockRenderable> =
             Renderer::new(&HeadlessEventsLoop::default(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
         assert_eq!(s.get_stage_filter(), LoopStage::RENDER);
     }
@@ -106,7 +117,7 @@ mod test {
     #[test]
     fn render() {
         let mut ctx: MockCtx<MockEvt> = Default::default();
-        let mut s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel> =
+        let mut s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel, MockRenderable> =
             Renderer::new(&HeadlessEventsLoop::default(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
 
         assert_ok!(s.render(&mut ctx, &Default::default(), &Default::default()));

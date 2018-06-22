@@ -8,16 +8,21 @@ use std::convert::TryInto;
 use std::f32;
 use std::ops::Mul;
 use wrappers::glium::EventsLoopTrait;
+use components::renderable::RenderTrait;
 
 impl SceneGraphTrait<Entity, MockModel> for MockCtx<MockEvt> {
-    fn get_current_nodes(
-        &mut self,
-        _sort_nodes: bool,
-    ) -> Result<Vec<(&Entity, &MockModel)>, FailureError> {
-        Ok(Vec::new())
+    fn update_graph(&mut self) -> Result<(), FailureError> {
+        Ok(())
     }
 
-    fn sort_graph_nodes(&self, _nodes: &mut [(&Entity, &MockModel)]) {}
+    fn get_nodes(
+        &self,
+        _sort_nodes: bool,
+    ) -> Vec<(&Entity, &MockModel)> {
+        Vec::new()
+    }
+
+    fn sort_nodes(&self, _nodes: &mut [(&Entity, &MockModel)]) {}
 }
 
 #[derive(Clone)]
@@ -84,5 +89,13 @@ impl<'a, 'b> Mul<&'b MockModel> for &'a MockModel {
 
     fn mul(self, rhs: &'b MockModel) -> Self::Output {
         MockModel(self.0 * rhs.0)
+    }
+}
+
+pub struct MockRenderable;
+
+impl RenderTrait for MockRenderable {
+    fn draw(&self) {
+        unimplemented!()
     }
 }

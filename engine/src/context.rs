@@ -50,27 +50,32 @@ where
     K: Clone + Default + Eq + Hash,
     V: Clone + Default,
 {
-    fn get_current_nodes(&mut self, sort_nodes: bool) -> Result<Vec<(&Entity, &V)>, Error>;
-    fn sort_graph_nodes(&self, nodes: &mut [(&Entity, &V)]);
+    fn update_graph(&mut self) -> Result<(), Error>;
+    fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &V)>;
+    fn sort_nodes(&self, nodes: &mut [(&Entity, &V)]);
 }
 
 impl SceneGraphTrait<Entity, Model> for Context {
-    fn get_current_nodes(&mut self, sort_nodes: bool) -> Result<Vec<(&Entity, &Model)>, Error> {
+    fn update_graph(&mut self) -> Result<(), Error> {
         let db = &self.database;
         self.scene_graph.update(&|entity, _, parent_model| {
             let current_model = db.borrow(entity).ok()?;
             Some(parent_model * current_model)
         })?;
-
-        let mut nodes = self.scene_graph.iter().collect::<Vec<_>>();
-        if sort_nodes {
-            self.sort_graph_nodes(&mut nodes);
-        }
-
-        Ok(nodes)
+        Ok(())
     }
 
-    fn sort_graph_nodes(&self, nodes: &mut [(&Entity, &Model)]) {
+    fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &Model)> {
+        let mut nodes = self.scene_graph.iter().collect::<Vec<_>>();
+
+        if sort_nodes {
+            self.sort_nodes(&mut nodes);
+        }
+
+        nodes
+    }
+
+    fn sort_nodes(&self, nodes: &mut [(&Entity, &Model)]) {
         nodes.sort_unstable_by_key(|(_, v)| v.depth_index());
     }
 }

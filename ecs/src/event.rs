@@ -2,7 +2,7 @@ use failure::Error;
 use std::fmt::Debug;
 
 pub trait EventTrait: Clone + Debug {
-    type EventFlag: Default + Clone + Copy;
+    type EventFlag: Default + Clone + Copy + PartialEq;
 
     fn matches_filter(&self, flag: Self::EventFlag) -> bool;
 }
