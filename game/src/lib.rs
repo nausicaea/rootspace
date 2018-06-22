@@ -38,16 +38,22 @@ impl Game {
     }
 
     pub fn run(&mut self, headless: bool, iterations: Option<usize>) -> Result<(), Error> {
+        let title = "Title";
+        let dimensions = [1024, 768];
+        let vsync = true;
+        let msaa = 4;
+        let clear_color = [0.2, 0.3, 0.0, 1.0];
+
         // Create and register the systems that depend on a graphics backend.
         if headless {
             let event_interface = EventInterface::new(HeadlessEventsLoop::default());
             let renderer: Renderer<Event, Context, HeadlessDisplay, Model> = Renderer::new(
                 &event_interface.events_loop,
-                "Title",
-                &[1024, 768],
-                true,
-                4,
-                [0.2, 0.3, 0.0, 1.0],
+                title,
+                &dimensions,
+                vsync,
+                msaa,
+                clear_color,
             ).unwrap();
 
             self.orchestrator.world.add_system(event_interface);
@@ -57,11 +63,11 @@ impl Game {
             let event_interface = EventInterface::new(EventsLoop::new());
             let renderer: Renderer<Event, Context, Display, Model> = Renderer::new(
                 &event_interface.events_loop,
-                "Title",
-                &[1024, 768],
-                true,
-                4,
-                [0.2, 0.3, 0.0, 1.0],
+                title,
+                &dimensions,
+                vsync,
+                msaa,
+                clear_color,
             ).unwrap();
 
             self.orchestrator.world.add_system(event_interface);
