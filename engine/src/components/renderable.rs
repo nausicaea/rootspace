@@ -1,11 +1,19 @@
+use failure::Error;
+use components::model::Model;
+use wrappers::glium::FrameTrait;
+
 pub trait RenderTrait {
-    fn draw(&self);
+    type Model;
+
+    fn draw<F: FrameTrait>(&self, target: &mut F, model: &Self::Model) -> Result<(), Error>;
 }
 
 pub struct Renderable;
 
 impl RenderTrait for Renderable {
-    fn draw(&self) {
+    type Model = Model;
+
+    fn draw<F: FrameTrait>(&self, target: &mut F, model: &Model) -> Result<(), Error> {
         unimplemented!()
     }
 }

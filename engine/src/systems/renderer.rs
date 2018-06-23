@@ -20,7 +20,7 @@ where
     D: DisplayTrait,
     M: DepthOrderingTrait + Clone + Default + 'static,
     for<'r> &'r M: Mul<Output = M>,
-    R: RenderTrait + 'static,
+    R: RenderTrait<Model = M> + 'static,
 {
     pub display: D,
     clear_color: [f32; 4],
@@ -37,7 +37,7 @@ where
     D: DisplayTrait,
     M: DepthOrderingTrait + Clone + Default + 'static,
     for<'r> &'r M: Mul<Output = M>,
-    R: RenderTrait + 'static,
+    R: RenderTrait<Model = M> + 'static,
 {
     pub fn new(
         events_loop: &D::EventsLoop,
@@ -67,7 +67,7 @@ where
     D: DisplayTrait,
     M: DepthOrderingTrait + Clone + Default + 'static,
     for<'r> &'r M: Mul<Output = M>,
-    R: RenderTrait + 'static,
+    R: RenderTrait<Model = M> + 'static,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::RENDER
@@ -83,9 +83,9 @@ where
         let nodes = ctx.get_nodes(true);
 
         // Render all entities
-        for (entity, _model) in nodes {
+        for (entity, model) in nodes {
             if let Ok(r) = ctx.borrow::<R>(entity) {
-                r.draw();
+                r.draw(&mut target, model)?;
             }
         }
 
@@ -135,6 +135,7 @@ mod test {
             0,
             [1.0, 1.0, 1.0, 1.0],
         ).unwrap();
+
         assert_eq!(s.get_stage_filter(), LoopStage::RENDER);
     }
 

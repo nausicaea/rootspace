@@ -13,7 +13,7 @@ use std::convert::TryInto;
 use std::f32;
 use std::ops::Mul;
 use std::sync::RwLock;
-use wrappers::glium::EventsLoopTrait;
+use wrappers::glium::{EventsLoopTrait, FrameTrait};
 
 pub struct MockCtx<E>
 where
@@ -219,8 +219,12 @@ pub struct MockRenderable {
 }
 
 impl RenderTrait for MockRenderable {
-    fn draw(&self) {
+    type Model = MockModel;
+
+    fn draw<F: FrameTrait>(&self, target: &mut F, model: &MockModel) -> Result<(), FailureError> {
         let mut calls = self.draw_calls.write().unwrap();
         *calls += 1;
+
+        Ok(())
     }
 }
