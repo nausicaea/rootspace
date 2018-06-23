@@ -14,6 +14,7 @@ extern crate log;
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
+extern crate nalgebra;
 #[cfg(test)]
 extern crate tempfile;
 #[macro_use]
