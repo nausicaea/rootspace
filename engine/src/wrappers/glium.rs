@@ -1,7 +1,10 @@
 use ecs::event::EventTrait;
 use event::Event;
 use failure::Error as FailureError;
-use glium::glutin::{Event as WinitEvent, EventsLoop as WinitEventsLoop, WindowBuilder, ContextBuilder, Api, GlProfile, GlRequest};
+use glium::glutin::{
+    Api, ContextBuilder, Event as WinitEvent, EventsLoop as WinitEventsLoop, GlProfile, GlRequest,
+    WindowBuilder,
+};
 use glium::{Display as GliumDisplay, Frame as GliumFrame, Surface as GliumSurface};
 use std::convert::{TryFrom, TryInto};
 

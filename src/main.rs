@@ -41,7 +41,7 @@ fn main() {
                 .short("i")
                 .long("iterations")
                 .takes_value(true)
-                .help("Specifies the number of iterations to run")
+                .help("Specifies the number of iterations to run"),
         )
         .get_matches();
 

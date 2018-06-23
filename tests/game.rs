@@ -1,8 +1,8 @@
 extern crate game;
 
+use game::Game;
 use std::env;
 use std::time::Duration;
-use game::Game;
 
 #[test]
 #[cfg_attr(not(windows), ignore)]

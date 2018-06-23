@@ -136,7 +136,10 @@ mod tests {
         let into_sys = (LoopStage::UPDATE, MockEvtFlag::empty(), false);
         w.add_system(into_sys);
         assert_eq!(w.systems.len(), 2);
-        assert_eq!(w.systems.last().unwrap().get_stage_filter(), LoopStage::UPDATE);
+        assert_eq!(
+            w.systems.last().unwrap().get_stage_filter(),
+            LoopStage::UPDATE
+        );
     }
     #[test]
     fn fixed_update_calls() {

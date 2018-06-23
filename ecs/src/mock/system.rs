@@ -1,10 +1,10 @@
 use event::EventTrait;
 use failure::Error;
 use loop_stage::LoopStage;
-use system::SystemTrait;
 use std::marker::PhantomData;
 use std::sync::RwLock;
 use std::time::Duration;
+use system::SystemTrait;
 
 #[derive(Debug)]
 pub struct MockSysA<C, E>

@@ -1,4 +1,4 @@
-use event::{EventTrait, EventManagerTrait};
+use event::{EventManagerTrait, EventTrait};
 use failure::Error;
 use std::collections::VecDeque;
 

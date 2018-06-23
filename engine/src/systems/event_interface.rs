@@ -61,7 +61,7 @@ where
 mod tests {
     use super::*;
     use ecs::mock::MockEvt;
-    use mock::{MockEventsLoop, MockOsEvent, MockCtx};
+    use mock::{MockCtx, MockEventsLoop, MockOsEvent};
 
     #[test]
     fn default() {

@@ -1,7 +1,7 @@
-use world::WorldTrait;
 use failure::Error;
 use std::thread;
 use std::time::Duration;
+use world::WorldTrait;
 
 #[derive(Debug)]
 pub struct MockWorld {

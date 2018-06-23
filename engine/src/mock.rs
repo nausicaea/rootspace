@@ -1,10 +1,11 @@
+use components::renderable::RenderTrait;
 use context::SceneGraphTrait;
 use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
-use ecs::event::{EventTrait, EventManagerTrait};
 use ecs::entity::Entity;
+use ecs::event::{EventManagerTrait, EventTrait};
 use ecs::mock::MockEvt;
-use hierarchy::Hierarchy;
 use failure::Error as FailureError;
+use hierarchy::Hierarchy;
 use math::DepthOrderingTrait;
 use std::any::Any;
 use std::collections::VecDeque;
@@ -13,7 +14,6 @@ use std::f32;
 use std::ops::Mul;
 use std::sync::RwLock;
 use wrappers::glium::EventsLoopTrait;
-use components::renderable::RenderTrait;
 
 pub struct MockCtx<E>
 where

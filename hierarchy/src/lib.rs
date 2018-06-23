@@ -142,7 +142,10 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
     }
     /// Returns the `NodeIndex` for a particular key.
     fn get_index(&self, key: &K) -> Result<NodeIndex, HierarchyError> {
-        self.index.get(key).cloned().ok_or(HierarchyError::KeyNotFound)
+        self.index
+            .get(key)
+            .cloned()
+            .ok_or(HierarchyError::KeyNotFound)
     }
     /// Rebuilds the `Key`-`HierNode` index from the underlying `Graph`.
     fn rebuild_index(&mut self) {

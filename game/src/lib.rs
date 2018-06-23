@@ -11,15 +11,15 @@ use engine::components::renderable::Renderable;
 use engine::context::Context;
 use engine::event::Event;
 use engine::file_manipulation::FileError;
-use engine::wrappers::glium::{HeadlessDisplay, HeadlessEventsLoop};
 use engine::orchestrator::Orchestrator;
 use engine::systems::event_interface::EventInterface;
 use engine::systems::event_monitor::EventMonitor;
 use engine::systems::renderer::Renderer;
 use engine::systems::SystemGroup;
+use engine::wrappers::glium::{HeadlessDisplay, HeadlessEventsLoop};
 use failure::Error;
-use glium::Display;
 use glium::glutin::EventsLoop;
+use glium::Display;
 use std::path::Path;
 use std::time::Duration;
 
@@ -48,18 +48,18 @@ impl Game {
         // Create and register the systems that depend on a graphics backend.
         if headless {
             let event_interface = EventInterface::new(HeadlessEventsLoop::default());
-            let renderer: Renderer<Event, Context, HeadlessDisplay, Model, Renderable> = Renderer::new(
-                &event_interface.events_loop,
-                title,
-                &dimensions,
-                vsync,
-                msaa,
-                clear_color,
-            ).unwrap();
+            let renderer: Renderer<Event, Context, HeadlessDisplay, Model, Renderable> =
+                Renderer::new(
+                    &event_interface.events_loop,
+                    title,
+                    &dimensions,
+                    vsync,
+                    msaa,
+                    clear_color,
+                ).unwrap();
 
             self.orchestrator.world.add_system(event_interface);
             self.orchestrator.world.add_system(renderer);
-
         } else {
             let event_interface = EventInterface::new(EventsLoop::new());
             let renderer: Renderer<Event, Context, Display, Model, Renderable> = Renderer::new(

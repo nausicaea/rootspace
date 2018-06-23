@@ -1,3 +1,4 @@
+use components::renderable::RenderTrait;
 use context::SceneGraphTrait;
 use ecs::database::DatabaseTrait;
 use ecs::entity::Entity;
@@ -11,7 +12,6 @@ use std::marker::PhantomData;
 use std::ops::Mul;
 use std::time::Duration;
 use wrappers::glium::{DisplayTrait, FrameTrait};
-use components::renderable::RenderTrait;
 
 pub struct Renderer<E, C, D, M, R>
 where
@@ -97,20 +97,44 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use ecs::mock::{MockEvt};
-    use mock::{MockModel, MockRenderable, MockCtx};
+    use ecs::mock::MockEvt;
+    use mock::{MockCtx, MockModel, MockRenderable};
     use wrappers::glium::{HeadlessDisplay, HeadlessEventsLoop};
 
     #[test]
     fn new_renderer() {
-        let _s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel, MockRenderable> =
-            Renderer::new(&HeadlessEventsLoop::default(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let _s: Renderer<
+            MockEvt,
+            MockCtx<MockEvt>,
+            HeadlessDisplay,
+            MockModel,
+            MockRenderable,
+        > = Renderer::new(
+            &HeadlessEventsLoop::default(),
+            "Title",
+            &[800, 600],
+            false,
+            0,
+            [1.0, 1.0, 1.0, 1.0],
+        ).unwrap();
     }
 
     #[test]
     fn stage_filter() {
-        let s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel, MockRenderable> =
-            Renderer::new(&HeadlessEventsLoop::default(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let s: Renderer<
+            MockEvt,
+            MockCtx<MockEvt>,
+            HeadlessDisplay,
+            MockModel,
+            MockRenderable,
+        > = Renderer::new(
+            &HeadlessEventsLoop::default(),
+            "Title",
+            &[800, 600],
+            false,
+            0,
+            [1.0, 1.0, 1.0, 1.0],
+        ).unwrap();
         assert_eq!(s.get_stage_filter(), LoopStage::RENDER);
     }
 
@@ -129,12 +153,34 @@ mod test {
         let d = ctx.create_entity();
         ctx.insert_node(d);
 
-        let mut s: Renderer<MockEvt, MockCtx<MockEvt>, HeadlessDisplay, MockModel, MockRenderable> =
-            Renderer::new(&HeadlessEventsLoop::default(), "Title", &[800, 600], false, 0, [1.0, 1.0, 1.0, 1.0]).unwrap();
+        let mut s: Renderer<
+            MockEvt,
+            MockCtx<MockEvt>,
+            HeadlessDisplay,
+            MockModel,
+            MockRenderable,
+        > = Renderer::new(
+            &HeadlessEventsLoop::default(),
+            "Title",
+            &[800, 600],
+            false,
+            0,
+            [1.0, 1.0, 1.0, 1.0],
+        ).unwrap();
 
         assert_ok!(s.render(&mut ctx, &Default::default(), &Default::default()));
 
-        assert_eq!(ctx.borrow::<MockRenderable>(&a).map(|c| *c.draw_calls.read().unwrap()).unwrap(), 1);
-        assert_eq!(ctx.borrow::<MockRenderable>(&c).map(|c| *c.draw_calls.read().unwrap()).unwrap(), 0);
+        assert_eq!(
+            ctx.borrow::<MockRenderable>(&a)
+                .map(|c| *c.draw_calls.read().unwrap())
+                .unwrap(),
+            1
+        );
+        assert_eq!(
+            ctx.borrow::<MockRenderable>(&c)
+                .map(|c| *c.draw_calls.read().unwrap())
+                .unwrap(),
+            0
+        );
     }
 }
