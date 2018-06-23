@@ -1,4 +1,12 @@
 [[package]]
+name = "affine-transform"
+version = "0.1.0"
+dependencies = [
+ "alga 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nalgebra 0.15.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -652,6 +660,7 @@ dependencies = [
 name = "tdd-playground"
 version = "0.1.0"
 dependencies = [
+ "affine-transform 0.1.0",
  "assertions 0.1.0",
  "clap 2.31.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "ecs 0.1.0",
