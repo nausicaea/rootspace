@@ -1,6 +1,9 @@
-use math::DepthOrderingTrait;
 use std::f32;
 use std::ops::Mul;
+
+pub trait DepthOrderingTrait {
+    fn depth_index(&self) -> i32;
+}
 
 #[derive(Clone, Default)]
 pub struct Model(f32);

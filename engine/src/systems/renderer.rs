@@ -6,7 +6,7 @@ use ecs::event::EventTrait;
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
 use failure::Error;
-use math::DepthOrderingTrait;
+use components::model::DepthOrderingTrait;
 use std::f32;
 use std::marker::PhantomData;
 use std::ops::Mul;

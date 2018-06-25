@@ -1,6 +1,6 @@
 use std::f32;
 use std::ops::Mul;
-use math::DepthOrderingTrait;
+use components::model::DepthOrderingTrait;
 
 #[derive(Clone, Default)]
 pub struct MockModel(f32);

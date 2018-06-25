@@ -5,7 +5,7 @@ use ecs::event::EventManagerTrait;
 use event::Event;
 use failure::Error;
 use hierarchy::Hierarchy;
-use math::DepthOrderingTrait;
+use components::model::DepthOrderingTrait;
 use std::any::Any;
 use std::collections::VecDeque;
 use std::hash::Hash;

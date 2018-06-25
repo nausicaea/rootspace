@@ -7,7 +7,7 @@ use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
 use hierarchy::Hierarchy;
 use super::model::MockModel;
 use context::SceneGraphTrait;
-use math::DepthOrderingTrait;
+use components::model::DepthOrderingTrait;
 
 pub struct MockCtx<E>
 where
