@@ -21,6 +21,7 @@ where
 
 pub trait FrameTrait {
     fn clear(&mut self, color: &[f32; 4], depth: f32);
+    fn render(&mut self) -> Result<(), FailureError>;
     fn finalize(self) -> Result<(), FailureError>;
 }
 
@@ -67,6 +68,10 @@ pub struct HeadlessFrame;
 
 impl FrameTrait for HeadlessFrame {
     fn clear(&mut self, _color: &[f32; 4], _depth: f32) {}
+
+    fn render(&mut self) -> Result<(), FailureError> {
+        Ok(())
+    }
 
     fn finalize(self) -> Result<(), FailureError> {
         Ok(())
@@ -121,6 +126,11 @@ impl EventsLoopTrait<Event> for WinitEventsLoop {
 impl FrameTrait for GliumFrame {
     fn clear(&mut self, color: &[f32; 4], depth: f32) {
         self.clear_color_and_depth((color[0], color[1], color[2], color[3]), depth)
+    }
+
+    fn render(&mut self) -> Result<(), FailureError> {
+        // self.draw(MultiVerticesSource, Into<IndicesSource>, &Program, &Uniforms, &DrawParameters)
+        unimplemented!()
     }
 
     fn finalize(self) -> Result<(), FailureError> {

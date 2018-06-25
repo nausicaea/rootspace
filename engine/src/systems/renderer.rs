@@ -20,7 +20,7 @@ where
     D: DisplayTrait,
     M: DepthOrderingTrait + Clone + Default + 'static,
     for<'r> &'r M: Mul<Output = M>,
-    R: RenderTrait<Model = M> + 'static,
+    R: RenderTrait<D::Frame, M> + 'static,
 {
     pub display: D,
     clear_color: [f32; 4],
@@ -37,7 +37,7 @@ where
     D: DisplayTrait,
     M: DepthOrderingTrait + Clone + Default + 'static,
     for<'r> &'r M: Mul<Output = M>,
-    R: RenderTrait<Model = M> + 'static,
+    R: RenderTrait<D::Frame, M> + 'static,
 {
     pub fn new(
         events_loop: &D::EventsLoop,
@@ -67,7 +67,7 @@ where
     D: DisplayTrait,
     M: DepthOrderingTrait + Clone + Default + 'static,
     for<'r> &'r M: Mul<Output = M>,
-    R: RenderTrait<Model = M> + 'static,
+    R: RenderTrait<D::Frame, M> + 'static,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::RENDER
@@ -85,7 +85,7 @@ where
         // Render all entities
         for (entity, model) in nodes {
             if let Ok(r) = ctx.borrow::<R>(entity) {
-                r.draw(&mut target, model)?;
+                r.render(&mut target, model)?;
             }
         }
 
@@ -173,13 +173,13 @@ mod test {
 
         assert_eq!(
             ctx.borrow::<MockRenderable>(&a)
-                .map(|c| c.draw_calls())
+                .map(|c| c.render_calls())
                 .unwrap(),
             1
         );
         assert_eq!(
             ctx.borrow::<MockRenderable>(&c)
-                .map(|c| c.draw_calls())
+                .map(|c| c.render_calls())
                 .unwrap(),
             0
         );

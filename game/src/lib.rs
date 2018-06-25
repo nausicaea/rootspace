@@ -4,11 +4,12 @@ extern crate failure;
 extern crate glium;
 extern crate log;
 
+use ecs::database::DatabaseTrait;
 use ecs::event::EventManagerTrait;
 use ecs::world::World;
 use engine::components::model::Model;
 use engine::components::renderable::Renderable;
-use engine::context::Context;
+use engine::context::{Context, SceneGraphTrait};
 use engine::event::Event;
 use engine::file_manipulation::FileError;
 use engine::orchestrator::Orchestrator;
@@ -77,6 +78,21 @@ impl Game {
 
         let event_monitor = EventMonitor::default();
         self.orchestrator.world.add_system(event_monitor);
+
+        {
+            let ctx = &mut self.orchestrator.world.context;
+            let a = ctx.create_entity();
+            ctx.insert_node(a);
+            ctx.add(a, Model::new(100.0)).unwrap();
+            ctx.add(a, Renderable::new()).unwrap();
+            let b = ctx.create_entity();
+            ctx.insert_node(b);
+            ctx.add(b, Model::new(50.0)).unwrap();
+            let c = ctx.create_entity();
+            ctx.add(c, Renderable::new()).unwrap();
+            let d = ctx.create_entity();
+            ctx.insert_node(d);
+        }
 
         self.orchestrator
             .world

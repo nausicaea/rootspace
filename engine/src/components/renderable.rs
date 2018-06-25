@@ -1,19 +1,33 @@
 use components::model::Model;
 use failure::Error;
-use wrappers::glium::FrameTrait;
+use wrappers::glium::{FrameTrait, HeadlessFrame};
+use glium::Frame as GliumFrame;
 
-pub trait RenderTrait {
-    type Model;
-
-    fn draw<F: FrameTrait>(&self, target: &mut F, model: &Self::Model) -> Result<(), Error>;
+pub trait RenderTrait<F, M>
+where
+    F: FrameTrait,
+{
+    fn render(&self, target: &mut F, model: &M) -> Result<(), Error>;
 }
 
 pub struct Renderable;
 
-impl RenderTrait for Renderable {
-    type Model = Model;
+impl Renderable {
+    pub fn new() -> Self {
+        Renderable { }
+    }
+}
 
-    fn draw<F: FrameTrait>(&self, _target: &mut F, _model: &Model) -> Result<(), Error> {
+impl RenderTrait<HeadlessFrame, Model> for Renderable {
+    fn render(&self, _target: &mut HeadlessFrame, _model: &Model) -> Result<(), Error> {
+        // target.render(vertices, indices, program, uniforms, params);
+        unimplemented!()
+    }
+}
+
+impl RenderTrait<GliumFrame, Model> for Renderable {
+    fn render(&self, _target: &mut GliumFrame, _model: &Model) -> Result<(), Error> {
+        // target.render(vertices, indices, program, uniforms, params);
         unimplemented!()
     }
 }

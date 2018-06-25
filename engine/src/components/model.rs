@@ -8,6 +8,16 @@ pub trait DepthOrderingTrait {
 #[derive(Clone, Default)]
 pub struct Model(f32);
 
+impl Model {
+    pub fn identity() -> Self {
+        Model(1.0)
+    }
+
+    pub fn new(value: f32) -> Self {
+        Model(value)
+    }
+}
+
 impl DepthOrderingTrait for Model {
     fn depth_index(&self) -> i32 {
         (self.0 / f32::EPSILON).round() as i32
