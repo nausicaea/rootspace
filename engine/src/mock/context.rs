@@ -1,19 +1,13 @@
-use components::renderable::RenderTrait;
-use context::SceneGraphTrait;
-use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
-use ecs::entity::Entity;
-use ecs::event::{EventManagerTrait, EventTrait};
-use ecs::mock::MockEvt;
-use failure::Error as FailureError;
-use hierarchy::Hierarchy;
-use math::DepthOrderingTrait;
 use std::any::Any;
 use std::collections::VecDeque;
-use std::convert::TryInto;
-use std::f32;
-use std::ops::Mul;
-use std::sync::RwLock;
-use wrappers::glium::{EventsLoopTrait, FrameTrait};
+use failure::Error as FailureError;
+use ecs::entity::Entity;
+use ecs::event::{EventTrait, EventManagerTrait};
+use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
+use hierarchy::Hierarchy;
+use super::model::MockModel;
+use context::SceneGraphTrait;
+use math::DepthOrderingTrait;
 
 pub struct MockCtx<E>
 where
@@ -140,97 +134,3 @@ where
     }
 }
 
-#[derive(Clone)]
-pub enum MockOsEvent {
-    TestEventA(String),
-    TestEventB(u32),
-    TestEventC(f32),
-}
-
-impl TryInto<MockEvt> for MockOsEvent {
-    type Error = ();
-
-    fn try_into(self) -> Result<MockEvt, Self::Error> {
-        match self {
-            MockOsEvent::TestEventA(s) => Ok(MockEvt::TestEventA(s)),
-            MockOsEvent::TestEventB(d) => Ok(MockEvt::TestEventB(d)),
-            MockOsEvent::TestEventC(_) => Err(()),
-        }
-    }
-}
-
-#[derive(Default)]
-pub struct MockEventsLoop {
-    events: VecDeque<MockOsEvent>,
-}
-
-impl MockEventsLoop {
-    pub fn enqueue(&mut self, event: MockOsEvent) {
-        self.events.push_back(event);
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.events.is_empty()
-    }
-}
-
-impl EventsLoopTrait<MockEvt> for MockEventsLoop {
-    type OsEvent = MockOsEvent;
-
-    fn poll<F>(&mut self, mut handler: F)
-    where
-        F: FnMut(Self::OsEvent),
-    {
-        let tmp = self.events.iter().cloned().collect::<Vec<_>>();
-        self.events.clear();
-
-        for event in tmp {
-            handler(event);
-        }
-    }
-}
-
-#[derive(Clone, Default)]
-pub struct MockModel(f32);
-
-impl MockModel {
-    pub fn new(z: f32) -> MockModel {
-        MockModel(z)
-    }
-}
-
-impl DepthOrderingTrait for MockModel {
-    fn depth_index(&self) -> i32 {
-        (self.0 / f32::EPSILON).round() as i32
-    }
-}
-
-impl<'a, 'b> Mul<&'b MockModel> for &'a MockModel {
-    type Output = MockModel;
-
-    fn mul(self, rhs: &'b MockModel) -> Self::Output {
-        MockModel(self.0 * rhs.0)
-    }
-}
-
-#[derive(Default)]
-pub struct MockRenderable {
-    pub dc: RwLock<usize>,
-}
-
-impl MockRenderable {
-    pub fn draw_calls(&self) -> usize {
-        *self.dc.read().unwrap()
-    }
-}
-
-impl RenderTrait for MockRenderable {
-    type Model = MockModel;
-
-    fn draw<F: FrameTrait>(&self, _target: &mut F, _model: &MockModel) -> Result<(), FailureError> {
-        let mut calls = self.dc.write().unwrap();
-        *calls += 1;
-
-        Ok(())
-    }
-}
