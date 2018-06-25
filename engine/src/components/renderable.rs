@@ -1,5 +1,5 @@
-use failure::Error;
 use components::model::Model;
+use failure::Error;
 use wrappers::glium::FrameTrait;
 
 pub trait RenderTrait {

@@ -1,8 +1,8 @@
-use std::sync::RwLock;
 use super::model::MockModel;
 use components::renderable::RenderTrait;
-use wrappers::glium::FrameTrait;
 use failure::Error as FailureError;
+use std::sync::RwLock;
+use wrappers::glium::FrameTrait;
 
 #[derive(Default)]
 pub struct MockRenderable {

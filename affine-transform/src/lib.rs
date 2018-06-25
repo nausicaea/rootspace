@@ -4,9 +4,11 @@
 extern crate alga;
 extern crate nalgebra;
 
-use nalgebra::{norm, one, zero, Affine3, Matrix4, Point3, Real, Rotation3, Scalar, Translation3,
-               U1, U3, UnitQuaternion, Vector3};
 use alga::linear::ProjectiveTransformation;
+use nalgebra::{
+    norm, one, zero, Affine3, Matrix4, Point3, Real, Rotation3, Scalar, Translation3, U1, U3,
+    UnitQuaternion, Vector3,
+};
 
 /// Unfortunately, `nalgebra` does not provide a decomposed affine matrix representation
 /// (equivalent to Isometry but with translational, rotational, and non-uniform scaling
@@ -69,7 +71,8 @@ where
 
     /// Transforms the specified point.
     pub fn transform_point(&self, point: &Point3<N>) -> Point3<N> {
-        self.translation * self.rotation
+        self.translation
+            * self.rotation
             * Point3::from_coordinates(self.scale.component_mul(&point.coords))
     }
 
@@ -175,22 +178,7 @@ mod tests {
     #[test]
     fn test_from_and_into_affine3() {
         let a = Affine3::from_matrix_unchecked(Matrix4::new(
-            1.0,
-            0.0,
-            0.0,
-            0.1,
-            0.0,
-            2.0,
-            0.0,
-            0.2,
-            0.0,
-            0.0,
-            3.0,
-            0.3,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
+            1.0, 0.0, 0.0, 0.1, 0.0, 2.0, 0.0, 0.2, 0.0, 0.0, 3.0, 0.3, 0.0, 0.0, 0.0, 1.0,
         ));
 
         let b: AffineTransform<f32> = a.into();

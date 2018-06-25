@@ -1,13 +1,13 @@
+use super::model::MockModel;
+use components::model::DepthOrderingTrait;
+use context::SceneGraphTrait;
+use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
+use ecs::entity::Entity;
+use ecs::event::{EventManagerTrait, EventTrait};
+use failure::Error as FailureError;
+use hierarchy::Hierarchy;
 use std::any::Any;
 use std::collections::VecDeque;
-use failure::Error as FailureError;
-use ecs::entity::Entity;
-use ecs::event::{EventTrait, EventManagerTrait};
-use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
-use hierarchy::Hierarchy;
-use super::model::MockModel;
-use context::SceneGraphTrait;
-use components::model::DepthOrderingTrait;
 
 pub struct MockCtx<E>
 where
@@ -133,4 +133,3 @@ where
         nodes.sort_unstable_by_key(|(_, v)| v.depth_index());
     }
 }
-

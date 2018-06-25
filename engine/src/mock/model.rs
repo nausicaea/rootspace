@@ -1,6 +1,6 @@
+use components::model::DepthOrderingTrait;
 use std::f32;
 use std::ops::Mul;
-use components::model::DepthOrderingTrait;
 
 #[derive(Clone, Default)]
 pub struct MockModel(f32);
@@ -24,4 +24,3 @@ impl<'a, 'b> Mul<&'b MockModel> for &'a MockModel {
         MockModel(self.0 * rhs.0)
     }
 }
-

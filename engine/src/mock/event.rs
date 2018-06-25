@@ -1,6 +1,6 @@
+use ecs::mock::MockEvt;
 use std::collections::VecDeque;
 use std::convert::TryInto;
-use ecs::mock::MockEvt;
 use wrappers::glium::EventsLoopTrait;
 
 #[derive(Clone)]
@@ -52,4 +52,3 @@ impl EventsLoopTrait<MockEvt> for MockEventsLoop {
         }
     }
 }
-

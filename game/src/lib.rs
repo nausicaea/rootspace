@@ -78,7 +78,10 @@ impl Game {
         let event_monitor = EventMonitor::default();
         self.orchestrator.world.add_system(event_monitor);
 
-        self.orchestrator.world.context.dispatch_later(Event::ready());
+        self.orchestrator
+            .world
+            .context
+            .dispatch_later(Event::ready());
         self.orchestrator.run(iterations)?;
 
         Ok(())
