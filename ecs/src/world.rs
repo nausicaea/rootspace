@@ -148,8 +148,8 @@ mod tests {
 
         assert_ok!(r);
         for system in &w.systems {
-            assert_eq!(*system.stage_filter_calls.read().unwrap(), 1);
-            assert_eq!(*system.event_filter_calls.read().unwrap(), 0);
+            assert_eq!(system.stage_filter_calls(), 1);
+            assert_eq!(system.event_filter_calls(), 0);
             if system.get_stage_filter().contains(LoopStage::FIXED_UPDATE) {
                 assert_eq!(system.fixed_update_calls, 1);
             } else {
@@ -192,8 +192,8 @@ mod tests {
 
         assert_ok!(r);
         for system in &w.systems {
-            assert_eq!(*system.stage_filter_calls.read().unwrap(), 1);
-            assert_eq!(*system.event_filter_calls.read().unwrap(), 0);
+            assert_eq!(system.stage_filter_calls(), 1);
+            assert_eq!(system.event_filter_calls(), 0);
             if system.get_stage_filter().contains(LoopStage::UPDATE) {
                 assert_eq!(system.update_calls, 1);
             } else {
@@ -233,8 +233,8 @@ mod tests {
 
         assert_ok!(r);
         for system in &w.systems {
-            assert_eq!(*system.stage_filter_calls.read().unwrap(), 1);
-            assert_eq!(*system.event_filter_calls.read().unwrap(), 0);
+            assert_eq!(system.stage_filter_calls(), 1);
+            assert_eq!(system.event_filter_calls(), 0);
             if system.get_stage_filter().contains(LoopStage::RENDER) {
                 assert_eq!(system.render_calls, 1);
             } else {
@@ -275,9 +275,9 @@ mod tests {
         assert_ok!(r);
         assert_eq!(w.context.handle_events_calls, 1);
         for system in &w.systems {
-            assert_eq!(*system.stage_filter_calls.read().unwrap(), 2);
+            assert_eq!(system.stage_filter_calls(), 2);
             if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) {
-                assert_eq!(*system.event_filter_calls.read().unwrap(), 2);
+                assert_eq!(system.event_filter_calls(), 2);
                 if system
                     .get_event_filter()
                     .contains(MockEvtFlag::TEST_EVENT_A)

@@ -215,14 +215,20 @@ impl<'a, 'b> Mul<&'b MockModel> for &'a MockModel {
 
 #[derive(Default)]
 pub struct MockRenderable {
-    pub draw_calls: RwLock<usize>,
+    pub dc: RwLock<usize>,
+}
+
+impl MockRenderable {
+    pub fn draw_calls(&self) -> usize {
+        *self.dc.read().unwrap()
+    }
 }
 
 impl RenderTrait for MockRenderable {
     type Model = MockModel;
 
     fn draw<F: FrameTrait>(&self, _target: &mut F, _model: &MockModel) -> Result<(), FailureError> {
-        let mut calls = self.draw_calls.write().unwrap();
+        let mut calls = self.dc.write().unwrap();
         *calls += 1;
 
         Ok(())

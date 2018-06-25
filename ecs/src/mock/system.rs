@@ -12,9 +12,9 @@ where
     E: EventTrait,
 {
     pub stage_filter: LoopStage,
-    pub stage_filter_calls: RwLock<usize>,
+    pub sfc: RwLock<usize>,
     pub event_filter: E::EventFlag,
-    pub event_filter_calls: RwLock<usize>,
+    pub efc: RwLock<usize>,
     pub error_out: bool,
     pub fixed_update_calls: usize,
     pub fixed_update_arguments: Vec<(Duration, Duration)>,
@@ -39,6 +39,14 @@ where
             ..Default::default()
         }
     }
+
+    pub fn stage_filter_calls(&self) -> usize {
+        *self.sfc.read().unwrap()
+    }
+
+    pub fn event_filter_calls(&self) -> usize {
+        *self.efc.read().unwrap()
+    }
 }
 
 impl<C, E> Clone for MockSysA<C, E>
@@ -48,9 +56,9 @@ where
     fn clone(&self) -> MockSysA<C, E> {
         MockSysA {
             stage_filter: self.stage_filter,
-            stage_filter_calls: RwLock::new(*self.stage_filter_calls.read().unwrap()),
+            sfc: RwLock::new(self.stage_filter_calls()),
             event_filter: self.event_filter.clone(),
-            event_filter_calls: RwLock::new(*self.event_filter_calls.read().unwrap()),
+            efc: RwLock::new(self.event_filter_calls()),
             error_out: self.error_out,
             fixed_update_calls: self.fixed_update_calls,
             fixed_update_arguments: self.fixed_update_arguments.clone(),
@@ -72,9 +80,9 @@ where
     fn default() -> Self {
         MockSysA {
             stage_filter: Default::default(),
-            stage_filter_calls: Default::default(),
+            sfc: Default::default(),
             event_filter: Default::default(),
-            event_filter_calls: Default::default(),
+            efc: Default::default(),
             error_out: Default::default(),
             fixed_update_calls: 0,
             fixed_update_arguments: Vec::new(),
@@ -103,12 +111,12 @@ where
     E: EventTrait,
 {
     fn get_stage_filter(&self) -> LoopStage {
-        let mut calls = self.stage_filter_calls.write().unwrap();
+        let mut calls = self.sfc.write().unwrap();
         *calls += 1;
         self.stage_filter
     }
     fn get_event_filter(&self) -> E::EventFlag {
-        let mut calls = self.event_filter_calls.write().unwrap();
+        let mut calls = self.efc.write().unwrap();
         *calls += 1;
         self.event_filter
     }
@@ -171,9 +179,9 @@ where
     E: EventTrait,
 {
     pub stage_filter: LoopStage,
-    pub stage_filter_calls: RwLock<usize>,
+    pub sfc: RwLock<usize>,
     pub event_filter: E::EventFlag,
-    pub event_filter_calls: RwLock<usize>,
+    pub efc: RwLock<usize>,
     pub error_out: bool,
     pub fixed_update_calls: usize,
     pub fixed_update_arguments: Vec<(Duration, Duration)>,
@@ -198,6 +206,14 @@ where
             ..Default::default()
         }
     }
+
+    pub fn stage_filter_calls(&self) -> usize {
+        *self.sfc.read().unwrap()
+    }
+
+    pub fn event_filter_calls(&self) -> usize {
+        *self.efc.read().unwrap()
+    }
 }
 
 impl<C, E> Clone for MockSysB<C, E>
@@ -207,9 +223,9 @@ where
     fn clone(&self) -> MockSysB<C, E> {
         MockSysB {
             stage_filter: self.stage_filter,
-            stage_filter_calls: RwLock::new(*self.stage_filter_calls.read().unwrap()),
+            sfc: RwLock::new(self.stage_filter_calls()),
             event_filter: self.event_filter.clone(),
-            event_filter_calls: RwLock::new(*self.event_filter_calls.read().unwrap()),
+            efc: RwLock::new(self.event_filter_calls()),
             error_out: self.error_out,
             fixed_update_calls: self.fixed_update_calls,
             fixed_update_arguments: self.fixed_update_arguments.clone(),
@@ -231,9 +247,9 @@ where
     fn default() -> Self {
         MockSysB {
             stage_filter: Default::default(),
-            stage_filter_calls: Default::default(),
+            sfc: Default::default(),
             event_filter: Default::default(),
-            event_filter_calls: Default::default(),
+            efc: Default::default(),
             error_out: Default::default(),
             fixed_update_calls: 0,
             fixed_update_arguments: Vec::new(),
@@ -262,12 +278,12 @@ where
     E: EventTrait,
 {
     fn get_stage_filter(&self) -> LoopStage {
-        let mut calls = self.stage_filter_calls.write().unwrap();
+        let mut calls = self.sfc.write().unwrap();
         *calls += 1;
         self.stage_filter
     }
     fn get_event_filter(&self) -> E::EventFlag {
-        let mut calls = self.event_filter_calls.write().unwrap();
+        let mut calls = self.efc.write().unwrap();
         *calls += 1;
         self.event_filter
     }

@@ -173,13 +173,13 @@ mod test {
 
         assert_eq!(
             ctx.borrow::<MockRenderable>(&a)
-                .map(|c| *c.draw_calls.read().unwrap())
+                .map(|c| c.draw_calls())
                 .unwrap(),
             1
         );
         assert_eq!(
             ctx.borrow::<MockRenderable>(&c)
-                .map(|c| *c.draw_calls.read().unwrap())
+                .map(|c| c.draw_calls())
                 .unwrap(),
             0
         );
