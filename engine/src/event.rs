@@ -1,18 +1,5 @@
 use ecs::event::EventTrait;
 
-#[derive(Clone, Debug)]
-pub enum Event {
-    Ready,
-}
-
-impl Event {
-    fn as_flag(&self) -> EventFlag {
-        match *self {
-            Event::Ready => EventFlag::READY,
-        }
-    }
-}
-
 bitflags! {
     pub struct EventFlag: u64 {
         const READY = 0x01;
@@ -25,11 +12,24 @@ impl Default for EventFlag {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct Event {
+    flag: EventFlag,
+}
+
+impl Event {
+    pub fn ready() -> Self {
+        Event {
+            flag: EventFlag::READY,
+        }
+    }
+}
+
 impl EventTrait for Event {
     type EventFlag = EventFlag;
 
     fn matches_filter(&self, flag: Self::EventFlag) -> bool {
-        flag.contains(self.as_flag())
+        flag.contains(self.flag)
     }
 }
 
@@ -40,5 +40,10 @@ mod tests {
     #[test]
     fn default_event_flag() {
         assert_eq!(EventFlag::default(), EventFlag::all());
+    }
+
+    #[test]
+    fn ready_event() {
+        assert!(Event::ready().matches_filter(EventFlag::READY));
     }
 }

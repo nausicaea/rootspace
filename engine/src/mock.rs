@@ -221,7 +221,7 @@ pub struct MockRenderable {
 impl RenderTrait for MockRenderable {
     type Model = MockModel;
 
-    fn draw<F: FrameTrait>(&self, target: &mut F, model: &MockModel) -> Result<(), FailureError> {
+    fn draw<F: FrameTrait>(&self, _target: &mut F, _model: &MockModel) -> Result<(), FailureError> {
         let mut calls = self.draw_calls.write().unwrap();
         *calls += 1;
 

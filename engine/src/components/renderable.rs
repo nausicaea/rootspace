@@ -13,7 +13,7 @@ pub struct Renderable;
 impl RenderTrait for Renderable {
     type Model = Model;
 
-    fn draw<F: FrameTrait>(&self, target: &mut F, model: &Model) -> Result<(), Error> {
+    fn draw<F: FrameTrait>(&self, _target: &mut F, _model: &Model) -> Result<(), Error> {
         unimplemented!()
     }
 }
