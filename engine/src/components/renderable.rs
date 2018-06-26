@@ -21,13 +21,13 @@ impl Renderable {
 impl RenderTrait<HeadlessFrame, Model> for Renderable {
     fn render(&self, _target: &mut HeadlessFrame, _model: &Model) -> Result<(), Error> {
         // target.render(vertices, indices, program, uniforms, params);
-        unimplemented!()
+        Ok(())
     }
 }
 
 impl RenderTrait<GliumFrame, Model> for Renderable {
     fn render(&self, _target: &mut GliumFrame, _model: &Model) -> Result<(), Error> {
         // target.render(vertices, indices, program, uniforms, params);
-        unimplemented!()
+        Ok(())
     }
 }
