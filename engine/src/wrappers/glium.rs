@@ -1,10 +1,12 @@
 use ecs::event::EventTrait;
 use event::Event;
 use failure::Error as FailureError;
+use nalgebra::Matrix4;
 use glium::glutin::{
     Api, ContextBuilder, Event as WinitEvent, EventsLoop as WinitEventsLoop, GlProfile, GlRequest,
     WindowBuilder,
 };
+use glium::uniforms::{Uniforms as GliumUniforms, UniformValue};
 use glium::{Display as GliumDisplay, Frame as GliumFrame, Surface as GliumSurface};
 use std::convert::{TryFrom, TryInto};
 
@@ -41,6 +43,21 @@ where
     fn create_frame(&self) -> Self::Frame;
 }
 
+pub struct Uniforms {
+    pub pvm_matrix: Matrix4<f32>,
+}
+
+impl GliumUniforms for Uniforms {
+    fn visit_values<'a, F>(&'a self, mut f: F)
+    where
+        F: FnMut(&str, UniformValue<'a>),
+    {
+        f("pvm_matrix", UniformValue::Mat4(self.pvm_matrix.into()));
+        // f("name", uniform_value);
+        // I need: pvm_matrix, normal_matrix, optionally diff_tex, optionally norm_tex
+    }
+}
+
 #[derive(Default)]
 pub struct HeadlessEventsLoop;
 
@@ -64,6 +81,12 @@ impl TryFrom<()> for Event {
 
 #[derive(Default)]
 pub struct HeadlessFrame;
+
+impl HeadlessFrame {
+    pub fn draw(&mut self) -> Result<(), FailureError> {
+        Ok(())
+    }
+}
 
 impl FrameTrait for HeadlessFrame {
     fn clear(&mut self, _color: &[f32; 4], _depth: f32) {}
