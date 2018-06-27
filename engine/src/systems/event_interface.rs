@@ -26,9 +26,9 @@ where
 {
     pub fn new(events_loop: Z) -> Self {
         EventInterface {
-            events_loop: events_loop,
-            phantom_e: Default::default(),
-            phantom_c: Default::default(),
+            events_loop,
+            phantom_e: PhantomData::default(),
+            phantom_c: PhantomData::default(),
         }
     }
 }

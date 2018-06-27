@@ -42,7 +42,7 @@ where
     pub fn new(
         events_loop: &D::EventsLoop,
         title: &str,
-        dimensions: &[u32; 2],
+        dimensions: [u32; 2],
         vsync: bool,
         msaa: u16,
         clear_color: [f32; 4],
@@ -50,12 +50,12 @@ where
         let display = D::create(events_loop, title, dimensions, vsync, msaa)?;
 
         Ok(Renderer {
-            display: display,
-            clear_color: clear_color,
-            phantom_e: Default::default(),
-            phantom_c: Default::default(),
-            phantom_m: Default::default(),
-            phantom_r: Default::default(),
+            display,
+            clear_color,
+            phantom_e: PhantomData::default(),
+            phantom_c: PhantomData::default(),
+            phantom_m: PhantomData::default(),
+            phantom_r: PhantomData::default(),
         })
     }
 }
@@ -112,7 +112,7 @@ mod test {
         > = Renderer::new(
             &HeadlessEventsLoop::default(),
             "Title",
-            &[800, 600],
+            [800, 600],
             false,
             0,
             [1.0, 1.0, 1.0, 1.0],
@@ -130,7 +130,7 @@ mod test {
         > = Renderer::new(
             &HeadlessEventsLoop::default(),
             "Title",
-            &[800, 600],
+            [800, 600],
             false,
             0,
             [1.0, 1.0, 1.0, 1.0],
@@ -163,7 +163,7 @@ mod test {
         > = Renderer::new(
             &HeadlessEventsLoop::default(),
             "Title",
-            &[800, 600],
+            [800, 600],
             false,
             0,
             [1.0, 1.0, 1.0, 1.0],

@@ -36,7 +36,7 @@ where
     fn create(
         events_loop: &Self::EventsLoop,
         title: &str,
-        dimensions: &[u32; 2],
+        dimensions: [u32; 2],
         vsync: bool,
         msaa: u16,
     ) -> Result<Self, FailureError>;
@@ -106,15 +106,15 @@ impl DisplayTrait for HeadlessDisplay {
     fn create(
         _events_loop: &Self::EventsLoop,
         _title: &str,
-        _dimensions: &[u32; 2],
+        _dimensions: [u32; 2],
         _vsync: bool,
         _msaa: u16,
     ) -> Result<Self, FailureError> {
-        Ok(Default::default())
+        Ok(HeadlessDisplay::default())
     }
 
     fn create_frame(&self) -> Self::Frame {
-        Default::default()
+        HeadlessFrame::default()
     }
 }
 
@@ -162,7 +162,7 @@ impl DisplayTrait for GliumDisplay {
     fn create(
         events_loop: &Self::EventsLoop,
         title: &str,
-        dimensions: &[u32; 2],
+        dimensions: [u32; 2],
         vsync: bool,
         msaa: u16,
     ) -> Result<Self, FailureError> {

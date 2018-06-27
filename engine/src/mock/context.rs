@@ -25,10 +25,10 @@ where
 {
     fn default() -> Self {
         MockCtx {
-            events: Default::default(),
+            events: VecDeque::default(),
             handle_events_calls: 0,
-            database: Default::default(),
-            scene_graph: Default::default(),
+            database: Database::default(),
+            scene_graph: Hierarchy::default(),
         }
     }
 }
@@ -116,7 +116,7 @@ where
     }
 
     fn insert_node(&mut self, entity: Entity) {
-        self.scene_graph.insert(entity, Default::default())
+        self.scene_graph.insert(entity, MockModel::default())
     }
 
     fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &MockModel)> {

@@ -43,8 +43,8 @@ where
     fn default() -> Self {
         World {
             context: Default::default(),
-            systems: Default::default(),
-            phantom: Default::default(),
+            systems: Vec::default(),
+            phantom: PhantomData::default(),
         }
     }
 }
@@ -84,10 +84,8 @@ where
 
         self.context.handle_events(|ctx, event| {
             for system in systems.iter_mut() {
-                if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) {
-                    if event.matches_filter(system.get_event_filter()) {
-                        system.handle_event(ctx, event)?;
-                    }
+                if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) && event.matches_filter(system.get_event_filter()) {
+                    system.handle_event(ctx, event)?;
                 }
             }
             Ok(true)

@@ -33,10 +33,10 @@ where
 {
     pub fn new(stage_filter: LoopStage, event_filter: E::EventFlag, error_out: bool) -> Self {
         MockSysA {
-            stage_filter: stage_filter,
-            event_filter: event_filter,
-            error_out: error_out,
-            ..Default::default()
+            stage_filter,
+            event_filter,
+            error_out,
+            ..MockSysA::default()
         }
     }
 
@@ -57,7 +57,7 @@ where
         MockSysA {
             stage_filter: self.stage_filter,
             sfc: RwLock::new(self.stage_filter_calls()),
-            event_filter: self.event_filter.clone(),
+            event_filter: self.event_filter,
             efc: RwLock::new(self.event_filter_calls()),
             error_out: self.error_out,
             fixed_update_calls: self.fixed_update_calls,
@@ -68,7 +68,7 @@ where
             render_arguments: self.render_arguments.clone(),
             handle_event_calls: self.handle_event_calls,
             handle_event_arguments: self.handle_event_arguments.clone(),
-            phantom_c: Default::default(),
+            phantom_c: PhantomData::default(),
         }
     }
 }
@@ -79,10 +79,10 @@ where
 {
     fn default() -> Self {
         MockSysA {
-            stage_filter: Default::default(),
-            sfc: Default::default(),
+            stage_filter: LoopStage::default(),
+            sfc: RwLock::default(),
             event_filter: Default::default(),
-            efc: Default::default(),
+            efc: RwLock::default(),
             error_out: Default::default(),
             fixed_update_calls: 0,
             fixed_update_arguments: Vec::new(),
@@ -92,7 +92,7 @@ where
             render_arguments: Vec::new(),
             handle_event_calls: 0,
             handle_event_arguments: Vec::new(),
-            phantom_c: Default::default(),
+            phantom_c: PhantomData::default(),
         }
     }
 }
@@ -200,10 +200,10 @@ where
 {
     pub fn new(stage_filter: LoopStage, event_filter: E::EventFlag, error_out: bool) -> Self {
         MockSysB {
-            stage_filter: stage_filter,
-            event_filter: event_filter,
-            error_out: error_out,
-            ..Default::default()
+            stage_filter,
+            event_filter,
+            error_out,
+            ..MockSysB::default()
         }
     }
 
@@ -224,7 +224,7 @@ where
         MockSysB {
             stage_filter: self.stage_filter,
             sfc: RwLock::new(self.stage_filter_calls()),
-            event_filter: self.event_filter.clone(),
+            event_filter: self.event_filter,
             efc: RwLock::new(self.event_filter_calls()),
             error_out: self.error_out,
             fixed_update_calls: self.fixed_update_calls,
@@ -235,7 +235,7 @@ where
             render_arguments: self.render_arguments.clone(),
             handle_event_calls: self.handle_event_calls,
             handle_event_arguments: self.handle_event_arguments.clone(),
-            phantom_c: Default::default(),
+            phantom_c: PhantomData::default(),
         }
     }
 }
@@ -246,10 +246,10 @@ where
 {
     fn default() -> Self {
         MockSysB {
-            stage_filter: Default::default(),
-            sfc: Default::default(),
+            stage_filter: LoopStage::default(),
+            sfc: RwLock::default(),
             event_filter: Default::default(),
-            efc: Default::default(),
+            efc: RwLock::default(),
             error_out: Default::default(),
             fixed_update_calls: 0,
             fixed_update_arguments: Vec::new(),
@@ -259,7 +259,7 @@ where
             render_arguments: Vec::new(),
             handle_event_calls: 0,
             handle_event_arguments: Vec::new(),
-            phantom_c: Default::default(),
+            phantom_c: PhantomData::default(),
         }
     }
 }

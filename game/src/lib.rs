@@ -56,7 +56,7 @@ impl Game {
                 Renderer::new(
                     &event_interface.events_loop,
                     title,
-                    &dimensions,
+                    dimensions,
                     vsync,
                     msaa,
                     clear_color,
@@ -82,7 +82,7 @@ impl Game {
             let renderer: Renderer<Event, Context, Display, Model, Renderable<GliumRenderData>> = Renderer::new(
                 &event_interface.events_loop,
                 title,
-                &dimensions,
+                dimensions,
                 vsync,
                 msaa,
                 clear_color,

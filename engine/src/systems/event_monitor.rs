@@ -18,8 +18,8 @@ where
 {
     fn default() -> Self {
         EventMonitor {
-            phantom_e: Default::default(),
-            phantom_c: Default::default(),
+            phantom_e: PhantomData::default(),
+            phantom_c: PhantomData::default(),
         }
     }
 }

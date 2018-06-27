@@ -21,9 +21,9 @@ where
 {
     fn default() -> Self {
         MockCtx {
-            events: Default::default(),
+            events: VecDeque::default(),
             handle_events_calls: 0,
-            database: Default::default(),
+            database: Database::default(),
         }
     }
 }

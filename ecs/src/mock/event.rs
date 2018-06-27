@@ -53,7 +53,7 @@ where
 {
     fn default() -> Self {
         MockEvtMgr {
-            events: Default::default(),
+            events: VecDeque::default(),
             handle_events_calls: 0,
         }
     }

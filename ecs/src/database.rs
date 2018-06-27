@@ -23,7 +23,7 @@ pub struct Database {
 impl Default for Database {
     fn default() -> Self {
         Database {
-            entities: Default::default(),
+            entities: HashMap::default(),
         }
     }
 }
@@ -31,7 +31,7 @@ impl Default for Database {
 impl DatabaseTrait for Database {
     fn create_entity(&mut self) -> Entity {
         let e = Entity::default();
-        self.entities.insert(e.clone(), Default::default());
+        self.entities.insert(e, HashMap::default());
         e
     }
 

@@ -18,9 +18,9 @@ pub struct Context {
 impl Default for Context {
     fn default() -> Self {
         Context {
-            events: Default::default(),
-            scene_graph: Default::default(),
-            database: Default::default(),
+            events: VecDeque::default(),
+            scene_graph: Hierarchy::default(),
+            database: Database::default(),
         }
     }
 }
@@ -66,7 +66,7 @@ impl SceneGraphTrait<Entity, Model> for Context {
     }
 
     fn insert_node(&mut self, entity: Entity) {
-        self.scene_graph.insert(entity, Default::default())
+        self.scene_graph.insert(entity, Model::default())
     }
 
     fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &Model)> {

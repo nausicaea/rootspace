@@ -56,7 +56,7 @@ pub struct Hierarchy<K: Clone + Default + Eq + Hash, V: Clone + Default> {
 impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Default for Hierarchy<K, V> {
     /// Creates a default `Hierarchy` with just a root node.
     fn default() -> Self {
-        let root_node: HierNode<K, V> = Default::default();
+        let root_node: HierNode<K, V> = HierNode::default();
         let root_key = root_node.key.clone();
 
         let mut dag = Dag::new();
@@ -66,8 +66,8 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Default for Hierarchy<K
         index.insert(root_key.clone(), root_idx);
 
         Hierarchy {
-            root_key: root_key,
-            index: index,
+            root_key,
+            index,
             graph: dag,
         }
     }
@@ -76,7 +76,7 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Default for Hierarchy<K
 impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
     /// Creates a new `Hierarchy`.
     pub fn new() -> Self {
-        Default::default()
+        Hierarchy::default()
     }
     /// Deletes the `HierNode` defined by the specified key.
     pub fn remove(&mut self, key: &K) -> Result<(), HierarchyError> {
@@ -173,8 +173,8 @@ impl<K, V: Clone + Default> HierNode<K, V> {
     /// Creates a new `HierNode`.
     pub fn new(key: K, data: V) -> Self {
         HierNode {
-            key: key,
-            data: data,
+            key,
+            data,
         }
     }
     /// Given the parent node's data, update the current node's data with the supplied closure.

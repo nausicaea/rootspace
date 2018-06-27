@@ -24,7 +24,7 @@ pub struct Renderable<D>
 impl Renderable<HeadlessRenderData> {
     pub fn new() -> Self {
         Renderable {
-            data: Default::default(),
+            data: HeadlessRenderData::default(),
         }
     }
 }
@@ -32,7 +32,7 @@ impl Renderable<HeadlessRenderData> {
 impl Renderable<GliumRenderData> {
     pub fn new() -> Self {
         Renderable {
-            data: Default::default(),
+            data: GliumRenderData::default(),
         }
     }
 }

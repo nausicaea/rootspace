@@ -30,8 +30,8 @@ where
         Ok(Orchestrator {
             world: W::default(),
             resource_path: rp,
-            delta_time: delta_time,
-            max_frame_time: max_frame_time,
+            delta_time,
+            max_frame_time,
         })
     }
     pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
