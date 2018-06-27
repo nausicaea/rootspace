@@ -11,7 +11,7 @@ use std::f32;
 use std::marker::PhantomData;
 use std::ops::Mul;
 use std::time::Duration;
-use wrappers::glium::{DisplayTrait, FrameTrait};
+use graphics::{DisplayTrait, FrameTrait};
 
 pub struct Renderer<E, C, D, M, R>
 where
@@ -99,7 +99,7 @@ mod test {
     use super::*;
     use ecs::mock::MockEvt;
     use mock::{MockCtx, MockModel, MockRenderable};
-    use wrappers::glium::{HeadlessDisplay, HeadlessEventsLoop};
+    use graphics::headless::{HeadlessDisplay, HeadlessEventsLoop};
 
     #[test]
     fn new_renderer() {

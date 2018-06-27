@@ -5,7 +5,7 @@ use failure::Error;
 use std::convert::TryInto;
 use std::marker::PhantomData;
 use std::time::Duration;
-use wrappers::glium::EventsLoopTrait;
+use graphics::EventsLoopTrait;
 
 pub struct EventInterface<E, C, Z>
 where

@@ -1,6 +1,7 @@
 use components::model::Model;
 use failure::Error;
-use wrappers::glium::{FrameTrait, HeadlessFrame};
+use graphics::FrameTrait;
+use graphics::headless::HeadlessFrame;
 use glium::Frame as GliumFrame;
 
 pub trait RenderTrait<F, M>

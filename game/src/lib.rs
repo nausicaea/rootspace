@@ -17,7 +17,7 @@ use engine::systems::event_interface::EventInterface;
 use engine::systems::event_monitor::EventMonitor;
 use engine::systems::renderer::Renderer;
 use engine::systems::SystemGroup;
-use engine::wrappers::glium::{HeadlessDisplay, HeadlessEventsLoop};
+use engine::graphics::headless::{HeadlessDisplay, HeadlessEventsLoop};
 use failure::Error;
 use glium::glutin::EventsLoop;
 use glium::Display;

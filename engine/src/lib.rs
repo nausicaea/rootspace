@@ -27,4 +27,4 @@ pub mod file_manipulation;
 pub mod mock;
 pub mod orchestrator;
 pub mod systems;
-pub mod wrappers;
+pub mod graphics;

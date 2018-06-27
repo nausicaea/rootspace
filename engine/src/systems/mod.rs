@@ -15,7 +15,7 @@ use failure::Error;
 use glium::glutin::EventsLoop;
 use glium::Display;
 use std::time::Duration;
-use wrappers::glium::{HeadlessDisplay, HeadlessEventsLoop};
+use graphics::headless::{HeadlessDisplay, HeadlessEventsLoop};
 
 impl_system_group! {
     pub enum SystemGroup<Context, Event, EventFlag> {

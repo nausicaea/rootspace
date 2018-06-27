@@ -2,7 +2,7 @@ use super::model::MockModel;
 use components::renderable::RenderTrait;
 use failure::Error as FailureError;
 use std::sync::RwLock;
-use wrappers::glium::HeadlessFrame;
+use graphics::headless::HeadlessFrame;
 
 #[derive(Default)]
 pub struct MockRenderable {
