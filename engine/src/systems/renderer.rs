@@ -7,11 +7,11 @@ use ecs::event::EventTrait;
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
 use failure::Error;
+use graphics::{DisplayTrait, FrameTrait};
 use std::f32;
 use std::marker::PhantomData;
 use std::ops::Mul;
 use std::time::Duration;
-use graphics::{DisplayTrait, FrameTrait};
 
 pub struct Renderer<E, C, D, M, R>
 where
@@ -98,8 +98,8 @@ where
 mod test {
     use super::*;
     use ecs::mock::MockEvt;
-    use mock::{MockCtx, MockModel, MockRenderable};
     use graphics::headless::{HeadlessDisplay, HeadlessEventsLoop};
+    use mock::{MockCtx, MockModel, MockRenderable};
 
     #[test]
     fn new_renderer() {

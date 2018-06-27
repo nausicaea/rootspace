@@ -172,10 +172,7 @@ struct HierNode<K, V: Clone + Default> {
 impl<K, V: Clone + Default> HierNode<K, V> {
     /// Creates a new `HierNode`.
     pub fn new(key: K, data: V) -> Self {
-        HierNode {
-            key,
-            data,
-        }
+        HierNode { key, data }
     }
     /// Given the parent node's data, update the current node's data with the supplied closure.
     /// This allows users to establish hierarchical relationships between instances of a type.

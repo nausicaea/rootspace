@@ -1,8 +1,8 @@
 use components::model::Model;
 use failure::Error;
-use graphics::FrameTrait;
-use graphics::headless::HeadlessFrame;
 use glium::Frame as GliumFrame;
+use graphics::headless::HeadlessFrame;
+use graphics::FrameTrait;
 
 pub trait RenderTrait<F, M>
 where
@@ -17,8 +17,7 @@ pub struct HeadlessRenderData;
 #[derive(Default)]
 pub struct GliumRenderData;
 
-pub struct Renderable<D>
-{
+pub struct Renderable<D> {
     data: D,
 }
 

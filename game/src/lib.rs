@@ -8,16 +8,16 @@ use ecs::database::DatabaseTrait;
 use ecs::event::EventManagerTrait;
 use ecs::world::World;
 use engine::components::model::Model;
-use engine::components::renderable::{Renderable, HeadlessRenderData, GliumRenderData};
+use engine::components::renderable::{GliumRenderData, HeadlessRenderData, Renderable};
 use engine::context::{Context, SceneGraphTrait};
 use engine::event::Event;
 use engine::file_manipulation::FileError;
+use engine::graphics::headless::{HeadlessDisplay, HeadlessEventsLoop};
 use engine::orchestrator::Orchestrator;
 use engine::systems::event_interface::EventInterface;
 use engine::systems::event_monitor::EventMonitor;
 use engine::systems::renderer::Renderer;
 use engine::systems::SystemGroup;
-use engine::graphics::headless::{HeadlessDisplay, HeadlessEventsLoop};
 use failure::Error;
 use glium::glutin::EventsLoop;
 use glium::Display;
@@ -52,15 +52,20 @@ impl Game {
         // Create and register the systems that depend on a graphics backend.
         if headless {
             let event_interface = EventInterface::new(HeadlessEventsLoop::default());
-            let renderer: Renderer<Event, Context, HeadlessDisplay, Model, Renderable<HeadlessRenderData>> =
-                Renderer::new(
-                    &event_interface.events_loop,
-                    title,
-                    dimensions,
-                    vsync,
-                    msaa,
-                    clear_color,
-                ).unwrap();
+            let renderer: Renderer<
+                Event,
+                Context,
+                HeadlessDisplay,
+                Model,
+                Renderable<HeadlessRenderData>,
+            > = Renderer::new(
+                &event_interface.events_loop,
+                title,
+                dimensions,
+                vsync,
+                msaa,
+                clear_color,
+            ).unwrap();
 
             self.orchestrator.world.add_system(event_interface);
             self.orchestrator.world.add_system(renderer);
@@ -79,7 +84,13 @@ impl Game {
             ctx.insert_node(d);
         } else {
             let event_interface = EventInterface::new(EventsLoop::new());
-            let renderer: Renderer<Event, Context, Display, Model, Renderable<GliumRenderData>> = Renderer::new(
+            let renderer: Renderer<
+                Event,
+                Context,
+                Display,
+                Model,
+                Renderable<GliumRenderData>,
+            > = Renderer::new(
                 &event_interface.events_loop,
                 title,
                 dimensions,

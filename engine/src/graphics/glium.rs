@@ -1,13 +1,13 @@
+use super::{DisplayTrait, EventsLoopTrait, FrameTrait, Uniforms};
 use event::Event;
 use failure::Error as FailureError;
 use glium::glutin::{
     Api, ContextBuilder, Event as WinitEvent, EventsLoop as WinitEventsLoop, GlProfile, GlRequest,
     WindowBuilder,
 };
-use glium::uniforms::{Uniforms as GliumUniforms, UniformValue};
+use glium::uniforms::{UniformValue, Uniforms as GliumUniforms};
 use glium::{Display as GliumDisplay, Frame as GliumFrame, Surface as GliumSurface};
 use std::convert::TryFrom;
-use super::{EventsLoopTrait, FrameTrait, DisplayTrait, Uniforms};
 
 impl GliumUniforms for Uniforms {
     fn visit_values<'a, F>(&'a self, mut f: F)

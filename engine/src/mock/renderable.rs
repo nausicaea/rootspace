@@ -1,8 +1,8 @@
 use super::model::MockModel;
 use components::renderable::RenderTrait;
 use failure::Error as FailureError;
-use std::sync::RwLock;
 use graphics::headless::HeadlessFrame;
+use std::sync::RwLock;
 
 #[derive(Default)]
 pub struct MockRenderable {

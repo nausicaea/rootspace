@@ -2,10 +2,10 @@ use ecs::event::{EventManagerTrait, EventTrait};
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
 use failure::Error;
+use graphics::EventsLoopTrait;
 use std::convert::TryInto;
 use std::marker::PhantomData;
 use std::time::Duration;
-use graphics::EventsLoopTrait;
 
 pub struct EventInterface<E, C, Z>
 where

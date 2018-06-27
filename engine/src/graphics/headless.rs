@@ -1,7 +1,7 @@
+use super::{DisplayTrait, EventsLoopTrait, FrameTrait};
 use event::Event;
 use failure::Error as FailureError;
 use std::convert::TryFrom;
-use super::{EventsLoopTrait, FrameTrait, DisplayTrait};
 
 #[derive(Default)]
 pub struct HeadlessEventsLoop;
@@ -62,4 +62,3 @@ impl DisplayTrait for HeadlessDisplay {
         HeadlessFrame::default()
     }
 }
-

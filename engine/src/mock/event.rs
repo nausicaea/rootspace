@@ -1,7 +1,7 @@
 use ecs::mock::MockEvt;
+use graphics::EventsLoopTrait;
 use std::collections::VecDeque;
 use std::convert::TryInto;
-use graphics::EventsLoopTrait;
 
 #[derive(Clone)]
 pub enum MockOsEvent {

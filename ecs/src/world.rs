@@ -84,7 +84,9 @@ where
 
         self.context.handle_events(|ctx, event| {
             for system in systems.iter_mut() {
-                if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) && event.matches_filter(system.get_event_filter()) {
+                if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS)
+                    && event.matches_filter(system.get_event_filter())
+                {
                     system.handle_event(ctx, event)?;
                 }
             }
