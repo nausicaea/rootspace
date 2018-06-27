@@ -8,6 +8,7 @@ use failure::Error as FailureError;
 use hierarchy::Hierarchy;
 use std::any::Any;
 use std::collections::VecDeque;
+use std::sync::RwLock;
 
 pub struct MockCtx<E>
 where
@@ -17,6 +18,17 @@ where
     pub handle_events_calls: usize,
     pub database: Database,
     pub scene_graph: Hierarchy<Entity, MockModel>,
+    pub update_graph_calls: usize,
+    pub gnc: RwLock<usize>,
+}
+
+impl<E> MockCtx<E>
+where
+    E: EventTrait,
+{
+    pub fn get_nodes_calls(&self) -> usize {
+        *self.gnc.read().unwrap()
+    }
 }
 
 impl<E> Default for MockCtx<E>
@@ -29,6 +41,8 @@ where
             handle_events_calls: 0,
             database: Database::default(),
             scene_graph: Hierarchy::default(),
+            update_graph_calls: 0,
+            gnc: RwLock::default(),
         }
     }
 }
@@ -107,6 +121,8 @@ where
     E: EventTrait,
 {
     fn update_graph(&mut self) -> Result<(), FailureError> {
+        self.update_graph_calls += 1;
+
         let db = &self.database;
         self.scene_graph.update(&|entity, _, parent_model| {
             let current_model = db.borrow(entity).ok()?;
@@ -120,6 +136,9 @@ where
     }
 
     fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &MockModel)> {
+        let mut calls = self.gnc.write().unwrap();
+        *calls += 1;
+
         let mut nodes = self.scene_graph.iter().collect::<Vec<_>>();
 
         if sort_nodes {

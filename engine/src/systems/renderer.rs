@@ -171,6 +171,8 @@ mod test {
 
         assert_ok!(s.render(&mut ctx, &Default::default(), &Default::default()));
 
+        assert_eq!(ctx.update_graph_calls, 1);
+        assert_eq!(ctx.get_nodes_calls(), 1);
         assert_eq!(
             ctx.borrow::<MockRenderable>(&a)
                 .map(|c| c.render_calls())
