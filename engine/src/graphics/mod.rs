@@ -18,7 +18,7 @@ where
 }
 
 pub trait FrameTrait {
-    fn clear(&mut self, color: &[f32; 4], depth: f32);
+    fn clear_frame(&mut self, color: [f32; 4], depth: f32);
     fn finalize(self) -> Result<(), FailureError>;
 }
 

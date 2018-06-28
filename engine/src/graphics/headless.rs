@@ -3,7 +3,7 @@ use event::Event;
 use failure::Error as FailureError;
 use std::convert::TryFrom;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct HeadlessEventsLoop;
 
 impl EventsLoopTrait<Event> for HeadlessEventsLoop {
@@ -24,24 +24,27 @@ impl TryFrom<()> for Event {
     }
 }
 
-#[derive(Default)]
-pub struct HeadlessFrame;
+#[derive(Default, Debug)]
+pub struct HeadlessFrame {
+    pub draw_calls: usize,
+}
 
 impl HeadlessFrame {
     pub fn draw(&mut self) -> Result<(), FailureError> {
+        self.draw_calls += 1;
         Ok(())
     }
 }
 
 impl FrameTrait for HeadlessFrame {
-    fn clear(&mut self, _color: &[f32; 4], _depth: f32) {}
+    fn clear_frame(&mut self, _color: [f32; 4], _depth: f32) {}
 
     fn finalize(self) -> Result<(), FailureError> {
         Ok(())
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct HeadlessDisplay;
 
 impl DisplayTrait for HeadlessDisplay {
@@ -60,5 +63,32 @@ impl DisplayTrait for HeadlessDisplay {
 
     fn create_frame(&self) -> Self::Frame {
         HeadlessFrame::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display() {
+        let r = HeadlessDisplay::create(&HeadlessEventsLoop::default(), "", [800, 600], false, 0);
+
+        assert_ok!(r);
+
+        let _f: HeadlessFrame = r.unwrap().create_frame();
+    }
+
+    #[test]
+    fn frame() {
+        let mut f = HeadlessFrame::default();
+
+        f.clear_frame([0.0, 0.0, 0.0, 0.0], 0.0);
+
+        assert_ok!(f.draw());
+
+        let r = f.finalize();
+
+        assert_ok!(r);
     }
 }

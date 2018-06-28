@@ -44,7 +44,7 @@ impl EventsLoopTrait<Event> for WinitEventsLoop {
 }
 
 impl FrameTrait for GliumFrame {
-    fn clear(&mut self, color: &[f32; 4], depth: f32) {
+    fn clear_frame(&mut self, color: [f32; 4], depth: f32) {
         self.clear_color_and_depth((color[0], color[1], color[2], color[3]), depth)
     }
 
@@ -86,5 +86,25 @@ impl DisplayTrait for GliumDisplay {
 
     fn create_frame(&self) -> Self::Frame {
         self.draw()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg_attr(not(windows), should_panic(expected = "No backend is available"))]
+    fn display() {
+        let e = WinitEventsLoop::new();
+        let r = GliumDisplay::create(&e, "Title", [640, 480], false, 0);
+
+        assert!(r.is_ok());
+
+        let mut f = r.unwrap().draw();
+        f.clear_frame([0.0, 1.0, 0.0, 1.0], 1.0);
+        let r = f.finalize();
+
+        assert_ok!(r);
     }
 }

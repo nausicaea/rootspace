@@ -76,7 +76,7 @@ where
     fn render(&mut self, ctx: &mut C, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
         // Create the current frame.
         let mut target = self.display.create_frame();
-        target.clear(&self.clear_color, 1.0);
+        target.clear_frame(self.clear_color, 1.0);
 
         // Update the scene graph and sort the nodes according to their z-value.
         ctx.update_graph()?;
