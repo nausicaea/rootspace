@@ -43,7 +43,11 @@ use std::hash::Hash;
 ///     Some(*value)
 /// }).unwrap();
 /// ```
-pub struct Hierarchy<K: Clone + Default + Eq + Hash, V: Clone + Default> {
+pub struct Hierarchy<K, V>
+where
+    K: Clone + Default + Eq + Hash,
+    V: Clone + Default,
+{
     /// Holds the key of the root node.
     root_key: K,
     /// Provides an indexing relationship between keys and `NodeIndex` instances that in turn index
@@ -53,7 +57,11 @@ pub struct Hierarchy<K: Clone + Default + Eq + Hash, V: Clone + Default> {
     graph: Dag<HierNode<K, V>, ()>,
 }
 
-impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Default for Hierarchy<K, V> {
+impl<K, V> Default for Hierarchy<K, V>
+where
+    K: Clone + Default + Eq + Hash,
+    V: Clone + Default,
+{
     /// Creates a default `Hierarchy` with just a root node.
     fn default() -> Self {
         let root_node: HierNode<K, V> = HierNode::default();
@@ -73,11 +81,16 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Default for Hierarchy<K
     }
 }
 
-impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
+impl<K, V> Hierarchy<K, V>
+where
+    K: Clone + Default + Eq + Hash,
+    V: Clone + Default,
+{
     /// Creates a new `Hierarchy`.
     pub fn new() -> Self {
         Hierarchy::default()
     }
+
     /// Deletes the `HierNode` defined by the specified key.
     pub fn remove(&mut self, key: &K) -> Result<(), HierarchyError> {
         if key == &self.root_key {
@@ -89,12 +102,14 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
         self.rebuild_index();
         Ok(())
     }
+
     /// Inserts a `HierNode` as child of the root `HierNode`.
     pub fn insert(&mut self, child: K, data: V) {
         let parent = self.root_key.clone();
         self.insert_child(&parent, child, data)
             .unwrap_or_else(|_| unreachable!())
     }
+
     /// Inserts a `HierNode` as child of another `HierNode` identified by its key.
     pub fn insert_child(&mut self, parent: &K, child: K, data: V) -> Result<(), HierarchyError> {
         let parent_idx = self.get_index(parent)?;
@@ -103,10 +118,12 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
         self.index.insert(child, child_idx);
         Ok(())
     }
+
     /// Returns `true` if the specified key is represented within the `Hierarchy`.
     pub fn has(&self, key: &K) -> bool {
         self.index.contains_key(key)
     }
+
     /// Updates each node in breadth first search order. Refer to `HierNode.update` for more
     /// information.
     pub fn update<F>(&mut self, merge_fn: &F) -> Result<(), HierarchyError>
@@ -136,10 +153,12 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
 
         Ok(())
     }
+
     /// Returns an iterator over all `HierNode`s in the `Hierarchy`.
-    pub fn iter(&self) -> HierIter<K, V> {
-        HierIter::new(self)
+    pub fn iter(&self) -> RawNodes<K, V> {
+        RawNodes::new(self)
     }
+
     /// Returns the `NodeIndex` for a particular key.
     fn get_index(&self, key: &K) -> Result<NodeIndex, HierarchyError> {
         self.index
@@ -147,6 +166,7 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
             .cloned()
             .ok_or(HierarchyError::KeyNotFound)
     }
+
     /// Rebuilds the `Key`-`HierNode` index from the underlying `Graph`.
     fn rebuild_index(&mut self) {
         self.index.clear();
@@ -162,18 +182,25 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
 
 /// Each `HierNode` consists of an identifying key and the associated data.
 #[derive(Default, Clone)]
-struct HierNode<K, V: Clone + Default> {
+struct HierNode<K, V>
+where
+    V: Clone + Default,
+{
     /// Provides access to the identifying key.
     pub key: K,
     /// Provides access to the hierarchical data.
     pub data: V,
 }
 
-impl<K, V: Clone + Default> HierNode<K, V> {
+impl<K, V> HierNode<K, V>
+where
+    V: Clone + Default,
+{
     /// Creates a new `HierNode`.
     pub fn new(key: K, data: V) -> Self {
         HierNode { key, data }
     }
+
     /// Given the parent node's data, update the current node's data with the supplied closure.
     /// This allows users to establish hierarchical relationships between instances of a type.
     /// As arguments, the closure will receive the current node's key and a reference to its parent
@@ -189,23 +216,33 @@ impl<K, V: Clone + Default> HierNode<K, V> {
 }
 
 /// Provides the ability to iterate over all `HierNode`s stored within a `Hierarchy`.
-pub struct HierIter<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> {
+pub struct RawNodes<'a, K, V>
+where
+    K: 'a + Clone + Default + Eq + Hash,
+    V: 'a + Clone + Default,
+{
     index: usize,
     data: &'a [Node<HierNode<K, V>, DefaultIx>],
 }
 
-impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> HierIter<'a, K, V> {
+impl<'a, K, V> RawNodes<'a, K, V>
+where
+    K: 'a + Clone + Default + Eq + Hash,
+    V: 'a + Clone + Default,
+{
     /// Creates a new `Hierarchy`.
     pub fn new(hierarchy: &'a Hierarchy<K, V>) -> Self {
-        HierIter {
+        RawNodes {
             index: 0,
             data: hierarchy.graph.raw_nodes(),
         }
     }
 }
 
-impl<'a, K: 'a + Clone + Default + Eq + Hash, V: 'a + Clone + Default> Iterator
-    for HierIter<'a, K, V>
+impl<'a, K, V> Iterator for RawNodes<'a, K, V>
+where
+    K: 'a + Clone + Default + Eq + Hash,
+    V: 'a + Clone + Default,
 {
     type Item = (&'a K, &'a V);
 
