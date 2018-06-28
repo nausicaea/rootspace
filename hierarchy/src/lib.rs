@@ -12,6 +12,7 @@ use daggy::petgraph::graph::{DefaultIx, Node};
 use daggy::petgraph::visit::{Bfs, Walker};
 use daggy::{Dag, NodeIndex};
 use std::collections::HashMap;
+use std::fmt;
 use std::hash::Hash;
 
 /// Given a set of identifying keys and corresponding data, `Hierarchy` allows users to establish
@@ -43,11 +44,8 @@ use std::hash::Hash;
 ///     Some(*value)
 /// }).unwrap();
 /// ```
-pub struct Hierarchy<K, V>
-where
-    K: Clone + Default + Eq + Hash,
-    V: Clone + Default,
-{
+#[derive(Clone)]
+pub struct Hierarchy<K, V> {
     /// Holds the key of the root node.
     root_key: K,
     /// Provides an indexing relationship between keys and `NodeIndex` instances that in turn index
@@ -78,6 +76,16 @@ where
             index,
             graph: dag,
         }
+    }
+}
+
+impl<K, V> fmt::Debug for Hierarchy<K, V>
+where
+    K: Clone + Default + Eq + Hash,
+    V: Clone + Default,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Hierarchy(nodes: {}, edges: {})", self.graph.node_count(), self.graph.edge_count())
     }
 }
 
@@ -182,10 +190,7 @@ where
 
 /// Each `HierNode` consists of an identifying key and the associated data.
 #[derive(Default, Clone)]
-struct HierNode<K, V>
-where
-    V: Clone + Default,
-{
+struct HierNode<K, V> {
     /// Provides access to the identifying key.
     pub key: K,
     /// Provides access to the hierarchical data.
@@ -216,11 +221,7 @@ where
 }
 
 /// Provides the ability to iterate over all `HierNode`s stored within a `Hierarchy`.
-pub struct RawNodes<'a, K, V>
-where
-    K: 'a + Clone + Default + Eq + Hash,
-    V: 'a + Clone + Default,
-{
+pub struct RawNodes<'a, K: 'a, V: 'a> {
     index: usize,
     data: &'a [Node<HierNode<K, V>, DefaultIx>],
 }
