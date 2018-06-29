@@ -12,12 +12,7 @@ pub trait WorldTrait {
     fn handle_events(&mut self) -> Result<bool, Error>;
 }
 
-pub struct World<E, C, S>
-where
-    E: EventTrait,
-    C: Default + EventManagerTrait<E>,
-    S: SystemTrait<C, E>,
-{
+pub struct World<E, C, S> {
     pub context: C,
     systems: Vec<S>,
     phantom: PhantomData<E>,

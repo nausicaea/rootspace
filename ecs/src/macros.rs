@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    fn system_group_coersion() {
+    fn system_group_coercion() {
         let _g: SystemGroup = MockSysA::default().into();
         let _h: SystemGroup = MockSysB::default().into();
     }
