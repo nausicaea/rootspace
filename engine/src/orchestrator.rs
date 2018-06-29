@@ -6,10 +6,7 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 #[derive(Debug)]
-pub struct Orchestrator<W>
-where
-    W: Default + WorldTrait,
-{
+pub struct Orchestrator<W> {
     pub world: W,
     resource_path: PathBuf,
     delta_time: Duration,

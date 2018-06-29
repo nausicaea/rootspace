@@ -4,10 +4,7 @@ use ecs::system::SystemTrait;
 use failure::Error;
 use std::marker::PhantomData;
 
-pub struct EventMonitor<E, C>
-where
-    E: EventTrait,
-{
+pub struct EventMonitor<E, C> {
     phantom_e: PhantomData<E>,
     phantom_c: PhantomData<C>,
 }

@@ -13,15 +13,7 @@ use std::marker::PhantomData;
 use std::ops::Mul;
 use std::time::Duration;
 
-pub struct Renderer<E, C, D, M, R>
-where
-    E: EventTrait,
-    C: SceneGraphTrait<Entity, M> + DatabaseTrait,
-    D: DisplayTrait,
-    M: DepthOrderingTrait + Clone + Default + 'static,
-    for<'r> &'r M: Mul<Output = M>,
-    R: RenderTrait<D::Frame, M> + 'static,
-{
+pub struct Renderer<E, C, D, M, R> {
     pub display: D,
     clear_color: [f32; 4],
     phantom_e: PhantomData<E>,

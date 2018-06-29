@@ -10,10 +10,7 @@ use std::any::Any;
 use std::collections::VecDeque;
 use std::sync::RwLock;
 
-pub struct MockCtx<E>
-where
-    E: EventTrait,
-{
+pub struct MockCtx<E> {
     pub events: VecDeque<E>,
     pub handle_events_calls: usize,
     pub database: Database,

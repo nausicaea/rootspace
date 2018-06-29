@@ -7,12 +7,7 @@ use std::convert::TryInto;
 use std::marker::PhantomData;
 use std::time::Duration;
 
-pub struct EventInterface<E, C, Z>
-where
-    E: EventTrait,
-    C: EventManagerTrait<E>,
-    Z: EventsLoopTrait<E>,
-{
+pub struct EventInterface<E, C, Z> {
     pub events_loop: Z,
     phantom_e: PhantomData<E>,
     phantom_c: PhantomData<C>,

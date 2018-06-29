@@ -39,10 +39,7 @@ impl EventTrait for MockEvt {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct MockEvtMgr<E>
-where
-    E: EventTrait,
-{
+pub struct MockEvtMgr<E> {
     pub events: VecDeque<E>,
     pub handle_events_calls: usize,
 }
