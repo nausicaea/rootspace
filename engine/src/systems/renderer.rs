@@ -94,7 +94,7 @@ mod test {
     use mock::{MockCtx, MockModel, MockRenderable};
 
     #[test]
-    fn new_renderer() {
+    fn new() {
         let _s: Renderer<
             MockEvt,
             MockCtx<MockEvt>,

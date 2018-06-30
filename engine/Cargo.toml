@@ -14,5 +14,6 @@ ecs = {path = "../ecs"}
 
 [dev-dependencies]
 assertions = {path = "../assertions"}
+approx = "^0.2.0"
 tempfile = "^3.0.1"
 quickcheck = "^0.6.2"
