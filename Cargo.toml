@@ -9,7 +9,6 @@ authors = ["Eleanore Young"]
 clap = "^2.31.2"
 log = "^0.4.1"
 fern = "^0.5.5"
-vulkan-sys = {path = "vulkan-sys"}
 affine-transform = {path = "affine-transform"}
 ecs = {path = "ecs"}
 engine = {path = "engine"}

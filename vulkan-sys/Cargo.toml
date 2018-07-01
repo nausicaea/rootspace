@@ -1,8 +1,0 @@
-[package]
-name = "vulkan-sys"
-version = "0.1.0"
-authors = ["Eleanore Young"]
-links = "vulkan"
-
-[build-dependencies]
-bindgen = "^0.37.0"
