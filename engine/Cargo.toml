@@ -3,6 +3,9 @@ name = "engine"
 version = "0.1.0"
 authors = ["Eleanore Young"]
 
+[features]
+wsl = []
+
 [dependencies]
 bitflags = "^1.0.3"
 failure = "^0.1.1"

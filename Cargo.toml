@@ -5,6 +5,9 @@ authors = ["Eleanore Young"]
 
 [workspace]
 
+[features]
+wsl = []
+
 [dependencies]
 clap = "^2.31.2"
 log = "^0.4.1"
