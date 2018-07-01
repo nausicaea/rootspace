@@ -4,19 +4,19 @@ pub mod graphics {
         use failure::Error;
 
         #[derive(Debug, Clone, Default)]
-        struct HeadlessEventsLoop;
+        pub struct HeadlessEventsLoop;
 
         #[derive(Debug, Clone, Default)]
-        struct HeadlessRenderData;
+        pub struct HeadlessRenderData;
 
         impl RenderDataTrait<HeadlessBackend> for HeadlessRenderData {
-            fn triangle(backend: &HeadlessBackend) -> Result<Self, Error> {
+            fn triangle(_backend: &HeadlessBackend) -> Result<Self, Error> {
                 Ok(HeadlessRenderData::default())
             }
         }
 
         #[derive(Debug, Clone, Default)]
-        struct HeadlessFrame;
+        pub struct HeadlessFrame;
 
         impl FrameTrait<HeadlessRenderData> for HeadlessFrame {
             fn initialize(&mut self, _color: [f32; 4], _depth: f32) {
@@ -33,7 +33,7 @@ pub mod graphics {
         }
 
         #[derive(Debug, Clone, Default)]
-        struct HeadlessBackend;
+        pub struct HeadlessBackend;
 
         impl BackendTrait<HeadlessEventsLoop, HeadlessRenderData, HeadlessFrame> for HeadlessBackend {
             fn new(_events_loop: &HeadlessEventsLoop, _title: &str, _dimensions: [u32; 2], _vsync: bool, _msaa: u16) -> Result<Self, Error> {
@@ -83,15 +83,29 @@ pub mod graphics {
         use glium::uniforms::EmptyUniforms;
         use std::fmt;
 
+        pub struct GliumEventsLoop(EventsLoop);
+
+        impl Default for GliumEventsLoop {
+            fn default() -> Self {
+                GliumEventsLoop(EventsLoop::new())
+            }
+        }
+
+        impl fmt::Debug for GliumEventsLoop {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "GliumEventsLoop")
+            }
+        }
+
         #[derive(Debug, Clone, Copy)]
-        struct Vertex {
+        pub struct Vertex {
             position: [f32; 2],
         }
 
         implement_vertex!(Vertex, position);
 
         #[derive(Debug)]
-        struct GliumRenderData {
+        pub struct GliumRenderData {
             vertices: VertexBuffer<Vertex>,
             indices: IndexBuffer<u16>,
             program: Program,
@@ -138,7 +152,7 @@ pub mod graphics {
             }
         }
 
-        struct GliumFrame(Frame);
+        pub struct GliumFrame(Frame);
 
         impl FrameTrait<GliumRenderData> for GliumFrame {
             fn initialize(&mut self, color: [f32; 4], depth: f32) {
@@ -165,10 +179,10 @@ pub mod graphics {
         }
 
         #[derive(Clone)]
-        struct GliumBackend(Display);
+        pub struct GliumBackend(Display);
 
-        impl BackendTrait<EventsLoop, GliumRenderData, GliumFrame> for GliumBackend {
-            fn new(events_loop: &EventsLoop, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error> {
+        impl BackendTrait<GliumEventsLoop, GliumRenderData, GliumFrame> for GliumBackend {
+            fn new(events_loop: &GliumEventsLoop, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error> {
                 let window = WindowBuilder::new()
                     .with_title(title)
                     .with_dimensions(dimensions[0], dimensions[1]);
@@ -179,7 +193,7 @@ pub mod graphics {
                     .with_vsync(vsync)
                     .with_multisampling(msaa);
 
-                match Display::new(window, context, events_loop) {
+                match Display::new(window, context, &events_loop.0) {
                     Ok(d) => Ok(GliumBackend(d)),
                     Err(e) => Err(format_err!("{}", e)),
                 }
@@ -204,14 +218,14 @@ pub mod graphics {
             #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
             #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
             fn backend() {
-                assert_ok!(GliumBackend::new(&EventsLoop::new(), "Title", [800, 600], false, 0));
+                assert_ok!(GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0));
             }
 
             #[test]
             #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
             #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
             fn render_data() {
-                let b = GliumBackend::new(&EventsLoop::new(), "Title", [800, 600], false, 0).unwrap();
+                let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
                 assert_ok!(GliumRenderData::triangle(&b));
             }
@@ -220,7 +234,7 @@ pub mod graphics {
             #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
             #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
             fn frame() {
-                let b = GliumBackend::new(&EventsLoop::new(), "Title", [800, 600], false, 0).unwrap();
+                let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
                 let data = GliumRenderData::triangle(&b).unwrap();
 
@@ -256,5 +270,51 @@ pub mod graphics {
         Self: Sized,
     {
         fn triangle(backend: &B) -> Result<Self, Error>;
+    }
+}
+
+use self::graphics::{BackendTrait, FrameTrait, RenderDataTrait};
+use failure::Error;
+use std::marker::PhantomData;
+
+#[derive(Debug)]
+struct Renderer<E, R, F, B> {
+    backend: B,
+    phantom_e: PhantomData<E>,
+    phantom_r: PhantomData<R>,
+    phantom_f: PhantomData<F>,
+}
+
+impl<E, R, F, B> Renderer<E, R, F, B>
+where
+    F: FrameTrait<R>,
+    B: BackendTrait<E, R, F>,
+{
+    pub fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error> {
+        Ok(Renderer {
+            backend: B::new(events_loop, title, dimensions, vsync, msaa)?,
+            phantom_e: PhantomData::default(),
+            phantom_r: PhantomData::default(),
+            phantom_f: PhantomData::default(),
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::graphics::headless::{HeadlessBackend, HeadlessFrame, HeadlessRenderData, HeadlessEventsLoop};
+    use super::graphics::glium::{GliumBackend, GliumFrame, GliumRenderData, GliumEventsLoop};
+
+    #[test]
+    fn new_headless() {
+        assert_ok!(Renderer::<HeadlessEventsLoop, HeadlessRenderData, HeadlessFrame, HeadlessBackend>::new(&Default::default(), "Title", [800, 600], false, 0));
+    }
+
+    #[test]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn new_glium() {
+        assert_ok!(Renderer::<GliumEventsLoop, GliumRenderData, GliumFrame, GliumBackend>::new(&Default::default(), "Title", [800, 600], false, 0));
     }
 }
