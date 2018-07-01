@@ -1,7 +1,6 @@
 #![feature(try_from)]
 
 #[cfg(test)]
-#[macro_use]
 extern crate approx;
 #[cfg(test)]
 #[macro_use]
@@ -10,6 +9,7 @@ extern crate assertions;
 extern crate bitflags;
 #[macro_use]
 extern crate failure;
+#[macro_use]
 extern crate glium;
 extern crate hierarchy;
 #[macro_use]

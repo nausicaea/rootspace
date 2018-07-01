@@ -1,6 +1,7 @@
 pub mod event_interface;
 pub mod event_monitor;
 pub mod renderer;
+pub mod new_renderer;
 
 use self::event_interface::EventInterface;
 use self::event_monitor::EventMonitor;
