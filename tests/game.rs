@@ -5,7 +5,7 @@ use std::env;
 use std::time::Duration;
 
 #[test]
-#[cfg_attr(not(windows), should_panic(expected = "No backend is available"))]
+#[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
 fn create_and_run_game() {
     let resource_path = env::temp_dir();
     let delta_time = Duration::from_millis(50);
