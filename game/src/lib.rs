@@ -4,23 +4,15 @@ extern crate failure;
 extern crate glium;
 extern crate log;
 
-use ecs::database::DatabaseTrait;
 use ecs::event::EventManagerTrait;
 use ecs::world::World;
-use engine::components::model::Model;
-use engine::components::renderable::{GliumRenderData, HeadlessRenderData, Renderable};
-use engine::context::{Context, SceneGraphTrait};
+use engine::context::Context;
 use engine::event::Event;
 use engine::file_manipulation::FileError;
-use engine::graphics::headless::{HeadlessDisplay, HeadlessEventsLoop};
 use engine::orchestrator::Orchestrator;
-use engine::systems::event_interface::EventInterface;
 use engine::systems::event_monitor::EventMonitor;
-use engine::systems::renderer::Renderer;
 use engine::systems::SystemGroup;
 use failure::Error;
-use glium::glutin::EventsLoop;
-use glium::Display;
 use std::path::Path;
 use std::time::Duration;
 
@@ -39,82 +31,9 @@ impl Game {
         Ok(Game { orchestrator: o })
     }
 
-    pub fn run(&mut self, headless: bool, iterations: Option<usize>) -> Result<(), Error> {
-        let title = "Title";
-        let dimensions = [1024, 768];
-        let vsync = true;
-        let msaa = 4;
-        let clear_color = [0.2, 0.3, 0.0, 1.0];
-
+    pub fn run(&mut self, _headless: bool, iterations: Option<usize>) -> Result<(), Error> {
         let event_monitor = EventMonitor::default();
         self.orchestrator.world.add_system(event_monitor);
-
-        // Create and register the systems that depend on a graphics backend.
-        if headless {
-            let event_interface = EventInterface::new(HeadlessEventsLoop::default());
-            let renderer: Renderer<
-                Event,
-                Context,
-                HeadlessDisplay,
-                Model,
-                Renderable<HeadlessRenderData>,
-            > = Renderer::new(
-                &event_interface.events_loop,
-                title,
-                dimensions,
-                vsync,
-                msaa,
-                clear_color,
-            ).unwrap();
-
-            self.orchestrator.world.add_system(event_interface);
-            self.orchestrator.world.add_system(renderer);
-
-            let ctx = &mut self.orchestrator.world.context;
-            let a = ctx.create_entity();
-            ctx.insert_node(a);
-            ctx.add(a, Model::new(100.0)).unwrap();
-            ctx.add(a, Renderable::<HeadlessRenderData>::new()).unwrap();
-            let b = ctx.create_entity();
-            ctx.insert_node(b);
-            ctx.add(b, Model::new(50.0)).unwrap();
-            let c = ctx.create_entity();
-            ctx.add(c, Renderable::<HeadlessRenderData>::new()).unwrap();
-            let d = ctx.create_entity();
-            ctx.insert_node(d);
-        } else {
-            let event_interface = EventInterface::new(EventsLoop::new());
-            let renderer: Renderer<
-                Event,
-                Context,
-                Display,
-                Model,
-                Renderable<GliumRenderData>,
-            > = Renderer::new(
-                &event_interface.events_loop,
-                title,
-                dimensions,
-                vsync,
-                msaa,
-                clear_color,
-            ).unwrap();
-
-            self.orchestrator.world.add_system(event_interface);
-            self.orchestrator.world.add_system(renderer);
-
-            let ctx = &mut self.orchestrator.world.context;
-            let a = ctx.create_entity();
-            ctx.insert_node(a);
-            ctx.add(a, Model::new(100.0)).unwrap();
-            ctx.add(a, Renderable::<GliumRenderData>::new()).unwrap();
-            let b = ctx.create_entity();
-            ctx.insert_node(b);
-            ctx.add(b, Model::new(50.0)).unwrap();
-            let c = ctx.create_entity();
-            ctx.add(c, Renderable::<GliumRenderData>::new()).unwrap();
-            let d = ctx.create_entity();
-            ctx.insert_node(d);
-        }
 
         self.orchestrator
             .world

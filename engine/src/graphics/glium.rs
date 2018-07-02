@@ -1,73 +1,126 @@
-use super::{DisplayTrait, EventsLoopTrait, FrameTrait, Uniforms};
-use event::Event;
-use failure::Error as FailureError;
-use glium::glutin::{
-    Api, ContextBuilder, Event as WinitEvent, EventsLoop as WinitEventsLoop, GlProfile, GlRequest,
-    WindowBuilder,
-};
-use glium::uniforms::{UniformValue, Uniforms as GliumUniforms};
-use glium::{Display as GliumDisplay, Frame as GliumFrame, Surface as GliumSurface};
-use std::convert::TryFrom;
+use super::{BackendTrait, FrameTrait, RenderDataTrait, EventsLoopTrait};
+use failure::Error;
+use glium::{Display, Frame, Surface, VertexBuffer, IndexBuffer, Program};
+use glium::index::PrimitiveType;
+use glium::glutin::{Event as GliumEvent, EventsLoop, WindowBuilder, ContextBuilder, GlRequest, Api, GlProfile};
+use std::fmt;
 
-impl GliumUniforms for Uniforms {
-    fn visit_values<'a, F>(&'a self, mut f: F)
-    where
-        F: FnMut(&str, UniformValue<'a>),
-    {
-        f("pvm_matrix", UniformValue::Mat4(self.pvm_matrix.into()));
-        // f("name", uniform_value);
-        // I need: pvm_matrix, normal_matrix, optionally diff_tex, optionally norm_tex
+pub struct GliumEventsLoop(EventsLoop);
+
+impl Default for GliumEventsLoop {
+    fn default() -> Self {
+        GliumEventsLoop(EventsLoop::new())
     }
 }
 
-impl TryFrom<WinitEvent> for Event {
-    type Error = ();
-
-    fn try_from(value: WinitEvent) -> Result<Event, Self::Error> {
-        if let WinitEvent::WindowEvent { event: _we, .. } = value {
-            Err(())
-        } else {
-            Err(())
-        }
+impl fmt::Debug for GliumEventsLoop {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "GliumEventsLoop")
     }
 }
 
-impl EventsLoopTrait<Event> for WinitEventsLoop {
-    type OsEvent = WinitEvent;
+// impl EventsLoopTrait<Event> for GliumEventsLoop {
+//     type OsEvent = GliumEvent;
 
-    fn poll<F>(&mut self, f: F)
-    where
-        F: FnMut(Self::OsEvent),
-    {
-        self.poll_events(f)
+//     fn poll<F>(&mut self, f: F)
+//     where
+//         F: FnMut(Self::OsEvent),
+//     {
+//         self.poll_events(f)
+//     }
+// }
+
+#[derive(Debug, Clone, Copy)]
+pub struct Vertex {
+    position: [f32; 2],
+}
+
+implement_vertex!(Vertex, position);
+
+#[derive(Debug)]
+pub struct GliumRenderData {
+    vertices: VertexBuffer<Vertex>,
+    indices: IndexBuffer<u16>,
+    program: Program,
+}
+
+impl RenderDataTrait<GliumBackend> for GliumRenderData {
+    fn triangle(backend: &GliumBackend) -> Result<Self, Error> {
+        let vertices = VertexBuffer::new(&backend.0, &[
+                                         Vertex { position: [-0.5, -0.5] },
+                                         Vertex { position: [0.0, 0.5] },
+                                         Vertex { position: [0.5, -0.5] },
+        ])?;
+
+        let indices = IndexBuffer::new(&backend.0, PrimitiveType::TrianglesList, &[0, 1, 2])?;
+
+        let program = Program::from_source(&backend.0,
+                                           r#"
+                    #version 330 core
+
+                    uniform mat4 location;
+
+                    in vec2 position;
+
+                    void main() {
+                            gl_Position = location * vec4(position, 0.0, 1.0);
+                    }
+                    "#,
+                    r#"
+                    #version 330 core
+
+                    const vec3 specular_color = vec3(0.3, 0.15, 0.1);
+
+                    out vec4 color;
+
+                    void main() {
+                            color = vec4(specular_color, 1.0);
+                    }
+                    "#,
+                    None)?;
+
+                    Ok(GliumRenderData {
+                        vertices,
+                        indices,
+                        program,
+                    })
     }
 }
 
-impl FrameTrait for GliumFrame {
-    fn clear_frame(&mut self, color: [f32; 4], depth: f32) {
-        self.clear_color_and_depth((color[0], color[1], color[2], color[3]), depth)
+pub struct GliumFrame(Frame);
+
+impl FrameTrait<GliumRenderData> for GliumFrame {
+    fn initialize(&mut self, color: [f32; 4], depth: f32) {
+        self.0.clear_color_and_depth((color[0], color[1], color[2], color[3]), depth)
     }
 
-    fn finalize(self) -> Result<(), FailureError> {
-        if let Err(e) = self.finish() {
-            Err(Into::into(e))
-        } else {
-            Ok(())
-        }
+    fn render<L: AsRef<[[f32; 4]; 4]>>(&mut self, location: &L, data: &GliumRenderData) -> Result<(), Error> {
+        let uniforms = uniform! {
+            location: *location.as_ref(),
+        };
+        self.0.draw(&data.vertices, &data.indices, &data.program, &uniforms, &Default::default())?;
+
+        Ok(())
+    }
+
+    fn finalize(self) -> Result<(), Error> {
+        self.0.finish()?;
+
+        Ok(())
     }
 }
 
-impl DisplayTrait for GliumDisplay {
-    type EventsLoop = WinitEventsLoop;
-    type Frame = GliumFrame;
+impl fmt::Debug for GliumFrame {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "GliumFrame")
+    }
+}
 
-    fn create(
-        events_loop: &Self::EventsLoop,
-        title: &str,
-        dimensions: [u32; 2],
-        vsync: bool,
-        msaa: u16,
-    ) -> Result<Self, FailureError> {
+#[derive(Clone)]
+pub struct GliumBackend(Display);
+
+impl BackendTrait<GliumEventsLoop, GliumFrame> for GliumBackend {
+    fn new(events_loop: &GliumEventsLoop, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error> {
         let window = WindowBuilder::new()
             .with_title(title)
             .with_dimensions(dimensions[0], dimensions[1]);
@@ -78,14 +131,20 @@ impl DisplayTrait for GliumDisplay {
             .with_vsync(vsync)
             .with_multisampling(msaa);
 
-        match GliumDisplay::new(window, context, events_loop) {
-            Ok(d) => Ok(d),
+        match Display::new(window, context, &events_loop.0) {
+            Ok(d) => Ok(GliumBackend(d)),
             Err(e) => Err(format_err!("{}", e)),
         }
     }
 
-    fn create_frame(&self) -> Self::Frame {
-        self.draw()
+    fn create_frame(&self) -> GliumFrame {
+        GliumFrame(self.0.draw())
+    }
+}
+
+impl fmt::Debug for GliumBackend {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "GliumBackend")
     }
 }
 
@@ -93,19 +152,43 @@ impl DisplayTrait for GliumDisplay {
 mod tests {
     use super::*;
 
+    #[derive(Debug, Clone, Default)]
+    struct MockLocation([[f32; 4]; 4]);
+
+    impl AsRef<[[f32; 4]; 4]> for MockLocation {
+        fn as_ref(&self) -> &[[f32; 4]; 4] {
+            &self.0
+        }
+    }
+
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
-    fn display() {
-        let e = WinitEventsLoop::new();
-        let r = GliumDisplay::create(&e, "Title", [640, 480], false, 0);
+    fn backend() {
+        assert_ok!(GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0));
+    }
 
-        assert!(r.is_ok());
+    #[test]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn render_data() {
+        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let mut f = r.unwrap().draw();
-        f.clear_frame([0.0, 1.0, 0.0, 1.0], 1.0);
+        assert_ok!(GliumRenderData::triangle(&b));
+    }
+
+    #[test]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn frame() {
+        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+
+        let data = GliumRenderData::triangle(&b).unwrap();
+
+        let mut f: GliumFrame = b.create_frame();
+        f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
+        assert_ok!(f.render(&MockLocation::default(), &data));
         let r = f.finalize();
-
         assert_ok!(r);
     }
 }

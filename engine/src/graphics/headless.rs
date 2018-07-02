@@ -1,67 +1,53 @@
-use super::{DisplayTrait, EventsLoopTrait, FrameTrait};
-use event::Event;
-use failure::Error as FailureError;
-use std::convert::TryFrom;
+use super::{BackendTrait, FrameTrait, RenderDataTrait};
+use failure::Error;
 
-#[derive(Default, Debug)]
+#[derive(Debug, Clone, Default)]
 pub struct HeadlessEventsLoop;
 
-impl EventsLoopTrait<Event> for HeadlessEventsLoop {
-    type OsEvent = ();
+// impl EventsLoopTrait<Event> for HeadlessEventsLoop {
+//     type OsEvent = ();
 
-    fn poll<F>(&mut self, _f: F)
-    where
-        F: FnMut(Self::OsEvent),
-    {
+//     fn poll<F>(&mut self, _f: F)
+//         where
+//             F: FnMut(Self::OsEvent),
+//         {
+//         }
+// }
+
+#[derive(Debug, Clone, Default)]
+pub struct HeadlessRenderData;
+
+impl RenderDataTrait<HeadlessBackend> for HeadlessRenderData {
+    fn triangle(_backend: &HeadlessBackend) -> Result<Self, Error> {
+        Ok(HeadlessRenderData::default())
     }
 }
 
-impl TryFrom<()> for Event {
-    type Error = ();
+#[derive(Debug, Clone, Default)]
+pub struct HeadlessFrame;
 
-    fn try_from(_value: ()) -> Result<Event, Self::Error> {
-        Err(())
+impl FrameTrait<HeadlessRenderData> for HeadlessFrame {
+    fn initialize(&mut self, _color: [f32; 4], _depth: f32) {
     }
-}
 
-#[derive(Default, Debug)]
-pub struct HeadlessFrame {
-    pub draw_calls: usize,
-}
+    fn render<L: AsRef<[[f32; 4]; 4]>>(&mut self, _location: &L, _data: &HeadlessRenderData) -> Result<(), Error> {
+        Ok(())
+    }
 
-impl HeadlessFrame {
-    pub fn draw(&mut self) -> Result<(), FailureError> {
-        self.draw_calls += 1;
+    fn finalize(self) -> Result<(), Error> {
         Ok(())
     }
 }
 
-impl FrameTrait for HeadlessFrame {
-    fn clear_frame(&mut self, _color: [f32; 4], _depth: f32) {}
+#[derive(Debug, Clone, Default)]
+pub struct HeadlessBackend;
 
-    fn finalize(self) -> Result<(), FailureError> {
-        Ok(())
-    }
-}
-
-#[derive(Default, Debug)]
-pub struct HeadlessDisplay;
-
-impl DisplayTrait for HeadlessDisplay {
-    type EventsLoop = HeadlessEventsLoop;
-    type Frame = HeadlessFrame;
-
-    fn create(
-        _events_loop: &Self::EventsLoop,
-        _title: &str,
-        _dimensions: [u32; 2],
-        _vsync: bool,
-        _msaa: u16,
-    ) -> Result<Self, FailureError> {
-        Ok(HeadlessDisplay::default())
+impl BackendTrait<HeadlessEventsLoop, HeadlessFrame> for HeadlessBackend {
+    fn new(_events_loop: &HeadlessEventsLoop, _title: &str, _dimensions: [u32; 2], _vsync: bool, _msaa: u16) -> Result<Self, Error> {
+        Ok(HeadlessBackend::default())
     }
 
-    fn create_frame(&self) -> Self::Frame {
+    fn create_frame(&self) -> HeadlessFrame {
         HeadlessFrame::default()
     }
 }
@@ -70,25 +56,35 @@ impl DisplayTrait for HeadlessDisplay {
 mod tests {
     use super::*;
 
+    #[derive(Debug, Clone, Default)]
+    struct MockLocation([[f32; 4]; 4]);
+
+    impl AsRef<[[f32; 4]; 4]> for MockLocation {
+        fn as_ref(&self) -> &[[f32; 4]; 4] {
+            &self.0
+        }
+    }
+
     #[test]
-    fn display() {
-        let r = HeadlessDisplay::create(&HeadlessEventsLoop::default(), "", [800, 600], false, 0);
+    fn backend() {
+        assert_ok!(HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0));
+    }
 
-        assert_ok!(r);
+    #[test]
+    fn render_data() {
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let _f: HeadlessFrame = r.unwrap().create_frame();
+        assert_ok!(HeadlessRenderData::triangle(&b));
     }
 
     #[test]
     fn frame() {
-        let mut f = HeadlessFrame::default();
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        f.clear_frame([0.0, 0.0, 0.0, 0.0], 0.0);
-
-        assert_ok!(f.draw());
-
+        let mut f: HeadlessFrame = b.create_frame();
+        f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
+        assert_ok!(f.render(&MockLocation::default(), &HeadlessRenderData::default()));
         let r = f.finalize();
-
         assert_ok!(r);
     }
 }

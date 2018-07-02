@@ -33,6 +33,18 @@ impl EventTrait for Event {
     }
 }
 
+// impl TryFrom<WinitEvent> for Event {
+//     type Error = ();
+//
+//     fn try_from(value: WinitEvent) -> Result<Event, Self::Error> {
+//         if let WinitEvent::WindowEvent { event: _we, .. } = value {
+//             Err(())
+//         } else {
+//             Err(())
+//         }
+//     }
+// }
+
 #[cfg(test)]
 mod tests {
     use super::*;
