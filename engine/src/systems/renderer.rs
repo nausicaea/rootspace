@@ -1,20 +1,26 @@
 use graphics::{BackendTrait, FrameTrait};
+use ecs::event::EventTrait;
+use ecs::loop_stage::LoopStage;
+use ecs::system::SystemTrait;
 use failure::Error;
 use std::marker::PhantomData;
 
 #[derive(Debug)]
-pub struct Renderer<L, R, F, E, B> {
+pub struct Renderer<Ctx, Evt, L, R, F, E, B> {
     backend: B,
     frames: usize,
     draw_calls: usize,
+    _ctx: PhantomData<Ctx>,
+    _evt: PhantomData<Evt>,
     _l: PhantomData<L>,
     _r: PhantomData<R>,
     _f: PhantomData<F>,
     _e: PhantomData<E>,
 }
 
-impl<L, R, F, E, B> Renderer<L, R, F, E, B>
+impl<Ctx, Evt, L, R, F, E, B> Renderer<Ctx, Evt, L, R, F, E, B>
 where
+    Evt: EventTrait,
     L: AsRef<[[f32; 4]; 4]>,
     F: FrameTrait<R>,
     B: BackendTrait<E, F>,
@@ -24,6 +30,8 @@ where
             backend: B::new(events_loop, title, dimensions, vsync, msaa)?,
             frames: 0,
             draw_calls: 0,
+            _ctx: PhantomData::default(),
+            _evt: PhantomData::default(),
             _l: PhantomData::default(),
             _r: PhantomData::default(),
             _f: PhantomData::default(),
@@ -61,12 +69,27 @@ where
     }
 }
 
+impl<Ctx, Evt, L, R, F, E, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, L, R, F, E, B>
+where
+    Evt: EventTrait,
+    L: AsRef<[[f32; 4]; 4]>,
+    F: FrameTrait<R>,
+    B: BackendTrait<E, F>,
+{
+    fn get_stage_filter(&self) -> LoopStage {
+        LoopStage::RENDER
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use components::model::Model;
     use graphics::RenderDataTrait;
     use graphics::headless::{HeadlessBackend as HB, HeadlessFrame as HF, HeadlessRenderData as HRD, HeadlessEventsLoop as HEL};
     use graphics::glium::{GliumBackend as GB, GliumFrame as GF, GliumRenderData as GRD, GliumEventsLoop as GEL};
+    use mock::context::MockCtx;
+    use ecs::mock::event::MockEvt;
     use std::f32;
 
     #[derive(Debug, Clone, Default)]
@@ -80,18 +103,18 @@ mod tests {
 
     #[test]
     fn new_headless() {
-        assert_ok!(Renderer::<MockLocation, HRD, HF, HEL, HB>::new(&Default::default(), "Title", [800, 600], false, 0));
+        assert_ok!(Renderer::<MockCtx<MockEvt, Model>, MockEvt, Model, HRD, HF, HEL, HB>::new(&Default::default(), "Title", [800, 600], false, 0));
     }
 
     #[test]
     fn render_headless() {
-        let mut r = Renderer::<MockLocation, HRD, HF, HEL, HB>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
+        let mut r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Model, HRD, HF, HEL, HB>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
 
         let nodes = vec![
-            (MockLocation::default(), HRD::triangle(&r.backend).unwrap()),
-            (MockLocation::default(), HRD::triangle(&r.backend).unwrap()),
-            (MockLocation::default(), HRD::triangle(&r.backend).unwrap()),
-            (MockLocation::default(), HRD::triangle(&r.backend).unwrap()),
+            (Model::default(), HRD::triangle(&r.backend).unwrap()),
+            (Model::default(), HRD::triangle(&r.backend).unwrap()),
+            (Model::default(), HRD::triangle(&r.backend).unwrap()),
+            (Model::default(), HRD::triangle(&r.backend).unwrap()),
         ];
 
         assert_ok!(r.render(&nodes));
@@ -104,20 +127,20 @@ mod tests {
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn new_glium() {
-        assert_ok!(Renderer::<MockLocation, GRD, GF, GEL, GB>::new(&Default::default(), "Title", [800, 600], false, 0));
+        assert_ok!(Renderer::<MockCtx<MockEvt, Model>, MockEvt, Model, GRD, GF, GEL, GB>::new(&Default::default(), "Title", [800, 600], false, 0));
     }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn render_glium() {
-        let mut r = Renderer::<MockLocation, GRD, GF, GEL, GB>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
+        let mut r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Model, GRD, GF, GEL, GB>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
 
         let nodes = vec![
-            (MockLocation::default(), GRD::triangle(&r.backend).unwrap()),
-            (MockLocation::default(), GRD::triangle(&r.backend).unwrap()),
-            (MockLocation::default(), GRD::triangle(&r.backend).unwrap()),
-            (MockLocation::default(), GRD::triangle(&r.backend).unwrap()),
+            (Model::default(), GRD::triangle(&r.backend).unwrap()),
+            (Model::default(), GRD::triangle(&r.backend).unwrap()),
+            (Model::default(), GRD::triangle(&r.backend).unwrap()),
+            (Model::default(), GRD::triangle(&r.backend).unwrap()),
         ];
 
         assert_ok!(r.render(&nodes));

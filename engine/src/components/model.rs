@@ -1,3 +1,4 @@
+use nalgebra::Matrix4;
 use std::f32;
 use std::ops::Mul;
 
@@ -5,22 +6,30 @@ pub trait DepthOrderingTrait {
     fn depth_index(&self) -> i32;
 }
 
-#[derive(Clone, Default)]
-pub struct Model(f32);
+#[derive(Debug, Clone)]
+pub struct Model(Matrix4<f32>);
 
 impl Model {
     pub fn identity() -> Self {
-        Model(1.0)
+        Model(Matrix4::identity())
     }
+}
 
-    pub fn new(value: f32) -> Self {
-        Model(value)
+impl Default for Model {
+    fn default() -> Self {
+        Model::identity()
+    }
+}
+
+impl AsRef<[[f32; 4]; 4]> for Model {
+    fn as_ref(&self) -> &[[f32; 4]; 4] {
+        self.0.as_ref()
     }
 }
 
 impl DepthOrderingTrait for Model {
     fn depth_index(&self) -> i32 {
-        (self.0 / f32::EPSILON).round() as i32
+        (self.0[(2, 3)] / f32::EPSILON).round() as i32
     }
 }
 

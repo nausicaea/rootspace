@@ -10,6 +10,7 @@ use std::collections::VecDeque;
 use std::ops::Mul;
 use std::sync::RwLock;
 
+#[derive(Debug)]
 pub struct MockCtx<E, M> {
     pub events: VecDeque<E>,
     pub handle_events_calls: usize,
@@ -19,12 +20,7 @@ pub struct MockCtx<E, M> {
     pub gnc: RwLock<usize>,
 }
 
-impl<E, M> MockCtx<E, M>
-where
-    E: EventTrait,
-    M: Clone + Default + DepthOrderingTrait + 'static,
-    for<'r> &'r M: Mul<Output = M>,
-{
+impl<E, M> MockCtx<E, M> {
     pub fn get_nodes_calls(&self) -> usize {
         *self.gnc.read().unwrap()
     }
@@ -32,9 +28,7 @@ where
 
 impl<E, M> Default for MockCtx<E, M>
 where
-    E: EventTrait,
-    M: Clone + Default + DepthOrderingTrait + 'static,
-    for<'r> &'r M: Mul<Output = M>,
+    M: Clone + Default,
 {
     fn default() -> Self {
         MockCtx {
@@ -51,8 +45,6 @@ where
 impl<E, M> EventManagerTrait<E> for MockCtx<E, M>
 where
     E: EventTrait,
-    M: Clone + Default + DepthOrderingTrait + 'static,
-    for<'r> &'r M: Mul<Output = M>,
 {
     fn dispatch_later(&mut self, event: E) {
         self.events.push_back(event)
@@ -76,9 +68,7 @@ where
 
 impl<E, M> DatabaseTrait for MockCtx<E, M>
 where
-    E: EventTrait,
-    M: Clone + Default + DepthOrderingTrait + 'static,
-    for<'r> &'r M: Mul<Output = M>,
+    M: Clone + Default,
 {
     fn create_entity(&mut self) -> Entity {
         self.database.create_entity()

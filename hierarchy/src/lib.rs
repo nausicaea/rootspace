@@ -79,11 +79,7 @@ where
     }
 }
 
-impl<K, V> fmt::Debug for Hierarchy<K, V>
-where
-    K: Clone + Default + Eq + Hash,
-    V: Clone + Default,
-{
+impl<K, V> fmt::Debug for Hierarchy<K, V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Hierarchy(nodes: {}, edges: {})", self.graph.node_count(), self.graph.edge_count())
     }
