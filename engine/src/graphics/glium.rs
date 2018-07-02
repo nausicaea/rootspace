@@ -1,8 +1,8 @@
-use super::{BackendTrait, FrameTrait, RenderDataTrait, EventsLoopTrait};
+use super::{BackendTrait, FrameTrait, RenderDataTrait};
 use failure::Error;
 use glium::{Display, Frame, Surface, VertexBuffer, IndexBuffer, Program};
 use glium::index::PrimitiveType;
-use glium::glutin::{Event as GliumEvent, EventsLoop, WindowBuilder, ContextBuilder, GlRequest, Api, GlProfile};
+use glium::glutin::{EventsLoop, WindowBuilder, ContextBuilder, GlRequest, Api, GlProfile};
 use std::fmt;
 
 pub struct GliumEventsLoop(EventsLoop);

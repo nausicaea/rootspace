@@ -3,7 +3,7 @@ use failure::Error;
 use std::marker::PhantomData;
 
 #[derive(Debug)]
-struct Renderer<L, R, F, E, B> {
+pub struct Renderer<L, R, F, E, B> {
     backend: B,
     frames: usize,
     draw_calls: usize,
