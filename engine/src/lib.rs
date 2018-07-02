@@ -1,6 +1,7 @@
 #![feature(try_from)]
 
 #[cfg(test)]
+#[macro_use]
 extern crate approx;
 #[cfg(test)]
 #[macro_use]

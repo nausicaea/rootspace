@@ -17,13 +17,13 @@ pub struct HeadlessRenderData;
 pub struct GliumRenderData;
 
 pub struct Renderable<D> {
-    data: D,
+    _data: D,
 }
 
 impl Renderable<HeadlessRenderData> {
     pub fn new() -> Self {
         Renderable {
-            data: HeadlessRenderData::default(),
+            _data: HeadlessRenderData::default(),
         }
     }
 }
@@ -31,7 +31,7 @@ impl Renderable<HeadlessRenderData> {
 impl Renderable<GliumRenderData> {
     pub fn new() -> Self {
         Renderable {
-            data: GliumRenderData::default(),
+            _data: GliumRenderData::default(),
         }
     }
 }
