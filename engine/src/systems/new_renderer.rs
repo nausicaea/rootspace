@@ -134,10 +134,12 @@ pub mod graphics {
                     r#"
                     #version 330 core
 
+                    uniform mat4 location;
+
                     in vec2 position;
 
                     void main() {
-                            gl_Position = vec4(position, 0.0, 1.0);
+                            gl_Position = location * vec4(position, 0.0, 1.0);
                     }
                     "#,
                     r#"
