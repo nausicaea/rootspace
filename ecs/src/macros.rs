@@ -63,8 +63,8 @@ macro_rules! impl_system_group {
         }
         )+
 
-        impl SystemTrait<$c, $e> for $name {
-            fn get_stage_filter(&self) -> LoopStage {
+        impl $crate::system::SystemTrait<$c, $e> for $name {
+            fn get_stage_filter(&self) -> $crate::loop_stage::LoopStage {
                 match *self {
                     $(
                     $name::$variant(ref s) => s.get_stage_filter(),
@@ -78,28 +78,28 @@ macro_rules! impl_system_group {
                     )+
                 }
             }
-            fn fixed_update(&mut self, ctx: &mut $c, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+            fn fixed_update(&mut self, ctx: &mut $c, time: &::std::time::Duration, delta_time: &::std::time::Duration) -> Result<(), ::failure::Error> {
                 match *self {
                     $(
                     $name::$variant(ref mut s) => s.fixed_update(ctx, time, delta_time),
                     )+
                 }
             }
-            fn update(&mut self, ctx: &mut $c, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+            fn update(&mut self, ctx: &mut $c, time: &::std::time::Duration, delta_time: &::std::time::Duration) -> Result<(), ::failure::Error> {
                 match *self {
                     $(
                     $name::$variant(ref mut s) => s.update(ctx, time, delta_time),
                     )+
                 }
             }
-            fn render(&mut self, ctx: &mut $c, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
+            fn render(&mut self, ctx: &mut $c, time: &::std::time::Duration, delta_time: &::std::time::Duration) -> Result<(), ::failure::Error> {
                 match *self {
                     $(
                     $name::$variant(ref mut s) => s.render(ctx, time, delta_time),
                     )+
                 }
             }
-            fn handle_event(&mut self, ctx: &mut $c, event: &$e) -> Result<(), Error> {
+            fn handle_event(&mut self, ctx: &mut $c, event: &$e) -> Result<(), ::failure::Error> {
                 match *self {
                     $(
                     $name::$variant(ref mut s) => s.handle_event(ctx, event),
@@ -112,10 +112,7 @@ macro_rules! impl_system_group {
 
 #[cfg(test)]
 mod tests {
-    use failure::Error;
-    use loop_stage::LoopStage;
     use mock::{MockCtx, MockEvt, MockEvtFlag, MockSysA, MockSysB};
-    use std::time::Duration;
     use system::SystemTrait;
 
     impl_system_group! {
