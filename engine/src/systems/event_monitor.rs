@@ -40,31 +40,32 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use components::model::Model;
     use ecs::mock::{MockEvt, MockEvtFlag};
     use mock::MockCtx;
 
     #[test]
     fn default() {
-        let _s = EventMonitor::<MockEvt, MockCtx<MockEvt>>::default();
+        let _s = EventMonitor::<MockEvt, MockCtx<MockEvt, Model>>::default();
     }
 
     #[test]
     fn stage_filter() {
-        let s = EventMonitor::<MockEvt, MockCtx<MockEvt>>::default();
+        let s = EventMonitor::<MockEvt, MockCtx<MockEvt, Model>>::default();
 
         assert_eq!(s.get_stage_filter(), LoopStage::HANDLE_EVENTS);
     }
 
     #[test]
     fn event_filter() {
-        let s = EventMonitor::<MockEvt, MockCtx<MockEvt>>::default();
+        let s = EventMonitor::<MockEvt, MockCtx<MockEvt, Model>>::default();
 
         assert_eq!(s.get_event_filter(), MockEvtFlag::all());
     }
 
     #[test]
     fn handle_event() {
-        let mut s = EventMonitor::<MockEvt, MockCtx<MockEvt>>::default();
+        let mut s = EventMonitor::<MockEvt, MockCtx<MockEvt, Model>>::default();
         assert_ok!(s.handle_event(&mut Default::default(), &MockEvt::TestEventB(0)));
     }
 }

@@ -1,4 +1,3 @@
-use super::model::MockModel;
 use components::model::DepthOrderingTrait;
 use context::SceneGraphTrait;
 use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
@@ -8,29 +7,34 @@ use failure::Error as FailureError;
 use hierarchy::Hierarchy;
 use std::any::Any;
 use std::collections::VecDeque;
+use std::ops::Mul;
 use std::sync::RwLock;
 
-pub struct MockCtx<E> {
+pub struct MockCtx<E, M> {
     pub events: VecDeque<E>,
     pub handle_events_calls: usize,
     pub database: Database,
-    pub scene_graph: Hierarchy<Entity, MockModel>,
+    pub scene_graph: Hierarchy<Entity, M>,
     pub update_graph_calls: usize,
     pub gnc: RwLock<usize>,
 }
 
-impl<E> MockCtx<E>
+impl<E, M> MockCtx<E, M>
 where
     E: EventTrait,
+    M: Clone + Default + DepthOrderingTrait + 'static,
+    for<'r> &'r M: Mul<Output = M>,
 {
     pub fn get_nodes_calls(&self) -> usize {
         *self.gnc.read().unwrap()
     }
 }
 
-impl<E> Default for MockCtx<E>
+impl<E, M> Default for MockCtx<E, M>
 where
     E: EventTrait,
+    M: Clone + Default + DepthOrderingTrait + 'static,
+    for<'r> &'r M: Mul<Output = M>,
 {
     fn default() -> Self {
         MockCtx {
@@ -44,9 +48,11 @@ where
     }
 }
 
-impl<E> EventManagerTrait<E> for MockCtx<E>
+impl<E, M> EventManagerTrait<E> for MockCtx<E, M>
 where
     E: EventTrait,
+    M: Clone + Default + DepthOrderingTrait + 'static,
+    for<'r> &'r M: Mul<Output = M>,
 {
     fn dispatch_later(&mut self, event: E) {
         self.events.push_back(event)
@@ -68,9 +74,11 @@ where
     }
 }
 
-impl<E> DatabaseTrait for MockCtx<E>
+impl<E, M> DatabaseTrait for MockCtx<E, M>
 where
     E: EventTrait,
+    M: Clone + Default + DepthOrderingTrait + 'static,
+    for<'r> &'r M: Mul<Output = M>,
 {
     fn create_entity(&mut self) -> Entity {
         self.database.create_entity()
@@ -113,9 +121,11 @@ where
     }
 }
 
-impl<E> SceneGraphTrait<Entity, MockModel> for MockCtx<E>
+impl<E, M> SceneGraphTrait<Entity, M> for MockCtx<E, M>
 where
     E: EventTrait,
+    M: Clone + Default + DepthOrderingTrait + 'static,
+    for<'r> &'r M: Mul<Output = M>,
 {
     fn update_graph(&mut self) -> Result<(), FailureError> {
         self.update_graph_calls += 1;
@@ -129,10 +139,10 @@ where
     }
 
     fn insert_node(&mut self, entity: Entity) {
-        self.scene_graph.insert(entity, MockModel::default())
+        self.scene_graph.insert(entity, Default::default())
     }
 
-    fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &MockModel)> {
+    fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &M)> {
         let mut calls = self.gnc.write().unwrap();
         *calls += 1;
 
@@ -145,7 +155,7 @@ where
         nodes
     }
 
-    fn sort_nodes(&self, nodes: &mut [(&Entity, &MockModel)]) {
+    fn sort_nodes(&self, nodes: &mut [(&Entity, &M)]) {
         nodes.sort_unstable_by_key(|(_, v)| v.depth_index());
     }
 }

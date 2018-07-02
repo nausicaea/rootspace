@@ -55,19 +55,20 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use components::model::Model;
     use ecs::mock::MockEvt;
     use mock::{MockCtx, MockEventsLoop, MockOsEvent};
 
     #[test]
     fn default() {
-        let _s = EventInterface::<MockEvt, MockCtx<MockEvt>, MockEventsLoop>::new(
+        let _s = EventInterface::<MockEvt, MockCtx<MockEvt, Model>, MockEventsLoop>::new(
             MockEventsLoop::default(),
         );
     }
 
     #[test]
     fn stage_filter() {
-        let s = EventInterface::<MockEvt, MockCtx<MockEvt>, MockEventsLoop>::new(
+        let s = EventInterface::<MockEvt, MockCtx<MockEvt, Model>, MockEventsLoop>::new(
             MockEventsLoop::default(),
         );
         assert_eq!(s.get_stage_filter(), LoopStage::UPDATE);
@@ -75,8 +76,8 @@ mod tests {
 
     #[test]
     fn update() {
-        let mut ctx = MockCtx::<MockEvt>::default();
-        let mut s = EventInterface::<MockEvt, MockCtx<MockEvt>, MockEventsLoop>::new(
+        let mut ctx = MockCtx::<MockEvt, Model>::default();
+        let mut s = EventInterface::<MockEvt, MockCtx<MockEvt, Model>, MockEventsLoop>::new(
             MockEventsLoop::default(),
         );
 

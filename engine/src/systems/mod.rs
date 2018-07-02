@@ -1,6 +1,6 @@
 pub mod event_interface;
 pub mod event_monitor;
-pub mod new_renderer;
+pub mod renderer;
 
 use self::event_monitor::EventMonitor;
 use context::Context;
