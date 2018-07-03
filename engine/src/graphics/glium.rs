@@ -12,11 +12,11 @@ use std::fmt;
 
 pub use glium::glutin::Event as GliumEvent;
 
-pub struct GliumEventsLoop(EventsLoop);
+pub struct GliumEventsLoop(Box<EventsLoop>);
 
 impl Default for GliumEventsLoop {
     fn default() -> Self {
-        GliumEventsLoop(EventsLoop::new())
+        GliumEventsLoop(Box::new(EventsLoop::new()))
     }
 }
 
