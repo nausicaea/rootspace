@@ -1,4 +1,5 @@
-use components::model::{DepthOrderingTrait, Model};
+use components::DepthOrderingTrait;
+use components::model::Model;
 use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
 use ecs::entity::Entity;
 use ecs::event::EventManagerTrait;

@@ -1,10 +1,7 @@
+use super::{DepthOrderingTrait, AsMatrix};
 use nalgebra::Matrix4;
 use std::f32;
 use std::ops::Mul;
-
-pub trait DepthOrderingTrait {
-    fn depth_index(&self) -> i32;
-}
 
 #[derive(Debug, Clone)]
 pub struct Model(Matrix4<f32>);
@@ -33,10 +30,27 @@ impl DepthOrderingTrait for Model {
     }
 }
 
+impl AsMatrix for Model {
+    fn as_matrix(&self) -> &Matrix4<f32> {
+        &self.0
+    }
+}
+
 impl<'a, 'b> Mul<&'b Model> for &'a Model {
     type Output = Model;
 
     fn mul(self, rhs: &'b Model) -> Self::Output {
         Model(self.0 * rhs.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn as_matrix() {
+        let m = Model::default();
+        let _: &Matrix4<f32> = m.as_matrix();
     }
 }

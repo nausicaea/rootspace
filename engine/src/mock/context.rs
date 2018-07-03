@@ -1,4 +1,4 @@
-use components::model::DepthOrderingTrait;
+use components::DepthOrderingTrait;
 use context::SceneGraphTrait;
 use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
 use ecs::entity::Entity;
