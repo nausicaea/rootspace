@@ -1,18 +1,16 @@
-use super::{BackendTrait, FrameTrait, RenderDataTrait};
+use super::{BackendTrait, FrameTrait, RenderDataTrait, EventsLoopTrait};
+use event::Event;
 use failure::Error;
+
+pub struct HeadlessEvent;
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessEventsLoop;
 
-// impl EventsLoopTrait<Event> for HeadlessEventsLoop {
-//     type OsEvent = ();
-
-//     fn poll<F>(&mut self, _f: F)
-//         where
-//             F: FnMut(Self::OsEvent),
-//         {
-//         }
-// }
+impl EventsLoopTrait<Event, HeadlessEvent> for HeadlessEventsLoop {
+    fn poll<F: FnMut(HeadlessEvent)>(&mut self, _f: F) {
+    }
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessRenderData;

@@ -1,50 +1,58 @@
+use graphics::EventsLoopTrait;
+use graphics::headless::{HeadlessEventsLoop as HEL, HeadlessEvent as HE};
+use graphics::glium::{GliumEventsLoop as GEL, GliumEvent as GE};
 use ecs::event::{EventManagerTrait, EventTrait};
 use ecs::loop_stage::LoopStage;
 use ecs::system::SystemTrait;
 use failure::Error;
-use graphics::EventsLoopTrait;
 use std::convert::TryInto;
 use std::marker::PhantomData;
 use std::time::Duration;
 
-pub struct EventInterface<E, C, Z> {
-    pub events_loop: Z,
-    phantom_e: PhantomData<E>,
-    phantom_c: PhantomData<C>,
+pub type HeadlessEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, HEL, HE>;
+pub type GliumEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, GEL, GE>;
+
+pub struct EventInterface<Ctx, Evt, L, I> {
+    pub events_loop: L,
+    _ctx: PhantomData<Ctx>,
+    _evt: PhantomData<Evt>,
+    _i: PhantomData<I>,
 }
 
-impl<E, C, Z> EventInterface<E, C, Z>
-where
-    E: EventTrait,
-    C: EventManagerTrait<E>,
-    Z: EventsLoopTrait<E>,
-{
-    pub fn new(events_loop: Z) -> Self {
+impl<Ctx, Evt, L, I> EventInterface<Ctx, Evt, L, I> {
+    pub fn new(events_loop: L) -> Self {
         EventInterface {
             events_loop,
-            phantom_e: PhantomData::default(),
-            phantom_c: PhantomData::default(),
+            _ctx: PhantomData::default(),
+            _evt: PhantomData::default(),
+            _i: PhantomData::default(),
         }
     }
 }
 
-impl<E, C, Z> SystemTrait<C, E> for EventInterface<E, C, Z>
+impl<Ctx, Evt, L, I> Default for EventInterface<Ctx, Evt, L, I>
 where
-    E: EventTrait,
-    C: EventManagerTrait<E>,
-    Z: EventsLoopTrait<E>,
+    L: Default,
+{
+    fn default() -> Self {
+        EventInterface::new(Default::default())
+    }
+}
+
+impl<Ctx, Evt, L, I> SystemTrait<Ctx, Evt> for EventInterface<Ctx, Evt, L, I>
+where
+    Ctx: EventManagerTrait<Evt>,
+    Evt: EventTrait,
+    L: EventsLoopTrait<Evt, I>,
+    I: TryInto<Evt>,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::UPDATE
     }
-    fn update(
-        &mut self,
-        ctx: &mut C,
-        _time: &Duration,
-        _delta_time: &Duration,
-    ) -> Result<(), Error> {
-        self.events_loop.poll(|os_event| {
-            if let Ok(event) = os_event.try_into() {
+
+    fn update(&mut self, ctx: &mut Ctx, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
+        self.events_loop.poll(|input_event| {
+            if let Ok(event) = input_event.try_into() {
                 ctx.dispatch_later(event);
             }
         });
@@ -56,38 +64,56 @@ where
 mod tests {
     use super::*;
     use components::model::Model;
-    use ecs::mock::MockEvt;
-    use mock::{MockCtx, MockEventsLoop, MockOsEvent};
+    use event::Event;
+    use graphics::headless::{HeadlessEventsLoop as HEL, HeadlessEvent as HE};
+    use graphics::glium::{GliumEventsLoop as GEL, GliumEvent as GE};
+    use mock::MockCtx;
 
     #[test]
-    fn default() {
-        let _s = EventInterface::<MockEvt, MockCtx<MockEvt, Model>, MockEventsLoop>::new(
-            MockEventsLoop::default(),
-        );
+    fn new_headless() {
+        let _: EventInterface<MockCtx<Event, Model>, Event, HEL, HE> = EventInterface::default();
     }
 
     #[test]
-    fn stage_filter() {
-        let s = EventInterface::<MockEvt, MockCtx<MockEvt, Model>, MockEventsLoop>::new(
-            MockEventsLoop::default(),
-        );
-        assert_eq!(s.get_stage_filter(), LoopStage::UPDATE);
+    fn get_stage_filter_headless() {
+        let e: EventInterface<MockCtx<Event, Model>, Event, HEL, HE> = EventInterface::default();
+
+        assert_eq!(e.get_stage_filter(), LoopStage::UPDATE);
     }
 
     #[test]
-    fn update() {
-        let mut ctx = MockCtx::<MockEvt, Model>::default();
-        let mut s = EventInterface::<MockEvt, MockCtx<MockEvt, Model>, MockEventsLoop>::new(
-            MockEventsLoop::default(),
-        );
+    fn update_headless() {
+        let mut e: EventInterface<MockCtx<Event, Model>, Event, HEL, HE> = EventInterface::default();
+        let mut c = MockCtx::default();
 
-        s.events_loop
-            .enqueue(MockOsEvent::TestEventA("hello".into()));
-        s.events_loop.enqueue(MockOsEvent::TestEventB(100));
-        s.events_loop.enqueue(MockOsEvent::TestEventC(1.0));
+        assert_ok!(e.update(&mut c, &Default::default(), &Default::default()));
+        assert_eq!(c.dispatch_later_calls, 0);
+        assert!(c.events.is_empty());
+    }
 
-        assert_ok!(s.update(&mut ctx, &Default::default(), &Default::default()));
-        assert!(s.events_loop.is_empty());
-        assert_eq!(ctx.events.len(), 2);
+    #[test]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn new_glium() {
+        let _: EventInterface<MockCtx<Event, Model>, Event, GEL, GE> = EventInterface::default();
+    }
+
+    #[test]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn get_stage_filter_glium() {
+        let e: EventInterface<MockCtx<Event, Model>, Event, GEL, GE> = EventInterface::default();
+
+        assert_eq!(e.get_stage_filter(), LoopStage::UPDATE);
+    }
+
+    #[test]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn update_glium() {
+        let mut e: EventInterface<MockCtx<Event, Model>, Event, GEL, GE> = EventInterface::default();
+        let mut c = MockCtx::default();
+
+        assert_ok!(e.update(&mut c, &Default::default(), &Default::default()));
     }
 }

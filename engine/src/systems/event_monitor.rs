@@ -5,8 +5,8 @@ use failure::Error;
 use std::marker::PhantomData;
 
 pub struct EventMonitor<E, C> {
-    phantom_e: PhantomData<E>,
-    phantom_c: PhantomData<C>,
+    _e: PhantomData<E>,
+    _c: PhantomData<C>,
 }
 
 impl<E, C> Default for EventMonitor<E, C>
@@ -15,8 +15,8 @@ where
 {
     fn default() -> Self {
         EventMonitor {
-            phantom_e: PhantomData::default(),
-            phantom_c: PhantomData::default(),
+            _e: PhantomData::default(),
+            _c: PhantomData::default(),
         }
     }
 }

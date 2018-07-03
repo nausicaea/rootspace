@@ -24,7 +24,7 @@ where
     pub render_arguments: Vec<(Duration, Duration)>,
     pub handle_event_calls: usize,
     pub handle_event_arguments: Vec<E>,
-    phantom_c: PhantomData<C>,
+    _c: PhantomData<C>,
 }
 
 impl<C, E> MockSysA<C, E>
@@ -68,7 +68,7 @@ where
             render_arguments: self.render_arguments.clone(),
             handle_event_calls: self.handle_event_calls,
             handle_event_arguments: self.handle_event_arguments.clone(),
-            phantom_c: PhantomData::default(),
+            _c: PhantomData::default(),
         }
     }
 }
@@ -92,7 +92,7 @@ where
             render_arguments: Vec::new(),
             handle_event_calls: 0,
             handle_event_arguments: Vec::new(),
-            phantom_c: PhantomData::default(),
+            _c: PhantomData::default(),
         }
     }
 }
@@ -191,7 +191,7 @@ where
     pub render_arguments: Vec<(Duration, Duration)>,
     pub handle_event_calls: usize,
     pub handle_event_arguments: Vec<E>,
-    phantom_c: PhantomData<C>,
+    _c: PhantomData<C>,
 }
 
 impl<C, E> MockSysB<C, E>
@@ -235,7 +235,7 @@ where
             render_arguments: self.render_arguments.clone(),
             handle_event_calls: self.handle_event_calls,
             handle_event_arguments: self.handle_event_arguments.clone(),
-            phantom_c: PhantomData::default(),
+            _c: PhantomData::default(),
         }
     }
 }
@@ -259,7 +259,7 @@ where
             render_arguments: Vec::new(),
             handle_event_calls: 0,
             handle_event_arguments: Vec::new(),
-            phantom_c: PhantomData::default(),
+            _c: PhantomData::default(),
         }
     }
 }

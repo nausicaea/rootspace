@@ -15,7 +15,7 @@ pub trait WorldTrait {
 pub struct World<E, C, S> {
     pub context: C,
     systems: Vec<S>,
-    phantom: PhantomData<E>,
+    _e: PhantomData<E>,
 }
 
 impl<E, C, S> World<E, C, S>
@@ -39,7 +39,7 @@ where
         World {
             context: Default::default(),
             systems: Vec::default(),
-            phantom: PhantomData::default(),
+            _e: PhantomData::default(),
         }
     }
 }

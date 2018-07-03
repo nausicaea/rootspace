@@ -13,6 +13,7 @@ use std::sync::RwLock;
 #[derive(Debug)]
 pub struct MockCtx<E, M> {
     pub events: VecDeque<E>,
+    pub dispatch_later_calls: usize,
     pub handle_events_calls: usize,
     pub database: Database,
     pub scene_graph: Hierarchy<Entity, M>,
@@ -33,6 +34,7 @@ where
     fn default() -> Self {
         MockCtx {
             events: VecDeque::default(),
+            dispatch_later_calls: 0,
             handle_events_calls: 0,
             database: Database::default(),
             scene_graph: Hierarchy::default(),
@@ -47,6 +49,7 @@ where
     E: EventTrait,
 {
     fn dispatch_later(&mut self, event: E) {
+        self.dispatch_later_calls += 1;
         self.events.push_back(event)
     }
     fn handle_events<F>(&mut self, mut handler: F) -> Result<bool, FailureError>

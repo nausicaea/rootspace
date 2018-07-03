@@ -7,7 +7,7 @@ use std::convert::TryInto;
 
 pub trait BackendTrait<E, F>
 where
-Self: Sized,
+    Self: Sized,
 {
     fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error>;
     fn create_frame(&self) -> F;
@@ -21,18 +21,15 @@ pub trait FrameTrait<R> {
 
 pub trait RenderDataTrait<B>
 where
-Self: Sized,
+    Self: Sized,
 {
     fn triangle(backend: &B) -> Result<Self, Error>;
 }
 
-pub trait EventsLoopTrait<E>
+pub trait EventsLoopTrait<O, I>
 where
-E: EventTrait,
+    O: EventTrait,
+    I: TryInto<O>,
 {
-    type OsEvent: TryInto<E>;
-
-    fn poll<F>(&mut self, f: F)
-        where
-            F: FnMut(Self::OsEvent);
+    fn poll<F: FnMut(I)>(&mut self, f: F);
 }

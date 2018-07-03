@@ -1,4 +1,7 @@
+use graphics::headless::HeadlessEvent;
+use graphics::glium::GliumEvent;
 use ecs::event::EventTrait;
+use std::convert::TryFrom;
 
 bitflags! {
     pub struct EventFlag: u64 {
@@ -33,17 +36,25 @@ impl EventTrait for Event {
     }
 }
 
-// impl TryFrom<WinitEvent> for Event {
-//     type Error = ();
-//
-//     fn try_from(value: WinitEvent) -> Result<Event, Self::Error> {
-//         if let WinitEvent::WindowEvent { event: _we, .. } = value {
-//             Err(())
-//         } else {
-//             Err(())
-//         }
-//     }
-// }
+impl TryFrom<HeadlessEvent> for Event {
+    type Error = ();
+
+    fn try_from(_value: HeadlessEvent) -> Result<Event, ()> {
+        Err(())
+    }
+}
+
+impl TryFrom<GliumEvent> for Event {
+    type Error = ();
+
+    fn try_from(value: GliumEvent) -> Result<Event, ()> {
+        if let GliumEvent::WindowEvent { event: _we, .. } = value {
+            unimplemented!()
+        } else {
+            Err(())
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

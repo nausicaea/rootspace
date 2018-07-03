@@ -1,5 +1,7 @@
 use context::SceneGraphTrait;
 use graphics::{BackendTrait, FrameTrait};
+use graphics::headless::{HeadlessBackend as HB, HeadlessFrame as HF, HeadlessRenderData as HRD, HeadlessEventsLoop as HEL};
+use graphics::glium::{GliumBackend as GB, GliumFrame as GF, GliumRenderData as GRD, GliumEventsLoop as GEL};
 use ecs::database::DatabaseTrait;
 use ecs::entity::Entity;
 use ecs::event::EventTrait;
@@ -8,6 +10,9 @@ use ecs::system::SystemTrait;
 use failure::Error;
 use std::marker::PhantomData;
 use std::time::Duration;
+
+pub type HeadlessRenderer<Ctx, Evt, L> = Renderer<Ctx, Evt, L, HRD, HF, HEL, HB>;
+pub type GliumRenderer<Ctx, Evt, L> = Renderer<Ctx, Evt, L, GRD, GF, GEL, GB>;
 
 #[derive(Debug)]
 pub struct Renderer<Ctx, Evt, L, R, F, E, B> {
@@ -103,21 +108,28 @@ mod tests {
     use super::*;
     use components::model::Model;
     use graphics::RenderDataTrait;
-    use graphics::headless::{HeadlessBackend as HB, HeadlessFrame as HF, HeadlessRenderData as HRD, HeadlessEventsLoop as HEL};
-    use graphics::glium::{GliumBackend as GB, GliumFrame as GF, GliumRenderData as GRD, GliumEventsLoop as GEL};
-    use mock::context::MockCtx;
-    use ecs::mock::event::MockEvt;
+    use graphics::headless::HeadlessRenderData as HRD;
+    use graphics::glium::GliumRenderData as GRD;
+    use mock::MockCtx;
+    use ecs::mock::MockEvt;
     use std::f32;
 
     #[test]
     fn new_headless() {
-        assert_ok!(Renderer::<MockCtx<MockEvt, Model>, MockEvt, Model, HRD, HF, HEL, HB>::new(&Default::default(), "Title", [800, 600], false, 0));
+        assert_ok!(HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Model>::new(&Default::default(), "Title", [800, 600], false, 0));
+    }
+
+    #[test]
+    fn get_stage_filter_headless() {
+        let r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Model>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
+
+        assert_eq!(r.get_stage_filter(), LoopStage::RENDER);
     }
 
     #[test]
     fn render_headless() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Model, HRD, HF, HEL, HB>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
+        let mut r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Model>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
 
         let a = ctx.create_entity();
         ctx.insert_node(a);
@@ -142,7 +154,16 @@ mod tests {
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn new_glium() {
-        assert_ok!(Renderer::<MockCtx<MockEvt, Model>, MockEvt, Model, GRD, GF, GEL, GB>::new(&Default::default(), "Title", [800, 600], false, 0));
+        assert_ok!(GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Model>::new(&Default::default(), "Title", [800, 600], false, 0));
+    }
+
+    #[test]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn get_stage_filter_glium() {
+        let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Model>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
+
+        assert_eq!(r.get_stage_filter(), LoopStage::RENDER);
     }
 
     #[test]
@@ -150,7 +171,7 @@ mod tests {
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn render_glium() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Model, GRD, GF, GEL, GB>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
+        let mut r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Model>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
 
         let a = ctx.create_entity();
         ctx.insert_node(a);

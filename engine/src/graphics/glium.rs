@@ -1,10 +1,13 @@
-use super::{BackendTrait, FrameTrait, RenderDataTrait};
+use super::{BackendTrait, FrameTrait, RenderDataTrait, EventsLoopTrait};
+use event::Event;
 use failure::Error;
 use glium::{Display, Frame, Surface, VertexBuffer, IndexBuffer, Program, DrawParameters, Depth, Blend, BlendingFunction, LinearBlendingFactor};
 use glium::draw_parameters::DepthTest;
 use glium::index::PrimitiveType;
 use glium::glutin::{EventsLoop, WindowBuilder, ContextBuilder, GlRequest, Api, GlProfile};
 use std::fmt;
+
+pub use glium::glutin::Event as GliumEvent;
 
 pub struct GliumEventsLoop(EventsLoop);
 
@@ -20,16 +23,11 @@ impl fmt::Debug for GliumEventsLoop {
     }
 }
 
-// impl EventsLoopTrait<Event> for GliumEventsLoop {
-//     type OsEvent = GliumEvent;
-
-//     fn poll<F>(&mut self, f: F)
-//     where
-//         F: FnMut(Self::OsEvent),
-//     {
-//         self.poll_events(f)
-//     }
-// }
+impl EventsLoopTrait<Event, GliumEvent> for GliumEventsLoop {
+    fn poll<F: FnMut(GliumEvent)>(&mut self, f: F) {
+        self.0.poll_events(f)
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vertex {
@@ -99,11 +97,12 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
         let uniforms = uniform! {
             location: *location.as_ref(),
         };
+
         let draw_params = DrawParameters {
             depth: Depth {
                 test: DepthTest::IfLess,
                 write: true,
-                ..Default::default()
+                ..Depth::default()
             },
             blend: Blend {
                 color: BlendingFunction::Addition {
@@ -116,11 +115,13 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
                 },
                 constant_value: (0.0, 0.0, 0.0, 0.0),
             },
-            ..Default::default()
+            ..DrawParameters::default()
         };
-        self.0.draw(&data.vertices, &data.indices, &data.program, &uniforms, &draw_params)?;
 
-        Ok(())
+        match self.0.draw(&data.vertices, &data.indices, &data.program, &uniforms, &draw_params) {
+            Ok(()) => Ok(()),
+            Err(e) => Err(Into::into(e)),
+        }
     }
 
     fn finalize(self) -> Result<(), Error> {

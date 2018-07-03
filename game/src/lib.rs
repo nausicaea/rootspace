@@ -10,8 +10,10 @@ use engine::context::Context;
 use engine::event::Event;
 use engine::file_manipulation::FileError;
 use engine::orchestrator::Orchestrator;
-use engine::systems::event_monitor::EventMonitor;
 use engine::systems::SystemGroup;
+use engine::systems::event_monitor::EventMonitor;
+use engine::systems::event_interface::{HeadlessEventInterface, GliumEventInterface};
+use engine::systems::renderer::{HeadlessRenderer, GliumRenderer};
 use failure::Error;
 use std::path::Path;
 use std::time::Duration;
@@ -31,9 +33,23 @@ impl Game {
         Ok(Game { orchestrator: o })
     }
 
-    pub fn run(&mut self, _headless: bool, iterations: Option<usize>) -> Result<(), Error> {
+    pub fn run(&mut self, headless: bool, iterations: Option<usize>) -> Result<(), Error> {
         let event_monitor = EventMonitor::default();
         self.orchestrator.world.add_system(event_monitor);
+
+        if headless {
+            let event_interface = HeadlessEventInterface::default();
+            let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4).unwrap();
+
+            self.orchestrator.world.add_system(event_interface);
+            self.orchestrator.world.add_system(renderer);
+        } else {
+            let event_interface = GliumEventInterface::default();
+            let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4).unwrap();
+
+            self.orchestrator.world.add_system(event_interface);
+            self.orchestrator.world.add_system(renderer);
+        }
 
         self.orchestrator
             .world
