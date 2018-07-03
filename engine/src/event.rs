@@ -1,11 +1,13 @@
 use graphics::headless::HeadlessEvent;
 use graphics::glium::GliumEvent;
 use ecs::event::EventTrait;
+use glium::glutin::WindowEvent;
 use std::convert::TryFrom;
 
 bitflags! {
     pub struct EventFlag: u64 {
-        const READY = 0x01;
+        const STARTUP = 0x01;
+        const SHUTDOWN = 0x02;
     }
 }
 
@@ -21,9 +23,15 @@ pub struct Event {
 }
 
 impl Event {
-    pub fn ready() -> Self {
+    pub fn startup() -> Self {
         Event {
-            flag: EventFlag::READY,
+            flag: EventFlag::STARTUP,
+        }
+    }
+
+    pub fn shutdown() -> Self {
+        Event {
+            flag: EventFlag::SHUTDOWN,
         }
     }
 }
@@ -48,8 +56,11 @@ impl TryFrom<GliumEvent> for Event {
     type Error = ();
 
     fn try_from(value: GliumEvent) -> Result<Event, ()> {
-        if let GliumEvent::WindowEvent { event: _we, .. } = value {
-            unimplemented!()
+        if let GliumEvent::WindowEvent { event: we, .. } = value {
+            match we {
+                WindowEvent::Closed => Ok(Event::shutdown()),
+                _ => Err(())
+            }
         } else {
             Err(())
         }
@@ -67,6 +78,11 @@ mod tests {
 
     #[test]
     fn ready_event() {
-        assert!(Event::ready().matches_filter(EventFlag::READY));
+        assert!(Event::startup().matches_filter(EventFlag::STARTUP));
+    }
+
+    #[test]
+    fn shutdown_event() {
+        assert!(Event::shutdown().matches_filter(EventFlag::SHUTDOWN));
     }
 }

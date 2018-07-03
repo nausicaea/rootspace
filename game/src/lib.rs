@@ -54,7 +54,7 @@ impl Game {
         self.orchestrator
             .world
             .context
-            .dispatch_later(Event::ready());
+            .dispatch_later(Event::startup());
         self.orchestrator.run(iterations)?;
 
         Ok(())
