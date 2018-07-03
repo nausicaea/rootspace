@@ -18,6 +18,7 @@ pub type GliumRenderer<Ctx, Evt, Cam, Mdl> = Renderer<Ctx, Evt, Cam, Mdl, GRD, G
 #[derive(Debug)]
 pub struct Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B> {
     backend: B,
+    clear_color: [f32; 4],
     frames: usize,
     draw_calls: usize,
     _ctx: PhantomData<Ctx>,
@@ -36,6 +37,7 @@ where
     pub fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error> {
         Ok(Renderer {
             backend: B::new(events_loop, title, dimensions, vsync, msaa)?,
+            clear_color: [0.69, 0.93, 0.93, 1.0],
             frames: 0,
             draw_calls: 0,
             _ctx: PhantomData::default(),
@@ -90,7 +92,7 @@ where
 
         // Create a new frame.
         let mut target = self.backend.create_frame();
-        target.initialize([0.0, 0.0, 0.0, 1.0], 1.0);
+        target.initialize(self.clear_color, 1.0);
 
         // Render the scene.
         for (entity, model) in nodes {
