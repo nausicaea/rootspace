@@ -4,8 +4,10 @@ extern crate failure;
 extern crate glium;
 extern crate log;
 
+use ecs::database::DatabaseTrait;
 use ecs::event::EventManagerTrait;
 use ecs::world::World;
+use engine::components::camera::Camera;
 use engine::context::Context;
 use engine::event::Event;
 use engine::file_manipulation::FileError;
@@ -35,11 +37,8 @@ impl Game {
     }
 
     pub fn run(&mut self, headless: bool, iterations: Option<usize>) -> Result<(), Error> {
-        let event_coordinator = EventCoordinator::default();
-        self.orchestrator.world.add_system(event_coordinator);
-
-        let event_monitor = EventMonitor::default();
-        self.orchestrator.world.add_system(event_monitor);
+        let camera = self.orchestrator.world.context.create_entity();
+        self.orchestrator.world.context.add(camera, Camera::default()).unwrap();
 
         if headless {
             let event_interface = HeadlessEventInterface::default();
@@ -54,6 +53,12 @@ impl Game {
             self.orchestrator.world.add_system(event_interface);
             self.orchestrator.world.add_system(renderer);
         }
+
+        let event_monitor = EventMonitor::default();
+        self.orchestrator.world.add_system(event_monitor);
+
+        let event_coordinator = EventCoordinator::default();
+        self.orchestrator.world.add_system(event_coordinator);
 
         self.orchestrator
             .world
