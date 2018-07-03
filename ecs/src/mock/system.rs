@@ -162,13 +162,13 @@ where
             Ok(())
         }
     }
-    fn handle_event(&mut self, _ctx: &mut C, event: &E) -> Result<(), Error> {
+    fn handle_event(&mut self, _ctx: &mut C, event: &E) -> Result<bool, Error> {
         self.handle_event_arguments.push(event.clone());
         self.handle_event_calls += 1;
         if self.error_out {
             Err(format_err!("MockSysA.handle_event() had an error"))
         } else {
-            Ok(())
+            Ok(true)
         }
     }
 }
@@ -329,13 +329,13 @@ where
             Ok(())
         }
     }
-    fn handle_event(&mut self, _ctx: &mut C, event: &E) -> Result<(), Error> {
+    fn handle_event(&mut self, _ctx: &mut C, event: &E) -> Result<bool, Error> {
         self.handle_event_arguments.push(event.clone());
         self.handle_event_calls += 1;
         if self.error_out {
             Err(format_err!("MockSysA.handle_event() had an error"))
         } else {
-            Ok(())
+            Ok(true)
         }
     }
 }

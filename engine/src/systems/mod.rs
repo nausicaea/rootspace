@@ -1,3 +1,4 @@
+pub mod event_coordinator;
 pub mod event_interface;
 pub mod event_monitor;
 pub mod renderer;
@@ -11,7 +12,7 @@ use event::{Event, EventFlag};
 
 impl_system_group! {
     pub enum SystemGroup<Context, Event, EventFlag> {
-        A(EventMonitor<Event, Context>),
+        A(EventMonitor<Context, Event>),
         B(GliumRenderer<Context, Event, Model>),
         C(HeadlessRenderer<Context, Event, Model>),
         D(GliumEventInterface<Context, Event>),

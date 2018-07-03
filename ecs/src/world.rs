@@ -78,14 +78,17 @@ where
         let systems = &mut self.systems;
 
         self.context.handle_events(|ctx, event| {
+            let mut statuses: Vec<bool> = Vec::new();
+
             for system in systems.iter_mut() {
                 if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS)
                     && event.matches_filter(system.get_event_filter())
                 {
-                    system.handle_event(ctx, event)?;
+                    statuses.push(system.handle_event(ctx, event)?);
                 }
             }
-            Ok(true)
+
+            Ok(statuses.iter().all(|s| *s))
         })
     }
 }

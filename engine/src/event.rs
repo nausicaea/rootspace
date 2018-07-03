@@ -8,6 +8,7 @@ bitflags! {
     pub struct EventFlag: u64 {
         const STARTUP = 0x01;
         const SHUTDOWN = 0x02;
+        const HARD_SHUTDOWN = 0x04;
     }
 }
 
@@ -32,6 +33,12 @@ impl Event {
     pub fn shutdown() -> Self {
         Event {
             flag: EventFlag::SHUTDOWN,
+        }
+    }
+
+    pub fn hard_shutdown() -> Self {
+        Event {
+            flag: EventFlag::HARD_SHUTDOWN,
         }
     }
 }
@@ -84,5 +91,10 @@ mod tests {
     #[test]
     fn shutdown_event() {
         assert!(Event::shutdown().matches_filter(EventFlag::SHUTDOWN));
+    }
+
+    #[test]
+    fn hard_shutdown_event() {
+        assert!(Event::hard_shutdown().matches_filter(EventFlag::HARD_SHUTDOWN));
     }
 }

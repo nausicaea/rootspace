@@ -20,7 +20,7 @@ where
     fn render(&mut self, _ctx: &mut C, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
         unimplemented!("Did you forget to implement the render method?")
     }
-    fn handle_event(&mut self, _ctx: &mut C, _e: &E) -> Result<(), Error> {
+    fn handle_event(&mut self, _ctx: &mut C, _e: &E) -> Result<bool, Error> {
         unimplemented!("Did you forget to implement the handle_event method?")
     }
 }

@@ -99,7 +99,7 @@ macro_rules! impl_system_group {
                     )+
                 }
             }
-            fn handle_event(&mut self, ctx: &mut $c, event: &$e) -> Result<(), ::failure::Error> {
+            fn handle_event(&mut self, ctx: &mut $c, event: &$e) -> Result<bool, ::failure::Error> {
                 match *self {
                     $(
                     $name::$variant(ref mut s) => s.handle_event(ctx, event),

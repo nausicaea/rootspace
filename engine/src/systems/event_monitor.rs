@@ -4,36 +4,33 @@ use ecs::system::SystemTrait;
 use failure::Error;
 use std::marker::PhantomData;
 
-pub struct EventMonitor<E, C> {
-    _e: PhantomData<E>,
-    _c: PhantomData<C>,
+pub struct EventMonitor<Ctx, Evt> {
+    _ctx: PhantomData<Ctx>,
+    _evt: PhantomData<Evt>,
 }
 
-impl<E, C> Default for EventMonitor<E, C>
-where
-    E: EventTrait,
-{
+impl<Ctx, Evt> Default for EventMonitor<Ctx, Evt> {
     fn default() -> Self {
         EventMonitor {
-            _e: PhantomData::default(),
-            _c: PhantomData::default(),
+            _ctx: PhantomData::default(),
+            _evt: PhantomData::default(),
         }
     }
 }
 
-impl<E, C> SystemTrait<C, E> for EventMonitor<E, C>
+impl<Ctx, Evt> SystemTrait<Ctx, Evt> for EventMonitor<Ctx, Evt>
 where
-    E: EventTrait,
+    Evt: EventTrait,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::HANDLE_EVENTS
     }
-    fn get_event_filter(&self) -> E::EventFlag {
+    fn get_event_filter(&self) -> Evt::EventFlag {
         Default::default()
     }
-    fn handle_event(&mut self, _ctx: &mut C, event: &E) -> Result<(), Error> {
+    fn handle_event(&mut self, _ctx: &mut Ctx, event: &Evt) -> Result<bool, Error> {
         trace!("Received event {:?}", event);
-        Ok(())
+        Ok(true)
     }
 }
 
@@ -46,26 +43,28 @@ mod tests {
 
     #[test]
     fn default() {
-        let _s = EventMonitor::<MockEvt, MockCtx<MockEvt, Model>>::default();
+        let _s = EventMonitor::<MockCtx<MockEvt, Model>, MockEvt>::default();
     }
 
     #[test]
     fn stage_filter() {
-        let s = EventMonitor::<MockEvt, MockCtx<MockEvt, Model>>::default();
+        let s = EventMonitor::<MockCtx<MockEvt, Model>, MockEvt>::default();
 
         assert_eq!(s.get_stage_filter(), LoopStage::HANDLE_EVENTS);
     }
 
     #[test]
     fn event_filter() {
-        let s = EventMonitor::<MockEvt, MockCtx<MockEvt, Model>>::default();
+        let s = EventMonitor::<MockCtx<MockEvt, Model>, MockEvt>::default();
 
         assert_eq!(s.get_event_filter(), MockEvtFlag::all());
     }
 
     #[test]
     fn handle_event() {
-        let mut s = EventMonitor::<MockEvt, MockCtx<MockEvt, Model>>::default();
-        assert_ok!(s.handle_event(&mut Default::default(), &MockEvt::TestEventB(0)));
+        let mut s = EventMonitor::<MockCtx<MockEvt, Model>, MockEvt>::default();
+        let r = s.handle_event(&mut Default::default(), &MockEvt::TestEventB(0));
+        assert_ok!(r);
+        assert!(r.unwrap());
     }
 }
