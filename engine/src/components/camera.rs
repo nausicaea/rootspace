@@ -1,6 +1,7 @@
 use super::AsMatrix;
 use nalgebra::Matrix4;
 
+#[derive(Debug)]
 pub struct Camera(Matrix4<f32>);
 
 impl Default for Camera {

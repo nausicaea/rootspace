@@ -128,4 +128,8 @@ impl DatabaseTrait for Context {
     fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, DatabaseError> {
         self.database.borrow_mut::<C>(entity)
     }
+
+    fn find<C: Any>(&self) -> Result<&C, DatabaseError> {
+        self.database.find::<C>()
+    }
 }

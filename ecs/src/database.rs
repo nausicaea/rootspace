@@ -13,6 +13,7 @@ pub trait DatabaseTrait: Default {
     fn components(&self, entity: &Entity) -> usize;
     fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, Error>;
     fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, Error>;
+    fn find<C: Any>(&self) -> Result<&C, Error>;
 }
 
 #[derive(Debug)]
@@ -110,6 +111,22 @@ impl DatabaseTrait for Database {
                     .map(|h| h.downcast_mut().unwrap_or_else(|| unreachable!()))
             })
     }
+
+    fn find<C: Any>(&self) -> Result<&C, Error> {
+        let candidates = self.entities
+            .values()
+            .filter(|g| g.contains_key(&TypeId::of::<C>()))
+            .map(|g| g.get(&TypeId::of::<C>()).unwrap().downcast_ref().unwrap_or_else(|| unreachable!()))
+            .collect::<Vec<&C>>();
+
+        if candidates.len() == 1 {
+            Ok(candidates.first().unwrap())
+        } else if candidates.is_empty() {
+            Err(Error::ComponentNotFound)
+        } else {
+            Err(Error::MultipleComponentsFound)
+        }
+    }
 }
 
 #[derive(Debug, Fail)]
@@ -120,6 +137,8 @@ pub enum Error {
     CannotOverwriteComponent,
     #[fail(display = "No such component")]
     ComponentNotFound,
+    #[fail(display = "Multiple components were found where one was expected.")]
+    MultipleComponentsFound,
 }
 
 #[cfg(test)]
@@ -330,5 +349,35 @@ mod tests {
         let mut d: Database = Default::default();
         let e: Entity = Default::default();
         assert_err!(d.borrow_mut::<TestTypeA>(&e));
+    }
+
+    #[test]
+    fn find_known_component() {
+        let mut d: Database = Default::default();
+        let e = d.create_entity();
+        let c = TestTypeA::new(1);
+        d.add(e.clone(), c.clone()).unwrap();
+        let r = d.find::<TestTypeA>();
+        assert_ok!(r);
+        assert_eq!(r.unwrap(), &c);
+    }
+
+    #[test]
+    fn find_unknown_component() {
+        let mut d: Database = Default::default();
+        let _e = d.create_entity();
+        assert_err!(d.find::<TestTypeA>());
+    }
+
+    #[test]
+    fn find_duplicate_component() {
+        let mut d: Database = Default::default();
+        let e = d.create_entity();
+        let x = TestTypeA::new(1);
+        d.add(e.clone(), x.clone()).unwrap();
+        let f = d.create_entity();
+        let y = TestTypeA::new(2);
+        d.add(f.clone(), y.clone()).unwrap();
+        assert_err!(d.find::<TestTypeA>());
     }
 }
