@@ -1,9 +1,9 @@
 use graphics::EventsLoopTrait;
 use graphics::headless::{HeadlessEventsLoop as HEL, HeadlessEvent as HE};
 use graphics::glium::{GliumEventsLoop as GEL, GliumEvent as GE};
-use ecs::event::{EventManagerTrait, EventTrait};
-use ecs::loop_stage::LoopStage;
-use ecs::system::SystemTrait;
+use ecs::{EventManagerTrait, EventTrait};
+use ecs::LoopStage;
+use ecs::SystemTrait;
 use failure::Error;
 use std::convert::TryInto;
 use std::marker::PhantomData;

@@ -5,15 +5,60 @@ use std::marker::PhantomData;
 use std::time::Duration;
 use system::SystemTrait;
 
+/// A World must perform actions for four types of calls.
 pub trait WorldTrait {
+    /// The fixed update method is supposed to be called from the main loop at fixed time
+    /// intervals.
+    ///
+    /// # Aruments
+    ///
+    /// * `time` - Interpreted as the current game time.
+    /// * `delta_time` - Interpreted as the time interval between calls to `fixed_update`.
+    ///
+    /// # Errors
+    ///
+    /// Will pass along any error encountered the respective systems.
     fn fixed_update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error>;
+    /// The dynamic update method is supposed to be called from the main loop just before the
+    /// render call.
+    ///
+    /// # Aruments
+    ///
+    /// * `time` - Interpreted as the current game time.
+    /// * `delta_time` - Interpreted as the time interval between calls to `update`.
+    ///
+    /// # Errors
+    ///
+    /// Will pass along any error encountered the respective systems.
     fn update(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error>;
+    /// The render method is supposed to be called when a re-draw of the graphical representation
+    /// is desired.
+    ///
+    /// # Aruments
+    ///
+    /// * `time` - Interpreted as the current game time.
+    /// * `delta_time` - Interpreted as the time interval between calls to `render`.
+    ///
+    /// # Errors
+    ///
+    /// Will pass along any error encountered the respective systems.
     fn render(&mut self, time: &Duration, delta_time: &Duration) -> Result<(), Error>;
+    /// The handle events method is supposed to be called when pending events or messages should be
+    /// handled by the connected systems. If this method returns `Ok(true)`, the execution of the
+    /// main loop shall continue, otherwise it shall abort.
+    ///
+    /// # Errors
+    ///
+    /// Will pass along any error encountered the respective systems.
     fn handle_events(&mut self) -> Result<bool, Error>;
 }
 
+/// This is the default implementation of the `WorldTrait` provided by this library.
 pub struct World<E, C, S> {
+    /// The context must be capable of managing events and messages. Additionally, any behaviour
+    /// may be added.
     pub context: C,
+    /// Holds all systems at use in this `World`.
     systems: Vec<S>,
     _e: PhantomData<E>,
 }
@@ -24,6 +69,11 @@ where
     C: Default + EventManagerTrait<E>,
     S: SystemTrait<C, E>,
 {
+    /// Adds a new system to the `World`.
+    ///
+    /// # Arguments
+    ///
+    /// * `system` - A type that must implement the `Into<S>` trait, where `S: SystemTrait<_, _>`.
     pub fn add_system<T: Into<S>>(&mut self, system: T) {
         self.systems.push(system.into());
     }

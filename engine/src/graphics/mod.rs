@@ -1,7 +1,7 @@
 pub mod glium;
 pub mod headless;
 
-use ecs::event::EventTrait;
+use ecs::EventTrait;
 use failure::Error;
 use std::convert::TryInto;
 

@@ -1,8 +1,8 @@
 use components::DepthOrderingTrait;
 use context::SceneGraphTrait;
-use ecs::database::{Database, DatabaseTrait, Error as DatabaseError};
-use ecs::entity::Entity;
-use ecs::event::{EventManagerTrait, EventTrait};
+use ecs::{Database, DatabaseTrait, DatabaseError};
+use ecs::Entity;
+use ecs::{EventManagerTrait, EventTrait};
 use failure::Error as FailureError;
 use hierarchy::Hierarchy;
 use std::any::Any;

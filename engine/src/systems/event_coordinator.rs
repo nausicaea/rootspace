@@ -1,7 +1,7 @@
 use event::{Event, EventFlag};
-use ecs::event::EventManagerTrait;
-use ecs::loop_stage::LoopStage;
-use ecs::system::SystemTrait;
+use ecs::EventManagerTrait;
+use ecs::LoopStage;
+use ecs::SystemTrait;
 use failure::Error;
 use std::marker::PhantomData;
 

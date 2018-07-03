@@ -3,11 +3,11 @@ use context::SceneGraphTrait;
 use graphics::{BackendTrait, FrameTrait};
 use graphics::headless::{HeadlessBackend as HB, HeadlessFrame as HF, HeadlessRenderData as HRD, HeadlessEventsLoop as HEL};
 use graphics::glium::{GliumBackend as GB, GliumFrame as GF, GliumRenderData as GRD, GliumEventsLoop as GEL};
-use ecs::database::DatabaseTrait;
-use ecs::entity::Entity;
-use ecs::event::EventTrait;
-use ecs::loop_stage::LoopStage;
-use ecs::system::SystemTrait;
+use ecs::DatabaseTrait;
+use ecs::Entity;
+use ecs::EventTrait;
+use ecs::LoopStage;
+use ecs::SystemTrait;
 use failure::Error;
 use std::marker::PhantomData;
 use std::time::Duration;
@@ -17,8 +17,8 @@ pub type GliumRenderer<Ctx, Evt, Cam, Mdl> = Renderer<Ctx, Evt, Cam, Mdl, GRD, G
 
 #[derive(Debug)]
 pub struct Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B> {
-    backend: B,
-    clear_color: [f32; 4],
+    pub backend: B,
+    pub clear_color: [f32; 4],
     frames: usize,
     draw_calls: usize,
     _ctx: PhantomData<Ctx>,

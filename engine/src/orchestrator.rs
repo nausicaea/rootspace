@@ -1,4 +1,4 @@
-use ecs::world::WorldTrait;
+use ecs::WorldTrait;
 use failure::Error;
 use file_manipulation::{FileError, VerifyPath};
 use std::cmp;

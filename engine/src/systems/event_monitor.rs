@@ -1,6 +1,6 @@
-use ecs::event::EventTrait;
-use ecs::loop_stage::LoopStage;
-use ecs::system::SystemTrait;
+use ecs::EventTrait;
+use ecs::LoopStage;
+use ecs::SystemTrait;
 use failure::Error;
 use std::marker::PhantomData;
 
@@ -29,7 +29,7 @@ where
         Default::default()
     }
     fn handle_event(&mut self, _ctx: &mut Ctx, event: &Evt) -> Result<bool, Error> {
-        trace!("Received event {:?}", event);
+        trace!("Received {:?}", event);
         Ok(true)
     }
 }

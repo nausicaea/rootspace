@@ -1,6 +1,6 @@
 use graphics::headless::HeadlessEvent;
 use graphics::glium::GliumEvent;
-use ecs::event::EventTrait;
+use ecs::EventTrait;
 use glium::glutin::WindowEvent;
 use std::convert::TryFrom;
 
