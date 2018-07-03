@@ -137,7 +137,7 @@ pub enum Error {
     CannotOverwriteComponent,
     #[fail(display = "No such component")]
     ComponentNotFound,
-    #[fail(display = "Multiple components were found where one was expected.")]
+    #[fail(display = "Multiple components were found where one was expected")]
     MultipleComponentsFound,
 }
 
