@@ -27,7 +27,7 @@ pub mod world;
 
 pub use self::database::{Database, DatabaseTrait, Error as DatabaseError};
 pub use self::entity::Entity;
-pub use self::event::{EventTrait, EventManagerTrait};
+pub use self::event::{EventManagerTrait, EventTrait};
 pub use self::loop_stage::LoopStage;
 pub use self::system::SystemTrait;
 pub use self::world::{World, WorldTrait};

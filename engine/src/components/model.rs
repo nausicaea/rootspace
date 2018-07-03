@@ -1,4 +1,4 @@
-use super::{DepthOrderingTrait, AsMatrix};
+use super::{AsMatrix, DepthOrderingTrait};
 use nalgebra::Matrix4;
 use std::f32;
 use std::ops::Mul;

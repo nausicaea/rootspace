@@ -1,6 +1,4 @@
-use ecs::EventTrait;
-use ecs::LoopStage;
-use ecs::SystemTrait;
+use ecs::{EventTrait, LoopStage, SystemTrait};
 use failure::Error;
 use std::marker::PhantomData;
 

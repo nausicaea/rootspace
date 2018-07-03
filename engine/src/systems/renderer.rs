@@ -1,14 +1,15 @@
 use components::AsMatrix;
 use context::SceneGraphTrait;
-use graphics::{BackendTrait, FrameTrait};
-use graphics::headless::{HeadlessBackend as HB, HeadlessFrame as HF, HeadlessRenderData as HRD, HeadlessEventsLoop as HEL};
-use graphics::glium::{GliumBackend as GB, GliumFrame as GF, GliumRenderData as GRD, GliumEventsLoop as GEL};
-use ecs::DatabaseTrait;
-use ecs::Entity;
-use ecs::EventTrait;
-use ecs::LoopStage;
-use ecs::SystemTrait;
+use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
+use graphics::glium::{
+    GliumBackend as GB, GliumEventsLoop as GEL, GliumFrame as GF, GliumRenderData as GRD,
+};
+use graphics::headless::{
+    HeadlessBackend as HB, HeadlessEventsLoop as HEL, HeadlessFrame as HF,
+    HeadlessRenderData as HRD,
+};
+use graphics::{BackendTrait, FrameTrait};
 use std::marker::PhantomData;
 use std::time::Duration;
 
@@ -34,7 +35,13 @@ impl<Ctx, Evt, Cam, Mdl, R, F, E, B> Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B>
 where
     B: BackendTrait<E, F>,
 {
-    pub fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error> {
+    pub fn new(
+        events_loop: &E,
+        title: &str,
+        dimensions: [u32; 2],
+        vsync: bool,
+        msaa: u16,
+    ) -> Result<Self, Error> {
         Ok(Renderer {
             backend: B::new(events_loop, title, dimensions, vsync, msaa)?,
             clear_color: [0.69, 0.93, 0.93, 1.0],
@@ -60,7 +67,8 @@ where
     }
 }
 
-impl<Ctx, Evt, Cam, Mdl, R, F, E, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B>
+impl<Ctx, Evt, Cam, Mdl, R, F, E, B> SystemTrait<Ctx, Evt>
+    for Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B>
 where
     Ctx: DatabaseTrait + SceneGraphTrait<Entity, Mdl>,
     Evt: EventTrait,
@@ -117,21 +125,34 @@ mod tests {
     use super::*;
     use components::camera::Camera;
     use components::model::Model;
-    use graphics::RenderDataTrait;
-    use graphics::headless::HeadlessRenderData as HRD;
-    use graphics::glium::GliumRenderData as GRD;
-    use mock::MockCtx;
     use ecs::mock::MockEvt;
+    use graphics::glium::GliumRenderData as GRD;
+    use graphics::headless::HeadlessRenderData as HRD;
+    use graphics::RenderDataTrait;
+    use mock::MockCtx;
     use std::f32;
 
     #[test]
     fn new_headless() {
-        assert_ok!(HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(&Default::default(), "Title", [800, 600], false, 0));
+        assert_ok!(HeadlessRenderer::<
+            MockCtx<MockEvt, Model>,
+            MockEvt,
+            Camera,
+            Model,
+        >::new(
+            &Default::default(), "Title", [800, 600], false, 0
+        ));
     }
 
     #[test]
     fn get_stage_filter_headless() {
-        let r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
+        let r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+            &Default::default(),
+            "Title",
+            [800, 600],
+            false,
+            0,
+        ).unwrap();
 
         assert_eq!(r.get_stage_filter(), LoopStage::RENDER);
     }
@@ -139,7 +160,13 @@ mod tests {
     #[test]
     fn render_headless() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
+        let mut r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+            &Default::default(),
+            "Title",
+            [800, 600],
+            false,
+            0,
+        ).unwrap();
 
         let a = ctx.create_entity();
         ctx.insert_node(a);
@@ -163,26 +190,54 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn new_glium() {
-        assert_ok!(GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(&Default::default(), "Title", [800, 600], false, 0));
+        assert_ok!(GliumRenderer::<
+            MockCtx<MockEvt, Model>,
+            MockEvt,
+            Camera,
+            Model,
+        >::new(
+            &Default::default(), "Title", [800, 600], false, 0
+        ));
     }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn get_stage_filter_glium() {
-        let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
+        let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+            &Default::default(),
+            "Title",
+            [800, 600],
+            false,
+            0,
+        ).unwrap();
 
         assert_eq!(r.get_stage_filter(), LoopStage::RENDER);
     }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn render_glium() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(&Default::default(), "Title", [800, 600], false, 0).unwrap();
+        let mut r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+            &Default::default(),
+            "Title",
+            [800, 600],
+            false,
+            0,
+        ).unwrap();
 
         let a = ctx.create_entity();
         ctx.insert_node(a);

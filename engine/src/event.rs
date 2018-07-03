@@ -1,7 +1,7 @@
-use graphics::headless::HeadlessEvent;
-use graphics::glium::GliumEvent;
 use ecs::EventTrait;
 use glium::glutin::WindowEvent;
+use graphics::glium::GliumEvent;
+use graphics::headless::HeadlessEvent;
 use std::convert::TryFrom;
 
 bitflags! {
@@ -70,7 +70,7 @@ impl TryFrom<GliumEvent> for Event {
         if let GliumEvent::WindowEvent { event: we, .. } = value {
             match we {
                 WindowEvent::Closed => Ok(Event::shutdown()),
-                _ => Err(())
+                _ => Err(()),
             }
         } else {
             Err(())

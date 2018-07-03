@@ -4,9 +4,9 @@ pub mod event_monitor;
 pub mod renderer;
 
 use self::event_coordinator::EventCoordinator;
-use self::event_interface::{HeadlessEventInterface, GliumEventInterface};
+use self::event_interface::{GliumEventInterface, HeadlessEventInterface};
 use self::event_monitor::EventMonitor;
-use self::renderer::{HeadlessRenderer, GliumRenderer};
+use self::renderer::{GliumRenderer, HeadlessRenderer};
 use components::camera::Camera;
 use components::model::Model;
 use context::Context;

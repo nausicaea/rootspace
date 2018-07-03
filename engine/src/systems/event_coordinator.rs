@@ -1,7 +1,5 @@
+use ecs::{EventManagerTrait, LoopStage, SystemTrait};
 use event::{Event, EventFlag};
-use ecs::EventManagerTrait;
-use ecs::LoopStage;
-use ecs::SystemTrait;
 use failure::Error;
 use std::marker::PhantomData;
 
@@ -27,10 +25,8 @@ where
             EventFlag::SHUTDOWN => {
                 ctx.dispatch_later(Event::hard_shutdown());
                 Ok(true)
-            },
-            EventFlag::HARD_SHUTDOWN => {
-                Ok(false)
-            },
+            }
+            EventFlag::HARD_SHUTDOWN => Ok(false),
             _ => Ok(true),
         }
     }
@@ -58,7 +54,10 @@ mod tests {
     fn get_event_filter() {
         let c: EventCoordinator<MockCtx<Event, Model>> = EventCoordinator::default();
 
-        assert_eq!(c.get_event_filter(), EventFlag::SHUTDOWN | EventFlag::HARD_SHUTDOWN);
+        assert_eq!(
+            c.get_event_filter(),
+            EventFlag::SHUTDOWN | EventFlag::HARD_SHUTDOWN
+        );
     }
 
     #[test]

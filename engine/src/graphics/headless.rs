@@ -1,4 +1,4 @@
-use super::{BackendTrait, FrameTrait, RenderDataTrait, EventsLoopTrait};
+use super::{BackendTrait, EventsLoopTrait, FrameTrait, RenderDataTrait};
 use event::Event;
 use failure::Error;
 
@@ -8,8 +8,7 @@ pub struct HeadlessEvent;
 pub struct HeadlessEventsLoop;
 
 impl EventsLoopTrait<Event, HeadlessEvent> for HeadlessEventsLoop {
-    fn poll<F: FnMut(HeadlessEvent)>(&mut self, _f: F) {
-    }
+    fn poll<F: FnMut(HeadlessEvent)>(&mut self, _f: F) {}
 }
 
 #[derive(Debug, Clone, Default)]
@@ -25,10 +24,13 @@ impl RenderDataTrait<HeadlessBackend> for HeadlessRenderData {
 pub struct HeadlessFrame;
 
 impl FrameTrait<HeadlessRenderData> for HeadlessFrame {
-    fn initialize(&mut self, _color: [f32; 4], _depth: f32) {
-    }
+    fn initialize(&mut self, _color: [f32; 4], _depth: f32) {}
 
-    fn render<L: AsRef<[[f32; 4]; 4]>>(&mut self, _location: &L, _data: &HeadlessRenderData) -> Result<(), Error> {
+    fn render<L: AsRef<[[f32; 4]; 4]>>(
+        &mut self,
+        _location: &L,
+        _data: &HeadlessRenderData,
+    ) -> Result<(), Error> {
         Ok(())
     }
 
@@ -41,7 +43,13 @@ impl FrameTrait<HeadlessRenderData> for HeadlessFrame {
 pub struct HeadlessBackend;
 
 impl BackendTrait<HeadlessEventsLoop, HeadlessFrame> for HeadlessBackend {
-    fn new(_events_loop: &HeadlessEventsLoop, _title: &str, _dimensions: [u32; 2], _vsync: bool, _msaa: u16) -> Result<Self, Error> {
+    fn new(
+        _events_loop: &HeadlessEventsLoop,
+        _title: &str,
+        _dimensions: [u32; 2],
+        _vsync: bool,
+        _msaa: u16,
+    ) -> Result<Self, Error> {
         Ok(HeadlessBackend::default())
     }
 
@@ -65,19 +73,37 @@ mod tests {
 
     #[test]
     fn backend() {
-        assert_ok!(HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0));
+        assert_ok!(HeadlessBackend::new(
+            &HeadlessEventsLoop::default(),
+            "Title",
+            [800, 600],
+            false,
+            0
+        ));
     }
 
     #[test]
     fn render_data() {
-        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let b = HeadlessBackend::new(
+            &HeadlessEventsLoop::default(),
+            "Title",
+            [800, 600],
+            false,
+            0,
+        ).unwrap();
 
         assert_ok!(HeadlessRenderData::triangle(&b));
     }
 
     #[test]
     fn frame() {
-        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let b = HeadlessBackend::new(
+            &HeadlessEventsLoop::default(),
+            "Title",
+            [800, 600],
+            false,
+            0,
+        ).unwrap();
 
         let mut f: HeadlessFrame = b.create_frame();
         f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);

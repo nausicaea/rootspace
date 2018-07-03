@@ -1,8 +1,6 @@
-use components::DepthOrderingTrait;
 use components::model::Model;
-use ecs::{Database, DatabaseTrait, DatabaseError};
-use ecs::Entity;
-use ecs::EventManagerTrait;
+use components::DepthOrderingTrait;
+use ecs::{Entity, EventManagerTrait, Database, DatabaseError, DatabaseTrait};
 use event::Event;
 use failure::Error;
 use hierarchy::Hierarchy;

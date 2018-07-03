@@ -113,10 +113,16 @@ impl DatabaseTrait for Database {
     }
 
     fn find<C: Any>(&self) -> Result<&C, Error> {
-        let candidates = self.entities
+        let candidates = self
+            .entities
             .values()
             .filter(|g| g.contains_key(&TypeId::of::<C>()))
-            .map(|g| g.get(&TypeId::of::<C>()).unwrap().downcast_ref().unwrap_or_else(|| unreachable!()))
+            .map(|g| {
+                g.get(&TypeId::of::<C>())
+                    .unwrap()
+                    .downcast_ref()
+                    .unwrap_or_else(|| unreachable!())
+            })
             .collect::<Vec<&C>>();
 
         if candidates.len() == 1 {
