@@ -1,4 +1,8 @@
-//! Provides a hierarchical data structure, called `Hierarchy`.
+//! # Hierarchy
+//!
+//! Provides a hierarchical data structure, called `Hierarchy`. Its goal is to encode a
+//! hierarchical relationships between identifiers (e.g. entities in an ECS) and a piece of data
+//! associated with each identifier.
 #![deny(missing_docs)]
 
 #[cfg(test)]
@@ -81,7 +85,12 @@ where
 
 impl<K, V> fmt::Debug for Hierarchy<K, V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Hierarchy(nodes: {}, edges: {})", self.graph.node_count(), self.graph.edge_count())
+        write!(
+            f,
+            "Hierarchy(nodes: {}, edges: {})",
+            self.graph.node_count(),
+            self.graph.edge_count()
+        )
     }
 }
 
@@ -95,7 +104,16 @@ where
         Hierarchy::default()
     }
 
-    /// Deletes the `HierNode` defined by the specified key.
+    /// Deletes the hierarchical node identified by the specified `key`.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The identifier of the node to be deleted.
+    ///
+    /// # Errors
+    ///
+    /// * `HierarchyError::CannotRemoveRootNode` if you try to remove the root node.
+    /// * `HierarchyError::KeyNotFound` if `key` identifies no known node.
     pub fn remove(&mut self, key: &K) -> Result<(), HierarchyError> {
         if key == &self.root_key {
             return Err(HierarchyError::CannotRemoveRootNode);
@@ -107,14 +125,29 @@ where
         Ok(())
     }
 
-    /// Inserts a `HierNode` as child of the root `HierNode`.
+    /// Inserts a new node as child of the root node.
+    ///
+    /// # Arguments
+    ///
+    /// * `child` - The identifier of the new node.
+    /// * `data` - The associated data.
     pub fn insert(&mut self, child: K, data: V) {
         let parent = self.root_key.clone();
         self.insert_child(&parent, child, data)
             .unwrap_or_else(|_| unreachable!())
     }
 
-    /// Inserts a `HierNode` as child of another `HierNode` identified by its key.
+    /// Inserts a new node as child of another node.
+    ///
+    /// # Arguments
+    ///
+    /// * `parent` - The identifier of the parent node.
+    /// * `child` - The identifier of the new node.
+    /// * `data` - The data associated with the new node.
+    ///
+    /// # Errors
+    ///
+    /// * `HierarchyError::KeyNotFound` if `parent` identifies no known node.
     pub fn insert_child(&mut self, parent: &K, child: K, data: V) -> Result<(), HierarchyError> {
         let parent_idx = self.get_index(parent)?;
         let child_node = HierNode::new(child.clone(), data);
@@ -124,12 +157,22 @@ where
     }
 
     /// Returns `true` if the specified key is represented within the `Hierarchy`.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The identifier to be verified for presence.
     pub fn has(&self, key: &K) -> bool {
         self.index.contains_key(key)
     }
 
-    /// Updates each node in breadth first search order. Refer to `HierNode.update` for more
-    /// information.
+    /// Updates each node in breadth-first search order. Given a parent node's data, update the
+    /// child nodes' data with the supplied closure. This allows users to establish hierarchical
+    /// relationships between identifiers and associated data.
+    ///
+    /// # Arguments
+    ///
+    /// * `merge_fn` - A closure that takes a node identifier, its associated data and the parent's
+    /// data as arguments. It may return new data that will overwrite the node's associated data.
     pub fn update<F>(&mut self, merge_fn: &F) -> Result<(), HierarchyError>
     where
         for<'r> F: Fn(&'r K, &'r V, &'r V) -> Option<V>,
@@ -158,7 +201,8 @@ where
         Ok(())
     }
 
-    /// Returns an iterator over all `HierNode`s in the `Hierarchy`.
+    /// Returns an iterator over all pairs of identifier and data irrespective of hierarchical
+    /// order.
     pub fn iter(&self) -> RawNodes<K, V> {
         RawNodes::new(self)
     }
@@ -188,9 +232,9 @@ where
 #[derive(Default, Clone)]
 struct HierNode<K, V> {
     /// Provides access to the identifying key.
-    pub key: K,
+    key: K,
     /// Provides access to the hierarchical data.
-    pub data: V,
+    data: V,
 }
 
 impl<K, V> HierNode<K, V>
@@ -198,7 +242,7 @@ where
     V: Clone + Default,
 {
     /// Creates a new `HierNode`.
-    pub fn new(key: K, data: V) -> Self {
+    fn new(key: K, data: V) -> Self {
         HierNode { key, data }
     }
 
@@ -206,7 +250,7 @@ where
     /// This allows users to establish hierarchical relationships between instances of a type.
     /// As arguments, the closure will receive the current node's key and a reference to its parent
     /// node's data.
-    pub fn update<F>(&mut self, parent_data: &V, merge_fn: &F)
+    fn update<F>(&mut self, parent_data: &V, merge_fn: &F)
     where
         for<'r> F: Fn(&'r K, &'r V, &'r V) -> Option<V>,
     {
@@ -227,7 +271,7 @@ where
     K: 'a + Clone + Default + Eq + Hash,
     V: 'a + Clone + Default,
 {
-    /// Creates a new `Hierarchy`.
+    /// Creates a new iterator over the raw nodes of a `Hierarchy`.
     pub fn new(hierarchy: &'a Hierarchy<K, V>) -> Self {
         RawNodes {
             index: 0,
