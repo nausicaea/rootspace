@@ -1,6 +1,7 @@
 use super::{BackendTrait, FrameTrait, RenderDataTrait};
 use failure::Error;
-use glium::{Display, Frame, Surface, VertexBuffer, IndexBuffer, Program};
+use glium::{Display, Frame, Surface, VertexBuffer, IndexBuffer, Program, DrawParameters, Depth, Blend, BlendingFunction, LinearBlendingFactor};
+use glium::draw_parameters::DepthTest;
 use glium::index::PrimitiveType;
 use glium::glutin::{EventsLoop, WindowBuilder, ContextBuilder, GlRequest, Api, GlProfile};
 use std::fmt;
@@ -98,7 +99,26 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
         let uniforms = uniform! {
             location: *location.as_ref(),
         };
-        self.0.draw(&data.vertices, &data.indices, &data.program, &uniforms, &Default::default())?;
+        let draw_params = DrawParameters {
+            depth: Depth {
+                test: DepthTest::IfLess,
+                write: true,
+                ..Default::default()
+            },
+            blend: Blend {
+                color: BlendingFunction::Addition {
+                    source: LinearBlendingFactor::One,
+                    destination: LinearBlendingFactor::OneMinusSourceAlpha,
+                },
+                alpha: BlendingFunction::Addition {
+                    source: LinearBlendingFactor::One,
+                    destination: LinearBlendingFactor::OneMinusSourceAlpha,
+                },
+                constant_value: (0.0, 0.0, 0.0, 0.0),
+            },
+            ..Default::default()
+        };
+        self.0.draw(&data.vertices, &data.indices, &data.program, &uniforms, &draw_params)?;
 
         Ok(())
     }
