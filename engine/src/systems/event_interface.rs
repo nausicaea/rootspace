@@ -65,25 +65,23 @@ mod tests {
     use super::*;
     use components::model::Model;
     use event::Event;
-    use graphics::headless::{HeadlessEventsLoop as HEL, HeadlessEvent as HE};
-    use graphics::glium::{GliumEventsLoop as GEL, GliumEvent as GE};
     use mock::MockCtx;
 
     #[test]
     fn new_headless() {
-        let _: EventInterface<MockCtx<Event, Model>, Event, HEL, HE> = EventInterface::default();
+        let _: HeadlessEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
     }
 
     #[test]
     fn get_stage_filter_headless() {
-        let e: EventInterface<MockCtx<Event, Model>, Event, HEL, HE> = EventInterface::default();
+        let e: HeadlessEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
 
         assert_eq!(e.get_stage_filter(), LoopStage::UPDATE);
     }
 
     #[test]
     fn update_headless() {
-        let mut e: EventInterface<MockCtx<Event, Model>, Event, HEL, HE> = EventInterface::default();
+        let mut e: HeadlessEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
         let mut c = MockCtx::default();
 
         assert_ok!(e.update(&mut c, &Default::default(), &Default::default()));
@@ -93,25 +91,23 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn new_glium() {
-        let _: EventInterface<MockCtx<Event, Model>, Event, GEL, GE> = EventInterface::default();
+        let _: GliumEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
     }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn get_stage_filter_glium() {
-        let e: EventInterface<MockCtx<Event, Model>, Event, GEL, GE> = EventInterface::default();
+        let e: GliumEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
 
         assert_eq!(e.get_stage_filter(), LoopStage::UPDATE);
     }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Events can only be polled from the main thread on macOS"))]
     fn update_glium() {
-        let mut e: EventInterface<MockCtx<Event, Model>, Event, GEL, GE> = EventInterface::default();
+        let mut e: GliumEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
         let mut c = MockCtx::default();
 
         assert_ok!(e.update(&mut c, &Default::default(), &Default::default()));

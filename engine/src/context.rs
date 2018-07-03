@@ -29,6 +29,7 @@ impl EventManagerTrait<Event> for Context {
     fn dispatch_later(&mut self, event: Event) {
         self.events.push_back(event)
     }
+
     fn handle_events<F>(&mut self, mut handler: F) -> Result<bool, Error>
     where
         F: FnMut(&mut Self, &Event) -> Result<bool, Error>,
@@ -36,11 +37,13 @@ impl EventManagerTrait<Event> for Context {
         let tmp = self.events.iter().cloned().collect::<Vec<_>>();
         self.events.clear();
 
+        let mut statuses: Vec<bool> = Vec::with_capacity(tmp.len());
+
         for event in tmp {
-            handler(self, &event)?;
+            statuses.push(handler(self, &event)?);
         }
 
-        Ok(true)
+        Ok(statuses.iter().all(|s| *s))
     }
 }
 

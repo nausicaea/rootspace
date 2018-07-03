@@ -78,7 +78,7 @@ where
         let systems = &mut self.systems;
 
         self.context.handle_events(|ctx, event| {
-            let mut statuses: Vec<bool> = Vec::new();
+            let mut statuses: Vec<bool> = Vec::with_capacity(systems.len());
 
             for system in systems.iter_mut() {
                 if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS)

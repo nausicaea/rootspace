@@ -41,6 +41,10 @@ impl Event {
             flag: EventFlag::HARD_SHUTDOWN,
         }
     }
+
+    pub fn flag(&self) -> EventFlag {
+        self.flag
+    }
 }
 
 impl EventTrait for Event {

@@ -11,8 +11,9 @@ use engine::event::Event;
 use engine::file_manipulation::FileError;
 use engine::orchestrator::Orchestrator;
 use engine::systems::SystemGroup;
-use engine::systems::event_monitor::EventMonitor;
+use engine::systems::event_coordinator::EventCoordinator;
 use engine::systems::event_interface::{HeadlessEventInterface, GliumEventInterface};
+use engine::systems::event_monitor::EventMonitor;
 use engine::systems::renderer::{HeadlessRenderer, GliumRenderer};
 use failure::Error;
 use std::path::Path;
@@ -34,6 +35,9 @@ impl Game {
     }
 
     pub fn run(&mut self, headless: bool, iterations: Option<usize>) -> Result<(), Error> {
+        let event_coordinator = EventCoordinator::default();
+        self.orchestrator.world.add_system(event_coordinator);
+
         let event_monitor = EventMonitor::default();
         self.orchestrator.world.add_system(event_monitor);
 
