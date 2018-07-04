@@ -1,4 +1,4 @@
-use super::{AsMatrix, DepthOrderingTrait};
+use super::DepthOrderingTrait;
 use affine_transform::AffineTransform;
 use nalgebra::{Matrix4, Vector3, Affine3, Isometry3};
 use std::{f32, ops::Mul};
@@ -43,8 +43,8 @@ impl DepthOrderingTrait for Model {
     }
 }
 
-impl AsMatrix for Model {
-    fn as_matrix(&self) -> &Matrix4<f32> {
+impl AsRef<Matrix4<f32>> for Model {
+    fn as_ref(&self) -> &Matrix4<f32> {
         self.model.matrix()
     }
 }
@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn identity() {
-        assert_eq!(Model::identity().as_matrix(), &Matrix4::identity());
+        assert_eq!(Model::identity().as_ref(), &Matrix4::identity());
     }
 
     #[test]
@@ -104,8 +104,8 @@ mod tests {
     }
 
     #[test]
-    fn as_matrix() {
+    fn as_ref() {
         let m = Model::default();
-        let _: &Matrix4<f32> = m.as_matrix();
+        let _: &Matrix4<f32> = m.as_ref();
     }
 }

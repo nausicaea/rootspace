@@ -1,4 +1,3 @@
-use super::AsMatrix;
 use nalgebra::{Isometry3, Matrix4, Perspective3, Point3, Vector3};
 use std::f32;
 
@@ -51,8 +50,8 @@ impl Default for Camera {
     }
 }
 
-impl AsMatrix for Camera {
-    fn as_matrix(&self) -> &Matrix4<f32> {
+impl AsRef<Matrix4<f32>> for Camera {
+    fn as_ref(&self) -> &Matrix4<f32> {
         &self.matrix
     }
 }
@@ -89,9 +88,9 @@ mod tests {
     }
 
     #[test]
-    fn as_matrix() {
+    fn as_ref() {
         let c = Camera::default();
-        let m: &Matrix4<f32> = c.as_matrix();
+        let m: &Matrix4<f32> = c.as_ref();
         assert_eq!(m, &(c.projection.as_matrix() * c.view.to_homogeneous()));
     }
 }

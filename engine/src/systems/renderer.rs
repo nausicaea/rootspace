@@ -1,4 +1,3 @@
-use components::AsMatrix;
 use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
@@ -7,6 +6,7 @@ use graphics::{
     headless::{HeadlessBackend as HB, HeadlessEventsLoop as HEL, HeadlessFrame as HF, HeadlessRenderData as HRD},
     BackendTrait, FrameTrait,
 };
+use nalgebra::Matrix4;
 use std::{marker::PhantomData, time::Duration};
 
 pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl> = Renderer<Ctx, Evt, Cam, Mdl, HRD, HF, HEL, HB>;
@@ -61,8 +61,8 @@ impl<Ctx, Evt, Cam, Mdl, R, F, E, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt
 where
     Ctx: DatabaseTrait + SceneGraphTrait<Entity, Mdl>,
     Evt: EventTrait,
-    Cam: AsMatrix + 'static,
-    Mdl: Default + Clone + AsMatrix + 'static,
+    Cam: AsRef<Matrix4<f32>> + 'static,
+    Mdl: Default + Clone + AsRef<Matrix4<f32>> + 'static,
     R: 'static,
     F: FrameTrait<R>,
     B: BackendTrait<E, F>,
@@ -99,7 +99,7 @@ where
                     {
                         self.draw_calls += 1;
                     }
-                    target.render(&(cam.as_matrix() * model.as_matrix()), data)?;
+                    target.render(&(cam.as_ref() * model.as_ref()), data)?;
                 }
             }
         }
