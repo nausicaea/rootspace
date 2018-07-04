@@ -9,7 +9,7 @@ use self::{
     event_monitor::EventMonitor,
     renderer::{GliumRenderer, HeadlessRenderer},
 };
-use components::{camera::Camera, model::Model};
+use components::{camera::Camera, model::Model, renderable::Renderable};
 use context::Context;
 use event::{Event, EventFlag};
 
@@ -19,7 +19,7 @@ impl_system_group! {
         B(EventMonitor<Context, Event>),
         C(GliumEventInterface<Context, Event>),
         D(HeadlessEventInterface<Context, Event>),
-        E(GliumRenderer<Context, Event, Camera, Model>),
-        F(HeadlessRenderer<Context, Event, Camera, Model>),
+        E(GliumRenderer<Context, Event, Camera, Model, Renderable>),
+        F(HeadlessRenderer<Context, Event, Camera, Model, Renderable>),
     }
 }

@@ -9,11 +9,11 @@ use graphics::{
 use nalgebra::Matrix4;
 use std::{marker::PhantomData, time::Duration};
 
-pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl> = Renderer<Ctx, Evt, Cam, Mdl, HRD, HF, HEL, HB>;
-pub type GliumRenderer<Ctx, Evt, Cam, Mdl> = Renderer<Ctx, Evt, Cam, Mdl, GRD, GF, GEL, GB>;
+pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, HRD, HF, HEL, HB>;
+pub type GliumRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, GRD, GF, GEL, GB>;
 
 #[derive(Debug)]
-pub struct Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B> {
+pub struct Renderer<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B> {
     pub backend: B,
     pub clear_color: [f32; 4],
     frames: usize,
@@ -22,12 +22,13 @@ pub struct Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B> {
     _evt: PhantomData<Evt>,
     _cam: PhantomData<Cam>,
     _mdl: PhantomData<Mdl>,
-    _r: PhantomData<R>,
+    _ren: PhantomData<Ren>,
+    _d: PhantomData<D>,
     _f: PhantomData<F>,
     _e: PhantomData<E>,
 }
 
-impl<Ctx, Evt, Cam, Mdl, R, F, E, B> Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B>
+impl<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B> Renderer<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B>
 where
     B: BackendTrait<E, F>,
 {
@@ -41,7 +42,8 @@ where
             _evt: PhantomData::default(),
             _cam: PhantomData::default(),
             _mdl: PhantomData::default(),
-            _r: PhantomData::default(),
+            _ren: PhantomData::default(),
+            _d: PhantomData::default(),
             _f: PhantomData::default(),
             _e: PhantomData::default(),
         })
@@ -57,14 +59,14 @@ where
     }
 }
 
-impl<Ctx, Evt, Cam, Mdl, R, F, E, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B>
+impl<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B>
 where
     Ctx: DatabaseTrait + SceneGraphTrait<Entity, Mdl>,
     Evt: EventTrait,
     Cam: AsRef<Matrix4<f32>> + 'static,
     Mdl: Default + Clone + AsRef<Matrix4<f32>> + 'static,
-    R: 'static,
-    F: FrameTrait<R>,
+    Ren: AsRef<D> + 'static,
+    F: FrameTrait<D>,
     B: BackendTrait<E, F>,
 {
     fn get_stage_filter(&self) -> LoopStage {
@@ -94,7 +96,7 @@ where
         // Render the scene.
         for (entity, model) in nodes {
             if ctx.has::<Mdl>(entity) {
-                if let Ok(data) = ctx.borrow::<R>(entity) {
+                if let Ok(data) = ctx.borrow::<Ren>(entity) {
                     #[cfg(any(test, feature = "diagnostics"))]
                     {
                         self.draw_calls += 1;

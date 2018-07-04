@@ -13,9 +13,9 @@ where
     fn create_frame(&self) -> F;
 }
 
-pub trait FrameTrait<R> {
+pub trait FrameTrait<D> {
     fn initialize(&mut self, color: [f32; 4], depth: f32);
-    fn render<L: AsRef<[[f32; 4]; 4]>>(&mut self, location: &L, data: &R) -> Result<(), Error>;
+    fn render<T: AsRef<[[f32; 4]; 4]>, R: AsRef<D>>(&mut self, transform: &T, data: &R) -> Result<(), Error>;
     fn finalize(self) -> Result<(), Error>;
 }
 
