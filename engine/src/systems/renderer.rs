@@ -2,16 +2,12 @@ use components::AsMatrix;
 use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
-use graphics::glium::{
-    GliumBackend as GB, GliumEventsLoop as GEL, GliumFrame as GF, GliumRenderData as GRD,
+use graphics::{
+    glium::{GliumBackend as GB, GliumEventsLoop as GEL, GliumFrame as GF, GliumRenderData as GRD},
+    headless::{HeadlessBackend as HB, HeadlessEventsLoop as HEL, HeadlessFrame as HF, HeadlessRenderData as HRD},
+    BackendTrait, FrameTrait,
 };
-use graphics::headless::{
-    HeadlessBackend as HB, HeadlessEventsLoop as HEL, HeadlessFrame as HF,
-    HeadlessRenderData as HRD,
-};
-use graphics::{BackendTrait, FrameTrait};
-use std::marker::PhantomData;
-use std::time::Duration;
+use std::{marker::PhantomData, time::Duration};
 
 pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl> = Renderer<Ctx, Evt, Cam, Mdl, HRD, HF, HEL, HB>;
 pub type GliumRenderer<Ctx, Evt, Cam, Mdl> = Renderer<Ctx, Evt, Cam, Mdl, GRD, GF, GEL, GB>;
@@ -35,13 +31,7 @@ impl<Ctx, Evt, Cam, Mdl, R, F, E, B> Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B>
 where
     B: BackendTrait<E, F>,
 {
-    pub fn new(
-        events_loop: &E,
-        title: &str,
-        dimensions: [u32; 2],
-        vsync: bool,
-        msaa: u16,
-    ) -> Result<Self, Error> {
+    pub fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error> {
         Ok(Renderer {
             backend: B::new(events_loop, title, dimensions, vsync, msaa)?,
             clear_color: [0.69, 0.93, 0.93, 1.0],
@@ -67,8 +57,7 @@ where
     }
 }
 
-impl<Ctx, Evt, Cam, Mdl, R, F, E, B> SystemTrait<Ctx, Evt>
-    for Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B>
+impl<Ctx, Evt, Cam, Mdl, R, F, E, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Cam, Mdl, R, F, E, B>
 where
     Ctx: DatabaseTrait + SceneGraphTrait<Entity, Mdl>,
     Evt: EventTrait,
@@ -123,25 +112,23 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use components::camera::Camera;
-    use components::model::Model;
+    use components::{camera::Camera, model::Model};
     use ecs::mock::MockEvt;
-    use graphics::glium::GliumRenderData as GRD;
-    use graphics::headless::HeadlessRenderData as HRD;
-    use graphics::RenderDataTrait;
+    use graphics::{glium::GliumRenderData as GRD, headless::HeadlessRenderData as HRD, RenderDataTrait};
     use mock::MockCtx;
     use std::f32;
 
     #[test]
     fn new_headless() {
-        assert_ok!(HeadlessRenderer::<
-            MockCtx<MockEvt, Model>,
-            MockEvt,
-            Camera,
-            Model,
-        >::new(
-            &Default::default(), "Title", [800, 600], false, 0
-        ));
+        assert_ok!(
+            HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+                &Default::default(),
+                "Title",
+                [800, 600],
+                false,
+                0
+            )
+        );
     }
 
     #[test]
@@ -190,27 +177,20 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn new_glium() {
-        assert_ok!(GliumRenderer::<
-            MockCtx<MockEvt, Model>,
-            MockEvt,
-            Camera,
-            Model,
-        >::new(
-            &Default::default(), "Title", [800, 600], false, 0
+        assert_ok!(GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+            &Default::default(),
+            "Title",
+            [800, 600],
+            false,
+            0
         ));
     }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn get_stage_filter_glium() {
         let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
             &Default::default(),
@@ -225,10 +205,7 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn render_glium() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
         let mut r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(

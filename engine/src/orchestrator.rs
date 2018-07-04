@@ -1,9 +1,11 @@
 use ecs::WorldTrait;
 use failure::Error;
 use file_manipulation::{FileError, VerifyPath};
-use std::cmp;
-use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
+use std::{
+    cmp,
+    path::{Path, PathBuf},
+    time::{Duration, Instant},
+};
 
 #[derive(Debug)]
 pub struct Orchestrator<W> {
@@ -17,11 +19,7 @@ impl<W> Orchestrator<W>
 where
     W: Default + WorldTrait,
 {
-    pub fn new(
-        resource_path: &Path,
-        delta_time: Duration,
-        max_frame_time: Duration,
-    ) -> Result<Self, FileError> {
+    pub fn new(resource_path: &Path, delta_time: Duration, max_frame_time: Duration) -> Result<Self, FileError> {
         let rp = resource_path.to_path_buf().ensure_accessible_directory()?;
 
         Ok(Orchestrator {
@@ -59,10 +57,7 @@ where
         Ok(())
     }
     pub fn get_file(&self, folder: &str, file: &str) -> Result<PathBuf, FileError> {
-        self.resource_path
-            .join(folder)
-            .join(file)
-            .ensure_accessible_file()
+        self.resource_path.join(folder).join(file).ensure_accessible_file()
     }
 }
 
@@ -76,11 +71,7 @@ mod tests {
     /// Danger! This test works with thread::sleep() to test fixed loop timing. Note that the
     /// estimate of update calls is not always accurate, that's why this test is fuzzy by +/-1
     /// iteration. Because of this, the test will bust quickcheck's shrinking algorithm.
-    fn check_fixed_update_calls(
-        iterations: u32,
-        delta_time: Duration,
-        max_frame_time: Duration,
-    ) -> bool {
+    fn check_fixed_update_calls(iterations: u32, delta_time: Duration, max_frame_time: Duration) -> bool {
         let base = env::temp_dir();
         let render_duration = Duration::from_millis(20);
 
@@ -97,25 +88,16 @@ mod tests {
         }
 
         let abs_error = (fixed_update_calls as f64 - o.world.fixed_update_calls as f64).abs();
-        let rel_error = (fixed_update_calls as f64 - o.world.fixed_update_calls as f64)
-            / fixed_update_calls as f64;
+        let rel_error = (fixed_update_calls as f64 - o.world.fixed_update_calls as f64) / fixed_update_calls as f64;
         abs_error <= 1.0 || rel_error <= 0.1
     }
 
     #[test]
     fn create_orchestrator() {
-        let r = Orchestrator::<MockWorld>::new(
-            &env::temp_dir(),
-            Default::default(),
-            Default::default(),
-        );
+        let r = Orchestrator::<MockWorld>::new(&env::temp_dir(), Default::default(), Default::default());
         assert_ok!(r);
 
-        let r = Orchestrator::<MockWorld>::new(
-            &PathBuf::from("blablablabla"),
-            Default::default(),
-            Default::default(),
-        );
+        let r = Orchestrator::<MockWorld>::new(&PathBuf::from("blablablabla"), Default::default(), Default::default());
         assert_err!(r);
 
         let tf = NamedTempFile::new().unwrap();
@@ -129,8 +111,7 @@ mod tests {
         let base = env::temp_dir();
         let tf = NamedTempFile::new_in(&base).unwrap();
 
-        let o =
-            Orchestrator::<MockWorld>::new(&base, Default::default(), Default::default()).unwrap();
+        let o = Orchestrator::<MockWorld>::new(&base, Default::default(), Default::default()).unwrap();
 
         let r = o.get_file(dir_name, &tf.path().file_name().unwrap().to_string_lossy());
         assert_ok!(r);

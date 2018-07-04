@@ -1,12 +1,12 @@
 use super::{BackendTrait, EventsLoopTrait, FrameTrait, RenderDataTrait};
 use event::Event;
 use failure::Error;
-use glium::draw_parameters::DepthTest;
-use glium::glutin::{Api, ContextBuilder, EventsLoop, GlProfile, GlRequest, WindowBuilder};
-use glium::index::PrimitiveType;
 use glium::{
-    Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer,
-    LinearBlendingFactor, Program, Surface, VertexBuffer,
+    draw_parameters::DepthTest,
+    glutin::{Api, ContextBuilder, EventsLoop, GlProfile, GlRequest, WindowBuilder},
+    index::PrimitiveType,
+    Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
+    Surface, VertexBuffer,
 };
 use std::fmt;
 
@@ -63,11 +63,11 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
         let vertices = VertexBuffer::new(
             &backend.0,
             &[
-            Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
-            Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
-            Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
+                Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
+                Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
+                Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
             ],
-            )?;
+        )?;
 
         let indices = IndexBuffer::new(&backend.0, PrimitiveType::TrianglesList, &[0, 1, 2])?;
 
@@ -86,7 +86,7 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
                             gl_Position = transform * vec4(position, 1.0);
                     }
                     "#,
-                    r#"
+            r#"
                     #version 330 core
 
                     out vec4 color;
@@ -95,14 +95,14 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
                             color = vec4(gl_FragCoord.xyz, 1.0);
                     }
                     "#,
-                    None,
-                    )?;
+            None,
+        )?;
 
-                    Ok(GliumRenderData {
-                        vertices,
-                        indices,
-                        program,
-                    })
+        Ok(GliumRenderData {
+            vertices,
+            indices,
+            program,
+        })
     }
 
     fn cube(backend: &GliumBackend) -> Result<Self, Error> {
@@ -110,47 +110,51 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
         let vertices = VertexBuffer::new(
             &backend.0,
             &[
-            // Front face
-            Vertex::new([-hw, hw, hw], [0.0, 1.0], [0.0, 0.0, 1.0]),
-            Vertex::new([-hw, -hw, hw], [0.0, 0.0], [0.0, 0.0, 1.0]),
-            Vertex::new([hw, -hw, hw], [1.0, 0.0], [0.0, 0.0, 1.0]),
-            Vertex::new([hw, hw, hw], [1.0, 1.0], [0.0, 0.0, 1.0]),
-            // Back face
-            Vertex::new([hw, hw, -hw], [0.0, 1.0], [0.0, 0.0, -1.0]),
-            Vertex::new([hw, -hw, -hw], [0.0, 0.0], [0.0, 0.0, -1.0]),
-            Vertex::new([-hw, -hw, -hw], [1.0, 0.0], [0.0, 0.0, -1.0]),
-            Vertex::new([-hw, hw, -hw], [1.0, 1.0], [0.0, 0.0, -1.0]),
-            // Right face
-            Vertex::new([hw, hw, hw], [0.0, 1.0], [1.0, 0.0, 0.0]),
-            Vertex::new([hw, -hw, hw], [0.0, 0.0], [1.0, 0.0, 0.0]),
-            Vertex::new([hw, -hw, -hw], [1.0, 0.0], [1.0, 0.0, 0.0]),
-            Vertex::new([hw, hw, -hw], [1.0, 1.0], [1.0, 0.0, 0.0]),
-            // Left face
-            Vertex::new([-hw, hw, -hw], [0.0, 1.0], [-1.0, 0.0, 0.0]),
-            Vertex::new([-hw, -hw, -hw], [0.0, 0.0], [-1.0, 0.0, 0.0]),
-            Vertex::new([-hw, -hw, hw], [1.0, 0.0], [-1.0, 0.0, 0.0]),
-            Vertex::new([-hw, hw, hw], [1.0, 1.0], [-1.0, 0.0, 0.0]),
-            // Top face
-            Vertex::new([-hw, hw, -hw], [0.0, 1.0], [0.0, 1.0, 0.0]),
-            Vertex::new([-hw, hw, hw], [0.0, 0.0], [0.0, 1.0, 0.0]),
-            Vertex::new([hw, hw, hw], [1.0, 0.0], [0.0, 1.0, 0.0]),
-            Vertex::new([hw, hw, -hw], [1.0, 1.0], [0.0, 1.0, 0.0]),
-            // Bottom face
-            Vertex::new([-hw, -hw, hw], [0.0, 1.0], [0.0, -1.0, 0.0]),
-            Vertex::new([-hw, -hw, -hw], [0.0, 0.0], [0.0, -1.0, 0.0]),
-            Vertex::new([hw, -hw, -hw], [1.0, 0.0], [0.0, -1.0, 0.0]),
-            Vertex::new([hw, -hw, hw], [1.0, 1.0], [0.0, -1.0, 0.0]),
+                // Front face
+                Vertex::new([-hw, hw, hw], [0.0, 1.0], [0.0, 0.0, 1.0]),
+                Vertex::new([-hw, -hw, hw], [0.0, 0.0], [0.0, 0.0, 1.0]),
+                Vertex::new([hw, -hw, hw], [1.0, 0.0], [0.0, 0.0, 1.0]),
+                Vertex::new([hw, hw, hw], [1.0, 1.0], [0.0, 0.0, 1.0]),
+                // Back face
+                Vertex::new([hw, hw, -hw], [0.0, 1.0], [0.0, 0.0, -1.0]),
+                Vertex::new([hw, -hw, -hw], [0.0, 0.0], [0.0, 0.0, -1.0]),
+                Vertex::new([-hw, -hw, -hw], [1.0, 0.0], [0.0, 0.0, -1.0]),
+                Vertex::new([-hw, hw, -hw], [1.0, 1.0], [0.0, 0.0, -1.0]),
+                // Right face
+                Vertex::new([hw, hw, hw], [0.0, 1.0], [1.0, 0.0, 0.0]),
+                Vertex::new([hw, -hw, hw], [0.0, 0.0], [1.0, 0.0, 0.0]),
+                Vertex::new([hw, -hw, -hw], [1.0, 0.0], [1.0, 0.0, 0.0]),
+                Vertex::new([hw, hw, -hw], [1.0, 1.0], [1.0, 0.0, 0.0]),
+                // Left face
+                Vertex::new([-hw, hw, -hw], [0.0, 1.0], [-1.0, 0.0, 0.0]),
+                Vertex::new([-hw, -hw, -hw], [0.0, 0.0], [-1.0, 0.0, 0.0]),
+                Vertex::new([-hw, -hw, hw], [1.0, 0.0], [-1.0, 0.0, 0.0]),
+                Vertex::new([-hw, hw, hw], [1.0, 1.0], [-1.0, 0.0, 0.0]),
+                // Top face
+                Vertex::new([-hw, hw, -hw], [0.0, 1.0], [0.0, 1.0, 0.0]),
+                Vertex::new([-hw, hw, hw], [0.0, 0.0], [0.0, 1.0, 0.0]),
+                Vertex::new([hw, hw, hw], [1.0, 0.0], [0.0, 1.0, 0.0]),
+                Vertex::new([hw, hw, -hw], [1.0, 1.0], [0.0, 1.0, 0.0]),
+                // Bottom face
+                Vertex::new([-hw, -hw, hw], [0.0, 1.0], [0.0, -1.0, 0.0]),
+                Vertex::new([-hw, -hw, -hw], [0.0, 0.0], [0.0, -1.0, 0.0]),
+                Vertex::new([hw, -hw, -hw], [1.0, 0.0], [0.0, -1.0, 0.0]),
+                Vertex::new([hw, -hw, hw], [1.0, 1.0], [0.0, -1.0, 0.0]),
             ],
-            )?;
+        )?;
 
-            let indices = IndexBuffer::new(&backend.0, PrimitiveType::TrianglesList, &[
-                0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12, 16,
-                17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
-            ])?;
+        let indices = IndexBuffer::new(
+            &backend.0,
+            PrimitiveType::TrianglesList,
+            &[
+                0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19,
+                16, 20, 21, 22, 22, 23, 20,
+            ],
+        )?;
 
-            let program = Program::from_source(
-                &backend.0,
-                r#"
+        let program = Program::from_source(
+            &backend.0,
+            r#"
                     #version 330 core
 
                     uniform mat4 transform;
@@ -163,7 +167,7 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
                             gl_Position = transform * vec4(position, 1.0);
                     }
                     "#,
-                    r#"
+            r#"
                     #version 330 core
 
                     out vec4 color;
@@ -172,14 +176,14 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
                             color = vec4(gl_FragCoord.xyz, 1.0);
                     }
                     "#,
-                    None,
-                    )?;
+            None,
+        )?;
 
-                    Ok(GliumRenderData {
-                        vertices,
-                        indices,
-                        program,
-                    })
+        Ok(GliumRenderData {
+            vertices,
+            indices,
+            program,
+        })
     }
 }
 
@@ -244,7 +248,7 @@ impl BackendTrait<GliumEventsLoop, GliumFrame> for GliumBackend {
         dimensions: [u32; 2],
         vsync: bool,
         msaa: u16,
-        ) -> Result<Self, Error> {
+    ) -> Result<Self, Error> {
         let window = WindowBuilder::new()
             .with_title(title)
             .with_dimensions(dimensions[0], dimensions[1]);
@@ -287,50 +291,39 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
-        fn backend() {
-            assert_ok!(GliumBackend::new(
-                    &GliumEventsLoop::default(),
-                    "Title",
-                    [800, 600],
-                    false,
-                    0
-            ));
-        }
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn backend() {
+        assert_ok!(GliumBackend::new(
+            &GliumEventsLoop::default(),
+            "Title",
+            [800, 600],
+            false,
+            0
+        ));
+    }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
-        fn render_data() {
-            let b =
-                GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn render_data() {
+        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-            assert_ok!(GliumRenderData::triangle(&b));
-            assert_ok!(GliumRenderData::cube(&b));
-        }
+        assert_ok!(GliumRenderData::triangle(&b));
+        assert_ok!(GliumRenderData::cube(&b));
+    }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
-        fn frame() {
-            let b =
-                GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn frame() {
+        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-            let data = GliumRenderData::triangle(&b).unwrap();
+        let data = GliumRenderData::triangle(&b).unwrap();
 
-            let mut f: GliumFrame = b.create_frame();
-            f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
-            assert_ok!(f.render(&MockLocation::default(), &data));
-            let r = f.finalize();
-            assert_ok!(r);
-        }
+        let mut f: GliumFrame = b.create_frame();
+        f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
+        assert_ok!(f.render(&MockLocation::default(), &data));
+        let r = f.finalize();
+        assert_ok!(r);
+    }
 }

@@ -1,7 +1,6 @@
 use ecs::EventTrait;
 use glium::glutin::WindowEvent;
-use graphics::glium::GliumEvent;
-use graphics::headless::HeadlessEvent;
+use graphics::{glium::GliumEvent, headless::HeadlessEvent};
 use std::convert::TryFrom;
 
 bitflags! {

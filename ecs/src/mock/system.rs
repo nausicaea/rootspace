@@ -1,9 +1,7 @@
 use event::EventTrait;
 use failure::Error;
 use loop_stage::LoopStage;
-use std::marker::PhantomData;
-use std::sync::RwLock;
-use std::time::Duration;
+use std::{marker::PhantomData, sync::RwLock, time::Duration};
 use system::SystemTrait;
 
 #[derive(Debug)]
@@ -120,12 +118,7 @@ where
         *calls += 1;
         self.event_filter
     }
-    fn fixed_update(
-        &mut self,
-        _ctx: &mut C,
-        time: &Duration,
-        delta_time: &Duration,
-    ) -> Result<(), Error> {
+    fn fixed_update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.fixed_update_arguments.push((*time, *delta_time));
         self.fixed_update_calls += 1;
         if self.error_out {
@@ -134,12 +127,7 @@ where
             Ok(())
         }
     }
-    fn update(
-        &mut self,
-        _ctx: &mut C,
-        time: &Duration,
-        delta_time: &Duration,
-    ) -> Result<(), Error> {
+    fn update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.update_arguments.push((*time, *delta_time));
         self.update_calls += 1;
         if self.error_out {
@@ -148,12 +136,7 @@ where
             Ok(())
         }
     }
-    fn render(
-        &mut self,
-        _ctx: &mut C,
-        time: &Duration,
-        delta_time: &Duration,
-    ) -> Result<(), Error> {
+    fn render(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.render_arguments.push((*time, *delta_time));
         self.render_calls += 1;
         if self.error_out {
@@ -287,12 +270,7 @@ where
         *calls += 1;
         self.event_filter
     }
-    fn fixed_update(
-        &mut self,
-        _ctx: &mut C,
-        time: &Duration,
-        delta_time: &Duration,
-    ) -> Result<(), Error> {
+    fn fixed_update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.fixed_update_arguments.push((*time, *delta_time));
         self.fixed_update_calls += 1;
         if self.error_out {
@@ -301,12 +279,7 @@ where
             Ok(())
         }
     }
-    fn update(
-        &mut self,
-        _ctx: &mut C,
-        time: &Duration,
-        delta_time: &Duration,
-    ) -> Result<(), Error> {
+    fn update(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.update_arguments.push((*time, *delta_time));
         self.update_calls += 1;
         if self.error_out {
@@ -315,12 +288,7 @@ where
             Ok(())
         }
     }
-    fn render(
-        &mut self,
-        _ctx: &mut C,
-        time: &Duration,
-        delta_time: &Duration,
-    ) -> Result<(), Error> {
+    fn render(&mut self, _ctx: &mut C, time: &Duration, delta_time: &Duration) -> Result<(), Error> {
         self.render_arguments.push((*time, *delta_time));
         self.render_calls += 1;
         if self.error_out {

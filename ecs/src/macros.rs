@@ -157,21 +157,15 @@ mod tests {
     #[test]
     fn system_group_fixed_update() {
         let mut g = SystemGroup::A(Default::default());
-        g.fixed_update(
-            &mut Default::default(),
-            &Default::default(),
-            &Default::default(),
-        ).unwrap();
+        g.fixed_update(&mut Default::default(), &Default::default(), &Default::default())
+            .unwrap();
         match g {
             SystemGroup::A(ref s) => assert_eq!(s.fixed_update_calls, 1),
             _ => unreachable!(),
         }
         let mut g = SystemGroup::B(Default::default());
-        g.fixed_update(
-            &mut Default::default(),
-            &Default::default(),
-            &Default::default(),
-        ).unwrap();
+        g.fixed_update(&mut Default::default(), &Default::default(), &Default::default())
+            .unwrap();
         match g {
             SystemGroup::B(ref s) => assert_eq!(s.fixed_update_calls, 1),
             _ => unreachable!(),
@@ -181,21 +175,15 @@ mod tests {
     #[test]
     fn system_group_update() {
         let mut g = SystemGroup::A(Default::default());
-        g.update(
-            &mut Default::default(),
-            &Default::default(),
-            &Default::default(),
-        ).unwrap();
+        g.update(&mut Default::default(), &Default::default(), &Default::default())
+            .unwrap();
         match g {
             SystemGroup::A(ref s) => assert_eq!(s.update_calls, 1),
             _ => unreachable!(),
         }
         let mut g = SystemGroup::B(Default::default());
-        g.update(
-            &mut Default::default(),
-            &Default::default(),
-            &Default::default(),
-        ).unwrap();
+        g.update(&mut Default::default(), &Default::default(), &Default::default())
+            .unwrap();
         match g {
             SystemGroup::B(ref s) => assert_eq!(s.update_calls, 1),
             _ => unreachable!(),
@@ -205,21 +193,15 @@ mod tests {
     #[test]
     fn system_group_render() {
         let mut g = SystemGroup::A(Default::default());
-        g.render(
-            &mut Default::default(),
-            &Default::default(),
-            &Default::default(),
-        ).unwrap();
+        g.render(&mut Default::default(), &Default::default(), &Default::default())
+            .unwrap();
         match g {
             SystemGroup::A(ref s) => assert_eq!(s.render_calls, 1),
             _ => unreachable!(),
         }
         let mut g = SystemGroup::B(Default::default());
-        g.render(
-            &mut Default::default(),
-            &Default::default(),
-            &Default::default(),
-        ).unwrap();
+        g.render(&mut Default::default(), &Default::default(), &Default::default())
+            .unwrap();
         match g {
             SystemGroup::B(ref s) => assert_eq!(s.render_calls, 1),
             _ => unreachable!(),

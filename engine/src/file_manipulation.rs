@@ -21,10 +21,7 @@ impl VerifyPath for PathBuf {
                 Err(FileError::NotAFile(format!("{}", self.display())))
             }
         } else {
-            Err(FileError::FileOrDirectoryNotFound(format!(
-                "{}",
-                self.display()
-            )))
+            Err(FileError::FileOrDirectoryNotFound(format!("{}", self.display())))
         }
     }
     fn ensure_accessible_directory(self) -> Result<Self, FileError>
@@ -38,10 +35,7 @@ impl VerifyPath for PathBuf {
                 Err(FileError::NotADirectory(format!("{}", self.display())))
             }
         } else {
-            Err(FileError::FileOrDirectoryNotFound(format!(
-                "{}",
-                self.display()
-            )))
+            Err(FileError::FileOrDirectoryNotFound(format!("{}", self.display())))
         }
     }
 }

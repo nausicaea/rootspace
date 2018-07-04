@@ -1,6 +1,8 @@
 use entity::Entity;
-use std::any::{Any, TypeId};
-use std::collections::HashMap;
+use std::{
+    any::{Any, TypeId},
+    collections::HashMap,
+};
 
 pub trait DatabaseTrait: Default {
     fn create_entity(&mut self) -> Entity;
@@ -37,10 +39,7 @@ impl DatabaseTrait for Database {
     }
 
     fn destroy_entity(&mut self, entity: &Entity) -> Result<(), Error> {
-        self.entities
-            .remove(entity)
-            .map(|_| ())
-            .ok_or(Error::EntityNotFound)
+        self.entities.remove(entity).map(|_| ()).ok_or(Error::EntityNotFound)
     }
 
     fn has_entity(&self, entity: &Entity) -> bool {
@@ -84,21 +83,15 @@ impl DatabaseTrait for Database {
     }
 
     fn components(&self, entity: &Entity) -> usize {
-        self.entities
-            .get(entity)
-            .map(|g| g.len())
-            .unwrap_or_default()
+        self.entities.get(entity).map(|g| g.len()).unwrap_or_default()
     }
 
     fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, Error> {
-        self.entities
-            .get(entity)
-            .ok_or(Error::EntityNotFound)
-            .and_then(|g| {
-                g.get(&TypeId::of::<C>())
-                    .ok_or(Error::ComponentNotFound)
-                    .map(|h| h.downcast_ref().unwrap_or_else(|| unreachable!()))
-            })
+        self.entities.get(entity).ok_or(Error::EntityNotFound).and_then(|g| {
+            g.get(&TypeId::of::<C>())
+                .ok_or(Error::ComponentNotFound)
+                .map(|h| h.downcast_ref().unwrap_or_else(|| unreachable!()))
+        })
     }
 
     fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, Error> {

@@ -3,12 +3,13 @@ pub mod event_interface;
 pub mod event_monitor;
 pub mod renderer;
 
-use self::event_coordinator::EventCoordinator;
-use self::event_interface::{GliumEventInterface, HeadlessEventInterface};
-use self::event_monitor::EventMonitor;
-use self::renderer::{GliumRenderer, HeadlessRenderer};
-use components::camera::Camera;
-use components::model::Model;
+use self::{
+    event_coordinator::EventCoordinator,
+    event_interface::{GliumEventInterface, HeadlessEventInterface},
+    event_monitor::EventMonitor,
+    renderer::{GliumRenderer, HeadlessRenderer},
+};
+use components::{camera::Camera, model::Model};
 use context::Context;
 use event::{Event, EventFlag};
 

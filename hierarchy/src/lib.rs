@@ -12,12 +12,14 @@ extern crate assertions;
 extern crate failure;
 extern crate daggy;
 
-use daggy::petgraph::graph::{DefaultIx, Node};
-use daggy::petgraph::visit::{Bfs, Walker};
-use daggy::{Dag, NodeIndex};
-use std::collections::HashMap;
-use std::fmt;
-use std::hash::Hash;
+use daggy::{
+    petgraph::{
+        graph::{DefaultIx, Node},
+        visit::{Bfs, Walker},
+    },
+    Dag, NodeIndex,
+};
+use std::{collections::HashMap, fmt, hash::Hash};
 
 /// Given a set of identifying keys and corresponding data, `Hierarchy` allows users to establish
 /// hierarchical relationships between individual instances of the data type.
@@ -209,20 +211,14 @@ where
 
     /// Returns the `NodeIndex` for a particular key.
     fn get_index(&self, key: &K) -> Result<NodeIndex, HierarchyError> {
-        self.index
-            .get(key)
-            .cloned()
-            .ok_or(HierarchyError::KeyNotFound)
+        self.index.get(key).cloned().ok_or(HierarchyError::KeyNotFound)
     }
 
     /// Rebuilds the `Key`-`HierNode` index from the underlying `Graph`.
     fn rebuild_index(&mut self) {
         self.index.clear();
         for idx in self.graph.graph().node_indices() {
-            let node = self
-                .graph
-                .node_weight(idx)
-                .unwrap_or_else(|| unreachable!());
+            let node = self.graph.node_weight(idx).unwrap_or_else(|| unreachable!());
             self.index.insert(node.key.clone(), idx);
         }
     }
