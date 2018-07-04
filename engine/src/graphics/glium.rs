@@ -195,8 +195,11 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
     }
 
     fn render<L: AsRef<[[f32; 4]; 4]>>(&mut self, t: &L, d: &GliumRenderData) -> Result<(), Error> {
+        let dimensions = self.0.get_dimensions();
+
         let u = uniform! {
             transform: *t.as_ref(),
+            dimensions: [dimensions.0 as f32, dimensions.1 as f32],
         };
 
         let dp = DrawParameters {
