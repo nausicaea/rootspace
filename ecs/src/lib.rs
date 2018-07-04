@@ -26,9 +26,11 @@ pub mod mock;
 pub mod system;
 pub mod world;
 
-pub use self::database::{Database, DatabaseTrait, Error as DatabaseError};
-pub use self::entity::Entity;
-pub use self::event::{EventManagerTrait, EventTrait};
-pub use self::loop_stage::LoopStage;
-pub use self::system::SystemTrait;
-pub use self::world::{World, WorldTrait};
+pub use self::{
+    database::{Database, DatabaseTrait, Error as DatabaseError},
+    entity::Entity,
+    event::{EventManagerTrait, EventTrait},
+    loop_stage::LoopStage,
+    system::SystemTrait,
+    world::{World, WorldTrait},
+};

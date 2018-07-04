@@ -2,8 +2,7 @@ use database::{Database, DatabaseTrait, Error as DatabaseError};
 use entity::Entity;
 use event::{EventManagerTrait, EventTrait};
 use failure::Error;
-use std::any::Any;
-use std::collections::VecDeque;
+use std::{any::Any, collections::VecDeque};
 
 #[derive(Debug)]
 pub struct MockCtx<E> {

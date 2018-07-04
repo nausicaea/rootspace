@@ -1,12 +1,9 @@
-use components::model::Model;
-use components::DepthOrderingTrait;
-use ecs::{Entity, EventManagerTrait, Database, DatabaseError, DatabaseTrait};
+use components::{model::Model, DepthOrderingTrait};
+use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventManagerTrait};
 use event::Event;
 use failure::Error;
 use hierarchy::Hierarchy;
-use std::any::Any;
-use std::collections::VecDeque;
-use std::hash::Hash;
+use std::{any::Any, collections::VecDeque, hash::Hash};
 
 pub struct Context {
     events: VecDeque<Event>,

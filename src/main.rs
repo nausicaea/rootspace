@@ -8,20 +8,11 @@ use clap::{App, Arg};
 use fern::Dispatch;
 use game::Game;
 use log::LevelFilter;
-use std::env;
-use std::io;
-use std::time::Duration;
+use std::{env, io, time::Duration};
 
 fn main() {
     Dispatch::new()
-        .format(|out, message, record| {
-            out.finish(format_args!(
-                "{} @{}: {}",
-                record.level(),
-                record.target(),
-                message
-            ))
-        })
+        .format(|out, message, record| out.finish(format_args!("{} @{}: {}", record.level(), record.target(), message)))
         .level(LevelFilter::Trace)
         .chain(io::stdout())
         .apply()
@@ -48,11 +39,7 @@ fn main() {
     let headless = matches.is_present("headless");
     let iterations: Option<usize> = matches.value_of("iterations").and_then(|i| i.parse().ok());
 
-    let r = Game::new(
-        &env::temp_dir(),
-        Duration::from_millis(50),
-        Duration::from_millis(250),
-    );
+    let r = Game::new(&env::temp_dir(), Duration::from_millis(50), Duration::from_millis(250));
     match r {
         Ok(mut game) => if let Err(e) = game.run(headless, iterations) {
             error!("The game aborted with a runtime error: {}", e)

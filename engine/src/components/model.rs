@@ -1,7 +1,6 @@
 use super::{AsMatrix, DepthOrderingTrait};
 use nalgebra::Matrix4;
-use std::f32;
-use std::ops::Mul;
+use std::{f32, ops::Mul};
 
 #[derive(Debug, Clone)]
 pub struct Model(Matrix4<f32>);

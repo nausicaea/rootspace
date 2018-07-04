@@ -1,12 +1,9 @@
 use components::DepthOrderingTrait;
 use context::SceneGraphTrait;
-use ecs::{Entity, EventManagerTrait, EventTrait, Database, DatabaseError, DatabaseTrait};
+use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventManagerTrait, EventTrait};
 use failure::Error as FailureError;
 use hierarchy::Hierarchy;
-use std::any::Any;
-use std::collections::VecDeque;
-use std::ops::Mul;
-use std::sync::RwLock;
+use std::{any::Any, collections::VecDeque, ops::Mul, sync::RwLock};
 
 #[derive(Debug)]
 pub struct MockCtx<E, M> {

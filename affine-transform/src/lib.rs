@@ -6,8 +6,7 @@ extern crate nalgebra;
 
 use alga::linear::ProjectiveTransformation;
 use nalgebra::{
-    norm, one, zero, Affine3, Matrix4, Point3, Real, Rotation3, Scalar, Translation3, U1, U3,
-    UnitQuaternion, Vector3,
+    norm, one, zero, Affine3, Matrix4, Point3, Real, Rotation3, Scalar, Translation3, U1, U3, UnitQuaternion, Vector3,
 };
 
 /// Unfortunately, `nalgebra` does not provide a decomposed affine matrix representation
@@ -57,11 +56,7 @@ where
     }
 
     /// Creates a new instance of `AffineTransform` from its parts.
-    pub fn from_parts(
-        translation: Translation3<N>,
-        rotation: UnitQuaternion<N>,
-        scale: Vector3<N>,
-    ) -> Self {
+    pub fn from_parts(translation: Translation3<N>, rotation: UnitQuaternion<N>, scale: Vector3<N>) -> Self {
         AffineTransform {
             translation,
             rotation,
@@ -71,9 +66,7 @@ where
 
     /// Transforms the specified point.
     pub fn transform_point(&self, point: &Point3<N>) -> Point3<N> {
-        self.translation
-            * self.rotation
-            * Point3::from_coordinates(self.scale.component_mul(&point.coords))
+        self.translation * self.rotation * Point3::from_coordinates(self.scale.component_mul(&point.coords))
     }
 
     /// Transforms the specified vector.

@@ -1,11 +1,11 @@
-use ecs::{LoopStage, SystemTrait, EventManagerTrait, EventTrait};
+use ecs::{EventManagerTrait, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
-use graphics::glium::{GliumEvent as GE, GliumEventsLoop as GEL};
-use graphics::headless::{HeadlessEvent as HE, HeadlessEventsLoop as HEL};
-use graphics::EventsLoopTrait;
-use std::convert::TryInto;
-use std::marker::PhantomData;
-use std::time::Duration;
+use graphics::{
+    glium::{GliumEvent as GE, GliumEventsLoop as GEL},
+    headless::{HeadlessEvent as HE, HeadlessEventsLoop as HEL},
+    EventsLoopTrait,
+};
+use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
 pub type HeadlessEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, HEL, HE>;
 pub type GliumEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, GEL, GE>;
@@ -103,10 +103,7 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Events can only be polled from the main thread on macOS")
-    )]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Events can only be polled from the main thread on macOS"))]
     fn update_glium() {
         let mut e: GliumEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
         let mut c = MockCtx::default();

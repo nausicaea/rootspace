@@ -18,6 +18,10 @@ impl RenderDataTrait<HeadlessBackend> for HeadlessRenderData {
     fn triangle(_backend: &HeadlessBackend) -> Result<Self, Error> {
         Ok(HeadlessRenderData::default())
     }
+
+    fn cube(_backend: &HeadlessBackend) -> Result<Self, Error> {
+        Ok(HeadlessRenderData::default())
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -26,11 +30,7 @@ pub struct HeadlessFrame;
 impl FrameTrait<HeadlessRenderData> for HeadlessFrame {
     fn initialize(&mut self, _color: [f32; 4], _depth: f32) {}
 
-    fn render<L: AsRef<[[f32; 4]; 4]>>(
-        &mut self,
-        _location: &L,
-        _data: &HeadlessRenderData,
-    ) -> Result<(), Error> {
+    fn render<L: AsRef<[[f32; 4]; 4]>>(&mut self, _location: &L, _data: &HeadlessRenderData) -> Result<(), Error> {
         Ok(())
     }
 
@@ -84,26 +84,15 @@ mod tests {
 
     #[test]
     fn render_data() {
-        let b = HeadlessBackend::new(
-            &HeadlessEventsLoop::default(),
-            "Title",
-            [800, 600],
-            false,
-            0,
-        ).unwrap();
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
         assert_ok!(HeadlessRenderData::triangle(&b));
+        assert_ok!(HeadlessRenderData::cube(&b));
     }
 
     #[test]
     fn frame() {
-        let b = HeadlessBackend::new(
-            &HeadlessEventsLoop::default(),
-            "Title",
-            [800, 600],
-            false,
-            0,
-        ).unwrap();
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
         let mut f: HeadlessFrame = b.create_frame();
         f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);

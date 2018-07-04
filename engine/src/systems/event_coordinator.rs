@@ -54,10 +54,7 @@ mod tests {
     fn get_event_filter() {
         let c: EventCoordinator<MockCtx<Event, Model>> = EventCoordinator::default();
 
-        assert_eq!(
-            c.get_event_filter(),
-            EventFlag::SHUTDOWN | EventFlag::HARD_SHUTDOWN
-        );
+        assert_eq!(c.get_event_filter(), EventFlag::SHUTDOWN | EventFlag::HARD_SHUTDOWN);
     }
 
     #[test]

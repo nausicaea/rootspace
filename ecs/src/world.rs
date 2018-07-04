@@ -1,8 +1,7 @@
 use event::{EventManagerTrait, EventTrait};
 use failure::Error;
 use loop_stage::LoopStage;
-use std::marker::PhantomData;
-use std::time::Duration;
+use std::{marker::PhantomData, time::Duration};
 use system::SystemTrait;
 
 /// A World must perform actions for four types of calls.
@@ -148,10 +147,8 @@ mod tests {
     use super::*;
     use mock::{MockCtx, MockEvt, MockEvtFlag, MockSysA};
 
-    fn create_populated_world(
-) -> World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> {
-        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> =
-            Default::default();
+    fn create_populated_world() -> World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> {
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = Default::default();
 
         w.systems = vec![
             MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false),
@@ -164,8 +161,7 @@ mod tests {
             MockSysA::new(LoopStage::HANDLE_EVENTS, MockEvtFlag::TEST_EVENT_B, false),
         ];
 
-        w.context
-            .dispatch_later(MockEvt::TestEventA("lala-land".into()));
+        w.context.dispatch_later(MockEvt::TestEventA("lala-land".into()));
         w.context.dispatch_later(MockEvt::TestEventB(100));
 
         w
@@ -173,8 +169,7 @@ mod tests {
 
     #[test]
     fn add_system() {
-        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> =
-            World::default();
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         assert!(w.systems.is_empty());
 
         let sys = MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), false);
@@ -184,10 +179,7 @@ mod tests {
         let into_sys = (LoopStage::UPDATE, MockEvtFlag::empty(), false);
         w.add_system(into_sys);
         assert_eq!(w.systems.len(), 2);
-        assert_eq!(
-            w.systems.last().unwrap().get_stage_filter(),
-            LoopStage::UPDATE
-        );
+        assert_eq!(w.systems.last().unwrap().get_stage_filter(), LoopStage::UPDATE);
     }
     #[test]
     fn fixed_update_calls() {
@@ -208,8 +200,7 @@ mod tests {
     #[test]
     fn fixed_update_arguments() {
         let mut w = create_populated_world();
-        w.fixed_update(&Duration::new(1, 0), &Duration::new(0, 1))
-            .unwrap();
+        w.fixed_update(&Duration::new(1, 0), &Duration::new(0, 1)).unwrap();
 
         for system in &w.systems {
             if system.get_stage_filter().contains(LoopStage::FIXED_UPDATE) {
@@ -223,13 +214,9 @@ mod tests {
     }
     #[test]
     fn fixed_update_error() {
-        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> =
-            World::default();
-        w.systems.push(MockSysA::new(
-            LoopStage::FIXED_UPDATE,
-            MockEvtFlag::empty(),
-            true,
-        ));
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
+        w.systems
+            .push(MockSysA::new(LoopStage::FIXED_UPDATE, MockEvtFlag::empty(), true));
         let r = w.fixed_update(&Duration::new(1, 0), &Duration::new(0, 1));
         assert_err!(r);
     }
@@ -252,8 +239,7 @@ mod tests {
     #[test]
     fn update_arguments() {
         let mut w = create_populated_world();
-        w.update(&Duration::new(1, 0), &Duration::new(0, 1))
-            .unwrap();
+        w.update(&Duration::new(1, 0), &Duration::new(0, 1)).unwrap();
 
         for system in &w.systems {
             if system.get_stage_filter().contains(LoopStage::UPDATE) {
@@ -267,8 +253,7 @@ mod tests {
     }
     #[test]
     fn update_error() {
-        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> =
-            World::default();
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         w.systems
             .push(MockSysA::new(LoopStage::UPDATE, MockEvtFlag::empty(), true));
         let r = w.update(&Duration::new(1, 0), &Duration::new(0, 1));
@@ -293,8 +278,7 @@ mod tests {
     #[test]
     fn render_arguments() {
         let mut w = create_populated_world();
-        w.render(&Duration::new(1, 0), &Duration::new(0, 1))
-            .unwrap();
+        w.render(&Duration::new(1, 0), &Duration::new(0, 1)).unwrap();
 
         for system in &w.systems {
             if system.get_stage_filter().contains(LoopStage::RENDER) {
@@ -308,8 +292,7 @@ mod tests {
     }
     #[test]
     fn render_error() {
-        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> =
-            World::default();
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
         w.systems
             .push(MockSysA::new(LoopStage::RENDER, MockEvtFlag::empty(), true));
         let r = w.render(&Duration::new(1, 0), &Duration::new(0, 1));
@@ -326,15 +309,9 @@ mod tests {
             assert_eq!(system.stage_filter_calls(), 2);
             if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) {
                 assert_eq!(system.event_filter_calls(), 2);
-                if system
-                    .get_event_filter()
-                    .contains(MockEvtFlag::TEST_EVENT_A)
-                {
+                if system.get_event_filter().contains(MockEvtFlag::TEST_EVENT_A) {
                     assert_eq!(system.handle_event_calls, 1);
-                } else if system
-                    .get_event_filter()
-                    .contains(MockEvtFlag::TEST_EVENT_B)
-                {
+                } else if system.get_event_filter().contains(MockEvtFlag::TEST_EVENT_B) {
                     assert_eq!(system.handle_event_calls, 1);
                 } else {
                     assert_eq!(system.handle_event_calls, 0);
@@ -351,17 +328,11 @@ mod tests {
 
         for system in &w.systems {
             if system.get_stage_filter().contains(LoopStage::HANDLE_EVENTS) {
-                if system
-                    .get_event_filter()
-                    .contains(MockEvtFlag::TEST_EVENT_A)
-                {
+                if system.get_event_filter().contains(MockEvtFlag::TEST_EVENT_A) {
                     for event in &system.handle_event_arguments {
                         assert_eq!(event.as_flag(), MockEvtFlag::TEST_EVENT_A);
                     }
-                } else if system
-                    .get_event_filter()
-                    .contains(MockEvtFlag::TEST_EVENT_B)
-                {
+                } else if system.get_event_filter().contains(MockEvtFlag::TEST_EVENT_B) {
                     for event in &system.handle_event_arguments {
                         assert_eq!(event.as_flag(), MockEvtFlag::TEST_EVENT_B);
                     }
@@ -375,15 +346,10 @@ mod tests {
     }
     #[test]
     fn handle_events_error() {
-        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> =
-            World::default();
-        w.systems.push(MockSysA::new(
-            LoopStage::HANDLE_EVENTS,
-            MockEvtFlag::TEST_EVENT_A,
-            true,
-        ));
-        w.context
-            .dispatch_later(MockEvt::TestEventA("hello".into()));
+        let mut w: World<MockEvt, MockCtx<MockEvt>, MockSysA<MockCtx<MockEvt>, MockEvt>> = World::default();
+        w.systems
+            .push(MockSysA::new(LoopStage::HANDLE_EVENTS, MockEvtFlag::TEST_EVENT_A, true));
+        w.context.dispatch_later(MockEvt::TestEventA("hello".into()));
         assert_err!(w.handle_events());
     }
 }

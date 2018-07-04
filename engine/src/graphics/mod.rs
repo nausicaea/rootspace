@@ -9,13 +9,7 @@ pub trait BackendTrait<E, F>
 where
     Self: Sized,
 {
-    fn new(
-        events_loop: &E,
-        title: &str,
-        dimensions: [u32; 2],
-        vsync: bool,
-        msaa: u16,
-    ) -> Result<Self, Error>;
+    fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error>;
     fn create_frame(&self) -> F;
 }
 
@@ -30,6 +24,7 @@ where
     Self: Sized,
 {
     fn triangle(backend: &B) -> Result<Self, Error>;
+    fn cube(backend: &B) -> Result<Self, Error>;
 }
 
 pub trait EventsLoopTrait<O, I>
