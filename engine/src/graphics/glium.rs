@@ -170,10 +170,12 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
             r#"
                     #version 330 core
 
+                    uniform vec2 dimensions;
+
                     out vec4 color;
 
                     void main() {
-                            color = vec4(gl_FragCoord.xyz, 1.0);
+                            color = vec4(gl_FragCoord.xy / dimensions, 1.0);
                     }
                     "#,
             None,
