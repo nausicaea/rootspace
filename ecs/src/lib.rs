@@ -21,6 +21,7 @@ pub mod entity;
 pub mod event;
 pub mod loop_stage;
 pub mod macros;
+#[cfg(any(test, feature = "mock"))]
 pub mod mock;
 pub mod system;
 pub mod world;

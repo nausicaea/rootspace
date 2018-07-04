@@ -3,6 +3,7 @@ use failure::Error;
 use loop_stage::LoopStage;
 use std::time::Duration;
 
+/// A system encodes behaviour in the concept of an Entity-Component-System architecture.
 pub trait SystemTrait<C, E>
 where
     E: EventTrait,

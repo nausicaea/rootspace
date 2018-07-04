@@ -3,6 +3,9 @@ name = "ecs"
 version = "0.1.0"
 authors = ["Eleanore Young"]
 
+[features]
+mock = []
+
 [dependencies]
 log = "^0.4.1"
 failure = "^0.1.1"

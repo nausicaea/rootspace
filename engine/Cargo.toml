@@ -6,6 +6,7 @@ authors = ["Eleanore Young"]
 [features]
 diagnostics = []
 wsl = []
+mock = []
 
 [dependencies]
 bitflags = "^1.0.3"
@@ -21,3 +22,4 @@ assertions = {path = "../assertions"}
 approx = "^0.2.0"
 tempfile = "^3.0.1"
 quickcheck = "^0.6.2"
+ecs = {path = "../ecs", features = ["mock"]}

@@ -29,6 +29,7 @@ pub mod context;
 pub mod event;
 pub mod file_manipulation;
 pub mod graphics;
+#[cfg(any(test, feature = "mock"))]
 pub mod mock;
 pub mod orchestrator;
 pub mod systems;
