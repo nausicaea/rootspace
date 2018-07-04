@@ -42,11 +42,15 @@ impl Game {
         let camera = self.context_mut().create_entity();
         self.context_mut().add(camera, Camera::default()).unwrap();
 
-        let test_entity = self.context_mut().create_entity();
-        self.context_mut().insert_node(test_entity);
+        let ea = self.context_mut().create_entity();
+        self.context_mut().insert_node(ea);
         self.context_mut()
-            .add(test_entity, Model::default())
+            .add(ea, Model::default())
             .unwrap();
+
+        let eb = self.context_mut().create_entity();
+        self.context_mut().insert_node(eb);
+        self.context_mut().add(eb, Model::default()).unwrap();
 
         if headless {
             let event_interface = HeadlessEventInterface::default();
@@ -56,8 +60,15 @@ impl Game {
 
             self.context_mut()
                 .add(
-                    test_entity,
+                    ea,
                     HeadlessRenderData::triangle(&renderer.backend).unwrap(),
+                )
+                .unwrap();
+
+            self.context_mut()
+                .add(
+                    eb,
+                    HeadlessRenderData::cube(&renderer.backend).unwrap(),
                 )
                 .unwrap();
 
@@ -71,8 +82,15 @@ impl Game {
 
             self.context_mut()
                 .add(
-                    test_entity,
+                    ea,
                     GliumRenderData::triangle(&renderer.backend).unwrap(),
+                )
+                .unwrap();
+
+            self.context_mut()
+                .add(
+                    eb,
+                    GliumRenderData::cube(&renderer.backend).unwrap(),
                 )
                 .unwrap();
 
