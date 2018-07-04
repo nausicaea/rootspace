@@ -18,6 +18,10 @@ impl RenderDataTrait<HeadlessBackend> for HeadlessRenderData {
     fn triangle(_backend: &HeadlessBackend) -> Result<Self, Error> {
         Ok(HeadlessRenderData::default())
     }
+
+    fn cube(_backend: &HeadlessBackend) -> Result<Self, Error> {
+        Ok(HeadlessRenderData::default())
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -93,6 +97,7 @@ mod tests {
         ).unwrap();
 
         assert_ok!(HeadlessRenderData::triangle(&b));
+        assert_ok!(HeadlessRenderData::cube(&b));
     }
 
     #[test]

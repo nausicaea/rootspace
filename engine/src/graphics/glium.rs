@@ -34,10 +34,22 @@ impl EventsLoopTrait<Event, GliumEvent> for GliumEventsLoop {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vertex {
-    position: [f32; 2],
+    position: [f32; 3],
+    tex_coord: [f32; 2],
+    normals: [f32; 3],
 }
 
-implement_vertex!(Vertex, position);
+impl Vertex {
+    pub fn new(position: [f32; 3], tex_coord: [f32; 2], normals: [f32; 3]) -> Self {
+        Vertex {
+            position,
+            tex_coord,
+            normals,
+        }
+    }
+}
+
+implement_vertex!(Vertex, position, tex_coord, normals);
 
 #[derive(Debug)]
 pub struct GliumRenderData {
@@ -51,17 +63,11 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
         let vertices = VertexBuffer::new(
             &backend.0,
             &[
-                Vertex {
-                    position: [-0.5, -0.5],
-                },
-                Vertex {
-                    position: [0.0, 0.5],
-                },
-                Vertex {
-                    position: [0.5, -0.5],
-                },
+            Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
+            Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
             ],
-        )?;
+            )?;
 
         let indices = IndexBuffer::new(&backend.0, PrimitiveType::TrianglesList, &[0, 1, 2])?;
 
@@ -70,54 +76,126 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
             r#"
                     #version 330 core
 
-                    uniform mat4 location;
+                    uniform mat4 transform;
 
-                    in vec2 position;
+                    layout (location = 0) in vec3 position;
+                    layout (location = 1) in vec2 tex_coord;
+                    layout (location = 2) in vec3 normals;
 
                     void main() {
-                            gl_Position = location * vec4(position, 0.0, 1.0);
+                            gl_Position = transform * vec4(position, 1.0);
                     }
                     "#,
-            r#"
+                    r#"
                     #version 330 core
-
-                    const vec3 specular_color = vec3(0.3, 0.15, 0.1);
 
                     out vec4 color;
 
                     void main() {
-                            color = vec4(specular_color, 1.0);
+                            color = vec4(gl_FragCoord.xyz, 1.0);
                     }
                     "#,
-            None,
-        )?;
+                    None,
+                    )?;
 
-        Ok(GliumRenderData {
-            vertices,
-            indices,
-            program,
-        })
+                    Ok(GliumRenderData {
+                        vertices,
+                        indices,
+                        program,
+                    })
+    }
+
+    fn cube(backend: &GliumBackend) -> Result<Self, Error> {
+        let hw = 0.5;
+        let vertices = VertexBuffer::new(
+            &backend.0,
+            &[
+            // Front face
+            Vertex::new([-hw, hw, hw], [0.0, 1.0], [0.0, 0.0, 1.0]),
+            Vertex::new([-hw, -hw, hw], [0.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([hw, -hw, hw], [1.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([hw, hw, hw], [1.0, 1.0], [0.0, 0.0, 1.0]),
+            // Back face
+            Vertex::new([hw, hw, -hw], [0.0, 1.0], [0.0, 0.0, -1.0]),
+            Vertex::new([hw, -hw, -hw], [0.0, 0.0], [0.0, 0.0, -1.0]),
+            Vertex::new([-hw, -hw, -hw], [1.0, 0.0], [0.0, 0.0, -1.0]),
+            Vertex::new([-hw, hw, -hw], [1.0, 1.0], [0.0, 0.0, -1.0]),
+            // Right face
+            Vertex::new([hw, hw, hw], [0.0, 1.0], [1.0, 0.0, 0.0]),
+            Vertex::new([hw, -hw, hw], [0.0, 0.0], [1.0, 0.0, 0.0]),
+            Vertex::new([hw, -hw, -hw], [1.0, 0.0], [1.0, 0.0, 0.0]),
+            Vertex::new([hw, hw, -hw], [1.0, 1.0], [1.0, 0.0, 0.0]),
+            // Left face
+            Vertex::new([-hw, hw, -hw], [0.0, 1.0], [-1.0, 0.0, 0.0]),
+            Vertex::new([-hw, -hw, -hw], [0.0, 0.0], [-1.0, 0.0, 0.0]),
+            Vertex::new([-hw, -hw, hw], [1.0, 0.0], [-1.0, 0.0, 0.0]),
+            Vertex::new([-hw, hw, hw], [1.0, 1.0], [-1.0, 0.0, 0.0]),
+            // Top face
+            Vertex::new([-hw, hw, -hw], [0.0, 1.0], [0.0, 1.0, 0.0]),
+            Vertex::new([-hw, hw, hw], [0.0, 0.0], [0.0, 1.0, 0.0]),
+            Vertex::new([hw, hw, hw], [1.0, 0.0], [0.0, 1.0, 0.0]),
+            Vertex::new([hw, hw, -hw], [1.0, 1.0], [0.0, 1.0, 0.0]),
+            // Bottom face
+            Vertex::new([-hw, -hw, hw], [0.0, 1.0], [0.0, -1.0, 0.0]),
+            Vertex::new([-hw, -hw, -hw], [0.0, 0.0], [0.0, -1.0, 0.0]),
+            Vertex::new([hw, -hw, -hw], [1.0, 0.0], [0.0, -1.0, 0.0]),
+            Vertex::new([hw, -hw, hw], [1.0, 1.0], [0.0, -1.0, 0.0]),
+            ],
+            )?;
+
+            let indices = IndexBuffer::new(&backend.0, PrimitiveType::TrianglesList, &[
+                0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12, 16,
+                17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
+            ])?;
+
+            let program = Program::from_source(
+                &backend.0,
+                r#"
+                    #version 330 core
+
+                    uniform mat4 transform;
+
+                    layout (location = 0) in vec3 position;
+                    layout (location = 1) in vec2 tex_coord;
+                    layout (location = 2) in vec3 normals;
+
+                    void main() {
+                            gl_Position = transform * vec4(position, 1.0);
+                    }
+                    "#,
+                    r#"
+                    #version 330 core
+
+                    out vec4 color;
+
+                    void main() {
+                            color = vec4(gl_FragCoord.xyz, 1.0);
+                    }
+                    "#,
+                    None,
+                    )?;
+
+                    Ok(GliumRenderData {
+                        vertices,
+                        indices,
+                        program,
+                    })
     }
 }
 
 pub struct GliumFrame(Frame);
 
 impl FrameTrait<GliumRenderData> for GliumFrame {
-    fn initialize(&mut self, color: [f32; 4], depth: f32) {
-        self.0
-            .clear_color_and_depth((color[0], color[1], color[2], color[3]), depth)
+    fn initialize(&mut self, c: [f32; 4], d: f32) {
+        self.0.clear_color_and_depth((c[0], c[1], c[2], c[3]), d)
     }
 
-    fn render<L: AsRef<[[f32; 4]; 4]>>(
-        &mut self,
-        location: &L,
-        data: &GliumRenderData,
-    ) -> Result<(), Error> {
-        let uniforms = uniform! {
-            location: *location.as_ref(),
+    fn render<L: AsRef<[[f32; 4]; 4]>>(&mut self, t: &L, d: &GliumRenderData) -> Result<(), Error> {
+        let u = uniform! {
+            transform: *t.as_ref(),
         };
 
-        let draw_params = DrawParameters {
+        let dp = DrawParameters {
             depth: Depth {
                 test: DepthTest::IfLess,
                 write: true,
@@ -137,13 +215,7 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
             ..DrawParameters::default()
         };
 
-        match self.0.draw(
-            &data.vertices,
-            &data.indices,
-            &data.program,
-            &uniforms,
-            &draw_params,
-        ) {
+        match self.0.draw(&d.vertices, &d.indices, &d.program, &u, &dp) {
             Ok(()) => Ok(()),
             Err(e) => Err(Into::into(e)),
         }
@@ -172,7 +244,7 @@ impl BackendTrait<GliumEventsLoop, GliumFrame> for GliumBackend {
         dimensions: [u32; 2],
         vsync: bool,
         msaa: u16,
-    ) -> Result<Self, Error> {
+        ) -> Result<Self, Error> {
         let window = WindowBuilder::new()
             .with_title(title)
             .with_dimensions(dimensions[0], dimensions[1]);
@@ -219,15 +291,15 @@ mod tests {
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
-    fn backend() {
-        assert_ok!(GliumBackend::new(
-            &GliumEventsLoop::default(),
-            "Title",
-            [800, 600],
-            false,
-            0
-        ));
-    }
+        fn backend() {
+            assert_ok!(GliumBackend::new(
+                    &GliumEventsLoop::default(),
+                    "Title",
+                    [800, 600],
+                    false,
+                    0
+            ));
+        }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
@@ -235,12 +307,13 @@ mod tests {
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
-    fn render_data() {
-        let b =
-            GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        fn render_data() {
+            let b =
+                GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        assert_ok!(GliumRenderData::triangle(&b));
-    }
+            assert_ok!(GliumRenderData::triangle(&b));
+            assert_ok!(GliumRenderData::cube(&b));
+        }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
@@ -248,16 +321,16 @@ mod tests {
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
-    fn frame() {
-        let b =
-            GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        fn frame() {
+            let b =
+                GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let data = GliumRenderData::triangle(&b).unwrap();
+            let data = GliumRenderData::triangle(&b).unwrap();
 
-        let mut f: GliumFrame = b.create_frame();
-        f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
-        assert_ok!(f.render(&MockLocation::default(), &data));
-        let r = f.finalize();
-        assert_ok!(r);
-    }
+            let mut f: GliumFrame = b.create_frame();
+            f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
+            assert_ok!(f.render(&MockLocation::default(), &data));
+            let r = f.finalize();
+            assert_ok!(r);
+        }
 }

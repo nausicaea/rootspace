@@ -30,6 +30,7 @@ where
     Self: Sized,
 {
     fn triangle(backend: &B) -> Result<Self, Error>;
+    fn cube(backend: &B) -> Result<Self, Error>;
 }
 
 pub trait EventsLoopTrait<O, I>
