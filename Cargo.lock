@@ -302,6 +302,7 @@ dependencies = [
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "glium 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nalgebra 0.15.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
