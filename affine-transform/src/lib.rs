@@ -170,9 +170,9 @@ mod tests {
     fn test_identity() {
         let a: AffineTransform<f32> = AffineTransform::identity();
 
-        assert!(a.translation.vector == Vector3::new(0.0, 0.0, 0.0));
-        assert!(a.rotation == UnitQuaternion::identity());
-        assert!(a.scale == Vector3::new(1.0, 1.0, 1.0));
+        assert_eq!(a.translation.vector, Vector3::new(0.0, 0.0, 0.0));
+        assert_eq!(a.rotation, UnitQuaternion::identity());
+        assert_eq!(a.scale, Vector3::new(1.0, 1.0, 1.0));
     }
 
     #[test]
@@ -183,12 +183,12 @@ mod tests {
 
         let b: AffineTransform<f32> = a.into();
 
-        assert!(b.translation.vector == Vector3::new(0.1, 0.2, 0.3));
-        assert!(b.rotation == UnitQuaternion::identity());
+        assert_eq!(b.translation.vector, Vector3::new(0.1, 0.2, 0.3));
+        assert_eq!(b.rotation, UnitQuaternion::identity());
 
         let c: Affine3<f32> = b.into();
 
-        assert!(c == a);
+        assert_eq!(c, a);
     }
 
     #[test]
@@ -201,11 +201,7 @@ mod tests {
         let b = Point3::new(1.0, 1.0, 1.0);
         let c = a.transform_point(&b);
 
-        assert!(
-            c.x == 1.1 && c.y == 2.2 && c.z == 3.3,
-            "Got {:?} instead",
-            c
-        );
+        assert_eq!(c, Point3::new(1.1, 2.2, 3.3));
     }
 
     #[test]
@@ -218,11 +214,7 @@ mod tests {
         let b = Vector3::new(1.0, 1.0, 1.0);
         let c = a.transform_vector(&b);
 
-        assert!(
-            c.x == 1.0 && c.y == 2.0 && c.z == 3.0,
-            "Got {:?} instead",
-            c
-        );
+        assert_eq!(c, Vector3::new(1.0, 2.0, 3.0));
     }
 
     #[test]
@@ -235,11 +227,7 @@ mod tests {
         let b = Point3::new(1.1, 2.2, 3.3);
         let c = a.inverse_transform_point(&b);
 
-        assert!(
-            c.x == 1.0 && c.y == 1.0 && c.z == 1.0,
-            "Got {:?} instead",
-            c
-        );
+        assert_eq!(c, Point3::new(1.0, 1.0, 1.0));
     }
 
     #[test]
@@ -252,10 +240,6 @@ mod tests {
         let b = Vector3::new(1.0, 2.0, 3.0);
         let c = a.inverse_transform_vector(&b);
 
-        assert!(
-            c.x == 1.0 && c.y == 1.0 && c.z == 1.0,
-            "Got {:?} instead",
-            c
-        );
+        assert_eq!(c, Vector3::new(1.0, 1.0, 1.0));
     }
 }
