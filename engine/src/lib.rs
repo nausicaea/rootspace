@@ -6,6 +6,7 @@ extern crate approx;
 #[cfg(test)]
 #[macro_use]
 extern crate assertions;
+extern crate affine_transform;
 #[macro_use]
 extern crate bitflags;
 #[macro_use]

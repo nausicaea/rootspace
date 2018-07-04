@@ -92,7 +92,7 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
                     out vec4 color;
 
                     void main() {
-                            color = vec4(gl_FragCoord.xyz, 1.0);
+                            color = vec4(0.3, 0.12, 0.9, 1.0);
                     }
                     "#,
             None,
@@ -170,10 +170,13 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
             r#"
                     #version 330 core
 
+                    uniform vec2 dimensions;
+
                     out vec4 color;
 
                     void main() {
-                            color = vec4(gl_FragCoord.xyz, 1.0);
+                            vec2 c = gl_FragCoord.xy / dimensions;
+                            color = vec4(c, 0.3, 1.0);
                     }
                     "#,
             None,
