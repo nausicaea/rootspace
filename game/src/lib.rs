@@ -21,7 +21,7 @@ use engine::{
     },
 };
 use failure::Error;
-use std::{path::Path, time::Duration};
+use std::{path::Path, time::Duration, f32};
 
 pub struct Game {
     orchestrator: Orchestrator<World<Event, Context, SystemGroup>>,
@@ -40,11 +40,11 @@ impl Game {
 
         let ea = self.context_mut().create_entity();
         self.context_mut().insert_node(ea);
-        self.context_mut().add(ea, Model::default()).unwrap();
+        self.context_mut().add(ea, Model::new(Vector3::(0.0, 0.0, -10.0), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0))).unwrap();
 
         let eb = self.context_mut().create_entity();
         self.context_mut().insert_node(eb);
-        self.context_mut().add(eb, Model::default()).unwrap();
+        self.context_mut().add(ea, Model::new(Vector3::(-2.0, 1.0, -7.0), Vector3::new(0.0, f32::consts::PI / 4.0, 0.0), Vector3::new(1.0, 1.0, 1.0))).unwrap();
 
         if headless {
             let event_interface = HeadlessEventInterface::default();
