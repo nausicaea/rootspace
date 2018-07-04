@@ -2,7 +2,7 @@ use super::AsMatrix;
 use nalgebra::{Isometry3, Matrix4, Perspective3, Point3, Vector3};
 use std::f32;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Camera {
     matrix: Matrix4<f32>,
     projection: Perspective3<f32>,
