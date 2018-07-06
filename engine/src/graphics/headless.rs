@@ -1,6 +1,7 @@
 use super::{BackendTrait, EventsLoopTrait, FrameTrait, RenderDataTrait};
 use event::Event;
 use failure::Error;
+use std::borrow::Borrow;
 
 pub struct HeadlessEvent;
 
@@ -30,7 +31,7 @@ pub struct HeadlessFrame;
 impl FrameTrait<HeadlessRenderData> for HeadlessFrame {
     fn initialize(&mut self, _color: [f32; 4], _depth: f32) {}
 
-    fn render<T: AsRef<[[f32; 4]; 4]>, R: AsRef<HeadlessRenderData>>(&mut self, _transform: &T, _data: &R) -> Result<(), Error> {
+    fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<HeadlessRenderData>>(&mut self, _transform: &T, _data: &R) -> Result<(), Error> {
         Ok(())
     }
 

@@ -4,6 +4,7 @@ pub mod headless;
 use ecs::EventTrait;
 use failure::Error;
 use std::convert::TryInto;
+use std::borrow::Borrow;
 
 pub trait BackendTrait<E, F>
 where
@@ -15,7 +16,7 @@ where
 
 pub trait FrameTrait<D> {
     fn initialize(&mut self, color: [f32; 4], depth: f32);
-    fn render<T: AsRef<[[f32; 4]; 4]>, R: AsRef<D>>(&mut self, transform: &T, data: &R) -> Result<(), Error>;
+    fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<D>>(&mut self, transform: &T, data: &R) -> Result<(), Error>;
     fn finalize(self) -> Result<(), Error>;
 }
 

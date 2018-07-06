@@ -84,12 +84,12 @@ where
         self.database.components(entity)
     }
 
-    fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, DatabaseError> {
-        self.database.borrow::<C>(entity)
+    fn get<C: Any>(&self, entity: &Entity) -> Result<&C, DatabaseError> {
+        self.database.get::<C>(entity)
     }
 
-    fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, DatabaseError> {
-        self.database.borrow_mut::<C>(entity)
+    fn get_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, DatabaseError> {
+        self.database.get_mut::<C>(entity)
     }
 
     fn find<C: Any>(&self) -> Result<&C, DatabaseError> {

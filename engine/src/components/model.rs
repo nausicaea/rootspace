@@ -2,6 +2,7 @@ use super::DepthOrderingTrait;
 use affine_transform::AffineTransform;
 use nalgebra::{Matrix4, Vector3, Affine3, Isometry3};
 use std::{f32, ops::Mul};
+use std::borrow::Borrow;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
@@ -43,8 +44,8 @@ impl DepthOrderingTrait for Model {
     }
 }
 
-impl AsRef<Matrix4<f32>> for Model {
-    fn as_ref(&self) -> &Matrix4<f32> {
+impl Borrow<Matrix4<f32>> for Model {
+    fn borrow(&self) -> &Matrix4<f32> {
         self.model.matrix()
     }
 }
@@ -73,7 +74,9 @@ mod tests {
 
     #[test]
     fn identity() {
-        assert_eq!(Model::identity().as_ref(), &Matrix4::identity());
+        let ident = Model::identity();
+        let ident_mat: &Matrix4<f32> = ident.borrow();
+        assert_eq!(ident_mat, &Matrix4::identity());
     }
 
     #[test]
@@ -104,8 +107,8 @@ mod tests {
     }
 
     #[test]
-    fn as_ref() {
+    fn borrow() {
         let m = Model::default();
-        let _: &Matrix4<f32> = m.as_ref();
+        let _: &Matrix4<f32> = m.borrow();
     }
 }

@@ -58,7 +58,7 @@ impl SceneGraphTrait<Entity, Model> for Context {
     fn update_graph(&mut self) -> Result<(), Error> {
         let db = &self.database;
         self.scene_graph.update(&|entity, _, parent_model| {
-            let current_model = db.borrow(entity).ok()?;
+            let current_model = db.get(entity).ok()?;
             Some(parent_model * current_model)
         })?;
         Ok(())
@@ -116,12 +116,12 @@ impl DatabaseTrait for Context {
         self.database.components(entity)
     }
 
-    fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, DatabaseError> {
-        self.database.borrow::<C>(entity)
+    fn get<C: Any>(&self, entity: &Entity) -> Result<&C, DatabaseError> {
+        self.database.get::<C>(entity)
     }
 
-    fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, DatabaseError> {
-        self.database.borrow_mut::<C>(entity)
+    fn get_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, DatabaseError> {
+        self.database.get_mut::<C>(entity)
     }
 
     fn find<C: Any>(&self) -> Result<&C, DatabaseError> {

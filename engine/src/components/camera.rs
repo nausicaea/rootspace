@@ -1,5 +1,6 @@
 use nalgebra::{Isometry3, Matrix4, Perspective3, Point3, Vector3};
 use std::f32;
+use std::borrow::Borrow;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Camera {
@@ -50,8 +51,8 @@ impl Default for Camera {
     }
 }
 
-impl AsRef<Matrix4<f32>> for Camera {
-    fn as_ref(&self) -> &Matrix4<f32> {
+impl Borrow<Matrix4<f32>> for Camera {
+    fn borrow(&self) -> &Matrix4<f32> {
         &self.matrix
     }
 }
@@ -88,9 +89,9 @@ mod tests {
     }
 
     #[test]
-    fn as_ref() {
+    fn borrow() {
         let c = Camera::default();
-        let m: &Matrix4<f32> = c.as_ref();
+        let m: &Matrix4<f32> = c.borrow();
         assert_eq!(m, &(c.projection.as_matrix() * c.view.to_homogeneous()));
     }
 }

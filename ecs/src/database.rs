@@ -13,8 +13,8 @@ pub trait DatabaseTrait: Default {
     fn remove<C: Any>(&mut self, entity: &Entity) -> Result<C, Error>;
     fn has<C: Any>(&self, entity: &Entity) -> bool;
     fn components(&self, entity: &Entity) -> usize;
-    fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, Error>;
-    fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, Error>;
+    fn get<C: Any>(&self, entity: &Entity) -> Result<&C, Error>;
+    fn get_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, Error>;
     fn find<C: Any>(&self) -> Result<&C, Error>;
 }
 
@@ -86,7 +86,7 @@ impl DatabaseTrait for Database {
         self.entities.get(entity).map(|g| g.len()).unwrap_or_default()
     }
 
-    fn borrow<C: Any>(&self, entity: &Entity) -> Result<&C, Error> {
+    fn get<C: Any>(&self, entity: &Entity) -> Result<&C, Error> {
         self.entities.get(entity).ok_or(Error::EntityNotFound).and_then(|g| {
             g.get(&TypeId::of::<C>())
                 .ok_or(Error::ComponentNotFound)
@@ -94,7 +94,7 @@ impl DatabaseTrait for Database {
         })
     }
 
-    fn borrow_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, Error> {
+    fn get_mut<C: Any>(&mut self, entity: &Entity) -> Result<&mut C, Error> {
         self.entities
             .get_mut(entity)
             .ok_or(Error::EntityNotFound)
@@ -228,7 +228,7 @@ mod tests {
         assert_eq!(d.components(&e), 1);
         assert_err!(d.add(e.clone(), TestTypeA::new(2)));
         assert_eq!(d.components(&e), 1);
-        assert_eq!(d.borrow::<TestTypeA>(&e).unwrap(), &c);
+        assert_eq!(d.get::<TestTypeA>(&e).unwrap(), &c);
     }
 
     #[test]
@@ -296,7 +296,7 @@ mod tests {
         let e = d.create_entity();
         let c = TestTypeA::new(1);
         d.add(e.clone(), c.clone()).unwrap();
-        let r = d.borrow::<TestTypeA>(&e);
+        let r = d.get::<TestTypeA>(&e);
         assert_ok!(r);
         assert_eq!(r.unwrap(), &c);
     }
@@ -305,14 +305,14 @@ mod tests {
     fn borrow_unknown_component() {
         let mut d: Database = Default::default();
         let e = d.create_entity();
-        assert_err!(d.borrow::<TestTypeA>(&e));
+        assert_err!(d.get::<TestTypeA>(&e));
     }
 
     #[test]
     fn borrow_component_unknown_entity() {
         let d: Database = Default::default();
         let e: Entity = Default::default();
-        assert_err!(d.borrow::<TestTypeA>(&e));
+        assert_err!(d.get::<TestTypeA>(&e));
     }
 
     #[test]
@@ -322,14 +322,14 @@ mod tests {
         let c = TestTypeA::new(1);
         d.add(e.clone(), c.clone()).unwrap();
         {
-            let r = d.borrow_mut::<TestTypeA>(&e);
+            let r = d.get_mut::<TestTypeA>(&e);
             assert_ok!(r);
             let cb = r.unwrap();
             assert_eq!(cb, &c);
             cb.0 = 200;
         }
         {
-            let r = d.borrow::<TestTypeA>(&e);
+            let r = d.get::<TestTypeA>(&e);
             assert_ok!(r);
             let cb = r.unwrap();
             assert_eq!(cb, &TestTypeA(200));
@@ -340,14 +340,14 @@ mod tests {
     fn borrow_mut_unknown_component() {
         let mut d: Database = Default::default();
         let e = d.create_entity();
-        assert_err!(d.borrow_mut::<TestTypeA>(&e));
+        assert_err!(d.get_mut::<TestTypeA>(&e));
     }
 
     #[test]
     fn borrow_mut_unknown_entity() {
         let mut d: Database = Default::default();
         let e: Entity = Default::default();
-        assert_err!(d.borrow_mut::<TestTypeA>(&e));
+        assert_err!(d.get_mut::<TestTypeA>(&e));
     }
 
     #[test]

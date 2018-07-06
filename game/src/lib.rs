@@ -7,11 +7,11 @@ extern crate nalgebra;
 
 use ecs::{DatabaseTrait, EventManagerTrait, World};
 use engine::{
-    components::{camera::Camera, model::Model},
+    components::{camera::Camera, model::Model, renderable::Renderable},
     context::{Context, SceneGraphTrait},
     event::Event,
     file_manipulation::FileError,
-    graphics::{glium::GliumRenderData, headless::HeadlessRenderData, RenderDataTrait},
+    graphics::RenderDataTrait,
     orchestrator::Orchestrator,
     systems::{
         event_coordinator::EventCoordinator,
@@ -53,11 +53,11 @@ impl Game {
             let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4).unwrap();
 
             self.context_mut()
-                .add(ea, HeadlessRenderData::triangle(&renderer.backend).unwrap())
+                .add(ea, Renderable::triangle(&renderer.backend).unwrap())
                 .unwrap();
 
             self.context_mut()
-                .add(eb, HeadlessRenderData::cube(&renderer.backend).unwrap())
+                .add(eb, Renderable::cube(&renderer.backend).unwrap())
                 .unwrap();
 
             self.world_mut().add_system(event_interface);
@@ -67,11 +67,11 @@ impl Game {
             let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4).unwrap();
 
             self.context_mut()
-                .add(ea, GliumRenderData::triangle(&renderer.backend).unwrap())
+                .add(ea, Renderable::triangle(&renderer.backend).unwrap())
                 .unwrap();
 
             self.context_mut()
-                .add(eb, GliumRenderData::cube(&renderer.backend).unwrap())
+                .add(eb, Renderable::cube(&renderer.backend).unwrap())
                 .unwrap();
 
             self.world_mut().add_system(event_interface);

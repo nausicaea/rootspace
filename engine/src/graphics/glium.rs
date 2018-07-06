@@ -9,6 +9,7 @@ use glium::{
     Surface, VertexBuffer,
 };
 use std::fmt;
+use std::borrow::Borrow;
 
 pub use glium::glutin::Event as GliumEvent;
 
@@ -197,7 +198,7 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
         self.0.clear_color_and_depth((c[0], c[1], c[2], c[3]), d)
     }
 
-    fn render<T: AsRef<[[f32; 4]; 4]>, R: AsRef<GliumRenderData>>(&mut self, t: &T, d: &R) -> Result<(), Error> {
+    fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<GliumRenderData>>(&mut self, t: &T, d: &R) -> Result<(), Error> {
         let dimensions = self.0.get_dimensions();
 
         let u = uniform! {
@@ -225,7 +226,9 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
             ..DrawParameters::default()
         };
 
-        match self.0.draw(&d.as_ref().vertices, &d.as_ref().indices, &d.as_ref().program, &u, &dp) {
+        let db = d.borrow();
+
+        match self.0.draw(&db.vertices, &db.indices, &db.program, &u, &dp) {
             Ok(()) => Ok(()),
             Err(e) => Err(Into::into(e)),
         }

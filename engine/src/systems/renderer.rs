@@ -8,6 +8,7 @@ use graphics::{
 };
 use nalgebra::Matrix4;
 use std::{marker::PhantomData, time::Duration};
+use std::borrow::Borrow;
 
 pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, HRD, HF, HEL, HB>;
 pub type GliumRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, GRD, GF, GEL, GB>;
@@ -63,9 +64,9 @@ impl<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B> SystemTrait<Ctx, Evt> for Renderer<Ctx
 where
     Ctx: DatabaseTrait + SceneGraphTrait<Entity, Mdl>,
     Evt: EventTrait,
-    Cam: AsRef<Matrix4<f32>> + 'static,
-    Mdl: Default + Clone + AsRef<Matrix4<f32>> + 'static,
-    Ren: AsRef<D> + 'static,
+    Cam: Borrow<Matrix4<f32>> + 'static,
+    Mdl: Default + Clone + Borrow<Matrix4<f32>> + 'static,
+    Ren: Borrow<D> + 'static,
     F: FrameTrait<D>,
     B: BackendTrait<E, F>,
 {
@@ -96,12 +97,12 @@ where
         // Render the scene.
         for (entity, model) in nodes {
             if ctx.has::<Mdl>(entity) {
-                if let Ok(data) = ctx.borrow::<Ren>(entity) {
+                if let Ok(data) = ctx.get::<Ren>(entity) {
                     #[cfg(any(test, feature = "diagnostics"))]
                     {
                         self.draw_calls += 1;
                     }
-                    target.render(&(cam.as_ref() * model.as_ref()), data)?;
+                    target.render(&(cam.borrow() * model.borrow()), data)?;
                 }
             }
         }
@@ -114,7 +115,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use components::{camera::Camera, model::Model};
+    use components::{camera::Camera, model::Model, renderable::Renderable};
     use ecs::mock::MockEvt;
     use graphics::{glium::GliumRenderData as GRD, headless::HeadlessRenderData as HRD, RenderDataTrait};
     use mock::MockCtx;
@@ -123,7 +124,7 @@ mod tests {
     #[test]
     fn new_headless() {
         assert_ok!(
-            HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+            HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<HRD>>::new(
                 &Default::default(),
                 "Title",
                 [800, 600],
@@ -135,7 +136,7 @@ mod tests {
 
     #[test]
     fn get_stage_filter_headless() {
-        let r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+        let r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<HRD>>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -149,7 +150,7 @@ mod tests {
     #[test]
     fn render_headless() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+        let mut r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<HRD>>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -160,13 +161,13 @@ mod tests {
         let a = ctx.create_entity();
         ctx.insert_node(a);
         ctx.add(a, Model::default()).unwrap();
-        ctx.add(a, HRD::triangle(&r.backend).unwrap()).unwrap();
+        ctx.add(a, Renderable::triangle(&r.backend).unwrap()).unwrap();
         let b = ctx.create_entity();
         ctx.insert_node(b);
         ctx.add(b, Model::default()).unwrap();
         let c = ctx.create_entity();
         ctx.insert_node(c);
-        ctx.add(c, HRD::triangle(&r.backend).unwrap()).unwrap();
+        ctx.add(c, Renderable::triangle(&r.backend).unwrap()).unwrap();
         let d = ctx.create_entity();
         ctx.insert_node(d);
         ctx.add(c, Camera::default()).unwrap();
@@ -181,7 +182,7 @@ mod tests {
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn new_glium() {
-        assert_ok!(GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+        assert_ok!(GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<GRD>>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -194,7 +195,7 @@ mod tests {
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn get_stage_filter_glium() {
-        let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+        let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<GRD>>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -210,7 +211,7 @@ mod tests {
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn render_glium() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model>::new(
+        let mut r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<GRD>>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -221,13 +222,13 @@ mod tests {
         let a = ctx.create_entity();
         ctx.insert_node(a);
         ctx.add(a, Model::default()).unwrap();
-        ctx.add(a, GRD::triangle(&r.backend).unwrap()).unwrap();
+        ctx.add(a, Renderable::triangle(&r.backend).unwrap()).unwrap();
         let b = ctx.create_entity();
         ctx.insert_node(b);
         ctx.add(b, Model::default()).unwrap();
         let c = ctx.create_entity();
         ctx.insert_node(c);
-        ctx.add(c, GRD::triangle(&r.backend).unwrap()).unwrap();
+        ctx.add(c, Renderable::triangle(&r.backend).unwrap()).unwrap();
         let d = ctx.create_entity();
         ctx.insert_node(d);
         ctx.add(c, Camera::default()).unwrap();
