@@ -32,10 +32,6 @@ impl Camera {
             view,
         }
     }
-
-    fn recalculate(&mut self) {
-        self.matrix = self.projection.as_matrix() * self.view.to_homogeneous()
-    }
 }
 
 impl Default for Camera {
