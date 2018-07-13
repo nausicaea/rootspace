@@ -5,6 +5,7 @@ use glium::{
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, EventsLoop, GlProfile, GlRequest, WindowBuilder},
     index::PrimitiveType,
+    uniforms::{Uniforms, UniformValue},
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
@@ -51,6 +52,18 @@ impl Vertex {
 }
 
 implement_vertex!(Vertex, position, tex_coord, normals);
+
+pub struct GliumUniforms<'a> {
+    transform: &'a [[f32; 4]; 4],
+    dimensions: [f32; 2],
+}
+
+impl<'a> Uniforms for GliumUniforms<'a> {
+    fn visit_values<'b, F: FnMut(&str, UniformValue<'b>)>(&'b self, mut f: F) {
+        f("transform", UniformValue::Mat4(*self.transform));
+        f("dimensions", UniformValue::Vec2(self.dimensions));
+    }
+}
 
 #[derive(Debug)]
 pub struct GliumRenderData {
@@ -198,11 +211,17 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
         self.0.clear_color_and_depth((c[0], c[1], c[2], c[3]), d)
     }
 
-    fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<GliumRenderData>>(&mut self, t: &T, d: &R) -> Result<(), Error> {
+    fn render<T, R>(&mut self, transform: &T, renderable: &R) -> Result<(), Error>
+    where
+        T: AsRef<[[f32; 4]; 4]>,
+        R: Borrow<GliumRenderData>,
+    {
+        let data = renderable.borrow();
+
         let dimensions = self.0.get_dimensions();
 
-        let u = uniform! {
-            transform: *t.as_ref(),
+        let u = GliumUniforms {
+            transform: transform.as_ref(),
             dimensions: [dimensions.0 as f32, dimensions.1 as f32],
         };
 
@@ -226,9 +245,7 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
             ..DrawParameters::default()
         };
 
-        let db = d.borrow();
-
-        match self.0.draw(&db.vertices, &db.indices, &db.program, &u, &dp) {
+        match self.0.draw(&data.vertices, &data.indices, &data.program, &u, &dp) {
             Ok(()) => Ok(()),
             Err(e) => Err(Into::into(e)),
         }
