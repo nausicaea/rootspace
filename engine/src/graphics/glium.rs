@@ -6,6 +6,7 @@ use glium::{
     glutin::{Api, ContextBuilder, EventsLoop, GlProfile, GlRequest, WindowBuilder},
     index::PrimitiveType,
     uniforms::{Uniforms, UniformValue},
+    texture::Texture2d,
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
@@ -53,15 +54,22 @@ impl Vertex {
 
 implement_vertex!(Vertex, position, tex_coord, normals);
 
-pub struct GliumUniforms<'a> {
-    transform: &'a [[f32; 4]; 4],
+pub struct GliumUniforms<'a, 'b, 'c, T: 'a> {
+    transform: &'a T,
     dimensions: [f32; 2],
+    diffuse_texture: &'b Texture2d,
+    normal_texture: &'c Texture2d,
 }
 
-impl<'a> Uniforms for GliumUniforms<'a> {
-    fn visit_values<'b, F: FnMut(&str, UniformValue<'b>)>(&'b self, mut f: F) {
-        f("transform", UniformValue::Mat4(*self.transform));
+impl<'a, 'b, 'c, T> Uniforms for GliumUniforms<'a, 'b, 'c, T>
+where
+    T: AsRef<[[f32; 4]; 4]> + 'a,
+{
+    fn visit_values<'f, F: FnMut(&str, UniformValue<'f>)>(&'f self, mut f: F) {
+        f("transform", UniformValue::Mat4(*self.transform.as_ref()));
         f("dimensions", UniformValue::Vec2(self.dimensions));
+        f("diffuse_texture", UniformValue::Texture2d(self.diffuse_texture, None));
+        f("normal_texture", UniformValue::Texture2d(self.normal_texture, None));
     }
 }
 
@@ -70,6 +78,8 @@ pub struct GliumRenderData {
     vertices: VertexBuffer<Vertex>,
     indices: IndexBuffer<u16>,
     program: Program,
+    diffuse_texture: Texture2d,
+    normal_texture: Texture2d,
 }
 
 impl RenderDataTrait<GliumBackend> for GliumRenderData {
@@ -103,6 +113,10 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
             r#"
                     #version 330 core
 
+                    uniform vec2 dimensions;
+                    uniform Sampler2D diffuse_texture;
+                    uniform Sampler2D normal_texture;
+
                     out vec4 color;
 
                     void main() {
@@ -112,10 +126,15 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
             None,
         )?;
 
+        let diffuse_texture = Texture2d::empty(&backend.0, 32, 32)?;
+        let normal_texture = Texture2d::empty(&backend.0, 32, 32)?;
+
         Ok(GliumRenderData {
             vertices,
             indices,
             program,
+            diffuse_texture,
+            normal_texture,
         })
     }
 
@@ -185,6 +204,8 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
                     #version 330 core
 
                     uniform vec2 dimensions;
+                    uniform Sampler2D diffuse_texture;
+                    uniform Sampler2D normal_texture;
 
                     out vec4 color;
 
@@ -196,10 +217,15 @@ impl RenderDataTrait<GliumBackend> for GliumRenderData {
             None,
         )?;
 
+        let diffuse_texture = Texture2d::empty(&backend.0, 32, 32)?;
+        let normal_texture = Texture2d::empty(&backend.0, 32, 32)?;
+
         Ok(GliumRenderData {
             vertices,
             indices,
             program,
+            diffuse_texture,
+            normal_texture,
         })
     }
 }
@@ -221,8 +247,10 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
         let dimensions = self.0.get_dimensions();
 
         let u = GliumUniforms {
-            transform: transform.as_ref(),
+            transform: transform,
             dimensions: [dimensions.0 as f32, dimensions.1 as f32],
+            diffuse_texture: &data.diffuse_texture,
+            normal_texture: &data.normal_texture,
         };
 
         let dp = DrawParameters {
