@@ -12,7 +12,7 @@ mock = []
 bitflags = "^1.0.3"
 failure = "^0.1.1"
 log = "^0.4.1"
-glium = "^0.21.0"
+glium = "^0.22.0"
 nalgebra = "^0.15.0"
 affine-transform = {path = "../affine-transform"}
 hierarchy = {path = "../hierarchy"}
@@ -20,7 +20,7 @@ ecs = {path = "../ecs"}
 
 [dev-dependencies]
 assertions = {path = "../assertions"}
-approx = "^0.2.0"
+approx = "^0.3.0"
 tempfile = "^3.0.1"
 quickcheck = "^0.6.2"
 ecs = {path = "../ecs", features = ["mock"]}

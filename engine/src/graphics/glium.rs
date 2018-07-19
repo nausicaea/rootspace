@@ -159,7 +159,7 @@ impl BackendTrait<GliumEventsLoop, GliumFrame> for GliumBackend {
     ) -> Result<Self, Error> {
         let window = WindowBuilder::new()
             .with_title(title)
-            .with_dimensions(dimensions[0], dimensions[1]);
+            .with_dimensions(From::from((dimensions[0], dimensions[1])));
 
         let context = ContextBuilder::new()
             .with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))

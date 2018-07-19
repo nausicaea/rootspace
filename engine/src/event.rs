@@ -68,7 +68,7 @@ impl TryFrom<GliumEvent> for Event {
     fn try_from(value: GliumEvent) -> Result<Event, ()> {
         if let GliumEvent::WindowEvent { event: we, .. } = value {
             match we {
-                WindowEvent::Closed => Ok(Event::shutdown()),
+                WindowEvent::CloseRequested => Ok(Event::shutdown()),
                 _ => Err(()),
             }
         } else {

@@ -1,7 +1,6 @@
 extern crate ecs;
 extern crate engine;
 extern crate failure;
-extern crate glium;
 extern crate log;
 extern crate nalgebra;
 
