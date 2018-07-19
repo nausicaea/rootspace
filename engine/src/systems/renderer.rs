@@ -117,8 +117,14 @@ mod tests {
     use super::*;
     use components::{camera::Camera, model::Model, renderable::Renderable};
     use ecs::mock::MockEvt;
-    use graphics::{glium::GliumRenderData as GRD, headless::HeadlessRenderData as HRD, RenderDataTrait};
+    use graphics::{glium::{triangle, Vertex, GliumBackend as GB, GliumRenderData as GRD}, headless::HeadlessRenderData as HRD};
     use mock::MockCtx;
+    use glium::{
+        index::PrimitiveType,
+        texture::Texture2d,
+        IndexBuffer, Program,
+        VertexBuffer,
+    };
     use std::f32;
 
     #[test]
@@ -161,13 +167,13 @@ mod tests {
         let a = ctx.create_entity();
         ctx.insert_node(a);
         ctx.add(a, Model::default()).unwrap();
-        ctx.add(a, Renderable::triangle(&r.backend).unwrap()).unwrap();
+        ctx.add(a, Renderable::from(HRD::default())).unwrap();
         let b = ctx.create_entity();
         ctx.insert_node(b);
         ctx.add(b, Model::default()).unwrap();
         let c = ctx.create_entity();
         ctx.insert_node(c);
-        ctx.add(c, Renderable::triangle(&r.backend).unwrap()).unwrap();
+        ctx.add(c, Renderable::from(HRD::default())).unwrap();
         let d = ctx.create_entity();
         ctx.insert_node(d);
         ctx.add(c, Camera::default()).unwrap();
@@ -222,13 +228,13 @@ mod tests {
         let a = ctx.create_entity();
         ctx.insert_node(a);
         ctx.add(a, Model::default()).unwrap();
-        ctx.add(a, Renderable::triangle(&r.backend).unwrap()).unwrap();
+        ctx.add(a, Renderable::from(triangle(&r.backend).unwrap())).unwrap();
         let b = ctx.create_entity();
         ctx.insert_node(b);
         ctx.add(b, Model::default()).unwrap();
         let c = ctx.create_entity();
         ctx.insert_node(c);
-        ctx.add(c, Renderable::triangle(&r.backend).unwrap()).unwrap();
+        ctx.add(c, Renderable::from(triangle(&r.backend).unwrap())).unwrap();
         let d = ctx.create_entity();
         ctx.insert_node(d);
         ctx.add(c, Camera::default()).unwrap();

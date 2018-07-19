@@ -11,7 +11,6 @@ use engine::{
     context::{Context, SceneGraphTrait},
     event::Event,
     file_manipulation::FileError,
-    graphics::RenderDataTrait,
     orchestrator::Orchestrator,
     systems::{
         event_coordinator::EventCoordinator,

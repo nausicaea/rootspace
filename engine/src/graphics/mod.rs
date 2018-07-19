@@ -20,14 +20,6 @@ pub trait FrameTrait<D> {
     fn finalize(self) -> Result<(), Error>;
 }
 
-pub trait RenderDataTrait<B>
-where
-    Self: Sized,
-{
-    fn triangle(backend: &B) -> Result<Self, Error>;
-    fn cube(backend: &B) -> Result<Self, Error>;
-}
-
 pub trait EventsLoopTrait<O, I>
 where
     O: EventTrait,

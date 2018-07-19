@@ -1,0 +1,19 @@
+ply
+format ascii 1.0
+comment A single triangle
+element vertex 3
+property float pos_x
+property float pos_y
+property float pos_z
+property float tex_u
+property float tex_v
+property float norm_x
+property float norm_y
+property float norm_z
+element face 1
+property list uchar uchar vertex_index
+end_header
+0.0 0.5 0.0 0.0 1.0 0.0 0.0 1.0
+-0.5 -0.5 0.0 0.0 0.0 0.0 0.0 1.0
+0.5 0.5 0.0 1.0 0.0 0.0 0.0 1.0
+3 0 1 2

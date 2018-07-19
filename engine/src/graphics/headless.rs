@@ -1,4 +1,4 @@
-use super::{BackendTrait, EventsLoopTrait, FrameTrait, RenderDataTrait};
+use super::{BackendTrait, EventsLoopTrait, FrameTrait};
 use event::Event;
 use failure::Error;
 use std::borrow::Borrow;
@@ -14,16 +14,6 @@ impl EventsLoopTrait<Event, HeadlessEvent> for HeadlessEventsLoop {
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessRenderData;
-
-impl RenderDataTrait<HeadlessBackend> for HeadlessRenderData {
-    fn triangle(_backend: &HeadlessBackend) -> Result<Self, Error> {
-        Ok(HeadlessRenderData::default())
-    }
-
-    fn cube(_backend: &HeadlessBackend) -> Result<Self, Error> {
-        Ok(HeadlessRenderData::default())
-    }
-}
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessFrame;
@@ -81,14 +71,6 @@ mod tests {
             false,
             0
         ));
-    }
-
-    #[test]
-    fn render_data() {
-        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-
-        assert_ok!(HeadlessRenderData::triangle(&b));
-        assert_ok!(HeadlessRenderData::cube(&b));
     }
 
     #[test]

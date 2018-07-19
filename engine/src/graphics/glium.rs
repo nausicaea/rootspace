@@ -1,4 +1,4 @@
-use super::{BackendTrait, EventsLoopTrait, FrameTrait, RenderDataTrait};
+use super::{BackendTrait, EventsLoopTrait, FrameTrait};
 use event::Event;
 use failure::Error;
 use glium::{
@@ -82,154 +82,6 @@ pub struct GliumRenderData {
     normal_texture: Texture2d,
 }
 
-impl RenderDataTrait<GliumBackend> for GliumRenderData {
-    fn triangle(backend: &GliumBackend) -> Result<Self, Error> {
-        let vertices = VertexBuffer::new(
-            &backend.0,
-            &[
-                Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
-                Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
-                Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
-            ],
-        )?;
-
-        let indices = IndexBuffer::new(&backend.0, PrimitiveType::TrianglesList, &[0, 1, 2])?;
-
-        let program = Program::from_source(
-            &backend.0,
-            r#"
-                    #version 330 core
-
-                    uniform mat4 transform;
-
-                    layout (location = 0) in vec3 position;
-                    layout (location = 1) in vec2 tex_coord;
-                    layout (location = 2) in vec3 normals;
-
-                    void main() {
-                            gl_Position = transform * vec4(position, 1.0);
-                    }
-                    "#,
-            r#"
-                    #version 330 core
-
-                    uniform vec2 dimensions;
-                    uniform Sampler2D diffuse_texture;
-                    uniform Sampler2D normal_texture;
-
-                    out vec4 color;
-
-                    void main() {
-                            color = vec4(0.3, 0.12, 0.9, 1.0);
-                    }
-                    "#,
-            None,
-        )?;
-
-        let diffuse_texture = Texture2d::empty(&backend.0, 32, 32)?;
-        let normal_texture = Texture2d::empty(&backend.0, 32, 32)?;
-
-        Ok(GliumRenderData {
-            vertices,
-            indices,
-            program,
-            diffuse_texture,
-            normal_texture,
-        })
-    }
-
-    fn cube(backend: &GliumBackend) -> Result<Self, Error> {
-        let hw = 0.5;
-        let vertices = VertexBuffer::new(
-            &backend.0,
-            &[
-                // Front face
-                Vertex::new([-hw, hw, hw], [0.0, 1.0], [0.0, 0.0, 1.0]),
-                Vertex::new([-hw, -hw, hw], [0.0, 0.0], [0.0, 0.0, 1.0]),
-                Vertex::new([hw, -hw, hw], [1.0, 0.0], [0.0, 0.0, 1.0]),
-                Vertex::new([hw, hw, hw], [1.0, 1.0], [0.0, 0.0, 1.0]),
-                // Back face
-                Vertex::new([hw, hw, -hw], [0.0, 1.0], [0.0, 0.0, -1.0]),
-                Vertex::new([hw, -hw, -hw], [0.0, 0.0], [0.0, 0.0, -1.0]),
-                Vertex::new([-hw, -hw, -hw], [1.0, 0.0], [0.0, 0.0, -1.0]),
-                Vertex::new([-hw, hw, -hw], [1.0, 1.0], [0.0, 0.0, -1.0]),
-                // Right face
-                Vertex::new([hw, hw, hw], [0.0, 1.0], [1.0, 0.0, 0.0]),
-                Vertex::new([hw, -hw, hw], [0.0, 0.0], [1.0, 0.0, 0.0]),
-                Vertex::new([hw, -hw, -hw], [1.0, 0.0], [1.0, 0.0, 0.0]),
-                Vertex::new([hw, hw, -hw], [1.0, 1.0], [1.0, 0.0, 0.0]),
-                // Left face
-                Vertex::new([-hw, hw, -hw], [0.0, 1.0], [-1.0, 0.0, 0.0]),
-                Vertex::new([-hw, -hw, -hw], [0.0, 0.0], [-1.0, 0.0, 0.0]),
-                Vertex::new([-hw, -hw, hw], [1.0, 0.0], [-1.0, 0.0, 0.0]),
-                Vertex::new([-hw, hw, hw], [1.0, 1.0], [-1.0, 0.0, 0.0]),
-                // Top face
-                Vertex::new([-hw, hw, -hw], [0.0, 1.0], [0.0, 1.0, 0.0]),
-                Vertex::new([-hw, hw, hw], [0.0, 0.0], [0.0, 1.0, 0.0]),
-                Vertex::new([hw, hw, hw], [1.0, 0.0], [0.0, 1.0, 0.0]),
-                Vertex::new([hw, hw, -hw], [1.0, 1.0], [0.0, 1.0, 0.0]),
-                // Bottom face
-                Vertex::new([-hw, -hw, hw], [0.0, 1.0], [0.0, -1.0, 0.0]),
-                Vertex::new([-hw, -hw, -hw], [0.0, 0.0], [0.0, -1.0, 0.0]),
-                Vertex::new([hw, -hw, -hw], [1.0, 0.0], [0.0, -1.0, 0.0]),
-                Vertex::new([hw, -hw, hw], [1.0, 1.0], [0.0, -1.0, 0.0]),
-            ],
-        )?;
-
-        let indices = IndexBuffer::new(
-            &backend.0,
-            PrimitiveType::TrianglesList,
-            &[
-                0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19,
-                16, 20, 21, 22, 22, 23, 20,
-            ],
-        )?;
-
-        let program = Program::from_source(
-            &backend.0,
-            r#"
-                    #version 330 core
-
-                    uniform mat4 transform;
-
-                    layout (location = 0) in vec3 position;
-                    layout (location = 1) in vec2 tex_coord;
-                    layout (location = 2) in vec3 normals;
-
-                    void main() {
-                            gl_Position = transform * vec4(position, 1.0);
-                    }
-                    "#,
-            r#"
-                    #version 330 core
-
-                    uniform vec2 dimensions;
-                    uniform Sampler2D diffuse_texture;
-                    uniform Sampler2D normal_texture;
-
-                    out vec4 color;
-
-                    void main() {
-                            vec2 c = gl_FragCoord.xy / dimensions;
-                            color = vec4(c, 0.3, 1.0);
-                    }
-                    "#,
-            None,
-        )?;
-
-        let diffuse_texture = Texture2d::empty(&backend.0, 32, 32)?;
-        let normal_texture = Texture2d::empty(&backend.0, 32, 32)?;
-
-        Ok(GliumRenderData {
-            vertices,
-            indices,
-            program,
-            diffuse_texture,
-            normal_texture,
-        })
-    }
-}
-
 pub struct GliumFrame(Frame);
 
 impl FrameTrait<GliumRenderData> for GliumFrame {
@@ -293,7 +145,9 @@ impl fmt::Debug for GliumFrame {
 }
 
 #[derive(Clone)]
-pub struct GliumBackend(Display);
+pub struct GliumBackend {
+    pub display: Display,
+}
 
 impl BackendTrait<GliumEventsLoop, GliumFrame> for GliumBackend {
     fn new(
@@ -314,13 +168,13 @@ impl BackendTrait<GliumEventsLoop, GliumFrame> for GliumBackend {
             .with_multisampling(msaa);
 
         match Display::new(window, context, &events_loop.0) {
-            Ok(d) => Ok(GliumBackend(d)),
+            Ok(display) => Ok(GliumBackend { display }),
             Err(e) => Err(format_err!("{}", e)),
         }
     }
 
     fn create_frame(&self) -> GliumFrame {
-        GliumFrame(self.0.draw())
+        GliumFrame(self.display.draw())
     }
 }
 
@@ -328,6 +182,62 @@ impl fmt::Debug for GliumBackend {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "GliumBackend")
     }
+}
+
+#[cfg(test)]
+pub fn triangle(backend: &GliumBackend) -> Result<GliumRenderData, Error> {
+    let vertices = VertexBuffer::new(
+        &backend.display,
+        &[
+            Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
+            Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
+        ],
+    )?;
+
+    let indices = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, &[0, 1, 2])?;
+
+    let program = Program::from_source(
+        &backend.display,
+        r#"
+                #version 330 core
+
+                uniform mat4 transform;
+
+                layout (location = 0) in vec3 position;
+                layout (location = 1) in vec2 tex_coord;
+                layout (location = 2) in vec3 normals;
+
+                void main() {
+                        gl_Position = transform * vec4(position, 1.0);
+                }
+                "#,
+        r#"
+                #version 330 core
+
+                uniform vec2 dimensions;
+                uniform Sampler2D diffuse_texture;
+                uniform Sampler2D normal_texture;
+
+                out vec4 color;
+
+                void main() {
+                        color = vec4(0.3, 0.12, 0.9, 1.0);
+                }
+                "#,
+        None,
+    )?;
+
+    let diffuse_texture = Texture2d::empty(&backend.display, 32, 32)?;
+    let normal_texture = Texture2d::empty(&backend.display, 32, 32)?;
+
+    Ok(GliumRenderData {
+        vertices,
+        indices,
+        program,
+        diffuse_texture,
+        normal_texture,
+    })
 }
 
 #[cfg(test)]
@@ -359,20 +269,10 @@ mod tests {
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
-    fn render_data() {
-        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-
-        assert_ok!(GliumRenderData::triangle(&b));
-        assert_ok!(GliumRenderData::cube(&b));
-    }
-
-    #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn frame() {
         let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let data = GliumRenderData::triangle(&b).unwrap();
+        let data = triangle(&b).unwrap();
 
         let mut f: GliumFrame = b.create_frame();
         f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
