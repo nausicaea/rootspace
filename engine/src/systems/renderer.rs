@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
+    #[cfg_attr(feature = "wsl", should_panic)]
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn new_glium() {
         assert_ok!(GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<GRD>>::new(
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
+    #[cfg_attr(feature = "wsl", should_panic)]
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn get_stage_filter_glium() {
         let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<GRD>>::new(
@@ -213,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "No backend is available"))]
+    #[cfg_attr(feature = "wsl", should_panic)]
     #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
     fn render_glium() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
