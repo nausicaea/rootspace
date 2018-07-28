@@ -1,0 +1,10 @@
+[package]
+name = "ply"
+version = "0.1.0"
+authors = ["Eleanore Young <youngelliecaitlin@gmail.com>"]
+
+[dependencies]
+nom = "^4.0.0"
+
+[dev-dependencies]
+assertions = {path = "../assertions"}

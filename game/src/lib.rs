@@ -50,13 +50,13 @@ impl Game {
             let event_interface = HeadlessEventInterface::default();
             let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4).unwrap();
 
-            self.context_mut()
-                .add(ea, Renderable::triangle(&renderer.backend).unwrap())
-                .unwrap();
+            // self.context_mut()
+            //     .add(ea, Renderable::triangle(&renderer.backend).unwrap())
+            //     .unwrap();
 
-            self.context_mut()
-                .add(eb, Renderable::cube(&renderer.backend).unwrap())
-                .unwrap();
+            // self.context_mut()
+            //     .add(eb, Renderable::cube(&renderer.backend).unwrap())
+            //     .unwrap();
 
             self.world_mut().add_system(event_interface);
             self.world_mut().add_system(renderer);
@@ -64,13 +64,13 @@ impl Game {
             let event_interface = GliumEventInterface::default();
             let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4).unwrap();
 
-            self.context_mut()
-                .add(ea, Renderable::triangle(&renderer.backend).unwrap())
-                .unwrap();
+            // self.context_mut()
+            //     .add(ea, Renderable::triangle(&renderer.backend).unwrap())
+            //     .unwrap();
 
-            self.context_mut()
-                .add(eb, Renderable::cube(&renderer.backend).unwrap())
-                .unwrap();
+            // self.context_mut()
+            //     .add(eb, Renderable::cube(&renderer.backend).unwrap())
+            //     .unwrap();
 
             self.world_mut().add_system(event_interface);
             self.world_mut().add_system(renderer);
