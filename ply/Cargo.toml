@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Eleanore Young <youngelliecaitlin@gmail.com>"]
 
 [dependencies]
-nom = "^4.0.0"
+combine = "^3.3.6"
 
 [dev-dependencies]
 assertions = {path = "../assertions"}

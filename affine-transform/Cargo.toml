@@ -5,4 +5,4 @@ authors = ["Eleanore Young"]
 
 [dependencies]
 alga = "*"
-nalgebra = "^0.15.0"
+nalgebra = "^0.16.0"

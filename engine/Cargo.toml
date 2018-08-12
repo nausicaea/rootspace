@@ -13,7 +13,7 @@ bitflags = "^1.0.3"
 failure = "^0.1.1"
 log = "^0.4.1"
 glium = "^0.22.0"
-nalgebra = "^0.15.0"
+nalgebra = "^0.16.0"
 affine-transform = {path = "../affine-transform"}
 hierarchy = {path = "../hierarchy"}
 ecs = {path = "../ecs"}
