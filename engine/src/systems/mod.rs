@@ -9,10 +9,10 @@ use self::{
     event_monitor::EventMonitor,
     renderer::{GliumRenderer, HeadlessRenderer},
 };
-use graphics::{headless::HeadlessRenderData, glium::GliumRenderData};
 use components::{camera::Camera, model::Model, renderable::Renderable};
 use context::Context;
 use event::{Event, EventFlag};
+use graphics::{glium::GliumRenderData, headless::HeadlessRenderData};
 
 impl_system_group! {
     pub enum SystemGroup<Context, Event, EventFlag> {

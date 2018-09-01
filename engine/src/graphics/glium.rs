@@ -5,13 +5,12 @@ use glium::{
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, EventsLoop, GlProfile, GlRequest, WindowBuilder},
     index::PrimitiveType,
-    uniforms::{Uniforms, UniformValue},
     texture::Texture2d,
+    uniforms::{UniformValue, Uniforms},
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
-use std::fmt;
-use std::borrow::Borrow;
+use std::{borrow::Borrow, fmt};
 
 pub use glium::glutin::Event as GliumEvent;
 
@@ -255,7 +254,10 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic)]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn backend() {
         assert_ok!(GliumBackend::new(
             &GliumEventsLoop::default(),
@@ -268,7 +270,10 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic)]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn frame() {
         let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 

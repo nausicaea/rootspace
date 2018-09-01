@@ -6,7 +6,7 @@ extern crate nalgebra;
 
 use alga::linear::ProjectiveTransformation;
 use nalgebra::{
-    norm, one, zero, Affine3, Matrix4, Point3, Real, Rotation3, Scalar, Translation3, U1, U3, UnitQuaternion, Vector3,
+    norm, one, zero, Affine3, Matrix4, Point3, Real, Rotation3, Scalar, Translation3, UnitQuaternion, Vector3, U1, U3,
 };
 
 /// Unfortunately, `nalgebra` does not provide a decomposed affine matrix representation

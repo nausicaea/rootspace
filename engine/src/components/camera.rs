@@ -1,6 +1,5 @@
 use nalgebra::{Isometry3, Matrix4, Perspective3, Point3, Vector3};
-use std::f32;
-use std::borrow::Borrow;
+use std::{borrow::Borrow, f32};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Camera {

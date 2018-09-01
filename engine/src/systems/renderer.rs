@@ -7,8 +7,7 @@ use graphics::{
     BackendTrait, FrameTrait,
 };
 use nalgebra::Matrix4;
-use std::{marker::PhantomData, time::Duration};
-use std::borrow::Borrow;
+use std::{borrow::Borrow, marker::PhantomData, time::Duration};
 
 pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, HRD, HF, HEL, HB>;
 pub type GliumRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, GRD, GF, GEL, GB>;
@@ -117,27 +116,23 @@ mod tests {
     use super::*;
     use components::{camera::Camera, model::Model, renderable::Renderable};
     use ecs::mock::MockEvt;
-    use graphics::{glium::{triangle, Vertex, GliumBackend as GB, GliumRenderData as GRD}, headless::HeadlessRenderData as HRD};
-    use mock::MockCtx;
-    use glium::{
-        index::PrimitiveType,
-        texture::Texture2d,
-        IndexBuffer, Program,
-        VertexBuffer,
+    use glium::{index::PrimitiveType, texture::Texture2d, IndexBuffer, Program, VertexBuffer};
+    use graphics::{
+        glium::{triangle, GliumBackend as GB, GliumRenderData as GRD, Vertex},
+        headless::HeadlessRenderData as HRD,
     };
+    use mock::MockCtx;
     use std::f32;
 
     #[test]
     fn new_headless() {
-        assert_ok!(
-            HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<HRD>>::new(
-                &Default::default(),
-                "Title",
-                [800, 600],
-                false,
-                0
-            )
-        );
+        assert_ok!(HeadlessRenderer::<
+            MockCtx<MockEvt, Model>,
+            MockEvt,
+            Camera,
+            Model,
+            Renderable<HRD>,
+        >::new(&Default::default(), "Title", [800, 600], false, 0));
     }
 
     #[test]
@@ -186,20 +181,26 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic)]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn new_glium() {
-        assert_ok!(GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<GRD>>::new(
-            &Default::default(),
-            "Title",
-            [800, 600],
-            false,
-            0
-        ));
+        assert_ok!(GliumRenderer::<
+            MockCtx<MockEvt, Model>,
+            MockEvt,
+            Camera,
+            Model,
+            Renderable<GRD>,
+        >::new(&Default::default(), "Title", [800, 600], false, 0));
     }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic)]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn get_stage_filter_glium() {
         let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<GRD>>::new(
             &Default::default(),
@@ -214,7 +215,10 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic)]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn render_glium() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
         let mut r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<GRD>>::new(

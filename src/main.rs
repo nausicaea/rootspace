@@ -26,15 +26,13 @@ fn main() {
             Arg::with_name("headless")
                 .long("headless")
                 .help("Disables the graphical backend"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("iterations")
                 .short("i")
                 .long("iterations")
                 .takes_value(true)
                 .help("Specifies the number of iterations to run"),
-        )
-        .get_matches();
+        ).get_matches();
 
     let headless = matches.is_present("headless");
     let iterations: Option<usize> = matches.value_of("iterations").and_then(|i| i.parse().ok());

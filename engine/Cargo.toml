@@ -22,5 +22,5 @@ ecs = {path = "../ecs"}
 assertions = {path = "../assertions"}
 approx = "^0.3.0"
 tempfile = "^3.0.1"
-quickcheck = "^0.6.2"
+quickcheck = "^0.7.1"
 ecs = {path = "../ecs", features = ["mock"]}

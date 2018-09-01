@@ -103,7 +103,10 @@ mod tests {
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic)]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Events can only be polled from the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Events can only be polled from the main thread on macOS")
+    )]
     fn update_glium() {
         let mut e: GliumEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
         let mut c = MockCtx::default();

@@ -3,8 +3,7 @@ pub mod headless;
 
 use ecs::EventTrait;
 use failure::Error;
-use std::convert::TryInto;
-use std::borrow::Borrow;
+use std::{borrow::Borrow, convert::TryInto};
 
 pub trait BackendTrait<E, F>
 where

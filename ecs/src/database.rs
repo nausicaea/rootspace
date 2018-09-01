@@ -115,8 +115,7 @@ impl DatabaseTrait for Database {
                     .unwrap()
                     .downcast_ref()
                     .unwrap_or_else(|| unreachable!())
-            })
-            .collect::<Vec<&C>>();
+            }).collect::<Vec<&C>>();
 
         if candidates.len() == 1 {
             Ok(candidates.first().unwrap())
