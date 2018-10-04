@@ -14,12 +14,14 @@ extern crate failure;
 #[macro_use]
 extern crate glium;
 extern crate hierarchy;
+extern crate image;
 #[macro_use]
 extern crate log;
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
 extern crate nalgebra;
+extern crate rusttype;
 #[cfg(test)]
 extern crate tempfile;
 #[macro_use]

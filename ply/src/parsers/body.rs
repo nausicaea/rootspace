@@ -1,11 +1,11 @@
 use super::base::{lex, ascii_unsigned_integral, ascii_signed_integral, ascii_floating_point};
-use types::{Body, DataType, CountType, Element, ElementData, FormatType, Header, Property, PropertyData};
+use types::{Body, DataType, CountType, Element, ElementData, FormatType, Header, PropertyData};
 use combine::{
-    byteorder::ByteOrder,
+    byteorder::{ByteOrder, LE, BE},
     error::ParseError,
     parser::{
         byte::num,
-        combinator::{factory, no_partial, FnOpaque},
+        combinator::{factory, no_partial, opaque, FnOpaque, Opaque},
         range::take,
         repeat::count_min_max,
         Parser,
@@ -13,106 +13,50 @@ use combine::{
     stream::RangeStream,
 };
 
-macro_rules! impl_ascii_property {
+macro_rules! impl_ascii_scalar_property {
     ($name:ident, $inner:ident, $type:ty) => {
-        fn $name<'a, I>() -> FnOpaque<I, PropertyData>
+        fn $name<'a, I>() -> impl Parser<Input = I, Output = PropertyData>
         where
             I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
             I::Error: ParseError<I::Item, I::Range, I::Position>,
         {
-            opaque!(no_partial(lex($inner::<I, $t>()).map(|d| d.into())))
+            opaque(move |f: &mut FnMut(&mut Parser<Input = _, Output = _, PartialState = _>)| {
+                f(&mut no_partial(lex($inner::<I, $type>()).map(|d| d.into())))
+            })
         }
     };
 }
 
-macro_rules! impl_ascii_signed {
-    ($name:ident, $t:ty) => {
-        fn $name<'a, I>() -> FnOpaque<I, PropertyData>
+macro_rules! impl_ascii_vector_property {
+    ($name:ident, $inner:ident, $type:ty) => {
+        fn $name<'a, I>(count: usize) -> impl Parser<Input = I, Output = PropertyData>
         where
             I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
             I::Error: ParseError<I::Item, I::Range, I::Position>,
         {
-            opaque!(no_partial(lex(ascii_signed_integral::<I, $t>()).map(|d| d.into())))
+            opaque(move |f: &mut FnMut(&mut Parser<Input = _, Output = _, PartialState = _>)| {
+                f(&mut no_partial(count_min_max::<Vec<_>, _>(count, count, lex($inner::<I, $type>())).map(|d| d.into())))
+            })
         }
     };
 }
 
-macro_rules! impl_ascii_unsigned {
-    ($name:ident, $t:ty) => {
-        fn $name<'a, I>() -> FnOpaque<I, PropertyData>
-        where
-            I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
-            I::Error: ParseError<I::Item, I::Range, I::Position>,
-        {
-            opaque!(no_partial(lex(ascii_unsigned_integral::<I, $t>()).map(|d| d.into())))
-        }
-    };
-}
-
-macro_rules! impl_ascii_float {
-    ($name:ident, $t:ty) => {
-        fn $name<'a, I>() -> FnOpaque<I, PropertyData>
-        where
-            I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
-            I::Error: ParseError<I::Item, I::Range, I::Position>,
-        {
-            opaque!(no_partial(lex(ascii_floating_point::<I, $t>()).map(|d| d.into())))
-        }
-    };
-}
-
-macro_rules! impl_ascii_vector_signed {
-    ($name:ident, $t:ty) => {
-        fn $name<'a, I>(count: usize) -> FnOpaque<I, PropertyData>
-        where
-            I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
-            I::Error: ParseError<I::Item, I::Range, I::Position>,
-        {
-            opaque!(no_partial(count_min_max::<Vec<$t>, _>(count, count, lex(ascii_signed_integral::<I, $t>())).map(|v| v.into())))
-        }
-    };
-}
-
-macro_rules! impl_ascii_vector_unsigned {
-    ($name:ident, $t:ty) => {
-        fn $name<'a, I>(count: usize) -> FnOpaque<I, PropertyData>
-        where
-            I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
-            I::Error: ParseError<I::Item, I::Range, I::Position>,
-        {
-            opaque!(no_partial(count_min_max::<Vec<$t>, _>(count, count, lex(ascii_unsigned_integral::<I, $t>())).map(|v| v.into())))
-        }
-    };
-}
-
-macro_rules! impl_ascii_vector_float {
-    ($name:ident, $t:ty) => {
-        fn $name<'a, I>(count: usize) -> FnOpaque<I, PropertyData>
-        where
-            I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
-            I::Error: ParseError<I::Item, I::Range, I::Position>,
-        {
-            opaque!(no_partial(count_min_max::<Vec<$t>, _>(count, count, lex(ascii_floating_point::<I, $t>())).map(|v| v.into())))
-        }
-    };
-}
-
-impl_ascii_property!(pai8, ascii_signed_integral, i8);
-impl_ascii_signed!(pai16, i16);
-impl_ascii_signed!(pai32, i32);
-impl_ascii_unsigned!(pau8, u8);
-impl_ascii_unsigned!(pau16, u16);
-impl_ascii_unsigned!(pau32, u32);
-impl_ascii_float!(paf32, f32);
-impl_ascii_float!(paf64, f64);
-impl_ascii_vector_signed!(pavi8, i8);
-impl_ascii_vector_signed!(pavi16, i16);
-impl_ascii_vector_signed!(pavi32, i32);
-impl_ascii_vector_unsigned!(pavu8, u8);
-impl_ascii_vector_unsigned!(pavu16, u16);
-impl_ascii_vector_unsigned!(pavu32, u32);
-impl_ascii_vector_float!(pavf32, f32);
-impl_ascii_vector_float!(pavf64, f64);
+impl_ascii_scalar_property!(pai8, ascii_signed_integral, i8);
+impl_ascii_scalar_property!(pau8, ascii_unsigned_integral, u8);
+impl_ascii_scalar_property!(pai16, ascii_signed_integral, i16);
+impl_ascii_scalar_property!(pau16, ascii_unsigned_integral, u16);
+impl_ascii_scalar_property!(pai32, ascii_signed_integral, i32);
+impl_ascii_scalar_property!(pau32, ascii_unsigned_integral, u32);
+impl_ascii_scalar_property!(paf32, ascii_floating_point, f32);
+impl_ascii_scalar_property!(paf64, ascii_floating_point, f64);
+impl_ascii_vector_property!(pavi8, ascii_signed_integral, i8);
+impl_ascii_vector_property!(pavu8, ascii_unsigned_integral, u8);
+impl_ascii_vector_property!(pavi16, ascii_signed_integral, i16);
+impl_ascii_vector_property!(pavu16, ascii_unsigned_integral, u16);
+impl_ascii_vector_property!(pavi32, ascii_signed_integral, i32);
+impl_ascii_vector_property!(pavu32, ascii_unsigned_integral, u32);
+impl_ascii_vector_property!(pavf32, ascii_floating_point, f32);
+impl_ascii_vector_property!(pavf64, ascii_floating_point, f64);
 
 fn ascii_count<'a, I>() -> impl Parser<Input = I, Output = usize> + 'a
 where
@@ -122,7 +66,7 @@ where
     lex(ascii_unsigned_integral::<I, usize>())
 }
 
-fn ascii_scalar<'a, I>(data_type: DataType) -> FnOpaque<I, PropertyData>
+fn ascii_scalar<'a, I>(data_type: DataType) -> impl Parser<Input = I, Output = PropertyData>
 where
     I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
@@ -156,6 +100,78 @@ where
             DataType::Float64 => pavf64(c),
         })
     )
+}
+
+fn pbvi8<'a, I, T>(count: usize) -> FnOpaque<I, PropertyData>
+where
+    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I::Error: ParseError<I::Item, I::Range, I::Position>,
+    T: ByteOrder,
+{
+    opaque!(no_partial(count_min_max::<Vec<_>, _>(count, count, take(1).map(|b: &[u8]| b[0] as i8)).map(|b| b.into())))
+}
+
+fn pbvu8<'a, I, T>(count: usize) -> FnOpaque<I, PropertyData>
+where
+    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I::Error: ParseError<I::Item, I::Range, I::Position>,
+    T: ByteOrder,
+{
+    opaque!(no_partial(count_min_max::<Vec<_>, _>(count, count, take(1).map(|b: &[u8]| b[0])).map(|b| b.into())))
+}
+
+fn pbvi16<'a, I, T>(count: usize) -> FnOpaque<I, PropertyData>
+where
+    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I::Error: ParseError<I::Item, I::Range, I::Position>,
+    T: ByteOrder,
+{
+    opaque!(no_partial(count_min_max::<Vec<_>, _>(count, count, num::i16::<T, _>()).map(|b| b.into())))
+}
+
+fn pbvu16<'a, I, T>(count: usize) -> FnOpaque<I, PropertyData>
+where
+    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I::Error: ParseError<I::Item, I::Range, I::Position>,
+    T: ByteOrder,
+{
+    opaque!(no_partial(count_min_max::<Vec<_>, _>(count, count, num::u16::<T, _>()).map(|b| b.into())))
+}
+
+fn pbvi32<'a, I, T>(count: usize) -> FnOpaque<I, PropertyData>
+where
+    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I::Error: ParseError<I::Item, I::Range, I::Position>,
+    T: ByteOrder,
+{
+    opaque!(no_partial(count_min_max::<Vec<_>, _>(count, count, num::i32::<T, _>()).map(|b| b.into())))
+}
+
+fn pbvu32<'a, I, T>(count: usize) -> FnOpaque<I, PropertyData>
+where
+    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I::Error: ParseError<I::Item, I::Range, I::Position>,
+    T: ByteOrder,
+{
+    opaque!(no_partial(count_min_max::<Vec<_>, _>(count, count, num::u32::<T, _>()).map(|b| b.into())))
+}
+
+fn pbvf32<'a, I, T>(count: usize) -> FnOpaque<I, PropertyData>
+where
+    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I::Error: ParseError<I::Item, I::Range, I::Position>,
+    T: ByteOrder,
+{
+    opaque!(no_partial(count_min_max::<Vec<_>, _>(count, count, num::f32::<T, _>()).map(|b| b.into())))
+}
+
+fn pbvf64<'a, I, T>(count: usize) -> FnOpaque<I, PropertyData>
+where
+    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I::Error: ParseError<I::Item, I::Range, I::Position>,
+    T: ByteOrder,
+{
+    opaque!(no_partial(count_min_max::<Vec<_>, _>(count, count, num::f64::<T, _>()).map(|b| b.into())))
 }
 
 fn binary_count<'a, I, T>(count_type: CountType) -> FnOpaque<I, usize>
@@ -197,14 +213,14 @@ where
 {
     opaque!(binary_count::<_, T>(count_type)
         .then(|c| match data_type {
-            DataType::Int8 => pavi8(c),
-            DataType::Uint8 => pavu8(c),
-            DataType::Int16 => pavi16(c),
-            DataType::Uint16 => pavu16(c),
-            DataType::Int32 => pavi32(c),
-            DataType::Uint32 => pavu32(c),
-            DataType::Float32 => pavf32(c),
-            DataType::Float64 => pavf64(c),
+            DataType::Int8 => pbvi8::<I, T>(c),
+            DataType::Uint8 => pbvu8::<I, T>(c),
+            DataType::Int16 => pbvi16::<I, T>(c),
+            DataType::Uint16 => pbvu16::<I, T>(c),
+            DataType::Int32 => pbvi32::<I, T>(c),
+            DataType::Uint32 => pbvu32::<I, T>(c),
+            DataType::Float32 => pbvf32::<I, T>(c),
+            DataType::Float64 => pbvf64::<I, T>(c),
         })
     )
 }
@@ -228,16 +244,16 @@ where
         }
         FormatType::BinaryBigEndian => {
             if let Some(ct) = count_data_type {
-                big_endian_vector(ct, data_type)
+                binary_vector::<_, BE>(ct, data_type)
             } else {
-                big_endian_scalar(data_type)
+                binary_scalar::<_, BE>(data_type)
             }
         },
         FormatType::BinaryLittleEndian => {
             if let Some(ct) = count_data_type {
-                little_endian_vector(ct, data_type)
+                binary_vector::<_, LE>(ct, data_type)
             } else {
-                little_endian_scalar(data_type)
+                binary_scalar::<_, LE>(data_type)
             }
         },
     }

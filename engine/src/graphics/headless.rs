@@ -15,6 +15,12 @@ impl EventsLoopTrait<Event, HeadlessEvent> for HeadlessEventsLoop {
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessRenderData;
 
+impl HeadlessRenderData {
+    pub fn new(_backend: &HeadlessBackend) -> Result<Self, Error> {
+        Ok(HeadlessRenderData::default())
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessFrame;
 
@@ -64,6 +70,21 @@ mod tests {
         fn as_ref(&self) -> &[[f32; 4]; 4] {
             &self.0
         }
+    }
+
+    #[test]
+    fn data() {
+        let _ = HeadlessRenderData::default();
+
+        let b = HeadlessBackend::new(
+            &HeadlessEventsLoop::default(),
+            "Title",
+            [800, 600],
+            false,
+            0
+        ).unwrap();
+
+        assert_ok!(HeadlessRenderData::new(&b));
     }
 
     #[test]
