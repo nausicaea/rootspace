@@ -1,8 +1,6 @@
 ply
 format ascii 1.0
-comment A colored cube with shader and texture references.
-comment VertexShaderFile cube-vertex.glsl
-comment FragmentShaderFile cube-fragment.glsl
+comment A colored cube.
 element vertex 8
 property float x
 property float y

@@ -24,3 +24,24 @@ where
         .map(|(h, b)| Ply { header: h, body: b })
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use combine::stream::state::State;
+
+    #[test]
+    fn ply_ascii() {
+        let serialized_data = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-ascii.ply"));
+        let r = ply().easy_parse(State::new(&serialized_data[..]));
+        assert_ok!(r);
+    }
+
+    #[test]
+    #[ignore]
+    fn ply_be() {
+        let serialized_data = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-be.ply"));
+        let r = ply().easy_parse(&serialized_data[..]);
+        assert_ok!(r);
+
+    }
+}
