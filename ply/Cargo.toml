@@ -5,6 +5,7 @@ authors = ["Eleanore Young <youngelliecaitlin@gmail.com>"]
 
 [dependencies]
 combine = "^3.5.1"
+log = "^0.4.1"
 num-traits = "^0.2.5"
 
 [dev-dependencies]

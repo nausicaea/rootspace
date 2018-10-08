@@ -263,17 +263,37 @@ where
     })
 }
 
-fn element_data<'a, I>(format: FormatType, element: Element) -> impl Parser<Input = I, Output = ElementData> + 'a
+fn inner_element_data<'a, I>(format: FormatType, element: Element) -> impl Parser<Input = I, Output = ElementData> + 'a
 where
     I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
-    let count = element.properties.len();
-    let mut parsers = element.properties.into_iter().map(move |p| property_data(format, p.data_type, p.count_data_type));
+    let property_count = element.properties.len();
+    let mut parsers = element.properties
+        .into_iter()
+        .map(move |p| property_data(format, p.data_type, p.count_data_type));
 
-    count_min_max(count, count, factory(move || parsers.next().unwrap()))
+    let dynamic_parser = factory(move || {
+        parsers.next().expect("Premature end of the property parsers iterator")
+    });
+
+    count_min_max(property_count, property_count, dynamic_parser)
         .map(|properties| ElementData { properties })
-        .expected("data for an element")
+        .expected("data for a single occurrence of an element")
+}
+
+fn element_data<'a, I>(format: FormatType, element: Element) -> impl Parser<Input = I, Output = Vec<ElementData>> + 'a
+where
+    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I::Error: ParseError<I::Item, I::Range, I::Position>,
+{
+    let element_count = element.count;
+    let dynamic_parser = factory(move || {
+        inner_element_data(format, element.clone())
+    });
+
+    count_min_max(element_count, element_count, dynamic_parser)
+        .expected("data for all occurrences of an element")
 }
 
 pub fn body<'a, I>(header: Header) -> impl Parser<Input = I, Output = Body> + 'a
@@ -293,6 +313,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use types::Property;
 
     #[test]
     fn property_ascii() {
@@ -365,8 +386,41 @@ mod tests {
 
     #[test]
     fn element_data_ascii() {
-        let element = Element { name: "vertex".into(), count: 2, properties: vec![Property { name: "x".into(), count_data_type: None, data_type: DataType::Float32 }, Property { name: "y".into(), count_data_type: Some(CountType::Uint8), DataType::Float32}] };
+        let element = Element {
+            name: "vertex".into(),
+            count: 2,
+            properties: vec![
+                Property {
+                    name: "x".into(),
+                    count_data_type: None,
+                    data_type: DataType::Float32
+                },
+                Property {
+                    name: "y".into(),
+                    count_data_type: Some(CountType::Uint8),
+                    data_type: DataType::Float32
+                }
+            ]
+        };
+
+        let expected = vec![
+            ElementData {
+                properties: vec![
+                    PropertyData::Float32(100.1),
+                    PropertyData::Vfloat32(vec![1.0, 2.2, 3.0]),
+                ],
+            },
+            ElementData {
+                properties: vec![
+                    PropertyData::Float32(50.0),
+                    PropertyData::Vfloat32(vec![0.0, -1.0, 50.0]),
+                ],
+            },
+        ];
+
         let mut parser = element_data(FormatType::Ascii, element);
+        let r = parser.easy_parse(&b"100.1 3 1.0 2.2 3.0\n50.0 3 0.0 -1.0 50.0"[..]);
+        assert_eq!(r, Ok((expected, &b""[..])));
 
     }
 }

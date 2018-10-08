@@ -180,7 +180,7 @@ pub struct ElementData {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Body {
-    pub elements: Vec<ElementData>,
+    pub elements: Vec<Vec<ElementData>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
