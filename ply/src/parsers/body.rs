@@ -6,18 +6,18 @@ use combine::{
     parser::{
         byte::num,
         combinator::{factory, no_partial, opaque},
-        range::take,
+        item::any,
         repeat::count_min_max,
         Parser,
     },
-    stream::RangeStream,
+    stream::Stream,
 };
 
 macro_rules! impl_ascii_scalar_property {
     ($name:ident, $inner:ident, $type:ty) => {
         fn $name<'a, I>() -> impl Parser<Input = I, Output = PropertyData> + 'a
         where
-            I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+            I: Stream<Item = u8, Range = u8> + 'a,
             I::Error: ParseError<I::Item, I::Range, I::Position>,
         {
             lex($inner::<I, $type>())
@@ -30,7 +30,7 @@ macro_rules! impl_ascii_vector_property {
     ($name:ident, $inner:ident, $type:ty) => {
         fn $name<'a, I>(count: usize) -> impl Parser<Input = I, Output = PropertyData> + 'a
         where
-            I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+            I: Stream<Item = u8, Range = u8> + 'a,
             I::Error: ParseError<I::Item, I::Range, I::Position>,
         {
             count_min_max::<Vec<_>, _>(count, count, lex($inner::<I, $type>()))
@@ -58,7 +58,7 @@ impl_ascii_vector_property!(pavf64, ascii_floating_point, f64);
 
 fn ascii_count<'a, I>() -> impl Parser<Input = I, Output = usize> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
     lex(ascii_unsigned_integral::<I, usize>())
@@ -67,7 +67,7 @@ where
 
 fn ascii_scalar<'a, I>(data_type: DataType) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
     opaque(move |f: &mut FnMut(&mut Parser<Input = _, Output = _, PartialState = _>)| {
@@ -86,7 +86,7 @@ where
 
 fn ascii_vector<'a, I>(data_type: DataType) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
     ascii_count()
@@ -107,25 +107,25 @@ where
 
 fn pbvi8<'a, I, T>(count: usize) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a,
 {
-    count_min_max::<Vec<_>, _>(count, count, take(1).map(|b: &[u8]| b[0] as i8)).map(|b| b.into())
+    count_min_max::<Vec<_>, _>(count, count, any().map(|b: u8| b as i8)).map(|b| b.into())
 }
 
 fn pbvu8<'a, I, T>(count: usize) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a
 {
-    count_min_max::<Vec<_>, _>(count, count, take(1).map(|b: &[u8]| b[0])).map(|b| b.into())
+    count_min_max::<Vec<_>, _>(count, count, any().map(|b: u8| b)).map(|b| b.into())
 }
 
 fn pbvi16<'a, I, T>(count: usize) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a
 {
@@ -134,7 +134,7 @@ where
 
 fn pbvu16<'a, I, T>(count: usize) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a,
 {
@@ -143,7 +143,7 @@ where
 
 fn pbvi32<'a, I, T>(count: usize) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a,
 {
@@ -152,7 +152,7 @@ where
 
 fn pbvu32<'a, I, T>(count: usize) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a,
 {
@@ -161,7 +161,7 @@ where
 
 fn pbvf32<'a, I, T>(count: usize) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a,
 {
@@ -170,7 +170,7 @@ where
 
 fn pbvf64<'a, I, T>(count: usize) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a,
 {
@@ -179,13 +179,13 @@ where
 
 fn binary_count<'a, I, T>(count_type: CountType) -> impl Parser<Input = I, Output = usize> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder,
 {
     opaque(move |f: &mut FnMut(&mut Parser<Input = _, Output = _, PartialState = _>)| {
         match count_type {
-            CountType::Uint8 => f(&mut no_partial(take(1).map(|b: &[u8]| b[0] as usize).expected("a vector length of u8"))),
+            CountType::Uint8 => f(&mut no_partial(any().map(|b: u8| b as usize).expected("a vector length of u8"))),
             CountType::Uint16 => f(&mut no_partial(num::u16::<T, _>().map(|n| n as usize).expected("a vector length of u16"))),
             CountType::Uint32 => f(&mut no_partial(num::u32::<T, _>().map(|n| n as usize).expected("a vector length of u32"))),
         }
@@ -194,14 +194,14 @@ where
 
 fn binary_scalar<'a, I, T>(data_type: DataType) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a,
 {
     opaque(move |f: &mut FnMut(&mut Parser<Input = _, Output = _, PartialState = _>)| {
         match data_type {
-            DataType::Int8 => f(&mut no_partial(take(1).map(|b: &[u8]| PropertyData::Int8(b[0] as i8)).expected("a binary i8 scalar"))),
-            DataType::Uint8 => f(&mut no_partial(take(1).map(|b: &[u8]| PropertyData::Uint8(b[0])).expected("a binary u8 scalar"))),
+            DataType::Int8 => f(&mut no_partial(any().map(|b: u8| PropertyData::Int8(b as i8)).expected("a binary i8 scalar"))),
+            DataType::Uint8 => f(&mut no_partial(any().map(|b: u8| PropertyData::Uint8(b)).expected("a binary u8 scalar"))),
             DataType::Int16 => f(&mut no_partial(num::i16::<T, _>().map(|n| PropertyData::Int16(n)).expected("a binary i16 scalar"))),
             DataType::Uint16 => f(&mut no_partial(num::u16::<T, _>().map(|n| PropertyData::Uint16(n)).expected("a binary u16 scalar"))),
             DataType::Int32 => f(&mut no_partial(num::i32::<T, _>().map(|n| PropertyData::Int32(n)).expected("a binary i32 scalar"))),
@@ -214,7 +214,7 @@ where
 
 fn binary_vector<'a, I, T>(count_type: CountType, data_type: DataType) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a,
 {
@@ -239,7 +239,7 @@ fn property_data<'a, I>(
     count_data_type: Option<CountType>,
 ) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
     opaque(move |f: &mut FnMut(&mut Parser<Input = _, Output = _, PartialState = _>)| {
@@ -265,7 +265,7 @@ where
 
 fn inner_element_data<'a, I>(format: FormatType, element: Element) -> impl Parser<Input = I, Output = ElementData> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
     let property_count = element.properties.len();
@@ -284,7 +284,7 @@ where
 
 fn element_data<'a, I>(format: FormatType, element: Element) -> impl Parser<Input = I, Output = Vec<ElementData>> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
     let element_count = element.count;
@@ -298,7 +298,7 @@ where
 
 pub fn body<'a, I>(header: Header) -> impl Parser<Input = I, Output = Body> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
     let count = header.elements.len();
@@ -314,6 +314,7 @@ where
 mod tests {
     use super::*;
     use types::Property;
+    use combine::stream::{ReadStream, buffered::BufferedStream, state::State};
 
     #[test]
     fn property_ascii() {
@@ -337,8 +338,13 @@ mod tests {
         ];
 
         for (i, c, t, o) in expected {
+            let stream = BufferedStream::new(State::new(ReadStream::new(i)), 32);
             let mut parser = property_data(FormatType::Ascii, t, c);
-            assert_eq!(parser.easy_parse(i), Ok((o, &b""[..])));
+            let r = parser.parse(stream);
+            assert_ok2!(r);
+            if let Ok(r) = r {
+                assert_eq!(r.0, o);
+            }
         }
     }
 
@@ -358,8 +364,13 @@ mod tests {
         ];
 
         for (i, c, t, o) in expected {
+            let stream = BufferedStream::new(State::new(ReadStream::new(i)), 32);
             let mut parser = property_data(FormatType::BinaryBigEndian, t, c);
-            assert_eq!(parser.easy_parse(i), Ok((o, &b""[..])));
+            let r = parser.parse(stream);
+            assert_ok2!(r);
+            if let Ok(r) = r {
+                assert_eq!(r.0, o);
+            }
         }
     }
 
@@ -379,8 +390,13 @@ mod tests {
         ];
 
         for (i, c, t, o) in expected {
+            let stream = BufferedStream::new(State::new(ReadStream::new(i)), 32);
             let mut parser = property_data(FormatType::BinaryLittleEndian, t, c);
-            assert_eq!(parser.easy_parse(i), Ok((o, &b""[..])));
+            let r = parser.parse(stream);
+            assert_ok2!(r);
+            if let Ok(r) = r {
+                assert_eq!(r.0, o);
+            }
         }
     }
 
@@ -418,9 +434,12 @@ mod tests {
             },
         ];
 
+        let stream = BufferedStream::new(State::new(ReadStream::new(&b"100.1 3 1.0 2.2 3.0\n50.0 3 0.0 -1.0 50.0"[..])), 32);
         let mut parser = element_data(FormatType::Ascii, element);
-        let r = parser.easy_parse(&b"100.1 3 1.0 2.2 3.0\n50.0 3 0.0 -1.0 50.0"[..]);
-        assert_eq!(r, Ok((expected, &b""[..])));
-
+        let r = parser.parse(stream);
+        assert_ok2!(r);
+        if let Ok(r) = r {
+            assert_eq!(r.0, expected);
+        }
     }
 }

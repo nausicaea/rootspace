@@ -4,12 +4,11 @@ use combine::{
         byte::{crlf, digit, newline, spaces},
         choice::optional,
         combinator::recognize,
-        item::token,
-        range::take_while1,
+        item::{token, tokens2, satisfy},
         repeat::{many1, skip_many, skip_many1},
         Parser,
     },
-    stream::{RangeStream, Stream, StreamOnce},
+    stream::{Stream, StreamOnce},
 };
 use num_traits::{cast, Float, Num, PrimInt, Signed, Unsigned};
 
@@ -38,18 +37,18 @@ fn is_identity(b: u8) -> bool {
 /// Parses a set of characters if it can be interpreted as a name or identity.
 pub fn identity<'a, I>() -> impl Parser<Input = I, Output = String> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
-    take_while1(is_identity)
-        .map(|s| String::from_utf8_lossy(s).to_string())
+    many1::<Vec<_>, _>(satisfy(is_identity))
+        .map(|s| String::from_utf8_lossy(&s).to_string())
         .expected("a name or identity")
 }
 
 /// Parses end-of-line sequences and maps them to the LF ASCII character.
 pub fn eol<'a, I>() -> impl Parser<Input = I, Output = u8> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
     crlf().or(newline()).expected("a line termination byte sequence")
@@ -59,17 +58,30 @@ where
 pub fn lex<'a, P>(parser: P) -> impl Parser<Input = P::Input, Output = P::Output>
 where
     P: Parser,
-    P::Input: Stream<Item = u8, Range = &'a [u8]> + 'a,
+    P::Input: Stream<Item = u8, Range = u8> + 'a,
     <P::Input as StreamOnce>::Error:
         ParseError<<P::Input as StreamOnce>::Item, <P::Input as StreamOnce>::Range, <P::Input as StreamOnce>::Position>,
 {
     parser.skip(spaces())
 }
 
+/// Matches the specified keyword, or sequence of bytes.
+pub fn keyword<'a, I>(kw: &'a [u8]) -> impl Parser<Input = I, Output = &'a [u8]> + 'a
+where
+    I: Stream<Item = u8, Range = u8> + 'a,
+    I::Error: ParseError<I::Item, I::Range, I::Position>,
+{
+    fn cmp(l: &u8, r: u8) -> bool {
+        l == &r
+    }
+
+    tokens2(cmp, kw)
+}
+
 /// Parses an unsigned integer from a stream of numeric ASCII characters.
 pub fn ascii_unsigned_integral<'a, I, O>() -> impl Parser<Input = I, Output = O> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     O: Num + PrimInt + Unsigned,
 {
@@ -86,7 +98,7 @@ where
 /// Parses a signed integer from a stream of numeric ASCII characters.
 pub fn ascii_signed_integral<'a, I, O>() -> impl Parser<Input = I, Output = O> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     O: Num + PrimInt + Signed,
 {
@@ -107,7 +119,7 @@ where
 
 pub fn ascii_floating_point<'a, I, O>() -> impl Parser<Input = I, Output = O> + 'a
 where
-    I: RangeStream<Item = u8, Range = &'a [u8]> + 'a,
+    I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     O: Num + Float + ::std::str::FromStr,
     <O as ::std::str::FromStr>::Err: ::std::fmt::Debug,
@@ -127,28 +139,30 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn is_identity_char() {
-        let expected = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._";
-        assert!(expected.iter().all(|b| is_identity(*b)));
-    }
+    use combine::stream::{ReadStream, buffered::BufferedStream, state::State};
 
     #[test]
     fn is_eol() {
-        assert_ok!(eol().easy_parse(&b"\r\n"[..]));
-        assert_ok!(eol().easy_parse(&b"\n"[..]));
+        let stream = BufferedStream::new(State::new(ReadStream::new(&b"\r\n"[..])), 1);
+        assert_ok2!(eol().parse(stream));
+
+        let stream = BufferedStream::new(State::new(ReadStream::new(&b"\n"[..])), 1);
+        assert_ok2!(eol().parse(stream));
     }
 
     #[test]
     fn can_lex() {
-        let mut parser = lex(digit());
-
-        assert_ok!(parser.easy_parse(&b"9 "[..]));
+        let stream = BufferedStream::new(State::new(ReadStream::new(&b"9 "[..])), 1);
+        assert_ok2!(lex(digit()).parse(stream));
     }
 
     #[test]
     fn unsigned_int() {
-        assert_eq!(ascii_unsigned_integral::<_, u32>().easy_parse(&b"10"[..]), Ok((10u32, &b""[..])));
+        let stream = BufferedStream::new(State::new(ReadStream::new(&b"10"[..])), 1);
+        let r = ascii_unsigned_integral::<_, u32>().parse(stream);
+        assert_ok2!(r);
+        if let Ok(r) = r {
+            assert_eq!(r.0, 10u32);
+        }
     }
 }

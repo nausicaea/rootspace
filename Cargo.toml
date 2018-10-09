@@ -10,6 +10,7 @@ wsl = []
 
 [dependencies]
 clap = "^2.31.2"
+combine = "^3.5.1"
 log = "^0.4.1"
 fern = "^0.5.5"
 ply = {path = "ply"}

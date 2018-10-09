@@ -97,6 +97,58 @@ macro_rules! assert_err {
     };
 }
 
+/// Asserts that the supplied expression is a `Result::Ok(_)` value. Functions the same as
+/// `assert_ok!`, but does not require that the error type have the `Debug` trait.
+///
+/// # Example
+///
+/// ```
+/// #[macro_use] extern crate assertions;
+///
+/// struct NoDebug(u32);
+///
+/// let ok: Result<u32, NoDebug> = Ok(100);
+/// assert_ok2!(ok);
+/// ```
+#[macro_export]
+macro_rules! assert_ok2 {
+    ($result:expr) => {
+        assert!(
+            $result.is_ok(),
+            "Expected 'Ok(_)', got 'Err(_)'"
+        );
+    };
+    ($result:expr,) => {
+        assert_ok2!($result);
+    }
+}
+
+/// Asserts that the supplied expression is a `Result::Err(_)` value. Functions the same as
+/// `assert_err!`, but does not require that the success type have the `Debug` trait.
+///
+/// # Example
+///
+/// ```
+/// #[macro_use] extern crate assertions;
+///
+/// struct NoDebug(u32);
+///
+/// let err: Result<u32, NoDebug> = Err(NoDebug(100));
+/// assert_err2!(err);
+/// ```
+#[macro_export]
+macro_rules! assert_err2 {
+    ($result:expr) => {
+        assert!(
+            $result.is_err(),
+            "Expected 'Err(_)', got 'Ok(_)'"
+        );
+    };
+    ($result:expr,) => {
+        assert_err2!($result);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -157,5 +209,43 @@ mod tests {
         let ok: Result<u32, String> = Ok(100);
 
         assert_err!(ok);
+    }
+
+    #[test]
+    fn assert_ok2() {
+        struct NoDebug(u32);
+
+        let ok: Result<u32, NoDebug> = Ok(100);
+
+        assert_ok2!(ok);
+    }
+
+    #[test]
+    #[should_panic(expected = "Expected 'Ok(_)', got 'Err(_)'")]
+    fn assert_ok2_fail() {
+        struct NoDebug(u32);
+
+        let err: Result<u32, NoDebug> = Err(NoDebug(100));
+
+        assert_ok2!(err);
+    }
+
+    #[test]
+    fn assert_err2() {
+        struct NoDebug(u32);
+
+        let err: Result<u32, NoDebug> = Err(NoDebug(100));
+
+        assert_err2!(err);
+    }
+
+    #[test]
+    #[should_panic(expected = "Expected 'Err(_)', got 'Ok(_)'")]
+    fn assert_err2_fail() {
+        struct NoDebug(u32);
+
+        let ok: Result<u32, NoDebug> = Ok(100);
+
+        assert_err2!(ok);
     }
 }
