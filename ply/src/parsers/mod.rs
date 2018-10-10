@@ -40,9 +40,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn ply_be() {
         let data_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-be.ply");
+        let file = File::open(data_path).unwrap();
+        let stream = BufferedStream::new(State::new(ReadStream::new(file)), 32);
+        let r = ply().parse(stream);
+        assert_ok2!(r);
+    }
+
+    #[test]
+    fn ply_le() {
+        let data_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-le.ply");
         let file = File::open(data_path).unwrap();
         let stream = BufferedStream::new(State::new(ReadStream::new(file)), 32);
         let r = ply().parse(stream);

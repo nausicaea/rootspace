@@ -1,3 +1,5 @@
+use std::path::Path;
+
 /// Describes the recognized formats of a PLY file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FormatType {
@@ -50,13 +52,14 @@ pub struct Element {
     pub properties: Vec<Property>,
 }
 
-/// Describes the PLY header..
+/// Describes the PLY header.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Header {
     pub format: Format,
     pub elements: Vec<Element>,
 }
 
+/// Holds data of a single property.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PropertyData {
     Int8(i8),
@@ -173,16 +176,19 @@ impl From<Vec<f64>> for PropertyData {
     }
 }
 
+/// Holds data of a single element.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ElementData {
     pub properties: Vec<PropertyData>,
 }
 
+/// Holds data of all occurrences of each element specified in the header, i.e. all data.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Body {
     pub elements: Vec<Vec<ElementData>>,
 }
 
+/// Describes an in-memory representation of the PLY file format.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Ply {
     pub header: Header,

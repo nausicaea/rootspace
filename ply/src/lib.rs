@@ -7,3 +7,5 @@ extern crate num_traits;
 
 pub mod parsers;
 pub mod types;
+
+pub use self::types::Ply;
