@@ -1,5 +1,3 @@
-use std::path::Path;
-
 /// Describes the recognized formats of a PLY file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FormatType {

@@ -40,6 +40,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn ply_be() {
         let data_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-be.ply");
         let file = File::open(data_path).unwrap();
@@ -49,6 +50,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn ply_le() {
         let data_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-le.ply");
         let file = File::open(data_path).unwrap();
