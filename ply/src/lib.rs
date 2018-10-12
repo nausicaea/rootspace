@@ -59,6 +59,13 @@ impl Ply {
     pub fn element(&self, names: &[&str]) -> Option<(usize, &Element)> {
         self.header.element(names)
     }
+
+    pub fn generate<T, F>(&self, element: usize, mapper: F) -> Vec<T>
+    where
+        F: Fn(&[PropertyData]) -> T,
+    {
+        self.body.generate(element, mapper)
+    }
 }
 
 #[cfg(test)]
@@ -114,7 +121,7 @@ mod tests {
         let (norm_y_idx, _) = el.scalar_property(&["norm_y"]).unwrap();
         let (norm_z_idx, _) = el.scalar_property(&["norm_z"]).unwrap();
 
-        let vertices = data.body.generate(eidx, |props| {
+        let vertices = data.generate(eidx, |props| {
             let p = [
                 props[pos_x_idx].coerce().unwrap(),
                 props[pos_y_idx].coerce().unwrap(),
@@ -143,7 +150,7 @@ mod tests {
         let (eidx, el) = data.element(&["face", "faces"]).unwrap();
         let (idx_idx, _) = el.vector_property(&["vertex_index", "vertex_indices"]).unwrap();
 
-        let faces = data.body.generate(eidx, |props| {
+        let faces = data.generate(eidx, |props| {
             let f: Vec<u16> = props[idx_idx].coerce().unwrap();
             f
         });
