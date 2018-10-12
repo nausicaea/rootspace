@@ -76,13 +76,7 @@ mod tests {
     fn data() {
         let _ = HeadlessRenderData::default();
 
-        let b = HeadlessBackend::new(
-            &HeadlessEventsLoop::default(),
-            "Title",
-            [800, 600],
-            false,
-            0
-        ).unwrap();
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
         assert_ok!(HeadlessRenderData::new(&b));
     }

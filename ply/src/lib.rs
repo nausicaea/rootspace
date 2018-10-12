@@ -7,18 +7,16 @@ extern crate failure;
 extern crate log;
 extern crate num_traits;
 
-pub mod parsers;
+mod parsers;
 pub mod types;
 
-pub use self::types::Ply;
-use self::types::{Element, Header};
+pub use self::types::{Ply, PropertyData};
+use combine::{
+    parser::Parser,
+    stream::{buffered::BufferedStream, state::State, ReadStream},
+};
 use parsers::ply;
-use combine::parser::Parser;
-use combine::stream::{ReadStream, buffered::BufferedStream, state::State};
-use std::io;
-use std::collections::HashSet;
-use std::fs::File;
-use std::path::Path;
+use std::{fs::File, io, path::Path};
 
 #[derive(Debug, Fail)]
 pub enum Error {
@@ -30,24 +28,6 @@ pub enum Error {
     ParserError(String, String),
     #[fail(display = "{}: {}", _1, _0)]
     IoError(String, #[cause] io::Error),
-}
-
-impl Element {
-    fn has_duplicate_properties(&self) -> bool {
-        let mut unique = HashSet::new();
-        !self.properties
-            .iter()
-            .all(|p| unique.insert(p.name.clone()))
-    }
-}
-
-impl Header {
-    fn has_duplicate_elements(&self) -> bool {
-        let mut unique = HashSet::new();
-        !self.elements
-            .iter()
-            .all(|e| unique.insert(e.name.clone()))
-    }
 }
 
 impl Ply {
@@ -73,111 +53,12 @@ impl Ply {
             Err(Error::DuplicateElements)
         }
     }
-
-    pub fn has_element(&self, name: &str) -> bool {
-        self.header.elements
-            .iter()
-            .any(|e| e.name == name)
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use types::{Format, FormatType, Property, DataType};
     use std::path::PathBuf;
-
-    #[test]
-    fn duplicate_properties() {
-        let e = Element {
-            name: "vertex".into(),
-            count: 1,
-            properties: vec![
-                Property {
-                    name: "x".into(),
-                    count_data_type: None,
-                    data_type: DataType::Float32,
-                },
-                Property {
-                    name: "x".into(),
-                    count_data_type: None,
-                    data_type: DataType::Float32,
-                },
-            ],
-        };
-
-        assert!(e.has_duplicate_properties());
-    }
-
-    #[test]
-    fn nonduplicate_properties() {
-        let e = Element {
-            name: "vertex".into(),
-            count: 1,
-            properties: vec![
-                Property {
-                    name: "x".into(),
-                    count_data_type: None,
-                    data_type: DataType::Float32,
-                },
-                Property {
-                    name: "y".into(),
-                    count_data_type: None,
-                    data_type: DataType::Float32,
-                },
-            ],
-        };
-
-        assert!(!e.has_duplicate_properties());
-    }
-
-    #[test]
-    fn duplicate_elements() {
-        let h = Header {
-            format: Format {
-                format: FormatType::Ascii,
-                version: vec![1, 0],
-            },
-            elements: vec![
-                Element {
-                    name: "vertex".into(),
-                    count: 0,
-                    properties: Vec::new(),
-                },
-                Element {
-                    name: "vertex".into(),
-                    count: 0,
-                    properties: Vec::new(),
-                },
-            ],
-        };
-
-        assert!(h.has_duplicate_elements());
-    }
-
-    #[test]
-    fn nonduplicate_elements() {
-        let h = Header {
-            format: Format {
-                format: FormatType::Ascii,
-                version: vec![1, 0],
-            },
-            elements: vec![
-                Element {
-                    name: "vertex".into(),
-                    count: 0,
-                    properties: Vec::new(),
-                },
-                Element {
-                    name: "face".into(),
-                    count: 0,
-                    properties: Vec::new(),
-                },
-            ],
-        };
-
-        assert!(!h.has_duplicate_elements());
-    }
 
     #[test]
     fn from_valid_path() {
@@ -193,15 +74,5 @@ mod tests {
         let r = Ply::from_path(&path);
 
         assert_err!(r);
-    }
-
-    #[test]
-    fn has_element_accessor() {
-        let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-ascii.ply"));
-        let data = Ply::from_path(&path).unwrap();
-
-        assert!(data.has_element("vertex"));
-        assert!(data.has_element("face"));
-        assert!(!data.has_element("blabla"));
     }
 }

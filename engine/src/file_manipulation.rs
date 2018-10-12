@@ -1,9 +1,11 @@
 use image;
-use std::borrow::Borrow;
-use std::fmt;
-use std::fs::File;
-use std::io::{self, Read};
-use std::path::Path;
+use std::{
+    borrow::Borrow,
+    fmt,
+    fs::File,
+    io::{self, Read},
+    path::Path,
+};
 
 pub struct Image(image::DynamicImage);
 
@@ -66,8 +68,7 @@ impl<T: Borrow<Path>> ReadPath for T {
     fn read_to_string(&self) -> Result<String, FileError> {
         let path = self.borrow();
         path.ensure_extant_file()?;
-        let mut f = File::open(path)
-            .map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
+        let mut f = File::open(path).map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
         let mut buf = String::new();
         f.read_to_string(&mut buf)
             .map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
@@ -78,8 +79,7 @@ impl<T: Borrow<Path>> ReadPath for T {
     fn read_to_bytes(&self) -> Result<Vec<u8>, FileError> {
         let path = self.borrow();
         path.ensure_extant_file()?;
-        let mut f = File::open(path)
-            .map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
+        let mut f = File::open(path).map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
         let mut buf = Vec::new();
         f.read_to_end(&mut buf)
             .map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
@@ -119,9 +119,8 @@ pub enum FileError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{io::Write, path::PathBuf};
     use tempfile::{tempdir, NamedTempFile};
-    use std::io::Write;
-    use std::path::PathBuf;
 
     #[test]
     fn ensure_extant_file() {
@@ -172,8 +171,7 @@ mod tests {
     fn read_to_bytes() {
         let mut tf = NamedTempFile::new().unwrap();
 
-        tf.write(&[0x00, 0xff, 0x14, 0xf6])
-            .unwrap();
+        tf.write(&[0x00, 0xff, 0x14, 0xf6]).unwrap();
 
         let r = tf.path().read_to_bytes();
         assert_ok!(r);

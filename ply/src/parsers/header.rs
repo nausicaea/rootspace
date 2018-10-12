@@ -1,17 +1,17 @@
-use super::base::{eol, lex, identity, keyword, ascii_unsigned_integral};
-use types::{DataType, CountType, Element, Format, FormatType, Header, Property};
+use super::base::{ascii_unsigned_integral, eol, identity, keyword, lex};
 use combine::{
     error::ParseError,
     parser::{
         byte::{byte, spaces},
         choice::{choice, optional},
-        combinator::{look_ahead, attempt},
+        combinator::{attempt, look_ahead},
         repeat::{many, many1, sep_by, take_until},
         sequence::between,
         Parser,
     },
     stream::Stream,
 };
+use types::{CountType, DataType, Element, Format, FormatType, Header, Property};
 
 /// Parses the beginning of the ply header.
 fn begin_header<'a, I>() -> impl Parser<Input = I, Output = ()> + 'a
@@ -234,7 +234,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use combine::stream::{ReadStream, buffered::BufferedStream, state::State};
+    use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
 
     const BUFFER_SIZE: usize = 32;
 
@@ -246,7 +246,10 @@ mod tests {
             version: vec![1, 0],
         };
 
-        let r = format_stmt().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = format_stmt().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_ok2!(r);
         let r = r.unwrap();
         assert_eq!(r.0, expected);
@@ -256,7 +259,10 @@ mod tests {
     fn ply_unknown_version() {
         let stream = b"format ascii 1.1\n";
 
-        let r = format_stmt().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = format_stmt().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_err2!(r);
     }
 
@@ -265,7 +271,10 @@ mod tests {
         let stream = b"comment Hello, World!\n";
         let expected = String::from("Hello, World!");
 
-        let r = comment_stmt().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = comment_stmt().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_ok2!(r);
         let r = r.unwrap();
         assert_eq!(r.0, expected);
@@ -276,7 +285,10 @@ mod tests {
         let stream = b"element some_name 10\n";
         let expected = (String::from("some_name"), 10usize);
 
-        let r = element_stmt().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = element_stmt().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_ok2!(r);
         let r = r.unwrap();
         assert_eq!(r.0, expected);
@@ -291,7 +303,10 @@ mod tests {
             data_type: DataType::Uint8,
         };
 
-        let r = property_stmt().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = property_stmt().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_ok2!(r);
         let r = r.unwrap();
         assert_eq!(r.0, expected);
@@ -303,7 +318,10 @@ mod tests {
             data_type: DataType::Uint8,
         };
 
-        let r = property_stmt().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = property_stmt().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_ok2!(r);
         let r = r.unwrap();
         assert_eq!(r.0, expected);
@@ -320,7 +338,10 @@ mod tests {
             elements: Vec::new(),
         };
 
-        let r = header().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = header().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_ok2!(r);
         let r = r.unwrap();
         assert_eq!(r.0, expected);
@@ -331,7 +352,10 @@ mod tests {
         let stream =
             b"ply\nformat ascii 1.0\r\nelement face 3\rproperty list uint8 uint32 vertex_indices\nend_header\r\n";
 
-        assert_ok2!(header().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE)));
+        assert_ok2!(header().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE
+        )));
     }
 
     #[test]
@@ -353,7 +377,10 @@ mod tests {
             }],
         };
 
-        let r = header().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = header().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_ok2!(r);
         let r = r.unwrap();
         assert_eq!(r.0, expected);
@@ -378,7 +405,10 @@ mod tests {
             }],
         };
 
-        let r = header().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = header().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_ok2!(r);
         let r = r.unwrap();
         assert_eq!(r.0, expected);
@@ -410,7 +440,10 @@ mod tests {
             }],
         };
 
-        let r = header().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = header().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_ok2!(r);
         let r = r.unwrap();
         assert_eq!(r.0, expected);
@@ -442,7 +475,10 @@ mod tests {
             }],
         };
 
-        let r = header().parse(BufferedStream::new(State::new(ReadStream::new(&stream[..])), BUFFER_SIZE));
+        let r = header().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream[..])),
+            BUFFER_SIZE,
+        ));
         assert_ok2!(r);
         let r = r.unwrap();
         assert_eq!(r.0, expected);
@@ -457,9 +493,21 @@ mod tests {
         let stream_d =
             b"ply\nformat ascii 1.0\nelement vertex 3\nproperty float x\ncomment I am done now\nend_header\n";
 
-        assert_ok2!(header().parse(BufferedStream::new(State::new(ReadStream::new(&stream_a[..])), BUFFER_SIZE)));
-        assert_ok2!(header().parse(BufferedStream::new(State::new(ReadStream::new(&stream_b[..])), BUFFER_SIZE)));
-        assert_ok2!(header().parse(BufferedStream::new(State::new(ReadStream::new(&stream_c[..])), BUFFER_SIZE)));
-        assert_err2!(header().parse(BufferedStream::new(State::new(ReadStream::new(&stream_d[..])), BUFFER_SIZE)));
+        assert_ok2!(header().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream_a[..])),
+            BUFFER_SIZE
+        )));
+        assert_ok2!(header().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream_b[..])),
+            BUFFER_SIZE
+        )));
+        assert_ok2!(header().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream_c[..])),
+            BUFFER_SIZE
+        )));
+        assert_err2!(header().parse(BufferedStream::new(
+            State::new(ReadStream::new(&stream_d[..])),
+            BUFFER_SIZE
+        )));
     }
 }

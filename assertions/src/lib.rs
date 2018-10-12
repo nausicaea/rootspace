@@ -113,14 +113,11 @@ macro_rules! assert_err {
 #[macro_export]
 macro_rules! assert_ok2 {
     ($result:expr) => {
-        assert!(
-            $result.is_ok(),
-            "Expected 'Ok(_)', got 'Err(_)'"
-        );
+        assert!($result.is_ok(), "Expected 'Ok(_)', got 'Err(_)'");
     };
     ($result:expr,) => {
         assert_ok2!($result);
-    }
+    };
 }
 
 /// Asserts that the supplied expression is a `Result::Err(_)` value. Functions the same as
@@ -139,14 +136,11 @@ macro_rules! assert_ok2 {
 #[macro_export]
 macro_rules! assert_err2 {
     ($result:expr) => {
-        assert!(
-            $result.is_err(),
-            "Expected 'Err(_)', got 'Ok(_)'"
-        );
+        assert!($result.is_err(), "Expected 'Err(_)', got 'Ok(_)'");
     };
     ($result:expr,) => {
         assert_err2!($result);
-    }
+    };
 }
 
 #[cfg(test)]

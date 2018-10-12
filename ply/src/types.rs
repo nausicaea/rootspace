@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 /// Describes the recognized formats of a PLY file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FormatType {
@@ -50,11 +52,25 @@ pub struct Element {
     pub properties: Vec<Property>,
 }
 
+impl Element {
+    pub fn has_duplicate_properties(&self) -> bool {
+        let mut unique = HashSet::new();
+        !self.properties.iter().all(|p| unique.insert(p.name.clone()))
+    }
+}
+
 /// Describes the PLY header.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Header {
     pub format: Format,
     pub elements: Vec<Element>,
+}
+
+impl Header {
+    pub fn has_duplicate_elements(&self) -> bool {
+        let mut unique = HashSet::new();
+        !self.elements.iter().all(|e| unique.insert(e.name.clone()))
+    }
 }
 
 /// Holds data of a single property.
@@ -191,4 +207,101 @@ pub struct Body {
 pub struct Ply {
     pub header: Header,
     pub body: Body,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn duplicate_properties() {
+        let e = Element {
+            name: "vertex".into(),
+            count: 1,
+            properties: vec![
+                Property {
+                    name: "x".into(),
+                    count_data_type: None,
+                    data_type: DataType::Float32,
+                },
+                Property {
+                    name: "x".into(),
+                    count_data_type: None,
+                    data_type: DataType::Float32,
+                },
+            ],
+        };
+
+        assert!(e.has_duplicate_properties());
+    }
+
+    #[test]
+    fn nonduplicate_properties() {
+        let e = Element {
+            name: "vertex".into(),
+            count: 1,
+            properties: vec![
+                Property {
+                    name: "x".into(),
+                    count_data_type: None,
+                    data_type: DataType::Float32,
+                },
+                Property {
+                    name: "y".into(),
+                    count_data_type: None,
+                    data_type: DataType::Float32,
+                },
+            ],
+        };
+
+        assert!(!e.has_duplicate_properties());
+    }
+
+    #[test]
+    fn duplicate_elements() {
+        let h = Header {
+            format: Format {
+                format: FormatType::Ascii,
+                version: vec![1, 0],
+            },
+            elements: vec![
+                Element {
+                    name: "vertex".into(),
+                    count: 0,
+                    properties: Vec::new(),
+                },
+                Element {
+                    name: "vertex".into(),
+                    count: 0,
+                    properties: Vec::new(),
+                },
+            ],
+        };
+
+        assert!(h.has_duplicate_elements());
+    }
+
+    #[test]
+    fn nonduplicate_elements() {
+        let h = Header {
+            format: Format {
+                format: FormatType::Ascii,
+                version: vec![1, 0],
+            },
+            elements: vec![
+                Element {
+                    name: "vertex".into(),
+                    count: 0,
+                    properties: Vec::new(),
+                },
+                Element {
+                    name: "face".into(),
+                    count: 0,
+                    properties: Vec::new(),
+                },
+            ],
+        };
+
+        assert!(!h.has_duplicate_elements());
+    }
 }

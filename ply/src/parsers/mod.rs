@@ -2,15 +2,11 @@ mod base;
 mod body;
 mod header;
 
-use self::header::header;
-use self::body::body;
+use self::{body::body, header::header};
 use super::types::Ply;
 use combine::{
     error::ParseError,
-    parser::{
-        item::value,
-        Parser,
-    },
+    parser::{item::value, Parser},
     stream::Stream,
 };
 
@@ -27,7 +23,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use combine::stream::{ReadStream, buffered::BufferedStream, state::State};
+    use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
     use std::fs::File;
 
     #[test]

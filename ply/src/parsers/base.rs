@@ -4,7 +4,7 @@ use combine::{
         byte::{crlf, digit, newline, spaces},
         choice::optional,
         combinator::recognize,
-        item::{token, tokens2, satisfy},
+        item::{satisfy, token, tokens2},
         repeat::{many1, skip_many, skip_many1},
         Parser,
     },
@@ -139,7 +139,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use combine::stream::{ReadStream, buffered::BufferedStream, state::State};
+    use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
 
     #[test]
     fn is_eol() {
