@@ -1,3 +1,4 @@
+use resources::Vertex;
 use super::{BackendTrait, EventsLoopTrait, FrameTrait};
 use event::Event;
 use failure::Error;
@@ -13,6 +14,8 @@ use glium::{
 use std::{borrow::Borrow, fmt};
 
 pub use glium::glutin::Event as GliumEvent;
+
+implement_vertex!(Vertex, position, tex_coord, normals);
 
 pub struct GliumEventsLoop(Box<EventsLoop>);
 
@@ -33,25 +36,6 @@ impl EventsLoopTrait<Event, GliumEvent> for GliumEventsLoop {
         self.0.poll_events(f)
     }
 }
-
-#[derive(Debug, Clone, Copy)]
-pub struct Vertex {
-    position: [f32; 3],
-    tex_coord: [f32; 2],
-    normals: [f32; 3],
-}
-
-impl Vertex {
-    pub fn new(position: [f32; 3], tex_coord: [f32; 2], normals: [f32; 3]) -> Self {
-        Vertex {
-            position,
-            tex_coord,
-            normals,
-        }
-    }
-}
-
-implement_vertex!(Vertex, position, tex_coord, normals);
 
 pub struct GliumUniforms<'a, 'b, 'c, T: 'a> {
     transform: &'a T,

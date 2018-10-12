@@ -57,6 +57,22 @@ impl Element {
         let mut unique = HashSet::new();
         !self.properties.iter().all(|p| unique.insert(p.name.clone()))
     }
+
+    pub fn scalar_property(&self, names: &[&str]) -> Option<(usize, &Property)> {
+        self.properties
+            .iter()
+            .enumerate()
+            .filter(|(_, p)| p.count_data_type.is_none() && names.iter().any(|n| p.name == *n))
+            .last()
+    }
+
+    pub fn vector_property(&self, names: &[&str]) -> Option<(usize, &Property)> {
+        self.properties
+            .iter()
+            .enumerate()
+            .filter(|(_, p)| p.count_data_type.is_some() && names.iter().any(|n| p.name == *n))
+            .last()
+    }
 }
 
 /// Describes the PLY header.
@@ -71,124 +87,89 @@ impl Header {
         let mut unique = HashSet::new();
         !self.elements.iter().all(|e| unique.insert(e.name.clone()))
     }
-}
 
-/// Holds data of a single property.
-#[derive(Debug, Clone, PartialEq)]
-pub enum PropertyData {
-    Int8(i8),
-    Uint8(u8),
-    Int16(i16),
-    Uint16(u16),
-    Int32(i32),
-    Uint32(u32),
-    Float32(f32),
-    Float64(f64),
-    Vint8(Vec<i8>),
-    Vuint8(Vec<u8>),
-    Vint16(Vec<i16>),
-    Vuint16(Vec<u16>),
-    Vint32(Vec<i32>),
-    Vuint32(Vec<u32>),
-    Vfloat32(Vec<f32>),
-    Vfloat64(Vec<f64>),
-}
-
-impl From<i8> for PropertyData {
-    fn from(value: i8) -> Self {
-        PropertyData::Int8(value)
+    pub fn element(&self, names: &[&str]) -> Option<(usize, &Element)> {
+        self.elements
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| names.iter().any(|n| e.name == *n))
+            .last()
     }
 }
 
-impl From<u8> for PropertyData {
-    fn from(value: u8) -> Self {
-        PropertyData::Uint8(value)
+impl_property_data! {
+    /// Holds data of a single property.
+    #[derive(Debug, Clone, PartialEq)]
+    pub enum PropertyData {
+        Int8(i8),
+        Uint8(u8),
+        Int16(i16),
+        Uint16(u16),
+        Int32(i32),
+        Uint32(u32),
+        Float32(f32),
+        Float64(f64),
+        Vint8(Vec<i8>),
+        Vuint8(Vec<u8>),
+        Vint16(Vec<i16>),
+        Vuint16(Vec<u16>),
+        Vint32(Vec<i32>),
+        Vuint32(Vec<u32>),
+        Vfloat32(Vec<f32>),
+        Vfloat64(Vec<f64>),
     }
 }
 
-impl From<i16> for PropertyData {
-    fn from(value: i16) -> Self {
-        PropertyData::Int16(value)
-    }
+pub trait CoerceTo<T> {
+    fn coerce(&self) -> Option<T>;
 }
 
-impl From<u16> for PropertyData {
-    fn from(value: u16) -> Self {
-        PropertyData::Uint16(value)
-    }
+macro_rules! impl_coercions {
+    ($type:ty) => {
+        impl CoerceTo<$type> for PropertyData {
+            fn coerce(&self) -> Option<$type> {
+                use self::PropertyData::*;
+                match *self {
+                    Int8(ref t) => Some(*t as $type),
+                    Uint8(ref t) => Some(*t as $type),
+                    Int16(ref t) => Some(*t as $type),
+                    Uint16(ref t) => Some(*t as $type),
+                    Int32(ref t) => Some(*t as $type),
+                    Uint32(ref t) => Some(*t as $type),
+                    Float32(ref t) => Some(*t as $type),
+                    Float64(ref t) => Some(*t as $type),
+                    _ => None,
+                }
+            }
+        }
+
+        impl CoerceTo<Vec<$type>> for PropertyData {
+            fn coerce(&self) -> Option<Vec<$type>> {
+                use self::PropertyData::*;
+                match *self {
+                    Vint8(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
+                    Vuint8(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
+                    Vint16(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
+                    Vuint16(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
+                    Vint32(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
+                    Vuint32(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
+                    Vfloat32(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
+                    Vfloat64(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
+                    _ => None,
+                }
+            }
+        }
+    };
 }
 
-impl From<i32> for PropertyData {
-    fn from(value: i32) -> Self {
-        PropertyData::Int32(value)
-    }
-}
-
-impl From<u32> for PropertyData {
-    fn from(value: u32) -> Self {
-        PropertyData::Uint32(value)
-    }
-}
-
-impl From<f32> for PropertyData {
-    fn from(value: f32) -> Self {
-        PropertyData::Float32(value)
-    }
-}
-
-impl From<f64> for PropertyData {
-    fn from(value: f64) -> Self {
-        PropertyData::Float64(value)
-    }
-}
-
-impl From<Vec<i8>> for PropertyData {
-    fn from(value: Vec<i8>) -> Self {
-        PropertyData::Vint8(value)
-    }
-}
-
-impl From<Vec<u8>> for PropertyData {
-    fn from(value: Vec<u8>) -> Self {
-        PropertyData::Vuint8(value)
-    }
-}
-
-impl From<Vec<i16>> for PropertyData {
-    fn from(value: Vec<i16>) -> Self {
-        PropertyData::Vint16(value)
-    }
-}
-
-impl From<Vec<u16>> for PropertyData {
-    fn from(value: Vec<u16>) -> Self {
-        PropertyData::Vuint16(value)
-    }
-}
-
-impl From<Vec<i32>> for PropertyData {
-    fn from(value: Vec<i32>) -> Self {
-        PropertyData::Vint32(value)
-    }
-}
-
-impl From<Vec<u32>> for PropertyData {
-    fn from(value: Vec<u32>) -> Self {
-        PropertyData::Vuint32(value)
-    }
-}
-
-impl From<Vec<f32>> for PropertyData {
-    fn from(value: Vec<f32>) -> Self {
-        PropertyData::Vfloat32(value)
-    }
-}
-
-impl From<Vec<f64>> for PropertyData {
-    fn from(value: Vec<f64>) -> Self {
-        PropertyData::Vfloat64(value)
-    }
-}
+impl_coercions!(i8);
+impl_coercions!(u8);
+impl_coercions!(i16);
+impl_coercions!(u16);
+impl_coercions!(i32);
+impl_coercions!(u32);
+impl_coercions!(f32);
+impl_coercions!(f64);
 
 /// Holds data of a single element.
 #[derive(Debug, Clone, PartialEq)]
@@ -200,6 +181,18 @@ pub struct ElementData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Body {
     pub elements: Vec<Vec<ElementData>>,
+}
+
+impl Body {
+    pub fn generate<T, F>(&self, element: usize, mapper: F) -> Vec<T>
+    where
+        F: Fn(&[PropertyData]) -> T,
+    {
+        self.elements[element]
+            .iter()
+            .map(|i| mapper(&i.properties))
+            .collect()
+    }
 }
 
 /// Describes an in-memory representation of the PLY file format.
@@ -303,5 +296,76 @@ mod tests {
         };
 
         assert!(!h.has_duplicate_elements());
+    }
+
+    #[test]
+    fn get_element() {
+        let h = Header {
+            format: Format {
+                format: FormatType::Ascii,
+                version: vec![1, 0],
+            },
+            elements: vec![
+                Element {
+                    name: "vertex".into(),
+                    count: 0,
+                    properties: Vec::new(),
+                },
+                Element {
+                    name: "face".into(),
+                    count: 0,
+                    properties: Vec::new(),
+                },
+            ],
+        };
+
+        let r = h.element(&["vertex"]);
+        assert_eq!(r, Some((0, &Element { name: "vertex".into(), count: 0, properties: Vec::new() })));
+    }
+
+    #[test]
+    fn get_scalar_property() {
+        let e = Element {
+            name: "vertex".into(),
+            count: 1,
+            properties: vec![
+                Property {
+                    name: "x".into(),
+                    count_data_type: None,
+                    data_type: DataType::Float32,
+                },
+                Property {
+                    name: "y".into(),
+                    count_data_type: None,
+                    data_type: DataType::Float32,
+                },
+            ],
+        };
+
+        let r = e.scalar_property(&["y"]);
+        assert_eq!(r, Some((1, &Property { name: "y".into(), count_data_type: None, data_type: DataType::Float32 })));
+    }
+
+    #[test]
+    fn get_vector_property() {
+        let e = Element {
+            name: "vertex".into(),
+            count: 1,
+            properties: vec![
+                Property {
+                    name: "x".into(),
+                    count_data_type: None,
+                    data_type: DataType::Float32,
+                },
+                Property {
+                    name: "vertex_index".into(),
+                    count_data_type: Some(CountType::Uint8),
+                    data_type: DataType::Float32,
+                },
+            ],
+        };
+
+        let r = e.vector_property(&["vertex_index"]);
+        assert_eq!(r, Some((1, &Property { name: "vertex_index".into(), count_data_type: Some(CountType::Uint8), data_type: DataType::Float32 })));
     }
 }
