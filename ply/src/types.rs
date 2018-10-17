@@ -1,3 +1,5 @@
+///! The module `types` defines internal representations of parts of a Stanford PLY file.
+
 use std::collections::HashSet;
 
 /// Describes the recognized formats of a PLY file.
@@ -53,11 +55,71 @@ pub struct Element {
 }
 
 impl Element {
+    /// Returns `true` if a property name occurs more than once.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// extern crate ply;
+    ///
+    /// use ply::types::{Element, Property, DataType};
+    ///
+    /// let e = Element {
+    ///     name: "vertex".into(),
+    ///     count: 32,
+    ///     properties: vec![
+    ///         Property {
+    ///             name: "x".into(),
+    ///             count_data_type: None,
+    ///             data_type: DataType::Float32,
+    ///         },
+    ///         Property {
+    ///             name: "x".into(),
+    ///             count_data_type: None,
+    ///             data_type: DataType::Float32,
+    ///         },
+    ///     ],
+    /// };
+    ///
+    /// assert!(e.has_duplicate_properties());
+    /// ```
     pub fn has_duplicate_properties(&self) -> bool {
         let mut unique = HashSet::new();
         !self.properties.iter().all(|p| unique.insert(p.name.clone()))
     }
 
+    /// Returns the last scalar property that matches any of the specified names. Also returns the
+    /// index of the property which can be used to obtain the corresponding data from the body of
+    /// the ply file.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// extern crate ply;
+    ///
+    /// use ply::types::{Element, Property, CountType, DataType};
+    ///
+    /// let a = Property {
+    ///     name: "a".into(),
+    ///     count_data_type: None,
+    ///     data_type: DataType::Float32,
+    /// };
+    ///
+    /// let b = Property {
+    ///     name: "b".into(),
+    ///     count_data_type: Some(CountType::Uint8),
+    ///     data_type: DataType::Float32,
+    /// };
+    ///
+    /// let e = Element {
+    ///     name: "vertex".into(),
+    ///     count: 32,
+    ///     properties: vec![a.clone(), b.clone()],
+    /// };
+    ///
+    /// assert_eq!(e.scalar_property(&["a", "prop_a"]), Some((0usize, &a)));
+    /// assert_eq!(e.scalar_property(&["b", "prop_b"]), None);
+    /// ```
     pub fn scalar_property(&self, names: &[&str]) -> Option<(usize, &Property)> {
         self.properties
             .iter()
@@ -66,6 +128,38 @@ impl Element {
             .last()
     }
 
+    /// Returns the last vector property that matches any of the specified names. Also returns the
+    /// index of the property which can be used to obtain the corresponding data from the body of
+    /// the ply file.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// extern crate ply;
+    ///
+    /// use ply::types::{Element, Property, CountType, DataType};
+    ///
+    /// let a = Property {
+    ///     name: "a".into(),
+    ///     count_data_type: None,
+    ///     data_type: DataType::Float32,
+    /// };
+    ///
+    /// let b = Property {
+    ///     name: "b".into(),
+    ///     count_data_type: Some(CountType::Uint8),
+    ///     data_type: DataType::Float32,
+    /// };
+    ///
+    /// let e = Element {
+    ///     name: "vertex".into(),
+    ///     count: 32,
+    ///     properties: vec![a.clone(), b.clone()],
+    /// };
+    ///
+    /// assert_eq!(e.vector_property(&["a", "prop_a"]), None);
+    /// assert_eq!(e.vector_property(&["b", "prop_b"]), Some((1usize, &b)));
+    /// ```
     pub fn vector_property(&self, names: &[&str]) -> Option<(usize, &Property)> {
         self.properties
             .iter()
@@ -83,11 +177,74 @@ pub struct Header {
 }
 
 impl Header {
+    /// Returns `true` if an element name occurs more than once.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// extern crate ply;
+    ///
+    /// use ply::types::{Header, Format, FormatType, Element};
+    ///
+    /// let h = Header {
+    ///     format: Format {
+    ///         format: FormatType::Ascii,
+    ///         version: vec![1, 0],
+    ///     },
+    ///     elements: vec![
+    ///         Element {
+    ///             name: "vertex".into(),
+    ///             count: 32,
+    ///             properties: Vec::new(),
+    ///         },
+    ///         Element {
+    ///             name: "vertex".into(),
+    ///             count: 10,
+    ///             properties: Vec::new(),
+    ///         },
+    ///     ],
+    /// };
+    ///
+    /// assert!(h.has_duplicate_elements());
+    /// ```
     pub fn has_duplicate_elements(&self) -> bool {
         let mut unique = HashSet::new();
         !self.elements.iter().all(|e| unique.insert(e.name.clone()))
     }
 
+    /// Returns the last element that matches any of the specified names. Also returns the index of
+    /// the element which can be used to obtain the corresponding data from the body of the ply
+    /// file.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// extern crate ply;
+    ///
+    /// use ply::types::{Header, Format, FormatType, Element};
+    ///
+    /// let a = Element {
+    ///     name: "vertex".into(),
+    ///     count: 32,
+    ///     properties: Vec::new(),
+    /// };
+    ///
+    /// let b = Element {
+    ///     name: "face".into(),
+    ///     count: 100,
+    ///     properties: Vec::new(),
+    /// };
+    ///
+    /// let h = Header {
+    ///     format: Format {
+    ///         format: FormatType::Ascii,
+    ///         version: vec![1, 0],
+    ///     },
+    ///     elements: vec![a.clone(), b.clone()],
+    /// };
+    ///
+    /// assert_eq!(h.element(&["vertex", "vertices"]), Some((0usize, &a)));
+    /// ```
     pub fn element(&self, names: &[&str]) -> Option<(usize, &Element)> {
         self.elements
             .iter()
@@ -184,6 +341,8 @@ pub struct Body {
 }
 
 impl Body {
+    /// Given an element index and a mapper closure, calls the mapper for each instance of the
+    /// supplied element. This allows to map the ply data to other representations.
     pub fn generate<T, F>(&self, element: usize, mapper: F) -> Vec<T>
     where
         F: Fn(&[PropertyData]) -> T,

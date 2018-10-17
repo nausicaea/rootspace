@@ -1,3 +1,6 @@
+//! The `ply` crate provides facilities to read from Stanford PLY 3d-data files. Supported formats
+//! are `ascii`, `big-endian` and `little-endian`, for the specification `1.0`.
+
 #[cfg(test)]
 #[macro_use]
 extern crate assertions;
@@ -34,6 +37,9 @@ pub enum Error {
 }
 
 impl Ply {
+    /// Loads a ply file from the specified and attempts to parse it. If parsing is successful,
+    /// `from_path` also checks for duplicate element or property names. This is necessary, because
+    /// otherwise you cannot reliably search for elements or properties by name.
     pub fn from_path(path: &Path) -> Result<Self, Error> {
         let file = File::open(path)
             .map_err(|e| Error::IoError(format!("{}", path.display()), e))?;
@@ -54,10 +60,52 @@ impl Ply {
         }
     }
 
+    /// Returns the last element that matches any of the specified names. Also returns the index of
+    /// the element which can be used to obtain the corresponding data from the body of the ply
+    /// file.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// extern crate ply;
+    ///
+    /// use std::path::PathBuf;
+    /// use ply::Ply;
+    ///
+    /// let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-ascii.ply"));
+    /// let data = Ply::from_path(&path).unwrap();
+    ///
+    /// assert!(data.element(&["vertex", "vertices"]).is_some());
+    /// ```
     pub fn element(&self, names: &[&str]) -> Option<(usize, &Element)> {
         self.header.element(names)
     }
 
+    /// Given an element index and a mapper closure, calls the mapper for each instance of the
+    /// supplied element. This allows to map the ply data to other representations.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// extern crate ply;
+    ///
+    /// use std::path::PathBuf;
+    /// use ply::{Ply, CoerceTo};
+    ///
+    /// let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-ascii.ply"));
+    /// let data = Ply::from_path(&path).unwrap();
+    ///
+    /// let (eidx, el) = data.element(&["face", "faces"]).unwrap();
+    /// let (idx, _) = el.vector_property(&["vertex_index", "vertex_indices"]).unwrap();
+    ///
+    /// let indices: Vec<u16> = data
+    ///     .generate(eidx, |p| CoerceTo::<Vec<u16>>::coerce(&p[idx]).unwrap())
+    ///     .into_iter()
+    ///     .flatten()
+    ///     .collect();
+    ///
+    /// assert_eq!(indices.len(), 12 * 3);
+    /// ```
     pub fn generate<T, F>(&self, element: usize, mapper: F) -> Vec<T>
     where
         F: Fn(&[PropertyData]) -> T,
@@ -89,6 +137,7 @@ mod tests {
 
     #[test]
     fn generate_vertices() {
+        #[allow(dead_code)]
         struct Vertex {
             position: [f32; 3],
             tex_coord: [f32; 2],
