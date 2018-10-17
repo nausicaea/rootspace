@@ -54,6 +54,10 @@ where
 }
 
 #[derive(Debug)]
+pub struct GliumRenderDataBuilder {
+}
+
+#[derive(Debug)]
 pub struct GliumRenderData {
     vertices: VertexBuffer<Vertex>,
     indices: IndexBuffer<u16>,
@@ -67,10 +71,6 @@ impl GliumRenderData {
         GliumRenderDataBuilder {
         }
     }
-}
-
-#[derive(Debug)]
-pub struct GliumRenderDataBuilder {
 }
 
 pub struct GliumFrame(Frame);

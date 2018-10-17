@@ -22,6 +22,7 @@ extern crate log;
 extern crate quickcheck;
 extern crate nalgebra;
 extern crate rusttype;
+extern crate unicode_normalization;
 #[cfg(test)]
 extern crate tempfile;
 #[macro_use]
@@ -38,3 +39,4 @@ pub mod mock;
 pub mod orchestrator;
 pub mod resources;
 pub mod systems;
+pub mod text_rendering;

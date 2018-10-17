@@ -53,7 +53,7 @@ impl<'a> From<Image> for RawImage2d<'a, u8> {
 
 impl fmt::Debug for Image {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Image(image::DynamicImage)")
+        write!(f, "Image{{{:?}, ...}}", self.inner.color())
     }
 }
 
@@ -65,24 +65,25 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn from_ply(data: &ply::Ply) -> Result<Self, Error> {
-        let (eidx, el) = data.element(&["vertex", "vertices"])
-            .ok_or(Error::ElementNotFound("vertex"))?;
+        let vtx_keyword = "vertex";
+        let (eidx, el) = data.element(&[vtx_keyword, "vertices"])
+            .ok_or(Error::ElementNotFound(vtx_keyword))?;
         let (pos_x_idx, _) = el.scalar_property(&["x", "pos_x"])
-            .ok_or(Error::PropertyNotFound("vertex", "x"))?;
+            .ok_or(Error::PropertyNotFound(vtx_keyword, "x"))?;
         let (pos_y_idx, _) = el.scalar_property(&["y", "pos_y"])
-            .ok_or(Error::PropertyNotFound("vertex", "y"))?;
+            .ok_or(Error::PropertyNotFound(vtx_keyword, "y"))?;
         let (pos_z_idx, _) = el.scalar_property(&["z", "pos_z"])
-            .ok_or(Error::PropertyNotFound("vertex", "z"))?;
+            .ok_or(Error::PropertyNotFound(vtx_keyword, "z"))?;
         let (tex_u_idx, _) = el.scalar_property(&["s", "u", "tex_u"])
-            .ok_or(Error::PropertyNotFound("vertex", "s"))?;
+            .ok_or(Error::PropertyNotFound(vtx_keyword, "s"))?;
         let (tex_v_idx, _) = el.scalar_property(&["t", "v", "tex_v"])
-            .ok_or(Error::PropertyNotFound("vertex", "t"))?;
+            .ok_or(Error::PropertyNotFound(vtx_keyword, "t"))?;
         let (norm_x_idx, _) = el.scalar_property(&["nx", "norm_x"])
-            .ok_or(Error::PropertyNotFound("vertex", "nx"))?;
+            .ok_or(Error::PropertyNotFound(vtx_keyword, "nx"))?;
         let (norm_y_idx, _) = el.scalar_property(&["ny", "norm_y"])
-            .ok_or(Error::PropertyNotFound("vertex", "ny"))?;
+            .ok_or(Error::PropertyNotFound(vtx_keyword, "ny"))?;
         let (norm_z_idx, _) = el.scalar_property(&["nz", "norm_z"])
-            .ok_or(Error::PropertyNotFound("vertex", "nz"))?;
+            .ok_or(Error::PropertyNotFound(vtx_keyword, "nz"))?;
 
         let vertices = data.generate(eidx, |props| {
             let p = [
@@ -102,10 +103,11 @@ impl Mesh {
             Vertex::new(p, t, n)
         });
 
-        let (eidx, el) = data.element(&["face", "faces"])
-            .ok_or(Error::ElementNotFound("face"))?;
+        let fc_keyword = "face";
+        let (eidx, el) = data.element(&[fc_keyword, "faces"])
+            .ok_or(Error::ElementNotFound(fc_keyword))?;
         let (idx, _) = el.vector_property(&["vertex_index", "vertex_indices"])
-            .ok_or(Error::PropertyNotFound("face", "vertex_index"))?;
+            .ok_or(Error::PropertyNotFound(fc_keyword, "vertex_index"))?;
 
         let indices = data
             .generate(eidx, |p| CoerceTo::<Vec<u16>>::coerce(&p[idx]).unwrap())
