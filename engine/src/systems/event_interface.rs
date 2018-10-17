@@ -88,13 +88,13 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic)]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
     fn new_glium() {
         let _: GliumEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic)]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
     fn get_stage_filter_glium() {
         let e: GliumEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
 
@@ -102,7 +102,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic)]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Events can only be polled from the main thread on macOS")

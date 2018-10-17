@@ -12,7 +12,8 @@ mod macros;
 mod parsers;
 pub mod types;
 
-pub use self::types::{Ply, PropertyData, Element};
+pub use self::types::{Ply, CoerceTo};
+use self::types::{PropertyData, Element};
 use combine::{
     parser::Parser,
     stream::{buffered::BufferedStream, state::State, ReadStream},
@@ -34,16 +35,13 @@ pub enum Error {
 
 impl Ply {
     pub fn from_path(path: &Path) -> Result<Self, Error> {
-        let file = match File::open(path) {
-            Ok(f) => f,
-            Err(e) => return Err(Error::IoError(format!("{}", path.display()), e)),
-        };
+        let file = File::open(path)
+            .map_err(|e| Error::IoError(format!("{}", path.display()), e))?;
 
         let stream = BufferedStream::new(State::new(ReadStream::new(file)), 32);
-        let data = match ply().parse(stream) {
-            Ok((data, _)) => data,
-            Err(e) => return Err(Error::ParserError(format!("{}", path.display()), format!("{}", e))),
-        };
+        let data = ply().parse(stream)
+            .map(|(d, _)| d)
+            .map_err( |e|Error::ParserError(format!("{}", path.display()), format!("{}", e)))?;
 
         if !data.header.has_duplicate_elements() {
             if !data.header.elements.iter().any(|e| e.has_duplicate_properties()) {
@@ -71,7 +69,6 @@ impl Ply {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use types::CoerceTo;
     use std::path::PathBuf;
 
     #[test]

@@ -1,8 +1,12 @@
 use failure::Error;
 use graphics::{
-    glium::{GliumBackend, GliumRenderData},
+    BackendTrait,
+    glium::GliumRenderData,
     headless::{HeadlessBackend, HeadlessRenderData},
 };
+use file_manipulation::ReadPath;
+use resources::Image;
+use rusttype;
 use std::{
     borrow::Borrow,
     path::{Path, PathBuf},
@@ -52,14 +56,16 @@ impl Renderable<HeadlessRenderData> {
             normal_texture: nt.into(),
         };
 
-        // let mesh_data = load_mesh_file(mesh)?;
-        // let vertex_shader = load_text_file(vs)?;
-        // let fragment_shader = load_text_file(fs)?;
-        // let geometry_shader = if let Some(gs) = gs {
-        //     Some(load_text_file(gs)?)
-        // } else {
-        //     None
-        // };
+        let _mesh_data = mesh.read_to_mesh()?;
+        let _vertex_shader = vs.read_to_string()?;
+        let _fragment_shader = vs.read_to_string()?;
+        let _geomertry_shader = if let Some(gs) = gs {
+            Some(gs.read_to_string()?)
+        } else {
+            None
+        };
+        let _diffuse_texture = dt.read_to_image()?;
+        let _normal_texture = dt.read_to_image()?;
 
         Ok(Renderable {
             data: HeadlessRenderData::new(backend)?,
@@ -81,6 +87,23 @@ impl Renderable<HeadlessRenderData> {
             vertex_shader: vs.into(),
             fragment_shader: fs.into(),
             geometry_shader: gs.map(|p| p.to_path_buf()),
+        };
+
+        let font_data = font.read_to_bytes()?;
+        let dpi_factor = backend.dpi_factor();
+        let cache_length = (512.0 * dpi_factor) as u32;
+
+        let _font = rusttype::Font::from_bytes(font_data)?;
+        let _cache_cpu = rusttype::gpu_cache::Cache::builder()
+            .dimensions(cache_length, cache_length)
+            .build();
+        let _cache_gpu = Image::new_rgba8(cache_length, cache_length);
+        let _vertex_shader = vs.read_to_string()?;
+        let _fragment_shader = vs.read_to_string()?;
+        let _geomertry_shader = if let Some(gs) = gs {
+            Some(gs.read_to_string()?)
+        } else {
+            None
         };
 
         Ok(Renderable {
@@ -112,15 +135,4 @@ impl From<GliumRenderData> for Renderable<GliumRenderData> {
             source: None,
         }
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // #[test]
-    // fn nothing() {
-    //     let source = SourceData::
-    //     Renderable::from_source()
-    // }
 }

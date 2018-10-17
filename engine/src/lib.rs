@@ -26,6 +26,7 @@ extern crate rusttype;
 extern crate tempfile;
 #[macro_use]
 extern crate ecs;
+extern crate ply;
 
 pub mod components;
 pub mod context;

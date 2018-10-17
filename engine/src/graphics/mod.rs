@@ -11,6 +11,7 @@ where
 {
     fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error>;
     fn create_frame(&self) -> F;
+    fn dpi_factor(&self) -> f64;
 }
 
 pub trait FrameTrait<D> {

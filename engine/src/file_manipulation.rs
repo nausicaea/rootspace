@@ -1,22 +1,12 @@
 use image;
+use resources::{self, Image, Mesh};
+use ply;
 use std::{
     borrow::Borrow,
-    fmt,
     fs::File,
     io::{self, Read},
     path::Path,
 };
-
-pub struct Image(image::DynamicImage);
-
-impl fmt::Debug for Image {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Image(image::DynamicImage)")
-    }
-}
-
-#[derive(Debug)]
-pub struct Mesh;
 
 pub trait VerifyPath {
     /// Verifies that `self` refers to an existing file in the file system.
@@ -91,14 +81,18 @@ impl<T: Borrow<Path>> ReadPath for T {
         let path = self.borrow();
         path.ensure_extant_file()?;
         image::open(path)
-            .map(|img| Image(img))
+            .map(|img| img.into())
             .map_err(|e| FileError::ImageError(format!("{}", path.display()), e))
     }
 
     fn read_to_mesh(&self) -> Result<Mesh, FileError> {
         let path = self.borrow();
         path.ensure_extant_file()?;
-        unimplemented!()
+        let data = ply::Ply::from_path(path)
+            .map_err(|e| FileError::PlyError(format!("{}", path.display()), e))?;
+
+        Mesh::from_ply(&data)
+            .map_err(|e| FileError::MeshError(format!("{}", path.display()), e))
     }
 }
 
@@ -114,6 +108,10 @@ pub enum FileError {
     ImageError(String, #[cause] image::ImageError),
     #[fail(display = "{}: {}", _1, _0)]
     IoError(String, #[cause] io::Error),
+    #[fail(display = "{}: {}", _1, _0)]
+    PlyError(String, #[cause] ply::Error),
+    #[fail(display = "{}: {}", _1, _0)]
+    MeshError(String, #[cause] resources::Error),
 }
 
 #[cfg(test)]

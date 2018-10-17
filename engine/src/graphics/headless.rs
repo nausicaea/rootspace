@@ -57,6 +57,10 @@ impl BackendTrait<HeadlessEventsLoop, HeadlessFrame> for HeadlessBackend {
     fn create_frame(&self) -> HeadlessFrame {
         HeadlessFrame::default()
     }
+
+    fn dpi_factor(&self) -> f64 {
+        1.0
+    }
 }
 
 #[cfg(test)]
@@ -90,6 +94,13 @@ mod tests {
             false,
             0
         ));
+    }
+
+    #[test]
+    fn dpi_factor() {
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+
+        assert_eq!(b.dpi_factor(), 1.0f64);
     }
 
     #[test]

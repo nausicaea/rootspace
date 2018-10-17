@@ -5,7 +5,6 @@ use failure::Error;
 use glium::{
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, EventsLoop, GlProfile, GlRequest, WindowBuilder},
-    index::PrimitiveType,
     texture::Texture2d,
     uniforms::{UniformValue, Uniforms},
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
@@ -14,8 +13,6 @@ use glium::{
 use std::{borrow::Borrow, fmt};
 
 pub use glium::glutin::Event as GliumEvent;
-
-implement_vertex!(Vertex, position, tex_coord, normals);
 
 pub struct GliumEventsLoop(Box<EventsLoop>);
 
@@ -63,6 +60,17 @@ pub struct GliumRenderData {
     program: Program,
     diffuse_texture: Texture2d,
     normal_texture: Texture2d,
+}
+
+impl GliumRenderData {
+    pub fn builder() -> GliumRenderDataBuilder {
+        GliumRenderDataBuilder {
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct GliumRenderDataBuilder {
 }
 
 pub struct GliumFrame(Frame);
@@ -159,6 +167,10 @@ impl BackendTrait<GliumEventsLoop, GliumFrame> for GliumBackend {
     fn create_frame(&self) -> GliumFrame {
         GliumFrame(self.display.draw())
     }
+
+    fn dpi_factor(&self) -> f64 {
+        self.display.gl_window().get_hidpi_factor()
+    }
 }
 
 impl fmt::Debug for GliumBackend {
@@ -178,7 +190,7 @@ pub fn triangle(backend: &GliumBackend) -> Result<GliumRenderData, Error> {
         ],
     )?;
 
-    let indices = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, &[0, 1, 2])?;
+    let indices = IndexBuffer::new(&backend.display, ::glium::index::PrimitiveType::TrianglesList, &[0, 1, 2])?;
 
     let program = Program::from_source(
         &backend.display,
@@ -226,6 +238,7 @@ pub fn triangle(backend: &GliumBackend) -> Result<GliumRenderData, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f64;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);
@@ -237,7 +250,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic)]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")
@@ -253,7 +266,19 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic)]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
+    fn dpi_factor() {
+        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+
+        assert_ulps_ne!(b.dpi_factor(), 0.0f64, epsilon = f64::EPSILON);
+    }
+
+    #[test]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")

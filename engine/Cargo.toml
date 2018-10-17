@@ -19,6 +19,7 @@ rusttype = {version = "^0.7.2", features = ["gpu_cache"]}
 affine-transform = {path = "../affine-transform"}
 hierarchy = {path = "../hierarchy"}
 ecs = {path = "../ecs"}
+ply = {path = "../ply"}
 
 [dev-dependencies]
 assertions = {path = "../assertions"}
