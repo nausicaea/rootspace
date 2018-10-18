@@ -27,29 +27,30 @@ impl TextBuilder {
         }
     }
 
-    pub fn font(&mut self, path: &Path) -> &mut Self {
+    pub fn font(mut self, path: &Path) -> Self {
         self.font_path = Some(path.into());
         self
     }
 
-    pub fn cache(&mut self, texture: Texture2d) -> &mut Self {
+    pub fn cache(mut self, texture: Texture2d) -> Self {
         self.cache_size = Some((texture.width(), texture.height()));
         self.cache_texture = Some(texture);
         self
     }
 
-    pub fn scale(&mut self, scale: f32) -> &mut Self {
+    pub fn scale(mut self, scale: f32) -> Self {
         self.font_scale = scale;
         self
     }
 
-    pub fn text_width(&mut self, width: u32) -> &mut Self {
+    pub fn text_width(mut self, width: u32) -> Self {
         self.text_width = width;
         self
     }
 
     pub fn layout(self, text: &str) -> Result<Text, Error> {
         let font_data = self.font_path
+            .as_ref()
             .ok_or(Error::MissingFont)?
             .read_to_bytes()?;
 
@@ -62,7 +63,7 @@ impl TextBuilder {
         let cache_gpu = self.cache_texture
             .ok_or(Error::MissingCache)?;
 
-        let font = Font::from_bytes(font_data)?;
+        let font: Font = Font::from_bytes(font_data)?;
 
         let (glyphs, text_height) = layout_paragraph(&font, self.font_scale, self.text_width, text);
 
@@ -70,7 +71,9 @@ impl TextBuilder {
         update_cache(&mut cache_cpu, &cache_gpu)?;
 
         Ok(Text {
+            text: text.into(),
             dimensions: (self.text_width, text_height),
+            scale: self.font_scale,
             glyphs,
             cache_cpu,
             cache_gpu,
@@ -80,9 +83,10 @@ impl TextBuilder {
 
 }
 
-#[derive(Debug)]
 pub struct Text<'a> {
+    text: String,
     dimensions: (u32, u32),
+    scale: f32,
     glyphs: Vec<PositionedGlyph<'a>>,
     cache_cpu: Cache<'a>,
     cache_gpu: Texture2d,
@@ -91,7 +95,7 @@ pub struct Text<'a> {
 
 impl<'a> fmt::Debug for Text<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Text {{ dimensions: {:?} }}", self.dimensions)
+        write!(f, "Text {{ dimensions: {:?}, text: {:?}, ... }}", self.dimensions, self.text)
     }
 }
 
@@ -103,9 +107,82 @@ impl<'a> Text<'a> {
     pub fn mesh(&self, screen_dimensions: (u32, u32)) -> Mesh {
         generate_mesh(&self.cache_cpu, screen_dimensions, self.dimensions, &self.glyphs)
     }
+
+    pub fn text(&mut self, value: &str) -> Result<(), Error> {
+        let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions.0, value);
+
+        enqueue_glyphs(&mut self.cache_cpu, &glyphs);
+        update_cache(&mut self.cache_cpu, &self.cache_gpu)?;
+
+        self.text = value.into();
+        self.dimensions = (self.dimensions.0, text_height);
+        self.glyphs = glyphs;
+
+        Ok(())
+    }
+
+    pub fn scale(&mut self, value: f32) {
+        self.scale = value;
+    }
+
+    pub fn width(&mut self, value: u32) {
+        self.dimensions.0 = value;
+    }
 }
 
-fn layout_paragraph<'a>(font: &'a Font<'a>, scale: f32, width: u32, text: &str) -> (Vec<PositionedGlyph<'a>>, u32) {
+#[derive(Debug, Fail)]
+pub enum Error {
+    #[fail(display = "You must provide a font to build an instance of Text")]
+    MissingFont,
+    #[fail(display = "You must provide a cache texture to build an instance of Text")]
+    MissingCache,
+    #[fail(display = "Font data presented to rusttype is not in a format that the library recognizes")]
+    UnrecognizedFormat,
+    #[fail(display = "Font data presented to rusttype was ill-formed (lacking necessary tables, for example)")]
+    IllFormed,
+    #[fail(display = "The caller tried to access the i'th font from a FontCollection, but the collection doesn't contain that many fonts")]
+    CollectionIndexOutOfBounds,
+    #[fail(display = "The caller tried to convert a FontCollection into a font via into_font, but the FontCollection contains more than one font")]
+    CollectionContainsMultipleFonts,
+    #[fail(display = "At least one of the queued glyphs is too big to fit into the cache, even if all other glyphs are removed")]
+    GlyphTooLarge,
+    #[fail(display = "Not all of the requested glyphs can fit into the cache, even if the cache is completely cleared before the attempt")]
+    NoRoomForWholeQueue,
+    #[fail(display = "{}", _0)]
+    FileError(#[cause] file_manipulation::FileError),
+}
+
+impl From<file_manipulation::FileError> for Error {
+    fn from(value: file_manipulation::FileError) -> Self {
+        Error::FileError(value)
+    }
+}
+
+impl From<rusttype::Error> for Error {
+    fn from(value: rusttype::Error) -> Self {
+        use rusttype::Error::*;
+
+        match value {
+            UnrecognizedFormat => Error::UnrecognizedFormat,
+            IllFormed => Error::IllFormed,
+            CollectionIndexOutOfBounds => Error::CollectionIndexOutOfBounds,
+            CollectionContainsMultipleFonts => Error::CollectionContainsMultipleFonts,
+        }
+    }
+}
+
+impl From<rusttype::gpu_cache::CacheWriteErr> for Error {
+    fn from(value: rusttype::gpu_cache::CacheWriteErr) -> Self {
+        use rusttype::gpu_cache::CacheWriteErr::*;
+
+        match value {
+            GlyphTooLarge => Error::GlyphTooLarge,
+            NoRoomForWholeQueue => Error::NoRoomForWholeQueue,
+        }
+    }
+}
+
+fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> (Vec<PositionedGlyph<'a>>, u32) {
     let mut glyphs = Vec::new();
     let scale = Scale::uniform(scale);
     let v_metrics = font.v_metrics(scale);
@@ -233,72 +310,26 @@ fn generate_mesh(
     Mesh {vertices, indices}
 }
 
-#[derive(Debug, Fail)]
-pub enum Error {
-    #[fail(display = "You must provide a font to build an instance of `Text`")]
-    MissingFont,
-    #[fail(display = "You must provide a cache texture to build an instance of `Text`")]
-    MissingCache,
-    #[fail(display = "{}", _0)]
-    FileError(#[cause] file_manipulation::FileError),
-    #[fail(display = "Font data presented to rusttype is not in a format that the library recognizes")]
-    UnrecognizedFormat,
-    #[fail(display = "Font data presented to rusttype was ill-formed (lacking necessary tables, for example)")]
-    IllFormed,
-    #[fail(display = "The caller tried to access the `i`'th font from a `FontCollection`, but the collection doesn't contain that many fonts")]
-    CollectionIndexOutOfBounds,
-    #[fail(display = "The caller tried to convert a `FontCollection` into a font via `into_font`, but the `FontCollection` contains more than one font")]
-    CollectionContainsMultipleFonts,
-    #[fail(display = "At least one of the queued glyphs is too big to fit into the cache, even if all other glyphs are removed")]
-    GlyphTooLarge,
-    #[fail(display = "Not all of the requested glyphs can fit into the cache, even if the cache is completely cleared before the attempt")]
-    NoRoomForWholeQueue,
-}
-
-impl From<file_manipulation::FileError> for Error {
-    fn from(value: file_manipulation::FileError) -> Self {
-        Error::FileError(value)
-    }
-}
-
-impl From<rusttype::Error> for Error {
-    fn from(value: rusttype::Error) -> Self {
-        use rusttype::Error::*;
-
-        match value {
-            UnrecognizedFormat => Error::UnrecognizedFormat,
-            IllFormed => Error::IllFormed,
-            CollectionIndexOutOfBounds => Error::CollectionIndexOutOfBounds,
-            CollectionContainsMultipleFonts => Error::CollectionContainsMultipleFonts,
-        }
-    }
-}
-
-impl From<rusttype::gpu_cache::CacheWriteErr> for Error {
-    fn from(value: rusttype::gpu_cache::CacheWriteErr) -> Self {
-        use rusttype::gpu_cache::CacheWriteErr::*;
-
-        match value {
-            GlyphTooLarge => Error::GlyphTooLarge,
-            NoRoomForWholeQueue => Error::NoRoomForWholeQueue,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use graphics::{BackendTrait, glium::{GliumBackend, GliumEventsLoop}};
 
     #[test]
-    fn builder() {
-        let p = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
+    fn text_builder_glium() {
+        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let tex = Texture2d::empty(&backend.inner, 512, 512).unwrap();
-        let mut b: TextBuilder = Text::builder();
+        let tex = Texture2d::empty(&backend.display, 512, 512).unwrap();
 
-        let t: Text = b
-            .font(&p)
+        let mut b = Text::builder();
+
+        let _t = Text::builder()
+            .font(&font_path)
             .cache(tex)
             .scale(24.0)
             .text_width(100)

@@ -3,6 +3,7 @@ use event::Event;
 use failure::Error;
 use std::borrow::Borrow;
 
+#[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;
 
 #[derive(Debug, Clone, Default)]
