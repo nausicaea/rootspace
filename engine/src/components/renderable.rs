@@ -2,11 +2,10 @@ use failure::Error;
 use graphics::{
     BackendTrait,
     glium::GliumRenderData,
-    headless::{HeadlessBackend, HeadlessRenderData},
+    headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture},
 };
 use file_manipulation::ReadPath;
-use resources::Image;
-use rusttype;
+use text_rendering::Text;
 use std::{
     borrow::Borrow,
     path::{Path, PathBuf},
@@ -89,15 +88,16 @@ impl Renderable<HeadlessRenderData> {
             geometry_shader: gs.map(|p| p.to_path_buf()),
         };
 
-        let font_data = font.read_to_bytes()?;
         let dpi_factor = backend.dpi_factor();
         let cache_length = (512.0 * dpi_factor) as u32;
 
-        let _font = rusttype::Font::from_bytes(font_data)?;
-        let _cache_cpu = rusttype::gpu_cache::Cache::builder()
-            .dimensions(cache_length, cache_length)
-            .build();
-        let _cache_gpu = Image::new_rgba8(cache_length, cache_length);
+        let _text: Text<HeadlessTexture> = Text::builder()
+            .font(font)
+            .cache([cache_length; 2])
+            .scale(24.0)
+            .width(100)
+            .layout(backend, text)?;
+
         let _vertex_shader = vs.read_to_string()?;
         let _fragment_shader = vs.read_to_string()?;
         let _geomertry_shader = if let Some(gs) = gs {

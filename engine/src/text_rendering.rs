@@ -1,7 +1,9 @@
 use std::fmt;
 use std::path::{Path, PathBuf};
+use std::marker::PhantomData;
 use std::borrow::Cow;
-use file_manipulation::{self, ReadPath};
+use failure::Error;
+use file_manipulation::ReadPath;
 use rusttype::{self, Rect as RusttypeRect, point, vector, Font, Scale, PositionedGlyph, gpu_cache::Cache};
 use unicode_normalization::UnicodeNormalization;
 use resources::{Vertex, Mesh};
@@ -11,9 +13,9 @@ use graphics::TextureTrait;
 pub struct TextBuilder<T> {
     font_path: Option<PathBuf>,
     cache_size: Option<[u32; 2]>,
-    cache_texture: Option<T>,
     font_scale: f32,
     text_width: u32,
+    _t: PhantomData<T>,
 }
 
 impl<T> TextBuilder<T>
@@ -24,9 +26,9 @@ where
         TextBuilder {
             font_path: None,
             cache_size: None,
-            cache_texture: None,
             font_scale: 1.0,
             text_width: 100,
+            _t: PhantomData::default(),
         }
     }
 
@@ -35,9 +37,8 @@ where
         self
     }
 
-    pub fn cache(mut self, texture: T) -> Self {
-        self.cache_size = Some([texture.width(), texture.height()]);
-        self.cache_texture = Some(texture);
+    pub fn cache(mut self, dimensions: [u32; 2]) -> Self {
+        self.cache_size = Some(dimensions);
         self
     }
 
@@ -46,25 +47,26 @@ where
         self
     }
 
-    pub fn text_width(mut self, width: u32) -> Self {
+    pub fn width(mut self, width: u32) -> Self {
         self.text_width = width;
         self
     }
 
-    pub fn layout(self, text: &str) -> Result<Text<T>, Error> {
+    pub fn layout<'a>(self, backend: &T::Backend, text: &str) -> Result<Text<'a, T>, Error> {
         let font_data = self.font_path
             .as_ref()
-            .ok_or(Error::MissingFont)?
+            .ok_or(TextRenderError::MissingFont)?
             .read_to_bytes()?;
 
         let mut cache_cpu = self.cache_size
             .map(|dims| Cache::builder()
                 .dimensions(dims[0], dims[1])
                 .build())
-            .ok_or(Error::MissingCache)?;
+            .ok_or(TextRenderError::MissingCache)?;
 
-        let cache_gpu = self.cache_texture
-            .ok_or(Error::MissingCache)?;
+        let cache_gpu = self.cache_size
+            .ok_or(TextRenderError::MissingCache.into())
+            .and_then(|dims| T::empty(backend, dims[0], dims[1]))?;
 
         let font: Font = Font::from_bytes(font_data)?;
 
@@ -136,7 +138,7 @@ where
 }
 
 #[derive(Debug, Fail)]
-pub enum Error {
+pub enum TextRenderError {
     #[fail(display = "You must provide a font to build an instance of Text")]
     MissingFont,
     #[fail(display = "You must provide a cache texture to build an instance of Text")]
@@ -153,36 +155,28 @@ pub enum Error {
     GlyphTooLarge,
     #[fail(display = "Not all of the requested glyphs can fit into the cache, even if the cache is completely cleared before the attempt")]
     NoRoomForWholeQueue,
-    #[fail(display = "{}", _0)]
-    FileError(#[cause] file_manipulation::FileError),
 }
 
-impl From<file_manipulation::FileError> for Error {
-    fn from(value: file_manipulation::FileError) -> Self {
-        Error::FileError(value)
-    }
-}
-
-impl From<rusttype::Error> for Error {
+impl From<rusttype::Error> for TextRenderError {
     fn from(value: rusttype::Error) -> Self {
         use rusttype::Error::*;
 
         match value {
-            UnrecognizedFormat => Error::UnrecognizedFormat,
-            IllFormed => Error::IllFormed,
-            CollectionIndexOutOfBounds => Error::CollectionIndexOutOfBounds,
-            CollectionContainsMultipleFonts => Error::CollectionContainsMultipleFonts,
+            UnrecognizedFormat => TextRenderError::UnrecognizedFormat,
+            IllFormed => TextRenderError::IllFormed,
+            CollectionIndexOutOfBounds => TextRenderError::CollectionIndexOutOfBounds,
+            CollectionContainsMultipleFonts => TextRenderError::CollectionContainsMultipleFonts,
         }
     }
 }
 
-impl From<rusttype::gpu_cache::CacheWriteErr> for Error {
+impl From<rusttype::gpu_cache::CacheWriteErr> for TextRenderError {
     fn from(value: rusttype::gpu_cache::CacheWriteErr) -> Self {
         use rusttype::gpu_cache::CacheWriteErr::*;
 
         match value {
-            GlyphTooLarge => Error::GlyphTooLarge,
-            NoRoomForWholeQueue => Error::NoRoomForWholeQueue,
+            GlyphTooLarge => TextRenderError::GlyphTooLarge,
+            NoRoomForWholeQueue => TextRenderError::NoRoomForWholeQueue,
         }
     }
 }
@@ -317,14 +311,13 @@ mod tests {
     fn text_builder_headless() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let tex = HeadlessTexture::empty(&backend, 512, 512).unwrap();
 
-        let r = Text::builder()
+        let r: Result<Text<HeadlessTexture>, Error> = Text::builder()
             .font(&font_path)
-            .cache(tex)
+            .cache([512, 512])
             .scale(24.0)
-            .text_width(100)
-            .layout("Hello, World!");
+            .width(100)
+            .layout(&backend, "Hello, World!");
 
         assert_ok!(r);
     }
@@ -333,14 +326,13 @@ mod tests {
     fn text_mesh_headless() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let tex = HeadlessTexture::empty(&backend, 512, 512).unwrap();
 
-        let text = Text::builder()
+        let text: Text<HeadlessTexture> = Text::builder()
             .font(&font_path)
-            .cache(tex)
+            .cache([512, 512])
             .scale(24.0)
-            .text_width(100)
-            .layout("Hello, World!")
+            .width(100)
+            .layout(&backend, "Hello, World!")
             .unwrap();
 
         let _: Mesh = text.mesh([1024, 768]);
@@ -350,14 +342,13 @@ mod tests {
     fn text_scale_headless() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let tex = HeadlessTexture::empty(&backend, 512, 512).unwrap();
 
-        let mut text = Text::builder()
+        let mut text: Text<HeadlessTexture> = Text::builder()
             .font(&font_path)
-            .cache(tex)
+            .cache([512, 512])
             .scale(24.0)
-            .text_width(100)
-            .layout("Hello, World!")
+            .width(100)
+            .layout(&backend, "Hello, World!")
             .unwrap();
 
         text.scale(24.0f32);
@@ -367,14 +358,13 @@ mod tests {
     fn text_width_headless() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let tex = HeadlessTexture::empty(&backend, 512, 512).unwrap();
 
-        let mut text = Text::builder()
+        let mut text: Text<HeadlessTexture> = Text::builder()
             .font(&font_path)
-            .cache(tex)
+            .cache([512, 512])
             .scale(24.0)
-            .text_width(100)
-            .layout("Hello, World!")
+            .width(100)
+            .layout(&backend, "Hello, World!")
             .unwrap();
 
         text.width(200u32);
@@ -384,14 +374,13 @@ mod tests {
     fn text_update_headless() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let tex = HeadlessTexture::empty(&backend, 512, 512).unwrap();
 
-        let mut text = Text::builder()
+        let mut text: Text<HeadlessTexture> = Text::builder()
             .font(&font_path)
-            .cache(tex)
+            .cache([512, 512])
             .scale(24.0)
-            .text_width(100)
-            .layout("Hello, World!")
+            .width(100)
+            .layout(&backend, "Hello, World!")
             .unwrap();
 
         assert_ok!(text.text("Hello, you!"));
@@ -406,14 +395,13 @@ mod tests {
     fn text_builder_glium() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let tex = GliumTexture::empty(&backend, 512, 512).unwrap();
 
-        let r = Text::builder()
+        let r: Result<Text<GliumTexture>, Error> = Text::builder()
             .font(&font_path)
-            .cache(tex)
+            .cache([512, 512])
             .scale(24.0)
-            .text_width(100)
-            .layout("Hello, World!");
+            .width(100)
+            .layout(&backend, "Hello, World!");
 
         assert_ok!(r);
     }
@@ -427,14 +415,13 @@ mod tests {
     fn text_update_glium() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let tex = GliumTexture::empty(&backend, 512, 512).unwrap();
 
-        let mut text = Text::builder()
+        let mut text: Text<GliumTexture> = Text::builder()
             .font(&font_path)
-            .cache(tex)
+            .cache([512, 512])
             .scale(24.0)
-            .text_width(100)
-            .layout("Hello, World!")
+            .width(100)
+            .layout(&backend, "Hello, World!")
             .unwrap();
 
         assert_ok!(text.text("Hello, you!"));
