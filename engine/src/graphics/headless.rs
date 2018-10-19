@@ -1,7 +1,7 @@
-use super::{BackendTrait, EventsLoopTrait, FrameTrait};
+use super::{BackendTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use event::Event;
 use failure::Error;
-use std::borrow::Borrow;
+use std::borrow::{Borrow, Cow};
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;
@@ -11,6 +11,34 @@ pub struct HeadlessEventsLoop;
 
 impl EventsLoopTrait<Event, HeadlessEvent> for HeadlessEventsLoop {
     fn poll<F: FnMut(HeadlessEvent)>(&mut self, _f: F) {}
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct HeadlessTexture {
+    width: u32,
+    height: u32,
+}
+
+impl TextureTrait for HeadlessTexture {
+    type Backend = HeadlessBackend;
+
+    fn empty(_backend: &HeadlessBackend, width: u32, height: u32) -> Result<Self, Error> {
+        Ok(HeadlessTexture {
+            width,
+            height,
+        })
+    }
+
+    fn width(&self) -> u32 {
+        self.width
+    }
+
+    fn height(&self) -> u32 {
+        self.height
+    }
+
+    fn write<'a>(&self, _x: u32, _y: u32, _width: u32, _height: u32, _data: Cow<'a, [u8]>) {
+    }
 }
 
 #[derive(Debug, Clone, Default)]

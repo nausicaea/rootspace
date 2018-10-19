@@ -3,20 +3,23 @@ use std::path::{Path, PathBuf};
 use std::borrow::Cow;
 use file_manipulation::{self, ReadPath};
 use rusttype::{self, Rect as RusttypeRect, point, vector, Font, Scale, PositionedGlyph, gpu_cache::Cache};
-use glium::{Rect, texture::{ClientFormat, RawImage2d, Texture2d}};
 use unicode_normalization::UnicodeNormalization;
 use resources::{Vertex, Mesh};
+use graphics::TextureTrait;
 
 #[derive(Debug)]
-pub struct TextBuilder {
+pub struct TextBuilder<T> {
     font_path: Option<PathBuf>,
-    cache_size: Option<(u32, u32)>,
-    cache_texture: Option<Texture2d>,
+    cache_size: Option<[u32; 2]>,
+    cache_texture: Option<T>,
     font_scale: f32,
     text_width: u32,
 }
 
-impl TextBuilder {
+impl<T> TextBuilder<T>
+where
+    T: TextureTrait,
+{
     pub fn new() -> Self {
         TextBuilder {
             font_path: None,
@@ -32,8 +35,8 @@ impl TextBuilder {
         self
     }
 
-    pub fn cache(mut self, texture: Texture2d) -> Self {
-        self.cache_size = Some((texture.width(), texture.height()));
+    pub fn cache(mut self, texture: T) -> Self {
+        self.cache_size = Some([texture.width(), texture.height()]);
         self.cache_texture = Some(texture);
         self
     }
@@ -48,15 +51,15 @@ impl TextBuilder {
         self
     }
 
-    pub fn layout(self, text: &str) -> Result<Text, Error> {
+    pub fn layout(self, text: &str) -> Result<Text<T>, Error> {
         let font_data = self.font_path
             .as_ref()
             .ok_or(Error::MissingFont)?
             .read_to_bytes()?;
 
         let mut cache_cpu = self.cache_size
-            .map(|(w, h)| Cache::builder()
-                .dimensions(w, h)
+            .map(|dims| Cache::builder()
+                .dimensions(dims[0], dims[1])
                 .build())
             .ok_or(Error::MissingCache)?;
 
@@ -72,7 +75,7 @@ impl TextBuilder {
 
         Ok(Text {
             text: text.into(),
-            dimensions: (self.text_width, text_height),
+            dimensions: [self.text_width, text_height],
             scale: self.font_scale,
             glyphs,
             cache_cpu,
@@ -80,42 +83,44 @@ impl TextBuilder {
             font,
         })
     }
-
 }
 
-pub struct Text<'a> {
+pub struct Text<'a, T> {
     text: String,
-    dimensions: (u32, u32),
+    dimensions: [u32; 2],
     scale: f32,
     glyphs: Vec<PositionedGlyph<'a>>,
     cache_cpu: Cache<'a>,
-    cache_gpu: Texture2d,
+    cache_gpu: T,
     font: Font<'a>,
 }
 
-impl<'a> fmt::Debug for Text<'a> {
+impl<'a, T> fmt::Debug for Text<'a, T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Text {{ dimensions: {:?}, text: {:?}, ... }}", self.dimensions, self.text)
     }
 }
 
-impl<'a> Text<'a> {
-    pub fn builder() -> TextBuilder {
+impl<'a, T> Text<'a, T>
+where
+    T: TextureTrait,
+{
+    pub fn builder() -> TextBuilder<T> {
         TextBuilder::new()
     }
 
-    pub fn mesh(&self, screen_dimensions: (u32, u32)) -> Mesh {
+    pub fn mesh(&self, screen_dimensions: [u32; 2]) -> Mesh {
         generate_mesh(&self.cache_cpu, screen_dimensions, self.dimensions, &self.glyphs)
     }
 
     pub fn text(&mut self, value: &str) -> Result<(), Error> {
-        let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions.0, value);
+        let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions[0], value);
 
         enqueue_glyphs(&mut self.cache_cpu, &glyphs);
         update_cache(&mut self.cache_cpu, &self.cache_gpu)?;
 
         self.text = value.into();
-        self.dimensions = (self.dimensions.0, text_height);
+        self.dimensions[1] = text_height;
         self.glyphs = glyphs;
 
         Ok(())
@@ -126,7 +131,7 @@ impl<'a> Text<'a> {
     }
 
     pub fn width(&mut self, value: u32) {
-        self.dimensions.0 = value;
+        self.dimensions[0] = value;
     }
 }
 
@@ -225,21 +230,14 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
     }
 }
 
-fn update_cache(cpu: &mut Cache, gpu: &Texture2d) -> Result<(), Error> {
+fn update_cache<T: TextureTrait>(cpu: &mut Cache, gpu: &T) -> Result<(), Error> {
     cpu.cache_queued(|rect, data| {
-        gpu.main_level().write(
-            Rect {
-                left: rect.min.x,
-                bottom: rect.min.y,
-                width: rect.width(),
-                height: rect.height(),
-            },
-            RawImage2d {
-                data: Cow::Borrowed(data),
-                width: rect.width(),
-                height: rect.height(),
-                format: ClientFormat::U8,
-            },
+        gpu.write(
+            rect.min.x,
+            rect.min.y,
+            rect.width(),
+            rect.height(),
+            Cow::Borrowed(data),
         );
     })?;
 
@@ -248,16 +246,16 @@ fn update_cache(cpu: &mut Cache, gpu: &Texture2d) -> Result<(), Error> {
 
 fn generate_mesh(
     cache: &Cache,
-    screen_dims: (u32, u32),
-    text_dims: (u32, u32),
+    screen_dims: [u32; 2],
+    text_dims: [u32; 2],
     glyphs: &[PositionedGlyph],
 ) -> Mesh {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
-    let screen_dims = (screen_dims.0 as f32, screen_dims.1 as f32);
-    let text_dims = (text_dims.0 as f32, text_dims.1 as f32);
-    let origin = point(-text_dims.0 / 2.0, text_dims.1 / 2.0);
+    let screen_dims = [screen_dims[0] as f32, screen_dims[1] as f32];
+    let text_dims = [text_dims[0] as f32, text_dims[1] as f32];
+    let origin = point(-text_dims[0] / 2.0, text_dims[1] / 2.0);
 
     let mut quad_counter = 0;
     glyphs.iter().for_each(|g| {
@@ -265,13 +263,13 @@ fn generate_mesh(
             let ndc_rect = RusttypeRect {
                 min: origin
                     + vector(
-                        screen_rect.min.x as f32 / screen_dims.0,
-                        -screen_rect.min.y as f32 / screen_dims.1,
+                        screen_rect.min.x as f32 / screen_dims[0],
+                        -screen_rect.min.y as f32 / screen_dims[1],
                     ),
                 max: origin
                     + vector(
-                        screen_rect.max.x as f32 / screen_dims.0,
-                        -screen_rect.max.y as f32 / screen_dims.1,
+                        screen_rect.max.x as f32 / screen_dims[0],
+                        -screen_rect.max.y as f32 / screen_dims[1],
                     ),
             };
 
@@ -313,7 +311,91 @@ fn generate_mesh(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use graphics::{BackendTrait, glium::{GliumBackend, GliumEventsLoop}};
+    use graphics::{BackendTrait, headless::{HeadlessBackend, HeadlessEventsLoop, HeadlessTexture}, glium::{GliumBackend, GliumEventsLoop, GliumTexture}};
+
+    #[test]
+    fn text_builder_headless() {
+        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let tex = HeadlessTexture::empty(&backend, 512, 512).unwrap();
+
+        let r = Text::builder()
+            .font(&font_path)
+            .cache(tex)
+            .scale(24.0)
+            .text_width(100)
+            .layout("Hello, World!");
+
+        assert_ok!(r);
+    }
+
+    #[test]
+    fn text_mesh_headless() {
+        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let tex = HeadlessTexture::empty(&backend, 512, 512).unwrap();
+
+        let text = Text::builder()
+            .font(&font_path)
+            .cache(tex)
+            .scale(24.0)
+            .text_width(100)
+            .layout("Hello, World!")
+            .unwrap();
+
+        let _: Mesh = text.mesh([1024, 768]);
+    }
+
+    #[test]
+    fn text_scale_headless() {
+        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let tex = HeadlessTexture::empty(&backend, 512, 512).unwrap();
+
+        let mut text = Text::builder()
+            .font(&font_path)
+            .cache(tex)
+            .scale(24.0)
+            .text_width(100)
+            .layout("Hello, World!")
+            .unwrap();
+
+        text.scale(24.0f32);
+    }
+
+    #[test]
+    fn text_width_headless() {
+        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let tex = HeadlessTexture::empty(&backend, 512, 512).unwrap();
+
+        let mut text = Text::builder()
+            .font(&font_path)
+            .cache(tex)
+            .scale(24.0)
+            .text_width(100)
+            .layout("Hello, World!")
+            .unwrap();
+
+        text.width(200u32);
+    }
+
+    #[test]
+    fn text_update_headless() {
+        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let tex = HeadlessTexture::empty(&backend, 512, 512).unwrap();
+
+        let mut text = Text::builder()
+            .font(&font_path)
+            .cache(tex)
+            .scale(24.0)
+            .text_width(100)
+            .layout("Hello, World!")
+            .unwrap();
+
+        assert_ok!(text.text("Hello, you!"));
+    }
 
     #[test]
     #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
@@ -324,16 +406,37 @@ mod tests {
     fn text_builder_glium() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let tex = Texture2d::empty(&backend.display, 512, 512).unwrap();
+        let tex = GliumTexture::empty(&backend, 512, 512).unwrap();
 
-        let mut b = Text::builder();
+        let r = Text::builder()
+            .font(&font_path)
+            .cache(tex)
+            .scale(24.0)
+            .text_width(100)
+            .layout("Hello, World!");
 
-        let _t = Text::builder()
+        assert_ok!(r);
+    }
+
+    #[test]
+    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
+    fn text_update_glium() {
+        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let tex = GliumTexture::empty(&backend, 512, 512).unwrap();
+
+        let mut text = Text::builder()
             .font(&font_path)
             .cache(tex)
             .scale(24.0)
             .text_width(100)
             .layout("Hello, World!")
             .unwrap();
+
+        assert_ok!(text.text("Hello, you!"));
     }
 }

@@ -3,12 +3,9 @@ pub mod headless;
 
 use ecs::EventTrait;
 use failure::Error;
-use std::{borrow::Borrow, convert::TryInto};
+use std::{borrow::{Borrow, Cow}, convert::TryInto};
 
-pub trait BackendTrait<E, F>
-where
-    Self: Sized,
-{
+pub trait BackendTrait<E, F>: Sized {
     fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error>;
     fn create_frame(&self) -> F;
     fn dpi_factor(&self) -> f64;
@@ -26,4 +23,13 @@ where
     I: TryInto<O>,
 {
     fn poll<F: FnMut(I)>(&mut self, f: F);
+}
+
+pub trait TextureTrait: Sized {
+    type Backend;
+
+    fn empty(backend: &Self::Backend, width: u32, height: u32) -> Result<Self, Error>;
+    fn width(&self) -> u32;
+    fn height(&self) -> u32;
+    fn write<'a>(&self, x: u32, y: u32, width: u32, height: u32, data: Cow<'a, [u8]>);
 }

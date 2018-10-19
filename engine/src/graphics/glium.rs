@@ -1,16 +1,16 @@
 use resources::Vertex;
-use super::{BackendTrait, EventsLoopTrait, FrameTrait};
+use super::{BackendTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use event::Event;
 use failure::Error;
 use glium::{
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, EventsLoop, GlProfile, GlRequest, WindowBuilder},
-    texture::Texture2d,
+    texture::{Texture2d, ClientFormat, RawImage2d},
     uniforms::{UniformValue, Uniforms},
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
-    Surface, VertexBuffer,
+    Surface, VertexBuffer, Rect
 };
-use std::{borrow::Borrow, fmt};
+use std::{borrow::{Borrow, Cow}, fmt};
 
 pub use glium::glutin::Event as GliumEvent;
 
@@ -24,7 +24,7 @@ impl Default for GliumEventsLoop {
 
 impl fmt::Debug for GliumEventsLoop {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "GliumEventsLoop")
+        write!(f, "GliumEventsLoop(...)")
     }
 }
 
@@ -41,6 +41,12 @@ pub struct GliumUniforms<'a, 'b, 'c, T: 'a> {
     normal_texture: &'c Texture2d,
 }
 
+impl<'a, 'b, 'c, T> fmt::Debug for GliumUniforms<'a, 'b, 'c, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "GliumUniforms {{ ... }}")
+    }
+}
+
 impl<'a, 'b, 'c, T> Uniforms for GliumUniforms<'a, 'b, 'c, T>
 where
     T: AsRef<[[f32; 4]; 4]> + 'a,
@@ -54,7 +60,41 @@ where
 }
 
 #[derive(Debug)]
-pub struct GliumRenderDataBuilder {
+pub struct GliumTexture(Texture2d);
+
+impl TextureTrait for GliumTexture {
+    type Backend = GliumBackend;
+
+    fn empty(backend: &GliumBackend, width: u32, height: u32) -> Result<Self, Error> {
+        let tex = Texture2d::empty(&backend.display, width, height)?;
+
+        Ok(GliumTexture(tex))
+    }
+
+    fn width(&self) -> u32 {
+        self.0.width()
+    }
+
+    fn height(&self) -> u32 {
+        self.0.height()
+    }
+
+    fn write<'a>(&self, x: u32, y: u32, width: u32, height: u32, data: Cow<'a, [u8]>) {
+        self.0.main_level().write(
+            Rect {
+                left: x,
+                bottom: y,
+                width: width,
+                height: height,
+            },
+            RawImage2d {
+                data: data,
+                width: width,
+                height: height,
+                format: ClientFormat::U8,
+            },
+        )
+    }
 }
 
 #[derive(Debug)]
@@ -64,13 +104,6 @@ pub struct GliumRenderData {
     program: Program,
     diffuse_texture: Texture2d,
     normal_texture: Texture2d,
-}
-
-impl GliumRenderData {
-    pub fn builder() -> GliumRenderDataBuilder {
-        GliumRenderDataBuilder {
-        }
-    }
 }
 
 pub struct GliumFrame(Frame);
@@ -131,7 +164,7 @@ impl FrameTrait<GliumRenderData> for GliumFrame {
 
 impl fmt::Debug for GliumFrame {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "GliumFrame")
+        write!(f, "GliumFrame(...)")
     }
 }
 
@@ -175,7 +208,7 @@ impl BackendTrait<GliumEventsLoop, GliumFrame> for GliumBackend {
 
 impl fmt::Debug for GliumBackend {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "GliumBackend")
+        write!(f, "GliumBackend {{ display: glium::Display }}")
     }
 }
 
