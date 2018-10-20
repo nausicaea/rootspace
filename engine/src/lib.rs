@@ -39,4 +39,3 @@ pub mod mock;
 pub mod orchestrator;
 pub mod resources;
 pub mod systems;
-pub mod text_rendering;

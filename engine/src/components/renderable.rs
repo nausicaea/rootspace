@@ -5,7 +5,7 @@ use graphics::{
     headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture},
 };
 use file_manipulation::ReadPath;
-use text_rendering::Text;
+use resources::{Mesh, Image, Text};
 use std::{
     borrow::Borrow,
     path::{Path, PathBuf},
@@ -55,7 +55,7 @@ impl Renderable<HeadlessRenderData> {
             normal_texture: nt.into(),
         };
 
-        let _mesh_data = mesh.read_to_mesh()?;
+        let _mesh_data = Mesh::from_path(mesh)?;
         let _vertex_shader = vs.read_to_string()?;
         let _fragment_shader = vs.read_to_string()?;
         let _geomertry_shader = if let Some(gs) = gs {
@@ -63,8 +63,8 @@ impl Renderable<HeadlessRenderData> {
         } else {
             None
         };
-        let _diffuse_texture = dt.read_to_image()?;
-        let _normal_texture = dt.read_to_image()?;
+        let _diffuse_texture = Image::from_path(dt)?;
+        let _normal_texture = Image::from_path(nt)?;
 
         Ok(Renderable {
             data: HeadlessRenderData::new(backend)?,

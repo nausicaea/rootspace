@@ -1,6 +1,3 @@
-use image;
-use resources::{self, Image, Mesh};
-use ply;
 use std::{
     borrow::Borrow,
     fs::File,
@@ -48,10 +45,6 @@ pub trait ReadPath {
     fn read_to_string(&self) -> Result<String, FileError>;
     /// Reads `self` as a vector of bytes.
     fn read_to_bytes(&self) -> Result<Vec<u8>, FileError>;
-    /// Reads `self` as an image.
-    fn read_to_image(&self) -> Result<Image, FileError>;
-    /// Reads `self` as 3-dimensional vertex data.
-    fn read_to_mesh(&self) -> Result<Mesh, FileError>;
 }
 
 impl<T: Borrow<Path>> ReadPath for T {
@@ -76,24 +69,6 @@ impl<T: Borrow<Path>> ReadPath for T {
 
         Ok(buf)
     }
-
-    fn read_to_image(&self) -> Result<Image, FileError> {
-        let path = self.borrow();
-        path.ensure_extant_file()?;
-        image::open(path)
-            .map(|img| img.into())
-            .map_err(|e| FileError::ImageError(format!("{}", path.display()), e))
-    }
-
-    fn read_to_mesh(&self) -> Result<Mesh, FileError> {
-        let path = self.borrow();
-        path.ensure_extant_file()?;
-        let data = ply::Ply::from_path(path)
-            .map_err(|e| FileError::PlyError(format!("{}", path.display()), e))?;
-
-        Mesh::from_ply(&data)
-            .map_err(|e| FileError::MeshError(format!("{}", path.display()), e))
-    }
 }
 
 #[derive(Debug, Fail)]
@@ -105,19 +80,13 @@ pub enum FileError {
     #[fail(display = "Not a directory: {}", _0)]
     NotADirectory(String),
     #[fail(display = "{}: {}", _1, _0)]
-    ImageError(String, #[cause] image::ImageError),
-    #[fail(display = "{}: {}", _1, _0)]
     IoError(String, #[cause] io::Error),
-    #[fail(display = "{}: {}", _1, _0)]
-    PlyError(String, #[cause] ply::Error),
-    #[fail(display = "{}: {}", _1, _0)]
-    MeshError(String, #[cause] resources::Error),
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{io::Write, path::PathBuf};
+    use std::io::Write;
     use tempfile::{tempdir, NamedTempFile};
 
     #[test]
@@ -174,19 +143,5 @@ mod tests {
         let r = tf.path().read_to_bytes();
         assert_ok!(r);
         assert_eq!(r.unwrap(), vec![0x00, 0xff, 0x14, 0xf6]);
-    }
-
-    #[test]
-    fn read_to_image() {
-        let img_file = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/tv-test-image.png"));
-        let r: Result<Image, FileError> = img_file.read_to_image();
-        assert_ok!(r);
-    }
-
-    #[test]
-    fn read_to_mesh() {
-        let mesh_file = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"));
-        let r: Result<Mesh, FileError> = mesh_file.read_to_mesh();
-        assert_ok!(r);
     }
 }
