@@ -1,7 +1,6 @@
 use ecs::EventTrait;
-use glium::glutin::WindowEvent;
+use glium::glutin::{Event as GlutinEvent, WindowEvent};
 use graphics::{glium::GliumEvent, headless::HeadlessEvent};
-use std::convert::TryFrom;
 
 bitflags! {
     pub struct EventFlag: u64 {
@@ -54,25 +53,21 @@ impl EventTrait for Event {
     }
 }
 
-impl TryFrom<HeadlessEvent> for Event {
-    type Error = ();
-
-    fn try_from(_value: HeadlessEvent) -> Result<Event, ()> {
-        Err(())
+impl From<HeadlessEvent> for Option<Event> {
+    fn from(_value: HeadlessEvent) -> Option<Event> {
+        None
     }
 }
 
-impl TryFrom<GliumEvent> for Event {
-    type Error = ();
-
-    fn try_from(value: GliumEvent) -> Result<Event, ()> {
-        if let GliumEvent::WindowEvent { event: we, .. } = value {
+impl From<GliumEvent> for Option<Event> {
+    fn from(value: GliumEvent) -> Option<Event> {
+        if let GliumEvent(GlutinEvent::WindowEvent { event: we, .. }) = value {
             match we {
-                WindowEvent::CloseRequested => Ok(Event::shutdown()),
-                _ => Err(()),
+                WindowEvent::CloseRequested => Some(Event::shutdown()),
+                _ => None,
             }
         } else {
-            Err(())
+            None
         }
     }
 }

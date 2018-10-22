@@ -4,7 +4,7 @@ use event::Event;
 use failure::Error;
 use glium::{
     draw_parameters::DepthTest,
-    glutin::{Api, ContextBuilder, EventsLoop, GlProfile, GlRequest, WindowBuilder},
+    glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder},
     texture::{Texture2d, ClientFormat, RawImage2d},
     uniforms::{UniformValue, Uniforms},
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
@@ -12,7 +12,14 @@ use glium::{
 };
 use std::{borrow::{Borrow, Cow}, fmt};
 
-pub use glium::glutin::Event as GliumEvent;
+#[derive(Debug)]
+pub struct GliumEvent(pub GlutinEvent);
+
+impl From<GlutinEvent> for GliumEvent {
+    fn from(value: GlutinEvent) -> Self {
+        GliumEvent(value)
+    }
+}
 
 pub struct GliumEventsLoop(Box<EventsLoop>);
 
@@ -29,8 +36,8 @@ impl fmt::Debug for GliumEventsLoop {
 }
 
 impl EventsLoopTrait<Event, GliumEvent> for GliumEventsLoop {
-    fn poll<F: FnMut(GliumEvent)>(&mut self, f: F) {
-        self.0.poll_events(f)
+    fn poll<F: FnMut(GliumEvent)>(&mut self, mut f: F) {
+        self.0.poll_events(|e| f(e.into()))
     }
 }
 

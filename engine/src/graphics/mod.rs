@@ -3,7 +3,7 @@ pub mod headless;
 
 use ecs::EventTrait;
 use failure::Error;
-use std::{borrow::{Borrow, Cow}, convert::TryInto};
+use std::borrow::{Borrow, Cow};
 
 pub trait BackendTrait<E, F>: Sized {
     fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error>;
@@ -20,7 +20,7 @@ pub trait FrameTrait<D> {
 pub trait EventsLoopTrait<O, I>
 where
     O: EventTrait,
-    I: TryInto<O>,
+    I: Into<Option<O>>,
 {
     fn poll<F: FnMut(I)>(&mut self, f: F);
 }

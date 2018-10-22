@@ -5,7 +5,7 @@ use graphics::{
     headless::{HeadlessEvent as HE, HeadlessEventsLoop as HEL},
     EventsLoopTrait,
 };
-use std::{convert::TryInto, marker::PhantomData, time::Duration};
+use std::{marker::PhantomData, time::Duration};
 
 pub type HeadlessEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, HEL, HE>;
 pub type GliumEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, GEL, GE>;
@@ -42,7 +42,7 @@ where
     Ctx: EventManagerTrait<Evt>,
     Evt: EventTrait,
     L: EventsLoopTrait<Evt, I>,
-    I: TryInto<Evt>,
+    I: Into<Option<Evt>>,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::UPDATE
@@ -50,7 +50,7 @@ where
 
     fn update(&mut self, ctx: &mut Ctx, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
         self.events_loop.poll(|input_event| {
-            if let Ok(event) = input_event.try_into() {
+            if let Some(event) = input_event.into() {
                 ctx.dispatch_later(event);
             }
         });

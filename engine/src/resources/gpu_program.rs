@@ -38,11 +38,11 @@ impl GpuProgramBuilder {
     }
 
     pub fn compile(self) -> Result<GpuProgram, GpuProgramError> {
-        let vs = self.vs
+        let _vs = self.vs
             .ok_or(GpuProgramError::MissingVertexShader)
             .map(|p| p.read_to_string())?;
 
-        let fs = self.fs
+        let _fs = self.fs
             .ok_or(GpuProgramError::MissingFragmentShader)
             .map(|p| p.read_to_string())?;
 
