@@ -1,16 +1,19 @@
-use resources::Vertex;
 use super::{BackendTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use event::Event;
 use failure::Error;
 use glium::{
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder},
-    texture::{Texture2d, ClientFormat, RawImage2d},
+    texture::{ClientFormat, RawImage2d, Texture2d},
     uniforms::{UniformValue, Uniforms},
-    Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
-    Surface, VertexBuffer, Rect
+    Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program, Rect,
+    Surface, VertexBuffer,
 };
-use std::{borrow::{Borrow, Cow}, fmt};
+use resources::Vertex;
+use std::{
+    borrow::{Borrow, Cow},
+    fmt,
+};
 
 #[derive(Debug)]
 pub struct GliumEvent(pub GlutinEvent);
@@ -230,7 +233,11 @@ pub fn triangle(backend: &GliumBackend) -> Result<GliumRenderData, Error> {
         ],
     )?;
 
-    let indices = IndexBuffer::new(&backend.display, ::glium::index::PrimitiveType::TrianglesList, &[0, 1, 2])?;
+    let indices = IndexBuffer::new(
+        &backend.display,
+        ::glium::index::PrimitiveType::TrianglesList,
+        &[0, 1, 2],
+    )?;
 
     let program = Program::from_source(
         &backend.display,
@@ -290,7 +297,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        feature = "wsl",
+        should_panic(
+            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+        )
+    )]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")
@@ -306,7 +318,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        feature = "wsl",
+        should_panic(
+            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+        )
+    )]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")
@@ -318,7 +335,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        feature = "wsl",
+        should_panic(
+            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+        )
+    )]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")

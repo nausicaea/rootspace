@@ -1,115 +1,25 @@
 use failure::Error;
+use file_manipulation::ReadPath;
 use graphics::{
-    BackendTrait,
     glium::GliumRenderData,
     headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture},
+    BackendTrait,
 };
-use file_manipulation::ReadPath;
-use resources::{Mesh, Image, Text};
+use resources::{Image, Mesh, Text};
 use std::{
     borrow::Borrow,
+    marker::PhantomData,
     path::{Path, PathBuf},
 };
 
 #[derive(Debug)]
-pub enum SourceData {
-    Mesh {
-        mesh: PathBuf,
-        vertex_shader: PathBuf,
-        fragment_shader: PathBuf,
-        geometry_shader: Option<PathBuf>,
-        diffuse_texture: PathBuf,
-        normal_texture: PathBuf,
-    },
-    Text {
-        text: String,
-        font: PathBuf,
-        vertex_shader: PathBuf,
-        fragment_shader: PathBuf,
-        geometry_shader: Option<PathBuf>,
-    },
-}
-
-#[derive(Debug)]
 pub struct Renderable<D> {
     data: D,
-    source: Option<SourceData>,
 }
 
 impl Renderable<HeadlessRenderData> {
-    pub fn from_mesh(
-        backend: &HeadlessBackend,
-        mesh: &Path,
-        vs: &Path,
-        fs: &Path,
-        gs: Option<&Path>,
-        dt: &Path,
-        nt: &Path,
-    ) -> Result<Self, Error> {
-        let source = SourceData::Mesh {
-            mesh: mesh.into(),
-            vertex_shader: vs.into(),
-            fragment_shader: fs.into(),
-            geometry_shader: gs.map(|p| p.to_path_buf()),
-            diffuse_texture: dt.into(),
-            normal_texture: nt.into(),
-        };
-
-        let _mesh_data = Mesh::from_path(mesh)?;
-        let _vertex_shader = vs.read_to_string()?;
-        let _fragment_shader = vs.read_to_string()?;
-        let _geomertry_shader = if let Some(gs) = gs {
-            Some(gs.read_to_string()?)
-        } else {
-            None
-        };
-        let _diffuse_texture = Image::from_path(dt)?;
-        let _normal_texture = Image::from_path(nt)?;
-
-        Ok(Renderable {
-            data: HeadlessRenderData::new(backend)?,
-            source: Some(source),
-        })
-    }
-
-    pub fn from_text(
-        backend: &HeadlessBackend,
-        text: &str,
-        font: &Path,
-        vs: &Path,
-        fs: &Path,
-        gs: Option<&Path>,
-    ) -> Result<Self, Error> {
-        let source = SourceData::Text {
-            text: text.into(),
-            font: font.into(),
-            vertex_shader: vs.into(),
-            fragment_shader: fs.into(),
-            geometry_shader: gs.map(|p| p.to_path_buf()),
-        };
-
-        let dpi_factor = backend.dpi_factor();
-        let cache_length = (512.0 * dpi_factor) as u32;
-
-        let _text: Text<HeadlessTexture> = Text::builder()
-            .font(font)
-            .cache([cache_length; 2])
-            .scale(24.0)
-            .width(100)
-            .layout(backend, text)?;
-
-        let _vertex_shader = vs.read_to_string()?;
-        let _fragment_shader = vs.read_to_string()?;
-        let _geomertry_shader = if let Some(gs) = gs {
-            Some(gs.read_to_string()?)
-        } else {
-            None
-        };
-
-        Ok(Renderable {
-            data: HeadlessRenderData::new(backend)?,
-            source: Some(source),
-        })
+    pub fn builder() -> RenderableBuilder<HeadlessRenderData> {
+        RenderableBuilder::default()
     }
 }
 
@@ -121,18 +31,46 @@ impl<D> Borrow<D> for Renderable<D> {
 
 impl From<HeadlessRenderData> for Renderable<HeadlessRenderData> {
     fn from(value: HeadlessRenderData) -> Self {
-        Renderable {
-            data: value,
-            source: None,
-        }
+        Renderable { data: value }
     }
 }
 
 impl From<GliumRenderData> for Renderable<GliumRenderData> {
     fn from(value: GliumRenderData) -> Self {
-        Renderable {
-            data: value,
-            source: None,
+        Renderable { data: value }
+    }
+}
+
+#[derive(Debug)]
+pub struct RenderableBuilder<D> {
+    _d: PhantomData<D>,
+}
+
+impl<D> Default for RenderableBuilder<D> {
+    fn default() -> Self {
+        RenderableBuilder {
+            _d: PhantomData::default(),
         }
+    }
+}
+
+impl<D> RenderableBuilder<D> {
+    pub fn create_text(self) -> Result<Renderable<D>, RenderableError> {
+        unimplemented!()
+    }
+}
+
+#[derive(Debug)]
+pub enum RenderableError {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn build_text_headless() {
+        let r: Result<Renderable<HeadlessRenderData>, RenderableError> = Renderable::builder().create_text();
+
+        assert_ok!(r);
     }
 }

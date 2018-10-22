@@ -1,13 +1,13 @@
-use std::fmt;
-use std::path::{Path, PathBuf};
-use std::marker::PhantomData;
-use std::borrow::Cow;
 use failure::Error;
 use file_manipulation::ReadPath;
-use rusttype::{self, Rect as RusttypeRect, point, vector, Font, Scale, PositionedGlyph, gpu_cache::Cache};
-use unicode_normalization::UnicodeNormalization;
-use resources::{Vertex, Mesh};
 use graphics::TextureTrait;
+use resources::{Mesh, Vertex};
+use rusttype::{self, gpu_cache::Cache, point, vector, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
+use std::borrow::Cow;
+use std::fmt;
+use std::marker::PhantomData;
+use std::path::{Path, PathBuf};
+use unicode_normalization::UnicodeNormalization;
 
 pub struct Text<'a, T> {
     text: String,
@@ -21,7 +21,11 @@ pub struct Text<'a, T> {
 
 impl<'a, T> fmt::Debug for Text<'a, T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Text {{ dimensions: {:?}, text: {:?}, ... }}", self.dimensions, self.text)
+        write!(
+            f,
+            "Text {{ dimensions: {:?}, text: {:?}, ... }}",
+            self.dimensions, self.text
+        )
     }
 }
 
@@ -105,18 +109,19 @@ where
     }
 
     pub fn layout<'a>(self, backend: &T::Backend, text: &str) -> Result<Text<'a, T>, Error> {
-        let font_data = self.font_path
+        let font_data = self
+            .font_path
             .as_ref()
             .ok_or(TextRenderError::MissingFont)?
             .read_to_bytes()?;
 
-        let mut cache_cpu = self.cache_size
-            .map(|dims| Cache::builder()
-                .dimensions(dims[0], dims[1])
-                .build())
+        let mut cache_cpu = self
+            .cache_size
+            .map(|dims| Cache::builder().dimensions(dims[0], dims[1]).build())
             .ok_or(TextRenderError::MissingCache)?;
 
-        let cache_gpu = self.cache_size
+        let cache_gpu = self
+            .cache_size
             .ok_or(TextRenderError::MissingCache.into())
             .and_then(|dims| T::empty(backend, dims[0], dims[1]))?;
 
@@ -149,13 +154,21 @@ pub enum TextRenderError {
     UnrecognizedFormat,
     #[fail(display = "Font data presented to rusttype was ill-formed (lacking necessary tables, for example)")]
     IllFormed,
-    #[fail(display = "The caller tried to access the i'th font from a FontCollection, but the collection doesn't contain that many fonts")]
+    #[fail(
+        display = "The caller tried to access the i'th font from a FontCollection, but the collection doesn't contain that many fonts"
+    )]
     CollectionIndexOutOfBounds,
-    #[fail(display = "The caller tried to convert a FontCollection into a font via into_font, but the FontCollection contains more than one font")]
+    #[fail(
+        display = "The caller tried to convert a FontCollection into a font via into_font, but the FontCollection contains more than one font"
+    )]
     CollectionContainsMultipleFonts,
-    #[fail(display = "At least one of the queued glyphs is too big to fit into the cache, even if all other glyphs are removed")]
+    #[fail(
+        display = "At least one of the queued glyphs is too big to fit into the cache, even if all other glyphs are removed"
+    )]
     GlyphTooLarge,
-    #[fail(display = "Not all of the requested glyphs can fit into the cache, even if the cache is completely cleared before the attempt")]
+    #[fail(
+        display = "Not all of the requested glyphs can fit into the cache, even if the cache is completely cleared before the attempt"
+    )]
     NoRoomForWholeQueue,
 }
 
@@ -228,24 +241,13 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
 
 fn update_cache<T: TextureTrait>(cpu: &mut Cache, gpu: &T) -> Result<(), Error> {
     cpu.cache_queued(|rect, data| {
-        gpu.write(
-            rect.min.x,
-            rect.min.y,
-            rect.width(),
-            rect.height(),
-            Cow::Borrowed(data),
-        );
+        gpu.write(rect.min.x, rect.min.y, rect.width(), rect.height(), Cow::Borrowed(data));
     })?;
 
     Ok(())
 }
 
-fn generate_mesh(
-    cache: &Cache,
-    screen_dims: [u32; 2],
-    text_dims: [u32; 2],
-    glyphs: &[PositionedGlyph],
-) -> Mesh {
+fn generate_mesh(cache: &Cache, screen_dims: [u32; 2], text_dims: [u32; 2], glyphs: &[PositionedGlyph]) -> Mesh {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
@@ -257,16 +259,14 @@ fn generate_mesh(
     glyphs.iter().for_each(|g| {
         if let Ok(Some((uv_rect, screen_rect))) = cache.rect_for(0, g) {
             let ndc_rect = RusttypeRect {
-                min: origin
-                    + vector(
-                        screen_rect.min.x as f32 / screen_dims[0],
-                        -screen_rect.min.y as f32 / screen_dims[1],
-                    ),
-                max: origin
-                    + vector(
-                        screen_rect.max.x as f32 / screen_dims[0],
-                        -screen_rect.max.y as f32 / screen_dims[1],
-                    ),
+                min: origin + vector(
+                    screen_rect.min.x as f32 / screen_dims[0],
+                    -screen_rect.min.y as f32 / screen_dims[1],
+                ),
+                max: origin + vector(
+                    screen_rect.max.x as f32 / screen_dims[0],
+                    -screen_rect.max.y as f32 / screen_dims[1],
+                ),
             };
 
             vertices.push(Vertex::new(
@@ -301,13 +301,17 @@ fn generate_mesh(
         }
     });
 
-    Mesh {vertices, indices}
+    Mesh { vertices, indices }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use graphics::{BackendTrait, headless::{HeadlessBackend, HeadlessEventsLoop, HeadlessTexture}, glium::{GliumBackend, GliumEventsLoop, GliumTexture}};
+    use graphics::{
+        glium::{GliumBackend, GliumEventsLoop, GliumTexture},
+        headless::{HeadlessBackend, HeadlessEventsLoop, HeadlessTexture},
+        BackendTrait,
+    };
 
     #[test]
     fn text_builder_headless() {
@@ -389,7 +393,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        feature = "wsl",
+        should_panic(
+            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+        )
+    )]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")
@@ -409,7 +418,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        feature = "wsl",
+        should_panic(
+            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+        )
+    )]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")

@@ -23,10 +23,7 @@ impl TextureTrait for HeadlessTexture {
     type Backend = HeadlessBackend;
 
     fn empty(_backend: &HeadlessBackend, width: u32, height: u32) -> Result<Self, Error> {
-        Ok(HeadlessTexture {
-            width,
-            height,
-        })
+        Ok(HeadlessTexture { width, height })
     }
 
     fn width(&self) -> u32 {
@@ -37,8 +34,7 @@ impl TextureTrait for HeadlessTexture {
         self.height
     }
 
-    fn write<'a>(&self, _x: u32, _y: u32, _width: u32, _height: u32, _data: Cow<'a, [u8]>) {
-    }
+    fn write<'a>(&self, _x: u32, _y: u32, _width: u32, _height: u32, _data: Cow<'a, [u8]>) {}
 }
 
 #[derive(Debug, Clone, Default)]

@@ -20,9 +20,9 @@ extern crate log;
 extern crate quickcheck;
 extern crate nalgebra;
 extern crate rusttype;
-extern crate unicode_normalization;
 #[cfg(test)]
 extern crate tempfile;
+extern crate unicode_normalization;
 #[macro_use]
 extern crate ecs;
 extern crate ply;

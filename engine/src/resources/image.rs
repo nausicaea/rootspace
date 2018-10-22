@@ -1,9 +1,9 @@
-use image;
 use failure::Error;
 use file_manipulation::VerifyPath;
 use glium::texture::RawImage2d;
-use std::path::Path;
+use image;
 use std::fmt;
+use std::path::Path;
 
 pub struct Image(image::DynamicImage);
 

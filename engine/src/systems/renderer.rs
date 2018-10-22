@@ -179,7 +179,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        feature = "wsl",
+        should_panic(
+            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+        )
+    )]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")
@@ -195,7 +200,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        feature = "wsl",
+        should_panic(
+            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+        )
+    )]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")
@@ -213,7 +223,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", should_panic(expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"))]
+    #[cfg_attr(
+        feature = "wsl",
+        should_panic(
+            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+        )
+    )]
     #[cfg_attr(
         target_os = "macos",
         should_panic(expected = "Windows can only be created on the main thread on macOS")
