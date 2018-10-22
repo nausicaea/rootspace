@@ -9,6 +9,56 @@ use unicode_normalization::UnicodeNormalization;
 use resources::{Vertex, Mesh};
 use graphics::TextureTrait;
 
+pub struct Text<'a, T> {
+    text: String,
+    dimensions: [u32; 2],
+    scale: f32,
+    glyphs: Vec<PositionedGlyph<'a>>,
+    cache_cpu: Cache<'a>,
+    cache_gpu: T,
+    font: Font<'a>,
+}
+
+impl<'a, T> fmt::Debug for Text<'a, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Text {{ dimensions: {:?}, text: {:?}, ... }}", self.dimensions, self.text)
+    }
+}
+
+impl<'a, T> Text<'a, T>
+where
+    T: TextureTrait,
+{
+    pub fn builder() -> TextBuilder<T> {
+        TextBuilder::default()
+    }
+
+    pub fn mesh(&self, screen_dimensions: [u32; 2]) -> Mesh {
+        generate_mesh(&self.cache_cpu, screen_dimensions, self.dimensions, &self.glyphs)
+    }
+
+    pub fn text(&mut self, value: &str) -> Result<(), Error> {
+        let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions[0], value);
+
+        enqueue_glyphs(&mut self.cache_cpu, &glyphs);
+        update_cache(&mut self.cache_cpu, &self.cache_gpu)?;
+
+        self.text = value.into();
+        self.dimensions[1] = text_height;
+        self.glyphs = glyphs;
+
+        Ok(())
+    }
+
+    pub fn scale(&mut self, value: f32) {
+        self.scale = value;
+    }
+
+    pub fn width(&mut self, value: u32) {
+        self.dimensions[0] = value;
+    }
+}
+
 #[derive(Debug)]
 pub struct TextBuilder<T> {
     font_path: Option<PathBuf>,
@@ -18,11 +68,8 @@ pub struct TextBuilder<T> {
     _t: PhantomData<T>,
 }
 
-impl<T> TextBuilder<T>
-where
-    T: TextureTrait,
-{
-    pub fn new() -> Self {
+impl<T> Default for TextBuilder<T> {
+    fn default() -> Self {
         TextBuilder {
             font_path: None,
             cache_size: None,
@@ -31,7 +78,12 @@ where
             _t: PhantomData::default(),
         }
     }
+}
 
+impl<T> TextBuilder<T>
+where
+    T: TextureTrait,
+{
     pub fn font(mut self, path: &Path) -> Self {
         self.font_path = Some(path.into());
         self
@@ -84,56 +136,6 @@ where
             cache_gpu,
             font,
         })
-    }
-}
-
-pub struct Text<'a, T> {
-    text: String,
-    dimensions: [u32; 2],
-    scale: f32,
-    glyphs: Vec<PositionedGlyph<'a>>,
-    cache_cpu: Cache<'a>,
-    cache_gpu: T,
-    font: Font<'a>,
-}
-
-impl<'a, T> fmt::Debug for Text<'a, T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Text {{ dimensions: {:?}, text: {:?}, ... }}", self.dimensions, self.text)
-    }
-}
-
-impl<'a, T> Text<'a, T>
-where
-    T: TextureTrait,
-{
-    pub fn builder() -> TextBuilder<T> {
-        TextBuilder::new()
-    }
-
-    pub fn mesh(&self, screen_dimensions: [u32; 2]) -> Mesh {
-        generate_mesh(&self.cache_cpu, screen_dimensions, self.dimensions, &self.glyphs)
-    }
-
-    pub fn text(&mut self, value: &str) -> Result<(), Error> {
-        let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions[0], value);
-
-        enqueue_glyphs(&mut self.cache_cpu, &glyphs);
-        update_cache(&mut self.cache_cpu, &self.cache_gpu)?;
-
-        self.text = value.into();
-        self.dimensions[1] = text_height;
-        self.glyphs = glyphs;
-
-        Ok(())
-    }
-
-    pub fn scale(&mut self, value: f32) {
-        self.scale = value;
-    }
-
-    pub fn width(&mut self, value: u32) {
-        self.dimensions[0] = value;
     }
 }
 

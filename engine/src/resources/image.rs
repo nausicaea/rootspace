@@ -1,5 +1,6 @@
 use image;
 use failure::Error;
+use file_manipulation::VerifyPath;
 use glium::texture::RawImage2d;
 use std::path::Path;
 use std::fmt;
@@ -8,6 +9,7 @@ pub struct Image(image::DynamicImage);
 
 impl Image {
     pub fn from_path(path: &Path) -> Result<Self, Error> {
+        path.ensure_extant_file()?;
         let data = image::open(path)?;
 
         Ok(Image(data))

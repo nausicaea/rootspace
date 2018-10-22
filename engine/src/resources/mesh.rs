@@ -2,6 +2,7 @@ use ply::{self, CoerceTo};
 use super::vertex::Vertex;
 use std::path::Path;
 use failure::Error;
+use file_manipulation::VerifyPath;
 
 #[derive(Debug)]
 pub struct Mesh {
@@ -11,6 +12,7 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn from_path(path: &Path) -> Result<Self, Error> {
+        path.ensure_extant_file()?;
         let data = ply::Ply::from_path(path)?;
         let mesh = Mesh::from_ply(&data)?;
 

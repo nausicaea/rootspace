@@ -1,8 +1,0 @@
-[package]
-name = "affine-transform"
-version = "0.1.0"
-authors = ["Eleanore Young"]
-
-[dependencies]
-alga = "*"
-nalgebra = "^0.16.0"
