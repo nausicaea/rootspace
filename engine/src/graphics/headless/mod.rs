@@ -49,7 +49,9 @@ impl HeadlessRenderData {
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessFrame;
 
-impl FrameTrait<HeadlessRenderData> for HeadlessFrame {
+impl FrameTrait for HeadlessFrame {
+    type Data = HeadlessRenderData;
+
     fn initialize(&mut self, _color: [f32; 4], _depth: f32) {}
 
     fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<HeadlessRenderData>>(
@@ -68,7 +70,10 @@ impl FrameTrait<HeadlessRenderData> for HeadlessFrame {
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessBackend;
 
-impl BackendTrait<HeadlessEventsLoop, HeadlessFrame> for HeadlessBackend {
+impl BackendTrait for HeadlessBackend {
+    type Loop = HeadlessEventsLoop;
+    type Frame = HeadlessFrame;
+
     fn new(
         _events_loop: &HeadlessEventsLoop,
         _title: &str,

@@ -5,15 +5,20 @@ use ecs::EventTrait;
 use failure::Error;
 use std::borrow::{Borrow, Cow};
 
-pub trait BackendTrait<E, F>: Sized {
-    fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error>;
-    fn create_frame(&self) -> F;
+pub trait BackendTrait: Sized {
+    type Loop;
+    type Frame: FrameTrait;
+
+    fn new(events_loop: &Self::Loop, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error>;
+    fn create_frame(&self) -> Self::Frame;
     fn dpi_factor(&self) -> f64;
 }
 
-pub trait FrameTrait<D> {
+pub trait FrameTrait {
+    type Data;
+
     fn initialize(&mut self, color: [f32; 4], depth: f32);
-    fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<D>>(&mut self, transform: &T, data: &R) -> Result<(), Error>;
+    fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<Self::Data>>(&mut self, transform: &T, data: &R) -> Result<(), Error>;
     fn finalize(self) -> Result<(), Error>;
 }
 

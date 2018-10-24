@@ -2,18 +2,18 @@ use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
 use graphics::{
-    glium::{GliumBackend as GB, GliumEventsLoop as GEL, GliumFrame as GF, GliumRenderData as GRD},
-    headless::{HeadlessBackend as HB, HeadlessEventsLoop as HEL, HeadlessFrame as HF, HeadlessRenderData as HRD},
+    glium::GliumBackend as GB,
+    headless::HeadlessBackend as HB,
     BackendTrait, FrameTrait,
 };
 use nalgebra::Matrix4;
 use std::{borrow::Borrow, marker::PhantomData, time::Duration};
 
-pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, HRD, HF, HEL, HB>;
-pub type GliumRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, GRD, GF, GEL, GB>;
+pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, HB>;
+pub type GliumRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, GB>;
 
 #[derive(Debug)]
-pub struct Renderer<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B> {
+pub struct Renderer<Ctx, Evt, Cam, Mdl, Ren, B> {
     pub backend: B,
     pub clear_color: [f32; 4],
     frames: usize,
@@ -23,16 +23,13 @@ pub struct Renderer<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B> {
     _cam: PhantomData<Cam>,
     _mdl: PhantomData<Mdl>,
     _ren: PhantomData<Ren>,
-    _d: PhantomData<D>,
-    _f: PhantomData<F>,
-    _e: PhantomData<E>,
 }
 
-impl<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B> Renderer<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B>
+impl<Ctx, Evt, Cam, Mdl, Ren, B> Renderer<Ctx, Evt, Cam, Mdl, Ren, B>
 where
-    B: BackendTrait<E, F>,
+    B: BackendTrait,
 {
-    pub fn new(events_loop: &E, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error> {
+    pub fn new(events_loop: &B::Loop, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error> {
         Ok(Renderer {
             backend: B::new(events_loop, title, dimensions, vsync, msaa)?,
             clear_color: [0.69, 0.93, 0.93, 1.0],
@@ -43,9 +40,6 @@ where
             _cam: PhantomData::default(),
             _mdl: PhantomData::default(),
             _ren: PhantomData::default(),
-            _d: PhantomData::default(),
-            _f: PhantomData::default(),
-            _e: PhantomData::default(),
         })
     }
 
@@ -59,15 +53,14 @@ where
     }
 }
 
-impl<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Cam, Mdl, Ren, D, F, E, B>
+impl<Ctx, Evt, Cam, Mdl, Ren, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Cam, Mdl, Ren, B>
 where
     Ctx: DatabaseTrait + SceneGraphTrait<Entity, Mdl>,
     Evt: EventTrait,
     Cam: Borrow<Matrix4<f32>> + 'static,
     Mdl: Default + Clone + Borrow<Matrix4<f32>> + 'static,
-    Ren: Borrow<D> + 'static,
-    F: FrameTrait<D>,
-    B: BackendTrait<E, F>,
+    Ren: Borrow<<<B as BackendTrait>::Frame as FrameTrait>::Data> + 'static,
+    B: BackendTrait,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::RENDER
@@ -114,7 +107,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use components::{camera::Camera, model::Model, renderable::Renderable};
+    use components::{camera::Camera, model::Model};
     use ecs::mock::MockEvt;
     use graphics::{
         glium::{triangle, GliumRenderData as GRD},
@@ -130,13 +123,13 @@ mod tests {
             MockEvt,
             Camera,
             Model,
-            Renderable<HRD>,
+            HRD,
         >::new(&Default::default(), "Title", [800, 600], false, 0));
     }
 
     #[test]
     fn get_stage_filter_headless() {
-        let r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<HRD>>::new(
+        let r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, HRD>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -150,7 +143,7 @@ mod tests {
     #[test]
     fn render_headless() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<HRD>>::new(
+        let mut r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, HRD>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -161,13 +154,13 @@ mod tests {
         let a = ctx.create_entity();
         ctx.insert_node(a);
         ctx.add(a, Model::default()).unwrap();
-        ctx.add(a, Renderable::from(HRD::default())).unwrap();
+        ctx.add(a, HRD::default()).unwrap();
         let b = ctx.create_entity();
         ctx.insert_node(b);
         ctx.add(b, Model::default()).unwrap();
         let c = ctx.create_entity();
         ctx.insert_node(c);
-        ctx.add(c, Renderable::from(HRD::default())).unwrap();
+        ctx.add(c, HRD::default()).unwrap();
         let d = ctx.create_entity();
         ctx.insert_node(d);
         ctx.add(c, Camera::default()).unwrap();
@@ -195,7 +188,7 @@ mod tests {
             MockEvt,
             Camera,
             Model,
-            Renderable<GRD>,
+            GRD,
         >::new(&Default::default(), "Title", [800, 600], false, 0));
     }
 
@@ -211,7 +204,7 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn get_stage_filter_glium() {
-        let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<GRD>>::new(
+        let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, GRD>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -235,7 +228,7 @@ mod tests {
     )]
     fn render_glium() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, Renderable<GRD>>::new(
+        let mut r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, GRD>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -246,13 +239,13 @@ mod tests {
         let a = ctx.create_entity();
         ctx.insert_node(a);
         ctx.add(a, Model::default()).unwrap();
-        ctx.add(a, Renderable::from(triangle(&r.backend).unwrap())).unwrap();
+        ctx.add(a, triangle(&r.backend).unwrap()).unwrap();
         let b = ctx.create_entity();
         ctx.insert_node(b);
         ctx.add(b, Model::default()).unwrap();
         let c = ctx.create_entity();
         ctx.insert_node(c);
-        ctx.add(c, Renderable::from(triangle(&r.backend).unwrap())).unwrap();
+        ctx.add(c, triangle(&r.backend).unwrap()).unwrap();
         let d = ctx.create_entity();
         ctx.insert_node(d);
         ctx.add(c, Camera::default()).unwrap();

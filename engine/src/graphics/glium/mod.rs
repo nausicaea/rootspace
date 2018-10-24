@@ -118,7 +118,9 @@ pub struct GliumRenderData {
 
 pub struct GliumFrame(Frame);
 
-impl FrameTrait<GliumRenderData> for GliumFrame {
+impl FrameTrait for GliumFrame {
+    type Data = GliumRenderData;
+
     fn initialize(&mut self, c: [f32; 4], d: f32) {
         self.0.clear_color_and_depth((c[0], c[1], c[2], c[3]), d)
     }
@@ -183,7 +185,10 @@ pub struct GliumBackend {
     pub display: Display,
 }
 
-impl BackendTrait<GliumEventsLoop, GliumFrame> for GliumBackend {
+impl BackendTrait for GliumBackend {
+    type Loop = GliumEventsLoop;
+    type Frame = GliumFrame;
+
     fn new(
         events_loop: &GliumEventsLoop,
         title: &str,
