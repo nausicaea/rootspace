@@ -54,8 +54,8 @@ impl<D> Default for RenderableBuilder<D> {
     }
 }
 
-impl<D> RenderableBuilder<D> {
-    pub fn create_text(self) -> Result<Renderable<D>, RenderableError> {
+impl RenderableBuilder<GliumRenderData> {
+    pub fn create_text(self) -> Result<Renderable<GliumRenderData>, RenderableError> {
         unimplemented!()
     }
 }
