@@ -7,12 +7,12 @@ use self::{
     event_coordinator::EventCoordinator,
     event_interface::{GliumEventInterface, HeadlessEventInterface},
     event_monitor::EventMonitor,
-    renderer::{GliumRenderer, HeadlessRenderer},
+    renderer::Renderer,
 };
 use components::{camera::Camera, model::Model, renderable::Renderable};
 use context::Context;
 use event::{Event, EventFlag};
-use graphics::{glium::GliumRenderData, headless::HeadlessRenderData};
+use graphics::{glium::{GliumBackend, GliumRenderData}, headless::{HeadlessBackend, HeadlessRenderData}};
 
 impl_system_group! {
     pub enum SystemGroup<Context, Event, EventFlag> {
@@ -20,7 +20,7 @@ impl_system_group! {
         B(EventMonitor<Context, Event>),
         C(GliumEventInterface<Context, Event>),
         D(HeadlessEventInterface<Context, Event>),
-        E(GliumRenderer<Context, Event, Camera, Model, Renderable<GliumRenderData>>),
-        F(HeadlessRenderer<Context, Event, Camera, Model, Renderable<HeadlessRenderData>>),
+        E(Renderer<Context, Event, Camera, Model, Renderable<GliumRenderData>, GliumBackend>),
+        F(Renderer<Context, Event, Camera, Model, Renderable<HeadlessRenderData>, HeadlessBackend>),
     }
 }

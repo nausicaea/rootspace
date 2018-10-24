@@ -1,16 +1,9 @@
 use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
-use graphics::{
-    glium::GliumBackend as GB,
-    headless::HeadlessBackend as HB,
-    BackendTrait, FrameTrait,
-};
+use graphics::{BackendTrait, FrameTrait};
 use nalgebra::Matrix4;
 use std::{borrow::Borrow, marker::PhantomData, time::Duration};
-
-pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, HB>;
-pub type GliumRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, GB>;
 
 #[derive(Debug)]
 pub struct Renderer<Ctx, Evt, Cam, Mdl, Ren, B> {
@@ -110,26 +103,27 @@ mod tests {
     use components::{camera::Camera, model::Model};
     use ecs::mock::MockEvt;
     use graphics::{
-        glium::{triangle, GliumRenderData as GRD},
-        headless::HeadlessRenderData as HRD,
+        glium::{triangle, GliumBackend as GB, GliumRenderData as GRD},
+        headless::{HeadlessBackend as HB, HeadlessRenderData as HRD},
     };
     use mock::MockCtx;
     use std::f32;
 
     #[test]
     fn new_headless() {
-        assert_ok!(HeadlessRenderer::<
+        assert_ok!(Renderer::<
             MockCtx<MockEvt, Model>,
             MockEvt,
             Camera,
             Model,
             HRD,
+            HB,
         >::new(&Default::default(), "Title", [800, 600], false, 0));
     }
 
     #[test]
     fn get_stage_filter_headless() {
-        let r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, HRD>::new(
+        let r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, HRD, HB>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -143,7 +137,7 @@ mod tests {
     #[test]
     fn render_headless() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = HeadlessRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, HRD>::new(
+        let mut r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, HRD, HB>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -183,12 +177,13 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn new_glium() {
-        assert_ok!(GliumRenderer::<
+        assert_ok!(Renderer::<
             MockCtx<MockEvt, Model>,
             MockEvt,
             Camera,
             Model,
             GRD,
+            GB,
         >::new(&Default::default(), "Title", [800, 600], false, 0));
     }
 
@@ -204,7 +199,7 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn get_stage_filter_glium() {
-        let r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, GRD>::new(
+        let r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, GRD, GB>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -228,7 +223,7 @@ mod tests {
     )]
     fn render_glium() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = GliumRenderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, GRD>::new(
+        let mut r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, GRD, GB>::new(
             &Default::default(),
             "Title",
             [800, 600],
