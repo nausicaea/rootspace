@@ -22,12 +22,10 @@ pub trait FrameTrait {
     fn finalize(self) -> Result<(), Error>;
 }
 
-pub trait EventsLoopTrait<O, I>
-where
-    O: EventTrait,
-    I: Into<Option<O>>,
-{
-    fn poll<F: FnMut(I)>(&mut self, f: F);
+pub trait EventsLoopTrait<O: EventTrait> {
+    type InputEvent: Into<Option<O>>;
+
+    fn poll<F: FnMut(Self::InputEvent)>(&mut self, f: F);
 }
 
 pub trait TextureTrait: Sized {

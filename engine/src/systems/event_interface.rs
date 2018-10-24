@@ -1,34 +1,32 @@
 use ecs::{EventManagerTrait, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
 use graphics::{
-    glium::{GliumEvent as GE, GliumEventsLoop as GEL},
-    headless::{HeadlessEvent as HE, HeadlessEventsLoop as HEL},
+    glium::GliumEventsLoop as GEL,
+    headless::HeadlessEventsLoop as HEL,
     EventsLoopTrait,
 };
 use std::{marker::PhantomData, time::Duration};
 
-pub type HeadlessEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, HEL, HE>;
-pub type GliumEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, GEL, GE>;
+pub type HeadlessEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, HEL>;
+pub type GliumEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, GEL>;
 
-pub struct EventInterface<Ctx, Evt, L, I> {
+pub struct EventInterface<Ctx, Evt, L> {
     pub events_loop: L,
     _ctx: PhantomData<Ctx>,
     _evt: PhantomData<Evt>,
-    _i: PhantomData<I>,
 }
 
-impl<Ctx, Evt, L, I> EventInterface<Ctx, Evt, L, I> {
+impl<Ctx, Evt, L> EventInterface<Ctx, Evt, L> {
     pub fn new(events_loop: L) -> Self {
         EventInterface {
             events_loop,
             _ctx: PhantomData::default(),
             _evt: PhantomData::default(),
-            _i: PhantomData::default(),
         }
     }
 }
 
-impl<Ctx, Evt, L, I> Default for EventInterface<Ctx, Evt, L, I>
+impl<Ctx, Evt, L> Default for EventInterface<Ctx, Evt, L>
 where
     L: Default,
 {
@@ -37,12 +35,11 @@ where
     }
 }
 
-impl<Ctx, Evt, L, I> SystemTrait<Ctx, Evt> for EventInterface<Ctx, Evt, L, I>
+impl<Ctx, Evt, L> SystemTrait<Ctx, Evt> for EventInterface<Ctx, Evt, L>
 where
     Ctx: EventManagerTrait<Evt>,
     Evt: EventTrait,
-    L: EventsLoopTrait<Evt, I>,
-    I: Into<Option<Evt>>,
+    L: EventsLoopTrait<Evt>,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::UPDATE

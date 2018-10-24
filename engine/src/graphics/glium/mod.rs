@@ -38,7 +38,9 @@ impl fmt::Debug for GliumEventsLoop {
     }
 }
 
-impl EventsLoopTrait<Event, GliumEvent> for GliumEventsLoop {
+impl EventsLoopTrait<Event> for GliumEventsLoop {
+    type InputEvent = GliumEvent;
+
     fn poll<F: FnMut(GliumEvent)>(&mut self, mut f: F) {
         self.0.poll_events(|e| f(e.into()))
     }

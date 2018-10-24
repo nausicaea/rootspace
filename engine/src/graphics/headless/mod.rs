@@ -9,7 +9,9 @@ pub struct HeadlessEvent;
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessEventsLoop;
 
-impl EventsLoopTrait<Event, HeadlessEvent> for HeadlessEventsLoop {
+impl EventsLoopTrait<Event> for HeadlessEventsLoop {
+    type InputEvent = HeadlessEvent;
+
     fn poll<F: FnMut(HeadlessEvent)>(&mut self, _f: F) {}
 }
 
