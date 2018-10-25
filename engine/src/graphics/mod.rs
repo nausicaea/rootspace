@@ -12,6 +12,7 @@ pub trait BackendTrait: Sized {
     fn new(events_loop: &Self::Loop, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error>;
     fn create_frame(&self) -> Self::Frame;
     fn dpi_factor(&self) -> f64;
+    fn dimensions(&self) -> [u32; 2];
 }
 
 pub trait FrameTrait {

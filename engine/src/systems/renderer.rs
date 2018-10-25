@@ -70,10 +70,8 @@ where
         let nodes = ctx.get_nodes(true);
 
         // Obtain a reference to the camera.
-        let cam = match ctx.find::<Cam>() {
-            Ok(cam) => cam,
-            Err(e) => return Err(format_err!("{} (Camera)", e)),
-        };
+        let cam = ctx.find::<Cam>()
+            .map_err(|e| format_err!("{} (Camera", e))?;
 
         // Create a new frame.
         let mut target = self.backend.create_frame();

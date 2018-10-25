@@ -93,6 +93,10 @@ impl BackendTrait for HeadlessBackend {
     fn dpi_factor(&self) -> f64 {
         1.0
     }
+
+    fn dimensions(&self) -> [u32; 2] {
+        [1024, 768]
+    }
 }
 
 #[cfg(test)]

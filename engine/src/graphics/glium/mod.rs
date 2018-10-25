@@ -111,11 +111,11 @@ impl TextureTrait for GliumTexture {
 
 #[derive(Debug)]
 pub struct GliumRenderData {
-    vertices: VertexBuffer<Vertex>,
-    indices: IndexBuffer<u16>,
-    program: Program,
-    diffuse_texture: Texture2d,
-    normal_texture: Texture2d,
+    pub vertices: VertexBuffer<Vertex>,
+    pub indices: IndexBuffer<u16>,
+    pub program: Program,
+    pub diffuse_texture: Texture2d,
+    pub normal_texture: Texture2d,
 }
 
 pub struct GliumFrame(Frame);
@@ -220,6 +220,11 @@ impl BackendTrait for GliumBackend {
 
     fn dpi_factor(&self) -> f64 {
         self.display.gl_window().get_hidpi_factor()
+    }
+
+    fn dimensions(&self) -> [u32; 2] {
+        let (w, h) = self.display.get_framebuffer_dimensions();
+        [w, h]
     }
 }
 
