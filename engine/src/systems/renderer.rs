@@ -52,7 +52,7 @@ where
     Evt: EventTrait,
     Cam: Borrow<Matrix4<f32>> + 'static,
     Mdl: Default + Clone + Borrow<Matrix4<f32>> + 'static,
-    Ren: Borrow<<<B as BackendTrait>::Frame as FrameTrait>::Data> + 'static,
+    Ren: Borrow<<B as BackendTrait>::Data> + 'static,
     B: BackendTrait,
 {
     fn get_stage_filter(&self) -> LoopStage {

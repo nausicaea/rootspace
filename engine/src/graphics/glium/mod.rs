@@ -74,9 +74,7 @@ where
 #[derive(Debug)]
 pub struct GliumTexture(Texture2d);
 
-impl TextureTrait for GliumTexture {
-    type Backend = GliumBackend;
-
+impl TextureTrait<GliumBackend> for GliumTexture {
     fn empty(backend: &GliumBackend, width: u32, height: u32) -> Result<Self, Error> {
         let tex = Texture2d::empty(&backend.display, width, height)?;
 
@@ -120,9 +118,7 @@ pub struct GliumRenderData {
 
 pub struct GliumFrame(Frame);
 
-impl FrameTrait for GliumFrame {
-    type Data = GliumRenderData;
-
+impl FrameTrait<GliumBackend> for GliumFrame {
     fn initialize(&mut self, c: [f32; 4], d: f32) {
         self.0.clear_color_and_depth((c[0], c[1], c[2], c[3]), d)
     }
@@ -189,7 +185,9 @@ pub struct GliumBackend {
 
 impl BackendTrait for GliumBackend {
     type Loop = GliumEventsLoop;
+    type Data = GliumRenderData;
     type Frame = GliumFrame;
+    type Texture = GliumTexture;
 
     fn new(
         events_loop: &GliumEventsLoop,

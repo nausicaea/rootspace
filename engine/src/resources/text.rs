@@ -1,6 +1,6 @@
 use failure::Error;
 use file_manipulation::ReadPath;
-use graphics::TextureTrait;
+use graphics::{BackendTrait, TextureTrait};
 use resources::{Mesh, Vertex};
 use rusttype::{self, gpu_cache::Cache, point, vector, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use std::borrow::Cow;
@@ -9,17 +9,18 @@ use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 use unicode_normalization::UnicodeNormalization;
 
-pub struct Text<'a, T> {
+pub struct Text<'a, B: BackendTrait> {
     text: String,
     dimensions: [u32; 2],
     scale: f32,
     glyphs: Vec<PositionedGlyph<'a>>,
     cache_cpu: Cache<'a>,
-    cache_gpu: T,
+    cache_gpu: B::Texture,
     font: Font<'a>,
+    _b: PhantomData<B>,
 }
 
-impl<'a, T> fmt::Debug for Text<'a, T> {
+impl<'a, B: BackendTrait> fmt::Debug for Text<'a, B> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -29,11 +30,8 @@ impl<'a, T> fmt::Debug for Text<'a, T> {
     }
 }
 
-impl<'a, T> Text<'a, T>
-where
-    T: TextureTrait,
-{
-    pub fn builder() -> TextBuilder<T> {
+impl<'a, B: BackendTrait> Text<'a, B> {
+    pub fn builder() -> TextBuilder<B> {
         TextBuilder::default()
     }
 
@@ -64,30 +62,27 @@ where
 }
 
 #[derive(Debug)]
-pub struct TextBuilder<T> {
+pub struct TextBuilder<B> {
     font_path: Option<PathBuf>,
     cache_size: Option<[u32; 2]>,
     font_scale: f32,
     text_width: u32,
-    _t: PhantomData<T>,
+    _b: PhantomData<B>,
 }
 
-impl<T> Default for TextBuilder<T> {
+impl<B> Default for TextBuilder<B> {
     fn default() -> Self {
         TextBuilder {
             font_path: None,
             cache_size: None,
             font_scale: 1.0,
             text_width: 100,
-            _t: PhantomData::default(),
+            _b: PhantomData::default(),
         }
     }
 }
 
-impl<T> TextBuilder<T>
-where
-    T: TextureTrait,
-{
+impl<B: BackendTrait> TextBuilder<B> {
     pub fn font(mut self, path: &Path) -> Self {
         self.font_path = Some(path.into());
         self
@@ -108,7 +103,7 @@ where
         self
     }
 
-    pub fn layout<'a>(self, backend: &T::Backend, text: &str) -> Result<Text<'a, T>, Error> {
+    pub fn layout<'a>(self, backend: &B, text: &str) -> Result<Text<'a, B>, Error> {
         let font_data = self
             .font_path
             .as_ref()
@@ -123,7 +118,7 @@ where
         let cache_gpu = self
             .cache_size
             .ok_or(TextRenderError::MissingCache.into())
-            .and_then(|dims| T::empty(backend, dims[0], dims[1]))?;
+            .and_then(|dims| B::Texture::empty(backend, dims[0], dims[1]))?;
 
         let font: Font = Font::from_bytes(font_data)?;
 
@@ -140,6 +135,7 @@ where
             cache_cpu,
             cache_gpu,
             font,
+            _b: PhantomData::default(),
         })
     }
 }
@@ -239,7 +235,7 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
     }
 }
 
-fn update_cache<T: TextureTrait>(cpu: &mut Cache, gpu: &T) -> Result<(), Error> {
+fn update_cache<B: BackendTrait, T: TextureTrait<B>>(cpu: &mut Cache, gpu: &T) -> Result<(), Error> {
     cpu.cache_queued(|rect, data| {
         gpu.write(rect.min.x, rect.min.y, rect.width(), rect.height(), Cow::Borrowed(data));
     })?;
@@ -308,8 +304,8 @@ fn generate_mesh(cache: &Cache, screen_dims: [u32; 2], text_dims: [u32; 2], glyp
 mod tests {
     use super::*;
     use graphics::{
-        glium::{GliumBackend, GliumEventsLoop, GliumTexture},
-        headless::{HeadlessBackend, HeadlessEventsLoop, HeadlessTexture},
+        glium::{GliumBackend, GliumEventsLoop},
+        headless::{HeadlessBackend, HeadlessEventsLoop},
         BackendTrait,
     };
 
@@ -318,7 +314,7 @@ mod tests {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let r: Result<Text<HeadlessTexture>, Error> = Text::builder()
+        let r: Result<Text<HeadlessBackend>, Error> = Text::builder()
             .font(&font_path)
             .cache([512, 512])
             .scale(24.0)
@@ -333,7 +329,7 @@ mod tests {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let text: Text<HeadlessTexture> = Text::builder()
+        let text: Text<HeadlessBackend> = Text::builder()
             .font(&font_path)
             .cache([512, 512])
             .scale(24.0)
@@ -349,7 +345,7 @@ mod tests {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let mut text: Text<HeadlessTexture> = Text::builder()
+        let mut text: Text<HeadlessBackend> = Text::builder()
             .font(&font_path)
             .cache([512, 512])
             .scale(24.0)
@@ -365,7 +361,7 @@ mod tests {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let mut text: Text<HeadlessTexture> = Text::builder()
+        let mut text: Text<HeadlessBackend> = Text::builder()
             .font(&font_path)
             .cache([512, 512])
             .scale(24.0)
@@ -381,7 +377,7 @@ mod tests {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let mut text: Text<HeadlessTexture> = Text::builder()
+        let mut text: Text<HeadlessBackend> = Text::builder()
             .font(&font_path)
             .cache([512, 512])
             .scale(24.0)
@@ -407,7 +403,7 @@ mod tests {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let r: Result<Text<GliumTexture>, Error> = Text::builder()
+        let r: Result<Text<GliumBackend>, Error> = Text::builder()
             .font(&font_path)
             .cache([512, 512])
             .scale(24.0)
@@ -432,7 +428,7 @@ mod tests {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
 
-        let mut text: Text<GliumTexture> = Text::builder()
+        let mut text: Text<GliumBackend> = Text::builder()
             .font(&font_path)
             .cache([512, 512])
             .scale(24.0)

@@ -1,15 +1,19 @@
 use std::path::PathBuf;
+use std::fmt;
 use std::borrow::Borrow;
+use graphics::BackendTrait;
 use graphics::glium::{GliumBackend, GliumRenderData};
+use graphics::headless::{HeadlessBackend, HeadlessRenderData};
 use resources::Text;
+use std::marker::PhantomData;
 
-#[derive(Debug)]
-pub struct Renderable<D> {
-    data: D,
+pub struct Renderable<B: BackendTrait> {
+    data: B::Data,
+    _b: PhantomData<B>,
 }
 
-impl Renderable<GliumRenderData> {
-    pub fn new(backend: &GliumBackend) -> Renderable<GliumRenderData> {
+impl Renderable<GliumBackend> {
+    pub fn new(backend: &GliumBackend) -> Renderable<GliumBackend> {
         let text = Text::builder()
             .font(&PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf")))
             .cache([512; 2])
@@ -21,20 +25,24 @@ impl Renderable<GliumRenderData> {
         let dimensions = backend.dimensions();
         let mesh = text.mesh(dimensions);
 
-        Renderable {
-            data: GliumRenderData {
-                vertices,
-                indices,
-                program,
-                diffuse_texture,
-                normal_texture,
-            },
-        }
+        unimplemented!()
     }
 }
 
-impl<D> Borrow<D> for Renderable<D> {
-    fn borrow(&self) -> &D {
+impl<B: BackendTrait> fmt::Debug for Renderable<B> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Renderable")
+    }
+}
+
+impl Borrow<GliumRenderData> for Renderable<GliumBackend> {
+    fn borrow(&self) -> &GliumRenderData {
+        &self.data
+    }
+}
+
+impl Borrow<HeadlessRenderData> for Renderable<HeadlessBackend> {
+    fn borrow(&self) -> &HeadlessRenderData {
         &self.data
     }
 }

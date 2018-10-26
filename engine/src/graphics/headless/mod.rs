@@ -21,9 +21,7 @@ pub struct HeadlessTexture {
     height: u32,
 }
 
-impl TextureTrait for HeadlessTexture {
-    type Backend = HeadlessBackend;
-
+impl TextureTrait<HeadlessBackend> for HeadlessTexture {
     fn empty(_backend: &HeadlessBackend, width: u32, height: u32) -> Result<Self, Error> {
         Ok(HeadlessTexture { width, height })
     }
@@ -51,9 +49,7 @@ impl HeadlessRenderData {
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessFrame;
 
-impl FrameTrait for HeadlessFrame {
-    type Data = HeadlessRenderData;
-
+impl FrameTrait<HeadlessBackend> for HeadlessFrame {
     fn initialize(&mut self, _color: [f32; 4], _depth: f32) {}
 
     fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<HeadlessRenderData>>(
@@ -74,7 +70,9 @@ pub struct HeadlessBackend;
 
 impl BackendTrait for HeadlessBackend {
     type Loop = HeadlessEventsLoop;
+    type Data = HeadlessRenderData;
     type Frame = HeadlessFrame;
+    type Texture = HeadlessTexture;
 
     fn new(
         _events_loop: &HeadlessEventsLoop,

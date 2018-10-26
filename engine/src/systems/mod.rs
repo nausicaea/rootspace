@@ -20,7 +20,7 @@ impl_system_group! {
         B(EventMonitor<Context, Event>),
         C(GliumEventInterface<Context, Event>),
         D(HeadlessEventInterface<Context, Event>),
-        E(Renderer<Context, Event, Camera, Model, Renderable<GliumRenderData>, GliumBackend>),
-        F(Renderer<Context, Event, Camera, Model, Renderable<HeadlessRenderData>, HeadlessBackend>),
+        E(Renderer<Context, Event, Camera, Model, Renderable<GliumBackend>, GliumBackend>),
+        F(Renderer<Context, Event, Camera, Model, Renderable<HeadlessBackend>, HeadlessBackend>),
     }
 }

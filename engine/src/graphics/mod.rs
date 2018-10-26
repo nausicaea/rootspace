@@ -7,7 +7,9 @@ use std::borrow::{Borrow, Cow};
 
 pub trait BackendTrait: Sized {
     type Loop;
-    type Frame: FrameTrait;
+    type Data;
+    type Frame: FrameTrait<Self>;
+    type Texture: TextureTrait<Self>;
 
     fn new(events_loop: &Self::Loop, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error>;
     fn create_frame(&self) -> Self::Frame;
@@ -15,11 +17,9 @@ pub trait BackendTrait: Sized {
     fn dimensions(&self) -> [u32; 2];
 }
 
-pub trait FrameTrait {
-    type Data;
-
+pub trait FrameTrait<B: BackendTrait> {
     fn initialize(&mut self, color: [f32; 4], depth: f32);
-    fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<Self::Data>>(&mut self, transform: &T, data: &R) -> Result<(), Error>;
+    fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<B::Data>>(&mut self, transform: &T, data: &R) -> Result<(), Error>;
     fn finalize(self) -> Result<(), Error>;
 }
 
@@ -29,10 +29,8 @@ pub trait EventsLoopTrait<O: EventTrait> {
     fn poll<F: FnMut(Self::InputEvent)>(&mut self, f: F);
 }
 
-pub trait TextureTrait: Sized {
-    type Backend;
-
-    fn empty(backend: &Self::Backend, width: u32, height: u32) -> Result<Self, Error>;
+pub trait TextureTrait<B: BackendTrait>: Sized {
+    fn empty(backend: &B, width: u32, height: u32) -> Result<Self, Error>;
     fn width(&self) -> u32;
     fn height(&self) -> u32;
     fn write<'a>(&self, x: u32, y: u32, width: u32, height: u32, data: Cow<'a, [u8]>);
