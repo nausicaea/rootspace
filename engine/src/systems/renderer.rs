@@ -1,9 +1,12 @@
 use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
-use graphics::{BackendTrait, FrameTrait};
+use graphics::{BackendTrait, FrameTrait, headless::HeadlessBackend, glium::GliumBackend};
 use nalgebra::Matrix4;
 use std::{borrow::Borrow, marker::PhantomData, time::Duration};
+
+pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, HeadlessBackend>;
+pub type GliumRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, GliumBackend>;
 
 #[derive(Debug)]
 pub struct Renderer<Ctx, Evt, Cam, Mdl, Ren, B> {
