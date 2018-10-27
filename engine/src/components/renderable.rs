@@ -7,7 +7,7 @@ use glium::{
 };
 use graphics::glium::{GliumBackend, GliumRenderData, GliumTexture};
 use graphics::headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture};
-use graphics::{BackendTrait, TextureTrait};
+use graphics::{BackendTrait, DataTrait, TextureTrait};
 use resources::{Image, Mesh, Text};
 use std::borrow::Borrow;
 use std::fmt;
@@ -31,23 +31,27 @@ impl<B: BackendTrait> fmt::Debug for Renderable<B> {
     }
 }
 
-// impl<B: BackendTrait> Borrow<B::Data> for Renderable<B> {
-//     fn borrow(&self) -> &B::Data {
+impl<B, D> Borrow<D> for Renderable<B>
+where
+    B: BackendTrait<Data = D>,
+    D: DataTrait,
+{
+    fn borrow(&self) -> &D {
+        &self.data
+    }
+}
+
+// impl Borrow<GliumRenderData> for Renderable<GliumBackend> {
+//     fn borrow(&self) -> &GliumRenderData {
 //         &self.data
 //     }
 // }
-
-impl Borrow<GliumRenderData> for Renderable<GliumBackend> {
-    fn borrow(&self) -> &GliumRenderData {
-        &self.data
-    }
-}
-
-impl Borrow<HeadlessRenderData> for Renderable<HeadlessBackend> {
-    fn borrow(&self) -> &HeadlessRenderData {
-        &self.data
-    }
-}
+//
+// impl Borrow<HeadlessRenderData> for Renderable<HeadlessBackend> {
+//     fn borrow(&self) -> &HeadlessRenderData {
+//         &self.data
+//     }
+// }
 
 #[derive(Debug)]
 pub struct RenderableBuilder<B: BackendTrait> {
