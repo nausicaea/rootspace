@@ -83,28 +83,28 @@ impl<B: BackendTrait> Default for RenderableBuilder<B> {
 }
 
 impl<B: BackendTrait> RenderableBuilder<B> {
-    pub fn mesh(mut self, path: &Path) -> Self {
-        self.mesh = Some(path.into());
+    pub fn mesh<P: AsRef<Path>>(mut self, path: P) -> Self {
+        self.mesh = Some(path.as_ref().into());
         self
     }
 
-    pub fn vertex_shader(mut self, path: &Path) -> Self {
-        self.vs = Some(path.into());
+    pub fn vertex_shader<P: AsRef<Path>>(mut self, path: P) -> Self {
+        self.vs = Some(path.as_ref().into());
         self
     }
 
-    pub fn fragment_shader(mut self, path: &Path) -> Self {
-        self.fs = Some(path.into());
+    pub fn fragment_shader<P: AsRef<Path>>(mut self, path: P) -> Self {
+        self.fs = Some(path.as_ref().into());
         self
     }
 
-    pub fn diffuse_texture(mut self, path: &Path) -> Self {
-        self.dt = Some(path.into());
+    pub fn diffuse_texture<P: AsRef<Path>>(mut self, path: P) -> Self {
+        self.dt = Some(path.as_ref().into());
         self
     }
 
-    pub fn normal_texture(mut self, path: &Path) -> Self {
-        self.nt = Some(path.into());
+    pub fn normal_texture<P: AsRef<Path>>(mut self, path: P) -> Self {
+        self.nt = Some(path.as_ref().into());
         self
     }
 
@@ -113,8 +113,8 @@ impl<B: BackendTrait> RenderableBuilder<B> {
         self
     }
 
-    pub fn font(mut self, path: &Path) -> Self {
-        self.font = Some(path.into());
+    pub fn font<P: AsRef<Path>>(mut self, path: P) -> Self {
+        self.font = Some(path.as_ref().into());
         self
     }
 

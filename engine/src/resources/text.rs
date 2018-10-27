@@ -84,8 +84,8 @@ impl<B: BackendTrait> Default for TextBuilder<B> {
 }
 
 impl<B: BackendTrait> TextBuilder<B> {
-    pub fn font(mut self, path: &Path) -> Self {
-        self.font_path = Some(path.into());
+    pub fn font<P: AsRef<Path>>(mut self, path: P) -> Self {
+        self.font_path = Some(path.as_ref().into());
         self
     }
 
@@ -307,7 +307,7 @@ mod tests {
 
     #[test]
     fn text_builder_headless() {
-        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
         let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 
@@ -323,7 +323,7 @@ mod tests {
 
     #[test]
     fn text_mesh_headless() {
-        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
         let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 
@@ -340,7 +340,7 @@ mod tests {
 
     #[test]
     fn text_scale_headless() {
-        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
         let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 
@@ -357,7 +357,7 @@ mod tests {
 
     #[test]
     fn text_width_headless() {
-        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
         let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 
@@ -374,7 +374,7 @@ mod tests {
 
     #[test]
     fn text_update_headless() {
-        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
+        let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
         let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 

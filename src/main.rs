@@ -1,16 +1,17 @@
 extern crate clap;
-#[macro_use]
 extern crate log;
+extern crate failure;
 extern crate fern;
 extern crate game;
 
 use clap::{App, Arg};
 use fern::Dispatch;
+use failure::Error;
 use game::Game;
 use log::LevelFilter;
-use std::{env, io, time::Duration};
+use std::{env, io, time::Duration, path::PathBuf};
 
-fn main() {
+fn main() -> Result<(), Error> {
     Dispatch::new()
         .format(|out, message, record| out.finish(format_args!("{} @{}: {}", record.level(), record.target(), message)))
         .level(LevelFilter::Trace)
@@ -37,11 +38,11 @@ fn main() {
     let headless = matches.is_present("headless");
     let iterations: Option<usize> = matches.value_of("iterations").and_then(|i| i.parse().ok());
 
-    let r = Game::new(&env::temp_dir(), Duration::from_millis(50), Duration::from_millis(250));
-    match r {
-        Ok(mut game) => if let Err(e) = game.run(headless, iterations) {
-            error!("The game aborted with a runtime error: {}", e)
-        },
-        Err(e) => error!("Creation of the game failed with: {}", e),
-    }
+    let dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?)
+        .join("resources")
+        .join("rootspace");
+
+    let mut game = Game::new(dir, Duration::from_millis(50), Duration::from_millis(250))?;
+
+    game.run(headless, iterations)
 }

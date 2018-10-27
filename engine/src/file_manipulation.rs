@@ -1,5 +1,4 @@
 use std::{
-    borrow::Borrow,
     fs::File,
     io::{self, Read},
     path::Path,
@@ -12,9 +11,9 @@ pub trait VerifyPath {
     fn ensure_extant_directory(&self) -> Result<(), FileError>;
 }
 
-impl<T: Borrow<Path>> VerifyPath for T {
+impl<T: AsRef<Path>> VerifyPath for T {
     fn ensure_extant_file(&self) -> Result<(), FileError> {
-        let path = self.borrow();
+        let path = self.as_ref();
         if path.exists() {
             if path.is_file() {
                 Ok(())
@@ -27,7 +26,7 @@ impl<T: Borrow<Path>> VerifyPath for T {
     }
 
     fn ensure_extant_directory(&self) -> Result<(), FileError> {
-        let path = self.borrow();
+        let path = self.as_ref();
         if path.exists() {
             if path.is_dir() {
                 Ok(())
@@ -47,9 +46,9 @@ pub trait ReadPath {
     fn read_to_bytes(&self) -> Result<Vec<u8>, FileError>;
 }
 
-impl<T: Borrow<Path>> ReadPath for T {
+impl<T: AsRef<Path>> ReadPath for T {
     fn read_to_string(&self) -> Result<String, FileError> {
-        let path = self.borrow();
+        let path = self.as_ref();
         path.ensure_extant_file()?;
         let mut f = File::open(path).map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
         let mut buf = String::new();
@@ -60,7 +59,7 @@ impl<T: Borrow<Path>> ReadPath for T {
     }
 
     fn read_to_bytes(&self) -> Result<Vec<u8>, FileError> {
-        let path = self.borrow();
+        let path = self.as_ref();
         path.ensure_extant_file()?;
         let mut f = File::open(path).map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
         let mut buf = Vec::new();

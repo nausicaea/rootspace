@@ -11,7 +11,7 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn from_path(path: &Path) -> Result<Self, Error> {
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         path.ensure_extant_file()?;
         let data = ply::Ply::from_path(path)?;
         let mesh = Mesh::from_ply(&data)?;
@@ -93,11 +93,10 @@ pub enum MeshError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn from_path() {
-        let p = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"));
+        let p = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply");
 
         let r: Result<Mesh, Error> = Mesh::from_path(&p);
         assert_ok!(r);

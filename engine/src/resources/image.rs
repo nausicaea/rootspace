@@ -8,7 +8,7 @@ use std::path::Path;
 pub struct Image(image::DynamicImage);
 
 impl Image {
-    pub fn from_path(path: &Path) -> Result<Self, Error> {
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         path.ensure_extant_file()?;
         let data = image::open(path)?;
 
@@ -48,11 +48,10 @@ impl fmt::Debug for Image {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn from_path() {
-        let p = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/tv-test-image.png"));
+        let p = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/tv-test-image.png");
         let r: Result<Image, Error> = Image::from_path(&p);
         assert_ok!(r);
     }
