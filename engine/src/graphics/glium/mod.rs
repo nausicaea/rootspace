@@ -1,4 +1,4 @@
-use super::{BackendTrait, EventsLoopTrait, FrameTrait, TextureTrait};
+use super::{BackendTrait, EventsLoopTrait, DataTrait, FrameTrait, TextureTrait, private::Sealed};
 use event::Event;
 use failure::Error;
 use glium::{
@@ -39,6 +39,8 @@ impl fmt::Debug for GliumEventsLoop {
     }
 }
 
+impl Sealed for GliumEventsLoop {}
+
 impl EventsLoopTrait<Event> for GliumEventsLoop {
     type InputEvent = GliumEvent;
 
@@ -76,6 +78,8 @@ where
 
 #[derive(Debug, Clone)]
 pub struct GliumTexture(Rc<Texture2d>);
+
+impl Sealed for GliumTexture {}
 
 impl TextureTrait<GliumBackend> for GliumTexture {
     fn empty(backend: &GliumBackend, dimensions: [u32; 2]) -> Result<Self, Error> {
@@ -122,7 +126,13 @@ pub struct GliumRenderData {
     pub normal_texture: Option<GliumTexture>,
 }
 
+impl Sealed for GliumRenderData {}
+
+impl DataTrait for GliumRenderData {}
+
 pub struct GliumFrame(Frame);
+
+impl Sealed for GliumFrame {}
 
 impl FrameTrait<GliumBackend> for GliumFrame {
     fn initialize(&mut self, c: [f32; 4], d: f32) {
@@ -188,6 +198,8 @@ impl fmt::Debug for GliumFrame {
 pub struct GliumBackend {
     pub display: Display,
 }
+
+impl Sealed for GliumBackend {}
 
 impl BackendTrait for GliumBackend {
     type Loop = GliumEventsLoop;

@@ -1,4 +1,4 @@
-use super::{BackendTrait, EventsLoopTrait, FrameTrait, TextureTrait};
+use super::{BackendTrait, EventsLoopTrait, DataTrait, FrameTrait, TextureTrait, private::Sealed};
 use event::Event;
 use failure::Error;
 use resources::Image;
@@ -10,6 +10,8 @@ pub struct HeadlessEvent;
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessEventsLoop;
 
+impl Sealed for HeadlessEventsLoop {}
+
 impl EventsLoopTrait<Event> for HeadlessEventsLoop {
     type InputEvent = HeadlessEvent;
 
@@ -20,6 +22,8 @@ impl EventsLoopTrait<Event> for HeadlessEventsLoop {
 pub struct HeadlessTexture {
     dimensions: [u32; 2],
 }
+
+impl Sealed for HeadlessTexture {}
 
 impl TextureTrait<HeadlessBackend> for HeadlessTexture {
     fn empty(_backend: &HeadlessBackend, dimensions: [u32; 2]) -> Result<Self, Error> {
@@ -42,8 +46,14 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessRenderData;
 
+impl Sealed for HeadlessRenderData {}
+
+impl DataTrait for HeadlessRenderData {}
+
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessFrame;
+
+impl Sealed for HeadlessFrame {}
 
 impl FrameTrait<HeadlessBackend> for HeadlessFrame {
     fn initialize(&mut self, _color: [f32; 4], _depth: f32) {}
@@ -63,6 +73,8 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessBackend;
+
+impl Sealed for HeadlessBackend {}
 
 impl BackendTrait for HeadlessBackend {
     type Loop = HeadlessEventsLoop;
