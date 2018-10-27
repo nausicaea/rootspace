@@ -9,12 +9,12 @@ use glium::{
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program, Rect,
     Surface, VertexBuffer,
 };
-use resources::{Vertex, Image};
+use resources::{Image, Vertex};
+use std::rc::Rc;
 use std::{
     borrow::{Borrow, Cow},
     fmt,
 };
-use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct GliumEvent(pub GlutinEvent);

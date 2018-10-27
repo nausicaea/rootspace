@@ -1,10 +1,6 @@
 use ecs::{EventManagerTrait, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
-use graphics::{
-    glium::GliumEventsLoop as GEL,
-    headless::HeadlessEventsLoop as HEL,
-    EventsLoopTrait,
-};
+use graphics::{glium::GliumEventsLoop as GEL, headless::HeadlessEventsLoop as HEL, EventsLoopTrait};
 use std::{marker::PhantomData, time::Duration};
 
 pub type HeadlessEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, HEL>;
@@ -82,47 +78,5 @@ mod tests {
         assert_ok!(e.update(&mut c, &Default::default(), &Default::default()));
         assert_eq!(c.dispatch_later_calls, 0);
         assert!(c.events.is_empty());
-    }
-
-    #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
-        )
-    )]
-    fn new_glium() {
-        let _: GliumEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
-    }
-
-    #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
-        )
-    )]
-    fn get_stage_filter_glium() {
-        let e: GliumEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
-
-        assert_eq!(e.get_stage_filter(), LoopStage::UPDATE);
-    }
-
-    #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
-        )
-    )]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Events can only be polled from the main thread on macOS")
-    )]
-    fn update_glium() {
-        let mut e: GliumEventInterface<MockCtx<Event, Model>, Event> = EventInterface::default();
-        let mut c = MockCtx::default();
-
-        assert_ok!(e.update(&mut c, &Default::default(), &Default::default()));
     }
 }

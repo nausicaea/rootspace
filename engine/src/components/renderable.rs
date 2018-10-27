@@ -1,18 +1,28 @@
-use std::path::{PathBuf, Path};
-use std::fmt;
 use failure::Error;
 use file_manipulation::ReadPath;
-use std::borrow::Borrow;
-use graphics::{BackendTrait, TextureTrait};
+use glium::{
+    index::{IndexBuffer, PrimitiveType},
+    program::Program,
+    vertex::VertexBuffer,
+};
 use graphics::glium::{GliumBackend, GliumRenderData, GliumTexture};
-use graphics::headless::{HeadlessBackend, HeadlessRenderData};
-use resources::{Text, Image, Mesh};
+use graphics::headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture};
+use graphics::{BackendTrait, TextureTrait};
+use resources::{Image, Mesh, Text};
+use std::borrow::Borrow;
+use std::fmt;
 use std::marker::PhantomData;
-use glium::{vertex::VertexBuffer, index::{IndexBuffer, PrimitiveType}, program::Program};
+use std::path::{Path, PathBuf};
 
 pub struct Renderable<B: BackendTrait> {
     data: B::Data,
     _b: PhantomData<B>,
+}
+
+impl<B: BackendTrait> Renderable<B> {
+    pub fn builder() -> RenderableBuilder<B> {
+        RenderableBuilder::default()
+    }
 }
 
 impl<B: BackendTrait> fmt::Debug for Renderable<B> {
@@ -39,6 +49,7 @@ impl Borrow<HeadlessRenderData> for Renderable<HeadlessBackend> {
     }
 }
 
+#[derive(Debug)]
 pub struct RenderableBuilder<B: BackendTrait> {
     mesh: Option<PathBuf>,
     vs: Option<PathBuf>,
@@ -123,32 +134,75 @@ impl<B: BackendTrait> RenderableBuilder<B> {
     }
 }
 
+impl RenderableBuilder<HeadlessBackend> {
+    pub fn build_mesh_headless(self, _backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
+        let mesh_path = self.mesh.ok_or(RenderableError::MissingMesh)?;
+        let vs_path = self.vs.ok_or(RenderableError::MissingVertexShader)?;
+        let fs_path = self.fs.ok_or(RenderableError::MissingFragmentShader)?;
+        let dt_path = self.dt.ok_or(RenderableError::MissingDiffuseTexture)?;
+
+        let _mesh = Mesh::from_path(&mesh_path)?;
+        let _dt_image = Image::from_path(&dt_path)?;
+        let _nt_image = if let Some(ref p) = self.nt {
+            Some(Image::from_path(p)?)
+        } else {
+            None
+        };
+        let _vs = vs_path.read_to_string()?;
+        let _fs = fs_path.read_to_string()?;
+
+        Ok(Renderable {
+            data: HeadlessRenderData::default(),
+            _b: PhantomData::default(),
+        })
+    }
+
+    pub fn build_text_headless(self, backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
+        let cache_size = self.cache_size;
+        let font_path = self.font.ok_or(RenderableError::MissingFont)?;
+        let text_scale = self.text_scale;
+        let text_width = self.text_width;
+        let text = self.text.ok_or(RenderableError::MissingText)?;
+        let vs_path = self.vs.ok_or(RenderableError::MissingVertexShader)?;
+        let fs_path = self.fs.ok_or(RenderableError::MissingFragmentShader)?;
+
+        let diffuse_texture = HeadlessTexture::empty(backend, cache_size)?;
+
+        let text: Text<HeadlessBackend> = Text::builder()
+            .font(&font_path)
+            .cache(diffuse_texture.clone())
+            .scale(text_scale)
+            .width(text_width)
+            .layout(&text)?;
+
+        let dimensions = backend.dimensions();
+        let _mesh = text.mesh(dimensions);
+
+        let _vs = vs_path.read_to_string()?;
+        let _fs = fs_path.read_to_string()?;
+
+        Ok(Renderable {
+            data: HeadlessRenderData::default(),
+            _b: PhantomData::default(),
+        })
+    }
+}
+
 impl RenderableBuilder<GliumBackend> {
-    pub fn build_mesh(self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
-        let mesh_path = self.mesh
-            .ok_or(RenderableError::MissingMesh)?;
-        let vs_path = self.vs
-            .ok_or(RenderableError::MissingVertexShader)?;
-        let fs_path = self.fs
-            .ok_or(RenderableError::MissingFragmentShader)?;
-        let dt_path = self.dt
-            .ok_or(RenderableError::MissingDiffuseTexture)?;
+    pub fn build_mesh_glium(self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
+        let mesh_path = self.mesh.ok_or(RenderableError::MissingMesh)?;
+        let vs_path = self.vs.ok_or(RenderableError::MissingVertexShader)?;
+        let fs_path = self.fs.ok_or(RenderableError::MissingFragmentShader)?;
+        let dt_path = self.dt.ok_or(RenderableError::MissingDiffuseTexture)?;
 
         let mesh = Mesh::from_path(&mesh_path)?;
         let dt_image = Image::from_path(&dt_path)?;
+        let vs = vs_path.read_to_string()?;
+        let fs = fs_path.read_to_string()?;
 
         let vertices = VertexBuffer::new(&backend.display, &mesh.vertices)?;
         let indices = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, &mesh.indices)?;
-        let vs = vs_path
-            .read_to_string()?;
-        let fs = fs_path
-            .read_to_string()?;
-        let program = Program::from_source(
-            &backend.display,
-            &vs,
-            &fs,
-            None,
-        )?;
+        let program = Program::from_source(&backend.display, &vs, &fs, None)?;
         let diffuse_texture = GliumTexture::from_image(backend, dt_image)?;
         let normal_texture = if let Some(ref p) = self.nt {
             let nt_image = Image::from_path(p)?;
@@ -169,18 +223,14 @@ impl RenderableBuilder<GliumBackend> {
         })
     }
 
-    pub fn build_text(self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
+    pub fn build_text_glium(self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
         let cache_size = self.cache_size;
-        let font_path = self.font
-            .ok_or(RenderableError::MissingFont)?;
+        let font_path = self.font.ok_or(RenderableError::MissingFont)?;
         let text_scale = self.text_scale;
         let text_width = self.text_width;
-        let text = self.text
-            .ok_or(RenderableError::MissingText)?;
-        let vs_path = self.vs
-            .ok_or(RenderableError::MissingVertexShader)?;
-        let fs_path = self.fs
-            .ok_or(RenderableError::MissingFragmentShader)?;
+        let text = self.text.ok_or(RenderableError::MissingText)?;
+        let vs_path = self.vs.ok_or(RenderableError::MissingVertexShader)?;
+        let fs_path = self.fs.ok_or(RenderableError::MissingFragmentShader)?;
 
         let diffuse_texture = GliumTexture::empty(backend, cache_size)?;
 
@@ -196,16 +246,9 @@ impl RenderableBuilder<GliumBackend> {
         let vertices = VertexBuffer::new(&backend.display, &mesh.vertices)?;
         let indices = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, &mesh.indices)?;
 
-        let vs = vs_path
-            .read_to_string()?;
-        let fs = fs_path
-            .read_to_string()?;
-        let program = Program::from_source(
-            &backend.display,
-            &vs,
-            &fs,
-            None,
-        )?;
+        let vs = vs_path.read_to_string()?;
+        let fs = fs_path.read_to_string()?;
+        let program = Program::from_source(&backend.display, &vs, &fs, None)?;
 
         Ok(Renderable {
             data: GliumRenderData {
@@ -234,4 +277,38 @@ pub enum RenderableError {
     MissingFont,
     #[fail(display = "You must provide text to build a Renderable")]
     MissingText,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use graphics::headless::HeadlessEventsLoop;
+
+    #[test]
+    fn headless_builder_mesh() {
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
+        let r: Result<Renderable<HeadlessBackend>, Error> = Renderable::builder()
+            .mesh(&base_path.join("cube.ply"))
+            .vertex_shader(&base_path.join("vertex.glsl"))
+            .fragment_shader(&base_path.join("fragment.glsl"))
+            .diffuse_texture(&base_path.join("tv-test-image.png"))
+            .build_mesh_headless(&b);
+
+        assert_ok!(r);
+    }
+
+    #[test]
+    fn headless_builder_text() {
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
+        let r: Result<Renderable<HeadlessBackend>, Error> = Renderable::builder()
+            .font(&base_path.join("SourceSansPro-Regular.ttf"))
+            .vertex_shader(&base_path.join("vertex.glsl"))
+            .fragment_shader(&base_path.join("fragment.glsl"))
+            .text("Hello, World!")
+            .build_text_headless(&b);
+
+        assert_ok!(r);
+    }
 }

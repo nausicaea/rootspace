@@ -1,7 +1,7 @@
 use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
-use graphics::{BackendTrait, FrameTrait, headless::HeadlessBackend, glium::GliumBackend};
+use graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait, FrameTrait};
 use nalgebra::Matrix4;
 use std::{borrow::Borrow, marker::PhantomData, time::Duration};
 
@@ -25,7 +25,13 @@ impl<Ctx, Evt, Cam, Mdl, Ren, B> Renderer<Ctx, Evt, Cam, Mdl, Ren, B>
 where
     B: BackendTrait,
 {
-    pub fn new(events_loop: &B::Loop, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error> {
+    pub fn new(
+        events_loop: &B::Loop,
+        title: &str,
+        dimensions: [u32; 2],
+        vsync: bool,
+        msaa: u16,
+    ) -> Result<Self, Error> {
         Ok(Renderer {
             backend: B::new(events_loop, title, dimensions, vsync, msaa)?,
             clear_color: [0.69, 0.93, 0.93, 1.0],
@@ -73,8 +79,7 @@ where
         let nodes = ctx.get_nodes(true);
 
         // Obtain a reference to the camera.
-        let cam = ctx.find::<Cam>()
-            .map_err(|e| format_err!("{} (Camera", e))?;
+        let cam = ctx.find::<Cam>().map_err(|e| format_err!("{} (Camera", e))?;
 
         // Create a new frame.
         let mut target = self.backend.create_frame();
@@ -104,7 +109,6 @@ mod tests {
     use components::{camera::Camera, model::Model};
     use ecs::mock::MockEvt;
     use graphics::{
-        glium::{triangle, GliumBackend as GB, GliumRenderData as GRD},
         headless::{HeadlessBackend as HB, HeadlessRenderData as HRD},
     };
     use mock::MockCtx;
@@ -112,14 +116,15 @@ mod tests {
 
     #[test]
     fn new_headless() {
-        assert_ok!(Renderer::<
-            MockCtx<MockEvt, Model>,
-            MockEvt,
-            Camera,
-            Model,
-            HRD,
-            HB,
-        >::new(&Default::default(), "Title", [800, 600], false, 0));
+        assert_ok!(
+            Renderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, HRD, HB>::new(
+                &Default::default(),
+                "Title",
+                [800, 600],
+                false,
+                0
+            )
+        );
     }
 
     #[test]
@@ -156,92 +161,6 @@ mod tests {
         let c = ctx.create_entity();
         ctx.insert_node(c);
         ctx.add(c, HRD::default()).unwrap();
-        let d = ctx.create_entity();
-        ctx.insert_node(d);
-        ctx.add(c, Camera::default()).unwrap();
-
-        assert_ok!(r.render(&mut ctx, &Default::default(), &Default::default()));
-        assert_eq!(r.frames, 1);
-        assert_eq!(r.draw_calls, 1);
-        assert_ulps_eq!(r.average_draw_calls(), 1.0, epsilon = f32::EPSILON);
-    }
-
-    #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
-        )
-    )]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
-    fn new_glium() {
-        assert_ok!(Renderer::<
-            MockCtx<MockEvt, Model>,
-            MockEvt,
-            Camera,
-            Model,
-            GRD,
-            GB,
-        >::new(&Default::default(), "Title", [800, 600], false, 0));
-    }
-
-    #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
-        )
-    )]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
-    fn get_stage_filter_glium() {
-        let r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, GRD, GB>::new(
-            &Default::default(),
-            "Title",
-            [800, 600],
-            false,
-            0,
-        ).unwrap();
-
-        assert_eq!(r.get_stage_filter(), LoopStage::RENDER);
-    }
-
-    #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
-        )
-    )]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
-    fn render_glium() {
-        let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, GRD, GB>::new(
-            &Default::default(),
-            "Title",
-            [800, 600],
-            false,
-            0,
-        ).unwrap();
-
-        let a = ctx.create_entity();
-        ctx.insert_node(a);
-        ctx.add(a, Model::default()).unwrap();
-        ctx.add(a, triangle(&r.backend).unwrap()).unwrap();
-        let b = ctx.create_entity();
-        ctx.insert_node(b);
-        ctx.add(b, Model::default()).unwrap();
-        let c = ctx.create_entity();
-        ctx.insert_node(c);
-        ctx.add(c, triangle(&r.backend).unwrap()).unwrap();
         let d = ctx.create_entity();
         ctx.insert_node(d);
         ctx.add(c, Camera::default()).unwrap();

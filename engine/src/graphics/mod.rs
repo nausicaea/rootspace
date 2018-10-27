@@ -2,8 +2,8 @@ pub mod glium;
 pub mod headless;
 
 use ecs::EventTrait;
-use resources::Image;
 use failure::Error;
+use resources::Image;
 use std::borrow::{Borrow, Cow};
 
 pub trait BackendTrait: Sized {

@@ -1,7 +1,7 @@
 use super::{BackendTrait, EventsLoopTrait, FrameTrait, TextureTrait};
-use resources::Image;
 use event::Event;
 use failure::Error;
+use resources::Image;
 use std::borrow::{Borrow, Cow};
 
 #[derive(Debug, Clone, Default, Copy)]
@@ -41,12 +41,6 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessRenderData;
-
-impl HeadlessRenderData {
-    pub fn new(_backend: &HeadlessBackend) -> Result<Self, Error> {
-        Ok(HeadlessRenderData::default())
-    }
-}
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessFrame;
@@ -115,10 +109,6 @@ mod tests {
     #[test]
     fn data() {
         let _ = HeadlessRenderData::default();
-
-        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-
-        assert_ok!(HeadlessRenderData::new(&b));
     }
 
     #[test]

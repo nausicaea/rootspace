@@ -3,11 +3,11 @@ use file_manipulation::ReadPath;
 use graphics::{BackendTrait, TextureTrait};
 use resources::{Mesh, Vertex};
 use rusttype::{self, gpu_cache::Cache, point, vector, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
+use std::borrow::Borrow;
 use std::borrow::Cow;
 use std::fmt;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
-use std::borrow::Borrow;
 use unicode_normalization::UnicodeNormalization;
 
 pub struct Text<'a, B: BackendTrait> {
@@ -111,14 +111,10 @@ impl<B: BackendTrait> TextBuilder<B> {
             .ok_or(TextRenderError::MissingFont)?
             .read_to_bytes()?;
 
-        let cache_gpu = self
-            .cache_gpu
-            .ok_or(TextRenderError::MissingCache)?;
+        let cache_gpu = self.cache_gpu.ok_or(TextRenderError::MissingCache)?;
 
         let dims = cache_gpu.dimensions();
-        let mut cache_cpu = Cache::builder()
-            .dimensions(dims[0], dims[1])
-            .build();
+        let mut cache_cpu = Cache::builder().dimensions(dims[0], dims[1]).build();
 
         let font: Font = Font::from_bytes(font_data)?;
 
@@ -237,7 +233,8 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
 
 fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(cpu: &mut Cache, gpu: &C) -> Result<(), Error> {
     cpu.cache_queued(|rect, data| {
-        gpu.borrow().write(rect.min.x, rect.min.y, rect.width(), rect.height(), Cow::Borrowed(data));
+        gpu.borrow()
+            .write(rect.min.x, rect.min.y, rect.width(), rect.height(), Cow::Borrowed(data));
     })?;
 
     Ok(())
@@ -304,9 +301,8 @@ fn generate_mesh(cache: &Cache, screen_dims: [u32; 2], text_dims: [u32; 2], glyp
 mod tests {
     use super::*;
     use graphics::{
-        glium::{GliumBackend, GliumEventsLoop, GliumTexture},
         headless::{HeadlessBackend, HeadlessEventsLoop, HeadlessTexture},
-        BackendTrait, TextureTrait
+        BackendTrait, TextureTrait,
     };
 
     #[test]
@@ -383,59 +379,6 @@ mod tests {
         let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 
         let mut text: Text<HeadlessBackend> = Text::builder()
-            .font(&font_path)
-            .cache(cache)
-            .scale(24.0)
-            .width(100)
-            .layout("Hello, World!")
-            .unwrap();
-
-        assert_ok!(text.text("Hello, you!"));
-    }
-
-    #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
-        )
-    )]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
-    fn text_builder_glium() {
-        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
-        let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let cache = GliumTexture::empty(&backend, [512; 2]).unwrap();
-
-        let r: Result<Text<GliumBackend>, Error> = Text::builder()
-            .font(&font_path)
-            .cache(cache)
-            .scale(24.0)
-            .width(100)
-            .layout("Hello, World!");
-
-        assert_ok!(r);
-    }
-
-    #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
-        )
-    )]
-    #[cfg_attr(
-        target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
-    )]
-    fn text_update_glium() {
-        let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
-        let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let cache = GliumTexture::empty(&backend, [512; 2]).unwrap();
-
-        let mut text: Text<GliumBackend> = Text::builder()
             .font(&font_path)
             .cache(cache)
             .scale(24.0)
