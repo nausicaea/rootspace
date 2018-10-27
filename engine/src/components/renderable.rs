@@ -41,18 +41,6 @@ where
     }
 }
 
-// impl Borrow<GliumRenderData> for Renderable<GliumBackend> {
-//     fn borrow(&self) -> &GliumRenderData {
-//         &self.data
-//     }
-// }
-//
-// impl Borrow<HeadlessRenderData> for Renderable<HeadlessBackend> {
-//     fn borrow(&self) -> &HeadlessRenderData {
-//         &self.data
-//     }
-// }
-
 #[derive(Debug)]
 pub struct RenderableBuilder<B: BackendTrait> {
     mesh: Option<PathBuf>,
