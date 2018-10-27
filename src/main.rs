@@ -11,7 +11,7 @@ use game::Game;
 use log::LevelFilter;
 use std::{env, io, time::Duration, path::PathBuf};
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), String> {
     Dispatch::new()
         .format(|out, message, record| out.finish(format_args!("{} @{}: {}", record.level(), record.target(), message)))
         .level(LevelFilter::Trace)
