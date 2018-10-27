@@ -1,12 +1,10 @@
 extern crate clap;
 extern crate log;
-extern crate failure;
 extern crate fern;
 extern crate game;
 
 use clap::{App, Arg};
 use fern::Dispatch;
-use failure::Error;
 use game::Game;
 use log::LevelFilter;
 use std::{env, io, time::Duration, path::PathBuf};
@@ -38,7 +36,10 @@ fn main() -> Result<(), String> {
     let headless = matches.is_present("headless");
     let iterations: Option<usize> = matches.value_of("iterations").and_then(|i| i.parse().ok());
 
-    let dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?)
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR")
+        .map_err(|e| format!("{}", e))?;
+
+    let dir = PathBuf::from(manifest_dir)
         .join("resources")
         .join("rootspace");
 
