@@ -1,4 +1,5 @@
 use super::{BackendTrait, EventsLoopTrait, FrameTrait, TextureTrait};
+use resources::Image;
 use event::Event;
 use failure::Error;
 use std::borrow::{Borrow, Cow};
@@ -17,21 +18,22 @@ impl EventsLoopTrait<Event> for HeadlessEventsLoop {
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessTexture {
-    width: u32,
-    height: u32,
+    dimensions: [u32; 2],
 }
 
 impl TextureTrait<HeadlessBackend> for HeadlessTexture {
-    fn empty(_backend: &HeadlessBackend, width: u32, height: u32) -> Result<Self, Error> {
-        Ok(HeadlessTexture { width, height })
+    fn empty(_backend: &HeadlessBackend, dimensions: [u32; 2]) -> Result<Self, Error> {
+        Ok(HeadlessTexture { dimensions })
     }
 
-    fn width(&self) -> u32 {
-        self.width
+    fn from_image(_backend: &HeadlessBackend, image: Image) -> Result<Self, Error> {
+        Ok(HeadlessTexture {
+            dimensions: image.dimensions(),
+        })
     }
 
-    fn height(&self) -> u32 {
-        self.height
+    fn dimensions(&self) -> [u32; 2] {
+        self.dimensions
     }
 
     fn write<'a>(&self, _x: u32, _y: u32, _width: u32, _height: u32, _data: Cow<'a, [u8]>) {}

@@ -9,7 +9,7 @@ use glium::{
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program, Rect,
     Surface, VertexBuffer,
 };
-use resources::Vertex;
+use resources::{Vertex, Image};
 use std::{
     borrow::{Borrow, Cow},
     fmt,
@@ -78,18 +78,21 @@ where
 pub struct GliumTexture(Rc<Texture2d>);
 
 impl TextureTrait<GliumBackend> for GliumTexture {
-    fn empty(backend: &GliumBackend, width: u32, height: u32) -> Result<Self, Error> {
-        let tex = Texture2d::empty(&backend.display, width, height)?;
+    fn empty(backend: &GliumBackend, dimensions: [u32; 2]) -> Result<Self, Error> {
+        let tex = Texture2d::empty(&backend.display, dimensions[0], dimensions[1])?;
 
         Ok(GliumTexture(Rc::new(tex)))
     }
 
-    fn width(&self) -> u32 {
-        self.0.width()
+    fn from_image(backend: &GliumBackend, image: Image) -> Result<Self, Error> {
+        let raw: RawImage2d<u8> = image.into();
+        let tex = Texture2d::new(&backend.display, raw)?;
+
+        Ok(GliumTexture(Rc::new(tex)))
     }
 
-    fn height(&self) -> u32 {
-        self.0.height()
+    fn dimensions(&self) -> [u32; 2] {
+        [self.0.width(), self.0.height()]
     }
 
     fn write<'a>(&self, x: u32, y: u32, width: u32, height: u32, data: Cow<'a, [u8]>) {
@@ -283,8 +286,8 @@ pub fn triangle(backend: &GliumBackend) -> Result<GliumRenderData, Error> {
         None,
     )?;
 
-    let diffuse_texture = GliumTexture::empty(&backend, 32, 32)?;
-    let normal_texture = Some(GliumTexture::empty(&backend, 32, 32)?);
+    let diffuse_texture = GliumTexture::empty(&backend, [32; 2])?;
+    let normal_texture = Some(GliumTexture::empty(&backend, [32; 2])?);
 
     Ok(GliumRenderData {
         vertices,

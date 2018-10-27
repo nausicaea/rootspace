@@ -115,8 +115,9 @@ impl<B: BackendTrait> TextBuilder<B> {
             .cache_gpu
             .ok_or(TextRenderError::MissingCache)?;
 
+        let dims = cache_gpu.dimensions();
         let mut cache_cpu = Cache::builder()
-            .dimensions(cache_gpu.width(), cache_gpu.height())
+            .dimensions(dims[0], dims[1])
             .build();
 
         let font: Font = Font::from_bytes(font_data)?;
@@ -312,7 +313,7 @@ mod tests {
     fn text_builder_headless() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let cache = HeadlessTexture::empty(&backend, 512, 512).unwrap();
+        let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 
         let r: Result<Text<HeadlessBackend>, Error> = Text::builder()
             .font(&font_path)
@@ -328,7 +329,7 @@ mod tests {
     fn text_mesh_headless() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let cache = HeadlessTexture::empty(&backend, 512, 512).unwrap();
+        let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 
         let text: Text<HeadlessBackend> = Text::builder()
             .font(&font_path)
@@ -345,7 +346,7 @@ mod tests {
     fn text_scale_headless() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let cache = HeadlessTexture::empty(&backend, 512, 512).unwrap();
+        let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 
         let mut text: Text<HeadlessBackend> = Text::builder()
             .font(&font_path)
@@ -362,7 +363,7 @@ mod tests {
     fn text_width_headless() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let cache = HeadlessTexture::empty(&backend, 512, 512).unwrap();
+        let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 
         let mut text: Text<HeadlessBackend> = Text::builder()
             .font(&font_path)
@@ -379,7 +380,7 @@ mod tests {
     fn text_update_headless() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let cache = HeadlessTexture::empty(&backend, 512, 512).unwrap();
+        let cache = HeadlessTexture::empty(&backend, [512; 2]).unwrap();
 
         let mut text: Text<HeadlessBackend> = Text::builder()
             .font(&font_path)
@@ -406,7 +407,7 @@ mod tests {
     fn text_builder_glium() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let cache = GliumTexture::empty(&backend, 512, 512).unwrap();
+        let cache = GliumTexture::empty(&backend, [512; 2]).unwrap();
 
         let r: Result<Text<GliumBackend>, Error> = Text::builder()
             .font(&font_path)
@@ -432,7 +433,7 @@ mod tests {
     fn text_update_glium() {
         let font_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf"));
         let backend = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
-        let cache = GliumTexture::empty(&backend, 512, 512).unwrap();
+        let cache = GliumTexture::empty(&backend, [512; 2]).unwrap();
 
         let mut text: Text<GliumBackend> = Text::builder()
             .font(&font_path)

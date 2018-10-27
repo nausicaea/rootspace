@@ -2,6 +2,7 @@ pub mod glium;
 pub mod headless;
 
 use ecs::EventTrait;
+use resources::Image;
 use failure::Error;
 use std::borrow::{Borrow, Cow};
 
@@ -30,8 +31,8 @@ pub trait EventsLoopTrait<O: EventTrait> {
 }
 
 pub trait TextureTrait<B: BackendTrait>: Sized {
-    fn empty(backend: &B, width: u32, height: u32) -> Result<Self, Error>;
-    fn width(&self) -> u32;
-    fn height(&self) -> u32;
+    fn empty(backend: &B, dimensions: [u32; 2]) -> Result<Self, Error>;
+    fn from_image(backend: &B, image: Image) -> Result<Self, Error>;
+    fn dimensions(&self) -> [u32; 2];
     fn write<'a>(&self, x: u32, y: u32, width: u32, height: u32, data: Cow<'a, [u8]>);
 }

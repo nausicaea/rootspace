@@ -1,7 +1,7 @@
 use failure::Error;
 use file_manipulation::VerifyPath;
 use glium::texture::RawImage2d;
-use image;
+use image::{self, GenericImageView};
 use std::fmt;
 use std::path::Path;
 
@@ -17,6 +17,10 @@ impl Image {
 
     pub fn new_rgba8(width: u32, height: u32) -> Self {
         Image(image::DynamicImage::new_rgba8(width, height))
+    }
+
+    pub fn dimensions(&self) -> [u32; 2] {
+        [self.0.width(), self.0.height()]
     }
 }
 
