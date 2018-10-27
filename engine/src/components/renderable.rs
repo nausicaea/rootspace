@@ -75,66 +75,66 @@ impl<B: BackendTrait> Default for RenderableBuilder<B> {
 }
 
 impl<B: BackendTrait> RenderableBuilder<B> {
-    pub fn mesh<P: AsRef<Path>>(mut self, path: P) -> Self {
+    pub fn mesh<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.mesh = Some(path.as_ref().into());
         self
     }
 
-    pub fn vertex_shader<P: AsRef<Path>>(mut self, path: P) -> Self {
+    pub fn vertex_shader<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.vs = Some(path.as_ref().into());
         self
     }
 
-    pub fn fragment_shader<P: AsRef<Path>>(mut self, path: P) -> Self {
+    pub fn fragment_shader<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.fs = Some(path.as_ref().into());
         self
     }
 
-    pub fn diffuse_texture<P: AsRef<Path>>(mut self, path: P) -> Self {
+    pub fn diffuse_texture<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.dt = Some(path.as_ref().into());
         self
     }
 
-    pub fn normal_texture<P: AsRef<Path>>(mut self, path: P) -> Self {
+    pub fn normal_texture<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.nt = Some(path.as_ref().into());
         self
     }
 
-    pub fn cache_size(mut self, width: u32, height: u32) -> Self {
+    pub fn cache_size(&mut self, width: u32, height: u32) -> &mut Self {
         self.cache_size = [width, height];
         self
     }
 
-    pub fn font<P: AsRef<Path>>(mut self, path: P) -> Self {
+    pub fn font<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.font = Some(path.as_ref().into());
         self
     }
 
-    pub fn text_scale(mut self, scale: f32) -> Self {
+    pub fn text_scale(&mut self, scale: f32) -> &mut Self {
         self.text_scale = scale;
         self
     }
 
-    pub fn text_width(mut self, width: u32) -> Self {
+    pub fn text_width(&mut self, width: u32) -> &mut Self {
         self.text_width = width;
         self
     }
 
-    pub fn text(mut self, text: &str) -> Self {
+    pub fn text(&mut self, text: &str) -> &mut Self {
         self.text = Some(text.into());
         self
     }
 }
 
 impl RenderableBuilder<HeadlessBackend> {
-    pub fn build_mesh_headless(self, _backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
-        let mesh_path = self.mesh.ok_or(RenderableError::MissingMesh)?;
-        let vs_path = self.vs.ok_or(RenderableError::MissingVertexShader)?;
-        let fs_path = self.fs.ok_or(RenderableError::MissingFragmentShader)?;
-        let dt_path = self.dt.ok_or(RenderableError::MissingDiffuseTexture)?;
+    pub fn build_mesh_headless(&self, _backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
+        let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
+        let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
+        let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
+        let dt_path = self.dt.as_ref().ok_or(RenderableError::MissingDiffuseTexture)?;
 
-        let _mesh = Mesh::from_path(&mesh_path)?;
-        let _dt_image = Image::from_path(&dt_path)?;
+        let _mesh = Mesh::from_path(mesh_path)?;
+        let _dt_image = Image::from_path(dt_path)?;
         let _nt_image = if let Some(ref p) = self.nt {
             Some(Image::from_path(p)?)
         } else {
@@ -149,19 +149,19 @@ impl RenderableBuilder<HeadlessBackend> {
         })
     }
 
-    pub fn build_text_headless(self, backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
+    pub fn build_text_headless(&self, backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
         let cache_size = self.cache_size;
-        let font_path = self.font.ok_or(RenderableError::MissingFont)?;
+        let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
         let text_scale = self.text_scale;
         let text_width = self.text_width;
-        let text = self.text.ok_or(RenderableError::MissingText)?;
-        let vs_path = self.vs.ok_or(RenderableError::MissingVertexShader)?;
-        let fs_path = self.fs.ok_or(RenderableError::MissingFragmentShader)?;
+        let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
+        let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
+        let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
 
         let diffuse_texture = HeadlessTexture::empty(backend, cache_size)?;
 
         let text: Text<HeadlessBackend> = Text::builder()
-            .font(&font_path)
+            .font(font_path)
             .cache(diffuse_texture.clone())
             .scale(text_scale)
             .width(text_width)
@@ -181,14 +181,14 @@ impl RenderableBuilder<HeadlessBackend> {
 }
 
 impl RenderableBuilder<GliumBackend> {
-    pub fn build_mesh_glium(self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
-        let mesh_path = self.mesh.ok_or(RenderableError::MissingMesh)?;
-        let vs_path = self.vs.ok_or(RenderableError::MissingVertexShader)?;
-        let fs_path = self.fs.ok_or(RenderableError::MissingFragmentShader)?;
-        let dt_path = self.dt.ok_or(RenderableError::MissingDiffuseTexture)?;
+    pub fn build_mesh_glium(&self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
+        let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
+        let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
+        let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
+        let dt_path = self.dt.as_ref().ok_or(RenderableError::MissingDiffuseTexture)?;
 
-        let mesh = Mesh::from_path(&mesh_path)?;
-        let dt_image = Image::from_path(&dt_path)?;
+        let mesh = Mesh::from_path(mesh_path)?;
+        let dt_image = Image::from_path(dt_path)?;
         let vs = vs_path.read_to_string()?;
         let fs = fs_path.read_to_string()?;
 
@@ -215,19 +215,19 @@ impl RenderableBuilder<GliumBackend> {
         })
     }
 
-    pub fn build_text_glium(self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
+    pub fn build_text_glium(&self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
         let cache_size = self.cache_size;
-        let font_path = self.font.ok_or(RenderableError::MissingFont)?;
+        let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
         let text_scale = self.text_scale;
         let text_width = self.text_width;
-        let text = self.text.ok_or(RenderableError::MissingText)?;
-        let vs_path = self.vs.ok_or(RenderableError::MissingVertexShader)?;
-        let fs_path = self.fs.ok_or(RenderableError::MissingFragmentShader)?;
+        let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
+        let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
+        let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
 
         let diffuse_texture = GliumTexture::empty(backend, cache_size)?;
 
         let text: Text<GliumBackend> = Text::builder()
-            .font(&font_path)
+            .font(font_path)
             .cache(diffuse_texture.clone())
             .scale(text_scale)
             .width(text_width)
