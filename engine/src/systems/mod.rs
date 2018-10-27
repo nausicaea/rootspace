@@ -12,7 +12,7 @@ use self::{
 use components::{camera::Camera, model::Model, renderable::Renderable};
 use context::Context;
 use event::{Event, EventFlag};
-use graphics::{glium::{GliumBackend, GliumRenderData}, headless::{HeadlessBackend, HeadlessRenderData}};
+use graphics::{glium::GliumBackend, headless::HeadlessBackend};
 
 impl_system_group! {
     pub enum SystemGroup<Context, Event, EventFlag> {

@@ -14,6 +14,7 @@ use std::{
     borrow::{Borrow, Cow},
     fmt,
 };
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct GliumEvent(pub GlutinEvent);
@@ -50,7 +51,7 @@ pub struct GliumUniforms<'a, 'b, 'c, T: 'a> {
     transform: &'a T,
     dimensions: [f32; 2],
     diffuse_texture: &'b Texture2d,
-    normal_texture: &'c Texture2d,
+    normal_texture: Option<&'c Texture2d>,
 }
 
 impl<'a, 'b, 'c, T> fmt::Debug for GliumUniforms<'a, 'b, 'c, T> {
@@ -67,18 +68,20 @@ where
         f("transform", UniformValue::Mat4(*self.transform.as_ref()));
         f("dimensions", UniformValue::Vec2(self.dimensions));
         f("diffuse_texture", UniformValue::Texture2d(self.diffuse_texture, None));
-        f("normal_texture", UniformValue::Texture2d(self.normal_texture, None));
+        if let Some(nt) = self.normal_texture {
+            f("normal_texture", UniformValue::Texture2d(nt, None));
+        }
     }
 }
 
-#[derive(Debug)]
-pub struct GliumTexture(Texture2d);
+#[derive(Debug, Clone)]
+pub struct GliumTexture(Rc<Texture2d>);
 
 impl TextureTrait<GliumBackend> for GliumTexture {
     fn empty(backend: &GliumBackend, width: u32, height: u32) -> Result<Self, Error> {
         let tex = Texture2d::empty(&backend.display, width, height)?;
 
-        Ok(GliumTexture(tex))
+        Ok(GliumTexture(Rc::new(tex)))
     }
 
     fn width(&self) -> u32 {
@@ -112,8 +115,8 @@ pub struct GliumRenderData {
     pub vertices: VertexBuffer<Vertex>,
     pub indices: IndexBuffer<u16>,
     pub program: Program,
-    pub diffuse_texture: Texture2d,
-    pub normal_texture: Texture2d,
+    pub diffuse_texture: GliumTexture,
+    pub normal_texture: Option<GliumTexture>,
 }
 
 pub struct GliumFrame(Frame);
@@ -135,8 +138,8 @@ impl FrameTrait<GliumBackend> for GliumFrame {
         let u = GliumUniforms {
             transform: transform,
             dimensions: [dimensions.0 as f32, dimensions.1 as f32],
-            diffuse_texture: &data.diffuse_texture,
-            normal_texture: &data.normal_texture,
+            diffuse_texture: &data.diffuse_texture.0,
+            normal_texture: data.normal_texture.as_ref().map(|t| t.0.borrow()),
         };
 
         let dp = DrawParameters {
@@ -280,8 +283,8 @@ pub fn triangle(backend: &GliumBackend) -> Result<GliumRenderData, Error> {
         None,
     )?;
 
-    let diffuse_texture = Texture2d::empty(&backend.display, 32, 32)?;
-    let normal_texture = Texture2d::empty(&backend.display, 32, 32)?;
+    let diffuse_texture = GliumTexture::empty(&backend, 32, 32)?;
+    let normal_texture = Some(GliumTexture::empty(&backend, 32, 32)?);
 
     Ok(GliumRenderData {
         vertices,
