@@ -1,6 +1,5 @@
 extern crate clap;
 extern crate log;
-#[macro_use]
 extern crate failure;
 extern crate fern;
 extern crate game;
@@ -44,8 +43,8 @@ fn main() -> Result<(), Error> {
         .join("rootspace");
 
     let mut game = Game::new(dir, Duration::from_millis(50), Duration::from_millis(250))
-        .map_err(|e| format_err!("{}", e))?;
+        .map_err(|e| format!("{}", e))?;
 
     game.run(headless, iterations)
-        .map_err(|e| format_err!("{}", e))
+        .map_err(|e| format!("{}", e))
 }
