@@ -47,6 +47,7 @@ where
         self.dispatch_later_calls += 1;
         self.events.push_back(event)
     }
+
     fn handle_events<F>(&mut self, mut handler: F) -> Result<bool, FailureError>
     where
         F: FnMut(&mut Self, &E) -> Result<bool, FailureError>,

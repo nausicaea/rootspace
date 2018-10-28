@@ -7,6 +7,7 @@ extern crate assertions;
 extern crate affine_transform;
 #[macro_use]
 extern crate bitflags;
+extern crate ctrlc;
 #[macro_use]
 extern crate failure;
 #[macro_use]
