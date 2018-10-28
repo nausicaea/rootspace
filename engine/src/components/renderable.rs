@@ -127,13 +127,13 @@ impl<B: BackendTrait> RenderableBuilder<B> {
 }
 
 impl RenderableBuilder<HeadlessBackend> {
-    pub fn build_mesh_headless(&self, _backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
+    pub fn build_mesh_headless(&self, backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
         let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
         let dt_path = self.dt.as_ref().ok_or(RenderableError::MissingDiffuseTexture)?;
 
-        let _mesh = Mesh::from_path(mesh_path)?;
+        let mesh = Mesh::from_path(mesh_path)?;
         let _dt_image = Image::from_path(dt_path)?;
         let _nt_image = if let Some(ref p) = self.nt {
             Some(Image::from_path(p)?)
@@ -144,7 +144,7 @@ impl RenderableBuilder<HeadlessBackend> {
         let _fs = fs_path.read_to_string()?;
 
         Ok(Renderable {
-            data: HeadlessRenderData::default(),
+            data: HeadlessRenderData::new(backend, &mesh)?,
             _b: PhantomData::default(),
         })
     }
@@ -168,13 +168,13 @@ impl RenderableBuilder<HeadlessBackend> {
             .layout(&text)?;
 
         let dimensions = backend.dimensions();
-        let _mesh = text.mesh(dimensions);
+        let mesh = text.mesh(dimensions);
 
         let _vs = vs_path.read_to_string()?;
         let _fs = fs_path.read_to_string()?;
 
         Ok(Renderable {
-            data: HeadlessRenderData::default(),
+            data: HeadlessRenderData::new(backend, &mesh)?,
             _b: PhantomData::default(),
         })
     }

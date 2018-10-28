@@ -1,7 +1,7 @@
 use super::{BackendTrait, EventsLoopTrait, DataTrait, FrameTrait, TextureTrait, private::Sealed};
 use event::Event;
 use failure::Error;
-use resources::Image;
+use resources::{Image, Mesh};
 use std::borrow::{Borrow, Cow};
 
 #[derive(Debug, Clone, Default, Copy)]
@@ -27,10 +27,16 @@ impl Sealed for HeadlessTexture {}
 
 impl TextureTrait<HeadlessBackend> for HeadlessTexture {
     fn empty(_backend: &HeadlessBackend, dimensions: [u32; 2]) -> Result<Self, Error> {
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Created an empty texture (dims={:?})", dimensions);
+
         Ok(HeadlessTexture { dimensions })
     }
 
     fn from_image(_backend: &HeadlessBackend, image: Image) -> Result<Self, Error> {
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Created a texture from an image (dims={:?})", image.dimensions());
+
         Ok(HeadlessTexture {
             dimensions: image.dimensions(),
         })
@@ -45,6 +51,16 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessRenderData;
+
+impl HeadlessRenderData {
+    #[allow(unused_variables)]
+    pub fn new(_backend: &HeadlessBackend, mesh: &Mesh) -> Result<Self, Error> {
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Created render data with {} vertices", mesh.vertices.len());
+
+        Ok(HeadlessRenderData::default())
+    }
+}
 
 impl Sealed for HeadlessRenderData {}
 
@@ -82,13 +98,17 @@ impl BackendTrait for HeadlessBackend {
     type Frame = HeadlessFrame;
     type Texture = HeadlessTexture;
 
+    #[allow(unused_variables)]
     fn new(
         _events_loop: &HeadlessEventsLoop,
-        _title: &str,
-        _dimensions: [u32; 2],
+        title: &str,
+        dimensions: [u32; 2],
         _vsync: bool,
         _msaa: u16,
     ) -> Result<Self, Error> {
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Created a headless backend (title '{}', dimensions {:?})", title, dimensions);
+
         Ok(HeadlessBackend::default())
     }
 
