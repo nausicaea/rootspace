@@ -47,7 +47,7 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
         self.dimensions
     }
 
-    fn write<'a>(&self, _rect: Rect<u32>, _data: Cow<'a, [u8]>) {}
+    fn write<'a, R: Into<Rect<u32>>>(&self, _rect: R, _data: Cow<'a, [u8]>) {}
 }
 
 #[derive(Debug, Clone, Default)]

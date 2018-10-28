@@ -1,8 +1,10 @@
 use ecs::{EventManagerTrait, LoopStage, SystemTrait};
 use event::{Event, EventFlag};
 use failure::Error;
+#[cfg(not(test))]
 use ctrlc;
 use std::marker::PhantomData;
+#[cfg(not(test))]
 use std::process;
 use std::time::Duration;
 use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
@@ -15,16 +17,18 @@ pub struct EventCoordinator<Ctx> {
 impl<Ctx> Default for EventCoordinator<Ctx> {
     fn default() -> Self {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
-        let r = ctrlc_triggered.clone();
         #[cfg(not(test))]
-        ctrlc::set_handler(move || {
-            let previous = r.fetch_add(1, Ordering::SeqCst);
-            if previous > 0 {
-                error!("Force-quitting the application");
-                process::exit(1);
-            }
-        })
-        .expect("Unable to set a termination handler");
+        {
+            let r = ctrlc_triggered.clone();
+            ctrlc::set_handler(move || {
+                let previous = r.fetch_add(1, Ordering::SeqCst);
+                if previous > 0 {
+                    error!("Force-quitting the application");
+                    process::exit(1);
+                }
+            })
+            .expect("Unable to set a termination handler");
+        }
 
         EventCoordinator {
             ctrlc_triggered,

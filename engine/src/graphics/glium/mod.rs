@@ -100,7 +100,8 @@ impl TextureTrait<GliumBackend> for GliumTexture {
         [self.0.width(), self.0.height()]
     }
 
-    fn write<'a>(&self, rect: Rect<u32>, data: Cow<'a, [u8]>) {
+    fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, data: Cow<'a, [u8]>) {
+        let rect = rect.into();
         let dims = rect.dimensions();
         let img = RawImage2d {
             data: data,

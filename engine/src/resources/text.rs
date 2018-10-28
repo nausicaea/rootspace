@@ -240,7 +240,7 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
 fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(cpu: &mut Cache, gpu: &C) -> Result<(), Error> {
     cpu.cache_queued(|rect, data| {
         gpu.borrow()
-            .write(rect.into(), Cow::Borrowed(data));
+            .write(rect, Cow::Borrowed(data));
     })?;
 
     Ok(())

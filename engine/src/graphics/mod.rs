@@ -41,5 +41,5 @@ pub trait TextureTrait<B: BackendTrait>: Sized + private::Sealed {
     fn empty(backend: &B, dimensions: [u32; 2]) -> Result<Self, Error>;
     fn from_image(backend: &B, image: Image) -> Result<Self, Error>;
     fn dimensions(&self) -> [u32; 2];
-    fn write<'a>(&self, rect: Rect<u32>, data: Cow<'a, [u8]>);
+    fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, data: Cow<'a, [u8]>);
 }
