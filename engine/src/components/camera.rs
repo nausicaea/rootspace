@@ -1,6 +1,5 @@
-use super::AsMatrix;
 use nalgebra::{Isometry3, Matrix4, Perspective3, Point3, Vector3};
-use std::f32;
+use std::{borrow::Borrow, f32};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Camera {
@@ -32,10 +31,6 @@ impl Camera {
             view,
         }
     }
-
-    fn recalculate(&mut self) {
-        self.matrix = self.projection.as_matrix() * self.view.to_homogeneous()
-    }
 }
 
 impl Default for Camera {
@@ -51,8 +46,8 @@ impl Default for Camera {
     }
 }
 
-impl AsMatrix for Camera {
-    fn as_matrix(&self) -> &Matrix4<f32> {
+impl Borrow<Matrix4<f32>> for Camera {
+    fn borrow(&self) -> &Matrix4<f32> {
         &self.matrix
     }
 }
@@ -89,9 +84,9 @@ mod tests {
     }
 
     #[test]
-    fn as_matrix() {
+    fn borrow() {
         let c = Camera::default();
-        let m: &Matrix4<f32> = c.as_matrix();
+        let m: &Matrix4<f32> = c.borrow();
         assert_eq!(m, &(c.projection.as_matrix() * c.view.to_homogeneous()));
     }
 }

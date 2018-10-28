@@ -6,21 +6,27 @@ authors = ["Eleanore Young"]
 [features]
 diagnostics = []
 wsl = []
-mock = []
+mock = ["ecs/mock"]
 
 [dependencies]
 bitflags = "^1.0.3"
+ctrlc = {version = "^3.0.0", features = ["termination"]}
 failure = "^0.1.1"
+glium = "^0.22.0"
+image = "^0.20.0"
 log = "^0.4.1"
-glium = "^0.21.0"
-nalgebra = "^0.15.0"
-affine-transform = {path = "../affine-transform"}
-hierarchy = {path = "../hierarchy"}
-ecs = {path = "../ecs"}
+nalgebra = "^0.16.0"
+num-traits = "^0.2.6"
+rusttype = {version = "^0.7.2", features = ["gpu_cache"]}
+unicode-normalization = "^0.1.5"
+affine-transform = {git = "https://gitlab.com/nausicaea/affine-transform.git"}
+hierarchy = {git = "https://gitlab.com/nausicaea/hierarchy.git"}
+ecs = {git = "https://gitlab.com/nausicaea/ecs.git"}
+ply = {git = "https://gitlab.com/nausicaea/ply.git"}
 
 [dev-dependencies]
-assertions = {path = "../assertions"}
-approx = "^0.2.0"
+assertions = {git = "https://gitlab.com/nausicaea/assertions.git"}
+approx = "^0.3.0"
 tempfile = "^3.0.1"
-quickcheck = "^0.6.2"
-ecs = {path = "../ecs", features = ["mock"]}
+quickcheck = "^0.7.1"
+ecs = {git = "https://gitlab.com/nausicaea/ecs.git", features = ["mock"]}

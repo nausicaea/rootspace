@@ -1,17 +1,15 @@
 extern crate ecs;
 extern crate engine;
 extern crate failure;
-extern crate glium;
 extern crate log;
 extern crate nalgebra;
 
 use ecs::{DatabaseTrait, EventManagerTrait, World};
 use engine::{
-    components::{camera::Camera, model::Model},
+    components::{camera::Camera, model::Model, renderable::Renderable},
     context::{Context, SceneGraphTrait},
     event::Event,
     file_manipulation::FileError,
-    graphics::{glium::GliumRenderData, headless::HeadlessRenderData, RenderDataTrait},
     orchestrator::Orchestrator,
     systems::{
         event_coordinator::EventCoordinator,
@@ -23,14 +21,18 @@ use engine::{
 };
 use failure::Error;
 use nalgebra::Vector3;
-use std::{path::Path, time::Duration, f32};
+use std::{f32, path::Path, time::Duration};
 
 pub struct Game {
     orchestrator: Orchestrator<World<Event, Context, SystemGroup>>,
 }
 
 impl Game {
-    pub fn new(resource_path: &Path, delta_time: Duration, max_frame_time: Duration) -> Result<Self, FileError> {
+    pub fn new<P: AsRef<Path>>(
+        resource_path: P,
+        delta_time: Duration,
+        max_frame_time: Duration,
+    ) -> Result<Self, FileError> {
         let o = Orchestrator::new(resource_path, delta_time, max_frame_time)?;
 
         Ok(Game { orchestrator: o })
@@ -38,41 +40,95 @@ impl Game {
 
     pub fn run(&mut self, headless: bool, iterations: Option<usize>) -> Result<(), Error> {
         let camera = self.context_mut().create_entity();
-        self.context_mut().add(camera, Camera::default()).unwrap();
+        self.context_mut().add(camera, Camera::default())?;
 
         let ea = self.context_mut().create_entity();
         self.context_mut().insert_node(ea);
-        self.context_mut().add(ea, Model::new(Vector3::new(0.0, 0.0, -10.0), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0))).unwrap();
+        self.context_mut().add(
+            ea,
+            Model::new(
+                Vector3::new(0.0, 0.0, -10.0),
+                Vector3::new(0.0, 0.0, 0.0),
+                Vector3::new(1.0, 1.0, 1.0),
+            ),
+        )?;
 
         let eb = self.context_mut().create_entity();
         self.context_mut().insert_node(eb);
-        self.context_mut().add(eb, Model::new(Vector3::new(-2.0, 1.0, -7.0), Vector3::new(0.0, f32::consts::PI / 4.0, 0.0), Vector3::new(1.0, 1.0, 1.0))).unwrap();
+        self.context_mut().add(
+            eb,
+            Model::new(
+                Vector3::new(-2.0, 1.0, -7.0),
+                Vector3::new(0.0, f32::consts::PI / 4.0, 0.0),
+                Vector3::new(1.0, 1.0, 1.0),
+            ),
+        )?;
 
         if headless {
             let event_interface = HeadlessEventInterface::default();
-            let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4).unwrap();
+            let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
 
-            self.context_mut()
-                .add(ea, HeadlessRenderData::triangle(&renderer.backend).unwrap())
-                .unwrap();
+            let m = self.orchestrator.get_file("meshes", "cube.ply")?;
+            let vs = self.orchestrator.get_file("shaders", "base-vertex.glsl")?;
+            let fs = self.orchestrator.get_file("shaders", "base-fragment.glsl")?;
+            let dt = self.orchestrator.get_file("textures", "tv-test-image.png")?;
+            self.context_mut().add(
+                ea,
+                Renderable::builder()
+                    .mesh(m)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .diffuse_texture(dt)
+                    .build_mesh_headless(&renderer.backend)?,
+            )?;
 
-            self.context_mut()
-                .add(eb, HeadlessRenderData::cube(&renderer.backend).unwrap())
-                .unwrap();
+            let f = self.orchestrator.get_file("fonts", "SourceSansPro-Regular.ttf")?;
+            let vs = self.orchestrator.get_file("shaders", "text-vertex.glsl")?;
+            let fs = self.orchestrator.get_file("shaders", "text-fragment.glsl")?;
+            let text = "Hello, World!";
+            self.context_mut().add(
+                eb,
+                Renderable::builder()
+                    .font(f)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .text(text)
+                    .build_text_headless(&renderer.backend)?,
+            )?;
 
             self.world_mut().add_system(event_interface);
             self.world_mut().add_system(renderer);
         } else {
             let event_interface = GliumEventInterface::default();
-            let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4).unwrap();
+            let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
 
-            self.context_mut()
-                .add(ea, GliumRenderData::triangle(&renderer.backend).unwrap())
-                .unwrap();
+            let m = self.orchestrator.get_file("meshes", "cube.ply")?;
+            let vs = self.orchestrator.get_file("shaders", "base-vertex.glsl")?;
+            let fs = self.orchestrator.get_file("shaders", "base-fragment.glsl")?;
+            let dt = self.orchestrator.get_file("textures", "tv-test-image.png")?;
+            self.context_mut().add(
+                ea,
+                Renderable::builder()
+                    .mesh(m)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .diffuse_texture(dt)
+                    .build_mesh_glium(&renderer.backend)?,
+            )?;
 
-            self.context_mut()
-                .add(eb, GliumRenderData::cube(&renderer.backend).unwrap())
-                .unwrap();
+            let f = self.orchestrator.get_file("fonts", "SourceSansPro-Regular.ttf")?;
+            let vs = self.orchestrator.get_file("shaders", "text-vertex.glsl")?;
+            let fs = self.orchestrator.get_file("shaders", "text-fragment.glsl")?;
+            let text = "Hello, World!";
+            self.context_mut().add(
+                eb,
+                Renderable::builder()
+                    .font(f)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .text(text)
+                    .build_text_glium(&renderer.backend)?,
+            )?;
 
             self.world_mut().add_system(event_interface);
             self.world_mut().add_system(renderer);

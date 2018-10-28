@@ -19,16 +19,21 @@ impl<W> Orchestrator<W>
 where
     W: Default + WorldTrait,
 {
-    pub fn new(resource_path: &Path, delta_time: Duration, max_frame_time: Duration) -> Result<Self, FileError> {
-        let rp = resource_path.to_path_buf().ensure_accessible_directory()?;
+    pub fn new<P: AsRef<Path>>(
+        resource_path: P,
+        delta_time: Duration,
+        max_frame_time: Duration,
+    ) -> Result<Self, FileError> {
+        resource_path.ensure_extant_directory()?;
 
         Ok(Orchestrator {
             world: W::default(),
-            resource_path: rp,
+            resource_path: resource_path.as_ref().into(),
             delta_time,
             max_frame_time,
         })
     }
+
     pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
         let mut loop_time = Instant::now();
         let mut accumulator = Duration::default();
@@ -56,8 +61,11 @@ where
         }
         Ok(())
     }
+
     pub fn get_file(&self, folder: &str, file: &str) -> Result<PathBuf, FileError> {
-        self.resource_path.join(folder).join(file).ensure_accessible_file()
+        let path = self.resource_path.join(folder).join(file);
+        path.ensure_extant_file()?;
+        Ok(path)
     }
 }
 
@@ -97,7 +105,7 @@ mod tests {
         let r = Orchestrator::<MockWorld>::new(&env::temp_dir(), Default::default(), Default::default());
         assert_ok!(r);
 
-        let r = Orchestrator::<MockWorld>::new(&PathBuf::from("blablablabla"), Default::default(), Default::default());
+        let r = Orchestrator::<MockWorld>::new("blablablabla", Default::default(), Default::default());
         assert_err!(r);
 
         let tf = NamedTempFile::new().unwrap();

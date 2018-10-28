@@ -1,7 +1,7 @@
-use super::{AsMatrix, DepthOrderingTrait};
+use super::DepthOrderingTrait;
 use affine_transform::AffineTransform;
-use nalgebra::{Matrix4, Vector3, Affine3, Isometry3};
-use std::{f32, ops::Mul};
+use nalgebra::{Affine3, Isometry3, Matrix4, Vector3};
+use std::{borrow::Borrow, f32, ops::Mul};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
@@ -12,10 +12,9 @@ pub struct Model {
 impl Model {
     pub fn new(translation: Vector3<f32>, axisangle: Vector3<f32>, scale: Vector3<f32>) -> Self {
         let isometry = Isometry3::new(translation, axisangle);
-        let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(scale.x, 0.0, 0.0, 0.0,
-                                                                       0.0, scale.y, 0.0, 0.0,
-                                                                       0.0, 0.0, scale.z, 0.0,
-                                                                       0.0, 0.0, 0.0, 1.0));
+        let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(
+            scale.x, 0.0, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 0.0, scale.z, 0.0, 0.0, 0.0, 0.0, 1.0,
+        ));
 
         Model {
             model: isometry * scale_matrix,
@@ -43,8 +42,8 @@ impl DepthOrderingTrait for Model {
     }
 }
 
-impl AsMatrix for Model {
-    fn as_matrix(&self) -> &Matrix4<f32> {
+impl Borrow<Matrix4<f32>> for Model {
+    fn borrow(&self) -> &Matrix4<f32> {
         self.model.matrix()
     }
 }
@@ -73,7 +72,9 @@ mod tests {
 
     #[test]
     fn identity() {
-        assert_eq!(Model::identity().as_matrix(), &Matrix4::identity());
+        let ident = Model::identity();
+        let ident_mat: &Matrix4<f32> = ident.borrow();
+        assert_eq!(ident_mat, &Matrix4::identity());
     }
 
     #[test]
@@ -83,9 +84,21 @@ mod tests {
 
     #[test]
     fn depth_ordering() {
-        let a = Model::new(Vector3::new(-1.0, 0.0, -10.35), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0));
-        let b = Model::new(Vector3::new(-1.0, 0.0, 0.0), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0));
-        let c = Model::new(Vector3::new(-1.0, 0.0, 12.35), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0));
+        let a = Model::new(
+            Vector3::new(-1.0, 0.0, -10.35),
+            Vector3::new(0.0, 0.0, 0.0),
+            Vector3::new(1.0, 1.0, 1.0),
+        );
+        let b = Model::new(
+            Vector3::new(-1.0, 0.0, 0.0),
+            Vector3::new(0.0, 0.0, 0.0),
+            Vector3::new(1.0, 1.0, 1.0),
+        );
+        let c = Model::new(
+            Vector3::new(-1.0, 0.0, 12.35),
+            Vector3::new(0.0, 0.0, 0.0),
+            Vector3::new(1.0, 1.0, 1.0),
+        );
 
         let a_idx = a.depth_index();
         let b_idx = b.depth_index();
@@ -97,15 +110,19 @@ mod tests {
 
     #[test]
     fn multiplication() {
-        let a = Model::new(Vector3::new(-1.0, 0.0, -10.35), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0));
+        let a = Model::new(
+            Vector3::new(-1.0, 0.0, -10.35),
+            Vector3::new(0.0, 0.0, 0.0),
+            Vector3::new(1.0, 1.0, 1.0),
+        );
         let b = Model::identity();
 
         assert_eq!(&a * &b, a);
     }
 
     #[test]
-    fn as_matrix() {
+    fn borrow() {
         let m = Model::default();
-        let _: &Matrix4<f32> = m.as_matrix();
+        let _: &Matrix4<f32> = m.borrow();
     }
 }
