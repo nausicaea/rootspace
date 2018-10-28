@@ -5,14 +5,18 @@ use glium::{
     program::Program,
     vertex::VertexBuffer,
 };
-use graphics::glium::{GliumBackend, GliumRenderData, GliumTexture};
-use graphics::headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture};
-use graphics::{BackendTrait, DataTrait, TextureTrait};
+use graphics::{
+    glium::{GliumBackend, GliumRenderData, GliumTexture},
+    headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture},
+    BackendTrait, DataTrait, TextureTrait,
+};
 use resources::{Image, Mesh, Text};
-use std::borrow::Borrow;
-use std::fmt;
-use std::marker::PhantomData;
-use std::path::{Path, PathBuf};
+use std::{
+    borrow::Borrow,
+    fmt,
+    marker::PhantomData,
+    path::{Path, PathBuf},
+};
 
 pub struct Renderable<B: BackendTrait> {
     data: B::Data,

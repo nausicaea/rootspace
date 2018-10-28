@@ -3,11 +3,12 @@ use file_manipulation::ReadPath;
 use graphics::{BackendTrait, TextureTrait};
 use resources::{Mesh, Vertex};
 use rusttype::{self, gpu_cache::Cache, point, vector, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
-use std::borrow::Borrow;
-use std::borrow::Cow;
-use std::fmt;
-use std::marker::PhantomData;
-use std::path::{Path, PathBuf};
+use std::{
+    borrow::{Borrow, Cow},
+    fmt,
+    marker::PhantomData,
+    path::{Path, PathBuf},
+};
 use unicode_normalization::UnicodeNormalization;
 
 pub struct Text<'a, B: BackendTrait> {
@@ -239,8 +240,7 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
 
 fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(cpu: &mut Cache, gpu: &C) -> Result<(), Error> {
     cpu.cache_queued(|rect, data| {
-        gpu.borrow()
-            .write(rect, Cow::Borrowed(data));
+        gpu.borrow().write(rect, Cow::Borrowed(data));
     })?;
 
     Ok(())
@@ -258,14 +258,16 @@ fn generate_mesh(cache: &Cache, screen_dims: [u32; 2], text_dims: [u32; 2], glyp
     glyphs.iter().for_each(|g| {
         if let Ok(Some((uv_rect, screen_rect))) = cache.rect_for(0, g) {
             let ndc_rect = RusttypeRect {
-                min: origin + vector(
-                    screen_rect.min.x as f32 / screen_dims[0],
-                    -screen_rect.min.y as f32 / screen_dims[1],
-                ),
-                max: origin + vector(
-                    screen_rect.max.x as f32 / screen_dims[0],
-                    -screen_rect.max.y as f32 / screen_dims[1],
-                ),
+                min: origin
+                    + vector(
+                        screen_rect.min.x as f32 / screen_dims[0],
+                        -screen_rect.min.y as f32 / screen_dims[1],
+                    ),
+                max: origin
+                    + vector(
+                        screen_rect.max.x as f32 / screen_dims[0],
+                        -screen_rect.max.y as f32 / screen_dims[1],
+                    ),
             };
 
             vertices.push(Vertex::new(

@@ -33,8 +33,8 @@ pub mod components;
 pub mod context;
 pub mod event;
 pub mod file_manipulation;
-pub mod graphics;
 pub mod geometry;
+pub mod graphics;
 #[cfg(any(test, feature = "mock"))]
 pub mod mock;
 pub mod orchestrator;

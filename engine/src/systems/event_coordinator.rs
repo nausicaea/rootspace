@@ -1,13 +1,18 @@
+#[cfg(not(test))]
+use ctrlc;
 use ecs::{EventManagerTrait, LoopStage, SystemTrait};
 use event::{Event, EventFlag};
 use failure::Error;
 #[cfg(not(test))]
-use ctrlc;
-use std::marker::PhantomData;
-#[cfg(not(test))]
 use std::process;
-use std::time::Duration;
-use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+use std::{
+    marker::PhantomData,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
+    time::Duration,
+};
 
 pub struct EventCoordinator<Ctx> {
     ctrlc_triggered: Arc<AtomicUsize>,

@@ -7,8 +7,8 @@ mod private {
 
 use ecs::EventTrait;
 use failure::Error;
-use resources::Image;
 use geometry::Rect;
+use resources::Image;
 use std::borrow::{Borrow, Cow};
 
 pub trait BackendTrait: Sized + private::Sealed {

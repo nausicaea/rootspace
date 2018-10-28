@@ -108,9 +108,7 @@ mod tests {
     use super::*;
     use components::{camera::Camera, model::Model};
     use ecs::mock::MockEvt;
-    use graphics::{
-        headless::{HeadlessBackend as HB, HeadlessRenderData as HRD},
-    };
+    use graphics::headless::{HeadlessBackend as HB, HeadlessRenderData as HRD};
     use mock::MockCtx;
     use std::f32;
 
@@ -135,7 +133,8 @@ mod tests {
             [800, 600],
             false,
             0,
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(r.get_stage_filter(), LoopStage::RENDER);
     }
@@ -149,7 +148,8 @@ mod tests {
             [800, 600],
             false,
             0,
-        ).unwrap();
+        )
+        .unwrap();
 
         let a = ctx.create_entity();
         ctx.insert_node(a);

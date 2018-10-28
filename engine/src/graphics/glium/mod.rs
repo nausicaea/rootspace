@@ -1,6 +1,7 @@
-use super::{BackendTrait, EventsLoopTrait, DataTrait, FrameTrait, TextureTrait, private::Sealed};
+use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use event::Event;
 use failure::Error;
+use geometry::Rect;
 use glium::{
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder},
@@ -10,11 +11,10 @@ use glium::{
     Surface, VertexBuffer,
 };
 use resources::{Image, Vertex};
-use geometry::Rect;
-use std::rc::Rc;
 use std::{
     borrow::{Borrow, Cow},
     fmt,
+    rc::Rc,
 };
 
 #[derive(Debug)]
@@ -110,10 +110,7 @@ impl TextureTrait<GliumBackend> for GliumTexture {
             format: ClientFormat::U8,
         };
 
-        self.0.main_level().write(
-            rect.into(),
-            img,
-        )
+        self.0.main_level().write(rect.into(), img)
     }
 }
 

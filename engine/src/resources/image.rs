@@ -2,8 +2,7 @@ use failure::Error;
 use file_manipulation::VerifyPath;
 use glium::texture::RawImage2d;
 use image::{self, GenericImageView};
-use std::fmt;
-use std::path::Path;
+use std::{fmt, path::Path};
 
 pub struct Image(image::DynamicImage);
 

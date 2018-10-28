@@ -28,7 +28,11 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new<P: AsRef<Path>>(resource_path: P, delta_time: Duration, max_frame_time: Duration) -> Result<Self, FileError> {
+    pub fn new<P: AsRef<Path>>(
+        resource_path: P,
+        delta_time: Duration,
+        max_frame_time: Duration,
+    ) -> Result<Self, FileError> {
         let o = Orchestrator::new(resource_path, delta_time, max_frame_time)?;
 
         Ok(Game { orchestrator: o })
@@ -40,27 +44,25 @@ impl Game {
 
         let ea = self.context_mut().create_entity();
         self.context_mut().insert_node(ea);
-        self.context_mut()
-            .add(
-                ea,
-                Model::new(
-                    Vector3::new(0.0, 0.0, -10.0),
-                    Vector3::new(0.0, 0.0, 0.0),
-                    Vector3::new(1.0, 1.0, 1.0),
-                ),
-            )?;
+        self.context_mut().add(
+            ea,
+            Model::new(
+                Vector3::new(0.0, 0.0, -10.0),
+                Vector3::new(0.0, 0.0, 0.0),
+                Vector3::new(1.0, 1.0, 1.0),
+            ),
+        )?;
 
         let eb = self.context_mut().create_entity();
         self.context_mut().insert_node(eb);
-        self.context_mut()
-            .add(
-                eb,
-                Model::new(
-                    Vector3::new(-2.0, 1.0, -7.0),
-                    Vector3::new(0.0, f32::consts::PI / 4.0, 0.0),
-                    Vector3::new(1.0, 1.0, 1.0),
-                ),
-            )?;
+        self.context_mut().add(
+            eb,
+            Model::new(
+                Vector3::new(-2.0, 1.0, -7.0),
+                Vector3::new(0.0, f32::consts::PI / 4.0, 0.0),
+                Vector3::new(1.0, 1.0, 1.0),
+            ),
+        )?;
 
         if headless {
             let event_interface = HeadlessEventInterface::default();
@@ -70,25 +72,29 @@ impl Game {
             let vs = self.orchestrator.get_file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.get_file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.get_file("textures", "tv-test-image.png")?;
-            self.context_mut()
-                .add(ea, Renderable::builder()
-                     .mesh(m)
-                     .vertex_shader(vs)
-                     .fragment_shader(fs)
-                     .diffuse_texture(dt)
-                     .build_mesh_headless(&renderer.backend)?)?;
+            self.context_mut().add(
+                ea,
+                Renderable::builder()
+                    .mesh(m)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .diffuse_texture(dt)
+                    .build_mesh_headless(&renderer.backend)?,
+            )?;
 
             let f = self.orchestrator.get_file("fonts", "SourceSansPro-Regular.ttf")?;
             let vs = self.orchestrator.get_file("shaders", "text-vertex.glsl")?;
             let fs = self.orchestrator.get_file("shaders", "text-fragment.glsl")?;
             let text = "Hello, World!";
-            self.context_mut()
-                .add(eb, Renderable::builder()
-                     .font(f)
-                     .vertex_shader(vs)
-                     .fragment_shader(fs)
-                     .text(text)
-                     .build_text_headless(&renderer.backend)?)?;
+            self.context_mut().add(
+                eb,
+                Renderable::builder()
+                    .font(f)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .text(text)
+                    .build_text_headless(&renderer.backend)?,
+            )?;
 
             self.world_mut().add_system(event_interface);
             self.world_mut().add_system(renderer);
@@ -100,25 +106,29 @@ impl Game {
             let vs = self.orchestrator.get_file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.get_file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.get_file("textures", "tv-test-image.png")?;
-            self.context_mut()
-                .add(ea, Renderable::builder()
-                     .mesh(m)
-                     .vertex_shader(vs)
-                     .fragment_shader(fs)
-                     .diffuse_texture(dt)
-                     .build_mesh_glium(&renderer.backend)?)?;
+            self.context_mut().add(
+                ea,
+                Renderable::builder()
+                    .mesh(m)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .diffuse_texture(dt)
+                    .build_mesh_glium(&renderer.backend)?,
+            )?;
 
             let f = self.orchestrator.get_file("fonts", "SourceSansPro-Regular.ttf")?;
             let vs = self.orchestrator.get_file("shaders", "text-vertex.glsl")?;
             let fs = self.orchestrator.get_file("shaders", "text-fragment.glsl")?;
             let text = "Hello, World!";
-            self.context_mut()
-                .add(eb, Renderable::builder()
-                     .font(f)
-                     .vertex_shader(vs)
-                     .fragment_shader(fs)
-                     .text(text)
-                     .build_text_glium(&renderer.backend)?)?;
+            self.context_mut().add(
+                eb,
+                Renderable::builder()
+                    .font(f)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .text(text)
+                    .build_text_glium(&renderer.backend)?,
+            )?;
 
             self.world_mut().add_system(event_interface);
             self.world_mut().add_system(renderer);

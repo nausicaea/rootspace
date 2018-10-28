@@ -19,7 +19,11 @@ impl<W> Orchestrator<W>
 where
     W: Default + WorldTrait,
 {
-    pub fn new<P: AsRef<Path>>(resource_path: P, delta_time: Duration, max_frame_time: Duration) -> Result<Self, FileError> {
+    pub fn new<P: AsRef<Path>>(
+        resource_path: P,
+        delta_time: Duration,
+        max_frame_time: Duration,
+    ) -> Result<Self, FileError> {
         resource_path.ensure_extant_directory()?;
 
         Ok(Orchestrator {

@@ -1,8 +1,8 @@
-use super::{BackendTrait, EventsLoopTrait, DataTrait, FrameTrait, TextureTrait, private::Sealed};
+use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use event::Event;
 use failure::Error;
-use resources::{Image, Mesh};
 use geometry::Rect;
+use resources::{Image, Mesh};
 use std::borrow::{Borrow, Cow};
 
 #[derive(Debug, Clone, Default, Copy)]
@@ -57,7 +57,11 @@ impl HeadlessRenderData {
     #[allow(unused_variables)]
     pub fn new(_backend: &HeadlessBackend, mesh: &Mesh) -> Result<Self, Error> {
         #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Created render data ({} vertices, {} triangles)", mesh.vertices.len(), mesh.indices.len() as f32 / 3.0);
+        trace!(
+            "Created render data ({} vertices, {} triangles)",
+            mesh.vertices.len(),
+            mesh.indices.len() as f32 / 3.0
+        );
 
         Ok(HeadlessRenderData::default())
     }

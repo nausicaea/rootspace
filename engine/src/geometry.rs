@@ -1,6 +1,6 @@
-use num_traits::{Num, RefNum};
 use glium::Rect as GliumRect;
-use rusttype::{Rect as RusttypeRect, Point as RusttypePoint};
+use num_traits::{Num, RefNum};
+use rusttype::{Point as RusttypePoint, Rect as RusttypeRect};
 
 #[derive(Debug, Clone)]
 pub struct Point<N> {
@@ -16,21 +16,24 @@ pub struct Rect<N> {
 
 impl<N: Num> Rect<N>
 where
-for<'r> &'r N: RefNum<N>,
+    for<'r> &'r N: RefNum<N>,
 {
     pub fn dimensions(&self) -> [N; 2] {
-        [
-            &self.max.x - &self.min.x,
-            &self.max.y - &self.min.y,
-        ]
+        [&self.max.x - &self.min.x, &self.max.y - &self.min.y]
     }
 }
 
 impl From<GliumRect> for Rect<u32> {
     fn from(value: GliumRect) -> Self {
         Rect {
-            min: Point { x: value.left, y: value.bottom },
-            max: Point { x: value.left + value.width, y: value.bottom + value.height },
+            min: Point {
+                x: value.left,
+                y: value.bottom,
+            },
+            max: Point {
+                x: value.left + value.width,
+                y: value.bottom + value.height,
+            },
         }
     }
 }
@@ -70,8 +73,14 @@ impl<N: Num + PartialOrd> From<RusttypeRect<N>> for Rect<N> {
 impl<N: Num> Into<RusttypeRect<N>> for Rect<N> {
     fn into(self) -> RusttypeRect<N> {
         RusttypeRect {
-            min: RusttypePoint { x: self.min.x, y: self.min.y },
-            max: RusttypePoint { x: self.max.x, y: self.max.y },
+            min: RusttypePoint {
+                x: self.min.x,
+                y: self.min.y,
+            },
+            max: RusttypePoint {
+                x: self.max.x,
+                y: self.max.y,
+            },
         }
     }
 }

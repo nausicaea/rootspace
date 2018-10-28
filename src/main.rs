@@ -1,13 +1,13 @@
 extern crate clap;
-extern crate log;
 extern crate fern;
 extern crate game;
+extern crate log;
 
 use clap::{App, Arg};
 use fern::Dispatch;
 use game::Game;
 use log::LevelFilter;
-use std::{env, io, time::Duration, path::PathBuf};
+use std::{env, io, path::PathBuf, time::Duration};
 
 fn main() -> Result<(), String> {
     Dispatch::new()
@@ -25,27 +25,25 @@ fn main() -> Result<(), String> {
             Arg::with_name("headless")
                 .long("headless")
                 .help("Disables the graphical backend"),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("iterations")
                 .short("i")
                 .long("iterations")
                 .takes_value(true)
                 .help("Specifies the number of iterations to run"),
-        ).get_matches();
+        )
+        .get_matches();
 
     let headless = matches.is_present("headless");
     let iterations: Option<usize> = matches.value_of("iterations").and_then(|i| i.parse().ok());
 
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR")
-        .map_err(|e| format!("{}", e))?;
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").map_err(|e| format!("{}", e))?;
 
-    let dir = PathBuf::from(manifest_dir)
-        .join("resources")
-        .join("rootspace");
+    let dir = PathBuf::from(manifest_dir).join("resources").join("rootspace");
 
-    let mut game = Game::new(dir, Duration::from_millis(50), Duration::from_millis(250))
-        .map_err(|e| format!("{}", e))?;
+    let mut game =
+        Game::new(dir, Duration::from_millis(50), Duration::from_millis(250)).map_err(|e| format!("{}", e))?;
 
-    game.run(headless, iterations)
-        .map_err(|e| format!("{}", e))
+    game.run(headless, iterations).map_err(|e| format!("{}", e))
 }
