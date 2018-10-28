@@ -20,6 +20,7 @@ extern crate log;
 #[macro_use]
 extern crate quickcheck;
 extern crate nalgebra;
+extern crate num_traits;
 extern crate rusttype;
 #[cfg(test)]
 extern crate tempfile;
@@ -33,6 +34,7 @@ pub mod context;
 pub mod event;
 pub mod file_manipulation;
 pub mod graphics;
+pub mod geometry;
 #[cfg(any(test, feature = "mock"))]
 pub mod mock;
 pub mod orchestrator;

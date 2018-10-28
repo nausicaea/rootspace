@@ -340,6 +340,7 @@ dependencies = [
  "image 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "ply 0.1.0 (git+https://gitlab.com/nausicaea/ply.git)",
  "quickcheck 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusttype 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",

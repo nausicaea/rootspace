@@ -6,10 +6,11 @@ use glium::{
     glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder},
     texture::{ClientFormat, RawImage2d, Texture2d},
     uniforms::{UniformValue, Uniforms},
-    Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program, Rect,
+    Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
 use resources::{Image, Vertex};
+use geometry::Rect;
 use std::rc::Rc;
 use std::{
     borrow::{Borrow, Cow},
@@ -99,20 +100,18 @@ impl TextureTrait<GliumBackend> for GliumTexture {
         [self.0.width(), self.0.height()]
     }
 
-    fn write<'a>(&self, x: u32, y: u32, width: u32, height: u32, data: Cow<'a, [u8]>) {
+    fn write<'a>(&self, rect: Rect<u32>, data: Cow<'a, [u8]>) {
+        let dims = rect.dimensions();
+        let img = RawImage2d {
+            data: data,
+            width: dims[0],
+            height: dims[1],
+            format: ClientFormat::U8,
+        };
+
         self.0.main_level().write(
-            Rect {
-                left: x,
-                bottom: y,
-                width: width,
-                height: height,
-            },
-            RawImage2d {
-                data: data,
-                width: width,
-                height: height,
-                format: ClientFormat::U8,
-            },
+            rect.into(),
+            img,
         )
     }
 }

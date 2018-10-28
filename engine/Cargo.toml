@@ -16,6 +16,7 @@ glium = "^0.22.0"
 image = "^0.20.0"
 log = "^0.4.1"
 nalgebra = "^0.16.0"
+num-traits = "^0.2.6"
 rusttype = {version = "^0.7.2", features = ["gpu_cache"]}
 unicode-normalization = "^0.1.5"
 affine-transform = {git = "https://gitlab.com/nausicaea/affine-transform.git"}

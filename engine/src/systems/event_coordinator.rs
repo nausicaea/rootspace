@@ -16,6 +16,7 @@ impl<Ctx> Default for EventCoordinator<Ctx> {
     fn default() -> Self {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
         let r = ctrlc_triggered.clone();
+        #[cfg(not(test))]
         ctrlc::set_handler(move || {
             let previous = r.fetch_add(1, Ordering::SeqCst);
             if previous > 0 {
@@ -81,7 +82,7 @@ mod tests {
     fn get_stage_filter() {
         let c: EventCoordinator<MockCtx<Event, Model>> = EventCoordinator::default();
 
-        assert_eq!(c.get_stage_filter(), LoopStage::HANDLE_EVENTS);
+        assert_eq!(c.get_stage_filter(), LoopStage::HANDLE_EVENTS | LoopStage::UPDATE);
     }
 
     #[test]

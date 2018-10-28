@@ -40,13 +40,16 @@ impl<'a, B: BackendTrait> Text<'a, B> {
         generate_mesh(&self.cache_cpu, screen_dimensions, self.dimensions, &self.glyphs)
     }
 
-    pub fn text(&mut self, value: &str) -> Result<(), Error> {
-        let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions[0], value);
+    pub fn text(&mut self, text: &str) -> Result<(), Error> {
+        let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions[0], text);
 
         enqueue_glyphs(&mut self.cache_cpu, &glyphs);
         update_cache::<B, B::Texture, _>(&mut self.cache_cpu, &self.cache_gpu)?;
 
-        self.text = value.into();
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Updated text ({} characters, {} glyphs)", text.len(), glyphs.len());
+
+        self.text = text.into();
         self.dimensions[1] = text_height;
         self.glyphs = glyphs;
 
@@ -122,6 +125,9 @@ impl<B: BackendTrait> TextBuilder<B> {
 
         enqueue_glyphs(&mut cache_cpu, &glyphs);
         update_cache::<B, B::Texture, _>(&mut cache_cpu, &cache_gpu)?;
+
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Created text ({} characters, {} glyphs)", text.len(), glyphs.len());
 
         Ok(Text {
             text: text.into(),
@@ -234,7 +240,7 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
 fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(cpu: &mut Cache, gpu: &C) -> Result<(), Error> {
     cpu.cache_queued(|rect, data| {
         gpu.borrow()
-            .write(rect.min.x, rect.min.y, rect.width(), rect.height(), Cow::Borrowed(data));
+            .write(rect.into(), Cow::Borrowed(data));
     })?;
 
     Ok(())

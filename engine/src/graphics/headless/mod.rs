@@ -2,6 +2,7 @@ use super::{BackendTrait, EventsLoopTrait, DataTrait, FrameTrait, TextureTrait, 
 use event::Event;
 use failure::Error;
 use resources::{Image, Mesh};
+use geometry::Rect;
 use std::borrow::{Borrow, Cow};
 
 #[derive(Debug, Clone, Default, Copy)]
@@ -46,7 +47,7 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
         self.dimensions
     }
 
-    fn write<'a>(&self, _x: u32, _y: u32, _width: u32, _height: u32, _data: Cow<'a, [u8]>) {}
+    fn write<'a>(&self, _rect: Rect<u32>, _data: Cow<'a, [u8]>) {}
 }
 
 #[derive(Debug, Clone, Default)]
@@ -56,7 +57,7 @@ impl HeadlessRenderData {
     #[allow(unused_variables)]
     pub fn new(_backend: &HeadlessBackend, mesh: &Mesh) -> Result<Self, Error> {
         #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Created render data with {} vertices", mesh.vertices.len());
+        trace!("Created render data ({} vertices, {} triangles)", mesh.vertices.len(), mesh.indices.len() as f32 / 3.0);
 
         Ok(HeadlessRenderData::default())
     }
@@ -107,7 +108,7 @@ impl BackendTrait for HeadlessBackend {
         _msaa: u16,
     ) -> Result<Self, Error> {
         #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Created a headless backend (title '{}', dimensions {:?})", title, dimensions);
+        trace!("Created a headless backend (title='{}', dims={:?})", title, dimensions);
 
         Ok(HeadlessBackend::default())
     }

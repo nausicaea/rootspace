@@ -8,6 +8,7 @@ mod private {
 use ecs::EventTrait;
 use failure::Error;
 use resources::Image;
+use geometry::Rect;
 use std::borrow::{Borrow, Cow};
 
 pub trait BackendTrait: Sized + private::Sealed {
@@ -40,5 +41,5 @@ pub trait TextureTrait<B: BackendTrait>: Sized + private::Sealed {
     fn empty(backend: &B, dimensions: [u32; 2]) -> Result<Self, Error>;
     fn from_image(backend: &B, image: Image) -> Result<Self, Error>;
     fn dimensions(&self) -> [u32; 2];
-    fn write<'a>(&self, x: u32, y: u32, width: u32, height: u32, data: Cow<'a, [u8]>);
+    fn write<'a>(&self, rect: Rect<u32>, data: Cow<'a, [u8]>);
 }
