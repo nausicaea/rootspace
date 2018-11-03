@@ -37,6 +37,10 @@ impl Model {
             decomposed: AffineTransform::identity(),
         }
     }
+
+    pub fn matrix(&self) -> &Matrix4<f32> {
+        self.model.matrix()
+    }
 }
 
 impl Default for Model {
@@ -54,17 +58,24 @@ impl DepthOrderingTrait for Model {
 impl TransformTrait for Model {
     type Camera = Camera;
 
-    fn transform(&self, _camera: &Camera, rhs: &Model) -> Option<Model> {
+    fn transform(&self, camera: &Camera, rhs: &Model) -> Option<Model> {
         if self.layer == rhs.layer {
             let product = self.model * rhs.model;
 
             Some(Model {
-                layer: self.layer,
+                layer: rhs.layer,
                 model: product,
                 decomposed: product.into(),
             })
         } else if self.layer == Layer::World && rhs.layer == Layer::Ndc {
-            unimplemented!()
+            let projected = camera.matrix() * self.matrix();
+            let product = Affine3::from_matrix_unchecked(projected) * rhs.model;
+
+            Some(Model {
+                layer: rhs.layer,
+                model: product,
+                decomposed: product.into(),
+            })
         } else {
             None
         }
