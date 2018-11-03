@@ -1,4 +1,4 @@
-use components::{model::Model, DepthOrderingTrait};
+use components::{model::Model, DepthOrderingTrait, TransformTrait};
 use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventManagerTrait};
 use event::Event;
 use failure::Error;
@@ -46,7 +46,7 @@ impl EventManagerTrait<Event> for Context {
 pub trait SceneGraphTrait<K, V>
 where
     K: Clone + Default + Eq + Hash,
-    V: Clone + Default,
+    V: Clone + Default + TransformTrait + DepthOrderingTrait,
 {
     fn update_graph(&mut self) -> Result<(), Error>;
     fn insert_node(&mut self, entity: Entity);
@@ -58,14 +58,15 @@ impl SceneGraphTrait<Entity, Model> for Context {
     fn update_graph(&mut self) -> Result<(), Error> {
         let db = &self.database;
         self.scene_graph.update(&|entity, _, parent_model| {
+            let camera: &<Model as TransformTrait>::Camera = db.find().ok()?;
             let current_model = db.get(entity).ok()?;
-            Some(parent_model * current_model)
+            parent_model.transform(camera, current_model)
         })?;
         Ok(())
     }
 
     fn insert_node(&mut self, entity: Entity) {
-        self.scene_graph.insert(entity, Model::default())
+        self.scene_graph.insert(entity, Default::default())
     }
 
     fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &Model)> {

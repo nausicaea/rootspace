@@ -1,4 +1,5 @@
 use context::SceneGraphTrait;
+use components::{DepthOrderingTrait, TransformTrait};
 use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
 use graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait, FrameTrait};
@@ -60,7 +61,7 @@ where
     Ctx: DatabaseTrait + SceneGraphTrait<Entity, Mdl>,
     Evt: EventTrait,
     Cam: Borrow<Matrix4<f32>> + 'static,
-    Mdl: Default + Clone + Borrow<Matrix4<f32>> + 'static,
+    Mdl: Default + Clone + Borrow<Matrix4<f32>> + DepthOrderingTrait + TransformTrait + 'static,
     Ren: Borrow<<B as BackendTrait>::Data> + 'static,
     B: BackendTrait,
 {

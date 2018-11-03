@@ -6,7 +6,7 @@ extern crate nalgebra;
 
 use ecs::{DatabaseTrait, EventManagerTrait, World};
 use engine::{
-    components::{camera::Camera, model::Model, renderable::Renderable},
+    components::{camera::Camera, model::{Layer, Model}, renderable::Renderable},
     context::{Context, SceneGraphTrait},
     event::Event,
     file_manipulation::FileError,
@@ -47,6 +47,7 @@ impl Game {
         self.context_mut().add(
             ea,
             Model::new(
+                Layer::World,
                 Vector3::new(0.0, 0.0, -10.0),
                 Vector3::new(0.0, 0.0, 0.0),
                 Vector3::new(1.0, 1.0, 1.0),
@@ -58,6 +59,7 @@ impl Game {
         self.context_mut().add(
             eb,
             Model::new(
+                Layer::World,
                 Vector3::new(-2.0, 1.0, -7.0),
                 Vector3::new(0.0, f32::consts::PI / 4.0, 0.0),
                 Vector3::new(1.0, 1.0, 1.0),

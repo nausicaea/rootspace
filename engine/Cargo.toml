@@ -5,8 +5,8 @@ authors = ["Eleanore Young"]
 
 [features]
 diagnostics = []
-wsl = []
 mock = ["ecs/mock"]
+wsl = []
 
 [dependencies]
 bitflags = "^1.0.3"
