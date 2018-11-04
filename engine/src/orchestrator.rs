@@ -62,7 +62,7 @@ where
         Ok(())
     }
 
-    pub fn get_file(&self, folder: &str, file: &str) -> Result<PathBuf, FileError> {
+    pub fn file(&self, folder: &str, file: &str) -> Result<PathBuf, FileError> {
         let path = self.resource_path.join(folder).join(file);
         path.ensure_extant_file()?;
         Ok(path)
@@ -121,7 +121,7 @@ mod tests {
 
         let o = Orchestrator::<MockWorld>::new(&base, Default::default(), Default::default()).unwrap();
 
-        let r = o.get_file(dir_name, &tf.path().file_name().unwrap().to_string_lossy());
+        let r = o.file(dir_name, &tf.path().file_name().unwrap().to_string_lossy());
         assert_ok!(r);
 
         let r = r.unwrap();
@@ -133,13 +133,13 @@ mod tests {
             r.display()
         );
 
-        let r = o.get_file("blabla", &tf.path().file_name().unwrap().to_string_lossy());
+        let r = o.file("blabla", &tf.path().file_name().unwrap().to_string_lossy());
         assert_err!(r);
 
-        let r = o.get_file(dir_name, "blabla.a");
+        let r = o.file(dir_name, "blabla.a");
         assert_err!(r);
 
-        let r = o.get_file(dir_name, "..");
+        let r = o.file(dir_name, "..");
         assert_err!(r);
     }
     #[test]

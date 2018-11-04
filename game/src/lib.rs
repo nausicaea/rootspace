@@ -70,10 +70,10 @@ impl Game {
             let event_interface = HeadlessEventInterface::default();
             let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
 
-            let m = self.orchestrator.get_file("meshes", "cube.ply")?;
-            let vs = self.orchestrator.get_file("shaders", "base-vertex.glsl")?;
-            let fs = self.orchestrator.get_file("shaders", "base-fragment.glsl")?;
-            let dt = self.orchestrator.get_file("textures", "tv-test-image.png")?;
+            let m = self.orchestrator.file("meshes", "cube.ply")?;
+            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
+            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
             self.context_mut().add(
                 ea,
                 Renderable::builder()
@@ -84,9 +84,9 @@ impl Game {
                     .build_mesh_headless(&renderer.backend)?,
             )?;
 
-            let f = self.orchestrator.get_file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.get_file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.get_file("shaders", "text-fragment.glsl")?;
+            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
+            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
             let text = "Hello, World!";
             self.context_mut().add(
                 eb,
@@ -104,10 +104,10 @@ impl Game {
             let event_interface = GliumEventInterface::default();
             let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
 
-            let m = self.orchestrator.get_file("meshes", "cube.ply")?;
-            let vs = self.orchestrator.get_file("shaders", "base-vertex.glsl")?;
-            let fs = self.orchestrator.get_file("shaders", "base-fragment.glsl")?;
-            let dt = self.orchestrator.get_file("textures", "tv-test-image.png")?;
+            let m = self.orchestrator.file("meshes", "cube.ply")?;
+            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
+            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
             self.context_mut().add(
                 ea,
                 Renderable::builder()
@@ -118,9 +118,9 @@ impl Game {
                     .build_mesh_glium(&renderer.backend)?,
             )?;
 
-            let f = self.orchestrator.get_file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.get_file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.get_file("shaders", "text-fragment.glsl")?;
+            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
+            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
             let text = "Hello, World!";
             self.context_mut().add(
                 eb,
