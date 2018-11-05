@@ -1,3 +1,4 @@
+pub mod debug_console;
 pub mod event_coordinator;
 pub mod event_interface;
 pub mod event_monitor;
