@@ -1,55 +1,74 @@
 use failure::Error;
+use components::model::Model;
+use context::SceneGraphTrait;
 use std::marker::PhantomData;
-use ecs::{EventManagerTrait, SystemTrait, LoopStage};
+use ecs::{Entity, DatabaseTrait, EventManagerTrait, SystemTrait, LoopStage};
 use event::{Event, EventFlag, EventData};
+use debug_commands::{CommandTrait, ExitCommand, EntityCommand};
+use std::collections::HashMap;
 
 pub struct DebugShell<Ctx> {
+    commands: HashMap<&'static str, Box<dyn CommandTrait<Ctx>>>,
     _ctx: PhantomData<Ctx>,
 }
 
-impl<Ctx> Default for DebugShell<Ctx> {
+impl<Ctx> Default for DebugShell<Ctx>
+where
+    Ctx: EventManagerTrait<Event> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+{
     fn default() -> Self {
-        DebugShell {
+        let mut sys = DebugShell {
+            commands: HashMap::new(),
             _ctx: PhantomData::default(),
-        }
+        };
+
+        sys.add_command(ExitCommand::default());
+        sys.add_command(EntityCommand::default());
+
+        sys
     }
 }
 
 impl<Ctx> DebugShell<Ctx>
 where
-    Ctx: EventManagerTrait<Event>,
+    Ctx: EventManagerTrait<Event> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
 {
-    fn interpret<S: AsRef<str>>(&self, ctx: &mut Ctx, args: &[S]) -> Result<(), DebugShellError> {
+    fn add_command<C: CommandTrait<Ctx>>(&mut self, command: C) {
+        self.commands.insert(command.name(), Box::new(command));
+    }
+
+    fn interpret(&self, ctx: &mut Ctx, args: &[String]) -> Result<(), Error> {
         if !args.is_empty() {
-            match args[0].as_ref() {
-                "help" => self.command_help(),
-                "exit" => self.command_exit(ctx),
-                _ => Err(DebugShellError::CommandNotFound(args[0].as_ref().to_string())),
+            let command_name = args[0].as_str();
+            if command_name == "help" {
+                self.command_help()
+            } else {
+                self.commands.get(command_name)
+                    .ok_or(DebugShellError::CommandNotFound(command_name.to_string()).into())
+                    .and_then(|c| c.run(ctx, args))
             }
         } else {
             Ok(())
         }
     }
 
-    fn command_help(&self) -> Result<(), DebugShellError> {
-        print!(
-        "For more information on a specific command, type COMMAND-NAME --help.\
-        \nhelp: Prints this message\
-        \nexit: Shuts down the engine (can also be done with Ctrl-C. Tap Ctrl-C twice to force a shutdown)\
-        \n");
+    fn command_help(&self) -> Result<(), Error> {
+        let mut output = String::from("For more information on a specific command, type COMMAND -h\n");
+        for (k, v) in &self.commands {
+            output.push_str(k);
+            output.push_str(": ");
+            output.push_str(v.description());
+            output.push('\n');
+        }
+        print!("{}", output);
 
-        Ok(())
-    }
-
-    fn command_exit(&self, ctx: &mut Ctx) -> Result<(), DebugShellError> {
-        ctx.dispatch_later(Event::shutdown());
         Ok(())
     }
 }
 
 impl<Ctx> SystemTrait<Ctx, Event> for DebugShell<Ctx>
 where
-    Ctx: EventManagerTrait<Event>,
+    Ctx: EventManagerTrait<Event> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::HANDLE_EVENTS
@@ -73,6 +92,4 @@ where
 enum DebugShellError {
     #[fail(display = "'{}' is not a recognized builtin or command", _0)]
     CommandNotFound(String),
-    #[fail(display = "The required argument '{}' is missing for command '{}'", _1, _0)]
-    MissingArgument(String, String),
 }

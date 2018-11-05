@@ -81,7 +81,11 @@ where
         self.database.has_entity(entity)
     }
 
-    fn entities(&self) -> usize {
+    fn num_entities(&self) -> usize {
+        self.database.num_entities()
+    }
+
+    fn entities(&self) -> Vec<&Entity> {
         self.database.entities()
     }
 
@@ -97,8 +101,8 @@ where
         self.database.has::<C>(entity)
     }
 
-    fn components(&self, entity: &Entity) -> usize {
-        self.database.components(entity)
+    fn num_components(&self, entity: &Entity) -> usize {
+        self.database.num_components(entity)
     }
 
     fn get<C: Any>(&self, entity: &Entity) -> Result<&C, DatabaseError> {

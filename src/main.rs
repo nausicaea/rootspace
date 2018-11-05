@@ -10,13 +10,6 @@ use log::LevelFilter;
 use std::{env, io, path::PathBuf, time::Duration};
 
 fn main() -> Result<(), String> {
-    Dispatch::new()
-        .format(|out, message, record| out.finish(format_args!("{} @{}: {}", record.level(), record.target(), message)))
-        .level(LevelFilter::Trace)
-        .chain(io::stdout())
-        .apply()
-        .expect("Unable to configure the logger");
-
     let matches = App::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -33,10 +26,32 @@ fn main() -> Result<(), String> {
                 .takes_value(true)
                 .help("Specifies the number of iterations to run"),
         )
+        .arg(
+            Arg::with_name("verbosity")
+                .short("v")
+                .long("verbose")
+                .multiple(true)
+                .help("Increases the output of the program"),
+        )
         .get_matches();
 
     let headless = matches.is_present("headless");
     let iterations: Option<usize> = matches.value_of("iterations").and_then(|i| i.parse().ok());
+    let verbosity = matches.occurrences_of("verbosity");
+
+    let log_level = match verbosity {
+        0 => LevelFilter::Error,
+        1 => LevelFilter::Warn,
+        2 => LevelFilter::Info,
+        _ => LevelFilter::Trace,
+    };
+
+    Dispatch::new()
+        .format(|out, message, record| out.finish(format_args!("{} @{}: {}", record.level(), record.target(), message)))
+        .level(log_level)
+        .chain(io::stdout())
+        .apply()
+        .expect("Unable to configure the logger");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").map_err(|e| format!("{}", e))?;
 

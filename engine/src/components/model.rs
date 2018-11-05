@@ -41,6 +41,10 @@ impl Model {
     pub fn matrix(&self) -> &Matrix4<f32> {
         self.model.matrix()
     }
+
+    pub fn position(&self) -> Vector3<f32> {
+        self.decomposed.translation.vector
+    }
 }
 
 impl Default for Model {
@@ -102,6 +106,12 @@ mod tests {
         let ident = Model::identity(Layer::World);
         let ident_mat: &Matrix4<f32> = ident.borrow();
         assert_eq!(ident_mat, &Matrix4::identity());
+    }
+
+    #[test]
+    fn position() {
+        let ident = Model::identity(Layer::World);
+        assert_eq!(ident.position(), Vector3::new(0.0, 0.0, 0.0));
     }
 
     #[test]

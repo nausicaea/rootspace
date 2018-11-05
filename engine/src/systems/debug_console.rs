@@ -4,7 +4,7 @@
 #![cfg_attr(test, allow(dead_code))]
 
 use ecs::{EventManagerTrait, LoopStage, SystemTrait};
-use event::Event;
+use event::{Event, EventFlag};
 use text_manipulation::split_arguments;
 use failure::Error;
 use std::marker::PhantomData;
@@ -77,7 +77,19 @@ where
     Ctx: EventManagerTrait<Event>,
 {
     fn get_stage_filter(&self) -> LoopStage {
-        LoopStage::UPDATE
+        LoopStage::UPDATE | LoopStage::HANDLE_EVENTS
+    }
+
+    fn get_event_filter(&self) -> EventFlag {
+        EventFlag::STARTUP
+    }
+
+    fn handle_event(&mut self, _ctx: &mut Ctx, event: &Event) -> Result<bool, Error> {
+        if let EventFlag::STARTUP = event.flag() {
+            println!("Debug console is ready");
+        }
+
+        Ok(true)
     }
 
     fn update(&mut self, ctx: &mut Ctx, _: &Duration, _: &Duration) -> Result<(), Error> {

@@ -9,7 +9,7 @@ authors = ["Eleanore Young"]
 diagnostics = ["engine/diagnostics"]
 
 [dependencies]
-clap = "^2.31.2"
+clap = "^2.0.0"
 combine = "^3.5.1"
 log = "^0.4.1"
 fern = "^0.5.5"

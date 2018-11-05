@@ -49,9 +49,10 @@ where
     V: Clone + Default + TransformTrait + DepthOrderingTrait,
 {
     fn update_graph(&mut self) -> Result<(), Error>;
-    fn insert_node(&mut self, entity: Entity);
-    fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &V)>;
-    fn sort_nodes(&self, nodes: &mut [(&Entity, &V)]);
+    fn insert_node(&mut self, entity: K);
+    fn get_node(&self, entity: &K) -> Option<&V>;
+    fn get_nodes(&self, sort_nodes: bool) -> Vec<(&K, &V)>;
+    fn sort_nodes(&self, nodes: &mut [(&K, &V)]);
 }
 
 impl SceneGraphTrait<Entity, Model> for Context {
@@ -67,6 +68,13 @@ impl SceneGraphTrait<Entity, Model> for Context {
 
     fn insert_node(&mut self, entity: Entity) {
         self.scene_graph.insert(entity, Default::default())
+    }
+
+    fn get_node(&self, entity: &Entity) -> Option<&Model> {
+        self.scene_graph.iter()
+            .filter(|&(k, _)| k == entity)
+            .map(|(_, v)| v)
+            .last()
     }
 
     fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &Model)> {
@@ -97,7 +105,11 @@ impl DatabaseTrait for Context {
         self.database.has_entity(entity)
     }
 
-    fn entities(&self) -> usize {
+    fn num_entities(&self) -> usize {
+        self.database.num_entities()
+    }
+
+    fn entities(&self) -> Vec<&Entity> {
         self.database.entities()
     }
 
@@ -113,8 +125,8 @@ impl DatabaseTrait for Context {
         self.database.has::<C>(entity)
     }
 
-    fn components(&self, entity: &Entity) -> usize {
-        self.database.components(entity)
+    fn num_components(&self, entity: &Entity) -> usize {
+        self.database.num_components(entity)
     }
 
     fn get<C: Any>(&self, entity: &Entity) -> Result<&C, DatabaseError> {
