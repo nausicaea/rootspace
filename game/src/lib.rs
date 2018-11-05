@@ -12,16 +12,18 @@ use engine::{
     file_manipulation::FileError,
     orchestrator::Orchestrator,
     systems::{
-        event_coordinator::EventCoordinator,
-        event_interface::{GliumEventInterface, HeadlessEventInterface},
-        event_monitor::EventMonitor,
-        renderer::{GliumRenderer, HeadlessRenderer},
+        DebugConsole,
+        DebugShell,
+        EventCoordinator,
+        GliumEventInterface, HeadlessEventInterface,
+        EventMonitor,
+        GliumRenderer, HeadlessRenderer,
         SystemGroup,
     },
 };
 use failure::Error;
 use nalgebra::Vector3;
-use std::{f32, path::Path, time::Duration};
+use std::{f32, path::Path, time::Duration, io};
 
 pub struct Game {
     orchestrator: Orchestrator<World<Event, Context, SystemGroup>>,
@@ -141,6 +143,12 @@ impl Game {
 
         let event_coordinator = EventCoordinator::default();
         self.world_mut().add_system(event_coordinator);
+
+        let debug_console = DebugConsole::new(io::stdin(), None, None);
+        self.world_mut().add_system(debug_console);
+
+        let debug_shell = DebugShell::default();
+        self.world_mut().add_system(debug_shell);
 
         self.orchestrator.world.context.dispatch_later(Event::startup());
         self.orchestrator.run(iterations)?;
