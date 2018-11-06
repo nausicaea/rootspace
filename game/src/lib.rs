@@ -113,7 +113,7 @@ impl Game {
             let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
             self.context_mut().add(
-                ea,
+                eb,
                 Renderable::builder()
                     .mesh(m)
                     .vertex_shader(vs)
@@ -125,9 +125,9 @@ impl Game {
             let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
             let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
-            let text = "Hello, World!";
+            let text = "A";
             self.context_mut().add(
-                eb,
+                ea,
                 Renderable::builder()
                     .font(f)
                     .vertex_shader(vs)

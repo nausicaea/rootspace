@@ -154,9 +154,15 @@ impl RenderableBuilder<HeadlessBackend> {
     }
 
     pub fn build_text_headless(&self, backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
-        let cache_size = self.cache_size;
+        let dpi_factor = backend.dpi_factor();
+        let dimensions = backend.dimensions();
+
+        let cache_size = [
+            (self.cache_size[0] as f64 * dpi_factor) as u32,
+            (self.cache_size[1] as f64 * dpi_factor) as u32,
+        ];
         let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
-        let text_scale = self.text_scale;
+        let text_scale = (self.text_scale as f64 * dpi_factor) as f32;
         let text_width = self.text_width;
         let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
@@ -171,7 +177,6 @@ impl RenderableBuilder<HeadlessBackend> {
             .width(text_width)
             .layout(&text)?;
 
-        let dimensions = backend.dimensions();
         let mesh = text.mesh(dimensions);
 
         let _vs = vs_path.read_to_string()?;
@@ -220,9 +225,15 @@ impl RenderableBuilder<GliumBackend> {
     }
 
     pub fn build_text_glium(&self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
-        let cache_size = self.cache_size;
+        let dpi_factor = backend.dpi_factor();
+        let dimensions = backend.dimensions();
+
+        let cache_size = [
+            (self.cache_size[0] as f64 * dpi_factor) as u32,
+            (self.cache_size[1] as f64 * dpi_factor) as u32,
+        ];
         let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
-        let text_scale = self.text_scale;
+        let text_scale = (self.text_scale as f64 * dpi_factor) as f32;
         let text_width = self.text_width;
         let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
@@ -237,7 +248,6 @@ impl RenderableBuilder<GliumBackend> {
             .width(text_width)
             .layout(&text)?;
 
-        let dimensions = backend.dimensions();
         let mesh = text.mesh(dimensions);
         let vertices = VertexBuffer::new(&backend.display, &mesh.vertices)?;
         let indices = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, &mesh.indices)?;

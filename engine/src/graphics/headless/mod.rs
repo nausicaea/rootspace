@@ -47,7 +47,10 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
         self.dimensions
     }
 
-    fn write<'a, R: Into<Rect<u32>>>(&self, _rect: R, _data: Cow<'a, [u8]>) {}
+    fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, _data: Cow<'a, [u8]>) {
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Wrote to the texture at {}", rect.into());
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -93,7 +96,9 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct HeadlessBackend;
+pub struct HeadlessBackend {
+    dimensions: [u32; 2],
+}
 
 impl Sealed for HeadlessBackend {}
 
@@ -114,7 +119,9 @@ impl BackendTrait for HeadlessBackend {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Created a headless backend (title='{}', dims={:?})", title, dimensions);
 
-        Ok(HeadlessBackend::default())
+        Ok(HeadlessBackend {
+            dimensions
+        })
     }
 
     fn create_frame(&self) -> HeadlessFrame {
@@ -126,7 +133,7 @@ impl BackendTrait for HeadlessBackend {
     }
 
     fn dimensions(&self) -> [u32; 2] {
-        [1024, 768]
+        self.dimensions
     }
 }
 
