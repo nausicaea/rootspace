@@ -47,9 +47,6 @@ impl<'a, B: BackendTrait> Text<'a, B> {
         enqueue_glyphs(&mut self.cache_cpu, &glyphs);
         update_cache::<B, B::Texture, _>(&mut self.cache_cpu, &self.cache_gpu)?;
 
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Updated text ({} characters, {} glyphs)", text.len(), glyphs.len());
-
         self.text = text.into();
         self.dimensions[1] = text_height;
         self.glyphs = glyphs;
@@ -126,9 +123,6 @@ impl<B: BackendTrait> TextBuilder<B> {
 
         enqueue_glyphs(&mut cache_cpu, &glyphs);
         update_cache::<B, B::Texture, _>(&mut cache_cpu, &cache_gpu)?;
-
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Created text ({} characters, {} glyphs)", text.len(), glyphs.len());
 
         Ok(Text {
             text: text.into(),
@@ -228,6 +222,9 @@ fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> 
     }
 
     let height = (caret.y - caret_origin.y + advance_height).ceil() as u32;
+
+    #[cfg(any(test, feature = "diagnostics"))]
+    trace!("Layouted text ({} characters, {} glyphs, {}px wide, {}px high)", text.len(), glyphs.len(), width, height);
 
     (glyphs, height)
 }

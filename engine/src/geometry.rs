@@ -1,4 +1,5 @@
 use glium::Rect as GliumRect;
+use std::fmt;
 use num_traits::{Num, RefNum};
 use rusttype::{Point as RusttypePoint, Rect as RusttypeRect};
 
@@ -8,14 +9,35 @@ pub struct Point<N> {
     y: N,
 }
 
+impl<N> fmt::Display for Point<N>
+where
+    N: fmt::Display,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Rect<N> {
     min: Point<N>,
     max: Point<N>,
 }
 
-impl<N: Num> Rect<N>
+impl<N> fmt::Display for Rect<N>
 where
+    N: fmt::Display + Num,
+    for<'r> &'r N: RefNum<N>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let (w, h) = (&self.max.x - &self.min.x, &self.max.y - &self.min.y);
+        write!(f, "({}, {} x {})", self.min, w, h)
+    }
+}
+
+impl<N> Rect<N>
+where
+    N: Num,
     for<'r> &'r N: RefNum<N>,
 {
     pub fn dimensions(&self) -> [N; 2] {
