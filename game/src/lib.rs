@@ -82,7 +82,7 @@ impl Game {
                 ea,
                 Renderable::builder()
                     .font(f)
-                    .text_scale(50.0)
+                    .text_scale(16.0)
                     .text_width(1.0, 100)
                     .vertex_shader(vs)
                     .fragment_shader(fs)
@@ -118,7 +118,7 @@ impl Game {
                 ea,
                 Renderable::builder()
                     .font(f)
-                    .text_scale(50.0)
+                    .text_scale(16.0)
                     .text_width(1.0, 100)
                     .vertex_shader(vs)
                     .fragment_shader(fs)

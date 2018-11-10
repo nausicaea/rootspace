@@ -1,7 +1,7 @@
 use failure::Error;
 use file_manipulation::ReadPath;
 use graphics::{BackendTrait, TextureTrait};
-use geometry::Rect;
+use geometry::rect::Rect;
 use resources::{Mesh, Vertex};
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use std::{

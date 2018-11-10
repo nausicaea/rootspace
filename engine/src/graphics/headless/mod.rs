@@ -1,7 +1,7 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use event::Event;
 use failure::Error;
-use geometry::Rect;
+use geometry::rect::Rect;
 use resources::{Image, Mesh};
 use std::borrow::{Borrow, Cow};
 
@@ -50,7 +50,15 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
     #[cfg_attr(not(test), allow(unused_variables))]
     fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, _data: Cow<'a, [u8]>) {
         #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Wrote to the texture at {}", rect.into());
+        {
+            let rect = rect.into();
+            assert!(rect.min().x() >= 0);
+            assert!(rect.min().y() >= 0);
+            assert!(rect.max().x() < self.dimensions[0]);
+            assert!(rect.max().y() < self.dimensions[1]);
+
+            trace!("Wrote to the texture at {}", rect);
+        }
     }
 }
 
