@@ -1,6 +1,7 @@
 use failure::Error;
 use file_manipulation::ReadPath;
 use graphics::{BackendTrait, TextureTrait};
+use geometry::Rect;
 use resources::{Mesh, Vertex};
 use rusttype::{self, gpu_cache::Cache, point, vector, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use std::{
@@ -37,8 +38,9 @@ impl<'a, B: BackendTrait> Text<'a, B> {
         TextBuilder::default()
     }
 
-    pub fn mesh(&self, screen_dimensions: [u32; 2]) -> Mesh {
-        generate_mesh(&self.cache_cpu, screen_dimensions, self.dimensions, &self.glyphs)
+    pub fn mesh(&self, dimensions: [f32; 2]) -> Mesh {
+        let scale = [dimensions[0] / self.dimensions[0] as f32, dimensions[1] / self.dimensions[1] as f32];
+        generate_mesh(&self.cache_cpu, &self.glyphs, self.dimensions, scale)
     }
 
     pub fn text(&mut self, text: &str) -> Result<(), Error> {
@@ -189,6 +191,8 @@ impl From<rusttype::gpu_cache::CacheWriteErr> for TextRenderError {
     }
 }
 
+/// Layouts text into a rectangle of the specified width in pixels, whith each glyph scaled by the
+/// specified factor in pixels.
 fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> (Vec<PositionedGlyph<'a>>, u32) {
     let mut glyphs = Vec::new();
     let scale = Scale::uniform(scale);
@@ -199,7 +203,7 @@ fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> 
     let mut last_glyph_id = None;
     for c in text.nfc() {
         if c.is_control() {
-            if let '\n' = c {
+            if c == '\n' {
                 caret = point(0.0, caret.y + advance_height);
             }
             continue;
@@ -243,47 +247,46 @@ fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(cpu: &mut Cac
     Ok(())
 }
 
-fn generate_mesh(cache: &Cache, screen_dims: [u32; 2], text_dims: [u32; 2], glyphs: &[PositionedGlyph]) -> Mesh {
+fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dims: [u32; 2], scale: [f32; 2]) -> Mesh {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
-    let screen_dims = [screen_dims[0] as f32, screen_dims[1] as f32];
-    let text_dims = [text_dims[0] as f32, text_dims[1] as f32];
-    let origin = point(-text_dims[0] / 2.0, text_dims[1] / 2.0);
-
     let mut quad_counter = 0;
     glyphs.iter().for_each(|g| {
-        if let Ok(Some((uv_rect, screen_rect))) = cache.rect_for(0, g) {
-            let ndc_rect = RusttypeRect {
-                min: origin
-                    + vector(
-                        screen_rect.min.x as f32 / screen_dims[0],
-                        -screen_rect.min.y as f32 / screen_dims[1],
-                    ),
-                max: origin
-                    + vector(
-                        screen_rect.max.x as f32 / screen_dims[0],
-                        -screen_rect.max.y as f32 / screen_dims[1],
-                    ),
-            };
+        if let Ok(Some((uv_rect, pos_rect))) = cache.rect_for(0, g) {
+            let min = point(
+                (pos_rect.min.x as f32 + (text_dims[0] as f32) / -2.0) * scale[0],
+                ((text_dims[1] as f32) / 2.0 - pos_rect.min.y as f32) * scale[1],
+            );
+            let max = point(
+                (pos_rect.max.x as f32 + (text_dims[0] as f32) / -2.0) * scale[0],
+                ((text_dims[1] as f32) / 2.0 - pos_rect.max.y as f32) * scale[1],
+            );
+            let pos_rect = RusttypeRect { min, max };
+
+            #[cfg(any(test, feature = "diagnostics"))]
+            {
+                let r: Rect<f32> = pos_rect.clone().into();
+                trace!("Generating glyph at {}", r);
+            }
 
             vertices.push(Vertex::new(
-                [ndc_rect.min.x, ndc_rect.max.y, 0.0],
+                [pos_rect.min.x, pos_rect.max.y, 0.0],
                 [uv_rect.min.x, uv_rect.max.y],
                 [0.0, 0.0, 1.0],
             ));
             vertices.push(Vertex::new(
-                [ndc_rect.min.x, ndc_rect.min.y, 0.0],
+                [pos_rect.min.x, pos_rect.min.y, 0.0],
                 [uv_rect.min.x, uv_rect.min.y],
                 [0.0, 0.0, 1.0],
             ));
             vertices.push(Vertex::new(
-                [ndc_rect.max.x, ndc_rect.min.y, 0.0],
+                [pos_rect.max.x, pos_rect.min.y, 0.0],
                 [uv_rect.max.x, uv_rect.min.y],
                 [0.0, 0.0, 1.0],
             ));
             vertices.push(Vertex::new(
-                [ndc_rect.max.x, ndc_rect.max.y, 0.0],
+                [pos_rect.max.x, pos_rect.max.y, 0.0],
                 [uv_rect.max.x, uv_rect.max.y],
                 [0.0, 0.0, 1.0],
             ));
@@ -340,7 +343,7 @@ mod tests {
             .layout("Hello, World!")
             .unwrap();
 
-        let _: Mesh = text.mesh([1024, 768]);
+        let _: Mesh = text.mesh([2.0; 2]);
     }
 
     #[test]

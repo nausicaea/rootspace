@@ -177,7 +177,7 @@ impl RenderableBuilder<HeadlessBackend> {
             .width(text_width)
             .layout(&text)?;
 
-        let mesh = text.mesh(dimensions);
+        let mesh = text.mesh([2.0; 2]);
 
         let _vs = vs_path.read_to_string()?;
         let _fs = fs_path.read_to_string()?;
@@ -248,7 +248,7 @@ impl RenderableBuilder<GliumBackend> {
             .width(text_width)
             .layout(&text)?;
 
-        let mesh = text.mesh(dimensions);
+        let mesh = text.mesh([2.0; 2]);
         let vertices = VertexBuffer::new(&backend.display, &mesh.vertices)?;
         let indices = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, &mesh.indices)?;
 

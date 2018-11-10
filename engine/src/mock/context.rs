@@ -139,6 +139,13 @@ where
         self.scene_graph.insert(entity, Default::default())
     }
 
+    fn get_node(&self, entity: &Entity) -> Option<&M> {
+        self.scene_graph.iter()
+            .filter(|&(k, _)| k == entity)
+            .map(|(_, v)| v)
+            .last()
+    }
+
     fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &M)> {
         let mut calls = self.gnc.write().unwrap();
         *calls += 1;

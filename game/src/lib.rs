@@ -74,12 +74,28 @@ impl Game {
             let event_interface = HeadlessEventInterface::default();
             let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
 
+            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
+            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
+            let text = "ABCDEFGH";
+            self.context_mut().add(
+                ea,
+                Renderable::builder()
+                    .font(f)
+                    .text_scale(50.0)
+                    .text_width(100)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .text(text)
+                    .build_text_headless(&renderer.backend)?,
+            )?;
+
             let m = self.orchestrator.file("meshes", "cube.ply")?;
             let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
             self.context_mut().add(
-                ea,
+                eb,
                 Renderable::builder()
                     .mesh(m)
                     .vertex_shader(vs)
@@ -88,25 +104,25 @@ impl Game {
                     .build_mesh_headless(&renderer.backend)?,
             )?;
 
-            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
-            let text = "Hello, World!";
-            self.context_mut().add(
-                eb,
-                Renderable::builder()
-                    .font(f)
-                    .vertex_shader(vs)
-                    .fragment_shader(fs)
-                    .text(text)
-                    .build_text_headless(&renderer.backend)?,
-            )?;
-
             self.world_mut().add_system(event_interface);
             self.world_mut().add_system(renderer);
         } else {
             let event_interface = GliumEventInterface::default();
             let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
+
+            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
+            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
+            let text = "Hello, World";
+            self.context_mut().add(
+                ea,
+                Renderable::builder()
+                    .font(f)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .text(text)
+                    .build_text_glium(&renderer.backend)?,
+            )?;
 
             let m = self.orchestrator.file("meshes", "cube.ply")?;
             let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
@@ -120,20 +136,6 @@ impl Game {
                     .fragment_shader(fs)
                     .diffuse_texture(dt)
                     .build_mesh_glium(&renderer.backend)?,
-            )?;
-
-            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
-            let text = "A";
-            self.context_mut().add(
-                ea,
-                Renderable::builder()
-                    .font(f)
-                    .vertex_shader(vs)
-                    .fragment_shader(fs)
-                    .text(text)
-                    .build_text_glium(&renderer.backend)?,
             )?;
 
             self.world_mut().add_system(event_interface);

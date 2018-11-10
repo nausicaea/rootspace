@@ -124,6 +124,6 @@ mod tests {
     fn get_stage_filter() {
         let c: DebugConsole<MockCtx<Event, Model>> = DebugConsole::new(io::stdin(), None, None);
 
-        assert_eq!(c.get_stage_filter(), LoopStage::UPDATE);
+        assert_eq!(c.get_stage_filter(), LoopStage::UPDATE | LoopStage::HANDLE_EVENTS);
     }
 }
