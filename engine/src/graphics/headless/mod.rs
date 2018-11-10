@@ -47,6 +47,7 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
         self.dimensions
     }
 
+    #[cfg_attr(not(test), allow(unused_variables))]
     fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, _data: Cow<'a, [u8]>) {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Wrote to the texture at {}", rect.into());

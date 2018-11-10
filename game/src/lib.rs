@@ -77,13 +77,13 @@ impl Game {
             let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
             let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
-            let text = "ABCDEFGH";
+            let text = "Hello, World!";
             self.context_mut().add(
                 ea,
                 Renderable::builder()
                     .font(f)
                     .text_scale(50.0)
-                    .text_width(100)
+                    .text_width(1.0, 100)
                     .vertex_shader(vs)
                     .fragment_shader(fs)
                     .text(text)
@@ -113,11 +113,13 @@ impl Game {
             let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
             let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
-            let text = "Hello, World";
+            let text = "Hello, World!";
             self.context_mut().add(
                 ea,
                 Renderable::builder()
                     .font(f)
+                    .text_scale(50.0)
+                    .text_width(1.0, 100)
                     .vertex_shader(vs)
                     .fragment_shader(fs)
                     .text(text)

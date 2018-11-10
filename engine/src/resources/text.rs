@@ -3,7 +3,7 @@ use file_manipulation::ReadPath;
 use graphics::{BackendTrait, TextureTrait};
 use geometry::Rect;
 use resources::{Mesh, Vertex};
-use rusttype::{self, gpu_cache::Cache, point, vector, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
+use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use std::{
     borrow::{Borrow, Cow},
     fmt,
@@ -38,8 +38,8 @@ impl<'a, B: BackendTrait> Text<'a, B> {
         TextBuilder::default()
     }
 
-    pub fn mesh(&self, dimensions: [f32; 2]) -> Mesh {
-        let scale = [dimensions[0] / self.dimensions[0] as f32, dimensions[1] / self.dimensions[1] as f32];
+    pub fn mesh(&self, width: f32) -> Mesh {
+        let scale = width / self.dimensions[0] as f32;
         generate_mesh(&self.cache_cpu, &self.glyphs, self.dimensions, scale)
     }
 
@@ -247,7 +247,7 @@ fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(cpu: &mut Cac
     Ok(())
 }
 
-fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dims: [u32; 2], scale: [f32; 2]) -> Mesh {
+fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dims: [u32; 2], scale: f32) -> Mesh {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
@@ -255,12 +255,12 @@ fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dim
     glyphs.iter().for_each(|g| {
         if let Ok(Some((uv_rect, pos_rect))) = cache.rect_for(0, g) {
             let min = point(
-                (pos_rect.min.x as f32 + (text_dims[0] as f32) / -2.0) * scale[0],
-                ((text_dims[1] as f32) / 2.0 - pos_rect.min.y as f32) * scale[1],
+                (pos_rect.min.x as f32 + (text_dims[0] as f32) / -2.0) * scale,
+                ((text_dims[1] as f32) / 2.0 - pos_rect.min.y as f32) * scale,
             );
             let max = point(
-                (pos_rect.max.x as f32 + (text_dims[0] as f32) / -2.0) * scale[0],
-                ((text_dims[1] as f32) / 2.0 - pos_rect.max.y as f32) * scale[1],
+                (pos_rect.max.x as f32 + (text_dims[0] as f32) / -2.0) * scale,
+                ((text_dims[1] as f32) / 2.0 - pos_rect.max.y as f32) * scale,
             );
             let pos_rect = RusttypeRect { min, max };
 
@@ -343,7 +343,7 @@ mod tests {
             .layout("Hello, World!")
             .unwrap();
 
-        let _: Mesh = text.mesh([2.0; 2]);
+        let _: Mesh = text.mesh(2.0);
     }
 
     #[test]
