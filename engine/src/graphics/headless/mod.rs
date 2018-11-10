@@ -52,8 +52,6 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
         #[cfg(any(test, feature = "diagnostics"))]
         {
             let rect = rect.into();
-            assert!(rect.min().x() >= 0);
-            assert!(rect.min().y() >= 0);
             assert!(rect.max().x() < self.dimensions[0]);
             assert!(rect.max().y() < self.dimensions[1]);
 

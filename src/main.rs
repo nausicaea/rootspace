@@ -1,15 +1,18 @@
 extern crate clap;
+extern crate failure;
 extern crate fern;
 extern crate game;
+#[macro_use]
 extern crate log;
 
 use clap::{App, Arg};
 use fern::Dispatch;
+use failure::Error;
 use game::Game;
 use log::LevelFilter;
 use std::{env, io, path::PathBuf, time::Duration};
 
-fn main() -> Result<(), String> {
+fn main() -> Result<(), Error> {
     let matches = App::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -51,14 +54,25 @@ fn main() -> Result<(), String> {
         .level(log_level)
         .chain(io::stdout())
         .apply()
-        .expect("Unable to configure the logger");
+        .map_err(|e| {
+            error!("Unable to configure the logger: {}", e);
+            e
+        })?;
 
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR").map_err(|e| format!("{}", e))?;
+    let resource_dir = {
+        let manifest_dir = env::var("CARGO_MANIFEST_DIR")
+            .map_err(|e| {
+                error!("Cannot find the `CARGO_MANIFEST_DIR` environment variable: {}", e);
+                e
+            })?;
 
-    let dir = PathBuf::from(manifest_dir).join("resources").join("rootspace");
+        PathBuf::from(manifest_dir).join("resources").join("rootspace")
+    };
 
-    let mut game =
-        Game::new(dir, Duration::from_millis(50), Duration::from_millis(250)).map_err(|e| format!("{}", e))?;
-
-    game.run(headless, iterations).map_err(|e| format!("{}", e))
+    Game::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
+        .and_then(|mut g| g.run(headless, iterations))
+        .map_err(|e| {
+            error!("Error initializing or running the game: {} (probable cause: {})", e, e.find_root_cause());
+            e
+        })
 }

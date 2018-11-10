@@ -1,5 +1,5 @@
 [package]
-name = "tdd-playground"
+name = "rootspace"
 version = "0.1.0"
 authors = ["Eleanore Young"]
 
@@ -12,6 +12,7 @@ diagnostics = ["engine/diagnostics"]
 clap = "^2.0.0"
 combine = "^3.5.1"
 log = "^0.4.1"
+failure = "^0.1.1"
 fern = "^0.5.5"
 engine = {path = "engine"}
 game = {path = "game"}

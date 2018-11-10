@@ -9,7 +9,6 @@ use engine::{
     components::{info::Info, camera::Camera, model::{Layer, Model}, renderable::Renderable},
     context::{Context, SceneGraphTrait},
     event::Event,
-    file_manipulation::FileError,
     orchestrator::Orchestrator,
     systems::{
         DebugConsole,
@@ -34,7 +33,7 @@ impl Game {
         resource_path: P,
         delta_time: Duration,
         max_frame_time: Duration,
-    ) -> Result<Self, FileError> {
+    ) -> Result<Self, Error> {
         let o = Orchestrator::new(resource_path, delta_time, max_frame_time)?;
 
         Ok(Game { orchestrator: o })
