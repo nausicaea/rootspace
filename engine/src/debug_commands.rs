@@ -1,6 +1,6 @@
 use failure::Error;
 use clap::{App, SubCommand, Arg, AppSettings};
-use components::{info::Info, model::Model};
+use components::{TransformTrait, info::Info, model::Model};
 use ecs::{Entity, DatabaseTrait};
 use std::marker::PhantomData;
 use ecs::EventManagerTrait;
@@ -113,7 +113,7 @@ where
                 if list_matches.is_present("positions") {
                     if let Some(m) = ctx.get_node(entity) {
                         let pos = m.position();
-                        output.push_str(&format!(" [{}, {}, {}]", pos.x, pos.y, pos.z));
+                        output.push_str(&format!(" [{}, {}, {}] ({})", pos.x, pos.y, pos.z, m.layer()));
                     } else {
                         output.push_str(" (no position)");
                     }

@@ -1,5 +1,5 @@
 use context::SceneGraphTrait;
-use components::{DepthOrderingTrait, TransformTrait};
+use components::{Layer, DepthOrderingTrait, TransformTrait};
 use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
 use graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait, FrameTrait};
@@ -94,7 +94,11 @@ where
                     {
                         self.draw_calls += 1;
                     }
-                    target.render(&(cam.borrow() * model.borrow()), data)?;
+                    let transform = match model.layer() {
+                        Layer::World => cam.borrow() * model.borrow(),
+                        Layer::Ndc => model.borrow().clone(),
+                    };
+                    target.render(&transform, data)?;
                 }
             }
         }

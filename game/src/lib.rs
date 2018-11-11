@@ -6,7 +6,7 @@ extern crate nalgebra;
 
 use ecs::{DatabaseTrait, EventManagerTrait, World};
 use engine::{
-    components::{info::Info, camera::Camera, model::{Layer, Model}, renderable::Renderable},
+    components::{Layer, info::Info, camera::Camera, model::Model, renderable::Renderable},
     context::{Context, SceneGraphTrait},
     event::Event,
     orchestrator::Orchestrator,
@@ -69,6 +69,19 @@ impl Game {
             ),
         )?;
 
+        let ec = self.context_mut().create_entity();
+        self.context_mut().insert_node(ec);
+        self.context_mut().add(ec, Info::new("Entity C", "UI Text example"))?;
+        self.context_mut().add(
+            ec,
+            Model::new(
+                Layer::Ndc,
+                Vector3::new(0.0, 0.0, -1.0),
+                Vector3::new(0.0, 0.0, 0.0),
+                Vector3::new(1.0, 1.0, 1.0),
+            ),
+        )?;
+
         if headless {
             let event_interface = HeadlessEventInterface::default();
             let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
@@ -82,7 +95,7 @@ impl Game {
                 Renderable::builder()
                     .font(f)
                     .text_scale(16.0)
-                    .text_width(1.0, 100)
+                    .text_width(2.0, 200)
                     .vertex_shader(vs)
                     .fragment_shader(fs)
                     .text(text)
@@ -95,6 +108,20 @@ impl Game {
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
             self.context_mut().add(
                 eb,
+                Renderable::builder()
+                    .mesh(m)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .diffuse_texture(dt)
+                    .build_mesh_headless(&renderer.backend)?,
+            )?;
+
+            let m = self.orchestrator.file("meshes", "quad.ply")?;
+            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
+            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
+            self.context_mut().add(
+                ec,
                 Renderable::builder()
                     .mesh(m)
                     .vertex_shader(vs)
@@ -118,7 +145,7 @@ impl Game {
                 Renderable::builder()
                     .font(f)
                     .text_scale(16.0)
-                    .text_width(1.0, 100)
+                    .text_width(2.0, 200)
                     .vertex_shader(vs)
                     .fragment_shader(fs)
                     .text(text)
@@ -131,6 +158,20 @@ impl Game {
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
             self.context_mut().add(
                 eb,
+                Renderable::builder()
+                    .mesh(m)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .diffuse_texture(dt)
+                    .build_mesh_glium(&renderer.backend)?,
+            )?;
+
+            let m = self.orchestrator.file("meshes", "quad.ply")?;
+            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
+            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
+            self.context_mut().add(
+                ec,
                 Renderable::builder()
                     .mesh(m)
                     .vertex_shader(vs)
