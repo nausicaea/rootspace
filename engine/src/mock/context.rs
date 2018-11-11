@@ -1,9 +1,9 @@
-use components::DepthOrderingTrait;
+use components::{DepthOrderingTrait, TransformTrait};
 use context::SceneGraphTrait;
 use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventManagerTrait, EventTrait};
 use failure::Error as FailureError;
 use hierarchy::Hierarchy;
-use std::{any::Any, collections::VecDeque, ops::Mul, sync::RwLock};
+use std::{any::Any, collections::VecDeque, sync::RwLock};
 
 #[derive(Debug)]
 pub struct MockCtx<E, M> {
@@ -81,7 +81,11 @@ where
         self.database.has_entity(entity)
     }
 
-    fn entities(&self) -> usize {
+    fn num_entities(&self) -> usize {
+        self.database.num_entities()
+    }
+
+    fn entities(&self) -> Vec<&Entity> {
         self.database.entities()
     }
 
@@ -97,8 +101,8 @@ where
         self.database.has::<C>(entity)
     }
 
-    fn components(&self, entity: &Entity) -> usize {
-        self.database.components(entity)
+    fn num_components(&self, entity: &Entity) -> usize {
+        self.database.num_components(entity)
     }
 
     fn get<C: Any>(&self, entity: &Entity) -> Result<&C, DatabaseError> {
@@ -117,22 +121,29 @@ where
 impl<E, M> SceneGraphTrait<Entity, M> for MockCtx<E, M>
 where
     E: EventTrait,
-    M: Clone + Default + DepthOrderingTrait + 'static,
-    for<'r> &'r M: Mul<Output = M>,
+    M: Clone + Default + DepthOrderingTrait + TransformTrait + 'static,
 {
     fn update_graph(&mut self) -> Result<(), FailureError> {
         self.update_graph_calls += 1;
 
         let db = &self.database;
         self.scene_graph.update(&|entity, _, parent_model| {
+            let camera: &<M as TransformTrait>::Camera = db.find().ok()?;
             let current_model = db.get(entity).ok()?;
-            Some(parent_model * current_model)
+            parent_model.transform(camera, current_model)
         })?;
         Ok(())
     }
 
     fn insert_node(&mut self, entity: Entity) {
         self.scene_graph.insert(entity, Default::default())
+    }
+
+    fn get_node(&self, entity: &Entity) -> Option<&M> {
+        self.scene_graph.iter()
+            .filter(|&(k, _)| k == entity)
+            .map(|(_, v)| v)
+            .last()
     }
 
     fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &M)> {

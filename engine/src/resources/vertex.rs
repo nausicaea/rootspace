@@ -13,6 +13,18 @@ impl Vertex {
             normals,
         }
     }
+
+    pub fn position(&self) -> &[f32; 3] {
+        &self.position
+    }
+
+    pub fn tex_coord(&self) -> &[f32; 2] {
+        &self.tex_coord
+    }
+
+    pub fn normals(&self) -> &[f32; 3] {
+        &self.normals
+    }
 }
 
 implement_vertex!(Vertex, position, tex_coord, normals);
@@ -22,7 +34,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new_vertex() {
+    fn new() {
         let _: Vertex = Vertex::new([0.0; 3], [0.0; 2], [0.0; 3]);
+    }
+
+    #[test]
+    fn accessors() {
+        let v = Vertex::new([0.0; 3], [0.0; 2], [0.0; 3]);
+
+        assert_eq!(v.position(), &[0.0; 3]);
+        assert_eq!(v.tex_coord(), &[0.0; 2]);
+        assert_eq!(v.normals(), &[0.0; 3]);
     }
 }

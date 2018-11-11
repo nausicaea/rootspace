@@ -6,22 +6,23 @@ extern crate nalgebra;
 
 use ecs::{DatabaseTrait, EventManagerTrait, World};
 use engine::{
-    components::{camera::Camera, model::Model, renderable::Renderable},
+    components::{info::Info, camera::Camera, model::{Layer, Model}, renderable::Renderable},
     context::{Context, SceneGraphTrait},
     event::Event,
-    file_manipulation::FileError,
     orchestrator::Orchestrator,
     systems::{
-        event_coordinator::EventCoordinator,
-        event_interface::{GliumEventInterface, HeadlessEventInterface},
-        event_monitor::EventMonitor,
-        renderer::{GliumRenderer, HeadlessRenderer},
+        DebugConsole,
+        DebugShell,
+        EventCoordinator,
+        GliumEventInterface, HeadlessEventInterface,
+        EventMonitor,
+        GliumRenderer, HeadlessRenderer,
         SystemGroup,
     },
 };
 use failure::Error;
 use nalgebra::Vector3;
-use std::{f32, path::Path, time::Duration};
+use std::{f32, path::Path, time::Duration, io};
 
 pub struct Game {
     orchestrator: Orchestrator<World<Event, Context, SystemGroup>>,
@@ -32,7 +33,7 @@ impl Game {
         resource_path: P,
         delta_time: Duration,
         max_frame_time: Duration,
-    ) -> Result<Self, FileError> {
+    ) -> Result<Self, Error> {
         let o = Orchestrator::new(resource_path, delta_time, max_frame_time)?;
 
         Ok(Game { orchestrator: o })
@@ -44,9 +45,11 @@ impl Game {
 
         let ea = self.context_mut().create_entity();
         self.context_mut().insert_node(ea);
+        self.context_mut().add(ea, Info::new("Entity A", "Rotated cube example"))?;
         self.context_mut().add(
             ea,
             Model::new(
+                Layer::World,
                 Vector3::new(0.0, 0.0, -10.0),
                 Vector3::new(0.0, 0.0, 0.0),
                 Vector3::new(1.0, 1.0, 1.0),
@@ -55,9 +58,11 @@ impl Game {
 
         let eb = self.context_mut().create_entity();
         self.context_mut().insert_node(eb);
+        self.context_mut().add(eb, Info::new("Entity B", "Text example"))?;
         self.context_mut().add(
             eb,
             Model::new(
+                Layer::World,
                 Vector3::new(-2.0, 1.0, -7.0),
                 Vector3::new(0.0, f32::consts::PI / 4.0, 0.0),
                 Vector3::new(1.0, 1.0, 1.0),
@@ -68,12 +73,28 @@ impl Game {
             let event_interface = HeadlessEventInterface::default();
             let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
 
-            let m = self.orchestrator.get_file("meshes", "cube.ply")?;
-            let vs = self.orchestrator.get_file("shaders", "base-vertex.glsl")?;
-            let fs = self.orchestrator.get_file("shaders", "base-fragment.glsl")?;
-            let dt = self.orchestrator.get_file("textures", "tv-test-image.png")?;
+            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
+            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
+            let text = "Hello, World!";
             self.context_mut().add(
                 ea,
+                Renderable::builder()
+                    .font(f)
+                    .text_scale(16.0)
+                    .text_width(1.0, 100)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .text(text)
+                    .build_text_headless(&renderer.backend)?,
+            )?;
+
+            let m = self.orchestrator.file("meshes", "cube.ply")?;
+            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
+            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
+            self.context_mut().add(
+                eb,
                 Renderable::builder()
                     .mesh(m)
                     .vertex_shader(vs)
@@ -82,52 +103,40 @@ impl Game {
                     .build_mesh_headless(&renderer.backend)?,
             )?;
 
-            let f = self.orchestrator.get_file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.get_file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.get_file("shaders", "text-fragment.glsl")?;
-            let text = "Hello, World!";
-            self.context_mut().add(
-                eb,
-                Renderable::builder()
-                    .font(f)
-                    .vertex_shader(vs)
-                    .fragment_shader(fs)
-                    .text(text)
-                    .build_text_headless(&renderer.backend)?,
-            )?;
-
             self.world_mut().add_system(event_interface);
             self.world_mut().add_system(renderer);
         } else {
             let event_interface = GliumEventInterface::default();
             let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
 
-            let m = self.orchestrator.get_file("meshes", "cube.ply")?;
-            let vs = self.orchestrator.get_file("shaders", "base-vertex.glsl")?;
-            let fs = self.orchestrator.get_file("shaders", "base-fragment.glsl")?;
-            let dt = self.orchestrator.get_file("textures", "tv-test-image.png")?;
+            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
+            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
+            let text = "Hello, World!";
             self.context_mut().add(
                 ea,
+                Renderable::builder()
+                    .font(f)
+                    .text_scale(16.0)
+                    .text_width(1.0, 100)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .text(text)
+                    .build_text_glium(&renderer.backend)?,
+            )?;
+
+            let m = self.orchestrator.file("meshes", "cube.ply")?;
+            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
+            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
+            self.context_mut().add(
+                eb,
                 Renderable::builder()
                     .mesh(m)
                     .vertex_shader(vs)
                     .fragment_shader(fs)
                     .diffuse_texture(dt)
                     .build_mesh_glium(&renderer.backend)?,
-            )?;
-
-            let f = self.orchestrator.get_file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.get_file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.get_file("shaders", "text-fragment.glsl")?;
-            let text = "Hello, World!";
-            self.context_mut().add(
-                eb,
-                Renderable::builder()
-                    .font(f)
-                    .vertex_shader(vs)
-                    .fragment_shader(fs)
-                    .text(text)
-                    .build_text_glium(&renderer.backend)?,
             )?;
 
             self.world_mut().add_system(event_interface);
@@ -139,6 +148,12 @@ impl Game {
 
         let event_coordinator = EventCoordinator::default();
         self.world_mut().add_system(event_coordinator);
+
+        let debug_console = DebugConsole::new(io::stdin(), None, None);
+        self.world_mut().add_system(debug_console);
+
+        let debug_shell = DebugShell::default();
+        self.world_mut().add_system(debug_shell);
 
         self.orchestrator.world.context.dispatch_later(Event::startup());
         self.orchestrator.run(iterations)?;

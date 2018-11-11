@@ -7,6 +7,7 @@ extern crate assertions;
 extern crate affine_transform;
 #[macro_use]
 extern crate bitflags;
+extern crate clap;
 extern crate ctrlc;
 #[macro_use]
 extern crate failure;
@@ -31,8 +32,10 @@ extern crate ply;
 
 pub mod components;
 pub mod context;
+pub mod debug_commands;
 pub mod event;
 pub mod file_manipulation;
+pub mod text_manipulation;
 pub mod geometry;
 pub mod graphics;
 #[cfg(any(test, feature = "mock"))]

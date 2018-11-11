@@ -31,6 +31,10 @@ impl Camera {
             view,
         }
     }
+
+    pub fn matrix(&self) -> &Matrix4<f32> {
+        &self.matrix
+    }
 }
 
 impl Default for Camera {
@@ -48,7 +52,7 @@ impl Default for Camera {
 
 impl Borrow<Matrix4<f32>> for Camera {
     fn borrow(&self) -> &Matrix4<f32> {
-        &self.matrix
+        self.matrix()
     }
 }
 

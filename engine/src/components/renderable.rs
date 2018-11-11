@@ -55,7 +55,8 @@ pub struct RenderableBuilder<B: BackendTrait> {
     cache_size: [u32; 2],
     font: Option<PathBuf>,
     text_scale: f32,
-    text_width: u32,
+    text_width: f32,
+    virtual_pixel_text_width: u32,
     text: Option<String>,
     _b: PhantomData<B>,
 }
@@ -71,7 +72,8 @@ impl<B: BackendTrait> Default for RenderableBuilder<B> {
             cache_size: [512; 2],
             font: None,
             text_scale: 16.0,
-            text_width: 100,
+            text_width: 1.0,
+            virtual_pixel_text_width: 100,
             text: None,
             _b: PhantomData::default(),
         }
@@ -119,8 +121,9 @@ impl<B: BackendTrait> RenderableBuilder<B> {
         self
     }
 
-    pub fn text_width(&mut self, width: u32) -> &mut Self {
-        self.text_width = width;
+    pub fn text_width(&mut self, model_width: f32, pixel_width: u32) -> &mut Self {
+        self.text_width = model_width;
+        self.virtual_pixel_text_width = pixel_width;
         self
     }
 
@@ -154,10 +157,16 @@ impl RenderableBuilder<HeadlessBackend> {
     }
 
     pub fn build_text_headless(&self, backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
-        let cache_size = self.cache_size;
+        let dpi_factor = backend.dpi_factor();
+
+        let cache_size = [
+            (self.cache_size[0] as f64 * dpi_factor) as u32,
+            (self.cache_size[1] as f64 * dpi_factor) as u32,
+        ];
         let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
-        let text_scale = self.text_scale;
+        let text_scale = (self.text_scale as f64 * dpi_factor) as f32;
         let text_width = self.text_width;
+        let pixel_width = self.virtual_pixel_text_width;
         let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
@@ -168,11 +177,10 @@ impl RenderableBuilder<HeadlessBackend> {
             .font(font_path)
             .cache(diffuse_texture.clone())
             .scale(text_scale)
-            .width(text_width)
+            .width(pixel_width)
             .layout(&text)?;
 
-        let dimensions = backend.dimensions();
-        let mesh = text.mesh(dimensions);
+        let mesh = text.mesh(text_width);
 
         let _vs = vs_path.read_to_string()?;
         let _fs = fs_path.read_to_string()?;
@@ -220,10 +228,16 @@ impl RenderableBuilder<GliumBackend> {
     }
 
     pub fn build_text_glium(&self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
-        let cache_size = self.cache_size;
+        let dpi_factor = backend.dpi_factor();
+
+        let cache_size = [
+            (self.cache_size[0] as f64 * dpi_factor) as u32,
+            (self.cache_size[1] as f64 * dpi_factor) as u32,
+        ];
         let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
-        let text_scale = self.text_scale;
+        let text_scale = (self.text_scale as f64 * dpi_factor) as f32;
         let text_width = self.text_width;
+        let pixel_width = self.virtual_pixel_text_width;
         let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
@@ -234,11 +248,10 @@ impl RenderableBuilder<GliumBackend> {
             .font(font_path)
             .cache(diffuse_texture.clone())
             .scale(text_scale)
-            .width(text_width)
+            .width(pixel_width)
             .layout(&text)?;
 
-        let dimensions = backend.dimensions();
-        let mesh = text.mesh(dimensions);
+        let mesh = text.mesh(text_width);
         let vertices = VertexBuffer::new(&backend.display, &mesh.vertices)?;
         let indices = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, &mesh.indices)?;
 

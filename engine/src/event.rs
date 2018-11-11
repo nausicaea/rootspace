@@ -7,6 +7,7 @@ bitflags! {
         const STARTUP = 0x01;
         const SHUTDOWN = 0x02;
         const HARD_SHUTDOWN = 0x04;
+        const COMMAND = 0x08;
     }
 }
 
@@ -19,29 +20,44 @@ impl Default for EventFlag {
 #[derive(Clone, Debug)]
 pub struct Event {
     flag: EventFlag,
+    data: EventData,
 }
 
 impl Event {
     pub fn startup() -> Self {
         Event {
             flag: EventFlag::STARTUP,
+            data: EventData::Empty,
         }
     }
 
     pub fn shutdown() -> Self {
         Event {
             flag: EventFlag::SHUTDOWN,
+            data: EventData::Empty,
         }
     }
 
     pub fn hard_shutdown() -> Self {
         Event {
             flag: EventFlag::HARD_SHUTDOWN,
+            data: EventData::Empty,
+        }
+    }
+
+    pub fn command(args: Vec<String>) -> Self {
+        Event {
+            flag: EventFlag::COMMAND,
+            data: EventData::Command(args),
         }
     }
 
     pub fn flag(&self) -> EventFlag {
         self.flag
+    }
+
+    pub fn data(&self) -> &EventData {
+        &self.data
     }
 }
 
@@ -72,6 +88,12 @@ impl From<GliumEvent> for Option<Event> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum EventData {
+    Empty,
+    Command(Vec<String>),
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -82,17 +104,37 @@ mod tests {
     }
 
     #[test]
+    fn accessors() {
+        let e = Event::startup();
+        let _: EventFlag = e.flag();
+        let _: &EventData = e.data();
+    }
+
+    #[test]
     fn ready_event() {
-        assert!(Event::startup().matches_filter(EventFlag::STARTUP));
+        let e = Event::startup();
+        assert_eq!(e.flag, EventFlag::STARTUP);
+        assert_eq!(e.data, EventData::Empty);
     }
 
     #[test]
     fn shutdown_event() {
-        assert!(Event::shutdown().matches_filter(EventFlag::SHUTDOWN));
+        let e = Event::shutdown();
+        assert_eq!(e.flag, EventFlag::SHUTDOWN);
+        assert_eq!(e.data, EventData::Empty);
     }
 
     #[test]
     fn hard_shutdown_event() {
-        assert!(Event::hard_shutdown().matches_filter(EventFlag::HARD_SHUTDOWN));
+        let e = Event::hard_shutdown();
+        assert_eq!(e.flag, EventFlag::HARD_SHUTDOWN);
+        assert_eq!(e.data, EventData::Empty);
+    }
+
+    #[test]
+    fn command_event() {
+        let e = Event::command(Vec::new());
+        assert_eq!(e.flag, EventFlag::COMMAND);
+        assert_eq!(e.data, EventData::Command(Vec::new()));
     }
 }

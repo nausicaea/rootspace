@@ -7,7 +7,7 @@ mod private {
 
 use ecs::EventTrait;
 use failure::Error;
-use geometry::Rect;
+use geometry::rect::Rect;
 use resources::Image;
 use std::borrow::{Borrow, Cow};
 

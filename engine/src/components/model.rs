@@ -1,38 +1,55 @@
-use super::DepthOrderingTrait;
+use super::{DepthOrderingTrait, TransformTrait, camera::Camera};
 use affine_transform::AffineTransform;
 use nalgebra::{Affine3, Isometry3, Matrix4, Vector3};
-use std::{borrow::Borrow, f32, ops::Mul};
+use std::{borrow::Borrow, f32};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Layer {
+    World,
+    Ndc,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
+    layer: Layer,
     model: Affine3<f32>,
     decomposed: AffineTransform<f32>,
 }
 
 impl Model {
-    pub fn new(translation: Vector3<f32>, axisangle: Vector3<f32>, scale: Vector3<f32>) -> Self {
+    pub fn new(layer: Layer, translation: Vector3<f32>, axisangle: Vector3<f32>, scale: Vector3<f32>) -> Self {
         let isometry = Isometry3::new(translation, axisangle);
         let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(
             scale.x, 0.0, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 0.0, scale.z, 0.0, 0.0, 0.0, 0.0, 1.0,
         ));
 
         Model {
+            layer,
             model: isometry * scale_matrix,
             decomposed: AffineTransform::from_parts(isometry.translation, isometry.rotation, scale),
         }
     }
 
-    pub fn identity() -> Self {
+    pub fn identity(layer: Layer) -> Self {
         Model {
+            layer,
             model: Affine3::identity(),
             decomposed: AffineTransform::identity(),
         }
+    }
+
+    pub fn matrix(&self) -> &Matrix4<f32> {
+        self.model.matrix()
+    }
+
+    pub fn position(&self) -> Vector3<f32> {
+        self.decomposed.translation.vector
     }
 }
 
 impl Default for Model {
     fn default() -> Self {
-        Model::identity()
+        Model::identity(Layer::World)
     }
 }
 
@@ -42,22 +59,36 @@ impl DepthOrderingTrait for Model {
     }
 }
 
-impl Borrow<Matrix4<f32>> for Model {
-    fn borrow(&self) -> &Matrix4<f32> {
-        self.model.matrix()
+impl TransformTrait for Model {
+    type Camera = Camera;
+
+    fn transform(&self, camera: &Camera, rhs: &Model) -> Option<Model> {
+        if self.layer == rhs.layer {
+            let product = self.model * rhs.model;
+
+            Some(Model {
+                layer: rhs.layer,
+                model: product,
+                decomposed: product.into(),
+            })
+        } else if self.layer == Layer::World && rhs.layer == Layer::Ndc {
+            let projected = camera.matrix() * self.matrix();
+            let product = Affine3::from_matrix_unchecked(projected) * rhs.model;
+
+            Some(Model {
+                layer: rhs.layer,
+                model: product,
+                decomposed: product.into(),
+            })
+        } else {
+            None
+        }
     }
 }
 
-impl<'a, 'b> Mul<&'b Model> for &'a Model {
-    type Output = Model;
-
-    fn mul(self, rhs: &'b Model) -> Self::Output {
-        let product = self.model * rhs.model;
-
-        Model {
-            model: product,
-            decomposed: product.into(),
-        }
+impl Borrow<Matrix4<f32>> for Model {
+    fn borrow(&self) -> &Matrix4<f32> {
+        self.model.matrix()
     }
 }
 
@@ -67,34 +98,43 @@ mod tests {
 
     #[test]
     fn new() {
-        let _ = Model::new(Vector3::y(), Vector3::z(), Vector3::new(1.0, 1.0, 1.0));
+        let _: Model = Model::new(Layer::World, Vector3::y(), Vector3::z(), Vector3::new(1.0, 1.0, 1.0));
     }
 
     #[test]
     fn identity() {
-        let ident = Model::identity();
+        let ident = Model::identity(Layer::World);
         let ident_mat: &Matrix4<f32> = ident.borrow();
         assert_eq!(ident_mat, &Matrix4::identity());
     }
 
     #[test]
+    fn position() {
+        let ident = Model::identity(Layer::World);
+        assert_eq!(ident.position(), Vector3::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
     fn default() {
-        assert_eq!(Model::default(), Model::identity());
+        assert_eq!(Model::default(), Model::identity(Layer::World));
     }
 
     #[test]
     fn depth_ordering() {
         let a = Model::new(
+            Layer::World,
             Vector3::new(-1.0, 0.0, -10.35),
             Vector3::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 1.0, 1.0),
         );
         let b = Model::new(
+            Layer::World,
             Vector3::new(-1.0, 0.0, 0.0),
             Vector3::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 1.0, 1.0),
         );
         let c = Model::new(
+            Layer::World,
             Vector3::new(-1.0, 0.0, 12.35),
             Vector3::new(0.0, 0.0, 0.0),
             Vector3::new(1.0, 1.0, 1.0),
@@ -109,15 +149,33 @@ mod tests {
     }
 
     #[test]
-    fn multiplication() {
-        let a = Model::new(
-            Vector3::new(-1.0, 0.0, -10.35),
-            Vector3::new(0.0, 0.0, 0.0),
-            Vector3::new(1.0, 1.0, 1.0),
-        );
-        let b = Model::identity();
+    fn transform_3d() {
+        let a = Model::identity(Layer::World);
+        let b = Model::identity(Layer::World);
+        let c = Camera::default();
 
-        assert_eq!(&a * &b, a);
+        assert_eq!(a.transform(&c, &b), Some(a.clone()));
+        assert_eq!(b.transform(&c, &a), Some(a));
+    }
+
+    #[test]
+    fn transform_2d() {
+        let a = Model::identity(Layer::Ndc);
+        let b = Model::identity(Layer::Ndc);
+        let c = Camera::default();
+
+        assert_eq!(a.transform(&c, &b), Some(a.clone()));
+        assert_eq!(b.transform(&c, &a), Some(a));
+    }
+
+    #[test]
+    fn transform_mixed() {
+        let a = Model::identity(Layer::World);
+        let b = Model::identity(Layer::Ndc);
+        let c = Camera::default();
+
+        assert_none!(b.transform(&c, &a));
+        assert_some!(a.transform(&c, &b));
     }
 
     #[test]

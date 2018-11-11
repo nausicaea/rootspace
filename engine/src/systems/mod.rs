@@ -1,13 +1,17 @@
+pub mod debug_console;
+pub mod debug_shell;
 pub mod event_coordinator;
 pub mod event_interface;
 pub mod event_monitor;
 pub mod renderer;
 
-use self::{
+pub use self::{
+    debug_console::DebugConsole,
+    debug_shell::DebugShell,
     event_coordinator::EventCoordinator,
     event_interface::{GliumEventInterface, HeadlessEventInterface},
     event_monitor::EventMonitor,
-    renderer::Renderer,
+    renderer::{GliumRenderer, HeadlessRenderer},
 };
 use components::{camera::Camera, model::Model, renderable::Renderable};
 use context::Context;
@@ -20,7 +24,9 @@ impl_system_group! {
         B(EventMonitor<Context, Event>),
         C(GliumEventInterface<Context, Event>),
         D(HeadlessEventInterface<Context, Event>),
-        E(Renderer<Context, Event, Camera, Model, Renderable<GliumBackend>, GliumBackend>),
-        F(Renderer<Context, Event, Camera, Model, Renderable<HeadlessBackend>, HeadlessBackend>),
+        E(GliumRenderer<Context, Event, Camera, Model, Renderable<GliumBackend>>),
+        F(HeadlessRenderer<Context, Event, Camera, Model, Renderable<HeadlessBackend>>),
+        G(DebugConsole<Context>),
+        H(DebugShell<Context>),
     }
 }

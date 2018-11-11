@@ -1,7 +1,7 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use event::Event;
 use failure::Error;
-use geometry::Rect;
+use geometry::rect::Rect;
 use glium::{
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder},

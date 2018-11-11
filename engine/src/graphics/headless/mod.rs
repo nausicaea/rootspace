@@ -1,7 +1,7 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use event::Event;
 use failure::Error;
-use geometry::Rect;
+use geometry::rect::Rect;
 use resources::{Image, Mesh};
 use std::borrow::{Borrow, Cow};
 
@@ -47,7 +47,17 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
         self.dimensions
     }
 
-    fn write<'a, R: Into<Rect<u32>>>(&self, _rect: R, _data: Cow<'a, [u8]>) {}
+    #[cfg_attr(not(test), allow(unused_variables))]
+    fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, _data: Cow<'a, [u8]>) {
+        #[cfg(any(test, feature = "diagnostics"))]
+        {
+            let rect = rect.into();
+            assert!(rect.max().x() < self.dimensions[0]);
+            assert!(rect.max().y() < self.dimensions[1]);
+
+            trace!("Wrote to the texture at {}", rect);
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -93,7 +103,9 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct HeadlessBackend;
+pub struct HeadlessBackend {
+    dimensions: [u32; 2],
+}
 
 impl Sealed for HeadlessBackend {}
 
@@ -114,7 +126,9 @@ impl BackendTrait for HeadlessBackend {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Created a headless backend (title='{}', dims={:?})", title, dimensions);
 
-        Ok(HeadlessBackend::default())
+        Ok(HeadlessBackend {
+            dimensions
+        })
     }
 
     fn create_frame(&self) -> HeadlessFrame {
@@ -126,7 +140,7 @@ impl BackendTrait for HeadlessBackend {
     }
 
     fn dimensions(&self) -> [u32; 2] {
-        [1024, 768]
+        self.dimensions
     }
 }
 
