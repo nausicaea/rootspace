@@ -1,13 +1,7 @@
-use super::{DepthOrderingTrait, TransformTrait, camera::Camera};
+use super::{Layer, DepthOrderingTrait, TransformTrait, camera::Camera};
 use affine_transform::AffineTransform;
 use nalgebra::{Affine3, Isometry3, Matrix4, Vector3};
 use std::{borrow::Borrow, f32};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Layer {
-    World,
-    Ndc,
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
@@ -61,6 +55,10 @@ impl DepthOrderingTrait for Model {
 
 impl TransformTrait for Model {
     type Camera = Camera;
+
+    fn layer(&self) -> Layer {
+        self.layer
+    }
 
     fn transform(&self, camera: &Camera, rhs: &Model) -> Option<Model> {
         if self.layer == rhs.layer {

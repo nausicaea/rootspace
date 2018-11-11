@@ -6,7 +6,7 @@ extern crate nalgebra;
 
 use ecs::{DatabaseTrait, EventManagerTrait, World};
 use engine::{
-    components::{info::Info, camera::Camera, model::{Layer, Model}, renderable::Renderable},
+    components::{Layer, info::Info, camera::Camera, model::Model, renderable::Renderable},
     context::{Context, SceneGraphTrait},
     event::Event,
     orchestrator::Orchestrator,
