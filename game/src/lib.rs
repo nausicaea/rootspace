@@ -69,6 +69,19 @@ impl Game {
             ),
         )?;
 
+        let ec = self.context_mut().create_entity();
+        self.context_mut().insert_node(eb);
+        self.context_mut().add(ec, Info::new("Entity C", "UI Text example"))?;
+        self.context_mut().add(
+            ec,
+            Model::new(
+                Layer::Ndc,
+                Vector3::new(0.9, 0.9, 0.9),
+                Vector3::new(0.0, 0.0, 0.0),
+                Vector3::new(1.0, 1.0, 1.0),
+            ),
+        )?;
+
         if headless {
             let event_interface = HeadlessEventInterface::default();
             let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
@@ -101,6 +114,22 @@ impl Game {
                     .fragment_shader(fs)
                     .diffuse_texture(dt)
                     .build_mesh_headless(&renderer.backend)?,
+            )?;
+
+            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
+            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
+            let text = "Hello, World!";
+            self.context_mut().add(
+                ec,
+                Renderable::builder()
+                    .font(f)
+                    .text_scale(16.0)
+                    .text_width(0.1, 100)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .text(text)
+                    .build_text_headless(&renderer.backend)?,
             )?;
 
             self.world_mut().add_system(event_interface);
@@ -137,6 +166,22 @@ impl Game {
                     .fragment_shader(fs)
                     .diffuse_texture(dt)
                     .build_mesh_glium(&renderer.backend)?,
+            )?;
+
+            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
+            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
+            let text = "Hello, World!";
+            self.context_mut().add(
+                ec,
+                Renderable::builder()
+                    .font(f)
+                    .text_scale(16.0)
+                    .text_width(0.1, 100)
+                    .vertex_shader(vs)
+                    .fragment_shader(fs)
+                    .text(text)
+                    .build_text_glium(&renderer.backend)?,
             )?;
 
             self.world_mut().add_system(event_interface);
