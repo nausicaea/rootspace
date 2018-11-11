@@ -70,13 +70,13 @@ impl Game {
         )?;
 
         let ec = self.context_mut().create_entity();
-        self.context_mut().insert_node(eb);
+        self.context_mut().insert_node(ec);
         self.context_mut().add(ec, Info::new("Entity C", "UI Text example"))?;
         self.context_mut().add(
             ec,
             Model::new(
                 Layer::Ndc,
-                Vector3::new(0.9, 0.9, 0.9),
+                Vector3::new(0.0, 0.0, -1.0),
                 Vector3::new(0.0, 0.0, 0.0),
                 Vector3::new(1.0, 1.0, 1.0),
             ),
@@ -95,7 +95,7 @@ impl Game {
                 Renderable::builder()
                     .font(f)
                     .text_scale(16.0)
-                    .text_width(1.0, 100)
+                    .text_width(2.0, 200)
                     .vertex_shader(vs)
                     .fragment_shader(fs)
                     .text(text)
@@ -116,20 +116,18 @@ impl Game {
                     .build_mesh_headless(&renderer.backend)?,
             )?;
 
-            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
-            let text = "Hello, World!";
+            let m = self.orchestrator.file("meshes", "quad.ply")?;
+            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
+            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
             self.context_mut().add(
                 ec,
                 Renderable::builder()
-                    .font(f)
-                    .text_scale(16.0)
-                    .text_width(0.1, 100)
+                    .mesh(m)
                     .vertex_shader(vs)
                     .fragment_shader(fs)
-                    .text(text)
-                    .build_text_headless(&renderer.backend)?,
+                    .diffuse_texture(dt)
+                    .build_mesh_headless(&renderer.backend)?,
             )?;
 
             self.world_mut().add_system(event_interface);
@@ -147,7 +145,7 @@ impl Game {
                 Renderable::builder()
                     .font(f)
                     .text_scale(16.0)
-                    .text_width(1.0, 100)
+                    .text_width(2.0, 200)
                     .vertex_shader(vs)
                     .fragment_shader(fs)
                     .text(text)
@@ -168,20 +166,18 @@ impl Game {
                     .build_mesh_glium(&renderer.backend)?,
             )?;
 
-            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
-            let text = "Hello, World!";
+            let m = self.orchestrator.file("meshes", "quad.ply")?;
+            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
+            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
+            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
             self.context_mut().add(
                 ec,
                 Renderable::builder()
-                    .font(f)
-                    .text_scale(16.0)
-                    .text_width(0.1, 100)
+                    .mesh(m)
                     .vertex_shader(vs)
                     .fragment_shader(fs)
-                    .text(text)
-                    .build_text_glium(&renderer.backend)?,
+                    .diffuse_texture(dt)
+                    .build_mesh_glium(&renderer.backend)?,
             )?;
 
             self.world_mut().add_system(event_interface);
