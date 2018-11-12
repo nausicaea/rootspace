@@ -40,8 +40,17 @@ impl Camera {
         &self.matrix
     }
 
+    pub fn position(&self) -> &Vector3<f32> {
+        &self.view.translation.vector
+    }
+
     pub fn dimensions(&self) -> (u32, u32) {
         self.dimensions
+    }
+
+    pub fn physical_dimensions(&self) -> (u32, u32) {
+        let (w, h) = (self.dimensions.0 as f64, self.dimensions.1 as f64);
+        ((w * self.dpi_factor).round() as u32, (h * self.dpi_factor).round() as u32)
     }
 
     pub fn set_dimensions(&mut self, value: (u32, u32)) {
@@ -52,9 +61,8 @@ impl Camera {
         }
     }
 
-    pub fn physical_dimensions(&self) -> (u32, u32) {
-        let (w, h) = (self.dimensions.0 as f64, self.dimensions.1 as f64);
-        ((w * self.dpi_factor).round() as u32, (h * self.dpi_factor).round() as u32)
+    pub fn dpi_factor(&self) -> f64 {
+        self.dpi_factor
     }
 
     pub fn set_dpi_factor(&mut self, value: f64) {

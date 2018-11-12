@@ -1,6 +1,6 @@
 use failure::Error;
 use clap::{App, SubCommand, Arg, AppSettings};
-use components::{TransformTrait, info::Info, model::Model};
+use components::{TransformTrait, info::Info, model::Model, camera::Camera};
 use ecs::{Entity, DatabaseTrait};
 use std::marker::PhantomData;
 use ecs::EventManagerTrait;
@@ -40,6 +40,67 @@ where
 
     fn run(&self, ctx: &mut Ctx, _: &[String]) -> Result<(), Error> {
         ctx.dispatch_later(Event::shutdown());
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct CameraCommand<Ctx> {
+    _ctx: PhantomData<Ctx>,
+}
+
+impl<Ctx> Default for CameraCommand<Ctx> {
+    fn default() -> Self {
+        CameraCommand {
+            _ctx: PhantomData::default(),
+        }
+    }
+}
+
+impl<Ctx> CommandTrait<Ctx> for CameraCommand<Ctx>
+where
+    Ctx: DatabaseTrait + 'static,
+{
+    fn name(&self) -> &'static str {
+        "camera"
+    }
+
+    fn description(&self) -> &'static str {
+        "Provides access to the camera"
+    }
+
+    fn run(&self, ctx: &mut Ctx, args: &[String]) -> Result<(), Error> {
+        let matches = App::new("camera")
+            .about("Provides access to the camera")
+            .setting(AppSettings::DisableVersion)
+            .subcommand(SubCommand::with_name("info")
+                        .about("Prints camera settings")
+                        .setting(AppSettings::DisableVersion)
+                        .arg(Arg::with_name("position")
+                             .short("p")
+                             .long("position")
+                             .help("Displays the position of the camera"))
+                        .arg(Arg::with_name("dimensions")
+                             .short("d")
+                             .long("dimensions")
+                             .help("Display the viewport dimensions")))
+            .get_matches_from_safe(args)?;
+
+        if let Some(info_matches) = matches.subcommand_matches("info") {
+            let cam = ctx.find::<Camera>()?;
+
+            if info_matches.is_present("position") {
+                let pos = cam.position();
+                println!("Position: [{}, {}, {}]", pos.x, pos.y, pos.z);
+            }
+
+            if info_matches.is_present("dimensions") {
+                let dims = cam.dimensions();
+                let pdims = cam.physical_dimensions();
+                let dpi = cam.dpi_factor();
+                println!("Dimensions: {}x{} (physical={}x{}, DPI-factor={})", dims.0, dims.1, pdims.0, pdims.1, dpi);
+            }
+        }
         Ok(())
     }
 }
