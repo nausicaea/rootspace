@@ -21,13 +21,13 @@ impl EventsLoopTrait<Event> for HeadlessEventsLoop {
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessTexture {
-    dimensions: [u32; 2],
+    dimensions: (u32, u32),
 }
 
 impl Sealed for HeadlessTexture {}
 
 impl TextureTrait<HeadlessBackend> for HeadlessTexture {
-    fn empty(_backend: &HeadlessBackend, dimensions: [u32; 2]) -> Result<Self, Error> {
+    fn empty(_backend: &HeadlessBackend, dimensions: (u32, u32)) -> Result<Self, Error> {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Created an empty texture (dims={:?})", dimensions);
 
@@ -43,7 +43,7 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
         })
     }
 
-    fn dimensions(&self) -> [u32; 2] {
+    fn dimensions(&self) -> (u32, u32) {
         self.dimensions
     }
 
@@ -52,8 +52,8 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
         #[cfg(any(test, feature = "diagnostics"))]
         {
             let rect = rect.into();
-            assert!(rect.max().x() < self.dimensions[0]);
-            assert!(rect.max().y() < self.dimensions[1]);
+            assert!(rect.max().x() < self.dimensions.0);
+            assert!(rect.max().y() < self.dimensions.1);
 
             trace!("Wrote to the texture at {}", rect);
         }
@@ -104,7 +104,7 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessBackend {
-    dimensions: [u32; 2],
+    dimensions: (u32, u32),
 }
 
 impl Sealed for HeadlessBackend {}
@@ -119,7 +119,7 @@ impl BackendTrait for HeadlessBackend {
     fn new(
         _events_loop: &HeadlessEventsLoop,
         title: &str,
-        dimensions: [u32; 2],
+        dimensions: (u32, u32),
         _vsync: bool,
         _msaa: u16,
     ) -> Result<Self, Error> {
@@ -139,7 +139,7 @@ impl BackendTrait for HeadlessBackend {
         1.0
     }
 
-    fn dimensions(&self) -> [u32; 2] {
+    fn physical_dimensions(&self) -> (u32, u32) {
         self.dimensions
     }
 }
@@ -167,7 +167,7 @@ mod tests {
         assert_ok!(HeadlessBackend::new(
             &HeadlessEventsLoop::default(),
             "Title",
-            [800, 600],
+            (800, 600),
             false,
             0
         ));
@@ -175,14 +175,14 @@ mod tests {
 
     #[test]
     fn dpi_factor() {
-        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
 
         assert_eq!(b.dpi_factor(), 1.0f64);
     }
 
     #[test]
     fn frame() {
-        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
 
         let mut f: HeadlessFrame = b.create_frame();
         f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);

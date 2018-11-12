@@ -116,6 +116,10 @@ where
     fn find<C: Any>(&self) -> Result<&C, DatabaseError> {
         self.database.find::<C>()
     }
+
+    fn find_mut<C: Any>(&mut self) -> Result<&mut C, DatabaseError> {
+        self.database.find_mut::<C>()
+    }
 }
 
 impl<E, M> SceneGraphTrait<Entity, M> for MockCtx<E, M>

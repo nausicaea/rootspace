@@ -17,10 +17,10 @@ pub trait BackendTrait: Sized + private::Sealed {
     type Frame: FrameTrait<Self>;
     type Texture: TextureTrait<Self>;
 
-    fn new(events_loop: &Self::Loop, title: &str, dimensions: [u32; 2], vsync: bool, msaa: u16) -> Result<Self, Error>;
+    fn new(events_loop: &Self::Loop, title: &str, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self, Error>;
     fn create_frame(&self) -> Self::Frame;
     fn dpi_factor(&self) -> f64;
-    fn dimensions(&self) -> [u32; 2];
+    fn physical_dimensions(&self) -> (u32, u32);
 }
 
 pub trait EventsLoopTrait<O: EventTrait>: private::Sealed {
@@ -38,8 +38,8 @@ pub trait FrameTrait<B: BackendTrait>: private::Sealed {
 }
 
 pub trait TextureTrait<B: BackendTrait>: Sized + private::Sealed {
-    fn empty(backend: &B, dimensions: [u32; 2]) -> Result<Self, Error>;
+    fn empty(backend: &B, dimensions: (u32, u32)) -> Result<Self, Error>;
     fn from_image(backend: &B, image: Image) -> Result<Self, Error>;
-    fn dimensions(&self) -> [u32; 2];
+    fn dimensions(&self) -> (u32, u32);
     fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, data: Cow<'a, [u8]>);
 }

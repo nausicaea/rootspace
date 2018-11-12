@@ -4,7 +4,7 @@ use context::SceneGraphTrait;
 use std::marker::PhantomData;
 use ecs::{Entity, DatabaseTrait, EventManagerTrait, SystemTrait, LoopStage};
 use event::{Event, EventFlag, EventData};
-use debug_commands::{CommandTrait, ExitCommand, EntityCommand};
+use debug_commands::{CommandTrait, ExitCommand, CameraCommand, EntityCommand};
 use std::collections::HashMap;
 
 pub struct DebugShell<Ctx> {
@@ -23,6 +23,7 @@ where
         };
 
         sys.add_command(ExitCommand::default());
+        sys.add_command(CameraCommand::default());
         sys.add_command(EntityCommand::default());
 
         sys

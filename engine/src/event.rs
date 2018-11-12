@@ -8,6 +8,8 @@ bitflags! {
         const SHUTDOWN = 0x02;
         const HARD_SHUTDOWN = 0x04;
         const COMMAND = 0x08;
+        const RESIZE = 0x10;
+        const CHANGE_DPI = 0x20;
     }
 }
 
@@ -52,6 +54,20 @@ impl Event {
         }
     }
 
+    pub fn resize(dims: (u32, u32)) -> Self {
+        Event {
+            flag: EventFlag::RESIZE,
+            data: EventData::Resize(dims),
+        }
+    }
+
+    pub fn change_dpi(factor: f64) -> Self {
+        Event {
+            flag: EventFlag::CHANGE_DPI,
+            data: EventData::ChangeDpi(factor),
+        }
+    }
+
     pub fn flag(&self) -> EventFlag {
         self.flag
     }
@@ -80,6 +96,8 @@ impl From<GliumEvent> for Option<Event> {
         if let GliumEvent(GlutinEvent::WindowEvent { event: we, .. }) = value {
             match we {
                 WindowEvent::CloseRequested => Some(Event::shutdown()),
+                WindowEvent::Resized(l) => Some(Event::resize(l.into())),
+                WindowEvent::HiDpiFactorChanged(f) => Some(Event::change_dpi(f)),
                 _ => None,
             }
         } else {
@@ -92,6 +110,8 @@ impl From<GliumEvent> for Option<Event> {
 pub enum EventData {
     Empty,
     Command(Vec<String>),
+    Resize((u32, u32)),
+    ChangeDpi(f64),
 }
 
 #[cfg(test)]
@@ -136,5 +156,19 @@ mod tests {
         let e = Event::command(Vec::new());
         assert_eq!(e.flag, EventFlag::COMMAND);
         assert_eq!(e.data, EventData::Command(Vec::new()));
+    }
+
+    #[test]
+    fn resize_event() {
+        let e = Event::resize((1, 2));
+        assert_eq!(e.flag, EventFlag::RESIZE);
+        assert_eq!(e.data, EventData::Resize((1, 2)));
+    }
+
+    #[test]
+    fn change_dpi_event() {
+        let e = Event::change_dpi(2.0);
+        assert_eq!(e.flag, EventFlag::CHANGE_DPI);
+        assert_eq!(e.data, EventData::ChangeDpi(2.0));
     }
 }

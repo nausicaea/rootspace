@@ -52,7 +52,7 @@ pub struct RenderableBuilder<B: BackendTrait> {
     fs: Option<PathBuf>,
     dt: Option<PathBuf>,
     nt: Option<PathBuf>,
-    cache_size: [u32; 2],
+    cache_size: (u32, u32),
     font: Option<PathBuf>,
     text_scale: f32,
     text_width: f32,
@@ -69,7 +69,7 @@ impl<B: BackendTrait> Default for RenderableBuilder<B> {
             fs: None,
             dt: None,
             nt: None,
-            cache_size: [512; 2],
+            cache_size: (512, 512),
             font: None,
             text_scale: 16.0,
             text_width: 1.0,
@@ -106,8 +106,8 @@ impl<B: BackendTrait> RenderableBuilder<B> {
         self
     }
 
-    pub fn cache_size(&mut self, width: u32, height: u32) -> &mut Self {
-        self.cache_size = [width, height];
+    pub fn cache_size(&mut self, dims: (u32, u32)) -> &mut Self {
+        self.cache_size = dims;
         self
     }
 
@@ -159,10 +159,10 @@ impl RenderableBuilder<HeadlessBackend> {
     pub fn build_text_headless(&self, backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
         let dpi_factor = backend.dpi_factor();
 
-        let cache_size = [
-            (self.cache_size[0] as f64 * dpi_factor) as u32,
-            (self.cache_size[1] as f64 * dpi_factor) as u32,
-        ];
+        let cache_size = (
+            (self.cache_size.0 as f64 * dpi_factor) as u32,
+            (self.cache_size.1 as f64 * dpi_factor) as u32,
+        );
         let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
         let text_scale = (self.text_scale as f64 * dpi_factor) as f32;
         let text_width = self.text_width;
@@ -230,10 +230,10 @@ impl RenderableBuilder<GliumBackend> {
     pub fn build_text_glium(&self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
         let dpi_factor = backend.dpi_factor();
 
-        let cache_size = [
-            (self.cache_size[0] as f64 * dpi_factor) as u32,
-            (self.cache_size[1] as f64 * dpi_factor) as u32,
-        ];
+        let cache_size = (
+            (self.cache_size.0 as f64 * dpi_factor) as u32,
+            (self.cache_size.1 as f64 * dpi_factor) as u32,
+        );
         let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
         let text_scale = (self.text_scale as f64 * dpi_factor) as f32;
         let text_width = self.text_width;
@@ -295,7 +295,7 @@ mod tests {
 
     #[test]
     fn headless_builder_mesh() {
-        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let r: Result<Renderable<HeadlessBackend>, Error> = Renderable::builder()
             .mesh(&base_path.join("cube.ply"))
@@ -309,7 +309,7 @@ mod tests {
 
     #[test]
     fn headless_builder_text() {
-        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let r: Result<Renderable<HeadlessBackend>, Error> = Renderable::builder()
             .font(&base_path.join("SourceSansPro-Regular.ttf"))
