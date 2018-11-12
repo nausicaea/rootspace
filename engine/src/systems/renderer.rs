@@ -1,32 +1,32 @@
 use context::SceneGraphTrait;
 use components::{Layer, TransformTrait, camera::Camera, model::Model};
-use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
+use ecs::{DatabaseTrait, Entity, LoopStage, SystemTrait};
+use event::{Event, EventFlag, EventData};
 use failure::Error;
 use graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait, FrameTrait};
 use std::{borrow::Borrow, marker::PhantomData, time::Duration};
 
-pub type HeadlessRenderer<Ctx, Evt, Ren> = Renderer<Ctx, Evt, Ren, HeadlessBackend>;
-pub type GliumRenderer<Ctx, Evt, Ren> = Renderer<Ctx, Evt, Ren, GliumBackend>;
+pub type HeadlessRenderer<Ctx, Ren> = Renderer<Ctx, Ren, HeadlessBackend>;
+pub type GliumRenderer<Ctx, Ren> = Renderer<Ctx, Ren, GliumBackend>;
 
 #[derive(Debug)]
-pub struct Renderer<Ctx, Evt, Ren, B> {
+pub struct Renderer<Ctx, Ren, B> {
     pub backend: B,
     pub clear_color: [f32; 4],
     frames: usize,
     draw_calls: usize,
     _ctx: PhantomData<Ctx>,
-    _evt: PhantomData<Evt>,
     _ren: PhantomData<Ren>,
 }
 
-impl<Ctx, Evt, Ren, B> Renderer<Ctx, Evt, Ren, B>
+impl<Ctx, Ren, B> Renderer<Ctx, Ren, B>
 where
     B: BackendTrait,
 {
     pub fn new(
         events_loop: &B::Loop,
         title: &str,
-        dimensions: [u32; 2],
+        dimensions: (u32, u32),
         vsync: bool,
         msaa: u16,
     ) -> Result<Self, Error> {
@@ -36,7 +36,6 @@ where
             frames: 0,
             draw_calls: 0,
             _ctx: PhantomData::default(),
-            _evt: PhantomData::default(),
             _ren: PhantomData::default(),
         })
     }
@@ -51,15 +50,29 @@ where
     }
 }
 
-impl<Ctx, Evt, Ren, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Ren, B>
+impl<Ctx, Ren, B> SystemTrait<Ctx, Event> for Renderer<Ctx, Ren, B>
 where
     Ctx: DatabaseTrait + SceneGraphTrait<Entity, Model>,
-    Evt: EventTrait,
     Ren: Borrow<<B as BackendTrait>::Data> + 'static,
     B: BackendTrait,
 {
     fn get_stage_filter(&self) -> LoopStage {
-        LoopStage::RENDER
+        LoopStage::RENDER | LoopStage::HANDLE_EVENTS
+    }
+
+    fn get_event_filter(&self) -> EventFlag {
+        EventFlag::RESIZE
+    }
+
+    fn handle_event(&mut self, ctx: &mut Ctx, event: &Event) -> Result<bool, Error> {
+        if let EventData::Resize(dims) = event.data() {
+            // If the screen dimensions have changed, update the camera.
+            ctx.find_mut::<Camera>()
+                .map(|c| c.set_dimensions(*dims))
+                .map_err(|e| format_err!("{} (Camera)", e))?;
+        }
+
+        Ok(true)
     }
 
     fn render(&mut self, ctx: &mut Ctx, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
@@ -67,11 +80,6 @@ where
         {
             self.frames += 1;
         }
-
-        // If the screen dimensions have changed, update the camera.
-        ctx.find_mut::<Camera>()
-            .map(|c| c.set_dimensions(self.backend.dimensions()))
-            .map_err(|e| format_err!("{} (Camera)", e))?;
 
         // Update the scene graph and obtain the nodes (while sorting for z-value).
         ctx.update_graph()?;
@@ -109,7 +117,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::mock::MockEvt;
     use graphics::headless::{HeadlessBackend as HB, HeadlessRenderData as HRD};
     use mock::MockCtx;
     use std::f32;
@@ -117,10 +124,10 @@ mod tests {
     #[test]
     fn new_headless() {
         assert_ok!(
-            Renderer::<MockCtx<MockEvt, Model>, MockEvt, HRD, HB>::new(
+            Renderer::<MockCtx<Event, Model>, HRD, HB>::new(
                 &Default::default(),
                 "Title",
-                [800, 600],
+                (800, 600),
                 false,
                 0
             )
@@ -129,25 +136,25 @@ mod tests {
 
     #[test]
     fn get_stage_filter_headless() {
-        let r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, HRD, HB>::new(
+        let r = Renderer::<MockCtx<Event, Model>, HRD, HB>::new(
             &Default::default(),
             "Title",
-            [800, 600],
+            (800, 600),
             false,
             0,
         )
         .unwrap();
 
-        assert_eq!(r.get_stage_filter(), LoopStage::RENDER);
+        assert_eq!(r.get_stage_filter(), LoopStage::RENDER | LoopStage::HANDLE_EVENTS);
     }
 
     #[test]
     fn render_headless() {
-        let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, HRD, HB>::new(
+        let mut ctx: MockCtx<Event, Model> = MockCtx::default();
+        let mut r = Renderer::<MockCtx<Event, Model>, HRD, HB>::new(
             &Default::default(),
             "Title",
-            [800, 600],
+            (800, 600),
             false,
             0,
         )

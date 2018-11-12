@@ -24,8 +24,8 @@ impl_system_group! {
         B(EventMonitor<Context, Event>),
         C(GliumEventInterface<Context, Event>),
         D(HeadlessEventInterface<Context, Event>),
-        E(GliumRenderer<Context, Event, Renderable<GliumBackend>>),
-        F(HeadlessRenderer<Context, Event, Renderable<HeadlessBackend>>),
+        E(GliumRenderer<Context, Renderable<GliumBackend>>),
+        F(HeadlessRenderer<Context, Renderable<HeadlessBackend>>),
         G(DebugConsole<Context>),
         H(DebugShell<Context>),
     }

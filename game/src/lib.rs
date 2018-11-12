@@ -84,7 +84,7 @@ impl Game {
 
         if headless {
             let event_interface = HeadlessEventInterface::default();
-            let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
+            let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
 
             let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
             let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
@@ -134,7 +134,7 @@ impl Game {
             self.world_mut().add_system(renderer);
         } else {
             let event_interface = GliumEventInterface::default();
-            let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", [800, 600], true, 4)?;
+            let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
 
             let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
             let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;

@@ -52,7 +52,7 @@ impl EventsLoopTrait<Event> for GliumEventsLoop {
 
 pub struct GliumUniforms<'a, 'b, 'c, T: 'a> {
     transform: &'a T,
-    dimensions: [f32; 2],
+    dimensions: (u32, u32),
     diffuse_texture: &'b Texture2d,
     normal_texture: Option<&'c Texture2d>,
 }
@@ -69,7 +69,7 @@ where
 {
     fn visit_values<'f, F: FnMut(&str, UniformValue<'f>)>(&'f self, mut f: F) {
         f("transform", UniformValue::Mat4(*self.transform.as_ref()));
-        f("dimensions", UniformValue::Vec2(self.dimensions));
+        f("dimensions", UniformValue::Vec2([self.dimensions.0 as f32, self.dimensions.1 as f32]));
         f("diffuse_texture", UniformValue::Texture2d(self.diffuse_texture, None));
         if let Some(nt) = self.normal_texture {
             f("normal_texture", UniformValue::Texture2d(nt, None));
@@ -83,8 +83,8 @@ pub struct GliumTexture(Rc<Texture2d>);
 impl Sealed for GliumTexture {}
 
 impl TextureTrait<GliumBackend> for GliumTexture {
-    fn empty(backend: &GliumBackend, dimensions: [u32; 2]) -> Result<Self, Error> {
-        let tex = Texture2d::empty(&backend.display, dimensions[0], dimensions[1])?;
+    fn empty(backend: &GliumBackend, dimensions: (u32, u32)) -> Result<Self, Error> {
+        let tex = Texture2d::empty(&backend.display, dimensions.0, dimensions.1)?;
 
         Ok(GliumTexture(Rc::new(tex)))
     }
@@ -96,8 +96,8 @@ impl TextureTrait<GliumBackend> for GliumTexture {
         Ok(GliumTexture(Rc::new(tex)))
     }
 
-    fn dimensions(&self) -> [u32; 2] {
-        [self.0.width(), self.0.height()]
+    fn dimensions(&self) -> (u32, u32) {
+        (self.0.width(), self.0.height())
     }
 
     fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, data: Cow<'a, [u8]>) {
@@ -147,7 +147,7 @@ impl FrameTrait<GliumBackend> for GliumFrame {
 
         let u = GliumUniforms {
             transform: transform,
-            dimensions: [dimensions.0 as f32, dimensions.1 as f32],
+            dimensions,
             diffuse_texture: &data.diffuse_texture.0,
             normal_texture: data.normal_texture.as_ref().map(|t| t.0.borrow()),
         };
@@ -207,13 +207,13 @@ impl BackendTrait for GliumBackend {
     fn new(
         events_loop: &GliumEventsLoop,
         title: &str,
-        dimensions: [u32; 2],
+        dimensions: (u32, u32),
         vsync: bool,
         msaa: u16,
     ) -> Result<Self, Error> {
         let window = WindowBuilder::new()
             .with_title(title)
-            .with_dimensions(From::from((dimensions[0], dimensions[1])));
+            .with_dimensions(dimensions.into());
 
         let context = ContextBuilder::new()
             .with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
@@ -235,9 +235,8 @@ impl BackendTrait for GliumBackend {
         self.display.gl_window().get_hidpi_factor()
     }
 
-    fn dimensions(&self) -> [u32; 2] {
-        let (w, h) = self.display.get_framebuffer_dimensions();
-        [w, h]
+    fn dimensions(&self) -> (u32, u32) {
+        self.display.get_framebuffer_dimensions()
     }
 }
 
@@ -295,8 +294,8 @@ pub fn triangle(backend: &GliumBackend) -> Result<GliumRenderData, Error> {
         None,
     )?;
 
-    let diffuse_texture = GliumTexture::empty(&backend, [32; 2])?;
-    let normal_texture = Some(GliumTexture::empty(&backend, [32; 2])?);
+    let diffuse_texture = GliumTexture::empty(&backend, (32, 32))?;
+    let normal_texture = Some(GliumTexture::empty(&backend, (32, 32))?);
 
     Ok(GliumRenderData {
         vertices,
@@ -336,7 +335,7 @@ mod tests {
         assert_ok!(GliumBackend::new(
             &GliumEventsLoop::default(),
             "Title",
-            [800, 600],
+            (800, 600),
             false,
             0
         ));
@@ -354,7 +353,7 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn dpi_factor() {
-        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
 
         assert_ulps_ne!(b.dpi_factor(), 0.0f64, epsilon = f64::EPSILON);
     }
@@ -371,7 +370,7 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn frame() {
-        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", [800, 600], false, 0).unwrap();
+        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
 
         let data = triangle(&b).unwrap();
 

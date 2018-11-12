@@ -18,8 +18,8 @@ impl Image {
         Image(image::DynamicImage::new_rgba8(width, height))
     }
 
-    pub fn dimensions(&self) -> [u32; 2] {
-        [self.0.width(), self.0.height()]
+    pub fn dimensions(&self) -> (u32, u32) {
+        (self.0.width(), self.0.height())
     }
 }
 
