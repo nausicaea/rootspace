@@ -50,6 +50,10 @@ where
         }
     }
 
+    fn on_startup(&self, ctx: &mut Ctx) -> Result<bool, Error> {
+        self.on_dpi_change(ctx, self.backend.dpi_factor())
+    }
+
     fn on_resize(&self, ctx: &mut Ctx, dims: (u32, u32)) -> Result<bool, Error> {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Updating the camera dimensions (dims={:?})", dims);
@@ -84,11 +88,12 @@ where
     }
 
     fn get_event_filter(&self) -> EventFlag {
-        EventFlag::RESIZE | EventFlag::CHANGE_DPI
+        EventFlag::STARTUP | EventFlag::RESIZE | EventFlag::CHANGE_DPI
     }
 
     fn handle_event(&mut self, ctx: &mut Ctx, event: &Event) -> Result<bool, Error> {
         match event.data() {
+            EventData::Empty if event.flag() == EventFlag::STARTUP => self.on_startup(ctx),
             EventData::Resize(dims) => self.on_resize(ctx, *dims),
             EventData::ChangeDpi(factor) => self.on_dpi_change(ctx, *factor),
             _ => Ok(true),
@@ -179,7 +184,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(r.get_event_filter(), EventFlag::RESIZE | EventFlag::CHANGE_DPI);
+        assert_eq!(r.get_event_filter(), EventFlag::STARTUP | EventFlag::RESIZE | EventFlag::CHANGE_DPI);
     }
 
     #[test]
