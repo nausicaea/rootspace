@@ -1,8 +1,6 @@
 use failure::Error;
 use file_manipulation::ReadPath;
 use graphics::{BackendTrait, TextureTrait};
-#[cfg_attr(not(any(test, feature = "diagnostics")), allow(unused_imports))]
-use geometry::rect::Rect;
 use resources::{Mesh, Vertex};
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use std::{
@@ -264,12 +262,6 @@ fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dim
                 ((text_dims.1 as f32) / 2.0 - pos_rect.max.y as f32) * scale,
             );
             let pos_rect = RusttypeRect { min, max };
-
-            #[cfg(any(test, feature = "diagnostics"))]
-            {
-                let r: Rect<f32> = pos_rect.clone().into();
-                trace!("Generating glyph at {}", r);
-            }
 
             vertices.push(Vertex::new(
                 [pos_rect.min.x, pos_rect.max.y, 0.0],

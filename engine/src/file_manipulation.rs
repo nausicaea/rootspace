@@ -126,7 +126,7 @@ mod tests {
     fn read_to_string() {
         let mut tf = NamedTempFile::new().unwrap();
 
-        write!(tf, "Hello, World!");
+        write!(tf, "Hello, World!").unwrap();
 
         let r = tf.path().read_to_string();
         assert_ok!(r);
