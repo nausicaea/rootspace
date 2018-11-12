@@ -9,6 +9,7 @@ mock = ["ecs/mock"]
 wsl = []
 
 [dependencies]
+approx = "^0.3.0"
 bitflags = "^1.0.3"
 clap = "^2.0.0"
 ctrlc = {version = "^3.0.0", features = ["termination"]}
@@ -27,7 +28,6 @@ ply = {git = "https://gitlab.com/nausicaea/ply.git"}
 
 [dev-dependencies]
 assertions = {git = "https://gitlab.com/nausicaea/assertions.git"}
-approx = "^0.3.0"
 tempfile = "^3.0.1"
 quickcheck = "^0.7.1"
 ecs = {git = "https://gitlab.com/nausicaea/ecs.git", features = ["mock"]}

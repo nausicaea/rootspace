@@ -1,28 +1,25 @@
 use context::SceneGraphTrait;
-use components::{Layer, DepthOrderingTrait, TransformTrait};
+use components::{Layer, TransformTrait, camera::Camera, model::Model};
 use ecs::{DatabaseTrait, Entity, EventTrait, LoopStage, SystemTrait};
 use failure::Error;
 use graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait, FrameTrait};
-use nalgebra::Matrix4;
 use std::{borrow::Borrow, marker::PhantomData, time::Duration};
 
-pub type HeadlessRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, HeadlessBackend>;
-pub type GliumRenderer<Ctx, Evt, Cam, Mdl, Ren> = Renderer<Ctx, Evt, Cam, Mdl, Ren, GliumBackend>;
+pub type HeadlessRenderer<Ctx, Evt, Ren> = Renderer<Ctx, Evt, Ren, HeadlessBackend>;
+pub type GliumRenderer<Ctx, Evt, Ren> = Renderer<Ctx, Evt, Ren, GliumBackend>;
 
 #[derive(Debug)]
-pub struct Renderer<Ctx, Evt, Cam, Mdl, Ren, B> {
+pub struct Renderer<Ctx, Evt, Ren, B> {
     pub backend: B,
     pub clear_color: [f32; 4],
     frames: usize,
     draw_calls: usize,
     _ctx: PhantomData<Ctx>,
     _evt: PhantomData<Evt>,
-    _cam: PhantomData<Cam>,
-    _mdl: PhantomData<Mdl>,
     _ren: PhantomData<Ren>,
 }
 
-impl<Ctx, Evt, Cam, Mdl, Ren, B> Renderer<Ctx, Evt, Cam, Mdl, Ren, B>
+impl<Ctx, Evt, Ren, B> Renderer<Ctx, Evt, Ren, B>
 where
     B: BackendTrait,
 {
@@ -40,8 +37,6 @@ where
             draw_calls: 0,
             _ctx: PhantomData::default(),
             _evt: PhantomData::default(),
-            _cam: PhantomData::default(),
-            _mdl: PhantomData::default(),
             _ren: PhantomData::default(),
         })
     }
@@ -56,12 +51,10 @@ where
     }
 }
 
-impl<Ctx, Evt, Cam, Mdl, Ren, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Cam, Mdl, Ren, B>
+impl<Ctx, Evt, Ren, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Ren, B>
 where
-    Ctx: DatabaseTrait + SceneGraphTrait<Entity, Mdl>,
+    Ctx: DatabaseTrait + SceneGraphTrait<Entity, Model>,
     Evt: EventTrait,
-    Cam: Borrow<Matrix4<f32>> + 'static,
-    Mdl: Default + Clone + Borrow<Matrix4<f32>> + DepthOrderingTrait + TransformTrait + 'static,
     Ren: Borrow<<B as BackendTrait>::Data> + 'static,
     B: BackendTrait,
 {
@@ -75,12 +68,17 @@ where
             self.frames += 1;
         }
 
+        // If the screen dimensions have changed, update the camera.
+        ctx.find_mut::<Camera>()
+            .map(|c| c.set_dimensions(self.backend.dimensions()))
+            .map_err(|e| format_err!("{} (Camera)", e))?;
+
         // Update the scene graph and obtain the nodes (while sorting for z-value).
         ctx.update_graph()?;
         let nodes = ctx.get_nodes(true);
 
         // Obtain a reference to the camera.
-        let cam = ctx.find::<Cam>().map_err(|e| format_err!("{} (Camera)", e))?;
+        let cam = ctx.find::<Camera>().map_err(|e| format_err!("{} (Camera)", e))?;
 
         // Create a new frame.
         let mut target = self.backend.create_frame();
@@ -88,15 +86,15 @@ where
 
         // Render the scene.
         for (entity, model) in nodes {
-            if ctx.has::<Mdl>(entity) {
+            if ctx.has::<Model>(entity) {
                 if let Ok(data) = ctx.get::<Ren>(entity) {
                     #[cfg(any(test, feature = "diagnostics"))]
                     {
                         self.draw_calls += 1;
                     }
                     let transform = match model.layer() {
-                        Layer::World => cam.borrow() * model.borrow(),
-                        Layer::Ndc => model.borrow().clone(),
+                        Layer::World => cam.matrix() * model.matrix(),
+                        Layer::Ndc => model.matrix().clone(),
                     };
                     target.render(&transform, data)?;
                 }
@@ -111,7 +109,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use components::{camera::Camera, model::Model};
     use ecs::mock::MockEvt;
     use graphics::headless::{HeadlessBackend as HB, HeadlessRenderData as HRD};
     use mock::MockCtx;
@@ -120,7 +117,7 @@ mod tests {
     #[test]
     fn new_headless() {
         assert_ok!(
-            Renderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, HRD, HB>::new(
+            Renderer::<MockCtx<MockEvt, Model>, MockEvt, HRD, HB>::new(
                 &Default::default(),
                 "Title",
                 [800, 600],
@@ -132,7 +129,7 @@ mod tests {
 
     #[test]
     fn get_stage_filter_headless() {
-        let r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, HRD, HB>::new(
+        let r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, HRD, HB>::new(
             &Default::default(),
             "Title",
             [800, 600],
@@ -147,7 +144,7 @@ mod tests {
     #[test]
     fn render_headless() {
         let mut ctx: MockCtx<MockEvt, Model> = MockCtx::default();
-        let mut r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, Camera, Model, HRD, HB>::new(
+        let mut r = Renderer::<MockCtx<MockEvt, Model>, MockEvt, HRD, HB>::new(
             &Default::default(),
             "Title",
             [800, 600],

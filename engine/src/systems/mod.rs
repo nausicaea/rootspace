@@ -13,7 +13,7 @@ pub use self::{
     event_monitor::EventMonitor,
     renderer::{GliumRenderer, HeadlessRenderer},
 };
-use components::{camera::Camera, model::Model, renderable::Renderable};
+use components::renderable::Renderable;
 use context::Context;
 use event::{Event, EventFlag};
 use graphics::{glium::GliumBackend, headless::HeadlessBackend};
@@ -24,8 +24,8 @@ impl_system_group! {
         B(EventMonitor<Context, Event>),
         C(GliumEventInterface<Context, Event>),
         D(HeadlessEventInterface<Context, Event>),
-        E(GliumRenderer<Context, Event, Camera, Model, Renderable<GliumBackend>>),
-        F(HeadlessRenderer<Context, Event, Camera, Model, Renderable<HeadlessBackend>>),
+        E(GliumRenderer<Context, Event, Renderable<GliumBackend>>),
+        F(HeadlessRenderer<Context, Event, Renderable<HeadlessBackend>>),
         G(DebugConsole<Context>),
         H(DebugShell<Context>),
     }

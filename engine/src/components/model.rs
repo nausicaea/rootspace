@@ -1,7 +1,7 @@
 use super::{Layer, DepthOrderingTrait, TransformTrait, camera::Camera};
 use affine_transform::AffineTransform;
 use nalgebra::{Affine3, Isometry3, Matrix4, Vector3, UnitQuaternion};
-use std::{borrow::Borrow, f32};
+use std::f32;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
@@ -107,12 +107,6 @@ impl TransformTrait for Model {
     }
 }
 
-impl Borrow<Matrix4<f32>> for Model {
-    fn borrow(&self) -> &Matrix4<f32> {
-        self.model.matrix()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -125,7 +119,7 @@ mod tests {
     #[test]
     fn identity() {
         let ident = Model::identity(Layer::World);
-        let ident_mat: &Matrix4<f32> = ident.borrow();
+        let ident_mat: &Matrix4<f32> = ident.matrix();
         assert_eq!(ident_mat, &Matrix4::identity());
     }
 
@@ -215,11 +209,5 @@ mod tests {
 
         assert_none!(b.transform(&c, &a));
         assert_some!(a.transform(&c, &b));
-    }
-
-    #[test]
-    fn borrow() {
-        let m = Model::default();
-        let _: &Matrix4<f32> = m.borrow();
     }
 }
