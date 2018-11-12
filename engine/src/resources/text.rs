@@ -1,6 +1,7 @@
 use failure::Error;
 use file_manipulation::ReadPath;
 use graphics::{BackendTrait, TextureTrait};
+#[cfg_attr(not(any(test, feature = "diagnostics")), allow(unused_imports))]
 use geometry::rect::Rect;
 use resources::{Mesh, Vertex};
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
