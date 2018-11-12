@@ -20,7 +20,7 @@ pub trait BackendTrait: Sized + private::Sealed {
     fn new(events_loop: &Self::Loop, title: &str, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self, Error>;
     fn create_frame(&self) -> Self::Frame;
     fn dpi_factor(&self) -> f64;
-    fn dimensions(&self) -> (u32, u32);
+    fn physical_dimensions(&self) -> (u32, u32);
 }
 
 pub trait EventsLoopTrait<O: EventTrait>: private::Sealed {

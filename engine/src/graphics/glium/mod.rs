@@ -52,7 +52,7 @@ impl EventsLoopTrait<Event> for GliumEventsLoop {
 
 pub struct GliumUniforms<'a, 'b, 'c, T: 'a> {
     transform: &'a T,
-    dimensions: (u32, u32),
+    physical_dimensions: (u32, u32),
     diffuse_texture: &'b Texture2d,
     normal_texture: Option<&'c Texture2d>,
 }
@@ -69,7 +69,7 @@ where
 {
     fn visit_values<'f, F: FnMut(&str, UniformValue<'f>)>(&'f self, mut f: F) {
         f("transform", UniformValue::Mat4(*self.transform.as_ref()));
-        f("dimensions", UniformValue::Vec2([self.dimensions.0 as f32, self.dimensions.1 as f32]));
+        f("physical_dimensions", UniformValue::Vec2([self.physical_dimensions.0 as f32, self.physical_dimensions.1 as f32]));
         f("diffuse_texture", UniformValue::Texture2d(self.diffuse_texture, None));
         if let Some(nt) = self.normal_texture {
             f("normal_texture", UniformValue::Texture2d(nt, None));
@@ -143,11 +143,11 @@ impl FrameTrait<GliumBackend> for GliumFrame {
     {
         let data = renderable.borrow();
 
-        let dimensions = self.0.get_dimensions();
+        let physical_dimensions = self.0.get_dimensions();
 
         let u = GliumUniforms {
             transform: transform,
-            dimensions,
+            physical_dimensions,
             diffuse_texture: &data.diffuse_texture.0,
             normal_texture: data.normal_texture.as_ref().map(|t| t.0.borrow()),
         };
@@ -213,7 +213,8 @@ impl BackendTrait for GliumBackend {
     ) -> Result<Self, Error> {
         let window = WindowBuilder::new()
             .with_title(title)
-            .with_dimensions(dimensions.into());
+            .with_dimensions(dimensions.into())
+            .with_resizable(false);
 
         let context = ContextBuilder::new()
             .with_gl(GlRequest::Specific(Api::OpenGl, (3, 3)))
@@ -235,7 +236,7 @@ impl BackendTrait for GliumBackend {
         self.display.gl_window().get_hidpi_factor()
     }
 
-    fn dimensions(&self) -> (u32, u32) {
+    fn physical_dimensions(&self) -> (u32, u32) {
         self.display.get_framebuffer_dimensions()
     }
 }

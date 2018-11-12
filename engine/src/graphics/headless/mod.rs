@@ -139,7 +139,7 @@ impl BackendTrait for HeadlessBackend {
         1.0
     }
 
-    fn dimensions(&self) -> (u32, u32) {
+    fn physical_dimensions(&self) -> (u32, u32) {
         self.dimensions
     }
 }

@@ -6,7 +6,8 @@ pub struct Camera {
     matrix: Matrix4<f32>,
     projection: Perspective3<f32>,
     view: Isometry3<f32>,
-    aspect: f32,
+    dimensions: (u32, u32),
+    dpi_factor: f64,
 }
 
 impl Camera {
@@ -18,9 +19,8 @@ impl Camera {
         target: Point3<f32>,
         up: Vector3<f32>,
     ) -> Self {
-        let aspect = dimensions.0 as f32 / dimensions.1 as f32;
         let projection = Perspective3::new(
-            aspect,
+            dimensions.0 as f32 / dimensions.1 as f32,
             fov_y,
             frustum_z.0,
             frustum_z.1,
@@ -31,7 +31,8 @@ impl Camera {
             matrix: projection.as_matrix() * view.to_homogeneous(),
             projection,
             view,
-            aspect,
+            dimensions,
+            dpi_factor: 1.0,
         }
     }
 
@@ -39,16 +40,25 @@ impl Camera {
         &self.matrix
     }
 
-    pub fn set_dimensions(&mut self, value: (u32, u32)) {
-        let aspect = value.0 as f32 / value.1 as f32;
-        if ulps_ne!(aspect, self.aspect, epsilon = f32::EPSILON) {
-            #[cfg(any(test, feature = "diagnostics"))]
-            trace!("Updating the camera dimensions (dims={:?})", value);
+    pub fn dimensions(&self) -> (u32, u32) {
+        self.dimensions
+    }
 
-            self.projection.set_aspect(aspect);
-            self.aspect = aspect;
+    pub fn set_dimensions(&mut self, value: (u32, u32)) {
+        if value != self.dimensions {
+            self.projection.set_aspect(value.0 as f32 / value.1 as f32);
+            self.dimensions = value;
             self.recalculate_matrix();
         }
+    }
+
+    pub fn physical_dimensions(&self) -> (u32, u32) {
+        let (w, h) = (self.dimensions.0 as f64, self.dimensions.1 as f64);
+        ((w * self.dpi_factor).round() as u32, (h * self.dpi_factor).round() as u32)
+    }
+
+    pub fn set_dpi_factor(&mut self, value: f64) {
+        self.dpi_factor = value;
     }
 
     fn recalculate_matrix(&mut self) {
@@ -91,9 +101,11 @@ mod tests {
         let mat = c.matrix().clone();
 
         c.set_dimensions((1024, 768));
+        assert_eq!(c.dimensions(), (1024, 768));
         assert_eq!(c.matrix(), &mat);
 
         c.set_dimensions((1400, 900));
+        assert_eq!(c.dimensions(), (1400, 900));
         assert_ne!(c.matrix(), &mat);
     }
 

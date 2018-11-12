@@ -22,6 +22,7 @@ pub struct Renderer<Ctx, Ren, B> {
 impl<Ctx, Ren, B> Renderer<Ctx, Ren, B>
 where
     B: BackendTrait,
+    Ctx: DatabaseTrait,
 {
     pub fn new(
         events_loop: &B::Loop,
@@ -48,6 +49,28 @@ where
             0.0
         }
     }
+
+    fn on_resize(&self, ctx: &mut Ctx, dims: (u32, u32)) -> Result<bool, Error> {
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Updating the camera dimensions (dims={:?})", dims);
+
+        ctx.find_mut::<Camera>()
+            .map(|c| c.set_dimensions(dims))
+            .map_err(|e| format_err!("{} (Camera)", e))?;
+
+        Ok(true)
+    }
+
+    fn on_dpi_change(&self, ctx: &mut Ctx, factor: f64) -> Result<bool, Error> {
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Updating the camera dpi factor (factor={:?})", factor);
+
+        ctx.find_mut::<Camera>()
+            .map(|c| c.set_dpi_factor(factor))
+            .map_err(|e| format_err!("{} (Camera)", e))?;
+
+        Ok(true)
+    }
 }
 
 impl<Ctx, Ren, B> SystemTrait<Ctx, Event> for Renderer<Ctx, Ren, B>
@@ -61,18 +84,15 @@ where
     }
 
     fn get_event_filter(&self) -> EventFlag {
-        EventFlag::RESIZE
+        EventFlag::RESIZE | EventFlag::CHANGE_DPI
     }
 
     fn handle_event(&mut self, ctx: &mut Ctx, event: &Event) -> Result<bool, Error> {
-        if let EventData::Resize(dims) = event.data() {
-            // If the screen dimensions have changed, update the camera.
-            ctx.find_mut::<Camera>()
-                .map(|c| c.set_dimensions(*dims))
-                .map_err(|e| format_err!("{} (Camera)", e))?;
+        match event.data() {
+            EventData::Resize(dims) => self.on_resize(ctx, *dims),
+            EventData::ChangeDpi(factor) => self.on_dpi_change(ctx, *factor),
+            _ => Ok(true),
         }
-
-        Ok(true)
     }
 
     fn render(&mut self, ctx: &mut Ctx, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
@@ -146,6 +166,20 @@ mod tests {
         .unwrap();
 
         assert_eq!(r.get_stage_filter(), LoopStage::RENDER | LoopStage::HANDLE_EVENTS);
+    }
+
+    #[test]
+    fn get_event_filter_headless() {
+        let r = Renderer::<MockCtx<Event, Model>, HRD, HB>::new(
+            &Default::default(),
+            "Title",
+            (800, 600),
+            false,
+            0,
+        )
+        .unwrap();
+
+        assert_eq!(r.get_event_filter(), EventFlag::RESIZE | EventFlag::CHANGE_DPI);
     }
 
     #[test]
