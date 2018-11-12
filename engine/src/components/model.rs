@@ -1,6 +1,6 @@
 use super::{Layer, DepthOrderingTrait, TransformTrait, camera::Camera};
 use affine_transform::AffineTransform;
-use nalgebra::{Affine3, Isometry3, Matrix4, Vector3};
+use nalgebra::{Affine3, Isometry3, Matrix4, Vector3, UnitQuaternion};
 use std::{borrow::Borrow, f32};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -36,8 +36,31 @@ impl Model {
         self.model.matrix()
     }
 
-    pub fn position(&self) -> Vector3<f32> {
-        self.decomposed.translation.vector
+    pub fn position(&self) -> &Vector3<f32> {
+        &self.decomposed.translation.vector
+    }
+
+    pub fn set_position(&mut self, value: Vector3<f32>) {
+        self.decomposed.translation.vector = value;
+        self.model = self.decomposed.recompose();
+    }
+
+    pub fn orientation(&self) -> &UnitQuaternion<f32> {
+        &self.decomposed.rotation
+    }
+
+    pub fn set_orientation(&mut self, value: UnitQuaternion<f32>) {
+        self.decomposed.rotation = value;
+        self.model = self.decomposed.recompose();
+    }
+
+    pub fn scale(&self) -> &Vector3<f32> {
+        &self.decomposed.scale
+    }
+
+    pub fn set_scale(&mut self, value: Vector3<f32>) {
+        self.decomposed.scale = value;
+        self.model = self.decomposed.recompose();
     }
 }
 
@@ -107,9 +130,27 @@ mod tests {
     }
 
     #[test]
-    fn position() {
+    fn getters() {
         let ident = Model::identity(Layer::World);
-        assert_eq!(ident.position(), Vector3::new(0.0, 0.0, 0.0));
+        assert_eq!(ident.position(), &Vector3::new(0.0, 0.0, 0.0));
+        assert_eq!(ident.orientation(), &UnitQuaternion::identity());
+        assert_eq!(ident.scale(), &Vector3::new(1.0, 1.0, 1.0));
+
+        let mat = Model::new(Layer::World, Vector3::new(2.0, 3.0, 1.0), Vector3::new(1.0, 0.0, 0.0), Vector3::new(1.0, 1.1, 1.0));
+        assert_eq!(mat.position(), &Vector3::new(2.0, 3.0, 1.0));
+        assert_eq!(mat.orientation(), &UnitQuaternion::from_scaled_axis(Vector3::new(1.0, 0.0, 0.0)));
+        assert_eq!(mat.scale(), &Vector3::new(1.0, 1.1, 1.0));
+    }
+
+    #[test]
+    fn setters() {
+        let mut ident = Model::identity(Layer::World);
+        ident.set_position(Vector3::new(1.0, 2.0, 3.0));
+        assert_eq!(ident.position(), &Vector3::new(1.0, 2.0, 3.0));
+        ident.set_orientation(UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0)));
+        assert_eq!(ident.orientation(), &UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0)));
+        ident.set_scale(Vector3::new(0.9, 0.4, 1.0));
+        assert_eq!(ident.scale(), &Vector3::new(0.9, 0.4, 1.0));
     }
 
     #[test]
