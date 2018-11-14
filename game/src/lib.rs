@@ -9,16 +9,13 @@ extern crate nalgebra;
 
 mod event;
 
-use ecs::{DatabaseTrait, EventManagerTrait, World};
+use ecs::{DatabaseTrait, EventManagerTrait};
 use engine::{
-    components::{camera::Camera, info::Info, model::Model, renderable::Renderable, layer::Layer},
+    components::{camera::Camera, info::Info, layer::Layer, model::Model, renderable::Renderable},
     context::{Context, SceneGraphTrait},
     event::EngineEventTrait,
-    orchestrator::Orchestrator,
-    systems::{
-        DebugConsole, DebugShell, EventCoordinator, EventMonitor, GliumEventInterface, GliumRenderer,
-        HeadlessEventInterface, HeadlessRenderer, SystemGroup,
-    },
+    systems::{DebugConsole, DebugShell, EventCoordinator, EventMonitor},
+    DefaultOrchestrator, DefaultWorld, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
 };
 use event::Event;
 use failure::Error;
@@ -26,7 +23,7 @@ use nalgebra::Vector3;
 use std::{f32, io, path::Path, time::Duration};
 
 pub struct Game {
-    orchestrator: Orchestrator<World<Event, Context<Event>, SystemGroup<Event>>>,
+    orchestrator: DefaultOrchestrator<Event>,
 }
 
 impl Game {
@@ -35,7 +32,7 @@ impl Game {
         delta_time: Duration,
         max_frame_time: Duration,
     ) -> Result<Self, Error> {
-        let o = Orchestrator::new(resource_path, delta_time, max_frame_time)?;
+        let o = DefaultOrchestrator::new(resource_path, delta_time, max_frame_time)?;
 
         Ok(Game { orchestrator: o })
     }
@@ -48,8 +45,7 @@ impl Game {
         self.context_mut().insert_node(ea);
         self.context_mut()
             .add(ea, Info::new("Entity A", "Rotated cube example"))?;
-        self.context_mut()
-            .add(ea, Layer::World)?;
+        self.context_mut().add(ea, Layer::World)?;
         self.context_mut().add(
             ea,
             Model::new(
@@ -62,8 +58,7 @@ impl Game {
         let eb = self.context_mut().create_entity();
         self.context_mut().insert_node(eb);
         self.context_mut().add(eb, Info::new("Entity B", "Text example"))?;
-        self.context_mut()
-            .add(eb, Layer::World)?;
+        self.context_mut().add(eb, Layer::World)?;
         self.context_mut().add(
             eb,
             Model::new(
@@ -76,8 +71,7 @@ impl Game {
         let ec = self.context_mut().create_entity();
         self.context_mut().insert_node(ec);
         self.context_mut().add(ec, Info::new("Entity C", "UI Text example"))?;
-        self.context_mut()
-            .add(ec, Layer::Ui)?;
+        self.context_mut().add(ec, Layer::Ui)?;
         self.context_mut().add(
             ec,
             Model::new(
@@ -207,7 +201,7 @@ impl Game {
         Ok(())
     }
 
-    fn world_mut(&mut self) -> &mut World<Event, Context<Event>, SystemGroup<Event>> {
+    fn world_mut(&mut self) -> &mut DefaultWorld<Event> {
         &mut self.orchestrator.world
     }
 

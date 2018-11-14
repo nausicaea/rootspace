@@ -1,11 +1,8 @@
 use ecs::{EventManagerTrait, EventTrait, LoopStage, SystemTrait};
 use event::MaybeInto;
 use failure::Error;
-use graphics::{glium::GliumEventsLoop as GEL, headless::HeadlessEventsLoop as HEL, EventsLoopTrait};
+use graphics::EventsLoopTrait;
 use std::{marker::PhantomData, time::Duration};
-
-pub type HeadlessEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, HEL>;
-pub type GliumEventInterface<Ctx, Evt> = EventInterface<Ctx, Evt, GEL>;
 
 pub struct EventInterface<Ctx, Evt, L> {
     pub events_loop: L,
@@ -56,23 +53,24 @@ where
 mod tests {
     use super::*;
     use context::Context;
+    use graphics::headless::HeadlessEventsLoop;
     use mock::MockEvt;
 
     #[test]
     fn new_headless() {
-        let _: HeadlessEventInterface<Context<MockEvt>, MockEvt> = EventInterface::default();
+        let _: EventInterface<Context<MockEvt>, MockEvt, HeadlessEventsLoop> = EventInterface::default();
     }
 
     #[test]
     fn get_stage_filter_headless() {
-        let e: HeadlessEventInterface<Context<MockEvt>, MockEvt> = EventInterface::default();
+        let e: EventInterface<Context<MockEvt>, MockEvt, HeadlessEventsLoop> = EventInterface::default();
 
         assert_eq!(e.get_stage_filter(), LoopStage::UPDATE);
     }
 
     #[test]
     fn update_headless() {
-        let mut e: HeadlessEventInterface<Context<MockEvt>, MockEvt> = EventInterface::default();
+        let mut e: EventInterface<Context<MockEvt>, MockEvt, HeadlessEventsLoop> = EventInterface::default();
         let mut c = Context::default();
 
         assert_ok!(e.update(&mut c, &Default::default(), &Default::default()));

@@ -1,4 +1,4 @@
-use nalgebra::{Isometry3, Matrix4, Perspective3, Orthographic3, Point3, Vector3};
+use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point3, Vector3};
 use std::f32;
 
 #[derive(Debug, Clone, PartialEq)]

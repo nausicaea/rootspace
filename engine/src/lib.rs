@@ -43,3 +43,19 @@ pub mod orchestrator;
 pub mod resources;
 pub mod systems;
 pub mod text_manipulation;
+
+use context::Context;
+use ecs::World;
+use graphics::{
+    glium::{GliumBackend, GliumEventsLoop},
+    headless::{HeadlessBackend, HeadlessEventsLoop},
+};
+use orchestrator::Orchestrator;
+use systems::{EventInterface, Renderer, SystemGroup};
+
+pub type DefaultWorld<E> = World<E, Context<E>, SystemGroup<Context<E>, E>>;
+pub type DefaultOrchestrator<E> = Orchestrator<DefaultWorld<E>>;
+pub type GliumEventInterface<C, E> = EventInterface<C, E, GliumEventsLoop>;
+pub type HeadlessEventInterface<C, E> = EventInterface<C, E, HeadlessEventsLoop>;
+pub type GliumRenderer<C, E> = Renderer<C, E, GliumBackend>;
+pub type HeadlessRenderer<C, E> = Renderer<C, E, HeadlessBackend>;

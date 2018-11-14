@@ -1,13 +1,10 @@
-use components::{camera::Camera, model::Model, layer::Layer, renderable::Renderable};
+use components::{camera::Camera, layer::Layer, model::Model, renderable::Renderable};
 use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, Entity, LoopStage, SystemTrait};
 use event::EngineEventTrait;
 use failure::Error;
-use graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait, FrameTrait};
+use graphics::{BackendTrait, FrameTrait};
 use std::{marker::PhantomData, time::Duration};
-
-pub type HeadlessRenderer<Ctx, Evt> = Renderer<Ctx, Evt, HeadlessBackend>;
-pub type GliumRenderer<Ctx, Evt> = Renderer<Ctx, Evt, GliumBackend>;
 
 #[derive(Debug)]
 pub struct Renderer<Ctx, Evt, B> {
@@ -165,16 +162,16 @@ mod tests {
 
     #[test]
     fn get_stage_filter_headless() {
-        let r = Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
-            .unwrap();
+        let r =
+            Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0).unwrap();
 
         assert_eq!(r.get_stage_filter(), LoopStage::RENDER | LoopStage::HANDLE_EVENTS);
     }
 
     #[test]
     fn get_event_filter_headless() {
-        let r = Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
-            .unwrap();
+        let r =
+            Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0).unwrap();
 
         assert_eq!(
             r.get_event_filter(),
@@ -186,8 +183,7 @@ mod tests {
     fn render_headless() {
         let mut ctx: Context<MockEvt> = Context::default();
         let mut r =
-            Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
-                .unwrap();
+            Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0).unwrap();
 
         let a = ctx.create_entity();
         ctx.insert_node(a);

@@ -6,81 +6,83 @@ pub mod event_monitor;
 pub mod renderer;
 
 pub use self::{
-    debug_console::DebugConsole,
-    debug_shell::DebugShell,
-    event_coordinator::EventCoordinator,
-    event_interface::{GliumEventInterface, HeadlessEventInterface},
-    event_monitor::EventMonitor,
-    renderer::{GliumRenderer, HeadlessRenderer},
+    debug_console::DebugConsole, debug_shell::DebugShell, event_coordinator::EventCoordinator,
+    event_interface::EventInterface, event_monitor::EventMonitor, renderer::Renderer,
 };
-use context::Context;
-use ecs::{EventTrait, LoopStage, SystemTrait};
+use components::model::Model;
+use context::SceneGraphTrait;
+use ecs::{DatabaseTrait, Entity, EventManagerTrait, EventTrait, LoopStage, SystemTrait};
 use event::EngineEventTrait;
 use failure::Error;
+use graphics::{
+    glium::{GliumBackend, GliumEventsLoop},
+    headless::{HeadlessBackend, HeadlessEventsLoop},
+};
 use std::time::Duration;
 
-pub enum SystemGroup<E> {
-    A(EventCoordinator<Context<E>, E>),
-    B(EventMonitor<Context<E>, E>),
-    C(GliumEventInterface<Context<E>, E>),
-    D(HeadlessEventInterface<Context<E>, E>),
-    E(GliumRenderer<Context<E>, E>),
-    F(HeadlessRenderer<Context<E>, E>),
-    G(DebugConsole<Context<E>, E>),
-    H(DebugShell<Context<E>, E>),
+pub enum SystemGroup<C, E> {
+    A(EventCoordinator<C, E>),
+    B(EventMonitor<C, E>),
+    C(EventInterface<C, E, GliumEventsLoop>),
+    D(EventInterface<C, E, HeadlessEventsLoop>),
+    E(Renderer<C, E, GliumBackend>),
+    F(Renderer<C, E, HeadlessBackend>),
+    G(DebugConsole<C, E>),
+    H(DebugShell<C, E>),
 }
 
-impl<E> From<EventCoordinator<Context<E>, E>> for SystemGroup<E> {
-    fn from(value: EventCoordinator<Context<E>, E>) -> Self {
+impl<C, E> From<EventCoordinator<C, E>> for SystemGroup<C, E> {
+    fn from(value: EventCoordinator<C, E>) -> Self {
         SystemGroup::A(value)
     }
 }
 
-impl<E> From<EventMonitor<Context<E>, E>> for SystemGroup<E> {
-    fn from(value: EventMonitor<Context<E>, E>) -> Self {
+impl<C, E> From<EventMonitor<C, E>> for SystemGroup<C, E> {
+    fn from(value: EventMonitor<C, E>) -> Self {
         SystemGroup::B(value)
     }
 }
 
-impl<E> From<GliumEventInterface<Context<E>, E>> for SystemGroup<E> {
-    fn from(value: GliumEventInterface<Context<E>, E>) -> Self {
+impl<C, E> From<EventInterface<C, E, GliumEventsLoop>> for SystemGroup<C, E> {
+    fn from(value: EventInterface<C, E, GliumEventsLoop>) -> Self {
         SystemGroup::C(value)
     }
 }
 
-impl<E> From<HeadlessEventInterface<Context<E>, E>> for SystemGroup<E> {
-    fn from(value: HeadlessEventInterface<Context<E>, E>) -> Self {
+impl<C, E> From<EventInterface<C, E, HeadlessEventsLoop>> for SystemGroup<C, E> {
+    fn from(value: EventInterface<C, E, HeadlessEventsLoop>) -> Self {
         SystemGroup::D(value)
     }
 }
 
-impl<E> From<GliumRenderer<Context<E>, E>> for SystemGroup<E> {
-    fn from(value: GliumRenderer<Context<E>, E>) -> Self {
+impl<C, E> From<Renderer<C, E, GliumBackend>> for SystemGroup<C, E> {
+    fn from(value: Renderer<C, E, GliumBackend>) -> Self {
         SystemGroup::E(value)
     }
 }
 
-impl<E> From<HeadlessRenderer<Context<E>, E>> for SystemGroup<E> {
-    fn from(value: HeadlessRenderer<Context<E>, E>) -> Self {
+impl<C, E> From<Renderer<C, E, HeadlessBackend>> for SystemGroup<C, E> {
+    fn from(value: Renderer<C, E, HeadlessBackend>) -> Self {
         SystemGroup::F(value)
     }
 }
 
-impl<E> From<DebugConsole<Context<E>, E>> for SystemGroup<E> {
-    fn from(value: DebugConsole<Context<E>, E>) -> Self {
+impl<C, E> From<DebugConsole<C, E>> for SystemGroup<C, E> {
+    fn from(value: DebugConsole<C, E>) -> Self {
         SystemGroup::G(value)
     }
 }
 
-impl<E> From<DebugShell<Context<E>, E>> for SystemGroup<E> {
-    fn from(value: DebugShell<Context<E>, E>) -> Self {
+impl<C, E> From<DebugShell<C, E>> for SystemGroup<C, E> {
+    fn from(value: DebugShell<C, E>) -> Self {
         SystemGroup::H(value)
     }
 }
 
-impl<E> SystemTrait<Context<E>, E> for SystemGroup<E>
+impl<C, E> SystemTrait<C, E> for SystemGroup<C, E>
 where
     E: EngineEventTrait,
+    C: DatabaseTrait + EventManagerTrait<E> + SceneGraphTrait<Entity, Model> + 'static,
 {
     fn get_stage_filter(&self) -> LoopStage {
         use self::SystemGroup::*;
@@ -110,7 +112,7 @@ where
         }
     }
 
-    fn fixed_update(&mut self, ctx: &mut Context<E>, t: &Duration, dt: &Duration) -> Result<(), Error> {
+    fn fixed_update(&mut self, ctx: &mut C, t: &Duration, dt: &Duration) -> Result<(), Error> {
         use self::SystemGroup::*;
         match self {
             A(ref mut s) => s.fixed_update(ctx, t, dt),
@@ -124,7 +126,7 @@ where
         }
     }
 
-    fn update(&mut self, ctx: &mut Context<E>, t: &Duration, dt: &Duration) -> Result<(), Error> {
+    fn update(&mut self, ctx: &mut C, t: &Duration, dt: &Duration) -> Result<(), Error> {
         use self::SystemGroup::*;
         match self {
             A(ref mut s) => s.update(ctx, t, dt),
@@ -138,7 +140,7 @@ where
         }
     }
 
-    fn render(&mut self, ctx: &mut Context<E>, t: &Duration, dt: &Duration) -> Result<(), Error> {
+    fn render(&mut self, ctx: &mut C, t: &Duration, dt: &Duration) -> Result<(), Error> {
         use self::SystemGroup::*;
         match self {
             A(ref mut s) => s.render(ctx, t, dt),
@@ -152,7 +154,7 @@ where
         }
     }
 
-    fn handle_event(&mut self, ctx: &mut Context<E>, event: &E) -> Result<bool, Error> {
+    fn handle_event(&mut self, ctx: &mut C, event: &E) -> Result<bool, Error> {
         use self::SystemGroup::*;
         match self {
             A(ref mut s) => s.handle_event(ctx, event),
