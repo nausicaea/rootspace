@@ -1,7 +1,8 @@
-use super::{camera::Camera, DepthOrderingTrait, Layer, TransformTrait};
+use super::{DepthOrderingTrait, Layer};
 use affine_transform::AffineTransform;
 use nalgebra::{Affine3, Isometry3, Matrix4, UnitQuaternion, Vector3};
 use std::f32;
+use std::ops::Mul;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
@@ -30,6 +31,10 @@ impl Model {
             model: Affine3::identity(),
             decomposed: AffineTransform::identity(),
         }
+    }
+
+    pub fn layer(&self) -> Layer {
+        self.layer
     }
 
     pub fn matrix(&self) -> &Matrix4<f32> {
@@ -76,33 +81,30 @@ impl DepthOrderingTrait for Model {
     }
 }
 
-impl TransformTrait for Model {
-    type Camera = Camera;
+impl Mul<Model> for Model {
+    type Output = Model;
 
-    fn layer(&self) -> Layer {
-        self.layer
+    fn mul(self, rhs: Model) -> Model {
+        let product = self.model * rhs.model;
+
+        Model {
+            layer: rhs.layer,
+            model: product,
+            decomposed: product.into(),
+        }
     }
+}
 
-    fn transform(&self, camera: &Camera, rhs: &Model) -> Option<Model> {
-        if self.layer == rhs.layer {
-            let product = self.model * rhs.model;
+impl<'a, 'b> Mul<&'a Model> for &'b Model {
+    type Output = Model;
 
-            Some(Model {
-                layer: rhs.layer,
-                model: product,
-                decomposed: product.into(),
-            })
-        } else if self.layer == Layer::World && rhs.layer == Layer::Ndc {
-            let projected = camera.world_matrix() * self.matrix();
-            let product = Affine3::from_matrix_unchecked(projected) * rhs.model;
+    fn mul(self, rhs: &'a Model) -> Model {
+        let product = self.model * rhs.model;
 
-            Some(Model {
-                layer: rhs.layer,
-                model: product,
-                decomposed: product.into(),
-            })
-        } else {
-            None
+        Model {
+            layer: rhs.layer,
+            model: product,
+            decomposed: product.into(),
         }
     }
 }
@@ -193,32 +195,12 @@ mod tests {
     }
 
     #[test]
-    fn transform_3d() {
+    fn multiply() {
         let a = Model::identity(Layer::World);
         let b = Model::identity(Layer::World);
-        let c = Camera::default();
+        let expected = a.clone();
 
-        assert_eq!(a.transform(&c, &b), Some(a.clone()));
-        assert_eq!(b.transform(&c, &a), Some(a));
-    }
-
-    #[test]
-    fn transform_2d() {
-        let a = Model::identity(Layer::Ndc);
-        let b = Model::identity(Layer::Ndc);
-        let c = Camera::default();
-
-        assert_eq!(a.transform(&c, &b), Some(a.clone()));
-        assert_eq!(b.transform(&c, &a), Some(a));
-    }
-
-    #[test]
-    fn transform_mixed() {
-        let a = Model::identity(Layer::World);
-        let b = Model::identity(Layer::Ndc);
-        let c = Camera::default();
-
-        assert_none!(b.transform(&c, &a));
-        assert_some!(a.transform(&c, &b));
+        assert_eq!(&a * &b, expected);
+        assert_eq!(a * b, expected);
     }
 }

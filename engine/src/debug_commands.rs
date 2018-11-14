@@ -1,5 +1,5 @@
 use clap::{App, AppSettings, Arg, SubCommand};
-use components::{camera::Camera, info::Info, model::Model, TransformTrait};
+use components::{camera::Camera, info::Info, model::Model};
 use context::SceneGraphTrait;
 use ecs::EventManagerTrait;
 use ecs::{DatabaseTrait, Entity};

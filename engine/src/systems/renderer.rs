@@ -1,4 +1,4 @@
-use components::{camera::Camera, model::Model, Layer, TransformTrait};
+use components::{camera::Camera, model::Model, Layer};
 use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, Entity, LoopStage, SystemTrait};
 use event::EngineEventTrait;
@@ -114,7 +114,7 @@ where
 
         // Update the scene graph and obtain the nodes (while sorting for z-value).
         ctx.update_graph()?;
-        let nodes = ctx.get_nodes(true);
+        let nodes = ctx.get_nodes();
 
         // Obtain a reference to the camera.
         let cam = ctx.find::<Camera>().map_err(|e| format_err!("{} (Camera)", e))?;

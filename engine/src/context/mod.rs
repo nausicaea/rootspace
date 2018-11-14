@@ -1,4 +1,4 @@
-use components::{model::Model, DepthOrderingTrait, TransformTrait};
+use components::model::Model;
 use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventManagerTrait, EventTrait};
 use failure::Error;
 use hierarchy::Hierarchy;
@@ -12,13 +12,12 @@ use std::{
 pub trait SceneGraphTrait<K, V>
 where
     K: Clone + Default + Eq + Hash,
-    V: Clone + Default + TransformTrait + DepthOrderingTrait,
+    V: Clone + Default,
 {
     fn update_graph(&mut self) -> Result<(), Error>;
     fn insert_node(&mut self, entity: K);
     fn get_node(&self, entity: &K) -> Option<&V>;
-    fn get_nodes(&self, sort_nodes: bool) -> Vec<(&K, &V)>;
-    fn sort_nodes(&self, nodes: &mut [(&K, &V)]);
+    fn get_nodes(&self) -> Vec<(&K, &V)>;
 }
 
 pub struct Context<E> {
@@ -72,9 +71,8 @@ impl<E> SceneGraphTrait<Entity, Model> for Context<E> {
     fn update_graph(&mut self) -> Result<(), Error> {
         let db = &self.database;
         self.scene_graph.update(&|entity, _, parent_model| {
-            let camera: &<Model as TransformTrait>::Camera = db.find().ok()?;
-            let current_model = db.get(entity).ok()?;
-            parent_model.transform(camera, current_model)
+            let current_model: &Model = db.get(entity).ok()?;
+            Some(parent_model * current_model)
         })?;
         Ok(())
     }
@@ -91,18 +89,8 @@ impl<E> SceneGraphTrait<Entity, Model> for Context<E> {
             .last()
     }
 
-    fn get_nodes(&self, sort_nodes: bool) -> Vec<(&Entity, &Model)> {
-        let mut nodes = self.scene_graph.iter().collect::<Vec<_>>();
-
-        if sort_nodes {
-            self.sort_nodes(&mut nodes);
-        }
-
-        nodes
-    }
-
-    fn sort_nodes(&self, nodes: &mut [(&Entity, &Model)]) {
-        nodes.sort_unstable_by_key(|(_, v)| v.depth_index());
+    fn get_nodes(&self) -> Vec<(&Entity, &Model)> {
+        self.scene_graph.iter().collect()
     }
 }
 
