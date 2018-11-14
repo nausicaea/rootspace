@@ -1,4 +1,4 @@
-use components::{camera::Camera, model::Model, Layer};
+use components::{camera::Camera, model::Model, layer::Layer};
 use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, Entity, LoopStage, SystemTrait};
 use event::EngineEventTrait;
@@ -126,16 +126,18 @@ where
         // Render the scene.
         for (entity, model) in nodes {
             if ctx.has::<Model>(entity) {
-                if let Ok(data) = ctx.get::<Ren>(entity) {
-                    #[cfg(any(test, feature = "diagnostics"))]
-                    {
-                        self.draw_calls += 1;
+                if let Ok(layer) = ctx.get::<Layer>(entity) {
+                    if let Ok(data) = ctx.get::<Ren>(entity) {
+                        #[cfg(any(test, feature = "diagnostics"))]
+                        {
+                            self.draw_calls += 1;
+                        }
+                        let transform = match *layer {
+                            Layer::World => cam.world_matrix() * model.matrix(),
+                            Layer::Ui => cam.ui_matrix() * model.matrix(),
+                        };
+                        target.render(&transform, data)?;
                     }
-                    let transform = match model.layer() {
-                        Layer::World => cam.world_matrix() * model.matrix(),
-                        Layer::Ndc => cam.ui_matrix() * model.matrix(),
-                    };
-                    target.render(&transform, data)?;
                 }
             }
         }
@@ -193,10 +195,12 @@ mod tests {
         let a = ctx.create_entity();
         ctx.insert_node(a);
         ctx.add(a, Model::default()).unwrap();
+        ctx.add(a, Layer::World).unwrap();
         ctx.add(a, HRD::default()).unwrap();
         let b = ctx.create_entity();
         ctx.insert_node(b);
         ctx.add(b, Model::default()).unwrap();
+        ctx.add(b, Layer::World).unwrap();
         let c = ctx.create_entity();
         ctx.insert_node(c);
         ctx.add(c, HRD::default()).unwrap();

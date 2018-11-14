@@ -189,7 +189,7 @@ where
                 if list_matches.is_present("positions") {
                     if let Some(m) = ctx.get_node(entity) {
                         let pos = m.position();
-                        output.push_str(&format!(" [{}, {}, {}] ({})", pos.x, pos.y, pos.z, m.layer()));
+                        output.push_str(&format!(" [{}, {}, {}]", pos.x, pos.y, pos.z));
                     } else {
                         output.push_str(" (no position)");
                     }

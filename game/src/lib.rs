@@ -11,7 +11,7 @@ mod event;
 
 use ecs::{DatabaseTrait, EventManagerTrait, World};
 use engine::{
-    components::{camera::Camera, info::Info, model::Model, renderable::Renderable, Layer},
+    components::{camera::Camera, info::Info, model::Model, renderable::Renderable, layer::Layer},
     context::{Context, SceneGraphTrait},
     event::EngineEventTrait,
     orchestrator::Orchestrator,
@@ -48,10 +48,11 @@ impl Game {
         self.context_mut().insert_node(ea);
         self.context_mut()
             .add(ea, Info::new("Entity A", "Rotated cube example"))?;
+        self.context_mut()
+            .add(ea, Layer::World)?;
         self.context_mut().add(
             ea,
             Model::new(
-                Layer::World,
                 Vector3::new(0.0, 0.0, -10.0),
                 Vector3::new(0.0, 0.0, 0.0),
                 Vector3::new(1.0, 1.0, 1.0),
@@ -61,10 +62,11 @@ impl Game {
         let eb = self.context_mut().create_entity();
         self.context_mut().insert_node(eb);
         self.context_mut().add(eb, Info::new("Entity B", "Text example"))?;
+        self.context_mut()
+            .add(eb, Layer::World)?;
         self.context_mut().add(
             eb,
             Model::new(
-                Layer::World,
                 Vector3::new(-2.0, 1.0, -7.0),
                 Vector3::new(0.0, f32::consts::PI / 4.0, 0.0),
                 Vector3::new(1.0, 1.0, 1.0),
@@ -74,10 +76,11 @@ impl Game {
         let ec = self.context_mut().create_entity();
         self.context_mut().insert_node(ec);
         self.context_mut().add(ec, Info::new("Entity C", "UI Text example"))?;
+        self.context_mut()
+            .add(ec, Layer::Ui)?;
         self.context_mut().add(
             ec,
             Model::new(
-                Layer::Ndc,
                 Vector3::new(0.0, 0.0, -1.0),
                 Vector3::new(0.0, 0.0, 0.0),
                 Vector3::new(1.0, 1.0, 1.0),
