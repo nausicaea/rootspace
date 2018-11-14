@@ -1,25 +1,28 @@
-use failure::Error;
 use components::model::Model;
 use context::SceneGraphTrait;
-use std::marker::PhantomData;
-use ecs::{Entity, DatabaseTrait, EventManagerTrait, SystemTrait, LoopStage};
-use event::{Event, EventFlag, EventData};
-use debug_commands::{CommandTrait, ExitCommand, CameraCommand, EntityCommand};
+use debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand};
+use ecs::{DatabaseTrait, Entity, EventManagerTrait, LoopStage, SystemTrait};
+use event::EngineEventTrait;
+use failure::Error;
 use std::collections::HashMap;
+use std::marker::PhantomData;
 
-pub struct DebugShell<Ctx> {
+pub struct DebugShell<Ctx, Evt> {
     commands: HashMap<&'static str, Box<dyn CommandTrait<Ctx>>>,
     _ctx: PhantomData<Ctx>,
+    _evt: PhantomData<Evt>,
 }
 
-impl<Ctx> Default for DebugShell<Ctx>
+impl<Ctx, Evt> Default for DebugShell<Ctx, Evt>
 where
-    Ctx: EventManagerTrait<Event> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Evt: EngineEventTrait + 'static,
 {
     fn default() -> Self {
         let mut sys = DebugShell {
             commands: HashMap::new(),
             _ctx: PhantomData::default(),
+            _evt: PhantomData::default(),
         };
 
         sys.add_command(ExitCommand::default());
@@ -30,9 +33,10 @@ where
     }
 }
 
-impl<Ctx> DebugShell<Ctx>
+impl<Ctx, Evt> DebugShell<Ctx, Evt>
 where
-    Ctx: EventManagerTrait<Event> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Evt: EngineEventTrait + 'static,
 {
     fn add_command<C: CommandTrait<Ctx>>(&mut self, command: C) {
         self.commands.insert(command.name(), Box::new(command));
@@ -44,7 +48,8 @@ where
             if command_name == "help" {
                 self.command_help()
             } else {
-                self.commands.get(command_name)
+                self.commands
+                    .get(command_name)
                     .ok_or(DebugShellError::CommandNotFound(command_name.to_string()).into())
                     .and_then(|c| c.run(ctx, args))
             }
@@ -67,22 +72,22 @@ where
     }
 }
 
-impl<Ctx> SystemTrait<Ctx, Event> for DebugShell<Ctx>
+impl<Ctx, Evt> SystemTrait<Ctx, Evt> for DebugShell<Ctx, Evt>
 where
-    Ctx: EventManagerTrait<Event> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Evt: EngineEventTrait + 'static,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::HANDLE_EVENTS
     }
 
-    fn get_event_filter(&self) -> EventFlag {
-        EventFlag::COMMAND
+    fn get_event_filter(&self) -> Evt::EventFlag {
+        Evt::command()
     }
 
-    fn handle_event(&mut self, ctx: &mut Ctx, event: &Event) -> Result<bool, Error> {
-        if let EventData::Command(ref args) = event.data() {
-            self.interpret(ctx, args)
-                .unwrap_or_else(|e| eprintln!("{}", e));
+    fn handle_event(&mut self, ctx: &mut Ctx, event: &Evt) -> Result<bool, Error> {
+        if let Some(ref args) = event.command_data() {
+            self.interpret(ctx, args).unwrap_or_else(|e| eprintln!("{}", e));
         }
 
         Ok(true)

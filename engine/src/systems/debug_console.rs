@@ -4,24 +4,25 @@
 #![cfg_attr(test, allow(dead_code))]
 
 use ecs::{EventManagerTrait, LoopStage, SystemTrait};
-use event::{Event, EventFlag};
-use text_manipulation::split_arguments;
+use event::EngineEventTrait;
 use failure::Error;
-use std::marker::PhantomData;
 use std::io::{self, Read};
+use std::marker::PhantomData;
 use std::string;
 use std::sync::mpsc::{self, channel, Receiver};
 use std::thread::spawn;
 use std::time::Duration;
+use text_manipulation::split_arguments;
 
-pub struct DebugConsole<Ctx> {
+pub struct DebugConsole<Ctx, Evt> {
     escape_char: char,
     quote_char: char,
     worker_rx: Receiver<Result<String, DebugConsoleError>>,
     _ctx: PhantomData<Ctx>,
+    _evt: PhantomData<Evt>,
 }
 
-impl<Ctx> DebugConsole<Ctx> {
+impl<Ctx, Evt> DebugConsole<Ctx, Evt> {
     pub fn new<S>(mut input_stream: S, escape_char: Option<char>, quote_char: Option<char>) -> Self
     where
         S: Read + Send + 'static,
@@ -47,7 +48,8 @@ impl<Ctx> DebugConsole<Ctx> {
                             buf.push(byte[0])
                         }
                     }
-                    Err(e) => tx.send(Err(DebugConsoleError::IoError(e)))
+                    Err(e) => tx
+                        .send(Err(DebugConsoleError::IoError(e)))
                         .expect("Unable to send error information via mpsc channel"),
                 }
             }
@@ -58,6 +60,7 @@ impl<Ctx> DebugConsole<Ctx> {
             quote_char: quote_char.unwrap_or('"'),
             worker_rx: rx,
             _ctx: PhantomData::default(),
+            _evt: PhantomData::default(),
         }
     }
 
@@ -72,20 +75,21 @@ impl<Ctx> DebugConsole<Ctx> {
     }
 }
 
-impl<Ctx> SystemTrait<Ctx, Event> for DebugConsole<Ctx>
+impl<Ctx, Evt> SystemTrait<Ctx, Evt> for DebugConsole<Ctx, Evt>
 where
-    Ctx: EventManagerTrait<Event>,
+    Ctx: EventManagerTrait<Evt>,
+    Evt: EngineEventTrait,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::UPDATE | LoopStage::HANDLE_EVENTS
     }
 
-    fn get_event_filter(&self) -> EventFlag {
-        EventFlag::STARTUP
+    fn get_event_filter(&self) -> Evt::EventFlag {
+        Evt::startup()
     }
 
-    fn handle_event(&mut self, _ctx: &mut Ctx, event: &Event) -> Result<bool, Error> {
-        if let EventFlag::STARTUP = event.flag() {
+    fn handle_event(&mut self, _ctx: &mut Ctx, event: &Evt) -> Result<bool, Error> {
+        if event.matches_filter(Evt::startup()) {
             println!("Debug console is ready");
         }
 
@@ -95,7 +99,7 @@ where
     fn update(&mut self, ctx: &mut Ctx, _: &Duration, _: &Duration) -> Result<(), Error> {
         self.try_read_line()
             .map(|l| split_arguments(l, self.escape_char, self.quote_char))
-            .map(|a| ctx.dispatch_later(Event::command(a)));
+            .map(|a| ctx.dispatch_later(Evt::new_command(a)));
 
         Ok(())
     }
@@ -113,16 +117,17 @@ enum DebugConsoleError {
 mod tests {
     use super::*;
     use components::model::Model;
-    use mock::MockCtx;
+    use context::Context;
+    use mock::MockEvt;
 
     #[test]
     fn new() {
-        let _: DebugConsole<MockCtx<Event, Model>> = DebugConsole::new(io::stdin(), None, None);
+        let _: DebugConsole<Context<MockEvt>, MockEvt> = DebugConsole::new(io::stdin(), None, None);
     }
 
     #[test]
     fn get_stage_filter() {
-        let c: DebugConsole<MockCtx<Event, Model>> = DebugConsole::new(io::stdin(), None, None);
+        let c: DebugConsole<Context<MockEvt>, MockEvt> = DebugConsole::new(io::stdin(), None, None);
 
         assert_eq!(c.get_stage_filter(), LoopStage::UPDATE | LoopStage::HANDLE_EVENTS);
     }

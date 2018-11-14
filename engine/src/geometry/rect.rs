@@ -1,8 +1,8 @@
+use super::point::Point;
 use glium::Rect as GliumRect;
-use std::fmt;
 use num_traits::{Num, RefNum};
 use rusttype::{Point as RusttypePoint, Rect as RusttypeRect};
-use super::point::Point;
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Rect<N> {
@@ -130,7 +130,13 @@ mod tests {
     fn equality() {
         let r: Rect<u32> = Rect::new(2, 3, 21, 20);
 
-        assert_eq!(r, Rect { min: Point::new(2, 3), max: Point::new(21, 20) });
+        assert_eq!(
+            r,
+            Rect {
+                min: Point::new(2, 3),
+                max: Point::new(21, 20)
+            }
+        );
     }
 
     #[test]
@@ -144,7 +150,12 @@ mod tests {
 
     #[test]
     fn from_glium_rect() {
-        let r = GliumRect { left: 1, bottom: 2, width: 4, height: 5 };
+        let r = GliumRect {
+            left: 1,
+            bottom: 2,
+            width: 4,
+            height: 5,
+        };
         let s: Rect<u32> = r.into();
         assert_eq!(s, Rect::new(1, 2, 5, 7));
     }
@@ -153,12 +164,23 @@ mod tests {
     fn into_glium_rect() {
         let r = Rect::new(4u32, 2u32, 10u32, 11u32);
         let s: GliumRect = r.into();
-        assert_eq!(s, GliumRect { left: 4, bottom: 2, width: 6, height: 9 });
+        assert_eq!(
+            s,
+            GliumRect {
+                left: 4,
+                bottom: 2,
+                width: 6,
+                height: 9
+            }
+        );
     }
 
     #[test]
     fn from_rusttype_rect() {
-        let r = RusttypeRect { min: rusttype_point(1.0f32, 2.0f32), max: rusttype_point(32.0f32, 32.0f32) };
+        let r = RusttypeRect {
+            min: rusttype_point(1.0f32, 2.0f32),
+            max: rusttype_point(32.0f32, 32.0f32),
+        };
         let s: Rect<f32> = r.into();
         assert_eq!(s, Rect::new(1.0f32, 2.0f32, 32.0f32, 32.0f32));
     }
@@ -167,6 +189,12 @@ mod tests {
     fn into_rusttype_rect() {
         let r = Rect::new(1u32, 2u32, 3u32, 4u32);
         let s: RusttypeRect<u32> = r.into();
-        assert_eq!(s, RusttypeRect { min: rusttype_point(1, 2), max: rusttype_point(3, 4) });
+        assert_eq!(
+            s,
+            RusttypeRect {
+                min: rusttype_point(1, 2),
+                max: rusttype_point(3, 4)
+            }
+        );
     }
 }

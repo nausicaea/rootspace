@@ -1,31 +1,32 @@
+#[macro_use]
+extern crate bitflags;
 extern crate ecs;
 extern crate engine;
 extern crate failure;
+extern crate glium;
 extern crate log;
 extern crate nalgebra;
 
+mod event;
+
 use ecs::{DatabaseTrait, EventManagerTrait, World};
 use engine::{
-    components::{Layer, info::Info, camera::Camera, model::Model, renderable::Renderable},
+    components::{camera::Camera, info::Info, model::Model, renderable::Renderable, Layer},
     context::{Context, SceneGraphTrait},
-    event::Event,
+    event::EngineEventTrait,
     orchestrator::Orchestrator,
     systems::{
-        DebugConsole,
-        DebugShell,
-        EventCoordinator,
-        GliumEventInterface, HeadlessEventInterface,
-        EventMonitor,
-        GliumRenderer, HeadlessRenderer,
-        SystemGroup,
+        DebugConsole, DebugShell, EventCoordinator, EventMonitor, GliumEventInterface, GliumRenderer,
+        HeadlessEventInterface, HeadlessRenderer, SystemGroup,
     },
 };
+use event::Event;
 use failure::Error;
 use nalgebra::Vector3;
-use std::{f32, path::Path, time::Duration, io};
+use std::{f32, io, path::Path, time::Duration};
 
 pub struct Game {
-    orchestrator: Orchestrator<World<Event, Context, SystemGroup>>,
+    orchestrator: Orchestrator<World<Event, Context<Event>, SystemGroup<Event>>>,
 }
 
 impl Game {
@@ -45,7 +46,8 @@ impl Game {
 
         let ea = self.context_mut().create_entity();
         self.context_mut().insert_node(ea);
-        self.context_mut().add(ea, Info::new("Entity A", "Rotated cube example"))?;
+        self.context_mut()
+            .add(ea, Info::new("Entity A", "Rotated cube example"))?;
         self.context_mut().add(
             ea,
             Model::new(
@@ -196,17 +198,17 @@ impl Game {
         let debug_shell = DebugShell::default();
         self.world_mut().add_system(debug_shell);
 
-        self.orchestrator.world.context.dispatch_later(Event::startup());
+        self.orchestrator.world.context.dispatch_later(Event::new_startup());
         self.orchestrator.run(iterations)?;
 
         Ok(())
     }
 
-    fn world_mut(&mut self) -> &mut World<Event, Context, SystemGroup> {
+    fn world_mut(&mut self) -> &mut World<Event, Context<Event>, SystemGroup<Event>> {
         &mut self.orchestrator.world
     }
 
-    fn context_mut(&mut self) -> &mut Context {
+    fn context_mut(&mut self) -> &mut Context<Event> {
         &mut self.orchestrator.world.context
     }
 }

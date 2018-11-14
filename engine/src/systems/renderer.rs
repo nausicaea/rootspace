@@ -1,25 +1,26 @@
+use components::{camera::Camera, model::Model, Layer, TransformTrait};
 use context::SceneGraphTrait;
-use components::{Layer, TransformTrait, camera::Camera, model::Model};
 use ecs::{DatabaseTrait, Entity, LoopStage, SystemTrait};
-use event::{Event, EventFlag, EventData};
+use event::EngineEventTrait;
 use failure::Error;
 use graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait, FrameTrait};
 use std::{borrow::Borrow, marker::PhantomData, time::Duration};
 
-pub type HeadlessRenderer<Ctx, Ren> = Renderer<Ctx, Ren, HeadlessBackend>;
-pub type GliumRenderer<Ctx, Ren> = Renderer<Ctx, Ren, GliumBackend>;
+pub type HeadlessRenderer<Ctx, Evt, Ren> = Renderer<Ctx, Evt, Ren, HeadlessBackend>;
+pub type GliumRenderer<Ctx, Evt, Ren> = Renderer<Ctx, Evt, Ren, GliumBackend>;
 
 #[derive(Debug)]
-pub struct Renderer<Ctx, Ren, B> {
+pub struct Renderer<Ctx, Evt, Ren, B> {
     pub backend: B,
     pub clear_color: [f32; 4],
     frames: usize,
     draw_calls: usize,
     _ctx: PhantomData<Ctx>,
+    _evt: PhantomData<Evt>,
     _ren: PhantomData<Ren>,
 }
 
-impl<Ctx, Ren, B> Renderer<Ctx, Ren, B>
+impl<Ctx, Evt, Ren, B> Renderer<Ctx, Evt, Ren, B>
 where
     B: BackendTrait,
     Ctx: DatabaseTrait,
@@ -37,6 +38,7 @@ where
             frames: 0,
             draw_calls: 0,
             _ctx: PhantomData::default(),
+            _evt: PhantomData::default(),
             _ren: PhantomData::default(),
         })
     }
@@ -51,7 +53,7 @@ where
     }
 
     fn on_startup(&self, ctx: &mut Ctx) -> Result<bool, Error> {
-        self.on_dpi_change(ctx, self.backend.dpi_factor())
+        self.on_change_dpi(ctx, self.backend.dpi_factor())
     }
 
     fn on_resize(&self, ctx: &mut Ctx, dims: (u32, u32)) -> Result<bool, Error> {
@@ -65,7 +67,7 @@ where
         Ok(true)
     }
 
-    fn on_dpi_change(&self, ctx: &mut Ctx, factor: f64) -> Result<bool, Error> {
+    fn on_change_dpi(&self, ctx: &mut Ctx, factor: f64) -> Result<bool, Error> {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Updating the camera dpi factor (factor={:?})", factor);
 
@@ -77,9 +79,10 @@ where
     }
 }
 
-impl<Ctx, Ren, B> SystemTrait<Ctx, Event> for Renderer<Ctx, Ren, B>
+impl<Ctx, Evt, Ren, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Ren, B>
 where
     Ctx: DatabaseTrait + SceneGraphTrait<Entity, Model>,
+    Evt: EngineEventTrait,
     Ren: Borrow<<B as BackendTrait>::Data> + 'static,
     B: BackendTrait,
 {
@@ -87,16 +90,19 @@ where
         LoopStage::RENDER | LoopStage::HANDLE_EVENTS
     }
 
-    fn get_event_filter(&self) -> EventFlag {
-        EventFlag::STARTUP | EventFlag::RESIZE | EventFlag::CHANGE_DPI
+    fn get_event_filter(&self) -> Evt::EventFlag {
+        Evt::startup() | Evt::resize() | Evt::change_dpi()
     }
 
-    fn handle_event(&mut self, ctx: &mut Ctx, event: &Event) -> Result<bool, Error> {
-        match event.data() {
-            EventData::Empty if event.flag() == EventFlag::STARTUP => self.on_startup(ctx),
-            EventData::Resize(dims) => self.on_resize(ctx, *dims),
-            EventData::ChangeDpi(factor) => self.on_dpi_change(ctx, *factor),
-            _ => Ok(true),
+    fn handle_event(&mut self, ctx: &mut Ctx, event: &Evt) -> Result<bool, Error> {
+        if event.matches_filter(Evt::startup()) {
+            self.on_startup(ctx)
+        } else if let Some(dims) = event.resize_data() {
+            self.on_resize(ctx, dims)
+        } else if let Some(factor) = event.change_dpi_data() {
+            self.on_change_dpi(ctx, factor)
+        } else {
+            Ok(true)
         }
     }
 
@@ -142,62 +148,47 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use context::Context;
     use graphics::headless::{HeadlessBackend as HB, HeadlessRenderData as HRD};
-    use mock::MockCtx;
+    use mock::{MockEvt, MockEvtFlag};
     use std::f32;
 
     #[test]
     fn new_headless() {
-        assert_ok!(
-            Renderer::<MockCtx<Event, Model>, HRD, HB>::new(
-                &Default::default(),
-                "Title",
-                (800, 600),
-                false,
-                0
-            )
-        );
-    }
-
-    #[test]
-    fn get_stage_filter_headless() {
-        let r = Renderer::<MockCtx<Event, Model>, HRD, HB>::new(
+        assert_ok!(Renderer::<Context<MockEvt>, MockEvt, HRD, HB>::new(
             &Default::default(),
             "Title",
             (800, 600),
             false,
-            0,
-        )
-        .unwrap();
+            0
+        ));
+    }
+
+    #[test]
+    fn get_stage_filter_headless() {
+        let r = Renderer::<Context<MockEvt>, MockEvt, HRD, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
+            .unwrap();
 
         assert_eq!(r.get_stage_filter(), LoopStage::RENDER | LoopStage::HANDLE_EVENTS);
     }
 
     #[test]
     fn get_event_filter_headless() {
-        let r = Renderer::<MockCtx<Event, Model>, HRD, HB>::new(
-            &Default::default(),
-            "Title",
-            (800, 600),
-            false,
-            0,
-        )
-        .unwrap();
+        let r = Renderer::<Context<MockEvt>, MockEvt, HRD, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
+            .unwrap();
 
-        assert_eq!(r.get_event_filter(), EventFlag::STARTUP | EventFlag::RESIZE | EventFlag::CHANGE_DPI);
+        assert_eq!(
+            r.get_event_filter(),
+            MockEvtFlag::STARTUP | MockEvtFlag::RESIZE | MockEvtFlag::CHANGE_DPI
+        );
     }
 
     #[test]
     fn render_headless() {
-        let mut ctx: MockCtx<Event, Model> = MockCtx::default();
-        let mut r = Renderer::<MockCtx<Event, Model>, HRD, HB>::new(
-            &Default::default(),
-            "Title",
-            (800, 600),
-            false,
-            0,
-        )
-        .unwrap();
+        let mut ctx: Context<MockEvt> = Context::default();
+        let mut r =
+            Renderer::<Context<MockEvt>, MockEvt, HRD, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
+                .unwrap();
 
         let a = ctx.create_entity();
         ctx.insert_node(a);

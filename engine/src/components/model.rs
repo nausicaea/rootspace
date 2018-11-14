@@ -1,6 +1,6 @@
-use super::{Layer, DepthOrderingTrait, TransformTrait, camera::Camera};
+use super::{camera::Camera, DepthOrderingTrait, Layer, TransformTrait};
 use affine_transform::AffineTransform;
-use nalgebra::{Affine3, Isometry3, Matrix4, Vector3, UnitQuaternion};
+use nalgebra::{Affine3, Isometry3, Matrix4, UnitQuaternion, Vector3};
 use std::f32;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -130,9 +130,17 @@ mod tests {
         assert_eq!(ident.orientation(), &UnitQuaternion::identity());
         assert_eq!(ident.scale(), &Vector3::new(1.0, 1.0, 1.0));
 
-        let mat = Model::new(Layer::World, Vector3::new(2.0, 3.0, 1.0), Vector3::new(1.0, 0.0, 0.0), Vector3::new(1.0, 1.1, 1.0));
+        let mat = Model::new(
+            Layer::World,
+            Vector3::new(2.0, 3.0, 1.0),
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(1.0, 1.1, 1.0),
+        );
         assert_eq!(mat.position(), &Vector3::new(2.0, 3.0, 1.0));
-        assert_eq!(mat.orientation(), &UnitQuaternion::from_scaled_axis(Vector3::new(1.0, 0.0, 0.0)));
+        assert_eq!(
+            mat.orientation(),
+            &UnitQuaternion::from_scaled_axis(Vector3::new(1.0, 0.0, 0.0))
+        );
         assert_eq!(mat.scale(), &Vector3::new(1.0, 1.1, 1.0));
     }
 
@@ -142,7 +150,10 @@ mod tests {
         ident.set_position(Vector3::new(1.0, 2.0, 3.0));
         assert_eq!(ident.position(), &Vector3::new(1.0, 2.0, 3.0));
         ident.set_orientation(UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0)));
-        assert_eq!(ident.orientation(), &UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0)));
+        assert_eq!(
+            ident.orientation(),
+            &UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0))
+        );
         ident.set_scale(Vector3::new(0.9, 0.4, 1.0));
         assert_eq!(ident.scale(), &Vector3::new(0.9, 0.4, 1.0));
     }

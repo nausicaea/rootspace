@@ -50,7 +50,10 @@ impl Camera {
 
     pub fn physical_dimensions(&self) -> (u32, u32) {
         let (w, h) = (self.dimensions.0 as f64, self.dimensions.1 as f64);
-        ((w * self.dpi_factor).round() as u32, (h * self.dpi_factor).round() as u32)
+        (
+            (w * self.dpi_factor).round() as u32,
+            (h * self.dpi_factor).round() as u32,
+        )
     }
 
     pub fn set_dimensions(&mut self, value: (u32, u32)) {

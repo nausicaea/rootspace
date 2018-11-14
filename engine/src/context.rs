@@ -1,17 +1,39 @@
 use components::{model::Model, DepthOrderingTrait, TransformTrait};
-use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventManagerTrait};
-use event::Event;
+use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventManagerTrait, EventTrait};
 use failure::Error;
 use hierarchy::Hierarchy;
-use std::{any::Any, collections::VecDeque, hash::Hash};
+use std::{
+    any::Any,
+    collections::{HashSet, VecDeque},
+    fmt,
+    hash::Hash,
+};
 
-pub struct Context {
-    events: VecDeque<Event>,
+pub trait SceneGraphTrait<K, V>
+where
+    K: Clone + Default + Eq + Hash,
+    V: Clone + Default + TransformTrait + DepthOrderingTrait,
+{
+    fn update_graph(&mut self) -> Result<(), Error>;
+    fn insert_node(&mut self, entity: K);
+    fn get_node(&self, entity: &K) -> Option<&V>;
+    fn get_nodes(&self, sort_nodes: bool) -> Vec<(&K, &V)>;
+    fn sort_nodes(&self, nodes: &mut [(&K, &V)]);
+}
+
+pub struct Context<E> {
+    events: VecDeque<E>,
     scene_graph: Hierarchy<Entity, Model>,
     database: Database,
 }
 
-impl Default for Context {
+impl<E> fmt::Debug for Context<E> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Context {{ ... }}")
+    }
+}
+
+impl<E> Default for Context<E> {
     fn default() -> Self {
         Context {
             events: VecDeque::default(),
@@ -21,14 +43,17 @@ impl Default for Context {
     }
 }
 
-impl EventManagerTrait<Event> for Context {
-    fn dispatch_later(&mut self, event: Event) {
+impl<E> EventManagerTrait<E> for Context<E>
+where
+    E: EventTrait,
+{
+    fn dispatch_later(&mut self, event: E) {
         self.events.push_back(event)
     }
 
     fn handle_events<F>(&mut self, mut handler: F) -> Result<bool, Error>
     where
-        F: FnMut(&mut Self, &Event) -> Result<bool, Error>,
+        F: FnMut(&mut Self, &E) -> Result<bool, Error>,
     {
         let tmp = self.events.iter().cloned().collect::<Vec<_>>();
         self.events.clear();
@@ -43,19 +68,7 @@ impl EventManagerTrait<Event> for Context {
     }
 }
 
-pub trait SceneGraphTrait<K, V>
-where
-    K: Clone + Default + Eq + Hash,
-    V: Clone + Default + TransformTrait + DepthOrderingTrait,
-{
-    fn update_graph(&mut self) -> Result<(), Error>;
-    fn insert_node(&mut self, entity: K);
-    fn get_node(&self, entity: &K) -> Option<&V>;
-    fn get_nodes(&self, sort_nodes: bool) -> Vec<(&K, &V)>;
-    fn sort_nodes(&self, nodes: &mut [(&K, &V)]);
-}
-
-impl SceneGraphTrait<Entity, Model> for Context {
+impl<E> SceneGraphTrait<Entity, Model> for Context<E> {
     fn update_graph(&mut self) -> Result<(), Error> {
         let db = &self.database;
         self.scene_graph.update(&|entity, _, parent_model| {
@@ -71,7 +84,8 @@ impl SceneGraphTrait<Entity, Model> for Context {
     }
 
     fn get_node(&self, entity: &Entity) -> Option<&Model> {
-        self.scene_graph.iter()
+        self.scene_graph
+            .iter()
             .filter(|&(k, _)| k == entity)
             .map(|(_, v)| v)
             .last()
@@ -92,7 +106,7 @@ impl SceneGraphTrait<Entity, Model> for Context {
     }
 }
 
-impl DatabaseTrait for Context {
+impl<E> DatabaseTrait for Context<E> {
     fn create_entity(&mut self) -> Entity {
         self.database.create_entity()
     }
@@ -109,7 +123,7 @@ impl DatabaseTrait for Context {
         self.database.num_entities()
     }
 
-    fn entities(&self) -> Vec<&Entity> {
+    fn entities(&self) -> HashSet<&Entity> {
         self.database.entities()
     }
 

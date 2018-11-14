@@ -6,7 +6,7 @@ authors = ["Eleanore Young"]
 [workspace]
 
 [features]
-diagnostics = ["engine/diagnostics"]
+diagnostics = ["game/diagnostics", "engine/diagnostics"]
 
 [dependencies]
 clap = "^2.0.0"

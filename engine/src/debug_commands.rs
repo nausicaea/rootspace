@@ -1,11 +1,11 @@
-use failure::Error;
-use clap::{App, SubCommand, Arg, AppSettings};
-use components::{TransformTrait, info::Info, model::Model, camera::Camera};
-use ecs::{Entity, DatabaseTrait};
-use std::marker::PhantomData;
-use ecs::EventManagerTrait;
-use event::Event;
+use clap::{App, AppSettings, Arg, SubCommand};
+use components::{camera::Camera, info::Info, model::Model, TransformTrait};
 use context::SceneGraphTrait;
+use ecs::EventManagerTrait;
+use ecs::{DatabaseTrait, Entity};
+use event::EngineEventTrait;
+use failure::Error;
+use std::marker::PhantomData;
 
 pub trait CommandTrait<Ctx>: 'static {
     fn name(&self) -> &'static str;
@@ -14,21 +14,24 @@ pub trait CommandTrait<Ctx>: 'static {
 }
 
 #[derive(Debug, Clone)]
-pub struct ExitCommand<Ctx> {
+pub struct ExitCommand<Ctx, Evt> {
     _ctx: PhantomData<Ctx>,
+    _evt: PhantomData<Evt>,
 }
 
-impl<Ctx> Default for ExitCommand<Ctx> {
+impl<Ctx, Evt> Default for ExitCommand<Ctx, Evt> {
     fn default() -> Self {
         ExitCommand {
             _ctx: PhantomData::default(),
+            _evt: PhantomData::default(),
         }
     }
 }
 
-impl<Ctx> CommandTrait<Ctx> for ExitCommand<Ctx>
+impl<Ctx, Evt> CommandTrait<Ctx> for ExitCommand<Ctx, Evt>
 where
-    Ctx: EventManagerTrait<Event> + 'static,
+    Ctx: EventManagerTrait<Evt> + 'static,
+    Evt: EngineEventTrait + 'static,
 {
     fn name(&self) -> &'static str {
         "exit"
@@ -39,7 +42,7 @@ where
     }
 
     fn run(&self, ctx: &mut Ctx, _: &[String]) -> Result<(), Error> {
-        ctx.dispatch_later(Event::shutdown());
+        ctx.dispatch_later(Evt::new_shutdown());
         Ok(())
     }
 }
@@ -73,18 +76,22 @@ where
         let matches = App::new("camera")
             .about("Provides access to the camera")
             .setting(AppSettings::DisableVersion)
-            .subcommand(SubCommand::with_name("info")
-                        .about("Prints camera settings")
-                        .setting(AppSettings::DisableVersion)
-                        .arg(Arg::with_name("position")
-                             .short("p")
-                             .long("position")
-                             .help("Displays the position of the camera"))
-                        .arg(Arg::with_name("dimensions")
-                             .short("d")
-                             .long("dimensions")
-                             .help("Display the viewport dimensions")))
-            .get_matches_from_safe(args)?;
+            .subcommand(
+                SubCommand::with_name("info")
+                    .about("Prints camera settings")
+                    .setting(AppSettings::DisableVersion)
+                    .arg(
+                        Arg::with_name("position")
+                            .short("p")
+                            .long("position")
+                            .help("Displays the position of the camera"),
+                    ).arg(
+                        Arg::with_name("dimensions")
+                            .short("d")
+                            .long("dimensions")
+                            .help("Display the viewport dimensions"),
+                    ),
+            ).get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
             let cam = ctx.find::<Camera>()?;
@@ -98,7 +105,10 @@ where
                 let dims = cam.dimensions();
                 let pdims = cam.physical_dimensions();
                 let dpi = cam.dpi_factor();
-                println!("Dimensions: {}x{} (physical={}x{}, DPI-factor={})", dims.0, dims.1, pdims.0, pdims.1, dpi);
+                println!(
+                    "Dimensions: {}x{} (physical={}x{}, DPI-factor={})",
+                    dims.0, dims.1, pdims.0, pdims.1, dpi
+                );
             }
         }
         Ok(())
@@ -120,7 +130,7 @@ impl<Ctx> Default for EntityCommand<Ctx> {
 
 impl<Ctx> CommandTrait<Ctx> for EntityCommand<Ctx>
 where
-    Ctx: EventManagerTrait<Event> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Ctx: DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
 {
     fn name(&self) -> &'static str {
         "entity"
@@ -134,22 +144,27 @@ where
         let matches = App::new("entity")
             .about("Provides access to entities within the world")
             .setting(AppSettings::DisableVersion)
-            .subcommand(SubCommand::with_name("list")
-                        .about("Prints a list of entities")
-                        .setting(AppSettings::DisableVersion)
-                        .arg(Arg::with_name("count")
-                             .short("c")
-                             .long("count")
-                             .help("Displays the number of entities"))
-                        .arg(Arg::with_name("names")
-                             .short("n")
-                             .long("names")
-                             .help("Displays the names of entities"))
-                        .arg(Arg::with_name("positions")
-                             .short("p")
-                             .long("positions")
-                             .help("Displays the positions of entities")))
-            .get_matches_from_safe(args)?;
+            .subcommand(
+                SubCommand::with_name("list")
+                    .about("Prints a list of entities")
+                    .setting(AppSettings::DisableVersion)
+                    .arg(
+                        Arg::with_name("count")
+                            .short("c")
+                            .long("count")
+                            .help("Displays the number of entities"),
+                    ).arg(
+                        Arg::with_name("names")
+                            .short("n")
+                            .long("names")
+                            .help("Displays the names of entities"),
+                    ).arg(
+                        Arg::with_name("positions")
+                            .short("p")
+                            .long("positions")
+                            .help("Displays the positions of entities"),
+                    ),
+            ).get_matches_from_safe(args)?;
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
             if list_matches.is_present("count") {

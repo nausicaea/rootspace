@@ -6,8 +6,8 @@ extern crate game;
 extern crate log;
 
 use clap::{App, Arg};
-use fern::Dispatch;
 use failure::Error;
+use fern::Dispatch;
 use game::Game;
 use log::LevelFilter;
 use std::{env, io, path::PathBuf, time::Duration};
@@ -21,22 +21,19 @@ fn main() -> Result<(), Error> {
             Arg::with_name("headless")
                 .long("headless")
                 .help("Disables the graphical backend"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("iterations")
                 .short("i")
                 .long("iterations")
                 .takes_value(true)
                 .help("Specifies the number of iterations to run"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("verbosity")
                 .short("v")
                 .long("verbose")
                 .multiple(true)
                 .help("Increases the output of the program"),
-        )
-        .get_matches();
+        ).get_matches();
 
     let headless = matches.is_present("headless");
     let iterations: Option<usize> = matches.value_of("iterations").and_then(|i| i.parse().ok());
@@ -60,11 +57,10 @@ fn main() -> Result<(), Error> {
         })?;
 
     let resource_dir = {
-        let manifest_dir = env::var("CARGO_MANIFEST_DIR")
-            .map_err(|e| {
-                error!("Cannot find the `CARGO_MANIFEST_DIR` environment variable: {}", e);
-                e
-            })?;
+        let manifest_dir = env::var("CARGO_MANIFEST_DIR").map_err(|e| {
+            error!("Cannot find the `CARGO_MANIFEST_DIR` environment variable: {}", e);
+            e
+        })?;
 
         PathBuf::from(manifest_dir).join("resources").join("rootspace")
     };
@@ -72,7 +68,11 @@ fn main() -> Result<(), Error> {
     Game::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
         .and_then(|mut g| g.run(headless, iterations))
         .map_err(|e| {
-            error!("Error initializing or running the game: {} (probable cause: {})", e, e.find_root_cause());
+            error!(
+                "Error initializing or running the game: {} (probable cause: {})",
+                e,
+                e.find_root_cause()
+            );
             e
         })
 }

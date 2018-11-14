@@ -1,5 +1,6 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
-use event::Event;
+use ecs::EventTrait;
+use event::MaybeFrom;
 use failure::Error;
 use geometry::rect::Rect;
 use resources::{Image, Mesh};
@@ -13,7 +14,10 @@ pub struct HeadlessEventsLoop;
 
 impl Sealed for HeadlessEventsLoop {}
 
-impl EventsLoopTrait<Event> for HeadlessEventsLoop {
+impl<Evt> EventsLoopTrait<Evt> for HeadlessEventsLoop
+where
+    Evt: EventTrait + MaybeFrom<HeadlessEvent>,
+{
     type InputEvent = HeadlessEvent;
 
     fn poll<F: FnMut(HeadlessEvent)>(&mut self, _f: F) {}
@@ -126,9 +130,7 @@ impl BackendTrait for HeadlessBackend {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Created a headless backend (title='{}', dims={:?})", title, dimensions);
 
-        Ok(HeadlessBackend {
-            dimensions
-        })
+        Ok(HeadlessBackend { dimensions })
     }
 
     fn create_frame(&self) -> HeadlessFrame {
