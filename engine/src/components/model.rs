@@ -93,7 +93,7 @@ impl TransformTrait for Model {
                 decomposed: product.into(),
             })
         } else if self.layer == Layer::World && rhs.layer == Layer::Ndc {
-            let projected = camera.matrix() * self.matrix();
+            let projected = camera.world_matrix() * self.matrix();
             let product = Affine3::from_matrix_unchecked(projected) * rhs.model;
 
             Some(Model {

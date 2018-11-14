@@ -132,8 +132,8 @@ where
                         self.draw_calls += 1;
                     }
                     let transform = match model.layer() {
-                        Layer::World => cam.matrix() * model.matrix(),
-                        Layer::Ndc => model.matrix().clone(),
+                        Layer::World => cam.world_matrix() * model.matrix(),
+                        Layer::Ndc => cam.ui_matrix() * model.matrix(),
                     };
                     target.render(&transform, data)?;
                 }
