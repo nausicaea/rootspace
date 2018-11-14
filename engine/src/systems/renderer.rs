@@ -1,29 +1,28 @@
-use components::{camera::Camera, model::Model, layer::Layer};
+use components::{camera::Camera, model::Model, layer::Layer, renderable::Renderable};
 use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, Entity, LoopStage, SystemTrait};
 use event::EngineEventTrait;
 use failure::Error;
 use graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait, FrameTrait};
-use std::{borrow::Borrow, marker::PhantomData, time::Duration};
+use std::{marker::PhantomData, time::Duration};
 
-pub type HeadlessRenderer<Ctx, Evt, Ren> = Renderer<Ctx, Evt, Ren, HeadlessBackend>;
-pub type GliumRenderer<Ctx, Evt, Ren> = Renderer<Ctx, Evt, Ren, GliumBackend>;
+pub type HeadlessRenderer<Ctx, Evt> = Renderer<Ctx, Evt, HeadlessBackend>;
+pub type GliumRenderer<Ctx, Evt> = Renderer<Ctx, Evt, GliumBackend>;
 
 #[derive(Debug)]
-pub struct Renderer<Ctx, Evt, Ren, B> {
+pub struct Renderer<Ctx, Evt, B> {
     pub backend: B,
     pub clear_color: [f32; 4],
     frames: usize,
     draw_calls: usize,
     _ctx: PhantomData<Ctx>,
     _evt: PhantomData<Evt>,
-    _ren: PhantomData<Ren>,
 }
 
-impl<Ctx, Evt, Ren, B> Renderer<Ctx, Evt, Ren, B>
+impl<Ctx, Evt, B> Renderer<Ctx, Evt, B>
 where
-    B: BackendTrait,
     Ctx: DatabaseTrait,
+    B: BackendTrait,
 {
     pub fn new(
         events_loop: &B::Loop,
@@ -39,7 +38,6 @@ where
             draw_calls: 0,
             _ctx: PhantomData::default(),
             _evt: PhantomData::default(),
-            _ren: PhantomData::default(),
         })
     }
 
@@ -79,12 +77,11 @@ where
     }
 }
 
-impl<Ctx, Evt, Ren, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, Ren, B>
+impl<Ctx, Evt, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, B>
 where
     Ctx: DatabaseTrait + SceneGraphTrait<Entity, Model>,
     Evt: EngineEventTrait,
-    Ren: Borrow<<B as BackendTrait>::Data> + 'static,
-    B: BackendTrait,
+    B: BackendTrait + 'static,
 {
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::RENDER | LoopStage::HANDLE_EVENTS
@@ -127,7 +124,7 @@ where
         for (entity, model) in nodes {
             if ctx.has::<Model>(entity) {
                 if let Ok(layer) = ctx.get::<Layer>(entity) {
-                    if let Ok(data) = ctx.get::<Ren>(entity) {
+                    if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
                         #[cfg(any(test, feature = "diagnostics"))]
                         {
                             self.draw_calls += 1;
@@ -151,13 +148,13 @@ where
 mod tests {
     use super::*;
     use context::Context;
-    use graphics::headless::{HeadlessBackend as HB, HeadlessRenderData as HRD};
+    use graphics::headless::HeadlessBackend as HB;
     use mock::{MockEvt, MockEvtFlag};
     use std::f32;
 
     #[test]
     fn new_headless() {
-        assert_ok!(Renderer::<Context<MockEvt>, MockEvt, HRD, HB>::new(
+        assert_ok!(Renderer::<Context<MockEvt>, MockEvt, HB>::new(
             &Default::default(),
             "Title",
             (800, 600),
@@ -168,7 +165,7 @@ mod tests {
 
     #[test]
     fn get_stage_filter_headless() {
-        let r = Renderer::<Context<MockEvt>, MockEvt, HRD, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
+        let r = Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
             .unwrap();
 
         assert_eq!(r.get_stage_filter(), LoopStage::RENDER | LoopStage::HANDLE_EVENTS);
@@ -176,7 +173,7 @@ mod tests {
 
     #[test]
     fn get_event_filter_headless() {
-        let r = Renderer::<Context<MockEvt>, MockEvt, HRD, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
+        let r = Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
             .unwrap();
 
         assert_eq!(
@@ -189,21 +186,21 @@ mod tests {
     fn render_headless() {
         let mut ctx: Context<MockEvt> = Context::default();
         let mut r =
-            Renderer::<Context<MockEvt>, MockEvt, HRD, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
+            Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0)
                 .unwrap();
 
         let a = ctx.create_entity();
         ctx.insert_node(a);
         ctx.add(a, Model::default()).unwrap();
         ctx.add(a, Layer::World).unwrap();
-        ctx.add(a, HRD::default()).unwrap();
+        ctx.add(a, Renderable::default()).unwrap();
         let b = ctx.create_entity();
         ctx.insert_node(b);
         ctx.add(b, Model::default()).unwrap();
         ctx.add(b, Layer::World).unwrap();
         let c = ctx.create_entity();
         ctx.insert_node(c);
-        ctx.add(c, HRD::default()).unwrap();
+        ctx.add(c, Renderable::default()).unwrap();
         let d = ctx.create_entity();
         ctx.insert_node(d);
         ctx.add(c, Camera::default()).unwrap();

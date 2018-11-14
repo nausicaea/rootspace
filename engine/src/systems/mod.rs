@@ -13,12 +13,10 @@ pub use self::{
     event_monitor::EventMonitor,
     renderer::{GliumRenderer, HeadlessRenderer},
 };
-use components::renderable::Renderable;
 use context::Context;
 use ecs::{EventTrait, LoopStage, SystemTrait};
 use event::EngineEventTrait;
 use failure::Error;
-use graphics::{glium::GliumBackend, headless::HeadlessBackend};
 use std::time::Duration;
 
 pub enum SystemGroup<E> {
@@ -26,8 +24,8 @@ pub enum SystemGroup<E> {
     B(EventMonitor<Context<E>, E>),
     C(GliumEventInterface<Context<E>, E>),
     D(HeadlessEventInterface<Context<E>, E>),
-    E(GliumRenderer<Context<E>, E, Renderable<GliumBackend>>),
-    F(HeadlessRenderer<Context<E>, E, Renderable<HeadlessBackend>>),
+    E(GliumRenderer<Context<E>, E>),
+    F(HeadlessRenderer<Context<E>, E>),
     G(DebugConsole<Context<E>, E>),
     H(DebugShell<Context<E>, E>),
 }
@@ -56,14 +54,14 @@ impl<E> From<HeadlessEventInterface<Context<E>, E>> for SystemGroup<E> {
     }
 }
 
-impl<E> From<GliumRenderer<Context<E>, E, Renderable<GliumBackend>>> for SystemGroup<E> {
-    fn from(value: GliumRenderer<Context<E>, E, Renderable<GliumBackend>>) -> Self {
+impl<E> From<GliumRenderer<Context<E>, E>> for SystemGroup<E> {
+    fn from(value: GliumRenderer<Context<E>, E>) -> Self {
         SystemGroup::E(value)
     }
 }
 
-impl<E> From<HeadlessRenderer<Context<E>, E, Renderable<HeadlessBackend>>> for SystemGroup<E> {
-    fn from(value: HeadlessRenderer<Context<E>, E, Renderable<HeadlessBackend>>) -> Self {
+impl<E> From<HeadlessRenderer<Context<E>, E>> for SystemGroup<E> {
+    fn from(value: HeadlessRenderer<Context<E>, E>) -> Self {
         SystemGroup::F(value)
     }
 }
