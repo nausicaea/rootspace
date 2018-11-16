@@ -1,6 +1,6 @@
-use components::{camera::Camera, layer::Layer, model::Model, renderable::Renderable};
-use context::SceneGraphTrait;
-use ecs::{DatabaseTrait, Entity, LoopStage, SystemTrait};
+use components::{camera::Camera, renderable::Renderable, model::Model};
+use context::{Layer, SceneGraphTrait};
+use ecs::{DatabaseTrait, LoopStage, SystemTrait};
 use event::EngineEventTrait;
 use failure::Error;
 use graphics::{BackendTrait, FrameTrait};
@@ -76,7 +76,7 @@ where
 
 impl<Ctx, Evt, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, B>
 where
-    Ctx: DatabaseTrait + SceneGraphTrait<Entity, Model>,
+    Ctx: DatabaseTrait + SceneGraphTrait,
     Evt: EngineEventTrait,
     B: BackendTrait + 'static,
 {
@@ -106,9 +106,9 @@ where
             self.frames += 1;
         }
 
-        // Update the scene graph and obtain the nodes (while sorting for z-value).
-        ctx.update_graph()?;
-        let nodes = ctx.get_nodes();
+        // Update the scene graphs.
+        ctx.update_graph(Layer::World)?;
+        ctx.update_graph(Layer::Ui)?;
 
         // Obtain a reference to the camera.
         let cam = ctx.find::<Camera>().map_err(|e| format_err!("{} (Camera)", e))?;
@@ -117,21 +117,28 @@ where
         let mut target = self.backend.create_frame();
         target.initialize(self.clear_color, 1.0);
 
-        // Render the scene.
-        for (entity, model) in nodes {
+        // Render the world scene.
+        for (entity, model) in ctx.get_nodes(Layer::World) {
             if ctx.has::<Model>(entity) {
-                if let Ok(layer) = ctx.get::<Layer>(entity) {
-                    if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
-                        #[cfg(any(test, feature = "diagnostics"))]
-                        {
-                            self.draw_calls += 1;
-                        }
-                        let transform = match *layer {
-                            Layer::World => cam.world_matrix() * model.matrix(),
-                            Layer::Ui => cam.ui_matrix() * model.matrix(),
-                        };
-                        target.render(&transform, data)?;
+                if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
+                    #[cfg(any(test, feature = "diagnostics"))]
+                    {
+                        self.draw_calls += 1;
                     }
+                    target.render(&(cam.world_matrix() * model.matrix()), data)?;
+                }
+            }
+        }
+
+        // Render the ui scene.
+        for (entity, model) in ctx.get_nodes(Layer::Ui) {
+            if ctx.has::<Model>(entity) {
+                if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
+                    #[cfg(any(test, feature = "diagnostics"))]
+                    {
+                        self.draw_calls += 1;
+                    }
+                    target.render(&(cam.ui_matrix() * model.matrix()), data)?;
                 }
             }
         }
@@ -144,7 +151,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::Context;
+    use context::{Layer, Context};
     use graphics::headless::HeadlessBackend as HB;
     use mock::{MockEvt, MockEvtFlag};
     use std::f32;
@@ -186,19 +193,17 @@ mod tests {
             Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0).unwrap();
 
         let a = ctx.create_entity();
-        ctx.insert_node(a);
+        ctx.insert_node(a, Layer::World);
         ctx.add(a, Model::default()).unwrap();
-        ctx.add(a, Layer::World).unwrap();
         ctx.add(a, Renderable::default()).unwrap();
         let b = ctx.create_entity();
-        ctx.insert_node(b);
+        ctx.insert_node(b, Layer::World);
         ctx.add(b, Model::default()).unwrap();
-        ctx.add(b, Layer::World).unwrap();
         let c = ctx.create_entity();
-        ctx.insert_node(c);
+        ctx.insert_node(c, Layer::World);
         ctx.add(c, Renderable::default()).unwrap();
         let d = ctx.create_entity();
-        ctx.insert_node(d);
+        ctx.insert_node(d, Layer::World);
         ctx.add(c, Camera::default()).unwrap();
 
         assert_ok!(r.render(&mut ctx, &Default::default(), &Default::default()));

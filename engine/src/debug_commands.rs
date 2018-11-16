@@ -1,8 +1,8 @@
 use clap::{App, AppSettings, Arg, SubCommand};
-use components::{camera::Camera, info::Info, model::Model};
-use context::SceneGraphTrait;
+use components::{camera::Camera, info::Info};
+use context::{Layer, SceneGraphTrait};
 use ecs::EventManagerTrait;
-use ecs::{DatabaseTrait, Entity};
+use ecs::DatabaseTrait;
 use event::EngineEventTrait;
 use failure::Error;
 use std::marker::PhantomData;
@@ -130,7 +130,7 @@ impl<Ctx> Default for EntityCommand<Ctx> {
 
 impl<Ctx> CommandTrait<Ctx> for EntityCommand<Ctx>
 where
-    Ctx: DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Ctx: DatabaseTrait + SceneGraphTrait + 'static,
 {
     fn name(&self) -> &'static str {
         "entity"
@@ -187,9 +187,12 @@ where
                 }
 
                 if list_matches.is_present("positions") {
-                    if let Some(m) = ctx.get_node(entity) {
+                    if let Some(m) = ctx.get_node(entity, Layer::World) {
                         let pos = m.position();
-                        output.push_str(&format!(" [{}, {}, {}]", pos.x, pos.y, pos.z));
+                        output.push_str(&format!(" [{}, {}, {}] (world-space)", pos.x, pos.y, pos.z));
+                    } else if let Some(m) = ctx.get_node(entity, Layer::Ui) {
+                        let pos = m.position();
+                        output.push_str(&format!(" [{}, {}, {}] (ui-space)", pos.x, pos.y, pos.z));
                     } else {
                         output.push_str(" (no position)");
                     }

@@ -1,7 +1,6 @@
-use components::model::Model;
 use context::SceneGraphTrait;
 use debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand};
-use ecs::{DatabaseTrait, Entity, EventManagerTrait, LoopStage, SystemTrait};
+use ecs::{DatabaseTrait, EventManagerTrait, LoopStage, SystemTrait};
 use event::EngineEventTrait;
 use failure::Error;
 use std::collections::HashMap;
@@ -15,7 +14,7 @@ pub struct DebugShell<Ctx, Evt> {
 
 impl<Ctx, Evt> Default for DebugShell<Ctx, Evt>
 where
-    Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait + 'static,
     Evt: EngineEventTrait + 'static,
 {
     fn default() -> Self {
@@ -35,7 +34,7 @@ where
 
 impl<Ctx, Evt> DebugShell<Ctx, Evt>
 where
-    Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait + 'static,
     Evt: EngineEventTrait + 'static,
 {
     fn add_command<C: CommandTrait<Ctx>>(&mut self, command: C) {
@@ -74,7 +73,7 @@ where
 
 impl<Ctx, Evt> SystemTrait<Ctx, Evt> for DebugShell<Ctx, Evt>
 where
-    Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait<Entity, Model> + 'static,
+    Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait + 'static,
     Evt: EngineEventTrait + 'static,
 {
     fn get_stage_filter(&self) -> LoopStage {

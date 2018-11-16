@@ -6,23 +6,34 @@ use std::{
     any::Any,
     collections::{HashSet, VecDeque},
     fmt,
-    hash::Hash,
 };
 
-pub trait SceneGraphTrait<K, V>
-where
-    K: Clone + Default + Eq + Hash,
-    V: Clone + Default,
-{
-    fn update_graph(&mut self) -> Result<(), Error>;
-    fn insert_node(&mut self, entity: K);
-    fn get_node(&self, entity: &K) -> Option<&V>;
-    fn get_nodes(&self) -> Vec<(&K, &V)>;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Layer {
+    World,
+    Ui,
+}
+
+impl fmt::Display for Layer {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Layer::World => write!(f, "World"),
+            Layer::Ui => write!(f, "Ui"),
+        }
+    }
+}
+
+pub trait SceneGraphTrait {
+    fn update_graph(&mut self, layer: Layer) -> Result<(), Error>;
+    fn insert_node(&mut self, entity: Entity, layer: Layer);
+    fn get_node(&self, entity: &Entity, layer: Layer) -> Option<&Model>;
+    fn get_nodes(&self, layer: Layer) -> Vec<(&Entity, &Model)>;
 }
 
 pub struct Context<E> {
     events: VecDeque<E>,
-    scene_graph: Hierarchy<Entity, Model>,
+    world_graph: Hierarchy<Entity, Model>,
+    ui_graph: Hierarchy<Entity, Model>,
     database: Database,
 }
 
@@ -36,7 +47,8 @@ impl<E> Default for Context<E> {
     fn default() -> Self {
         Context {
             events: VecDeque::default(),
-            scene_graph: Hierarchy::default(),
+            world_graph: Hierarchy::default(),
+            ui_graph: Hierarchy::default(),
             database: Database::default(),
         }
     }
@@ -67,30 +79,49 @@ where
     }
 }
 
-impl<E> SceneGraphTrait<Entity, Model> for Context<E> {
-    fn update_graph(&mut self) -> Result<(), Error> {
+impl<E> SceneGraphTrait for Context<E> {
+    fn update_graph(&mut self, layer: Layer) -> Result<(), Error> {
         let db = &self.database;
-        self.scene_graph.update(&|entity, _, parent_model| {
-            let current_model: &Model = db.get(entity).ok()?;
-            Some(parent_model * current_model)
-        })?;
+        match layer {
+            Layer::World => self.world_graph.update(&|entity, _, parent_model| {
+                let current_model: &Model = db.get(entity).ok()?;
+                Some(parent_model * current_model)
+            })?,
+            Layer::Ui => self.ui_graph.update(&|entity, _, parent_model| {
+                let current_model: &Model = db.get(entity).ok()?;
+                Some(parent_model * current_model)
+            })?,
+        }
         Ok(())
     }
 
-    fn insert_node(&mut self, entity: Entity) {
-        self.scene_graph.insert(entity, Default::default())
+    fn insert_node(&mut self, entity: Entity, layer: Layer) {
+        match layer {
+            Layer::World => self.world_graph.insert(entity, Default::default()),
+            Layer::Ui => self.ui_graph.insert(entity, Default::default()),
+        }
     }
 
-    fn get_node(&self, entity: &Entity) -> Option<&Model> {
-        self.scene_graph
-            .iter()
-            .filter(|&(k, _)| k == entity)
-            .map(|(_, v)| v)
-            .last()
+    fn get_node(&self, entity: &Entity, layer: Layer) -> Option<&Model> {
+        match layer {
+            Layer::World => self.world_graph
+                .iter()
+                .filter(|&(k, _)| k == entity)
+                .map(|(_, v)| v)
+                .last(),
+            Layer::Ui => self.ui_graph
+                .iter()
+                .filter(|&(k, _)| k == entity)
+                .map(|(_, v)| v)
+                .last(),
+        }
     }
 
-    fn get_nodes(&self) -> Vec<(&Entity, &Model)> {
-        self.scene_graph.iter().collect()
+    fn get_nodes(&self, layer: Layer) -> Vec<(&Entity, &Model)> {
+        match layer {
+            Layer::World => self.world_graph.iter().collect(),
+            Layer::Ui => self.ui_graph.iter().collect(),
+        }
     }
 }
 

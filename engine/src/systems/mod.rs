@@ -9,9 +9,8 @@ pub use self::{
     debug_console::DebugConsole, debug_shell::DebugShell, event_coordinator::EventCoordinator,
     event_interface::EventInterface, event_monitor::EventMonitor, renderer::Renderer,
 };
-use components::model::Model;
 use context::SceneGraphTrait;
-use ecs::{DatabaseTrait, Entity, EventManagerTrait, EventTrait, LoopStage, SystemTrait};
+use ecs::{DatabaseTrait, EventManagerTrait, EventTrait, LoopStage, SystemTrait};
 use event::EngineEventTrait;
 use failure::Error;
 use graphics::{
@@ -82,7 +81,7 @@ impl<C, E> From<DebugShell<C, E>> for SystemGroup<C, E> {
 impl<C, E> SystemTrait<C, E> for SystemGroup<C, E>
 where
     E: EngineEventTrait,
-    C: DatabaseTrait + EventManagerTrait<E> + SceneGraphTrait<Entity, Model> + 'static,
+    C: DatabaseTrait + EventManagerTrait<E> + SceneGraphTrait + 'static,
 {
     fn get_stage_filter(&self) -> LoopStage {
         use self::SystemGroup::*;

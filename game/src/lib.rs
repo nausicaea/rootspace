@@ -11,8 +11,8 @@ mod event;
 
 use ecs::{DatabaseTrait, EventManagerTrait};
 use engine::{
-    components::{camera::Camera, info::Info, layer::Layer, model::Model, renderable::Renderable},
-    context::{Context, SceneGraphTrait},
+    components::{camera::Camera, info::Info, model::Model, renderable::Renderable},
+    context::{Context, Layer, SceneGraphTrait},
     event::EngineEventTrait,
     systems::{DebugConsole, DebugShell, EventCoordinator, EventMonitor},
     DefaultOrchestrator, DefaultWorld, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
@@ -42,10 +42,9 @@ impl Game {
         self.context_mut().add(camera, Camera::default())?;
 
         let ea = self.context_mut().create_entity();
-        self.context_mut().insert_node(ea);
+        self.context_mut().insert_node(ea, Layer::World);
         self.context_mut()
             .add(ea, Info::new("Entity A", "Rotated cube example"))?;
-        self.context_mut().add(ea, Layer::World)?;
         self.context_mut().add(
             ea,
             Model::new(
@@ -56,9 +55,8 @@ impl Game {
         )?;
 
         let eb = self.context_mut().create_entity();
-        self.context_mut().insert_node(eb);
+        self.context_mut().insert_node(eb, Layer::World);
         self.context_mut().add(eb, Info::new("Entity B", "Text example"))?;
-        self.context_mut().add(eb, Layer::World)?;
         self.context_mut().add(
             eb,
             Model::new(
@@ -69,9 +67,8 @@ impl Game {
         )?;
 
         let ec = self.context_mut().create_entity();
-        self.context_mut().insert_node(ec);
+        self.context_mut().insert_node(ec, Layer::Ui);
         self.context_mut().add(ec, Info::new("Entity C", "UI Text example"))?;
-        self.context_mut().add(ec, Layer::Ui)?;
         self.context_mut().add(
             ec,
             Model::new(
