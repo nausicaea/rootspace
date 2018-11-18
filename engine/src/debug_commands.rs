@@ -170,16 +170,6 @@ where
                             .short("q")
                             .long("ndc-positions")
                             .help("Displays the positions of entities in NDC space"),
-                    ).arg(
-                        Arg::with_name("dimensions")
-                            .short("d")
-                            .long("dimensions")
-                            .help("Displays the approximate dimensions of entities"),
-                    ).arg(
-                        Arg::with_name("ndc-dimensions")
-                            .short("e")
-                            .long("ndc-dimensions")
-                            .help("Displays the approximate dimensions of entities in NDC space"),
                     ),
             ).get_matches_from_safe(args)?;
 
@@ -230,12 +220,6 @@ where
                     } else {
                         output.push_str(" (no ndc position)");
                     }
-                }
-
-                if list_matches.is_present("dimensions") {
-                }
-
-                if list_matches.is_present("ndc-dimensions") {
                 }
 
                 println!("{}{}", entity, output);

@@ -74,7 +74,7 @@ impl Game {
             Model::new(
                 Vector3::new(0.0, 0.0, -1.0),
                 Vector3::new(0.0, 0.0, 0.0),
-                Vector3::new(1.0, 1.0, 1.0),
+                Vector3::new(800.0, 600.0, 1.0),
             ),
         )?;
 
