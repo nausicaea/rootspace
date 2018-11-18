@@ -6,6 +6,7 @@ use ecs::DatabaseTrait;
 use event::EngineEventTrait;
 use failure::Error;
 use std::marker::PhantomData;
+use nalgebra::{Vector4, Vector3};
 
 pub trait CommandTrait<Ctx>: 'static {
     fn name(&self) -> &'static str;
@@ -111,6 +112,7 @@ where
                 );
             }
         }
+
         Ok(())
     }
 }
@@ -162,7 +164,22 @@ where
                         Arg::with_name("positions")
                             .short("p")
                             .long("positions")
-                            .help("Displays the positions of entities"),
+                            .help("Displays the absolute positions of entities"),
+                    ).arg(
+                        Arg::with_name("ndc-positions")
+                            .short("q")
+                            .long("ndc-positions")
+                            .help("Displays the positions of entities in NDC space"),
+                    ).arg(
+                        Arg::with_name("dimensions")
+                            .short("d")
+                            .long("dimensions")
+                            .help("Displays the approximate dimensions of entities"),
+                    ).arg(
+                        Arg::with_name("ndc-dimensions")
+                            .short("e")
+                            .long("ndc-dimensions")
+                            .help("Displays the approximate dimensions of entities in NDC space"),
                     ),
             ).get_matches_from_safe(args)?;
 
@@ -170,6 +187,7 @@ where
             if list_matches.is_present("count") {
                 println!("Loaded entities: {}", ctx.num_entities());
             }
+            let camera = ctx.find::<Camera>()?;
             for entity in ctx.entities() {
                 let mut output = String::new();
 
@@ -189,13 +207,35 @@ where
                 if list_matches.is_present("positions") {
                     if let Some(m) = ctx.get_node(entity, Layer::World) {
                         let pos = m.position();
-                        output.push_str(&format!(" [{}, {}, {}] (world-space)", pos.x, pos.y, pos.z));
+                        output.push_str(&format!(" world-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
                     } else if let Some(m) = ctx.get_node(entity, Layer::Ui) {
                         let pos = m.position();
-                        output.push_str(&format!(" [{}, {}, {}] (ui-space)", pos.x, pos.y, pos.z));
+                        output.push_str(&format!(" ui-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
                     } else {
                         output.push_str(" (no position)");
                     }
+                }
+
+                if list_matches.is_present("ndc-positions") {
+                    if let Some(m) = ctx.get_node(entity, Layer::World) {
+                        let transform = camera.world_matrix() * m.matrix();
+                        let pos = transform * Vector4::new(0.0, 0.0, 0.0, 1.0);
+                        let pos = Vector3::new(pos.x/pos.w, pos.y/pos.w, pos.z/pos.w);
+                        output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+                    } else if let Some(m) = ctx.get_node(entity, Layer::Ui) {
+                        let transform = camera.ui_matrix() * m.matrix();
+                        let pos = transform * Vector4::new(0.0, 0.0, 0.0, 1.0);
+                        let pos = Vector3::new(pos.x/pos.w, pos.y/pos.w, pos.z/pos.w);
+                        output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+                    } else {
+                        output.push_str(" (no ndc position)");
+                    }
+                }
+
+                if list_matches.is_present("dimensions") {
+                }
+
+                if list_matches.is_present("ndc-dimensions") {
                 }
 
                 println!("{}{}", entity, output);

@@ -1,5 +1,5 @@
 use affine_transform::AffineTransform;
-use nalgebra::{Affine3, Isometry3, Matrix4, UnitQuaternion, Vector3};
+use nalgebra::{Affine3, Isometry3, Matrix4, UnitQuaternion, Vector3, Point3};
 use std::f32;
 use std::ops::Mul;
 
@@ -33,12 +33,12 @@ impl Model {
         self.model.matrix()
     }
 
-    pub fn position(&self) -> &Vector3<f32> {
-        &self.decomposed.translation.vector
+    pub fn position(&self) -> Point3<f32> {
+        Point3::from(self.decomposed.translation.vector)
     }
 
-    pub fn set_position(&mut self, value: Vector3<f32>) {
-        self.decomposed.translation.vector = value;
+    pub fn set_position(&mut self, value: Point3<f32>) {
+        self.decomposed.translation.vector = value.coords;
         self.model = self.decomposed.recompose();
     }
 
@@ -113,7 +113,7 @@ mod tests {
     #[test]
     fn getters() {
         let ident = Model::identity();
-        assert_eq!(ident.position(), &Vector3::new(0.0, 0.0, 0.0));
+        assert_eq!(ident.position(), Point3::new(0.0, 0.0, 0.0));
         assert_eq!(ident.orientation(), &UnitQuaternion::identity());
         assert_eq!(ident.scale(), &Vector3::new(1.0, 1.0, 1.0));
 
@@ -122,7 +122,7 @@ mod tests {
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(1.0, 1.1, 1.0),
         );
-        assert_eq!(mat.position(), &Vector3::new(2.0, 3.0, 1.0));
+        assert_eq!(mat.position(), Point3::new(2.0, 3.0, 1.0));
         assert_eq!(
             mat.orientation(),
             &UnitQuaternion::from_scaled_axis(Vector3::new(1.0, 0.0, 0.0))
@@ -133,8 +133,8 @@ mod tests {
     #[test]
     fn setters() {
         let mut ident = Model::identity();
-        ident.set_position(Vector3::new(1.0, 2.0, 3.0));
-        assert_eq!(ident.position(), &Vector3::new(1.0, 2.0, 3.0));
+        ident.set_position(Point3::new(1.0, 2.0, 3.0));
+        assert_eq!(ident.position(), Point3::new(1.0, 2.0, 3.0));
         ident.set_orientation(UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0)));
         assert_eq!(
             ident.orientation(),
