@@ -35,33 +35,33 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use components::model::Model;
-    use ecs::mock::{MockEvt, MockEvtFlag};
-    use mock::MockCtx;
+    use context::Context;
+    use event::EngineEventTrait;
+    use mock::{MockEvt, MockEvtFlag};
 
     #[test]
     fn default() {
-        let _s = EventMonitor::<MockCtx<MockEvt, Model>, MockEvt>::default();
+        let _s = EventMonitor::<Context<MockEvt>, MockEvt>::default();
     }
 
     #[test]
     fn stage_filter() {
-        let s = EventMonitor::<MockCtx<MockEvt, Model>, MockEvt>::default();
+        let s = EventMonitor::<Context<MockEvt>, MockEvt>::default();
 
         assert_eq!(s.get_stage_filter(), LoopStage::HANDLE_EVENTS);
     }
 
     #[test]
     fn event_filter() {
-        let s = EventMonitor::<MockCtx<MockEvt, Model>, MockEvt>::default();
+        let s = EventMonitor::<Context<MockEvt>, MockEvt>::default();
 
         assert_eq!(s.get_event_filter(), MockEvtFlag::all());
     }
 
     #[test]
     fn handle_event() {
-        let mut s = EventMonitor::<MockCtx<MockEvt, Model>, MockEvt>::default();
-        let r = s.handle_event(&mut Default::default(), &MockEvt::TestEventB(0));
+        let mut s = EventMonitor::<Context<MockEvt>, MockEvt>::default();
+        let r = s.handle_event(&mut Default::default(), &MockEvt::new_startup());
         assert_ok!(r);
         assert!(r.unwrap());
     }

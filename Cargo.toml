@@ -6,11 +6,10 @@ authors = ["Eleanore Young"]
 [workspace]
 
 [features]
-diagnostics = ["engine/diagnostics"]
+diagnostics = ["game/diagnostics", "engine/diagnostics"]
 
 [dependencies]
-clap = "^2.0.0"
-combine = "^3.5.1"
+clap = {version = "^2.0.0", default-features = false}
 log = "^0.4.1"
 failure = "^0.1.1"
 fern = "^0.5.5"

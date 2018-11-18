@@ -1,10 +1,12 @@
-use nalgebra::{Isometry3, Matrix4, Perspective3, Point3, Vector3};
+use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point3, Vector3};
 use std::f32;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Camera {
-    matrix: Matrix4<f32>,
-    projection: Perspective3<f32>,
+    world_matrix: Matrix4<f32>,
+    ui_matrix: Matrix4<f32>,
+    orthographic: Orthographic3<f32>,
+    perspective: Perspective3<f32>,
     view: Isometry3<f32>,
     dimensions: (u32, u32),
     dpi_factor: f64,
@@ -19,7 +21,15 @@ impl Camera {
         target: Point3<f32>,
         up: Vector3<f32>,
     ) -> Self {
-        let projection = Perspective3::new(
+        let orthographic = Orthographic3::new(
+            dimensions.0 as f32 / -2.0,
+            dimensions.0 as f32 / 2.0,
+            dimensions.1 as f32 / -2.0,
+            dimensions.1 as f32 / 2.0,
+            frustum_z.0,
+            frustum_z.1,
+        );
+        let perspective = Perspective3::new(
             dimensions.0 as f32 / dimensions.1 as f32,
             fov_y,
             frustum_z.0,
@@ -28,16 +38,22 @@ impl Camera {
         let view = Isometry3::look_at_rh(&eye, &target, &up);
 
         Camera {
-            matrix: projection.as_matrix() * view.to_homogeneous(),
-            projection,
+            world_matrix: perspective.as_matrix() * view.to_homogeneous(),
+            ui_matrix: orthographic.as_matrix().clone(),
+            orthographic,
+            perspective,
             view,
             dimensions,
             dpi_factor: 1.0,
         }
     }
 
-    pub fn matrix(&self) -> &Matrix4<f32> {
-        &self.matrix
+    pub fn world_matrix(&self) -> &Matrix4<f32> {
+        &self.world_matrix
+    }
+
+    pub fn ui_matrix(&self) -> &Matrix4<f32> {
+        &self.ui_matrix
     }
 
     pub fn position(&self) -> &Vector3<f32> {
@@ -50,14 +66,17 @@ impl Camera {
 
     pub fn physical_dimensions(&self) -> (u32, u32) {
         let (w, h) = (self.dimensions.0 as f64, self.dimensions.1 as f64);
-        ((w * self.dpi_factor).round() as u32, (h * self.dpi_factor).round() as u32)
+        (
+            (w * self.dpi_factor).round() as u32,
+            (h * self.dpi_factor).round() as u32,
+        )
     }
 
     pub fn set_dimensions(&mut self, value: (u32, u32)) {
         if value != self.dimensions {
-            self.projection.set_aspect(value.0 as f32 / value.1 as f32);
+            self.perspective.set_aspect(value.0 as f32 / value.1 as f32);
             self.dimensions = value;
-            self.recalculate_matrix();
+            self.recalculate_matrices();
         }
     }
 
@@ -69,8 +88,9 @@ impl Camera {
         self.dpi_factor = value;
     }
 
-    fn recalculate_matrix(&mut self) {
-        self.matrix = self.projection.as_matrix() * self.view.to_homogeneous();
+    fn recalculate_matrices(&mut self) {
+        self.world_matrix = self.perspective.as_matrix() * self.view.to_homogeneous();
+        self.ui_matrix = self.orthographic.as_matrix().clone();
     }
 }
 
@@ -104,20 +124,6 @@ mod tests {
     }
 
     #[test]
-    fn dimensions() {
-        let mut c = Camera::default();
-        let mat = c.matrix().clone();
-
-        c.set_dimensions((1024, 768));
-        assert_eq!(c.dimensions(), (1024, 768));
-        assert_eq!(c.matrix(), &mat);
-
-        c.set_dimensions((1400, 900));
-        assert_eq!(c.dimensions(), (1400, 900));
-        assert_ne!(c.matrix(), &mat);
-    }
-
-    #[test]
     fn default() {
         assert_eq!(
             Camera::default(),
@@ -133,9 +139,31 @@ mod tests {
     }
 
     #[test]
-    fn matrix() {
+    fn accessors() {
+        let mut c = Camera::default();
+
+        c.set_dimensions((1024, 768));
+        assert_eq!(c.dpi_factor(), 1.0);
+        assert_eq!(c.dimensions(), (1024, 768));
+        assert_eq!(c.physical_dimensions(), (1024, 768));
+
+        c.set_dpi_factor(2.0);
+        assert_eq!(c.dpi_factor(), 2.0);
+        assert_eq!(c.dimensions(), (1024, 768));
+        assert_eq!(c.physical_dimensions(), (2048, 1536));
+    }
+
+    #[test]
+    fn world_matrix_accessor() {
         let c = Camera::default();
-        let m: &Matrix4<f32> = c.matrix();
-        assert_eq!(m, &(c.projection.as_matrix() * c.view.to_homogeneous()));
+        let m: &Matrix4<f32> = c.world_matrix();
+        assert_eq!(m, &(c.perspective.as_matrix() * c.view.to_homogeneous()));
+    }
+
+    #[test]
+    fn ui_matrix_accessor() {
+        let c = Camera::default();
+        let m: &Matrix4<f32> = c.ui_matrix();
+        assert_eq!(m, c.orthographic.as_matrix());
     }
 }

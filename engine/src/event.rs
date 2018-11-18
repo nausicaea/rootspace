@@ -1,174 +1,40 @@
 use ecs::EventTrait;
-use glium::glutin::{Event as GlutinEvent, WindowEvent};
 use graphics::{glium::GliumEvent, headless::HeadlessEvent};
 
-bitflags! {
-    pub struct EventFlag: u64 {
-        const STARTUP = 0x01;
-        const SHUTDOWN = 0x02;
-        const HARD_SHUTDOWN = 0x04;
-        const COMMAND = 0x08;
-        const RESIZE = 0x10;
-        const CHANGE_DPI = 0x20;
-    }
+pub trait EngineEventTrait: EventTrait + MaybeFrom<GliumEvent> + MaybeFrom<HeadlessEvent> + 'static {
+    fn startup() -> Self::EventFlag;
+    fn shutdown() -> Self::EventFlag;
+    fn hard_shutdown() -> Self::EventFlag;
+    fn command() -> Self::EventFlag;
+    fn resize() -> Self::EventFlag;
+    fn change_dpi() -> Self::EventFlag;
+
+    fn new_startup() -> Self;
+    fn new_shutdown() -> Self;
+    fn new_hard_shutdown() -> Self;
+    fn new_command(args: Vec<String>) -> Self;
+    fn new_resize(dims: (u32, u32)) -> Self;
+    fn new_change_dpi(factor: f64) -> Self;
+
+    fn flag(&self) -> Self::EventFlag;
+    fn command_data(&self) -> Option<&[String]>;
+    fn resize_data(&self) -> Option<(u32, u32)>;
+    fn change_dpi_data(&self) -> Option<f64>;
 }
 
-impl Default for EventFlag {
-    fn default() -> Self {
-        EventFlag::all()
-    }
+pub trait MaybeFrom<T>: Sized {
+    fn maybe_from(value: T) -> Option<Self>;
 }
 
-#[derive(Clone, Debug)]
-pub struct Event {
-    flag: EventFlag,
-    data: EventData,
+pub trait MaybeInto<T> {
+    fn maybe_into(self) -> Option<T>;
 }
 
-impl Event {
-    pub fn startup() -> Self {
-        Event {
-            flag: EventFlag::STARTUP,
-            data: EventData::Empty,
-        }
-    }
-
-    pub fn shutdown() -> Self {
-        Event {
-            flag: EventFlag::SHUTDOWN,
-            data: EventData::Empty,
-        }
-    }
-
-    pub fn hard_shutdown() -> Self {
-        Event {
-            flag: EventFlag::HARD_SHUTDOWN,
-            data: EventData::Empty,
-        }
-    }
-
-    pub fn command(args: Vec<String>) -> Self {
-        Event {
-            flag: EventFlag::COMMAND,
-            data: EventData::Command(args),
-        }
-    }
-
-    pub fn resize(dims: (u32, u32)) -> Self {
-        Event {
-            flag: EventFlag::RESIZE,
-            data: EventData::Resize(dims),
-        }
-    }
-
-    pub fn change_dpi(factor: f64) -> Self {
-        Event {
-            flag: EventFlag::CHANGE_DPI,
-            data: EventData::ChangeDpi(factor),
-        }
-    }
-
-    pub fn flag(&self) -> EventFlag {
-        self.flag
-    }
-
-    pub fn data(&self) -> &EventData {
-        &self.data
-    }
-}
-
-impl EventTrait for Event {
-    type EventFlag = EventFlag;
-
-    fn matches_filter(&self, flag: Self::EventFlag) -> bool {
-        flag.contains(self.flag)
-    }
-}
-
-impl From<HeadlessEvent> for Option<Event> {
-    fn from(_value: HeadlessEvent) -> Option<Event> {
-        None
-    }
-}
-
-impl From<GliumEvent> for Option<Event> {
-    fn from(value: GliumEvent) -> Option<Event> {
-        if let GliumEvent(GlutinEvent::WindowEvent { event: we, .. }) = value {
-            match we {
-                WindowEvent::CloseRequested => Some(Event::shutdown()),
-                WindowEvent::Resized(l) => Some(Event::resize(l.into())),
-                WindowEvent::HiDpiFactorChanged(f) => Some(Event::change_dpi(f)),
-                _ => None,
-            }
-        } else {
-            None
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum EventData {
-    Empty,
-    Command(Vec<String>),
-    Resize((u32, u32)),
-    ChangeDpi(f64),
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn default_event_flag() {
-        assert_eq!(EventFlag::default(), EventFlag::all());
-    }
-
-    #[test]
-    fn accessors() {
-        let e = Event::startup();
-        let _: EventFlag = e.flag();
-        let _: &EventData = e.data();
-    }
-
-    #[test]
-    fn ready_event() {
-        let e = Event::startup();
-        assert_eq!(e.flag, EventFlag::STARTUP);
-        assert_eq!(e.data, EventData::Empty);
-    }
-
-    #[test]
-    fn shutdown_event() {
-        let e = Event::shutdown();
-        assert_eq!(e.flag, EventFlag::SHUTDOWN);
-        assert_eq!(e.data, EventData::Empty);
-    }
-
-    #[test]
-    fn hard_shutdown_event() {
-        let e = Event::hard_shutdown();
-        assert_eq!(e.flag, EventFlag::HARD_SHUTDOWN);
-        assert_eq!(e.data, EventData::Empty);
-    }
-
-    #[test]
-    fn command_event() {
-        let e = Event::command(Vec::new());
-        assert_eq!(e.flag, EventFlag::COMMAND);
-        assert_eq!(e.data, EventData::Command(Vec::new()));
-    }
-
-    #[test]
-    fn resize_event() {
-        let e = Event::resize((1, 2));
-        assert_eq!(e.flag, EventFlag::RESIZE);
-        assert_eq!(e.data, EventData::Resize((1, 2)));
-    }
-
-    #[test]
-    fn change_dpi_event() {
-        let e = Event::change_dpi(2.0);
-        assert_eq!(e.flag, EventFlag::CHANGE_DPI);
-        assert_eq!(e.data, EventData::ChangeDpi(2.0));
+impl<T, U> MaybeInto<U> for T
+where
+    U: MaybeFrom<T>,
+{
+    fn maybe_into(self) -> Option<U> {
+        MaybeFrom::maybe_from(self)
     }
 }

@@ -227,7 +227,13 @@ fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> 
     let height = (caret.y - caret_origin.y + advance_height).ceil() as u32;
 
     #[cfg(any(test, feature = "diagnostics"))]
-    trace!("Layouted text ({} characters, {} glyphs, {}px wide, {}px high)", text.len(), glyphs.len(), width, height);
+    trace!(
+        "Layouted text ({} characters, {} glyphs, {}px wide, {}px high)",
+        text.len(),
+        glyphs.len(),
+        width,
+        height
+    );
 
     (glyphs, height)
 }
@@ -342,7 +348,11 @@ mod tests {
         let vertices = m.vertices.len() as u16;
         let half_model_width = model_width / 2.0;
         assert!(m.indices.iter().all(|i| i < &vertices));
-        assert!(m.vertices.iter().all(|v| v.position()[0] >= -half_model_width && v.position()[0] <= half_model_width));
+        assert!(
+            m.vertices
+                .iter()
+                .all(|v| v.position()[0] >= -half_model_width && v.position()[0] <= half_model_width)
+        );
     }
 
     #[test]

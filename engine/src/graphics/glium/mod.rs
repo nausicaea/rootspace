@@ -1,5 +1,6 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
-use event::Event;
+use ecs::EventTrait;
+use event::MaybeFrom;
 use failure::Error;
 use geometry::rect::Rect;
 use glium::{
@@ -42,7 +43,10 @@ impl fmt::Debug for GliumEventsLoop {
 
 impl Sealed for GliumEventsLoop {}
 
-impl EventsLoopTrait<Event> for GliumEventsLoop {
+impl<Evt> EventsLoopTrait<Evt> for GliumEventsLoop
+where
+    Evt: EventTrait + MaybeFrom<GliumEvent>,
+{
     type InputEvent = GliumEvent;
 
     fn poll<F: FnMut(GliumEvent)>(&mut self, mut f: F) {
@@ -69,7 +73,10 @@ where
 {
     fn visit_values<'f, F: FnMut(&str, UniformValue<'f>)>(&'f self, mut f: F) {
         f("transform", UniformValue::Mat4(*self.transform.as_ref()));
-        f("physical_dimensions", UniformValue::Vec2([self.physical_dimensions.0 as f32, self.physical_dimensions.1 as f32]));
+        f(
+            "physical_dimensions",
+            UniformValue::Vec2([self.physical_dimensions.0 as f32, self.physical_dimensions.1 as f32]),
+        );
         f("diffuse_texture", UniformValue::Texture2d(self.diffuse_texture, None));
         if let Some(nt) = self.normal_texture {
             f("normal_texture", UniformValue::Texture2d(nt, None));
@@ -325,7 +332,7 @@ mod tests {
     #[cfg_attr(
         feature = "wsl",
         should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+            expected = "Failed to initialize any backend!\n    Wayland status: NoWaylandLib\n    X11 status: XOpenDisplayFailed\n"
         )
     )]
     #[cfg_attr(
@@ -346,7 +353,7 @@ mod tests {
     #[cfg_attr(
         feature = "wsl",
         should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+            expected = "Failed to initialize any backend!\n    Wayland status: NoWaylandLib\n    X11 status: XOpenDisplayFailed\n"
         )
     )]
     #[cfg_attr(
@@ -363,7 +370,7 @@ mod tests {
     #[cfg_attr(
         feature = "wsl",
         should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoCompositorListening\n    X11 status: XOpenDisplayFailed\n"
+            expected = "Failed to initialize any backend!\n    Wayland status: NoWaylandLib\n    X11 status: XOpenDisplayFailed\n"
         )
     )]
     #[cfg_attr(

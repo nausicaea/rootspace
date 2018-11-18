@@ -35,6 +35,15 @@ impl<B: BackendTrait> fmt::Debug for Renderable<B> {
     }
 }
 
+impl Default for Renderable<HeadlessBackend> {
+    fn default() -> Self {
+        Renderable {
+            data: HeadlessRenderData::default(),
+            _b: PhantomData::default(),
+        }
+    }
+}
+
 impl<B, D> Borrow<D> for Renderable<B>
 where
     B: BackendTrait<Data = D>,

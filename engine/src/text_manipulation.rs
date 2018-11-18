@@ -71,23 +71,18 @@ mod test {
 
     #[test]
     fn quoted_argument_list() {
-        let args = split_arguments(
-            "command -f \"flag value\"  \"positional argument\" 100 ",
-            '\\',
-            '"',
-            );
+        let args = split_arguments("command -f \"flag value\"  \"positional argument\" 100 ", '\\', '"');
 
         assert_eq!(args, vec!["command", "-f", "flag value", "positional argument", "100"]);
     }
 
     #[test]
     fn escaped_argument_list() {
-        let args = split_arguments(
-            r"command -f flag\\ value  positional argument 100 ",
-            '\\',
-            '"',
-            );
+        let args = split_arguments(r"command -f flag\\ value  positional argument 100 ", '\\', '"');
 
-        assert_eq!(args, vec!["command", "-f", "flag\\", "value", "positional", "argument", "100"]);
+        assert_eq!(
+            args,
+            vec!["command", "-f", "flag\\", "value", "positional", "argument", "100"]
+        );
     }
 }
