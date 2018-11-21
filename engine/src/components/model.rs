@@ -1,7 +1,6 @@
 use affine_transform::AffineTransform;
-use nalgebra::{Affine3, Isometry3, Matrix4, UnitQuaternion, Vector3, Point3};
-use std::f32;
-use std::ops::Mul;
+use nalgebra::{Affine3, Isometry3, Matrix4, Point3, UnitQuaternion, Vector3};
+use std::{f32, ops::Mul};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {

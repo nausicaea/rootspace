@@ -1,12 +1,10 @@
 use clap::{App, AppSettings, Arg, SubCommand};
 use components::{camera::Camera, info::Info};
 use context::{Layer, SceneGraphTrait};
-use ecs::EventManagerTrait;
-use ecs::DatabaseTrait;
+use ecs::{DatabaseTrait, EventManagerTrait};
 use event::EngineEventTrait;
 use failure::Error;
 use std::marker::PhantomData;
-use nalgebra::{Vector4, Vector3};
 
 pub trait CommandTrait<Ctx>: 'static {
     fn name(&self) -> &'static str;
@@ -77,22 +75,26 @@ where
         let matches = App::new("camera")
             .about("Provides access to the camera")
             .setting(AppSettings::DisableVersion)
+            .setting(AppSettings::SubcommandRequiredElseHelp)
             .subcommand(
                 SubCommand::with_name("info")
                     .about("Prints camera settings")
                     .setting(AppSettings::DisableVersion)
+                    .setting(AppSettings::ArgRequiredElseHelp)
                     .arg(
                         Arg::with_name("position")
                             .short("p")
                             .long("position")
                             .help("Displays the position of the camera"),
-                    ).arg(
+                    )
+                    .arg(
                         Arg::with_name("dimensions")
                             .short("d")
                             .long("dimensions")
                             .help("Display the viewport dimensions"),
                     ),
-            ).get_matches_from_safe(args)?;
+            )
+            .get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
             let cam = ctx.find::<Camera>()?;
@@ -146,32 +148,38 @@ where
         let matches = App::new("entity")
             .about("Provides access to entities within the world")
             .setting(AppSettings::DisableVersion)
+            .setting(AppSettings::SubcommandRequiredElseHelp)
             .subcommand(
                 SubCommand::with_name("list")
                     .about("Prints a list of entities")
                     .setting(AppSettings::DisableVersion)
+                    .setting(AppSettings::ArgRequiredElseHelp)
                     .arg(
                         Arg::with_name("count")
                             .short("c")
                             .long("count")
                             .help("Displays the number of entities"),
-                    ).arg(
+                    )
+                    .arg(
                         Arg::with_name("names")
                             .short("n")
                             .long("names")
                             .help("Displays the names of entities"),
-                    ).arg(
+                    )
+                    .arg(
                         Arg::with_name("positions")
                             .short("p")
                             .long("positions")
                             .help("Displays the absolute positions of entities"),
-                    ).arg(
+                    )
+                    .arg(
                         Arg::with_name("ndc-positions")
                             .short("q")
                             .long("ndc-positions")
                             .help("Displays the positions of entities in NDC space"),
                     ),
-            ).get_matches_from_safe(args)?;
+            )
+            .get_matches_from_safe(args)?;
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
             if list_matches.is_present("count") {
@@ -208,14 +216,10 @@ where
 
                 if list_matches.is_present("ndc-positions") {
                     if let Some(m) = ctx.get_node(entity, Layer::World) {
-                        let transform = camera.world_matrix() * m.matrix();
-                        let pos = transform * Vector4::new(0.0, 0.0, 0.0, 1.0);
-                        let pos = Vector3::new(pos.x/pos.w, pos.y/pos.w, pos.z/pos.w);
+                        let pos = camera.world_point_to_ndc(&m.position());
                         output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
                     } else if let Some(m) = ctx.get_node(entity, Layer::Ui) {
-                        let transform = camera.ui_matrix() * m.matrix();
-                        let pos = transform * Vector4::new(0.0, 0.0, 0.0, 1.0);
-                        let pos = Vector3::new(pos.x/pos.w, pos.y/pos.w, pos.z/pos.w);
+                        let pos = camera.ui_point_to_ndc(&m.position());
                         output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
                     } else {
                         output.push_str(" (no ndc position)");

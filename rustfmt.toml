@@ -1,1 +1,5 @@
 max_width = 120
+merge_imports = true
+reorder_impl_items = true
+report_todo = "Unnumbered"
+report_fixme = "Unnumbered"

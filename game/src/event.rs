@@ -1,6 +1,8 @@
 use ecs::EventTrait;
-use engine::event::{EngineEventTrait, MaybeFrom};
-use engine::graphics::{glium::GliumEvent, headless::HeadlessEvent};
+use engine::{
+    event::{EngineEventTrait, MaybeFrom},
+    graphics::{glium::GliumEvent, headless::HeadlessEvent},
+};
 use glium::glutin::{Event as GlutinEvent, WindowEvent};
 
 bitflags! {

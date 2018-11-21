@@ -112,6 +112,7 @@ mod tests {
         let r = Orchestrator::<MockWorld>::new(tf.path(), Default::default(), Default::default());
         assert_err!(r);
     }
+
     #[test]
     fn get_resource_path() {
         let dir_name = ".";
@@ -142,6 +143,7 @@ mod tests {
         let r = o.file(dir_name, "..");
         assert_err!(r);
     }
+
     #[test]
     fn run_orchestrator_unrestrained() {
         let base = env::temp_dir();
@@ -156,6 +158,7 @@ mod tests {
             o.world.max_iterations, o.world.handle_events_calls
         );
     }
+
     #[test]
     fn check_fixed_update_calls_a() {
         assert!(check_fixed_update_calls(
@@ -164,6 +167,7 @@ mod tests {
             Duration::from_millis(250)
         ));
     }
+
     #[test]
     fn check_fixed_update_calls_b() {
         assert!(check_fixed_update_calls(
@@ -172,6 +176,7 @@ mod tests {
             Duration::from_millis(250)
         ));
     }
+
     #[test]
     fn check_fixed_update_calls_d() {
         assert!(check_fixed_update_calls(
@@ -180,6 +185,7 @@ mod tests {
             Duration::from_millis(250)
         ));
     }
+
     #[test]
     fn check_fixed_update_calls_e() {
         assert!(check_fixed_update_calls(
@@ -188,6 +194,7 @@ mod tests {
             Duration::from_millis(250)
         ));
     }
+
     #[test]
     fn check_fixed_update_calls_f() {
         assert!(check_fixed_update_calls(
@@ -196,6 +203,7 @@ mod tests {
             Duration::from_millis(250)
         ));
     }
+
     #[test]
     fn fixed_update_error() {
         let base = env::temp_dir();
@@ -208,6 +216,7 @@ mod tests {
         let r = o.run(None);
         assert_err!(r);
     }
+
     quickcheck! {
         fn check_update_calls(iterations: usize) -> bool {
             let base = env::temp_dir();
@@ -220,6 +229,7 @@ mod tests {
             o.world.update_calls == iterations
         }
     }
+
     #[test]
     fn update_error() {
         let base = env::temp_dir();
@@ -231,6 +241,7 @@ mod tests {
         let r = o.run(None);
         assert_err!(r);
     }
+
     quickcheck! {
         fn check_render_calls(iterations: usize) -> bool {
             let base = env::temp_dir();
@@ -243,6 +254,7 @@ mod tests {
             o.world.render_calls == iterations
         }
     }
+
     #[test]
     fn render_error() {
         let base = env::temp_dir();
@@ -254,6 +266,7 @@ mod tests {
         let r = o.run(None);
         assert_err!(r);
     }
+
     quickcheck! {
         fn check_handle_events_calls(iterations: usize) -> bool {
             let base = env::temp_dir();
@@ -266,6 +279,7 @@ mod tests {
             o.world.handle_events_calls == iterations
         }
     }
+
     #[test]
     fn handle_events_error() {
         let base = env::temp_dir();
@@ -277,6 +291,7 @@ mod tests {
         let r = o.run(None);
         assert_err!(r);
     }
+
     #[test]
     fn check_fixed_update_arguments() {
         let base = env::temp_dir();
@@ -292,6 +307,7 @@ mod tests {
             temp
         }));
     }
+
     #[test]
     fn check_update_arguments() {
         let base = env::temp_dir();
@@ -307,6 +323,7 @@ mod tests {
             temp
         }));
     }
+
     #[test]
     fn check_render_arguments() {
         let base = env::temp_dir();

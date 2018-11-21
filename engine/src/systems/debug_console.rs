@@ -6,12 +6,14 @@
 use ecs::{EventManagerTrait, LoopStage, SystemTrait};
 use event::EngineEventTrait;
 use failure::Error;
-use std::io::{self, Read};
-use std::marker::PhantomData;
-use std::string;
-use std::sync::mpsc::{self, channel, Receiver};
-use std::thread::spawn;
-use std::time::Duration;
+use std::{
+    io::{self, Read},
+    marker::PhantomData,
+    string,
+    sync::mpsc::{self, channel, Receiver},
+    thread::spawn,
+    time::Duration,
+};
 use text_manipulation::split_arguments;
 
 pub struct DebugConsole<Ctx, Evt> {
@@ -42,7 +44,8 @@ impl<Ctx, Evt> DebugConsole<Ctx, Evt> {
                             tx.send(match String::from_utf8(buf.clone()) {
                                 Ok(l) => Ok(l),
                                 Err(e) => Err(DebugConsoleError::Utf8Error(e)),
-                            }).expect("Unable to send input from stdin via mpsc channel");
+                            })
+                            .expect("Unable to send input from stdin via mpsc channel");
                             buf.clear()
                         } else {
                             buf.push(byte[0])

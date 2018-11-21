@@ -32,7 +32,8 @@ impl<Ctx, Evt> Default for EventCoordinator<Ctx, Evt> {
                     error!("Force-quitting the application");
                     process::exit(1);
                 }
-            }).expect("Unable to set a termination handler");
+            })
+            .expect("Unable to set a termination handler");
         }
 
         EventCoordinator {
