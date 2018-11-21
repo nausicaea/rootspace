@@ -104,12 +104,14 @@ impl<E> SceneGraphTrait for Context<E> {
 
     fn get_node(&self, entity: &Entity, layer: Layer) -> Option<&Model> {
         match layer {
-            Layer::World => self.world_graph
+            Layer::World => self
+                .world_graph
                 .iter()
                 .filter(|&(k, _)| k == entity)
                 .map(|(_, v)| v)
                 .last(),
-            Layer::Ui => self.ui_graph
+            Layer::Ui => self
+                .ui_graph
                 .iter()
                 .filter(|&(k, _)| k == entity)
                 .map(|(_, v)| v)

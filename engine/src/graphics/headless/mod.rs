@@ -114,9 +114,9 @@ pub struct HeadlessBackend {
 impl Sealed for HeadlessBackend {}
 
 impl BackendTrait for HeadlessBackend {
-    type Loop = HeadlessEventsLoop;
     type Data = HeadlessRenderData;
     type Frame = HeadlessFrame;
+    type Loop = HeadlessEventsLoop;
     type Texture = HeadlessTexture;
 
     #[allow(unused_variables)]

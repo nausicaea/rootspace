@@ -1,4 +1,4 @@
-use components::{camera::Camera, renderable::Renderable, model::Model};
+use components::{camera::Camera, model::Model, renderable::Renderable};
 use context::{Layer, SceneGraphTrait};
 use ecs::{DatabaseTrait, LoopStage, SystemTrait};
 use event::EngineEventTrait;
@@ -151,7 +151,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::{Layer, Context};
+    use context::{Context, Layer};
     use graphics::headless::HeadlessBackend as HB;
     use mock::{MockEvt, MockEvtFlag};
     use std::f32;

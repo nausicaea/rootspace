@@ -3,8 +3,7 @@ use debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand};
 use ecs::{DatabaseTrait, EventManagerTrait, LoopStage, SystemTrait};
 use event::EngineEventTrait;
 use failure::Error;
-use std::collections::HashMap;
-use std::marker::PhantomData;
+use std::{collections::HashMap, marker::PhantomData};
 
 pub struct DebugShell<Ctx, Evt> {
     commands: HashMap<&'static str, Box<dyn CommandTrait<Ctx>>>,

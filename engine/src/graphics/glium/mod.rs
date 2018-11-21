@@ -206,9 +206,9 @@ pub struct GliumBackend {
 impl Sealed for GliumBackend {}
 
 impl BackendTrait for GliumBackend {
-    type Loop = GliumEventsLoop;
     type Data = GliumRenderData;
     type Frame = GliumFrame;
+    type Loop = GliumEventsLoop;
     type Texture = GliumTexture;
 
     fn new(

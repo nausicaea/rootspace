@@ -23,9 +23,11 @@ where
     fn get_stage_filter(&self) -> LoopStage {
         LoopStage::HANDLE_EVENTS
     }
+
     fn get_event_filter(&self) -> Evt::EventFlag {
         Default::default()
     }
+
     fn handle_event(&mut self, _ctx: &mut Ctx, event: &Evt) -> Result<bool, Error> {
         trace!("Received {:?}", event);
         Ok(true)

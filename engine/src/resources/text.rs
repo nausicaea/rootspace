@@ -348,11 +348,10 @@ mod tests {
         let vertices = m.vertices.len() as u16;
         let half_model_width = model_width / 2.0;
         assert!(m.indices.iter().all(|i| i < &vertices));
-        assert!(
-            m.vertices
-                .iter()
-                .all(|v| v.position()[0] >= -half_model_width && v.position()[0] <= half_model_width)
-        );
+        assert!(m
+            .vertices
+            .iter()
+            .all(|v| v.position()[0] >= -half_model_width && v.position()[0] <= half_model_width));
     }
 
     #[test]
