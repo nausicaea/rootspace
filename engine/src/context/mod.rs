@@ -37,6 +37,15 @@ pub struct Context<E> {
     database: Database,
 }
 
+impl<E> Context<E> {
+    pub fn clear(&mut self) {
+        self.events.clear();
+        self.world_graph.clear();
+        self.ui_graph.clear();
+        self.database.clear();
+    }
+}
+
 impl<E> fmt::Debug for Context<E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Context {{ ... }}")
@@ -128,6 +137,10 @@ impl<E> SceneGraphTrait for Context<E> {
 }
 
 impl<E> DatabaseTrait for Context<E> {
+    fn clear(&mut self) {
+        self.database.clear()
+    }
+
     fn create_entity(&mut self) -> Entity {
         self.database.create_entity()
     }

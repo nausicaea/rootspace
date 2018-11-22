@@ -37,7 +37,9 @@ impl Game {
         Ok(Game { orchestrator: o })
     }
 
-    pub fn run(&mut self, headless: bool, iterations: Option<usize>) -> Result<(), Error> {
+    pub fn load(&mut self, headless: bool) -> Result<(), Error> {
+        self.context_mut().clear();
+
         let camera = self.context_mut().create_entity();
         self.context_mut().add(camera, Camera::default())?;
 
@@ -78,6 +80,17 @@ impl Game {
             ),
         )?;
 
+        // Handle the recular systems.
+        let event_monitor = EventMonitor::default();
+        self.world_mut().add_system(event_monitor);
+
+        let debug_console = DebugConsole::new(io::stdin(), None, None);
+        self.world_mut().add_system(debug_console);
+
+        let debug_shell = DebugShell::default();
+        self.world_mut().add_system(debug_shell);
+
+        // Handle the systems that depend on a backend.
         if headless {
             let event_interface = HeadlessEventInterface::default();
             let renderer = HeadlessRenderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
@@ -180,22 +193,17 @@ impl Game {
             self.world_mut().add_system(renderer);
         }
 
-        let event_monitor = EventMonitor::default();
-        self.world_mut().add_system(event_monitor);
-
+        // The event coordinator should run last, because it can affect the shutdown of the engine.
         let event_coordinator = EventCoordinator::default();
         self.world_mut().add_system(event_coordinator);
 
-        let debug_console = DebugConsole::new(io::stdin(), None, None);
-        self.world_mut().add_system(debug_console);
-
-        let debug_shell = DebugShell::default();
-        self.world_mut().add_system(debug_shell);
-
-        self.orchestrator.world.context.dispatch_later(Event::new_startup());
-        self.orchestrator.run(iterations)?;
+        self.context_mut().dispatch_later(Event::new_startup());
 
         Ok(())
+    }
+
+    pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
+        self.orchestrator.run(iterations)
     }
 
     fn world_mut(&mut self) -> &mut DefaultWorld<Event> {

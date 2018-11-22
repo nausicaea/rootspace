@@ -69,7 +69,10 @@ fn main() -> Result<(), Error> {
     };
 
     Game::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
-        .and_then(|mut g| g.run(headless, iterations))
+        .and_then(|mut g| {
+            g.load(headless)?;
+            g.run(iterations)
+        })
         .map_err(|e| {
             error!(
                 "Error initializing or running the game: {} (probable cause: {})",
