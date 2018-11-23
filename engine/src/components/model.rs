@@ -1,5 +1,5 @@
 use affine_transform::AffineTransform;
-use nalgebra::{Affine3, Isometry3, Matrix4, Point3, UnitQuaternion, Vector3};
+use nalgebra::{Affine3, Isometry3, Point3, Matrix4, UnitQuaternion, Vector3};
 use std::{f32, ops::Mul};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -28,6 +28,21 @@ impl Model {
         }
     }
 
+    pub fn set_position(&mut self, value: Point3<f32>) {
+        self.decomposed.translation.vector = value.coords;
+        self.recalculate_matrix();
+    }
+
+    pub fn set_orientation(&mut self, value: UnitQuaternion<f32>) {
+        self.decomposed.rotation = value;
+        self.recalculate_matrix();
+    }
+
+    pub fn set_scale(&mut self, value: Vector3<f32>) {
+        self.decomposed.scale = value;
+        self.recalculate_matrix();
+    }
+
     pub fn matrix(&self) -> &Matrix4<f32> {
         self.model.matrix()
     }
@@ -36,26 +51,15 @@ impl Model {
         Point3::from(self.decomposed.translation.vector)
     }
 
-    pub fn set_position(&mut self, value: Point3<f32>) {
-        self.decomposed.translation.vector = value.coords;
-        self.model = self.decomposed.recompose();
-    }
-
     pub fn orientation(&self) -> &UnitQuaternion<f32> {
         &self.decomposed.rotation
-    }
-
-    pub fn set_orientation(&mut self, value: UnitQuaternion<f32>) {
-        self.decomposed.rotation = value;
-        self.model = self.decomposed.recompose();
     }
 
     pub fn scale(&self) -> &Vector3<f32> {
         &self.decomposed.scale
     }
 
-    pub fn set_scale(&mut self, value: Vector3<f32>) {
-        self.decomposed.scale = value;
+    fn recalculate_matrix(&mut self) {
         self.model = self.decomposed.recompose();
     }
 }

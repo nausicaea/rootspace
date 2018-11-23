@@ -11,15 +11,15 @@ mod event;
 
 use ecs::{DatabaseTrait, EventManagerTrait};
 use engine::{
-    components::{camera::Camera, info::Info, model::Model, renderable::Renderable},
-    context::{Context, Layer, SceneGraphTrait},
+    components::{camera::Camera, info::Info, model::Model, renderable::Renderable, ui_model::UiModel},
+    context::{Context, SceneGraphTrait},
     event::EngineEventTrait,
     systems::{DebugConsole, DebugShell, EventCoordinator, EventMonitor},
     DefaultOrchestrator, DefaultWorld, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
 };
 use event::Event;
 use failure::Error;
-use nalgebra::Vector3;
+use nalgebra::{Vector2, Vector3};
 use std::{f32, io, path::Path, time::Duration};
 
 pub struct Game {
@@ -44,7 +44,7 @@ impl Game {
         self.context_mut().add(camera, Camera::default())?;
 
         let ea = self.context_mut().create_entity();
-        self.context_mut().insert_node(ea, Layer::World);
+        self.context_mut().insert_world_node(ea);
         self.context_mut()
             .add(ea, Info::new("Entity A", "Rotated cube example"))?;
         self.context_mut().add(
@@ -57,7 +57,7 @@ impl Game {
         )?;
 
         let eb = self.context_mut().create_entity();
-        self.context_mut().insert_node(eb, Layer::World);
+        self.context_mut().insert_world_node(eb);
         self.context_mut().add(eb, Info::new("Entity B", "Text example"))?;
         self.context_mut().add(
             eb,
@@ -69,14 +69,14 @@ impl Game {
         )?;
 
         let ec = self.context_mut().create_entity();
-        self.context_mut().insert_node(ec, Layer::Ui);
+        self.context_mut().insert_ui_node(ec);
         self.context_mut().add(ec, Info::new("Entity C", "UI Text example"))?;
         self.context_mut().add(
             ec,
-            Model::new(
-                Vector3::new(0.0, 0.0, -1.0),
-                Vector3::new(0.0, 0.0, 0.0),
-                Vector3::new(800.0, 600.0, 1.0),
+            UiModel::new(
+                Vector2::new(0.0, 0.0),
+                Vector2::new(800.0, 600.0),
+                -1.0,
             ),
         )?;
 

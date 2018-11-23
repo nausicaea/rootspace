@@ -1,6 +1,6 @@
 use clap::{App, AppSettings, Arg, SubCommand};
 use components::{camera::Camera, info::Info};
-use context::{Layer, SceneGraphTrait};
+use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, EventManagerTrait};
 use event::EngineEventTrait;
 use failure::Error;
@@ -203,23 +203,23 @@ where
                 }
 
                 if list_matches.is_present("positions") {
-                    if let Some(m) = ctx.get_node(entity, Layer::World) {
+                    if let Some(m) = ctx.get_world_node(entity) {
                         let pos = m.position();
                         output.push_str(&format!(" world-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                    } else if let Some(m) = ctx.get_node(entity, Layer::Ui) {
+                    } else if let Some(m) = ctx.get_ui_node(entity) {
                         let pos = m.position();
-                        output.push_str(&format!(" ui-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+                        output.push_str(&format!(" ui-pos=[{}, {}]", pos.x, pos.y));
                     } else {
                         output.push_str(" (no position)");
                     }
                 }
 
                 if list_matches.is_present("ndc-positions") {
-                    if let Some(m) = ctx.get_node(entity, Layer::World) {
+                    if let Some(m) = ctx.get_world_node(entity) {
                         let pos = camera.world_point_to_ndc(&m.position());
                         output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                    } else if let Some(m) = ctx.get_node(entity, Layer::Ui) {
-                        let pos = camera.ui_point_to_ndc(&m.position());
+                    } else if let Some(m) = ctx.get_ui_node(entity) {
+                        let pos = camera.ui_point_to_ndc(&m.position(), m.depth());
                         output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
                     } else {
                         output.push_str(" (no ndc position)");

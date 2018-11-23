@@ -73,8 +73,8 @@ impl Camera {
         &self.ui_matrix
     }
 
-    pub fn position(&self) -> &Vector3<f32> {
-        &self.view.translation.vector
+    pub fn position(&self) -> Point3<f32> {
+        Point3::from(self.view.translation.vector)
     }
 
     pub fn dimensions(&self) -> (u32, u32) {
@@ -105,13 +105,14 @@ impl Camera {
     }
 
     /// Transforms a point in ui-space to normalized device coordinates.
-    pub fn ui_point_to_ndc(&self, point: &Point3<f32>) -> Point3<f32> {
-        self.orthographic.project_point(point)
+    pub fn ui_point_to_ndc(&self, point: &Point2<f32>, depth: f32) -> Point3<f32> {
+        self.orthographic.project_point(&Point3::new(point.x, point.y, depth))
     }
 
     /// Transforms a point in normalized device coordinates to ui-space.
-    pub fn ndc_point_to_ui(&self, point: &Point3<f32>) -> Point3<f32> {
-        self.orthographic.unproject_point(point)
+    pub fn ndc_point_to_ui(&self, point: &Point3<f32>) -> (Point2<f32>, f32) {
+        let p = self.orthographic.unproject_point(point);
+        (Point2::new(p.x, p.y), p.z)
     }
 
     /// Transforms a point in world-space to a screen point.
@@ -126,14 +127,17 @@ impl Camera {
         Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
     }
 
-    pub fn ui_point_to_screen(&self, point: &Point3<f32>) -> Point2<u32> {
-        self.ndc_point_to_screen(&self.ui_point_to_ndc(point))
+    pub fn ui_point_to_screen(&self, point: &Point2<f32>, depth: f32) -> Point2<u32> {
+        self.ndc_point_to_screen(&self.ui_point_to_ndc(point, depth))
     }
 
     /// Transforms a screen point to ui-space as a ray originating from the camera.
     pub fn screen_point_to_ui_ray(&self, point: &Point2<u32>) -> Option<Ray<f32>> {
         let origin = Point3::new(0.0, 0.0, 0.0);
-        let target = self.screen_point_to_ui(point).coords;
+        let target = {
+            let (t, d) = self.screen_point_to_ui(point);
+            Vector3::new(t.x, t.y, d)
+        };
         Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
     }
 
@@ -163,7 +167,7 @@ impl Camera {
     }
 
     /// Transforms a point in screen space to ui space.
-    fn screen_point_to_ui(&self, point: &Point2<u32>) -> Point3<f32> {
+    fn screen_point_to_ui(&self, point: &Point2<u32>) -> (Point2<f32>, f32) {
         self.ndc_point_to_ui(&self.screen_point_to_ndc(point))
     }
 
@@ -251,8 +255,8 @@ mod tests {
         let q = c.orthographic.project_point(&p);
         let r = c.orthographic.unproject_point(&q);
 
-        assert_eq!(c.ui_point_to_ndc(&p), q);
-        assert_eq!(c.ndc_point_to_ui(&q), r);
+        assert_eq!(c.ui_point_to_ndc(&Point2::new(p.x, p.y), p.z), q);
+        assert_eq!(c.ndc_point_to_ui(&q), (Point2::new(r.x, r.y), r.z));
     }
 
     #[test]
@@ -288,7 +292,7 @@ mod tests {
         let c = Camera::default();
         let p = Point3::new(1.0, 0.0, -5.0);
         let q = {
-            let tmp = c.ui_point_to_ndc(&p);
+            let tmp = c.ui_point_to_ndc(&Point2::new(p.x, p.y), p.z);
             let w = c.dimensions.0 as f32;
             let h = c.dimensions.1 as f32;
             Point2::new(
@@ -301,13 +305,16 @@ mod tests {
             let h = c.dimensions.1 as f32;
             let tmp = Point3::new((2.0 * q.x as f32) / w - 1.0, 1.0 - (2.0 * q.y as f32) / h, 1.0);
             let origin = Point3::new(0.0, 0.0, 0.0);
-            let target = c.ndc_point_to_ui(&tmp).coords;
+            let target = {
+                let (t, d) = c.ndc_point_to_ui(&tmp);
+                Vector3::new(t.x, t.y, d)
+            };
 
             Unit::try_new(target, f32::EPSILON)
                 .map(|direction| Ray { origin, direction })
         };
 
-        assert_eq!(c.ui_point_to_screen(&p), q);
+        assert_eq!(c.ui_point_to_screen(&Point2::new(p.x, p.y), p.z), q);
         assert_eq!(c.screen_point_to_ui_ray(&q), r);
     }
 

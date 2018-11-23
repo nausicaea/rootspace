@@ -1,5 +1,5 @@
-use components::{camera::Camera, model::Model, renderable::Renderable};
-use context::{Layer, SceneGraphTrait};
+use components::{camera::Camera, model::Model, renderable::Renderable, ui_model::UiModel};
+use context::SceneGraphTrait;
 use ecs::{DatabaseTrait, LoopStage, SystemTrait};
 use event::EngineEventTrait;
 use failure::Error;
@@ -107,8 +107,7 @@ where
         }
 
         // Update the scene graphs.
-        ctx.update_graph(Layer::World)?;
-        ctx.update_graph(Layer::Ui)?;
+        ctx.update_graph()?;
 
         // Obtain a reference to the camera.
         let cam = ctx.find::<Camera>().map_err(|e| format_err!("{} (Camera)", e))?;
@@ -118,7 +117,7 @@ where
         target.initialize(self.clear_color, 1.0);
 
         // Render the world scene.
-        for (entity, model) in ctx.get_nodes(Layer::World) {
+        for (entity, model) in ctx.get_world_nodes() {
             if ctx.has::<Model>(entity) {
                 if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
                     #[cfg(any(test, feature = "diagnostics"))]
@@ -131,8 +130,8 @@ where
         }
 
         // Render the ui scene.
-        for (entity, model) in ctx.get_nodes(Layer::Ui) {
-            if ctx.has::<Model>(entity) {
+        for (entity, model) in ctx.get_ui_nodes() {
+            if ctx.has::<UiModel>(entity) {
                 if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
                     #[cfg(any(test, feature = "diagnostics"))]
                     {
@@ -151,7 +150,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::{Context, Layer};
+    use context::Context;
     use graphics::headless::HeadlessBackend as HB;
     use mock::{MockEvt, MockEvtFlag};
     use std::f32;
@@ -193,18 +192,18 @@ mod tests {
             Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0).unwrap();
 
         let a = ctx.create_entity();
-        ctx.insert_node(a, Layer::World);
+        ctx.insert_world_node(a);
         ctx.add(a, Model::default()).unwrap();
         ctx.add(a, Renderable::default()).unwrap();
         let b = ctx.create_entity();
-        ctx.insert_node(b, Layer::World);
+        ctx.insert_world_node(b);
         ctx.add(b, Model::default()).unwrap();
         let c = ctx.create_entity();
-        ctx.insert_node(c, Layer::World);
+        ctx.insert_world_node(c);
         ctx.add(c, Renderable::default()).unwrap();
         let d = ctx.create_entity();
-        ctx.insert_node(d, Layer::World);
-        ctx.add(c, Camera::default()).unwrap();
+        ctx.insert_world_node(d);
+        ctx.add(d, Camera::default()).unwrap();
 
         assert_ok!(r.render(&mut ctx, &Default::default(), &Default::default()));
         assert_eq!(r.frames, 1);

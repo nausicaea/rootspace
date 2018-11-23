@@ -1,4 +1,5 @@
 use components::model::Model;
+use components::ui_model::UiModel;
 use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventManagerTrait, EventTrait};
 use failure::Error;
 use hierarchy::Hierarchy;
@@ -8,32 +9,20 @@ use std::{
     fmt,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Layer {
-    World,
-    Ui,
-}
-
-impl fmt::Display for Layer {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Layer::World => write!(f, "World"),
-            Layer::Ui => write!(f, "Ui"),
-        }
-    }
-}
-
 pub trait SceneGraphTrait {
-    fn update_graph(&mut self, layer: Layer) -> Result<(), Error>;
-    fn insert_node(&mut self, entity: Entity, layer: Layer);
-    fn get_node(&self, entity: &Entity, layer: Layer) -> Option<&Model>;
-    fn get_nodes(&self, layer: Layer) -> Vec<(&Entity, &Model)>;
+    fn update_graph(&mut self) -> Result<(), Error>;
+    fn insert_world_node(&mut self, entity: Entity);
+    fn insert_ui_node(&mut self, entity: Entity);
+    fn get_world_node(&self, entity: &Entity) -> Option<&Model>;
+    fn get_ui_node(&self, entity: &Entity) -> Option<&UiModel>;
+    fn get_world_nodes(&self) -> Vec<(&Entity, &Model)>;
+    fn get_ui_nodes(&self) -> Vec<(&Entity, &UiModel)>;
 }
 
 pub struct Context<E> {
     events: VecDeque<E>,
     world_graph: Hierarchy<Entity, Model>,
-    ui_graph: Hierarchy<Entity, Model>,
+    ui_graph: Hierarchy<Entity, UiModel>,
     database: Database,
 }
 
@@ -89,50 +78,50 @@ where
 }
 
 impl<E> SceneGraphTrait for Context<E> {
-    fn update_graph(&mut self, layer: Layer) -> Result<(), Error> {
+    fn update_graph(&mut self) -> Result<(), Error> {
         let db = &self.database;
-        match layer {
-            Layer::World => self.world_graph.update(&|entity, _, parent_model| {
-                let current_model: &Model = db.get(entity).ok()?;
-                Some(parent_model * current_model)
-            })?,
-            Layer::Ui => self.ui_graph.update(&|entity, _, parent_model| {
-                let current_model: &Model = db.get(entity).ok()?;
-                Some(parent_model * current_model)
-            })?,
-        }
+        self.world_graph.update(&|entity, _, parent_model| {
+            let current_model: &Model = db.get(entity).ok()?;
+            Some(parent_model * current_model)
+        })?;
+        self.ui_graph.update(&|entity, _, parent_model| {
+            let current_model: &UiModel = db.get(entity).ok()?;
+            Some(parent_model * current_model)
+        })?;
+
         Ok(())
     }
 
-    fn insert_node(&mut self, entity: Entity, layer: Layer) {
-        match layer {
-            Layer::World => self.world_graph.insert(entity, Default::default()),
-            Layer::Ui => self.ui_graph.insert(entity, Default::default()),
-        }
+    fn insert_world_node(&mut self, entity: Entity) {
+        self.world_graph.insert(entity, Default::default())
     }
 
-    fn get_node(&self, entity: &Entity, layer: Layer) -> Option<&Model> {
-        match layer {
-            Layer::World => self
-                .world_graph
-                .iter()
-                .filter(|&(k, _)| k == entity)
-                .map(|(_, v)| v)
-                .last(),
-            Layer::Ui => self
-                .ui_graph
-                .iter()
-                .filter(|&(k, _)| k == entity)
-                .map(|(_, v)| v)
-                .last(),
-        }
+    fn insert_ui_node(&mut self, entity: Entity) {
+        self.ui_graph.insert(entity, Default::default())
     }
 
-    fn get_nodes(&self, layer: Layer) -> Vec<(&Entity, &Model)> {
-        match layer {
-            Layer::World => self.world_graph.iter().collect(),
-            Layer::Ui => self.ui_graph.iter().collect(),
-        }
+    fn get_world_node(&self, entity: &Entity) -> Option<&Model> {
+        self.world_graph
+            .iter()
+            .filter(|&(k, _)| k == entity)
+            .map(|(_, v)| v)
+            .last()
+    }
+
+    fn get_ui_node(&self, entity: &Entity) -> Option<&UiModel> {
+        self.ui_graph
+            .iter()
+            .filter(|&(k, _)| k == entity)
+            .map(|(_, v)| v)
+            .last()
+    }
+
+    fn get_world_nodes(&self) -> Vec<(&Entity, &Model)> {
+        self.world_graph.iter().collect()
+    }
+
+    fn get_ui_nodes(&self) -> Vec<(&Entity, &UiModel)> {
+        self.ui_graph.iter().collect()
     }
 }
 
