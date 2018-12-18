@@ -24,11 +24,11 @@ rusttype = {version = "^0.7.2", features = ["gpu_cache"]}
 unicode-normalization = "^0.1.5"
 affine-transform = {git = "https://gitlab.com/nausicaea/affine-transform.git"}
 hierarchy = {git = "https://gitlab.com/nausicaea/hierarchy.git"}
-ecs = {git = "https://gitlab.com/nausicaea/ecs.git"}
+ecs = {path = "../ecs"}
 ply = {git = "https://gitlab.com/nausicaea/ply.git"}
 
 [dev-dependencies]
 approx = "^0.3.0"
 tempfile = "^3.0.1"
 quickcheck = {version = "^0.7.1", default-features = false}
-ecs = {git = "https://gitlab.com/nausicaea/ecs.git", features = ["mock"]}
+ecs = {path = "../ecs", features = ["mock"]}

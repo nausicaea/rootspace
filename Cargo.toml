@@ -14,5 +14,6 @@ clap = {version = "^2.0.0", default-features = false}
 log = "^0.4.1"
 failure = "^0.1.1"
 fern = "^0.5.5"
+ecs = {path = "ecs"}
 engine = {path = "engine"}
 game = {path = "game"}

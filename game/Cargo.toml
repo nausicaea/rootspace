@@ -13,5 +13,5 @@ log = "^0.4.1"
 failure = "^0.1.1"
 glium = "^0.22.0"
 nalgebra = "^0.16.0"
-ecs = {git = "https://gitlab.com/nausicaea/ecs.git"}
+ecs = {path = "../ecs"}
 engine = {path = "../engine"}
