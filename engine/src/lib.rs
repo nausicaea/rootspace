@@ -2,9 +2,6 @@ extern crate alga;
 #[cfg(test)]
 #[macro_use]
 extern crate approx;
-#[cfg(test)]
-#[macro_use]
-extern crate assertions;
 extern crate affine_transform;
 #[cfg(any(test, feature = "mock"))]
 #[macro_use]

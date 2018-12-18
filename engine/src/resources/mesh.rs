@@ -99,6 +99,6 @@ mod tests {
         let p = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply");
 
         let r: Result<Mesh, Error> = Mesh::from_path(&p);
-        assert_ok!(r);
+        assert!(r.is_ok());
     }
 }

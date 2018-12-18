@@ -94,15 +94,15 @@ mod tests {
         let base_dir = tempdir().unwrap();
 
         let r = tf.path().ensure_extant_file();
-        assert_ok!(r);
+        assert!(r.is_ok());
 
         let bad_file = base_dir.path().join("blabla.ext");
         let r = bad_file.ensure_extant_file();
-        assert_err!(r);
+        assert!(r.is_err());
 
         let bad_dir = base_dir.path();
         let r = bad_dir.ensure_extant_file();
-        assert_err!(r);
+        assert!(r.is_err());
     }
 
     #[test]
@@ -111,15 +111,15 @@ mod tests {
         let base_dir = tempdir().unwrap();
 
         let r = tf.path().ensure_extant_directory();
-        assert_err!(r);
+        assert!(r.is_err());
 
         let bad_dir = base_dir.path().join("blabla");
         let r = bad_dir.ensure_extant_directory();
-        assert_err!(r);
+        assert!(r.is_err());
 
         let good_dir = base_dir.path();
         let r = good_dir.ensure_extant_directory();
-        assert_ok!(r);
+        assert!(r.is_ok());
     }
 
     #[test]
@@ -129,7 +129,7 @@ mod tests {
         write!(tf, "Hello, World!").unwrap();
 
         let r = tf.path().read_to_string();
-        assert_ok!(r);
+        assert!(r.is_ok());
         assert_eq!(r.unwrap(), "Hello, World!");
     }
 
@@ -140,7 +140,7 @@ mod tests {
         tf.write(&[0x00, 0xff, 0x14, 0xf6]).unwrap();
 
         let r = tf.path().read_to_bytes();
-        assert_ok!(r);
+        assert!(r.is_ok());
         assert_eq!(r.unwrap(), vec![0x00, 0xff, 0x14, 0xf6]);
     }
 }

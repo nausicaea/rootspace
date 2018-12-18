@@ -109,15 +109,15 @@ mod tests {
         let mut c: EventCoordinator<Context<MockEvt>, MockEvt> = EventCoordinator::default();
 
         let r = c.handle_event(&mut Default::default(), &MockEvt::new_startup());
-        assert_ok!(r);
+        assert!(r.is_ok());
         assert!(r.unwrap());
 
         let r = c.handle_event(&mut Default::default(), &MockEvt::new_shutdown());
-        assert_ok!(r);
+        assert!(r.is_ok());
         assert!(r.unwrap());
 
         let r = c.handle_event(&mut Default::default(), &MockEvt::new_hard_shutdown());
-        assert_ok!(r);
+        assert!(r.is_ok());
         assert!(!r.unwrap());
     }
 }

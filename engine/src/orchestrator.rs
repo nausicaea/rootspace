@@ -103,14 +103,14 @@ mod tests {
     #[test]
     fn create_orchestrator() {
         let r = Orchestrator::<MockWorld>::new(&env::temp_dir(), Default::default(), Default::default());
-        assert_ok!(r);
+        assert!(r.is_ok());
 
         let r = Orchestrator::<MockWorld>::new("blablablabla", Default::default(), Default::default());
-        assert_err!(r);
+        assert!(r.is_err());
 
         let tf = NamedTempFile::new().unwrap();
         let r = Orchestrator::<MockWorld>::new(tf.path(), Default::default(), Default::default());
-        assert_err!(r);
+        assert!(r.is_err());
     }
 
     #[test]
@@ -123,7 +123,7 @@ mod tests {
         let o = Orchestrator::<MockWorld>::new(&base, Default::default(), Default::default()).unwrap();
 
         let r = o.file(dir_name, &tf.path().file_name().unwrap().to_string_lossy());
-        assert_ok!(r);
+        assert!(r.is_ok());
 
         let r = r.unwrap();
         assert_eq!(
@@ -135,13 +135,13 @@ mod tests {
         );
 
         let r = o.file("blabla", &tf.path().file_name().unwrap().to_string_lossy());
-        assert_err!(r);
+        assert!(r.is_err());
 
         let r = o.file(dir_name, "blabla.a");
-        assert_err!(r);
+        assert!(r.is_err());
 
         let r = o.file(dir_name, "..");
-        assert_err!(r);
+        assert!(r.is_err());
     }
 
     #[test]
@@ -214,7 +214,7 @@ mod tests {
         o.world.render_duration = Some(Duration::from_millis(20));
 
         let r = o.run(None);
-        assert_err!(r);
+        assert!(r.is_err());
     }
 
     quickcheck! {
@@ -239,7 +239,7 @@ mod tests {
         o.world.update_error_out = true;
 
         let r = o.run(None);
-        assert_err!(r);
+        assert!(r.is_err());
     }
 
     quickcheck! {
@@ -264,7 +264,7 @@ mod tests {
         o.world.render_error_out = true;
 
         let r = o.run(None);
-        assert_err!(r);
+        assert!(r.is_err());
     }
 
     quickcheck! {
@@ -289,7 +289,7 @@ mod tests {
         o.world.handle_events_error_out = true;
 
         let r = o.run(None);
-        assert_err!(r);
+        assert!(r.is_err());
     }
 
     #[test]

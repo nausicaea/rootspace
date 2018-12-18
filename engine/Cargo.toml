@@ -28,7 +28,6 @@ ply = {git = "https://gitlab.com/nausicaea/ply.git"}
 
 [dev-dependencies]
 approx = "^0.3.0"
-assertions = {git = "https://gitlab.com/nausicaea/assertions.git"}
 tempfile = "^3.0.1"
 quickcheck = {version = "^0.7.1", default-features = false}
 ecs = {git = "https://gitlab.com/nausicaea/ecs.git", features = ["mock"]}

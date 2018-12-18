@@ -52,7 +52,7 @@ mod tests {
     fn from_path() {
         let p = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/tv-test-image.png");
         let r: Result<Image, Error> = Image::from_path(&p);
-        assert_ok!(r);
+        assert!(r.is_ok());
     }
 
     #[test]

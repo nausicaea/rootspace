@@ -73,7 +73,7 @@ mod tests {
         let mut e: EventInterface<Context<MockEvt>, MockEvt, HeadlessEventsLoop> = EventInterface::default();
         let mut c = Context::default();
 
-        assert_ok!(e.update(&mut c, &Default::default(), &Default::default()));
+        assert!(e.update(&mut c, &Default::default(), &Default::default()).is_ok());
         // assert_eq!(c.dispatch_later_calls, 0);
         // assert!(c.events.is_empty());
     }

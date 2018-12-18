@@ -166,13 +166,13 @@ mod tests {
 
     #[test]
     fn backend() {
-        assert_ok!(HeadlessBackend::new(
+        assert!(HeadlessBackend::new(
             &HeadlessEventsLoop::default(),
             "Title",
             (800, 600),
             false,
             0
-        ));
+        ).is_ok());
     }
 
     #[test]
@@ -188,8 +188,8 @@ mod tests {
 
         let mut f: HeadlessFrame = b.create_frame();
         f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
-        assert_ok!(f.render(&MockLocation::default(), &HeadlessRenderData::default()));
+        assert!(f.render(&MockLocation::default(), &HeadlessRenderData::default()).is_ok());
         let r = f.finalize();
-        assert_ok!(r);
+        assert!(r.is_ok());
     }
 }

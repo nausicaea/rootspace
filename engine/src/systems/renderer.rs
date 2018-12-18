@@ -157,13 +157,13 @@ mod tests {
 
     #[test]
     fn new_headless() {
-        assert_ok!(Renderer::<Context<MockEvt>, MockEvt, HB>::new(
+        assert!(Renderer::<Context<MockEvt>, MockEvt, HB>::new(
             &Default::default(),
             "Title",
             (800, 600),
             false,
             0
-        ));
+        ).is_ok());
     }
 
     #[test]
@@ -205,7 +205,7 @@ mod tests {
         ctx.insert_world_node(d);
         ctx.add(d, Camera::default()).unwrap();
 
-        assert_ok!(r.render(&mut ctx, &Default::default(), &Default::default()));
+        assert!(r.render(&mut ctx, &Default::default(), &Default::default()).is_ok());
         assert_eq!(r.frames, 1);
         assert_eq!(r.draw_calls, 1);
         assert_ulps_eq!(r.average_draw_calls(), 1.0, epsilon = f32::EPSILON);

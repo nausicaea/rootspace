@@ -325,7 +325,7 @@ mod tests {
             .width(100)
             .layout("Hello, World!");
 
-        assert_ok!(r);
+        assert!(r.is_ok());
     }
 
     #[test]
@@ -402,6 +402,6 @@ mod tests {
             .layout("Hello, World!")
             .unwrap();
 
-        assert_ok!(text.text("Hello, you!"));
+        assert!(text.text("Hello, you!").is_ok());
     }
 }
