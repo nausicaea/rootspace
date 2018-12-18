@@ -1,5 +1,5 @@
 use ecs::EventTrait;
-use graphics::{glium::GliumEvent, headless::HeadlessEvent};
+use crate::graphics::{glium::GliumEvent, headless::HeadlessEvent};
 
 pub trait EngineEventTrait: EventTrait + MaybeFrom<GliumEvent> + MaybeFrom<HeadlessEvent> + 'static {
     fn startup() -> Self::EventFlag;

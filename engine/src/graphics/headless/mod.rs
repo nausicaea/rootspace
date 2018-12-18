@@ -1,9 +1,9 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use ecs::EventTrait;
-use event::MaybeFrom;
+use crate::event::MaybeFrom;
 use failure::Error;
-use geometry::rect::Rect;
-use resources::{Image, Mesh};
+use crate::geometry::rect::Rect;
+use crate::resources::{Image, Mesh};
 use std::borrow::{Borrow, Cow};
 
 #[derive(Debug, Clone, Default, Copy)]

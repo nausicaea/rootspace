@@ -9,11 +9,11 @@ pub use self::{
     debug_console::DebugConsole, debug_shell::DebugShell, event_coordinator::EventCoordinator,
     event_interface::EventInterface, event_monitor::EventMonitor, renderer::Renderer,
 };
-use context::SceneGraphTrait;
+use crate::context::SceneGraphTrait;
 use ecs::{DatabaseTrait, EventManagerTrait, EventTrait, LoopStage, SystemTrait};
-use event::EngineEventTrait;
+use crate::event::EngineEventTrait;
 use failure::Error;
-use graphics::{
+use crate::graphics::{
     glium::{GliumBackend, GliumEventsLoop},
     headless::{HeadlessBackend, HeadlessEventsLoop},
 };

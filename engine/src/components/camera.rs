@@ -1,5 +1,5 @@
 use alga::linear::{ProjectiveTransformation, Transformation};
-use geometry::ray::Ray;
+use crate::geometry::ray::Ray;
 use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
 use std::f32;
 

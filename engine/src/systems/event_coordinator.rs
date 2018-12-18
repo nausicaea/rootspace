@@ -1,7 +1,7 @@
 #[cfg(not(test))]
 use ctrlc;
 use ecs::{EventManagerTrait, LoopStage, SystemTrait};
-use event::EngineEventTrait;
+use crate::event::EngineEventTrait;
 use failure::Error;
 #[cfg(not(test))]
 use std::process;
@@ -82,8 +82,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::Context;
-    use mock::{MockEvt, MockEvtFlag};
+    use crate::context::Context;
+    use crate::mock::{MockEvt, MockEvtFlag};
 
     #[test]
     fn new() {

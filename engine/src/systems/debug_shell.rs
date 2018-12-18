@@ -1,7 +1,7 @@
-use context::SceneGraphTrait;
-use debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand};
+use crate::context::SceneGraphTrait;
+use crate::debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand};
 use ecs::{DatabaseTrait, EventManagerTrait, LoopStage, SystemTrait};
-use event::EngineEventTrait;
+use crate::event::EngineEventTrait;
 use failure::Error;
 use std::{collections::HashMap, marker::PhantomData};
 

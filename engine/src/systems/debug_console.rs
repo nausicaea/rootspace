@@ -4,7 +4,7 @@
 #![cfg_attr(test, allow(dead_code))]
 
 use ecs::{EventManagerTrait, LoopStage, SystemTrait};
-use event::EngineEventTrait;
+use crate::event::EngineEventTrait;
 use failure::Error;
 use std::{
     io::{self, Read},
@@ -14,7 +14,7 @@ use std::{
     thread::spawn,
     time::Duration,
 };
-use text_manipulation::split_arguments;
+use crate::text_manipulation::split_arguments;
 
 pub struct DebugConsole<Ctx, Evt> {
     escape_char: char,
@@ -119,9 +119,9 @@ enum DebugConsoleError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use components::model::Model;
-    use context::Context;
-    use mock::MockEvt;
+    use crate::components::model::Model;
+    use crate::context::Context;
+    use crate::mock::MockEvt;
 
     #[test]
     fn new() {

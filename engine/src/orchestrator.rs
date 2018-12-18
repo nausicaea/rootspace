@@ -1,6 +1,6 @@
 use ecs::WorldTrait;
 use failure::Error;
-use file_manipulation::{FileError, VerifyPath};
+use crate::file_manipulation::{FileError, VerifyPath};
 use std::{
     cmp,
     path::{Path, PathBuf},

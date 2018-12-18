@@ -37,9 +37,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::Context;
-    use event::EngineEventTrait;
-    use mock::{MockEvt, MockEvtFlag};
+    use crate::context::Context;
+    use crate::event::EngineEventTrait;
+    use crate::mock::{MockEvt, MockEvtFlag};
 
     #[test]
     fn default() {

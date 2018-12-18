@@ -6,10 +6,10 @@ mod private {
 }
 
 use ecs::EventTrait;
-use event::MaybeInto;
+use crate::event::MaybeInto;
 use failure::Error;
-use geometry::rect::Rect;
-use resources::Image;
+use crate::geometry::rect::Rect;
+use crate::resources::Image;
 use std::borrow::{Borrow, Cow};
 
 pub trait BackendTrait: Sized + private::Sealed {

@@ -1,9 +1,9 @@
-use components::{camera::Camera, model::Model, renderable::Renderable, ui_model::UiModel};
-use context::SceneGraphTrait;
+use crate::components::{camera::Camera, model::Model, renderable::Renderable, ui_model::UiModel};
+use crate::context::SceneGraphTrait;
 use ecs::{DatabaseTrait, LoopStage, SystemTrait};
-use event::EngineEventTrait;
+use crate::event::EngineEventTrait;
 use failure::Error;
-use graphics::{BackendTrait, FrameTrait};
+use crate::graphics::{BackendTrait, FrameTrait};
 use std::{marker::PhantomData, time::Duration};
 
 #[derive(Debug)]
@@ -150,9 +150,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::Context;
-    use graphics::headless::HeadlessBackend as HB;
-    use mock::{MockEvt, MockEvtFlag};
+    use crate::context::Context;
+    use crate::graphics::headless::HeadlessBackend as HB;
+    use crate::mock::{MockEvt, MockEvtFlag};
     use std::f32;
 
     #[test]

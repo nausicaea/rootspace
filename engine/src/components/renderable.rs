@@ -1,16 +1,16 @@
 use failure::Error;
-use file_manipulation::ReadPath;
+use crate::file_manipulation::ReadPath;
 use glium::{
     index::{IndexBuffer, PrimitiveType},
     program::Program,
     vertex::VertexBuffer,
 };
-use graphics::{
+use crate::graphics::{
     glium::{GliumBackend, GliumRenderData, GliumTexture},
     headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture},
     BackendTrait, DataTrait, TextureTrait,
 };
-use resources::{Image, Mesh, Text};
+use crate::resources::{Image, Mesh, Text};
 use std::{
     borrow::Borrow,
     fmt,
@@ -300,7 +300,7 @@ pub enum RenderableError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use graphics::headless::HeadlessEventsLoop;
+    use crate::graphics::headless::HeadlessEventsLoop;
 
     #[test]
     fn headless_builder_mesh() {

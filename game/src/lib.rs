@@ -17,7 +17,7 @@ use engine::{
     systems::{DebugConsole, DebugShell, EventCoordinator, EventMonitor},
     DefaultOrchestrator, DefaultWorld, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
 };
-use event::Event;
+use crate::event::Event;
 use failure::Error;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, io, path::Path, time::Duration};

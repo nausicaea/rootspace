@@ -1,8 +1,8 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use ecs::EventTrait;
-use event::MaybeFrom;
+use crate::event::MaybeFrom;
 use failure::Error;
-use geometry::rect::Rect;
+use crate::geometry::rect::Rect;
 use glium::{
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder},
@@ -11,7 +11,7 @@ use glium::{
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
-use resources::{Image, Vertex};
+use crate::resources::{Image, Vertex};
 use std::{
     borrow::{Borrow, Cow},
     fmt,

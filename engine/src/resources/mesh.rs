@@ -1,6 +1,6 @@
 use super::vertex::Vertex;
 use failure::Error;
-use file_manipulation::VerifyPath;
+use crate::file_manipulation::VerifyPath;
 use ply::{self, CoerceTo};
 use std::path::Path;
 

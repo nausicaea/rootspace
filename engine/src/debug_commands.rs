@@ -1,8 +1,8 @@
 use clap::{App, AppSettings, Arg, SubCommand};
-use components::{camera::Camera, info::Info};
-use context::SceneGraphTrait;
+use crate::components::{camera::Camera, info::Info};
+use crate::context::SceneGraphTrait;
 use ecs::{DatabaseTrait, EventManagerTrait};
-use event::EngineEventTrait;
+use crate::event::EngineEventTrait;
 use failure::Error;
 use std::marker::PhantomData;
 

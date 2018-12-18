@@ -1,7 +1,7 @@
 use failure::Error;
-use file_manipulation::ReadPath;
-use graphics::{BackendTrait, TextureTrait};
-use resources::{Mesh, Vertex};
+use crate::file_manipulation::ReadPath;
+use crate::graphics::{BackendTrait, TextureTrait};
+use crate::resources::{Mesh, Vertex};
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use std::{
     borrow::{Borrow, Cow},
@@ -307,7 +307,7 @@ fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dim
 #[cfg(test)]
 mod tests {
     use super::*;
-    use graphics::{
+    use crate::graphics::{
         headless::{HeadlessBackend, HeadlessEventsLoop, HeadlessTexture},
         BackendTrait, TextureTrait,
     };

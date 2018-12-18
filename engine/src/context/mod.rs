@@ -1,5 +1,5 @@
-use components::model::Model;
-use components::ui_model::UiModel;
+use crate::components::model::Model;
+use crate::components::ui_model::UiModel;
 use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventManagerTrait, EventTrait};
 use failure::Error;
 use hierarchy::Hierarchy;
