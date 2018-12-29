@@ -3,10 +3,11 @@
 //! relationship with Entities, and finally, Systems encode (mostly) behaviour. The World manages
 //! all three type categories and provides access to each.
 
-#[macro_use]
-extern crate failure;
+#[cfg(test)]
 #[macro_use]
 extern crate bitflags;
+#[macro_use]
+extern crate failure;
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
@@ -26,6 +27,5 @@ pub use crate::{
     entity::Entity,
     event::{EventManagerTrait, EventTrait},
     loop_stage::LoopStage,
-    system::SystemTrait,
     world::{World, WorldTrait},
 };

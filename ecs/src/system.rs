@@ -1,27 +1,19 @@
 use crate::event::EventTrait;
-use failure::Error;
-use crate::loop_stage::LoopStage;
 use std::time::Duration;
 
-/// A system encodes behaviour in the concept of an Entity-Component-System architecture.
-pub trait SystemTrait<C, E>
+/// Encodes a system or behaviour.
+pub trait System<C> {
+    /// Run the behaviour.
+    fn run(&mut self, ctx: &mut C, t: &Duration, dt: &Duration);
+}
+
+/// Encodes a system or behaviour that processes the supplied event.
+pub trait EventHandlerSystem<C, E>
 where
     E: EventTrait,
 {
-    fn get_stage_filter(&self) -> LoopStage;
-    fn get_event_filter(&self) -> E::EventFlag {
-        unimplemented!("Did you forget to implement the get_event_filter method?");
-    }
-    fn fixed_update(&mut self, _ctx: &mut C, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
-        unimplemented!("Did you forget to implement the fixed_update method?")
-    }
-    fn update(&mut self, _ctx: &mut C, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
-        unimplemented!("Did you forget to implement the update method?")
-    }
-    fn render(&mut self, _ctx: &mut C, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
-        unimplemented!("Did you forget to implement the render method?")
-    }
-    fn handle_event(&mut self, _ctx: &mut C, _e: &E) -> Result<bool, Error> {
-        unimplemented!("Did you forget to implement the handle_event method?")
-    }
+    /// Returns the system's event filter, which selects the events that the system will expect.
+    fn get_event_filter(&self) -> E::EventFlag;
+    /// Run the behaviour.
+    fn run(&mut self, ctx: &mut C, e: &E) -> bool;
 }

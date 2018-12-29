@@ -6,6 +6,6 @@ pub mod world;
 pub use self::{
     context::MockCtx,
     event::{MockEvt, MockEvtFlag, MockEvtMgr},
-    system::{MockSysA, MockSysB},
+    system::{MockFixedUpdateSys, MockUpdateSys, MockRenderSys, MockEventHandlerSys},
     world::MockWorld,
 };
