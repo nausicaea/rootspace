@@ -71,11 +71,12 @@ fn main() -> Result<(), Error> {
     Game::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
         .and_then(|mut g| {
             g.load(headless)?;
-            g.run(iterations)
+            g.run(iterations);
+            Ok(())
         })
         .map_err(|e| {
             error!(
-                "Error initializing or running the game: {} (probable cause: {})",
+                "Error initializing the game: {} (probable cause: {})",
                 e,
                 e.find_root_cause()
             );

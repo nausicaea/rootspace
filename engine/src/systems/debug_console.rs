@@ -3,9 +3,8 @@
 #![cfg_attr(test, allow(unused_mut))]
 #![cfg_attr(test, allow(dead_code))]
 
-use ecs::{EventManagerTrait, LoopStage, SystemTrait};
+use ecs::{EventManagerTrait, System};
 use crate::event::EngineEventTrait;
-use failure::Error;
 use std::{
     io::{self, Read},
     marker::PhantomData,
@@ -78,33 +77,21 @@ impl<Ctx, Evt> DebugConsole<Ctx, Evt> {
     }
 }
 
-impl<Ctx, Evt> SystemTrait<Ctx, Evt> for DebugConsole<Ctx, Evt>
+impl<Ctx, Evt> Default for DebugConsole<Ctx, Evt> {
+    fn default() -> Self {
+        DebugConsole::new(io::stdin(), Some('\\'), Some('"'))
+    }
+}
+
+impl<Ctx, Evt> System<Ctx> for DebugConsole<Ctx, Evt>
 where
     Ctx: EventManagerTrait<Evt>,
     Evt: EngineEventTrait,
 {
-    fn get_stage_filter(&self) -> LoopStage {
-        LoopStage::UPDATE | LoopStage::HANDLE_EVENTS
-    }
-
-    fn get_event_filter(&self) -> Evt::EventFlag {
-        Evt::startup()
-    }
-
-    fn handle_event(&mut self, _ctx: &mut Ctx, event: &Evt) -> Result<bool, Error> {
-        if event.matches_filter(Evt::startup()) {
-            println!("Debug console is ready");
-        }
-
-        Ok(true)
-    }
-
-    fn update(&mut self, ctx: &mut Ctx, _: &Duration, _: &Duration) -> Result<(), Error> {
+    fn run(&mut self, ctx: &mut Ctx, _: &Duration, _: &Duration) {
         self.try_read_line()
             .map(|l| split_arguments(l, self.escape_char, self.quote_char))
             .map(|a| ctx.dispatch_later(Evt::new_command(a)));
-
-        Ok(())
     }
 }
 
@@ -114,24 +101,4 @@ enum DebugConsoleError {
     IoError(#[cause] io::Error),
     #[fail(display = "{}", _0)]
     Utf8Error(#[cause] string::FromUtf8Error),
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::components::model::Model;
-    use crate::context::Context;
-    use crate::mock::MockEvt;
-
-    #[test]
-    fn new() {
-        let _: DebugConsole<Context<MockEvt>, MockEvt> = DebugConsole::new(io::stdin(), None, None);
-    }
-
-    #[test]
-    fn get_stage_filter() {
-        let c: DebugConsole<Context<MockEvt>, MockEvt> = DebugConsole::new(io::stdin(), None, None);
-
-        assert_eq!(c.get_stage_filter(), LoopStage::UPDATE | LoopStage::HANDLE_EVENTS);
-    }
 }

@@ -1,7 +1,7 @@
 use crate::components::{camera::Camera, model::Model, renderable::Renderable, ui_model::UiModel};
 use crate::context::SceneGraphTrait;
-use ecs::{DatabaseTrait, LoopStage, SystemTrait};
 use crate::event::EngineEventTrait;
+use ecs::{DatabaseTrait, System, EventManagerTrait};
 use failure::Error;
 use crate::graphics::{BackendTrait, FrameTrait};
 use std::{marker::PhantomData, time::Duration};
@@ -12,6 +12,7 @@ pub struct Renderer<Ctx, Evt, B> {
     pub clear_color: [f32; 4],
     frames: usize,
     draw_calls: usize,
+    initialised: bool,
     _ctx: PhantomData<Ctx>,
     _evt: PhantomData<Evt>,
 }
@@ -33,6 +34,7 @@ where
             clear_color: [0.69, 0.93, 0.93, 1.0],
             frames: 0,
             draw_calls: 0,
+            initialised: false,
             _ctx: PhantomData::default(),
             _evt: PhantomData::default(),
         })
@@ -46,71 +48,33 @@ where
             0.0
         }
     }
-
-    fn on_startup(&self, ctx: &mut Ctx) -> Result<bool, Error> {
-        self.on_change_dpi(ctx, self.backend.dpi_factor())
-    }
-
-    fn on_resize(&self, ctx: &mut Ctx, dims: (u32, u32)) -> Result<bool, Error> {
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Updating the camera dimensions (dims={:?})", dims);
-
-        ctx.find_mut::<Camera>()
-            .map(|c| c.set_dimensions(dims))
-            .map_err(|e| format_err!("{} (Camera)", e))?;
-
-        Ok(true)
-    }
-
-    fn on_change_dpi(&self, ctx: &mut Ctx, factor: f64) -> Result<bool, Error> {
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Updating the camera dpi factor (factor={:?})", factor);
-
-        ctx.find_mut::<Camera>()
-            .map(|c| c.set_dpi_factor(factor))
-            .map_err(|e| format_err!("{} (Camera)", e))?;
-
-        Ok(true)
-    }
 }
 
-impl<Ctx, Evt, B> SystemTrait<Ctx, Evt> for Renderer<Ctx, Evt, B>
+impl<Ctx, Evt, B> System<Ctx> for Renderer<Ctx, Evt, B>
 where
-    Ctx: DatabaseTrait + SceneGraphTrait,
+    Ctx: DatabaseTrait + SceneGraphTrait + EventManagerTrait<Evt>,
     Evt: EngineEventTrait,
     B: BackendTrait + 'static,
 {
-    fn get_stage_filter(&self) -> LoopStage {
-        LoopStage::RENDER | LoopStage::HANDLE_EVENTS
-    }
 
-    fn get_event_filter(&self) -> Evt::EventFlag {
-        Evt::startup() | Evt::resize() | Evt::change_dpi()
-    }
-
-    fn handle_event(&mut self, ctx: &mut Ctx, event: &Evt) -> Result<bool, Error> {
-        if event.matches_filter(Evt::startup()) {
-            self.on_startup(ctx)
-        } else if let Some(dims) = event.resize_data() {
-            self.on_resize(ctx, dims)
-        } else if let Some(factor) = event.change_dpi_data() {
-            self.on_change_dpi(ctx, factor)
-        } else {
-            Ok(true)
-        }
-    }
-
-    fn render(&mut self, ctx: &mut Ctx, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
+    fn run(&mut self, ctx: &mut Ctx, _t: &Duration, _dt: &Duration) {
         #[cfg(any(test, feature = "diagnostics"))]
         {
             self.frames += 1;
         }
 
+        if !self.initialised {
+            ctx.dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
+            self.initialised = true;
+        }
+
         // Update the scene graphs.
-        ctx.update_graph()?;
+        ctx.update_graph()
+            .expect("Unable to update the scene graphs");
 
         // Obtain a reference to the camera.
-        let cam = ctx.find::<Camera>().map_err(|e| format_err!("{} (Camera)", e))?;
+        let cam = ctx.find::<Camera>()
+            .expect("Unable to find the camera");
 
         // Create a new frame.
         let mut target = self.backend.create_frame();
@@ -124,7 +88,8 @@ where
                     {
                         self.draw_calls += 1;
                     }
-                    target.render(&(cam.world_matrix() * model.matrix()), data)?;
+                    target.render(&(cam.world_matrix() * model.matrix()), data)
+                        .expect("Unable to render the world");
                 }
             }
         }
@@ -137,77 +102,14 @@ where
                     {
                         self.draw_calls += 1;
                     }
-                    target.render(&(cam.ui_matrix() * model.matrix()), data)?;
+                    target.render(&(cam.ui_matrix() * model.matrix()), data)
+                        .expect("Unable to render the UI");
                 }
             }
         }
 
         // Finalize the frame and thus swap the display buffers.
         target.finalize()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::context::Context;
-    use crate::graphics::headless::HeadlessBackend as HB;
-    use crate::mock::{MockEvt, MockEvtFlag};
-    use std::f32;
-
-    #[test]
-    fn new_headless() {
-        assert!(Renderer::<Context<MockEvt>, MockEvt, HB>::new(
-            &Default::default(),
-            "Title",
-            (800, 600),
-            false,
-            0
-        ).is_ok());
-    }
-
-    #[test]
-    fn get_stage_filter_headless() {
-        let r =
-            Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0).unwrap();
-
-        assert_eq!(r.get_stage_filter(), LoopStage::RENDER | LoopStage::HANDLE_EVENTS);
-    }
-
-    #[test]
-    fn get_event_filter_headless() {
-        let r =
-            Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0).unwrap();
-
-        assert_eq!(
-            r.get_event_filter(),
-            MockEvtFlag::STARTUP | MockEvtFlag::RESIZE | MockEvtFlag::CHANGE_DPI
-        );
-    }
-
-    #[test]
-    fn render_headless() {
-        let mut ctx: Context<MockEvt> = Context::default();
-        let mut r =
-            Renderer::<Context<MockEvt>, MockEvt, HB>::new(&Default::default(), "Title", (800, 600), false, 0).unwrap();
-
-        let a = ctx.create_entity();
-        ctx.insert_world_node(a);
-        ctx.add(a, Model::default()).unwrap();
-        ctx.add(a, Renderable::default()).unwrap();
-        let b = ctx.create_entity();
-        ctx.insert_world_node(b);
-        ctx.add(b, Model::default()).unwrap();
-        let c = ctx.create_entity();
-        ctx.insert_world_node(c);
-        ctx.add(c, Renderable::default()).unwrap();
-        let d = ctx.create_entity();
-        ctx.insert_world_node(d);
-        ctx.add(d, Camera::default()).unwrap();
-
-        assert!(r.render(&mut ctx, &Default::default(), &Default::default()).is_ok());
-        assert_eq!(r.frames, 1);
-        assert_eq!(r.draw_calls, 1);
-        assert_ulps_eq!(r.average_draw_calls(), 1.0, epsilon = f32::EPSILON);
+            .expect("Unable to finalize the frame");
     }
 }

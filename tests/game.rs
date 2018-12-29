@@ -15,5 +15,7 @@ fn create_and_run_game_headless() -> Result<(), Error> {
 
     let mut g = Game::new(&resource_path, delta_time, max_frame_time)?;
     g.load(headless)?;
-    g.run(iterations)
+    g.run(iterations);
+
+    Ok(())
 }

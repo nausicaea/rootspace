@@ -1,6 +1,6 @@
 use crate::context::SceneGraphTrait;
 use crate::debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand};
-use ecs::{DatabaseTrait, EventManagerTrait, LoopStage, SystemTrait};
+use ecs::{DatabaseTrait, EventManagerTrait, EventHandlerSystem};
 use crate::event::EngineEventTrait;
 use failure::Error;
 use std::{collections::HashMap, marker::PhantomData};
@@ -36,7 +36,7 @@ where
     Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait + 'static,
     Evt: EngineEventTrait + 'static,
 {
-    fn add_command<C: CommandTrait<Ctx>>(&mut self, command: C) {
+    pub fn add_command<C: CommandTrait<Ctx>>(&mut self, command: C) {
         self.commands.insert(command.name(), Box::new(command));
     }
 
@@ -70,25 +70,21 @@ where
     }
 }
 
-impl<Ctx, Evt> SystemTrait<Ctx, Evt> for DebugShell<Ctx, Evt>
+impl<Ctx, Evt> EventHandlerSystem<Ctx, Evt> for DebugShell<Ctx, Evt>
 where
     Ctx: EventManagerTrait<Evt> + DatabaseTrait + SceneGraphTrait + 'static,
     Evt: EngineEventTrait + 'static,
 {
-    fn get_stage_filter(&self) -> LoopStage {
-        LoopStage::HANDLE_EVENTS
-    }
-
     fn get_event_filter(&self) -> Evt::EventFlag {
         Evt::command()
     }
 
-    fn handle_event(&mut self, ctx: &mut Ctx, event: &Evt) -> Result<bool, Error> {
+    fn run(&mut self, ctx: &mut Ctx, event: &Evt) -> bool {
         if let Some(ref args) = event.command_data() {
             self.interpret(ctx, args).unwrap_or_else(|e| eprintln!("{}", e));
         }
 
-        Ok(true)
+        true
     }
 }
 

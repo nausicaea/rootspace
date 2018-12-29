@@ -1,6 +1,5 @@
-use ecs::{EventManagerTrait, EventTrait, LoopStage, SystemTrait};
+use ecs::{EventManagerTrait, EventTrait, System};
 use crate::event::MaybeInto;
-use failure::Error;
 use crate::graphics::EventsLoopTrait;
 use std::{marker::PhantomData, time::Duration};
 
@@ -29,23 +28,18 @@ where
     }
 }
 
-impl<Ctx, Evt, L> SystemTrait<Ctx, Evt> for EventInterface<Ctx, Evt, L>
+impl<Ctx, Evt, L> System<Ctx> for EventInterface<Ctx, Evt, L>
 where
     Ctx: EventManagerTrait<Evt>,
     L: EventsLoopTrait<Evt>,
     Evt: EventTrait,
 {
-    fn get_stage_filter(&self) -> LoopStage {
-        LoopStage::UPDATE
-    }
-
-    fn update(&mut self, ctx: &mut Ctx, _t: &Duration, _dt: &Duration) -> Result<(), Error> {
+    fn run(&mut self, ctx: &mut Ctx, _t: &Duration, _dt: &Duration) {
         self.events_loop.poll(|input_event| {
             if let Some(event) = input_event.maybe_into() {
                 ctx.dispatch_later(event);
             }
         });
-        Ok(())
     }
 }
 
@@ -59,22 +53,5 @@ mod tests {
     #[test]
     fn new_headless() {
         let _: EventInterface<Context<MockEvt>, MockEvt, HeadlessEventsLoop> = EventInterface::default();
-    }
-
-    #[test]
-    fn get_stage_filter_headless() {
-        let e: EventInterface<Context<MockEvt>, MockEvt, HeadlessEventsLoop> = EventInterface::default();
-
-        assert_eq!(e.get_stage_filter(), LoopStage::UPDATE);
-    }
-
-    #[test]
-    fn update_headless() {
-        let mut e: EventInterface<Context<MockEvt>, MockEvt, HeadlessEventsLoop> = EventInterface::default();
-        let mut c = Context::default();
-
-        assert!(e.update(&mut c, &Default::default(), &Default::default()).is_ok());
-        // assert_eq!(c.dispatch_later_calls, 0);
-        // assert!(c.events.is_empty());
     }
 }

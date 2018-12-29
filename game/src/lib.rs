@@ -9,18 +9,18 @@ extern crate nalgebra;
 
 mod event;
 
-use ecs::{DatabaseTrait, EventManagerTrait};
+use ecs::{DatabaseTrait, EventManagerTrait, LoopStage};
 use engine::{
     components::{camera::Camera, info::Info, model::Model, renderable::Renderable, ui_model::UiModel},
     context::{Context, SceneGraphTrait},
     event::EngineEventTrait,
-    systems::{DebugConsole, DebugShell, EventCoordinator, EventMonitor},
+    systems::{debug_console::DebugConsole, debug_shell::DebugShell, event_coordinator::EventCoordinator, event_monitor::EventMonitor, camera_manager::CameraManager, force_shutdown::ForceShutdown},
     DefaultOrchestrator, DefaultWorld, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
 };
 use crate::event::Event;
 use failure::Error;
 use nalgebra::{Vector2, Vector3};
-use std::{f32, io, path::Path, time::Duration};
+use std::{f32, path::Path, time::Duration};
 
 pub struct Game {
     orchestrator: DefaultOrchestrator<Event>,
@@ -80,15 +80,21 @@ impl Game {
             ),
         )?;
 
-        // Handle the recular systems.
+        // Handle the regular systems.
         let event_monitor = EventMonitor::default();
-        self.world_mut().add_system(event_monitor);
+        self.world_mut().add_event_handler_system(event_monitor);
 
-        let debug_console = DebugConsole::new(io::stdin(), None, None);
-        self.world_mut().add_system(debug_console);
+        let force_shutdown = ForceShutdown::default();
+        self.world_mut().add_system(LoopStage::Update, force_shutdown);
+
+        let camera_manager = CameraManager::default();
+        self.world_mut().add_event_handler_system(camera_manager);
+
+        let debug_console = DebugConsole::default();
+        self.world_mut().add_system(LoopStage::Update, debug_console);
 
         let debug_shell = DebugShell::default();
-        self.world_mut().add_system(debug_shell);
+        self.world_mut().add_event_handler_system(debug_shell);
 
         // Handle the systems that depend on a backend.
         if headless {
@@ -139,8 +145,8 @@ impl Game {
                     .build_mesh_headless(&renderer.backend)?,
             )?;
 
-            self.world_mut().add_system(event_interface);
-            self.world_mut().add_system(renderer);
+            self.world_mut().add_system(LoopStage::Update, event_interface);
+            self.world_mut().add_system(LoopStage::Render, renderer);
         } else {
             let event_interface = GliumEventInterface::default();
             let renderer = GliumRenderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
@@ -189,20 +195,20 @@ impl Game {
                     .build_mesh_glium(&renderer.backend)?,
             )?;
 
-            self.world_mut().add_system(event_interface);
-            self.world_mut().add_system(renderer);
+            self.world_mut().add_system(LoopStage::Update, event_interface);
+            self.world_mut().add_system(LoopStage::Render, renderer);
         }
 
         // The event coordinator should run last, because it can affect the shutdown of the engine.
         let event_coordinator = EventCoordinator::default();
-        self.world_mut().add_system(event_coordinator);
+        self.world_mut().add_event_handler_system(event_coordinator);
 
         self.context_mut().dispatch_later(Event::new_startup());
 
         Ok(())
     }
 
-    pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
+    pub fn run(&mut self, iterations: Option<usize>) {
         self.orchestrator.run(iterations)
     }
 

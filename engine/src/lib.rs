@@ -49,9 +49,9 @@ use crate::graphics::{
     headless::{HeadlessBackend, HeadlessEventsLoop},
 };
 use crate::orchestrator::Orchestrator;
-use crate::systems::{EventInterface, Renderer, SystemGroup};
+use crate::systems::{event_interface::EventInterface, renderer::Renderer};
 
-pub type DefaultWorld<E> = World<E, Context<E>, SystemGroup<Context<E>, E>>;
+pub type DefaultWorld<E> = World<E, Context<E>>;
 pub type DefaultOrchestrator<E> = Orchestrator<DefaultWorld<E>>;
 pub type GliumEventInterface<C, E> = EventInterface<C, E, GliumEventsLoop>;
 pub type HeadlessEventInterface<C, E> = EventInterface<C, E, HeadlessEventsLoop>;

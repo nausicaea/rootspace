@@ -1,5 +1,4 @@
 use ecs::WorldTrait;
-use failure::Error;
 use crate::file_manipulation::{FileError, VerifyPath};
 use std::{
     cmp,
@@ -34,7 +33,7 @@ where
         })
     }
 
-    pub fn run(&mut self, iterations: Option<usize>) -> Result<(), Error> {
+    pub fn run(&mut self, iterations: Option<usize>) {
         let mut loop_time = Instant::now();
         let mut accumulator = Duration::default();
         let mut dynamic_game_time = Duration::default();
@@ -49,17 +48,16 @@ where
             dynamic_game_time += frame_time;
 
             while accumulator >= self.delta_time {
-                self.world.fixed_update(&fixed_game_time, &self.delta_time)?;
+                self.world.fixed_update(&fixed_game_time, &self.delta_time);
                 accumulator -= self.delta_time;
                 fixed_game_time += self.delta_time;
             }
 
-            self.world.update(&dynamic_game_time, &frame_time)?;
-            self.world.render(&dynamic_game_time, &frame_time)?;
-            running = self.world.handle_events()?;
+            self.world.update(&dynamic_game_time, &frame_time);
+            self.world.render(&dynamic_game_time, &frame_time);
+            running = self.world.handle_events();
             i += 1;
         }
-        Ok(())
     }
 
     pub fn file(&self, folder: &str, file: &str) -> Result<PathBuf, FileError> {
@@ -88,7 +86,7 @@ mod tests {
         o.world.render_duration = Some(render_duration);
 
         let start_time = Instant::now();
-        o.run(Some(iterations as usize)).unwrap();
+        o.run(Some(iterations as usize));
         let total_frame_time = start_time.elapsed();
         let mut fixed_update_calls: u32 = 0;
         while delta_time * (fixed_update_calls + 1) <= total_frame_time {
@@ -151,7 +149,7 @@ mod tests {
         let max_frame_time = Duration::from_millis(250);
         let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
-        o.run(None).unwrap();
+        o.run(None);
         assert_eq!(
             o.world.handle_events_calls, o.world.max_iterations,
             "Expected {} iterations, got {} instead",
@@ -204,19 +202,6 @@ mod tests {
         ));
     }
 
-    #[test]
-    fn fixed_update_error() {
-        let base = env::temp_dir();
-        let delta_time = Duration::from_millis(50);
-        let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
-        o.world.fixed_update_error_out = true;
-        o.world.render_duration = Some(Duration::from_millis(20));
-
-        let r = o.run(None);
-        assert!(r.is_err());
-    }
-
     quickcheck! {
         fn check_update_calls(iterations: usize) -> bool {
             let base = env::temp_dir();
@@ -225,21 +210,9 @@ mod tests {
             let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
             o.world.max_iterations = iterations + 1;
 
-            o.run(Some(iterations)).unwrap();
+            o.run(Some(iterations));
             o.world.update_calls == iterations
         }
-    }
-
-    #[test]
-    fn update_error() {
-        let base = env::temp_dir();
-        let delta_time = Duration::from_millis(50);
-        let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
-        o.world.update_error_out = true;
-
-        let r = o.run(None);
-        assert!(r.is_err());
     }
 
     quickcheck! {
@@ -250,21 +223,9 @@ mod tests {
             let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
             o.world.max_iterations = iterations + 1;
 
-            o.run(Some(iterations)).unwrap();
+            o.run(Some(iterations));
             o.world.render_calls == iterations
         }
-    }
-
-    #[test]
-    fn render_error() {
-        let base = env::temp_dir();
-        let delta_time = Duration::from_millis(50);
-        let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
-        o.world.render_error_out = true;
-
-        let r = o.run(None);
-        assert!(r.is_err());
     }
 
     quickcheck! {
@@ -275,21 +236,9 @@ mod tests {
             let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
             o.world.max_iterations = iterations + 1;
 
-            o.run(Some(iterations)).unwrap();
+            o.run(Some(iterations));
             o.world.handle_events_calls == iterations
         }
-    }
-
-    #[test]
-    fn handle_events_error() {
-        let base = env::temp_dir();
-        let delta_time = Duration::from_millis(50);
-        let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
-        o.world.handle_events_error_out = true;
-
-        let r = o.run(None);
-        assert!(r.is_err());
     }
 
     #[test]
@@ -299,7 +248,7 @@ mod tests {
         let max_frame_time = Duration::from_millis(250);
         let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
-        o.run(None).unwrap();
+        o.run(None);
         let mut last_time = Duration::default();
         assert!(o.world.fixed_update_arguments.iter().all(|&(t, dt)| {
             let temp = ((t - last_time) == delta_time) && (dt == delta_time);
@@ -315,7 +264,7 @@ mod tests {
         let max_frame_time = Duration::from_millis(250);
         let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
-        o.run(None).unwrap();
+        o.run(None);
         let mut last_time = Duration::default();
         assert!(o.world.update_arguments.iter().all(|&(t, dt)| {
             let temp = (t - last_time) == dt;
@@ -331,7 +280,7 @@ mod tests {
         let max_frame_time = Duration::from_millis(250);
         let mut o = Orchestrator::<MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
-        o.run(None).unwrap();
+        o.run(None);
         let mut last_time = Duration::default();
         assert!(o.world.render_arguments.iter().all(|&(t, dt)| {
             let temp = (t - last_time) == dt;
