@@ -8,6 +8,9 @@
 extern crate bitflags;
 #[macro_use]
 extern crate failure;
+extern crate hibitset;
+#[macro_use]
+extern crate mopa;
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
@@ -19,6 +22,7 @@ pub mod event;
 pub mod loop_stage;
 #[cfg(any(test, feature = "mock"))]
 pub mod mock;
+pub mod resources;
 pub mod system;
 pub mod world;
 

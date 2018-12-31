@@ -2,6 +2,7 @@ use crate::event::{EventManagerTrait, EventTrait};
 use std::{marker::PhantomData, time::Duration};
 use crate::system::{System, EventHandlerSystem};
 use crate::loop_stage::LoopStage;
+use crate::resources::Resources;
 
 /// A World must perform actions for four types of calls.
 pub trait WorldTrait {
@@ -40,6 +41,7 @@ pub struct World<E, C> {
     /// The context must be capable of managing events and messages. Additionally, any behaviour
     /// may be added.
     pub context: C,
+    pub resources: Resources,
     fixed_update_systems: Vec<Box<System<C>>>,
     update_systems: Vec<Box<System<C>>>,
     render_systems: Vec<Box<System<C>>>,
@@ -74,6 +76,7 @@ where
     fn default() -> Self {
         World {
             context: Default::default(),
+            resources: Resources::default(),
             fixed_update_systems: Vec::default(),
             update_systems: Vec::default(),
             render_systems: Vec::default(),
