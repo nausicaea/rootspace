@@ -83,7 +83,7 @@ impl CommandTrait for CameraCommand {
             .get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
-            let cameras = res.get::<<Camera as Component>::Storage>()
+            let cameras = res.borrow::<<Camera as Component>::Storage>()
                 .expect("Could not find the cameras");
 
             for (i, cam) in cameras.iter().enumerate() {
@@ -160,17 +160,17 @@ impl CommandTrait for EntityCommand {
             .get_matches_from_safe(args)?;
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
-            let entities: Vec<_> = res.get::<Entities>()
+            let entities: Vec<_> = res.borrow::<Entities>()
                 .expect("Could not find the entity register")
                 .iter()
                 .collect();
-            let cameras = res.get::<<Camera as Component>::Storage>()
+            let cameras = res.borrow::<<Camera as Component>::Storage>()
                 .expect("Could not find the cameras");
-            let infos = res.get::<<Info as Component>::Storage>()
+            let infos = res.borrow::<<Info as Component>::Storage>()
                 .expect("Could not find the Info component storage");
-            let world_graph = res.get::<SceneGraph<Model>>()
+            let world_graph = res.borrow::<SceneGraph<Model>>()
                 .expect("Could not find the world scene graph");
-            let ui_graph = res.get::<SceneGraph<UiModel>>()
+            let ui_graph = res.borrow::<SceneGraph<UiModel>>()
                 .expect("Could not find the ui scene graph");
 
             if list_matches.is_present("count") {
