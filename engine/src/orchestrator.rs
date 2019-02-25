@@ -33,9 +33,9 @@ where
         resource_path.ensure_extant_directory()?;
 
         let mut world = W::default();
-        world.register_resource(EventManager::<E>::default());
-        world.register_resource(SceneGraph::<Model>::default());
-        world.register_resource(SceneGraph::<UiModel>::default());
+        world.add_resource(EventManager::<E>::default());
+        world.add_resource(SceneGraph::<Model>::default());
+        world.add_resource(SceneGraph::<UiModel>::default());
 
         Ok(Orchestrator {
             world,
@@ -48,9 +48,9 @@ where
 
     pub fn reset(&mut self) {
         self.world.clear();
-        self.world.register_resource(EventManager::<E>::default());
-        self.world.register_resource(SceneGraph::<Model>::default());
-        self.world.register_resource(SceneGraph::<UiModel>::default());
+        self.world.add_resource(EventManager::<E>::default());
+        self.world.add_resource(SceneGraph::<Model>::default());
+        self.world.add_resource(SceneGraph::<UiModel>::default());
     }
 
     pub fn run(&mut self, iterations: Option<usize>) {

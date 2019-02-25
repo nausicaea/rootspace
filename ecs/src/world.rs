@@ -14,7 +14,7 @@ pub trait WorldTrait {
     /// # Arguments
     ///
     /// * `res` - The resource to be added.
-    fn register_resource<R>(&mut self, res: R) -> Option<R> where R: Resource;
+    fn add_resource<R>(&mut self, res: R) -> Option<R> where R: Resource;
     /// The fixed update method is supposed to be called from the main loop at fixed time
     /// intervals.
     ///
@@ -59,7 +59,7 @@ impl<E> World<E>
 where
     E: EventTrait,
 {
-    pub fn register_system<S>(&mut self, stage: LoopStage, system: S) where S: System + 'static {
+    pub fn add_system<S>(&mut self, stage: LoopStage, system: S) where S: System + 'static {
         let sys = Box::new(system);
         match stage {
             LoopStage::FixedUpdate => self.fixed_update_systems.push(sys),
@@ -114,7 +114,7 @@ where
         self.resources.insert(EventManager::<E>::default());
     }
 
-    fn register_resource<R>(&mut self, res: R) -> Option<R> where R: Resource {
+    fn add_resource<R>(&mut self, res: R) -> Option<R> where R: Resource {
         self.resources.insert(res)
     }
 
