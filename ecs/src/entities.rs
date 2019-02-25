@@ -1,13 +1,14 @@
-use super::Resource;
+use crate::resources::Resource;
+use std::fmt;
 
 #[derive(Default, Debug)]
-pub struct EntityResource {
+pub struct Entities {
     max_idx: Index,
     free_idx: Vec<Index>,
     generations: Vec<Generation>,
 }
 
-impl EntityResource {
+impl Entities {
     pub fn create(&mut self) -> Entity {
         let idx = if let Some(idx) = self.free_idx.pop() {
             idx
@@ -28,9 +29,42 @@ impl EntityResource {
         self.generations[entity.idx.0 as usize].deactivate();
         self.free_idx.push(entity.idx);
     }
+
+    pub fn len(&self) -> usize {
+        self.generations.iter().filter(|g| g.is_active()).count()
+    }
+
+    pub fn iter(&self) -> EntitiesIter {
+        EntitiesIter { idx: 0, gens: &self.generations }
+    }
 }
 
-impl Resource for EntityResource {}
+impl Resource for Entities {}
+
+pub struct EntitiesIter<'a> {
+    idx: usize,
+    gens: &'a [Generation],
+}
+
+impl<'a> Iterator for EntitiesIter<'a> {
+    type Item = Entity;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx < self.gens.len() {
+            while self.idx < self.gens.len() {
+                if self.gens[self.idx].is_active() {
+                    let tmp = Entity { idx: Index(self.idx as u32), gen: self.gens[self.idx] };
+                    self.idx += 1;
+                    return Some(tmp);
+                } else {
+                    self.idx += 1;
+                }
+            }
+        }
+
+        None
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Entity {
@@ -52,6 +86,12 @@ impl Entity {
     }
 }
 
+impl fmt::Display for Entity {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Entity({}, {})", self.idx, self.gen)
+    }
+}
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Index(u32);
 
@@ -60,6 +100,12 @@ impl Index {
         let tmp = *self;
         self.0 += 1;
         tmp
+    }
+}
+
+impl fmt::Display for Index {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -90,33 +136,70 @@ impl Generation {
     }
 }
 
+impl fmt::Display for Generation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn entity_resource_default() {
-        let _: EntityResource = Default::default();
+    fn entities_default() {
+        let _: Entities = Default::default();
     }
 
     #[test]
-    fn entity_resource_create() {
-        let mut r = EntityResource::default();
+    fn entities_create() {
+        let mut r = Entities::default();
 
         let _: Entity = r.create();
     }
 
     #[test]
-    fn entity_resource_destroy() {
-        let mut r = EntityResource::default();
+    fn entities_destroy() {
+        let mut r = Entities::default();
         let e: Entity = r.create();
 
         r.destroy(e);
     }
 
     #[test]
-    fn entity_resource_index_management() {
-        let mut r = EntityResource::default();
+    fn entities_len() {
+        let mut r = Entities::default();
+
+        assert_eq!(r.len(), 0);
+        let a = r.create();
+        assert_eq!(r.len(), 1);
+        let _b = r.create();
+        assert_eq!(r.len(), 2);
+        r.destroy(a);
+        assert_eq!(r.len(), 1);
+        let _c = r.create();
+        assert_eq!(r.len(), 2);
+    }
+
+    #[test]
+    fn entities_iter() {
+        let mut r = Entities::default();
+        let a = r.create();
+        let b = r.create();
+        let c = r.create();
+        r.destroy(a);
+        let d = r.create();
+        let e = r.create();
+        let f = r.create();
+        r.destroy(c);
+
+        let entities: Vec<Entity> = r.iter().collect();
+        assert_eq!(entities, vec![d, b, e, f]);
+    }
+
+    #[test]
+    fn entities_index_management() {
+        let mut r = Entities::default();
 
         let a = r.create();
         assert_eq!(a.idx, Index(0));

@@ -1,15 +1,24 @@
-use crate::event::{EventManagerTrait, EventTrait};
 use std::{marker::PhantomData, time::Duration};
 use crate::system::{System, EventHandlerSystem};
 use crate::loop_stage::LoopStage;
-use crate::resources::Resources;
+use crate::resources::{Resources, Resource};
+use crate::entities::{Entities, Entity};
+use crate::events::{EventTrait, EventManager};
 
 /// A World must perform actions for four types of calls.
 pub trait WorldTrait {
+    /// Clears the state of the world. This removes all resources and systems added by the user.
+    fn clear(&mut self);
+    /// Adds a resource to the world
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - The resource to be added.
+    fn register_resource<R>(&mut self, res: R) -> Option<R> where R: Resource;
     /// The fixed update method is supposed to be called from the main loop at fixed time
     /// intervals.
     ///
-    /// # Aruments
+    /// # Arguments
     ///
     /// * `time` - Interpreted as the current game time.
     /// * `delta_time` - Interpreted as the time interval between calls to `fixed_update`.
@@ -17,7 +26,7 @@ pub trait WorldTrait {
     /// The dynamic update method is supposed to be called from the main loop just before the
     /// render call.
     ///
-    /// # Aruments
+    /// # Arguments
     ///
     /// * `time` - Interpreted as the current game time.
     /// * `delta_time` - Interpreted as the time interval between calls to `update`.
@@ -25,7 +34,7 @@ pub trait WorldTrait {
     /// The render method is supposed to be called when a re-draw of the graphical representation
     /// is desired.
     ///
-    /// # Aruments
+    /// # Arguments
     ///
     /// * `time` - Interpreted as the current game time.
     /// * `delta_time` - Interpreted as the time interval between calls to `render`.
@@ -37,24 +46,20 @@ pub trait WorldTrait {
 }
 
 /// This is the default implementation of the `WorldTrait` provided by this library.
-pub struct World<E, C> {
-    /// The context must be capable of managing events and messages. Additionally, any behaviour
-    /// may be added.
-    pub context: C,
-    pub resources: Resources,
-    fixed_update_systems: Vec<Box<System<C>>>,
-    update_systems: Vec<Box<System<C>>>,
-    render_systems: Vec<Box<System<C>>>,
-    event_handler_systems: Vec<Box<EventHandlerSystem<C, E>>>,
+pub struct World<E> {
+    resources: Resources,
+    fixed_update_systems: Vec<Box<System>>,
+    update_systems: Vec<Box<System>>,
+    render_systems: Vec<Box<System>>,
+    event_handler_systems: Vec<Box<EventHandlerSystem<E>>>,
     _e: PhantomData<E>,
 }
 
-impl<E, C> World<E, C>
+impl<E> World<E>
 where
     E: EventTrait,
-    C: Default + EventManagerTrait<E>,
 {
-    pub fn add_system<S>(&mut self, stage: LoopStage, system: S) where S: System<C> + 'static {
+    pub fn register_system<S>(&mut self, stage: LoopStage, system: S) where S: System + 'static {
         let sys = Box::new(system);
         match stage {
             LoopStage::FixedUpdate => self.fixed_update_systems.push(sys),
@@ -63,20 +68,28 @@ where
         }
     }
 
-    pub fn add_event_handler_system<H>(&mut self, system: H) where H: EventHandlerSystem<C, E> + 'static {
+    pub fn add_event_handler_system<H>(&mut self, system: H) where H: EventHandlerSystem<E> + 'static {
         self.event_handler_systems.push(Box::new(system))
+    }
+
+    pub fn create_entity(&mut self) -> Entity {
+        self.resources.get_mut::<Entities>()
+            .expect("Could not find the Entities resource")
+            .create()
     }
 }
 
-impl<E, C> Default for World<E, C>
+impl<E> Default for World<E>
 where
-    E: EventTrait,
-    C: Default + EventManagerTrait<E>,
+    E: 'static,
 {
     fn default() -> Self {
+        let mut resources = Resources::default();
+        resources.insert(Entities::default());
+        resources.insert(EventManager::<E>::default());
+
         World {
-            context: Default::default(),
-            resources: Resources::default(),
+            resources,
             fixed_update_systems: Vec::default(),
             update_systems: Vec::default(),
             render_systems: Vec::default(),
@@ -86,42 +99,60 @@ where
     }
 }
 
-impl<E, C> WorldTrait for World<E, C>
+impl<E> WorldTrait for World<E>
 where
     E: EventTrait,
-    C: Default + EventManagerTrait<E>,
 {
+    fn clear(&mut self) {
+        self.resources.clear();
+        self.fixed_update_systems.clear();
+        self.update_systems.clear();
+        self.render_systems.clear();
+        self.event_handler_systems.clear();
+
+        self.resources.insert(Entities::default());
+        self.resources.insert(EventManager::<E>::default());
+    }
+
+    fn register_resource<R>(&mut self, res: R) -> Option<R> where R: Resource {
+        self.resources.insert(res)
+    }
+
     fn fixed_update(&mut self, t: &Duration, dt: &Duration) {
         for system in &mut self.fixed_update_systems {
-            system.run(&mut self.context, t, dt);
+            system.run(&mut self.resources, t, dt);
         }
     }
 
     fn update(&mut self, t: &Duration, dt: &Duration) {
         for system in &mut self.update_systems {
-            system.run(&mut self.context, t, dt);
+            system.run(&mut self.resources, t, dt);
         }
     }
 
     fn render(&mut self, t: &Duration, dt: &Duration) {
         for system in &mut self.render_systems {
-            system.run(&mut self.context, t, dt);
+            system.run(&mut self.resources, t, dt);
         }
     }
 
     fn handle_events(&mut self) -> bool {
-        let systems = &mut self.event_handler_systems;
+        let events = self.resources.get_mut::<EventManager<E>>()
+            .filter(|mgr| mgr.len() > 0)
+            .map(|mgr| mgr.flush());
 
-        self.context.handle_events(|ctx, event| {
-            let mut statuses: Vec<bool> = Vec::with_capacity(systems.len());
-
-            for system in systems.iter_mut() {
-                if event.matches_filter(system.get_event_filter()) {
-                    statuses.push(system.run(ctx, event));
+        if let Some(events) = events {
+            let mut statuses: Vec<bool> = Vec::with_capacity(events.len() * self.event_handler_systems.len());
+            for event in &events {
+                for system in self.event_handler_systems.iter_mut() {
+                    if event.matches_filter(system.get_event_filter()) {
+                        statuses.push(system.run(&mut self.resources, event));
+                    }
                 }
             }
-
-            Ok(statuses.iter().all(|s| *s))
-        }).unwrap()
+            statuses.into_iter().all(|s| s)
+        } else {
+            true
+        }
     }
 }

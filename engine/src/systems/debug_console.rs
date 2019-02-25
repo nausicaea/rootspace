@@ -3,7 +3,7 @@
 #![cfg_attr(test, allow(unused_mut))]
 #![cfg_attr(test, allow(dead_code))]
 
-use ecs::{EventManagerTrait, System};
+use ecs::{System, Resources};
 use crate::event::EngineEventTrait;
 use std::{
     io::{self, Read},
@@ -15,15 +15,14 @@ use std::{
 };
 use crate::text_manipulation::split_arguments;
 
-pub struct DebugConsole<Ctx, Evt> {
+pub struct DebugConsole<Evt> {
     escape_char: char,
     quote_char: char,
     worker_rx: Receiver<Result<String, DebugConsoleError>>,
-    _ctx: PhantomData<Ctx>,
     _evt: PhantomData<Evt>,
 }
 
-impl<Ctx, Evt> DebugConsole<Ctx, Evt> {
+impl<Evt> DebugConsole<Evt> {
     pub fn new<S>(mut input_stream: S, escape_char: Option<char>, quote_char: Option<char>) -> Self
     where
         S: Read + Send + 'static,
@@ -61,7 +60,6 @@ impl<Ctx, Evt> DebugConsole<Ctx, Evt> {
             escape_char: escape_char.unwrap_or('\\'),
             quote_char: quote_char.unwrap_or('"'),
             worker_rx: rx,
-            _ctx: PhantomData::default(),
             _evt: PhantomData::default(),
         }
     }
@@ -77,21 +75,21 @@ impl<Ctx, Evt> DebugConsole<Ctx, Evt> {
     }
 }
 
-impl<Ctx, Evt> Default for DebugConsole<Ctx, Evt> {
+impl<Evt> Default for DebugConsole<Evt> {
     fn default() -> Self {
         DebugConsole::new(io::stdin(), Some('\\'), Some('"'))
     }
 }
 
-impl<Ctx, Evt> System<Ctx> for DebugConsole<Ctx, Evt>
+impl<Evt> System for DebugConsole<Evt>
 where
-    Ctx: EventManagerTrait<Evt>,
     Evt: EngineEventTrait,
 {
-    fn run(&mut self, ctx: &mut Ctx, _: &Duration, _: &Duration) {
-        self.try_read_line()
-            .map(|l| split_arguments(l, self.escape_char, self.quote_char))
-            .map(|a| ctx.dispatch_later(Evt::new_command(a)));
+    fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
+        unimplemented!();
+        // self.try_read_line()
+        //     .map(|l| split_arguments(l, self.escape_char, self.quote_char))
+        //     .map(|a| ctx.dispatch_later(Evt::new_command(a)));
     }
 }
 

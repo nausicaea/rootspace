@@ -9,13 +9,12 @@ extern crate nalgebra;
 
 mod event;
 
-use ecs::{DatabaseTrait, EventManagerTrait, LoopStage};
+use ecs::{World, LoopStage};
 use engine::{
     components::{camera::Camera, info::Info, model::Model, renderable::Renderable, ui_model::UiModel},
-    context::{Context, SceneGraphTrait},
     event::EngineEventTrait,
     systems::{debug_console::DebugConsole, debug_shell::DebugShell, event_coordinator::EventCoordinator, event_monitor::EventMonitor, camera_manager::CameraManager, force_shutdown::ForceShutdown},
-    DefaultOrchestrator, DefaultWorld, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
+    DefaultOrchestrator, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
 };
 use crate::event::Event;
 use failure::Error;
@@ -38,16 +37,16 @@ impl Game {
     }
 
     pub fn load(&mut self, headless: bool) -> Result<(), Error> {
-        self.context_mut().clear();
+        self.orchestrator.reset();
 
-        let camera = self.context_mut().create_entity();
-        self.context_mut().add(camera, Camera::default())?;
+        let camera = self.world_mut().create_entity();
+        self.world_mut().add(camera, Camera::default())?;
 
-        let ea = self.context_mut().create_entity();
-        self.context_mut().insert_world_node(ea);
-        self.context_mut()
+        let ea = self.world_mut().create_entity();
+        self.world_mut().insert_world_node(ea);
+        self.world_mut()
             .add(ea, Info::new("Entity A", "Rotated cube example"))?;
-        self.context_mut().add(
+        self.world_mut().add(
             ea,
             Model::new(
                 Vector3::new(0.0, 0.0, -10.0),
@@ -56,10 +55,10 @@ impl Game {
             ),
         )?;
 
-        let eb = self.context_mut().create_entity();
-        self.context_mut().insert_world_node(eb);
-        self.context_mut().add(eb, Info::new("Entity B", "Text example"))?;
-        self.context_mut().add(
+        let eb = self.world_mut().create_entity();
+        self.world_mut().insert_world_node(eb);
+        self.world_mut().add(eb, Info::new("Entity B", "Text example"))?;
+        self.world_mut().add(
             eb,
             Model::new(
                 Vector3::new(-2.0, 1.0, -7.0),
@@ -68,10 +67,10 @@ impl Game {
             ),
         )?;
 
-        let ec = self.context_mut().create_entity();
-        self.context_mut().insert_ui_node(ec);
-        self.context_mut().add(ec, Info::new("Entity C", "UI Text example"))?;
-        self.context_mut().add(
+        let ec = self.world_mut().create_entity();
+        self.world_mut().insert_ui_node(ec);
+        self.world_mut().add(ec, Info::new("Entity C", "UI Text example"))?;
+        self.world_mut().add(
             ec,
             UiModel::new(
                 Vector2::new(0.0, 0.0),
@@ -105,7 +104,7 @@ impl Game {
             let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
             let text = "Hello, World!";
-            self.context_mut().add(
+            self.world_mut().add(
                 ea,
                 Renderable::builder()
                     .font(f)
@@ -121,7 +120,7 @@ impl Game {
             let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            self.context_mut().add(
+            self.world_mut().add(
                 eb,
                 Renderable::builder()
                     .mesh(m)
@@ -135,7 +134,7 @@ impl Game {
             let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            self.context_mut().add(
+            self.world_mut().add(
                 ec,
                 Renderable::builder()
                     .mesh(m)
@@ -155,7 +154,7 @@ impl Game {
             let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
             let text = "Hello, World!";
-            self.context_mut().add(
+            self.world_mut().add(
                 ea,
                 Renderable::builder()
                     .font(f)
@@ -171,7 +170,7 @@ impl Game {
             let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            self.context_mut().add(
+            self.world_mut().add(
                 eb,
                 Renderable::builder()
                     .mesh(m)
@@ -185,7 +184,7 @@ impl Game {
             let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            self.context_mut().add(
+            self.world_mut().add(
                 ec,
                 Renderable::builder()
                     .mesh(m)
@@ -203,7 +202,7 @@ impl Game {
         let event_coordinator = EventCoordinator::default();
         self.world_mut().add_event_handler_system(event_coordinator);
 
-        self.context_mut().dispatch_later(Event::new_startup());
+        self.world_mut().dispatch_later(Event::new_startup());
 
         Ok(())
     }
@@ -212,11 +211,7 @@ impl Game {
         self.orchestrator.run(iterations)
     }
 
-    fn world_mut(&mut self) -> &mut DefaultWorld<Event> {
+    fn world_mut(&mut self) -> &mut World<Event> {
         &mut self.orchestrator.world
-    }
-
-    fn context_mut(&mut self) -> &mut Context<Event> {
-        &mut self.orchestrator.world.context
     }
 }

@@ -3,33 +3,23 @@
 //! relationship with Entities, and finally, Systems encode (mostly) behaviour. The World manages
 //! all three type categories and provides access to each.
 
-#[cfg(any(test, feature = "mock"))]
-#[macro_use]
-extern crate bitflags;
-#[macro_use]
-extern crate failure;
 extern crate hibitset;
 #[macro_use]
 extern crate mopa;
-#[cfg(test)]
-#[macro_use]
-extern crate quickcheck;
-extern crate snowflake;
 
-pub mod database;
-pub mod entity;
-pub mod event;
 pub mod loop_stage;
-#[cfg(any(test, feature = "mock"))]
-pub mod mock;
+pub mod entities;
+pub mod components;
+pub mod events;
 pub mod resources;
 pub mod system;
 pub mod world;
 
 pub use crate::{
-    database::{Database, DatabaseTrait, Error as DatabaseError},
-    entity::Entity,
-    event::{EventManagerTrait, EventTrait},
+    events::{EventTrait, EventManager},
+    entities::{Entity, Entities},
+    components::VecStorage,
+    resources::{Resource, Resources},
     loop_stage::LoopStage,
     system::{System, EventHandlerSystem},
     world::{World, WorldTrait},

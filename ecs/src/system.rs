@@ -1,19 +1,20 @@
-use crate::event::EventTrait;
 use std::time::Duration;
+use crate::resources::Resources;
+use crate::events::EventTrait;
 
 /// Encodes a system or behaviour.
-pub trait System<C> {
+pub trait System {
     /// Run the behaviour.
-    fn run(&mut self, ctx: &mut C, t: &Duration, dt: &Duration);
+    fn run(&mut self, res: &mut Resources, t: &Duration, dt: &Duration);
 }
 
 /// Encodes a system or behaviour that processes the supplied event.
-pub trait EventHandlerSystem<C, E>
+pub trait EventHandlerSystem<E>
 where
     E: EventTrait,
 {
     /// Returns the system's event filter, which selects the events that the system will expect.
     fn get_event_filter(&self) -> E::EventFlag;
     /// Run the behaviour.
-    fn run(&mut self, ctx: &mut C, e: &E) -> bool;
+    fn run(&mut self, res: &mut Resources, e: &E) -> bool;
 }

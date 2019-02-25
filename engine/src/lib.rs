@@ -29,7 +29,6 @@ extern crate tempfile;
 extern crate unicode_normalization;
 
 pub mod components;
-pub mod context;
 pub mod debug_commands;
 pub mod event;
 pub mod file_manipulation;
@@ -39,10 +38,10 @@ pub mod graphics;
 pub mod mock;
 pub mod orchestrator;
 pub mod resources;
+pub mod scene_graph;
 pub mod systems;
 pub mod text_manipulation;
 
-use crate::context::Context;
 use ecs::World;
 use crate::graphics::{
     glium::{GliumBackend, GliumEventsLoop},
@@ -51,9 +50,8 @@ use crate::graphics::{
 use crate::orchestrator::Orchestrator;
 use crate::systems::{event_interface::EventInterface, renderer::Renderer};
 
-pub type DefaultWorld<E> = World<E, Context<E>>;
-pub type DefaultOrchestrator<E> = Orchestrator<DefaultWorld<E>>;
-pub type GliumEventInterface<C, E> = EventInterface<C, E, GliumEventsLoop>;
-pub type HeadlessEventInterface<C, E> = EventInterface<C, E, HeadlessEventsLoop>;
-pub type GliumRenderer<C, E> = Renderer<C, E, GliumBackend>;
-pub type HeadlessRenderer<C, E> = Renderer<C, E, HeadlessBackend>;
+pub type DefaultOrchestrator<E> = Orchestrator<E, World<E>>;
+pub type GliumEventInterface<E> = EventInterface<E, GliumEventsLoop>;
+pub type HeadlessEventInterface<E> = EventInterface<E, HeadlessEventsLoop>;
+pub type GliumRenderer<E> = Renderer<E, GliumBackend>;
+pub type HeadlessRenderer<E> = Renderer<E, HeadlessBackend>;

@@ -1,6 +1,6 @@
 #[cfg(not(test))]
 use ctrlc;
-use ecs::{EventManagerTrait, System};
+use ecs::{System, Resources};
 use crate::event::EngineEventTrait;
 #[cfg(not(test))]
 use std::process;
@@ -13,13 +13,12 @@ use std::{
     time::Duration,
 };
 
-pub struct ForceShutdown<Ctx, Evt> {
+pub struct ForceShutdown<Evt> {
     ctrlc_triggered: Arc<AtomicUsize>,
-    _ctx: PhantomData<Ctx>,
     _evt: PhantomData<Evt>,
 }
 
-impl<Ctx, Evt> Default for ForceShutdown<Ctx, Evt> {
+impl<Evt> Default for ForceShutdown<Evt> {
     fn default() -> Self {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
         #[cfg(not(test))]
@@ -37,21 +36,20 @@ impl<Ctx, Evt> Default for ForceShutdown<Ctx, Evt> {
 
         ForceShutdown {
             ctrlc_triggered,
-            _ctx: PhantomData::default(),
             _evt: PhantomData::default(),
         }
     }
 }
 
-impl<Ctx, Evt> System<Ctx> for ForceShutdown<Ctx, Evt>
+impl<Evt> System for ForceShutdown<Evt>
 where
-    Ctx: EventManagerTrait<Evt>,
     Evt: EngineEventTrait,
 {
-    fn run(&mut self, ctx: &mut Ctx, _: &Duration, _: &Duration) {
+    fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             trace!("Recently caught a termination signal");
-            ctx.dispatch_later(Evt::new_shutdown());
+            unimplemented!();
+            // ctx.dispatch_later(Evt::new_shutdown());
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
     }

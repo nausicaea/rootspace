@@ -1,25 +1,22 @@
 use crate::components::{camera::Camera, model::Model, renderable::Renderable, ui_model::UiModel};
-use crate::context::SceneGraphTrait;
 use crate::event::EngineEventTrait;
-use ecs::{DatabaseTrait, System, EventManagerTrait};
+use ecs::{System, Resources};
 use failure::Error;
 use crate::graphics::{BackendTrait, FrameTrait};
 use std::{marker::PhantomData, time::Duration};
 
 #[derive(Debug)]
-pub struct Renderer<Ctx, Evt, B> {
+pub struct Renderer<Evt, B> {
     pub backend: B,
     pub clear_color: [f32; 4],
     frames: usize,
     draw_calls: usize,
     initialised: bool,
-    _ctx: PhantomData<Ctx>,
     _evt: PhantomData<Evt>,
 }
 
-impl<Ctx, Evt, B> Renderer<Ctx, Evt, B>
+impl<Evt, B> Renderer<Evt, B>
 where
-    Ctx: DatabaseTrait,
     B: BackendTrait,
 {
     pub fn new(
@@ -35,7 +32,6 @@ where
             frames: 0,
             draw_calls: 0,
             initialised: false,
-            _ctx: PhantomData::default(),
             _evt: PhantomData::default(),
         })
     }
@@ -50,66 +46,66 @@ where
     }
 }
 
-impl<Ctx, Evt, B> System<Ctx> for Renderer<Ctx, Evt, B>
+impl<Evt, B> System for Renderer<Evt, B>
 where
-    Ctx: DatabaseTrait + SceneGraphTrait + EventManagerTrait<Evt>,
     Evt: EngineEventTrait,
     B: BackendTrait + 'static,
 {
 
-    fn run(&mut self, ctx: &mut Ctx, _t: &Duration, _dt: &Duration) {
+    fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
         #[cfg(any(test, feature = "diagnostics"))]
         {
             self.frames += 1;
         }
 
-        if !self.initialised {
-            ctx.dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
-            self.initialised = true;
-        }
+        unimplemented!();
+        // if !self.initialised {
+        //     ctx.dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
+        //     self.initialised = true;
+        // }
 
-        // Update the scene graphs.
-        ctx.update_graph()
-            .expect("Unable to update the scene graphs");
+        // // Update the scene graphs.
+        // ctx.update_graph()
+        //     .expect("Unable to update the scene graphs");
 
-        // Obtain a reference to the camera.
-        let cam = ctx.find::<Camera>()
-            .expect("Unable to find the camera");
+        // // Obtain a reference to the camera.
+        // let cam = ctx.find::<Camera>()
+        //     .expect("Unable to find the camera");
 
-        // Create a new frame.
-        let mut target = self.backend.create_frame();
-        target.initialize(self.clear_color, 1.0);
+        // // Create a new frame.
+        // let mut target = self.backend.create_frame();
+        // target.initialize(self.clear_color, 1.0);
 
-        // Render the world scene.
-        for (entity, model) in ctx.get_world_nodes() {
-            if ctx.has::<Model>(entity) {
-                if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
-                    #[cfg(any(test, feature = "diagnostics"))]
-                    {
-                        self.draw_calls += 1;
-                    }
-                    target.render(&(cam.world_matrix() * model.matrix()), data)
-                        .expect("Unable to render the world");
-                }
-            }
-        }
+        // // Render the world scene.
+        // for (entity, model) in ctx.get_world_nodes() {
+        //     if ctx.has::<Model>(entity) {
+        //         if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
+        //             #[cfg(any(test, feature = "diagnostics"))]
+        //             {
+        //                 self.draw_calls += 1;
+        //             }
+        //             target.render(&(cam.world_matrix() * model.matrix()), data)
+        //                 .expect("Unable to render the world");
+        //         }
+        //     }
+        // }
 
-        // Render the ui scene.
-        for (entity, model) in ctx.get_ui_nodes() {
-            if ctx.has::<UiModel>(entity) {
-                if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
-                    #[cfg(any(test, feature = "diagnostics"))]
-                    {
-                        self.draw_calls += 1;
-                    }
-                    target.render(&(cam.ui_matrix() * model.matrix()), data)
-                        .expect("Unable to render the UI");
-                }
-            }
-        }
+        // // Render the ui scene.
+        // for (entity, model) in ctx.get_ui_nodes() {
+        //     if ctx.has::<UiModel>(entity) {
+        //         if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
+        //             #[cfg(any(test, feature = "diagnostics"))]
+        //             {
+        //                 self.draw_calls += 1;
+        //             }
+        //             target.render(&(cam.ui_matrix() * model.matrix()), data)
+        //                 .expect("Unable to render the UI");
+        //         }
+        //     }
+        // }
 
-        // Finalize the frame and thus swap the display buffers.
-        target.finalize()
-            .expect("Unable to finalize the frame");
+        // // Finalize the frame and thus swap the display buffers.
+        // target.finalize()
+        //     .expect("Unable to finalize the frame");
     }
 }

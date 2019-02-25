@@ -1,6 +1,3 @@
-pub mod entities;
-pub mod components;
-
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::fmt;
@@ -14,6 +11,10 @@ mopafy!(Resource);
 pub struct Resources(HashMap<TypeId, Box<Resource>>);
 
 impl Resources {
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
+
     pub fn insert<R>(&mut self, res: R) -> Option<R> where R: Resource {
         self.0.insert(TypeId::of::<R>(), Box::new(res))
             .map(|r| *r.downcast::<R>().expect("Could not downcast the resource"))

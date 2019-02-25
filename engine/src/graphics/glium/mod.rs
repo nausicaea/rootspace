@@ -332,7 +332,7 @@ mod tests {
     #[cfg_attr(
         feature = "wsl",
         should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoWaylandLib\n    X11 status: XOpenDisplayFailed\n"
+            expected = "Failed to initialize any backend! Wayland status: XdgRuntimeDirNotSet X11 status: XOpenDisplayFailed"
         )
     )]
     #[cfg_attr(
@@ -353,7 +353,7 @@ mod tests {
     #[cfg_attr(
         feature = "wsl",
         should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoWaylandLib\n    X11 status: XOpenDisplayFailed\n"
+            expected = "Failed to initialize any backend! Wayland status: XdgRuntimeDirNotSet X11 status: XOpenDisplayFailed"
         )
     )]
     #[cfg_attr(
@@ -370,7 +370,7 @@ mod tests {
     #[cfg_attr(
         feature = "wsl",
         should_panic(
-            expected = "Failed to initialize any backend!\n    Wayland status: NoWaylandLib\n    X11 status: XOpenDisplayFailed\n"
+            expected = "Failed to initialize any backend! Wayland status: XdgRuntimeDirNotSet X11 status: XOpenDisplayFailed"
         )
     )]
     #[cfg_attr(

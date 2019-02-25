@@ -6,19 +6,19 @@ edition = "2018"
 
 [features]
 diagnostics = []
-mock = ["ecs/mock"]
+mock = []
 wsl = []
 
 [dependencies]
-alga = "^0.7.2"
+alga = "^0.8.2"
 bitflags = "^1.0.3"
 clap = {version = "^2.0.0", default-features = false}
 ctrlc = {version = "^3.0.0", features = ["termination"]}
 failure = "^0.1.1"
-glium = "^0.22.0"
-image = {version = "^0.20.0", default-features = false, features = ["png_codec"]}
+glium = "^0.23.0"
+image = {version = "^0.21.0", default-features = false, features = ["png_codec"]}
 log = "^0.4.1"
-nalgebra = "^0.16.0"
+nalgebra = "^0.17.2"
 num-traits = "^0.2.6"
 rusttype = {version = "^0.7.2", features = ["gpu_cache"]}
 unicode-normalization = "^0.1.5"
@@ -30,5 +30,4 @@ ply = {git = "https://gitlab.com/nausicaea/ply.git"}
 [dev-dependencies]
 approx = "^0.3.0"
 tempfile = "^3.0.1"
-quickcheck = {version = "^0.7.1", default-features = false}
-ecs = {path = "../ecs", features = ["mock"]}
+quickcheck = {version = "^0.8.2", default-features = false}

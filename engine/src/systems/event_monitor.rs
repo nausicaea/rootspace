@@ -1,21 +1,19 @@
-use ecs::{EventTrait, EventHandlerSystem};
+use ecs::{EventTrait, EventHandlerSystem, Resources};
 use std::marker::PhantomData;
 
-pub struct EventMonitor<Ctx, Evt> {
-    _ctx: PhantomData<Ctx>,
+pub struct EventMonitor<Evt> {
     _evt: PhantomData<Evt>,
 }
 
-impl<Ctx, Evt> Default for EventMonitor<Ctx, Evt> {
+impl<Evt> Default for EventMonitor<Evt> {
     fn default() -> Self {
         EventMonitor {
-            _ctx: PhantomData::default(),
             _evt: PhantomData::default(),
         }
     }
 }
 
-impl<Ctx, Evt> EventHandlerSystem<Ctx, Evt> for EventMonitor<Ctx, Evt>
+impl<Evt> EventHandlerSystem<Evt> for EventMonitor<Evt>
 where
     Evt: EventTrait,
 {
@@ -23,7 +21,7 @@ where
         Default::default()
     }
 
-    fn run(&mut self, _ctx: &mut Ctx, event: &Evt) -> bool {
+    fn run(&mut self, _res: &mut Resources, event: &Evt) -> bool {
         trace!("Received {:?}", event);
         true
     }

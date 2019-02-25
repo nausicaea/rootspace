@@ -1,36 +1,32 @@
 use clap::{App, AppSettings, Arg, SubCommand};
 use crate::components::{camera::Camera, info::Info};
-use crate::context::SceneGraphTrait;
-use ecs::{DatabaseTrait, EventManagerTrait};
+use ecs::{Resources, EventManager, VecStorage, Entities};
 use crate::event::EngineEventTrait;
 use failure::Error;
 use std::marker::PhantomData;
 
-pub trait CommandTrait<Ctx>: 'static {
+pub trait CommandTrait: 'static {
     fn name(&self) -> &'static str;
     fn description(&self) -> &'static str;
-    fn run(&self, ctx: &mut Ctx, args: &[String]) -> Result<(), Error>;
+    fn run(&self, res: &mut Resources, args: &[String]) -> Result<(), Error>;
 }
 
 #[derive(Debug, Clone)]
-pub struct ExitCommand<Ctx, Evt> {
-    _ctx: PhantomData<Ctx>,
+pub struct ExitCommand<Evt> {
     _evt: PhantomData<Evt>,
 }
 
-impl<Ctx, Evt> Default for ExitCommand<Ctx, Evt> {
+impl<Evt> Default for ExitCommand<Evt> {
     fn default() -> Self {
         ExitCommand {
-            _ctx: PhantomData::default(),
             _evt: PhantomData::default(),
         }
     }
 }
 
-impl<Ctx, Evt> CommandTrait<Ctx> for ExitCommand<Ctx, Evt>
+impl<Evt> CommandTrait for ExitCommand<Evt>
 where
-    Ctx: EventManagerTrait<Evt> + 'static,
-    Evt: EngineEventTrait + 'static,
+    Evt: EngineEventTrait,
 {
     fn name(&self) -> &'static str {
         "exit"
@@ -40,29 +36,18 @@ where
         "Shuts down the engine (can also be done with Ctrl-C. Tap Ctrl-C twice to force a shutdown)"
     }
 
-    fn run(&self, ctx: &mut Ctx, _: &[String]) -> Result<(), Error> {
-        ctx.dispatch_later(Evt::new_shutdown());
+    fn run(&self, res: &mut Resources, _: &[String]) -> Result<(), Error> {
+        let mgr = res.get_mut::<EventManager<Evt>>()
+            .expect("Could not find the event manager");
+        mgr.dispatch_later(Evt::new_shutdown());
         Ok(())
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct CameraCommand<Ctx> {
-    _ctx: PhantomData<Ctx>,
-}
+#[derive(Debug, Clone, Default)]
+pub struct CameraCommand;
 
-impl<Ctx> Default for CameraCommand<Ctx> {
-    fn default() -> Self {
-        CameraCommand {
-            _ctx: PhantomData::default(),
-        }
-    }
-}
-
-impl<Ctx> CommandTrait<Ctx> for CameraCommand<Ctx>
-where
-    Ctx: DatabaseTrait + 'static,
-{
+impl CommandTrait for CameraCommand {
     fn name(&self) -> &'static str {
         "camera"
     }
@@ -71,7 +56,7 @@ where
         "Provides access to the camera"
     }
 
-    fn run(&self, ctx: &mut Ctx, args: &[String]) -> Result<(), Error> {
+    fn run(&self, res: &mut Resources, args: &[String]) -> Result<(), Error> {
         let matches = App::new("camera")
             .about("Provides access to the camera")
             .setting(AppSettings::DisableVersion)
@@ -97,21 +82,26 @@ where
             .get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
-            let cam = ctx.find::<Camera>()?;
+            let cameras = res.get::<VecStorage<Camera>>()
+                .expect("Could not find the cameras");
 
-            if info_matches.is_present("position") {
-                let pos = cam.position();
-                println!("Position: [{}, {}, {}]", pos.x, pos.y, pos.z);
-            }
+            for (i, cam) in cameras.iter().enumerate() {
+                println!("Camera {}:", i);
 
-            if info_matches.is_present("dimensions") {
-                let dims = cam.dimensions();
-                let pdims = cam.physical_dimensions();
-                let dpi = cam.dpi_factor();
-                println!(
-                    "Dimensions: {}x{} (physical={}x{}, DPI-factor={})",
-                    dims.0, dims.1, pdims.0, pdims.1, dpi
-                );
+                if info_matches.is_present("position") {
+                    let pos = cam.position();
+                    println!("Position: [{}, {}, {}]", pos.x, pos.y, pos.z);
+                }
+
+                if info_matches.is_present("dimensions") {
+                    let dims = cam.dimensions();
+                    let pdims = cam.physical_dimensions();
+                    let dpi = cam.dpi_factor();
+                    println!(
+                        "Dimensions: {}x{} (physical={}x{}, DPI-factor={})",
+                        dims.0, dims.1, pdims.0, pdims.1, dpi
+                    );
+                }
             }
         }
 
@@ -119,23 +109,10 @@ where
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct EntityCommand<Ctx> {
-    _ctx: PhantomData<Ctx>,
-}
+#[derive(Debug, Clone, Default)]
+pub struct EntityCommand;
 
-impl<Ctx> Default for EntityCommand<Ctx> {
-    fn default() -> Self {
-        EntityCommand {
-            _ctx: PhantomData::default(),
-        }
-    }
-}
-
-impl<Ctx> CommandTrait<Ctx> for EntityCommand<Ctx>
-where
-    Ctx: DatabaseTrait + SceneGraphTrait + 'static,
-{
+impl CommandTrait for EntityCommand {
     fn name(&self) -> &'static str {
         "entity"
     }
@@ -144,7 +121,7 @@ where
         "Provides access to entities within the world"
     }
 
-    fn run(&self, ctx: &mut Ctx, args: &[String]) -> Result<(), Error> {
+    fn run(&self, res: &mut Resources, args: &[String]) -> Result<(), Error> {
         let matches = App::new("entity")
             .about("Provides access to entities within the world")
             .setting(AppSettings::DisableVersion)
@@ -182,51 +159,64 @@ where
             .get_matches_from_safe(args)?;
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
+            let cameras = res.get::<VecStorage<Camera>>()
+                .expect("Could not find the cameras");
+            let entities: Vec<_> = res.get::<Entities>()
+                .expect("Could not find the entity register")
+                .iter()
+                .collect();
+            let infos = res.get::<VecStorage<Info>>()
+                .expect("Could not find the Info component storage");
+
             if list_matches.is_present("count") {
-                println!("Loaded entities: {}", ctx.num_entities());
+                println!("Loaded entities: {}", entities.len());
             }
-            let camera = ctx.find::<Camera>()?;
-            for entity in ctx.entities() {
-                let mut output = String::new();
 
-                if list_matches.is_present("names") || list_matches.is_present("positions") {
-                    output.push(':');
-                }
+            for camera in cameras.iter() {
+                for entity in &entities {
+                    let mut output = String::new();
 
-                if list_matches.is_present("names") {
-                    if let Ok(i) = ctx.get::<Info>(entity) {
-                        output.push(' ');
-                        output.push_str(i.name());
-                    } else {
-                        output.push_str(" (no name)");
+                    if list_matches.is_present("names") || list_matches.is_present("positions") {
+                        output.push(':');
                     }
-                }
 
-                if list_matches.is_present("positions") {
-                    if let Some(m) = ctx.get_world_node(entity) {
-                        let pos = m.position();
-                        output.push_str(&format!(" world-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                    } else if let Some(m) = ctx.get_ui_node(entity) {
-                        let pos = m.position();
-                        output.push_str(&format!(" ui-pos=[{}, {}]", pos.x, pos.y));
-                    } else {
-                        output.push_str(" (no position)");
+                    if list_matches.is_present("names") {
+                        if let Some(i) = infos.get(entity) {
+                            output.push(' ');
+                            output.push_str(i.name());
+                        } else {
+                            output.push_str(" (no name)");
+                        }
                     }
-                }
 
-                if list_matches.is_present("ndc-positions") {
-                    if let Some(m) = ctx.get_world_node(entity) {
-                        let pos = camera.world_point_to_ndc(&m.position());
-                        output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                    } else if let Some(m) = ctx.get_ui_node(entity) {
-                        let pos = camera.ui_point_to_ndc(&m.position(), m.depth());
-                        output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                    } else {
-                        output.push_str(" (no ndc position)");
+                    if list_matches.is_present("positions") {
+                        unimplemented!();
+                        // if let Some(m) = ctx.get_world_node(entity) {
+                        //     let pos = m.position();
+                        //     output.push_str(&format!(" world-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+                        // } else if let Some(m) = ctx.get_ui_node(entity) {
+                        //     let pos = m.position();
+                        //     output.push_str(&format!(" ui-pos=[{}, {}]", pos.x, pos.y));
+                        // } else {
+                        //     output.push_str(" (no position)");
+                        // }
                     }
-                }
 
-                println!("{}{}", entity, output);
+                    if list_matches.is_present("ndc-positions") {
+                        unimplemented!();
+                        // if let Some(m) = ctx.get_world_node(entity) {
+                        //     let pos = camera.world_point_to_ndc(&m.position());
+                        //     output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+                        // } else if let Some(m) = ctx.get_ui_node(entity) {
+                        //     let pos = camera.ui_point_to_ndc(&m.position(), m.depth());
+                        //     output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+                        // } else {
+                        //     output.push_str(" (no ndc position)");
+                        // }
+                    }
+
+                    println!("{}{}", entity, output);
+                }
             }
         }
 

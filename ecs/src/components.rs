@@ -1,8 +1,21 @@
-use super::Resource;
-use super::entities::Entity;
+use crate::resources::Resource;
+use crate::entities::Entity;
 use std::fmt;
 use std::ptr;
 use hibitset::{BitSet, BitSetLike, BitIter};
+
+pub trait Component: Sized {
+    type Storage: Storage<Self>;
+}
+
+pub trait Storage<T> {
+    fn insert(&mut self, entity: Entity, datum: T) -> Option<T>;
+    fn remove(&mut self, entity: &Entity) -> Option<T>;
+    fn has(&self, entity: &Entity) -> bool;
+    fn clear(&mut self);
+    fn get(&self, entity: &Entity) -> Option<&T>;
+    fn get_mut(&mut self, entity: &Entity) -> Option<&mut T>;
+}
 
 pub struct VecStorage<T> {
     index: BitSet,
