@@ -3,7 +3,7 @@
 #![cfg_attr(test, allow(unused_mut))]
 #![cfg_attr(test, allow(dead_code))]
 
-use ecs::{System, Resources};
+use ecs::{System, Resources, EventManager};
 use crate::event::EngineEventTrait;
 use std::{
     io::{self, Read},
@@ -86,10 +86,9 @@ where
     Evt: EngineEventTrait,
 {
     fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
-        unimplemented!();
-        // self.try_read_line()
-        //     .map(|l| split_arguments(l, self.escape_char, self.quote_char))
-        //     .map(|a| ctx.dispatch_later(Evt::new_command(a)));
+        self.try_read_line()
+            .map(|l| split_arguments(l, self.escape_char, self.quote_char))
+            .map(|a| res.get_mut::<EventManager<Evt>>().expect("Could not find the main event manager").dispatch_later(Evt::new_command(a)));
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::components::camera::Camera;
 use crate::event::EngineEventTrait;
-use ecs::{EventHandlerSystem, Resources};
+use ecs::{Component, EventHandlerSystem, Resources};
 use std::marker::PhantomData;
 
 pub struct CameraManager<Evt> {
@@ -20,22 +20,20 @@ impl<Evt> CameraManager<Evt> {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Updating the camera dimensions (dims={:?})", dims);
 
-        unimplemented!();
-        // ctx.find_mut::<Camera>()
-        //     .map(|c| c.set_dimensions(dims))
-        //     .map_err(|e| format_err!("{} (Camera)", e))
-        //     .expect("Could not update the camera dimensions");
+        res.get_mut::<<Camera as Component>::Storage>()
+            .expect("Could not find the camera storage")
+            .iter_mut()
+            .for_each(|c| c.set_dimensions(dims));
     }
 
     fn on_change_dpi(&self, res: &mut Resources, factor: f64) {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Updating the camera dpi factor (factor={:?})", factor);
 
-        unimplemented!();
-        // ctx.find_mut::<Camera>()
-        //     .map(|c| c.set_dpi_factor(factor))
-        //     .map_err(|e| format_err!("{} (Camera)", e))
-        //     .expect("Could not update the camera dpi factor");
+        res.get_mut::<<Camera as Component>::Storage>()
+            .expect("Could not find the camera storage")
+            .iter_mut()
+            .for_each(|c| c.set_dpi_factor(factor));
     }
 }
 

@@ -1,6 +1,5 @@
 use std::ops::Mul;
-use ecs::{Entity, Resource, VecStorage};
-use failure::Error;
+use ecs::{Entity, Resource, Storage, Component};
 use hierarchy::{Hierarchy, RawNodes};
 use std::fmt;
 
@@ -14,19 +13,10 @@ where
 
 impl<T> SceneGraph<T>
 where
-    T: Clone + Default,
+    T: Clone + Default + Component,
     for<'r> &'r T: Mul<&'r T, Output = T>,
 {
-    pub fn update(&mut self, data: &VecStorage<T>) {
-        // let db = &self.database;
-        // self.world_graph.update(&|entity, _, parent_model| {
-        //     let current_model: &Model = db.get(entity).ok()?;
-        //     Some(parent_model * current_model)
-        // })?;
-        // self.ui_graph.update(&|entity, _, parent_model| {
-        //     let current_model: &UiModel = db.get(entity).ok()?;
-        //     Some(parent_model * current_model)
-        // })?;
+    pub fn update(&mut self, data: &<T as Component>::Storage) {
         self.hierarchy.update(&|entity, _, parent_datum| {
             data.get(entity)
                 .map(|current_datum| parent_datum * current_datum)

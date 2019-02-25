@@ -4,6 +4,7 @@ use crate::loop_stage::LoopStage;
 use crate::resources::{Resources, Resource};
 use crate::entities::{Entities, Entity};
 use crate::events::{EventTrait, EventManager};
+use crate::components::{Storage, Component};
 
 /// A World must perform actions for four types of calls.
 pub trait WorldTrait {
@@ -59,6 +60,10 @@ impl<E> World<E>
 where
     E: EventTrait,
 {
+    pub fn get_resource_mut<R>(&mut self) -> Option<&mut R> where R: Resource {
+        self.resources.get_mut::<R>()
+    }
+
     pub fn add_system<S>(&mut self, stage: LoopStage, system: S) where S: System + 'static {
         let sys = Box::new(system);
         match stage {
@@ -76,6 +81,16 @@ where
         self.resources.get_mut::<Entities>()
             .expect("Could not find the Entities resource")
             .create()
+    }
+
+    pub fn add_component<C>(&mut self, entity: Entity, component: C) -> Option<C> where C: Component {
+        if !self.resources.has::<C::Storage>() {
+            let _ = self.resources.insert(C::Storage::default());
+        }
+
+        self.resources.get_mut::<C::Storage>()
+            .expect("Could not find the requested component storage")
+            .insert(entity, component)
     }
 }
 
@@ -154,5 +169,17 @@ where
         } else {
             true
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct MockEvt;
+
+    #[test]
+    fn default() {
+        let _: World<MockEvt> = Default::default();
     }
 }

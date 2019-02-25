@@ -1,4 +1,4 @@
-use ecs::{EventTrait, System, Resources};
+use ecs::{EventTrait, System, Resources, EventManager};
 use crate::event::MaybeInto;
 use crate::graphics::EventsLoopTrait;
 use std::{marker::PhantomData, time::Duration};
@@ -34,8 +34,7 @@ where
     fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
         self.events_loop.poll(|input_event| {
             if let Some(event) = input_event.maybe_into() {
-                unimplemented!();
-                // ctx.dispatch_later(event);
+                res.get_mut::<EventManager<Evt>>().expect("Could not find the main event manager").dispatch_later(event);
             }
         });
     }

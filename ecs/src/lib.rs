@@ -18,7 +18,7 @@ pub mod world;
 pub use crate::{
     events::{EventTrait, EventManager},
     entities::{Entity, Entities},
-    components::VecStorage,
+    components::{Component, Storage, VecStorage},
     resources::{Resource, Resources},
     loop_stage::LoopStage,
     system::{System, EventHandlerSystem},

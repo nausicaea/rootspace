@@ -1,3 +1,4 @@
+use ecs::{Component, VecStorage};
 use failure::Error;
 use crate::file_manipulation::ReadPath;
 use glium::{
@@ -23,13 +24,19 @@ pub struct Renderable<B: BackendTrait> {
     _b: PhantomData<B>,
 }
 
-impl<B: BackendTrait> Renderable<B> {
+impl<B> Renderable<B>
+where
+    B: BackendTrait,
+{
     pub fn builder() -> RenderableBuilder<B> {
         RenderableBuilder::default()
     }
 }
 
-impl<B: BackendTrait> fmt::Debug for Renderable<B> {
+impl<B> fmt::Debug for Renderable<B>
+where
+    B: BackendTrait,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Renderable {{ ... }}")
     }
@@ -42,6 +49,13 @@ impl Default for Renderable<HeadlessBackend> {
             _b: PhantomData::default(),
         }
     }
+}
+
+impl<B> Component for Renderable<B>
+where
+    B: BackendTrait + 'static,
+{
+    type Storage = VecStorage<Self>;
 }
 
 impl<B, D> Borrow<D> for Renderable<B>

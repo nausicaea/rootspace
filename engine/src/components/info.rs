@@ -1,3 +1,5 @@
+use ecs::{Component, VecStorage};
+
 pub struct Info {
     name: String,
     description: String,
@@ -18,4 +20,8 @@ impl Info {
     pub fn description(&self) -> &str {
         self.description.as_str()
     }
+}
+
+impl Component for Info {
+    type Storage = VecStorage<Self>;
 }

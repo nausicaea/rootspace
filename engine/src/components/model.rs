@@ -1,3 +1,5 @@
+use ecs::{Component, VecStorage};
+
 use affine_transform::AffineTransform;
 use nalgebra::{Affine3, Isometry3, Point3, Matrix4, UnitQuaternion, Vector3};
 use std::{f32, ops::Mul};
@@ -68,6 +70,10 @@ impl Default for Model {
     fn default() -> Self {
         Model::identity()
     }
+}
+
+impl Component for Model {
+    type Storage = VecStorage<Self>;
 }
 
 // impl DepthOrderingTrait for Model {

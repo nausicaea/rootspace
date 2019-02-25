@@ -2,10 +2,12 @@ use crate::resources::Resource;
 use crate::entities::Entity;
 use std::fmt;
 use std::ptr;
+use std::slice;
+use std::iter;
 use hibitset::{BitSet, BitSetLike, BitIter};
 
 pub trait Component: Sized {
-    type Storage: Storage<Self>;
+    type Storage: Storage<Self> + Resource + Default;
 }
 
 pub trait Storage<T> {
@@ -23,7 +25,23 @@ pub struct VecStorage<T> {
 }
 
 impl<T> VecStorage<T> {
-    pub fn insert(&mut self, entity: Entity, datum: T) -> Option<T> {
+    pub fn iter(&self) -> VecStorageIter<T> {
+        VecStorageIter {
+            idx_iter: (&self.index).iter(),
+            data: &self.data,
+        }
+    }
+
+    pub fn iter_mut(&mut self) -> VecStorageIterMut<T> {
+        VecStorageIterMut {
+            idx: &self.index,
+            data_iter: self.data.iter_mut().enumerate(),
+        }
+    }
+}
+
+impl<T> Storage<T> for VecStorage<T> {
+    fn insert(&mut self, entity: Entity, datum: T) -> Option<T> {
         let idx = entity.idx();
         let idx_usize = idx as usize;
 
@@ -50,7 +68,7 @@ impl<T> VecStorage<T> {
         }
     }
 
-    pub fn remove(&mut self, entity: &Entity) -> Option<T> {
+    fn remove(&mut self, entity: &Entity) -> Option<T> {
         let idx = entity.idx();
 
         // If the index was previously occupied, return the old piece of data.
@@ -64,11 +82,11 @@ impl<T> VecStorage<T> {
         }
     }
 
-    pub fn has(&self, entity: &Entity) -> bool {
+    fn has(&self, entity: &Entity) -> bool {
         self.index.contains(entity.idx() as u32)
     }
 
-    pub fn clear(&mut self) {
+    fn clear(&mut self) {
         let data = &mut self.data;
 
         for idx in (&self.index).iter() {
@@ -83,7 +101,7 @@ impl<T> VecStorage<T> {
         }
     }
 
-    pub fn get(&self, entity: &Entity) -> Option<&T> {
+    fn get(&self, entity: &Entity) -> Option<&T> {
         let idx = entity.idx();
 
         if self.index.contains(idx) {
@@ -95,7 +113,7 @@ impl<T> VecStorage<T> {
         }
     }
 
-    pub fn get_mut(&mut self, entity: &Entity) -> Option<&mut T> {
+    fn get_mut(&mut self, entity: &Entity) -> Option<&mut T> {
         let idx = entity.idx();
 
         if self.index.contains(idx) {
@@ -104,13 +122,6 @@ impl<T> VecStorage<T> {
             }
         } else {
             None
-        }
-    }
-
-    pub fn iter(&self) -> VecStorageIter<T> {
-        VecStorageIter {
-            idx_iter: (&self.index).iter(),
-            data: &self.data,
         }
     }
 }
@@ -138,12 +149,12 @@ impl<T> fmt::Debug for VecStorage<T> {
 
 impl<T> Resource for VecStorage<T> where T: 'static {}
 
-pub struct VecStorageIter<'a, T> {
+pub struct VecStorageIter<'a, T: 'a> {
     idx_iter: BitIter<&'a BitSet>,
     data: &'a [T],
 }
 
-impl<'a, T> Iterator for VecStorageIter<'a, T> {
+impl<'a, T: 'a> Iterator for VecStorageIter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -154,6 +165,25 @@ impl<'a, T> Iterator for VecStorageIter<'a, T> {
         } else {
             None
         }
+    }
+}
+
+pub struct VecStorageIterMut<'a, T: 'a> {
+    idx: &'a BitSet,
+    data_iter: iter::Enumerate<slice::IterMut<'a, T>>,
+}
+
+impl<'a, T: 'a> Iterator for VecStorageIterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some((i, data)) = self.data_iter.next() {
+            if self.idx.contains(i as u32) {
+                return Some(data);
+            }
+        }
+
+        None
     }
 }
 

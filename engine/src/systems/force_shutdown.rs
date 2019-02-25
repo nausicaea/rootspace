@@ -1,6 +1,6 @@
 #[cfg(not(test))]
 use ctrlc;
-use ecs::{System, Resources};
+use ecs::{System, Resources, EventManager};
 use crate::event::EngineEventTrait;
 #[cfg(not(test))]
 use std::process;
@@ -48,8 +48,7 @@ where
     fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             trace!("Recently caught a termination signal");
-            unimplemented!();
-            // ctx.dispatch_later(Evt::new_shutdown());
+            res.get_mut::<EventManager<Evt>>().expect("Could not find the main event manager").dispatch_later(Evt::new_shutdown());
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
     }

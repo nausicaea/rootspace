@@ -1,6 +1,7 @@
 use clap::{App, AppSettings, Arg, SubCommand};
-use crate::components::{camera::Camera, info::Info};
-use ecs::{Resources, EventManager, VecStorage, Entities};
+use crate::scene_graph::SceneGraph;
+use crate::components::{camera::Camera, info::Info, model::Model, ui_model::UiModel};
+use ecs::{Component, Storage, Resources, EventManager, Entities};
 use crate::event::EngineEventTrait;
 use failure::Error;
 use std::marker::PhantomData;
@@ -82,7 +83,7 @@ impl CommandTrait for CameraCommand {
             .get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
-            let cameras = res.get::<VecStorage<Camera>>()
+            let cameras = res.get::<<Camera as Component>::Storage>()
                 .expect("Could not find the cameras");
 
             for (i, cam) in cameras.iter().enumerate() {
@@ -159,14 +160,18 @@ impl CommandTrait for EntityCommand {
             .get_matches_from_safe(args)?;
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
-            let cameras = res.get::<VecStorage<Camera>>()
-                .expect("Could not find the cameras");
             let entities: Vec<_> = res.get::<Entities>()
                 .expect("Could not find the entity register")
                 .iter()
                 .collect();
-            let infos = res.get::<VecStorage<Info>>()
+            let cameras = res.get::<<Camera as Component>::Storage>()
+                .expect("Could not find the cameras");
+            let infos = res.get::<<Info as Component>::Storage>()
                 .expect("Could not find the Info component storage");
+            let world_graph = res.get::<SceneGraph<Model>>()
+                .expect("Could not find the world scene graph");
+            let ui_graph = res.get::<SceneGraph<UiModel>>()
+                .expect("Could not find the ui scene graph");
 
             if list_matches.is_present("count") {
                 println!("Loaded entities: {}", entities.len());
@@ -190,29 +195,27 @@ impl CommandTrait for EntityCommand {
                     }
 
                     if list_matches.is_present("positions") {
-                        unimplemented!();
-                        // if let Some(m) = ctx.get_world_node(entity) {
-                        //     let pos = m.position();
-                        //     output.push_str(&format!(" world-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                        // } else if let Some(m) = ctx.get_ui_node(entity) {
-                        //     let pos = m.position();
-                        //     output.push_str(&format!(" ui-pos=[{}, {}]", pos.x, pos.y));
-                        // } else {
-                        //     output.push_str(" (no position)");
-                        // }
+                        if let Some(m) = world_graph.get(entity) {
+                            let pos = m.position();
+                            output.push_str(&format!(" world-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+                        } else if let Some(m) = ui_graph.get(entity) {
+                            let pos = m.position();
+                            output.push_str(&format!(" ui-pos=[{}, {}]", pos.x, pos.y));
+                        } else {
+                            output.push_str(" (no position)");
+                        }
                     }
 
                     if list_matches.is_present("ndc-positions") {
-                        unimplemented!();
-                        // if let Some(m) = ctx.get_world_node(entity) {
-                        //     let pos = camera.world_point_to_ndc(&m.position());
-                        //     output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                        // } else if let Some(m) = ctx.get_ui_node(entity) {
-                        //     let pos = camera.ui_point_to_ndc(&m.position(), m.depth());
-                        //     output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                        // } else {
-                        //     output.push_str(" (no ndc position)");
-                        // }
+                        if let Some(m) = world_graph.get(entity) {
+                            let pos = camera.world_point_to_ndc(&m.position());
+                            output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+                        } else if let Some(m) = ui_graph.get(entity) {
+                            let pos = camera.ui_point_to_ndc(&m.position(), m.depth());
+                            output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+                        } else {
+                            output.push_str(" (no ndc position)");
+                        }
                     }
 
                     println!("{}{}", entity, output);

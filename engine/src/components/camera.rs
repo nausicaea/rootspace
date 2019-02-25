@@ -1,3 +1,4 @@
+use ecs::{Component, VecStorage};
 use alga::linear::{ProjectiveTransformation, Transformation};
 use crate::geometry::ray::Ray;
 use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
@@ -189,6 +190,10 @@ impl Default for Camera {
             Vector3::y(),
         )
     }
+}
+
+impl Component for Camera {
+    type Storage = VecStorage<Self>;
 }
 
 #[cfg(test)]

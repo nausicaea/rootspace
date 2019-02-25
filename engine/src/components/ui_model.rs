@@ -1,3 +1,4 @@
+use ecs::{Component, VecStorage};
 use nalgebra::{zero, Point2, Vector2, Vector3, Affine3, Isometry3, Matrix4};
 use std::ops::Mul;
 
@@ -78,6 +79,10 @@ impl Default for UiModel {
     fn default() -> Self {
         UiModel::identity()
     }
+}
+
+impl Component for UiModel {
+    type Storage = VecStorage<Self>;
 }
 
 impl Mul<UiModel> for UiModel {

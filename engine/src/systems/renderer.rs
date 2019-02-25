@@ -1,6 +1,7 @@
 use crate::components::{camera::Camera, model::Model, renderable::Renderable, ui_model::UiModel};
 use crate::event::EngineEventTrait;
-use ecs::{System, Resources};
+use crate::scene_graph::SceneGraph;
+use ecs::{Component, Storage, System, Resources, EventManager};
 use failure::Error;
 use crate::graphics::{BackendTrait, FrameTrait};
 use std::{marker::PhantomData, time::Duration};
@@ -58,54 +59,64 @@ where
             self.frames += 1;
         }
 
-        unimplemented!();
-        // if !self.initialised {
-        //     ctx.dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
-        //     self.initialised = true;
-        // }
+        if !self.initialised {
+            res.get_mut::<EventManager<Evt>>()
+                .expect("Could not find the main event manager")
+                .dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
+            self.initialised = true;
+        }
 
-        // // Update the scene graphs.
-        // ctx.update_graph()
-        //     .expect("Unable to update the scene graphs");
+        // Update the scene graphs.
+        res.get_mut::<SceneGraph<Model>>()
+            .expect("Unable to find the world scene graph")
+            .update(res.get::<<Model as Component>::Storage>().expect("Could not find the model storage"));
+        res.get_mut::<SceneGraph<UiModel>>()
+            .expect("Unable to find the ui scene graph")
+            .update(res.get::<<UiModel as Component>::Storage>().expect("Could not find the ui-model storage"));
 
-        // // Obtain a reference to the camera.
-        // let cam = ctx.find::<Camera>()
-        //     .expect("Unable to find the camera");
+        // Obtain a reference to the camera.
+        let cameras = res.get::<<Camera as Component>::Storage>()
+            .expect("Unable to find the camera storage");
 
-        // // Create a new frame.
-        // let mut target = self.backend.create_frame();
-        // target.initialize(self.clear_color, 1.0);
+        // Create a new frame.
+        let mut target = self.backend.create_frame();
+        target.initialize(self.clear_color, 1.0);
 
-        // // Render the world scene.
-        // for (entity, model) in ctx.get_world_nodes() {
-        //     if ctx.has::<Model>(entity) {
-        //         if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
-        //             #[cfg(any(test, feature = "diagnostics"))]
-        //             {
-        //                 self.draw_calls += 1;
-        //             }
-        //             target.render(&(cam.world_matrix() * model.matrix()), data)
-        //                 .expect("Unable to render the world");
-        //         }
-        //     }
-        // }
+        let world_graph = res.get::<SceneGraph<Model>>()
+            .expect("Could not find the world scene graph");
+        let ui_graph = res.get::<SceneGraph<UiModel>>()
+            .expect("Could not find the ui scene graph");
+        let renderables = res.get::<<Renderable<B> as Component>::Storage>()
+            .expect("Could not find the renderable storage");
 
-        // // Render the ui scene.
-        // for (entity, model) in ctx.get_ui_nodes() {
-        //     if ctx.has::<UiModel>(entity) {
-        //         if let Ok(data) = ctx.get::<Renderable<B>>(entity) {
-        //             #[cfg(any(test, feature = "diagnostics"))]
-        //             {
-        //                 self.draw_calls += 1;
-        //             }
-        //             target.render(&(cam.ui_matrix() * model.matrix()), data)
-        //                 .expect("Unable to render the UI");
-        //         }
-        //     }
-        // }
+        for cam in cameras.iter() {
+            // Render the world scene.
+            for (entity, model) in world_graph.iter() {
+                if let Some(data) = renderables.get(entity) {
+                    #[cfg(any(test, feature = "diagnostics"))]
+                    {
+                        self.draw_calls += 1;
+                    }
+                    target.render(&(cam.world_matrix() * model.matrix()), data)
+                        .expect("Unable to render the world");
+                }
+            }
 
-        // // Finalize the frame and thus swap the display buffers.
-        // target.finalize()
-        //     .expect("Unable to finalize the frame");
+            // Render the ui scene.
+            for (entity, model) in ui_graph.iter() {
+                if let Some(data) = renderables.get(entity) {
+                    #[cfg(any(test, feature = "diagnostics"))]
+                    {
+                        self.draw_calls += 1;
+                    }
+                    target.render(&(cam.ui_matrix() * model.matrix()), data)
+                        .expect("Unable to render the UI");
+                }
+            }
+        }
+
+        // Finalize the frame and thus swap the display buffers.
+        target.finalize()
+            .expect("Unable to finalize the frame");
     }
 }
