@@ -61,33 +61,26 @@ where
 
         if !self.initialised {
             res.get_mut::<EventManager<Evt>>()
-                .expect("Could not find the main event manager")
                 .dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
             self.initialised = true;
         }
 
         // Update the scene graphs.
         res.borrow_mut::<SceneGraph<Model>>()
-            .expect("Unable to find the world scene graph")
-            .update(&res.borrow::<<Model as Component>::Storage>().expect("Could not find the model storage"));
+            .update(&res.borrow::<<Model as Component>::Storage>());
         res.borrow_mut::<SceneGraph<UiModel>>()
-            .expect("Unable to find the ui scene graph")
-            .update(&res.borrow::<<UiModel as Component>::Storage>().expect("Could not find the ui-model storage"));
+            .update(&res.borrow::<<UiModel as Component>::Storage>());
 
         // Obtain a reference to the camera.
-        let cameras = res.borrow::<<Camera as Component>::Storage>()
-            .expect("Unable to find the camera storage");
+        let cameras = res.borrow::<<Camera as Component>::Storage>();
 
         // Create a new frame.
         let mut target = self.backend.create_frame();
         target.initialize(self.clear_color, 1.0);
 
-        let world_graph = res.borrow::<SceneGraph<Model>>()
-            .expect("Could not find the world scene graph");
-        let ui_graph = res.borrow::<SceneGraph<UiModel>>()
-            .expect("Could not find the ui scene graph");
-        let renderables = res.borrow::<<Renderable<B> as Component>::Storage>()
-            .expect("Could not find the renderable storage");
+        let world_graph = res.borrow::<SceneGraph<Model>>();
+        let ui_graph = res.borrow::<SceneGraph<UiModel>>();
+        let renderables = res.borrow::<<Renderable<B> as Component>::Storage>();
 
         for cam in cameras.iter() {
             // Render the world scene.

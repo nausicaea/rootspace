@@ -60,7 +60,7 @@ impl<E> World<E>
 where
     E: EventTrait,
 {
-    pub fn get_resource_mut<R>(&mut self) -> Option<&mut R> where R: Resource {
+    pub fn get_resource_mut<R>(&mut self) -> &mut R where R: Resource {
         self.resources.get_mut::<R>()
     }
 
@@ -79,7 +79,6 @@ where
 
     pub fn create_entity(&mut self) -> Entity {
         self.resources.get_mut::<Entities>()
-            .expect("Could not find the Entities resource")
             .create()
     }
 
@@ -89,7 +88,6 @@ where
         }
 
         self.resources.get_mut::<C::Storage>()
-            .expect("Could not find the requested component storage")
             .insert(entity, component)
     }
 }
@@ -153,10 +151,9 @@ where
 
     fn handle_events(&mut self) -> bool {
         let events = self.resources.get_mut::<EventManager<E>>()
-            .filter(|mgr| mgr.len() > 0)
-            .map(|mgr| mgr.flush());
+            .flush();
 
-        if let Some(events) = events {
+        if !events.is_empty() {
             let mut statuses: Vec<bool> = Vec::with_capacity(events.len() * self.event_handler_systems.len());
             for event in &events {
                 for system in self.event_handler_systems.iter_mut() {

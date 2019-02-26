@@ -21,7 +21,6 @@ impl<Evt> CameraManager<Evt> {
         trace!("Updating the camera dimensions (dims={:?})", dims);
 
         res.get_mut::<<Camera as Component>::Storage>()
-            .expect("Could not find the camera storage")
             .iter_mut()
             .for_each(|c| c.set_dimensions(dims));
     }
@@ -31,7 +30,6 @@ impl<Evt> CameraManager<Evt> {
         trace!("Updating the camera dpi factor (factor={:?})", factor);
 
         res.get_mut::<<Camera as Component>::Storage>()
-            .expect("Could not find the camera storage")
             .iter_mut()
             .for_each(|c| c.set_dpi_factor(factor));
     }

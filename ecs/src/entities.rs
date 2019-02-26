@@ -1,14 +1,21 @@
+//! Provides facilities for reasoning about entities (e.g. objects) within a world.
+
 use crate::resources::Resource;
 use std::fmt;
 
+/// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug)]
 pub struct Entities {
+    /// Stores the highest assigned `Entity` index plus one.
     max_idx: Index,
+    /// Stores all previously assigned `Entity` indices that are now available again.
     free_idx: Vec<Index>,
+    /// Stores the generations of each `Entity`.
     generations: Vec<Generation>,
 }
 
 impl Entities {
+    /// Create a new `Entity`.
     pub fn create(&mut self) -> Entity {
         let idx = if let Some(idx) = self.free_idx.pop() {
             idx
@@ -25,15 +32,22 @@ impl Entities {
         Entity { idx, gen }
     }
 
+    /// Destroy the specified `Entity`.
+    ///
+    /// # Arguments
+    ///
+    /// * `entity` - The `Entity` to be destroyed.
     pub fn destroy(&mut self, entity: Entity) {
         self.generations[entity.idx.0 as usize].deactivate();
         self.free_idx.push(entity.idx);
     }
 
+    /// Return the number of active entities.
     pub fn len(&self) -> usize {
         self.generations.iter().filter(|g| g.is_active()).count()
     }
 
+    /// Create an iterator over all active entities.
     pub fn iter(&self) -> EntitiesIter {
         EntitiesIter { idx: 0, gens: &self.generations }
     }
@@ -41,8 +55,11 @@ impl Entities {
 
 impl Resource for Entities {}
 
+/// An iterator over all active entities.
 pub struct EntitiesIter<'a> {
+    /// Tracks the current index into the generations slice.
     idx: usize,
+    /// Holds a reference to the current generations.
     gens: &'a [Generation],
 }
 
@@ -66,13 +83,17 @@ impl<'a> Iterator for EntitiesIter<'a> {
     }
 }
 
+/// An entity serves as an identifier to an object within the world.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Entity {
+    /// Holds the entity index.
     idx: Index,
+    /// Holds the entity generation.
     gen: Generation,
 }
 
 impl Entity {
+    /// Create a new entity by specifying index and generation directly.
     #[cfg(test)]
     pub fn new(idx: u32, gen: u32) -> Entity {
         Entity {
@@ -81,6 +102,7 @@ impl Entity {
         }
     }
 
+    /// Return the integer index of the entity, which can be used to index into data structures.
     pub fn idx(&self) -> u32 {
         self.idx.0
     }
@@ -92,10 +114,13 @@ impl fmt::Display for Entity {
     }
 }
 
+/// A zero-based index that can be used as index into data structures. Entities may reuse these
+/// indices.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Index(u32);
 
 impl Index {
+    /// Return a copy of the current index and then increments the current index.
     fn post_increment(&mut self) -> Index {
         let tmp = *self;
         self.0 += 1;
@@ -109,10 +134,13 @@ impl fmt::Display for Index {
     }
 }
 
+/// A zero-based generation that can be used to track the number of times that a corresponding
+/// index has been used previously.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 struct Generation(u32);
 
 impl Generation {
+    /// Activates the current generation. Panics if the generation is already active.
     fn activate(&mut self) -> Generation {
         if !self.is_active() {
             self.0 += 1;
@@ -122,6 +150,7 @@ impl Generation {
         }
     }
 
+    /// Deactivates the current generation. Panics if the generation is already inactive.
     fn deactivate(&mut self) -> Generation {
         if self.is_active() {
             self.0 += 1;
@@ -131,6 +160,7 @@ impl Generation {
         }
     }
 
+    /// Returns `true`, if the current generation is an odd number, `false` if even or zero.
     fn is_active(&self) -> bool {
         self.0 % 2 == 1
     }

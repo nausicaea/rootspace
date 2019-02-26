@@ -3,6 +3,8 @@
 //! relationship with Entities, and finally, Systems encode (mostly) behaviour. The World manages
 //! all three type categories and provides access to each.
 
+#![warn(missing_docs)]
+
 extern crate hibitset;
 #[macro_use]
 extern crate mopa;

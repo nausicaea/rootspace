@@ -24,7 +24,7 @@ where
 
     fn run(&mut self, res: &mut Resources, event: &Evt) -> bool {
         if event.matches_filter(Evt::shutdown()) {
-            res.get_mut::<EventManager<Evt>>().expect("Could not find the main event manager").dispatch_later(Evt::new_hard_shutdown());
+            res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_hard_shutdown());
             true
         } else if event.matches_filter(Evt::hard_shutdown()) {
             false

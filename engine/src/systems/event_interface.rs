@@ -34,7 +34,7 @@ where
     fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
         self.events_loop.poll(|input_event| {
             if let Some(event) = input_event.maybe_into() {
-                res.get_mut::<EventManager<Evt>>().expect("Could not find the main event manager").dispatch_later(event);
+                res.get_mut::<EventManager<Evt>>().dispatch_later(event);
             }
         });
     }

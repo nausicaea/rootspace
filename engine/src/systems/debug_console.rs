@@ -88,7 +88,7 @@ where
     fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
         self.try_read_line()
             .map(|l| split_arguments(l, self.escape_char, self.quote_char))
-            .map(|a| res.get_mut::<EventManager<Evt>>().expect("Could not find the main event manager").dispatch_later(Evt::new_command(a)));
+            .map(|a| res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_command(a)));
     }
 }
 

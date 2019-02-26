@@ -45,7 +45,6 @@ impl Game {
 
         let ea = self.world_mut().create_entity();
         self.world_mut().get_resource_mut::<SceneGraph<Model>>()
-            .expect("Could not find the world scene graph")
             .insert(ea);
         self.world_mut()
             .add_component(ea, Info::new("Entity A", "Rotated cube example"));
@@ -60,7 +59,6 @@ impl Game {
 
         let eb = self.world_mut().create_entity();
         self.world_mut().get_resource_mut::<SceneGraph<Model>>()
-            .expect("Could not find the world scene graph")
             .insert(eb);
         self.world_mut().add_component(eb, Info::new("Entity B", "Text example"));
         self.world_mut().add_component(
@@ -74,7 +72,6 @@ impl Game {
 
         let ec = self.world_mut().create_entity();
         self.world_mut().get_resource_mut::<SceneGraph<UiModel>>()
-            .expect("Could not find the ui scene graph")
             .insert(ec);
         self.world_mut().add_component(ec, Info::new("Entity C", "UI Text example"));
         self.world_mut().add_component(
@@ -210,7 +207,6 @@ impl Game {
         self.world_mut().add_event_handler_system(event_coordinator);
 
         self.world_mut().get_resource_mut::<EventManager<Event>>()
-            .expect("Could not find the main event manager")
             .dispatch_later(Event::new_startup());
 
         Ok(())

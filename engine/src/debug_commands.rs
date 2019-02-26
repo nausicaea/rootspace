@@ -38,9 +38,8 @@ where
     }
 
     fn run(&self, res: &mut Resources, _: &[String]) -> Result<(), Error> {
-        let mgr = res.get_mut::<EventManager<Evt>>()
-            .expect("Could not find the event manager");
-        mgr.dispatch_later(Evt::new_shutdown());
+        res.get_mut::<EventManager<Evt>>()
+            .dispatch_later(Evt::new_shutdown());
         Ok(())
     }
 }
@@ -83,8 +82,7 @@ impl CommandTrait for CameraCommand {
             .get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
-            let cameras = res.borrow::<<Camera as Component>::Storage>()
-                .expect("Could not find the cameras");
+            let cameras = res.borrow::<<Camera as Component>::Storage>();
 
             for (i, cam) in cameras.iter().enumerate() {
                 println!("Camera {}:", i);
@@ -161,17 +159,12 @@ impl CommandTrait for EntityCommand {
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
             let entities: Vec<_> = res.borrow::<Entities>()
-                .expect("Could not find the entity register")
                 .iter()
                 .collect();
-            let cameras = res.borrow::<<Camera as Component>::Storage>()
-                .expect("Could not find the cameras");
-            let infos = res.borrow::<<Info as Component>::Storage>()
-                .expect("Could not find the Info component storage");
-            let world_graph = res.borrow::<SceneGraph<Model>>()
-                .expect("Could not find the world scene graph");
-            let ui_graph = res.borrow::<SceneGraph<UiModel>>()
-                .expect("Could not find the ui scene graph");
+            let cameras = res.borrow::<<Camera as Component>::Storage>();
+            let infos = res.borrow::<<Info as Component>::Storage>();
+            let world_graph = res.borrow::<SceneGraph<Model>>();
+            let ui_graph = res.borrow::<SceneGraph<UiModel>>();
 
             if list_matches.is_present("count") {
                 println!("Loaded entities: {}", entities.len());
