@@ -1,5 +1,5 @@
-extern crate game;
 extern crate failure;
+extern crate game;
 
 use failure::Error;
 use game::Game;

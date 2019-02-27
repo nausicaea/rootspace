@@ -1,15 +1,23 @@
 //! Provides facilities to define and manage events.
 
 use crate::resources::Resource;
-use std::fmt;
-use std::collections::VecDeque;
-use std::ops::{BitAnd, BitOr, BitXor};
+use std::{
+    collections::VecDeque,
+    fmt,
+    ops::{BitAnd, BitOr, BitXor},
+};
 
 /// Events sent around within the `World` need to implement this trait such that individual
 /// `EventHandlerSystem`s may filter for particular events.
 pub trait EventTrait: Clone + fmt::Debug + 'static {
     /// Defines the event filter type.
-    type EventFlag: Default + Clone + Copy + PartialEq + BitAnd<Output = Self::EventFlag> + BitOr<Output = Self::EventFlag> + BitXor<Output = Self::EventFlag>;
+    type EventFlag: Default
+        + Clone
+        + Copy
+        + PartialEq
+        + BitAnd<Output = Self::EventFlag>
+        + BitOr<Output = Self::EventFlag>
+        + BitXor<Output = Self::EventFlag>;
 
     /// Given an event filter, returns `true` if the current event matches that filter, `false`
     /// otherwise.

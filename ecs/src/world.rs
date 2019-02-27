@@ -1,10 +1,12 @@
+use crate::{
+    components::{Component, Storage},
+    entities::{Entities, Entity},
+    events::{EventManager, EventTrait},
+    loop_stage::LoopStage,
+    resources::{Resource, Resources},
+    system::{EventHandlerSystem, System},
+};
 use std::{marker::PhantomData, time::Duration};
-use crate::system::{System, EventHandlerSystem};
-use crate::loop_stage::LoopStage;
-use crate::resources::{Resources, Resource};
-use crate::entities::{Entities, Entity};
-use crate::events::{EventTrait, EventManager};
-use crate::components::{Storage, Component};
 
 /// A World must perform actions for four types of calls.
 pub trait WorldTrait {
@@ -15,7 +17,9 @@ pub trait WorldTrait {
     /// # Arguments
     ///
     /// * `res` - The resource to be added.
-    fn add_resource<R>(&mut self, res: R) -> Option<R> where R: Resource;
+    fn add_resource<R>(&mut self, res: R) -> Option<R>
+    where
+        R: Resource;
     /// The fixed update method is supposed to be called from the main loop at fixed time
     /// intervals.
     ///
@@ -60,11 +64,17 @@ impl<E> World<E>
 where
     E: EventTrait,
 {
-    pub fn get_resource_mut<R>(&mut self) -> &mut R where R: Resource {
+    pub fn get_resource_mut<R>(&mut self) -> &mut R
+    where
+        R: Resource,
+    {
         self.resources.get_mut::<R>()
     }
 
-    pub fn add_system<S>(&mut self, stage: LoopStage, system: S) where S: System + 'static {
+    pub fn add_system<S>(&mut self, stage: LoopStage, system: S)
+    where
+        S: System + 'static,
+    {
         let sys = Box::new(system);
         match stage {
             LoopStage::FixedUpdate => self.fixed_update_systems.push(sys),
@@ -73,22 +83,26 @@ where
         }
     }
 
-    pub fn add_event_handler_system<H>(&mut self, system: H) where H: EventHandlerSystem<E> + 'static {
+    pub fn add_event_handler_system<H>(&mut self, system: H)
+    where
+        H: EventHandlerSystem<E> + 'static,
+    {
         self.event_handler_systems.push(Box::new(system))
     }
 
     pub fn create_entity(&mut self) -> Entity {
-        self.resources.get_mut::<Entities>()
-            .create()
+        self.resources.get_mut::<Entities>().create()
     }
 
-    pub fn add_component<C>(&mut self, entity: Entity, component: C) -> Option<C> where C: Component {
+    pub fn add_component<C>(&mut self, entity: Entity, component: C) -> Option<C>
+    where
+        C: Component,
+    {
         if !self.resources.has::<C::Storage>() {
             let _ = self.resources.insert(C::Storage::default());
         }
 
-        self.resources.get_mut::<C::Storage>()
-            .insert(entity, component)
+        self.resources.get_mut::<C::Storage>().insert(entity, component)
     }
 }
 
@@ -127,7 +141,10 @@ where
         self.resources.insert(EventManager::<E>::default());
     }
 
-    fn add_resource<R>(&mut self, res: R) -> Option<R> where R: Resource {
+    fn add_resource<R>(&mut self, res: R) -> Option<R>
+    where
+        R: Resource,
+    {
         self.resources.insert(res)
     }
 
@@ -150,8 +167,7 @@ where
     }
 
     fn handle_events(&mut self) -> bool {
-        let events = self.resources.get_mut::<EventManager<E>>()
-            .flush();
+        let events = self.resources.get_mut::<EventManager<E>>().flush();
 
         if !events.is_empty() {
             let mut statuses: Vec<bool> = Vec::with_capacity(events.len() * self.event_handler_systems.len());

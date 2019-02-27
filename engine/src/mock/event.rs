@@ -1,7 +1,9 @@
+use crate::{
+    event::{EngineEventTrait, MaybeFrom},
+    graphics::{glium::GliumEvent, headless::HeadlessEvent},
+};
 use ecs::EventTrait;
-use crate::event::{EngineEventTrait, MaybeFrom};
 use glium::glutin::{Event as GlutinEvent, WindowEvent};
-use crate::graphics::{glium::GliumEvent, headless::HeadlessEvent};
 
 bitflags! {
     pub struct MockEvtFlag: u64 {

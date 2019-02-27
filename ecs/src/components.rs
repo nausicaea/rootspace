@@ -1,10 +1,6 @@
-use crate::resources::Resource;
-use crate::entities::Entity;
-use std::fmt;
-use std::ptr;
-use std::slice;
-use std::iter;
-use hibitset::{BitSet, BitSetLike, BitIter};
+use crate::{entities::Entity, resources::Resource};
+use hibitset::{BitIter, BitSet, BitSetLike};
+use std::{fmt, iter, ptr, slice};
 
 pub trait Component: Sized {
     type Storage: Storage<Self> + Resource + Default;
@@ -90,9 +86,7 @@ impl<T> Storage<T> for VecStorage<T> {
         let data = &mut self.data;
 
         for idx in (&self.index).iter() {
-            unsafe {
-                ptr::drop_in_place(data.get_unchecked_mut(idx as usize))
-            }
+            unsafe { ptr::drop_in_place(data.get_unchecked_mut(idx as usize)) }
         }
 
         self.index.clear();
@@ -105,9 +99,7 @@ impl<T> Storage<T> for VecStorage<T> {
         let idx = entity.idx();
 
         if self.index.contains(idx) {
-            unsafe {
-                Some(self.data.get_unchecked(idx as usize))
-            }
+            unsafe { Some(self.data.get_unchecked(idx as usize)) }
         } else {
             None
         }
@@ -117,9 +109,7 @@ impl<T> Storage<T> for VecStorage<T> {
         let idx = entity.idx();
 
         if self.index.contains(idx) {
-            unsafe {
-                Some(self.data.get_unchecked_mut(idx as usize))
-            }
+            unsafe { Some(self.data.get_unchecked_mut(idx as usize)) }
         } else {
             None
         }
@@ -159,9 +149,7 @@ impl<'a, T: 'a> Iterator for VecStorageIter<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(idx) = self.idx_iter.next() {
-            unsafe {
-                Some(self.data.get_unchecked(idx as usize))
-            }
+            unsafe { Some(self.data.get_unchecked(idx as usize)) }
         } else {
             None
         }
@@ -272,7 +260,7 @@ mod tests {
 
         let a = Entity::new(0, 1);
         let _ = s.insert(a, 101);
-        assert_eq!(s.get(&a) , Some(&101));
+        assert_eq!(s.get(&a), Some(&101));
 
         let b = Entity::new(1, 1);
         assert!(s.get(&b).is_none());
@@ -284,7 +272,7 @@ mod tests {
 
         let a = Entity::new(0, 1);
         let _ = s.insert(a, 101);
-        assert_eq!(s.get_mut(&a) , Some(&mut 101));
+        assert_eq!(s.get_mut(&a), Some(&mut 101));
 
         let b = Entity::new(1, 1);
         assert!(s.get_mut(&b).is_none());
@@ -327,9 +315,7 @@ mod tests {
         let c = Entity::new(2, 1);
         let _ = s.insert(c, 103);
 
-        let data: Vec<u32> = s.iter()
-            .cloned()
-            .collect();
+        let data: Vec<u32> = s.iter().cloned().collect();
         assert_eq!(data, vec![101, 102, 103]);
     }
 }

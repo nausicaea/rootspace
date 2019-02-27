@@ -9,20 +9,20 @@ extern crate hibitset;
 #[macro_use]
 extern crate mopa;
 
-pub mod loop_stage;
-pub mod entities;
 pub mod components;
+pub mod entities;
 pub mod events;
+pub mod loop_stage;
 pub mod resources;
 pub mod system;
 pub mod world;
 
 pub use crate::{
-    events::{EventTrait, EventManager},
-    entities::{Entity, Entities},
     components::{Component, Storage, VecStorage},
-    resources::{Resource, Resources},
+    entities::{Entities, Entity},
+    events::{EventManager, EventTrait},
     loop_stage::LoopStage,
-    system::{System, EventHandlerSystem},
+    resources::{Resource, Resources},
+    system::{EventHandlerSystem, System},
     world::{World, WorldTrait},
 };

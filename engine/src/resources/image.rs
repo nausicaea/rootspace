@@ -1,5 +1,5 @@
-use failure::Error;
 use crate::file_manipulation::VerifyPath;
+use failure::Error;
 use glium::texture::RawImage2d;
 use image::{self, GenericImageView};
 use std::{fmt, path::Path};

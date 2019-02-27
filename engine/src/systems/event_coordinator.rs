@@ -1,5 +1,5 @@
-use ecs::{Resources, EventHandlerSystem, EventManager};
 use crate::event::EngineEventTrait;
+use ecs::{EventHandlerSystem, EventManager, Resources};
 use std::marker::PhantomData;
 
 pub struct EventCoordinator<Evt> {
@@ -24,7 +24,8 @@ where
 
     fn run(&mut self, res: &mut Resources, event: &Evt) -> bool {
         if event.matches_filter(Evt::shutdown()) {
-            res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_hard_shutdown());
+            res.get_mut::<EventManager<Evt>>()
+                .dispatch_later(Evt::new_hard_shutdown());
             true
         } else if event.matches_filter(Evt::hard_shutdown()) {
             false

@@ -5,11 +5,9 @@ mod private {
     pub trait Sealed {}
 }
 
+use crate::{event::MaybeInto, geometry::rect::Rect, resources::Image};
 use ecs::EventTrait;
-use crate::event::MaybeInto;
 use failure::Error;
-use crate::geometry::rect::Rect;
-use crate::resources::Image;
 use std::borrow::{Borrow, Cow};
 
 pub trait BackendTrait: Sized + private::Sealed {

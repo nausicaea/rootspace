@@ -1,17 +1,19 @@
+use crate::{
+    file_manipulation::ReadPath,
+    graphics::{
+        glium::{GliumBackend, GliumRenderData, GliumTexture},
+        headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture},
+        BackendTrait, DataTrait, TextureTrait,
+    },
+    resources::{Image, Mesh, Text},
+};
 use ecs::{Component, VecStorage};
 use failure::Error;
-use crate::file_manipulation::ReadPath;
 use glium::{
     index::{IndexBuffer, PrimitiveType},
     program::Program,
     vertex::VertexBuffer,
 };
-use crate::graphics::{
-    glium::{GliumBackend, GliumRenderData, GliumTexture},
-    headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture},
-    BackendTrait, DataTrait, TextureTrait,
-};
-use crate::resources::{Image, Mesh, Text};
 use std::{
     borrow::Borrow,
     fmt,

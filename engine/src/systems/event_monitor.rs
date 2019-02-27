@@ -1,4 +1,4 @@
-use ecs::{EventTrait, EventHandlerSystem, Resources};
+use ecs::{EventHandlerSystem, EventTrait, Resources};
 use std::marker::PhantomData;
 
 pub struct EventMonitor<Evt> {

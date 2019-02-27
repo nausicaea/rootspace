@@ -1,7 +1,7 @@
 use ecs::{Component, VecStorage};
 
 use affine_transform::AffineTransform;
-use nalgebra::{Affine3, Isometry3, Point3, Matrix4, UnitQuaternion, Vector3};
+use nalgebra::{Affine3, Isometry3, Matrix4, Point3, UnitQuaternion, Vector3};
 use std::{f32, ops::Mul};
 
 #[derive(Debug, Clone, PartialEq)]

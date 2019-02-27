@@ -42,13 +42,15 @@ pub mod scene_graph;
 pub mod systems;
 pub mod text_manipulation;
 
-use ecs::World;
-use crate::graphics::{
-    glium::{GliumBackend, GliumEventsLoop},
-    headless::{HeadlessBackend, HeadlessEventsLoop},
+use crate::{
+    graphics::{
+        glium::{GliumBackend, GliumEventsLoop},
+        headless::{HeadlessBackend, HeadlessEventsLoop},
+    },
+    orchestrator::Orchestrator,
+    systems::{event_interface::EventInterface, renderer::Renderer},
 };
-use crate::orchestrator::Orchestrator;
-use crate::systems::{event_interface::EventInterface, renderer::Renderer};
+use ecs::World;
 
 pub type DefaultOrchestrator<E> = Orchestrator<E, World<E>>;
 pub type GliumEventInterface<E> = EventInterface<E, GliumEventsLoop>;

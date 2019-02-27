@@ -49,7 +49,10 @@ impl Entities {
 
     /// Create an iterator over all active entities.
     pub fn iter(&self) -> EntitiesIter {
-        EntitiesIter { idx: 0, gens: &self.generations }
+        EntitiesIter {
+            idx: 0,
+            gens: &self.generations,
+        }
     }
 }
 
@@ -70,7 +73,10 @@ impl<'a> Iterator for EntitiesIter<'a> {
         if self.idx < self.gens.len() {
             while self.idx < self.gens.len() {
                 if self.gens[self.idx].is_active() {
-                    let tmp = Entity { idx: Index(self.idx as u32), gen: self.gens[self.idx] };
+                    let tmp = Entity {
+                        idx: Index(self.idx as u32),
+                        gen: self.gens[self.idx],
+                    };
                     self.idx += 1;
                     return Some(tmp);
                 } else {

@@ -1,5 +1,5 @@
 use affine_transform::AffineTransform;
-use nalgebra::{Point3, Scalar, Real, Unit, Vector3};
+use nalgebra::{Point3, Real, Scalar, Unit, Vector3};
 use std::fmt;
 
 /// A `Ray` characterises a ray (a line segment with an origin, direction and infinite length in

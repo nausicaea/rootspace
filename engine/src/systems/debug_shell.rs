@@ -1,6 +1,8 @@
-use crate::debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand};
+use crate::{
+    debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand},
+    event::EngineEventTrait,
+};
 use ecs::{EventHandlerSystem, Resources};
-use crate::event::EngineEventTrait;
 use failure::Error;
 use std::{collections::HashMap, marker::PhantomData};
 

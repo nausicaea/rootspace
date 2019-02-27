@@ -1,6 +1,6 @@
-use ecs::{Component, VecStorage};
-use alga::linear::{ProjectiveTransformation, Transformation};
 use crate::geometry::ray::Ray;
+use alga::linear::{ProjectiveTransformation, Transformation};
+use ecs::{Component, VecStorage};
 use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
 use std::f32;
 
@@ -284,8 +284,7 @@ mod tests {
             let origin = Point3::from(-c.view.translation.vector);
             let target = c.ndc_point_to_world(&tmp).coords;
 
-            Unit::try_new(target, f32::EPSILON)
-                .map(|direction| Ray { origin, direction })
+            Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
         };
 
         assert_eq!(c.world_point_to_screen(&p), q);
@@ -315,8 +314,7 @@ mod tests {
                 Vector3::new(t.x, t.y, d)
             };
 
-            Unit::try_new(target, f32::EPSILON)
-                .map(|direction| Ray { origin, direction })
+            Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
         };
 
         assert_eq!(c.ui_point_to_screen(&Point2::new(p.x, p.y), p.z), q);

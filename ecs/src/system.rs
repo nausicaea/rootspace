@@ -1,8 +1,7 @@
 //! Provides traits to specify behaviour (e.g. systems) that operates on data (e.g. components).
 
+use crate::{events::EventTrait, resources::Resources};
 use std::time::Duration;
-use crate::resources::Resources;
-use crate::events::EventTrait;
 
 /// Encodes a system or behaviour.
 pub trait System {

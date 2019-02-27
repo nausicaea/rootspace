@@ -1,7 +1,7 @@
+use crate::event::EngineEventTrait;
 #[cfg(not(test))]
 use ctrlc;
-use ecs::{System, Resources, EventManager};
-use crate::event::EngineEventTrait;
+use ecs::{EventManager, Resources, System};
 #[cfg(not(test))]
 use std::process;
 use std::{

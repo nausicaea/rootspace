@@ -1,9 +1,10 @@
+use crate::{
+    components::{model::Model, ui_model::UiModel},
+    event::EngineEventTrait,
+    file_manipulation::{FileError, VerifyPath},
+    scene_graph::SceneGraph,
+};
 use ecs::{EventManager, WorldTrait};
-use crate::event::EngineEventTrait;
-use crate::file_manipulation::{FileError, VerifyPath};
-use crate::scene_graph::SceneGraph;
-use crate::components::model::Model;
-use crate::components::ui_model::UiModel;
 use std::{
     cmp,
     marker::PhantomData,
@@ -90,8 +91,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
     use crate::mock::{MockEvt, MockWorld};
+    use std::env;
     use tempfile::NamedTempFile;
 
     /// Danger! This test works with thread::sleep() to test fixed loop timing. Note that the

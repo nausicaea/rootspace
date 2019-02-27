@@ -1,7 +1,9 @@
+use crate::{
+    file_manipulation::ReadPath,
+    graphics::{BackendTrait, TextureTrait},
+    resources::{Mesh, Vertex},
+};
 use failure::Error;
-use crate::file_manipulation::ReadPath;
-use crate::graphics::{BackendTrait, TextureTrait};
-use crate::resources::{Mesh, Vertex};
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use std::{
     borrow::{Borrow, Cow},

@@ -1,8 +1,10 @@
+use crate::{
+    components::{camera::Camera, info::Info, model::Model, ui_model::UiModel},
+    event::EngineEventTrait,
+    scene_graph::SceneGraph,
+};
 use clap::{App, AppSettings, Arg, SubCommand};
-use crate::scene_graph::SceneGraph;
-use crate::components::{camera::Camera, info::Info, model::Model, ui_model::UiModel};
-use ecs::{Component, Storage, Resources, EventManager, Entities};
-use crate::event::EngineEventTrait;
+use ecs::{Component, Entities, EventManager, Resources, Storage};
 use failure::Error;
 use std::marker::PhantomData;
 
@@ -38,8 +40,7 @@ where
     }
 
     fn run(&self, res: &mut Resources, _: &[String]) -> Result<(), Error> {
-        res.get_mut::<EventManager<Evt>>()
-            .dispatch_later(Evt::new_shutdown());
+        res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_shutdown());
         Ok(())
     }
 }
@@ -158,9 +159,7 @@ impl CommandTrait for EntityCommand {
             .get_matches_from_safe(args)?;
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
-            let entities: Vec<_> = res.borrow::<Entities>()
-                .iter()
-                .collect();
+            let entities: Vec<_> = res.borrow::<Entities>().iter().collect();
             let cameras = res.borrow::<<Camera as Component>::Storage>();
             let infos = res.borrow::<<Info as Component>::Storage>();
             let world_graph = res.borrow::<SceneGraph<Model>>();

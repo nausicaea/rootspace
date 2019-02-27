@@ -1,7 +1,6 @@
-use std::ops::Mul;
-use ecs::{Entity, Resource, Storage, Component};
+use ecs::{Component, Entity, Resource, Storage};
 use hierarchy::{Hierarchy, RawNodes};
-use std::fmt;
+use std::{fmt, ops::Mul};
 
 #[derive(Default)]
 pub struct SceneGraph<T>
@@ -17,10 +16,8 @@ where
     for<'r> &'r T: Mul<&'r T, Output = T>,
 {
     pub fn update(&mut self, data: &<T as Component>::Storage) {
-        self.hierarchy.update(&|entity, _, parent_datum| {
-            data.get(entity)
-                .map(|current_datum| parent_datum * current_datum)
-        })
+        self.hierarchy
+            .update(&|entity, _, parent_datum| data.get(entity).map(|current_datum| parent_datum * current_datum))
     }
 
     pub fn insert(&mut self, entity: Entity) {

@@ -1,6 +1,5 @@
-use ecs::{EventTrait, System, Resources, EventManager};
-use crate::event::MaybeInto;
-use crate::graphics::EventsLoopTrait;
+use crate::{event::MaybeInto, graphics::EventsLoopTrait};
+use ecs::{EventManager, EventTrait, Resources, System};
 use std::{marker::PhantomData, time::Duration};
 
 pub struct EventInterface<Evt, L> {
@@ -43,8 +42,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graphics::headless::HeadlessEventsLoop;
-    use crate::mock::MockEvt;
+    use crate::{graphics::headless::HeadlessEventsLoop, mock::MockEvt};
 
     #[test]
     fn new_headless() {

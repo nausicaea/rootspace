@@ -27,7 +27,10 @@ impl WorldTrait for MockWorld {
         self.iterations = 0;
     }
 
-    fn add_resource<R>(&mut self, _res: R) -> Option<R> where R: Resource {
+    fn add_resource<R>(&mut self, _res: R) -> Option<R>
+    where
+        R: Resource,
+    {
         None
     }
 

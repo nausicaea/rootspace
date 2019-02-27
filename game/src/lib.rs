@@ -9,15 +9,18 @@ extern crate nalgebra;
 
 mod event;
 
-use ecs::{World, LoopStage, EventManager};
+use crate::event::Event;
+use ecs::{EventManager, LoopStage, World};
 use engine::{
     components::{camera::Camera, info::Info, model::Model, renderable::Renderable, ui_model::UiModel},
     event::EngineEventTrait,
     scene_graph::SceneGraph,
-    systems::{debug_console::DebugConsole, debug_shell::DebugShell, event_coordinator::EventCoordinator, event_monitor::EventMonitor, camera_manager::CameraManager, force_shutdown::ForceShutdown},
+    systems::{
+        camera_manager::CameraManager, debug_console::DebugConsole, debug_shell::DebugShell,
+        event_coordinator::EventCoordinator, event_monitor::EventMonitor, force_shutdown::ForceShutdown,
+    },
     DefaultOrchestrator, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
 };
-use crate::event::Event;
 use failure::Error;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
@@ -44,8 +47,7 @@ impl Game {
         self.world_mut().add_component(camera, Camera::default());
 
         let ea = self.world_mut().create_entity();
-        self.world_mut().get_resource_mut::<SceneGraph<Model>>()
-            .insert(ea);
+        self.world_mut().get_resource_mut::<SceneGraph<Model>>().insert(ea);
         self.world_mut()
             .add_component(ea, Info::new("Entity A", "Rotated cube example"));
         self.world_mut().add_component(
@@ -58,9 +60,9 @@ impl Game {
         );
 
         let eb = self.world_mut().create_entity();
-        self.world_mut().get_resource_mut::<SceneGraph<Model>>()
-            .insert(eb);
-        self.world_mut().add_component(eb, Info::new("Entity B", "Text example"));
+        self.world_mut().get_resource_mut::<SceneGraph<Model>>().insert(eb);
+        self.world_mut()
+            .add_component(eb, Info::new("Entity B", "Text example"));
         self.world_mut().add_component(
             eb,
             Model::new(
@@ -71,16 +73,12 @@ impl Game {
         );
 
         let ec = self.world_mut().create_entity();
-        self.world_mut().get_resource_mut::<SceneGraph<UiModel>>()
-            .insert(ec);
-        self.world_mut().add_component(ec, Info::new("Entity C", "UI Text example"));
+        self.world_mut().get_resource_mut::<SceneGraph<UiModel>>().insert(ec);
+        self.world_mut()
+            .add_component(ec, Info::new("Entity C", "UI Text example"));
         self.world_mut().add_component(
             ec,
-            UiModel::new(
-                Vector2::new(0.0, 0.0),
-                Vector2::new(800.0, 600.0),
-                -1.0,
-            ),
+            UiModel::new(Vector2::new(0.0, 0.0), Vector2::new(800.0, 600.0), -1.0),
         );
 
         // Handle the regular systems.
@@ -206,7 +204,8 @@ impl Game {
         let event_coordinator = EventCoordinator::<Event>::default();
         self.world_mut().add_event_handler_system(event_coordinator);
 
-        self.world_mut().get_resource_mut::<EventManager<Event>>()
+        self.world_mut()
+            .get_resource_mut::<EventManager<Event>>()
             .dispatch_later(Event::new_startup());
 
         Ok(())

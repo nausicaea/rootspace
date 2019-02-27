@@ -1,9 +1,11 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
+use crate::{
+    event::MaybeFrom,
+    geometry::rect::Rect,
+    resources::{Image, Mesh},
+};
 use ecs::EventTrait;
-use crate::event::MaybeFrom;
 use failure::Error;
-use crate::geometry::rect::Rect;
-use crate::resources::{Image, Mesh};
 use std::borrow::{Borrow, Cow};
 
 #[derive(Debug, Clone, Default, Copy)]
@@ -166,13 +168,7 @@ mod tests {
 
     #[test]
     fn backend() {
-        assert!(HeadlessBackend::new(
-            &HeadlessEventsLoop::default(),
-            "Title",
-            (800, 600),
-            false,
-            0
-        ).is_ok());
+        assert!(HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).is_ok());
     }
 
     #[test]
@@ -188,7 +184,9 @@ mod tests {
 
         let mut f: HeadlessFrame = b.create_frame();
         f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
-        assert!(f.render(&MockLocation::default(), &HeadlessRenderData::default()).is_ok());
+        assert!(f
+            .render(&MockLocation::default(), &HeadlessRenderData::default())
+            .is_ok());
         let r = f.finalize();
         assert!(r.is_ok());
     }

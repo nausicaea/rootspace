@@ -1,5 +1,4 @@
-use crate::components::camera::Camera;
-use crate::event::EngineEventTrait;
+use crate::{components::camera::Camera, event::EngineEventTrait};
 use ecs::{Component, EventHandlerSystem, Resources};
 use std::marker::PhantomData;
 

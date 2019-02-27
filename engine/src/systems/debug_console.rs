@@ -3,8 +3,8 @@
 #![cfg_attr(test, allow(unused_mut))]
 #![cfg_attr(test, allow(dead_code))]
 
-use ecs::{System, Resources, EventManager};
-use crate::event::EngineEventTrait;
+use crate::{event::EngineEventTrait, text_manipulation::split_arguments};
+use ecs::{EventManager, Resources, System};
 use std::{
     io::{self, Read},
     marker::PhantomData,
@@ -13,7 +13,6 @@ use std::{
     thread::spawn,
     time::Duration,
 };
-use crate::text_manipulation::split_arguments;
 
 pub struct DebugConsole<Evt> {
     escape_char: char,

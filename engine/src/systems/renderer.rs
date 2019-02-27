@@ -1,9 +1,11 @@
-use crate::components::{camera::Camera, model::Model, renderable::Renderable, ui_model::UiModel};
-use crate::event::EngineEventTrait;
-use crate::scene_graph::SceneGraph;
-use ecs::{Component, Storage, System, Resources, EventManager};
+use crate::{
+    components::{camera::Camera, model::Model, renderable::Renderable, ui_model::UiModel},
+    event::EngineEventTrait,
+    graphics::{BackendTrait, FrameTrait},
+    scene_graph::SceneGraph,
+};
+use ecs::{Component, EventManager, Resources, Storage, System};
 use failure::Error;
-use crate::graphics::{BackendTrait, FrameTrait};
 use std::{marker::PhantomData, time::Duration};
 
 #[derive(Debug)]
@@ -52,7 +54,6 @@ where
     Evt: EngineEventTrait,
     B: BackendTrait + 'static,
 {
-
     fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
         #[cfg(any(test, feature = "diagnostics"))]
         {
@@ -90,7 +91,8 @@ where
                     {
                         self.draw_calls += 1;
                     }
-                    target.render(&(cam.world_matrix() * model.matrix()), data)
+                    target
+                        .render(&(cam.world_matrix() * model.matrix()), data)
                         .expect("Unable to render the world");
                 }
             }
@@ -102,14 +104,14 @@ where
                     {
                         self.draw_calls += 1;
                     }
-                    target.render(&(cam.ui_matrix() * model.matrix()), data)
+                    target
+                        .render(&(cam.ui_matrix() * model.matrix()), data)
                         .expect("Unable to render the UI");
                 }
             }
         }
 
         // Finalize the frame and thus swap the display buffers.
-        target.finalize()
-            .expect("Unable to finalize the frame");
+        target.finalize().expect("Unable to finalize the frame");
     }
 }

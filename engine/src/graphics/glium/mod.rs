@@ -1,8 +1,11 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
+use crate::{
+    event::MaybeFrom,
+    geometry::rect::Rect,
+    resources::{Image, Vertex},
+};
 use ecs::EventTrait;
-use crate::event::MaybeFrom;
 use failure::Error;
-use crate::geometry::rect::Rect;
 use glium::{
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder},
@@ -11,7 +14,6 @@ use glium::{
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
-use crate::resources::{Image, Vertex};
 use std::{
     borrow::{Borrow, Cow},
     fmt,
@@ -340,13 +342,7 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn backend() {
-        assert!(GliumBackend::new(
-            &GliumEventsLoop::default(),
-            "Title",
-            (800, 600),
-            false,
-            0
-        ).is_ok());
+        assert!(GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0).is_ok());
     }
 
     #[test]
