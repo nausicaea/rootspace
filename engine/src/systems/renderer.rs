@@ -1,5 +1,5 @@
 use crate::{
-    components::{camera::Camera, model::Model, renderable::Renderable, ui_model::UiModel},
+    components::{Camera, Model, Renderable, Status, UiModel},
     event::EngineEventTrait,
     graphics::{BackendTrait, FrameTrait},
     scene_graph::SceneGraph,
@@ -81,32 +81,37 @@ where
 
         let world_graph = res.borrow::<SceneGraph<Model>>();
         let ui_graph = res.borrow::<SceneGraph<UiModel>>();
+        let statuses = res.borrow::<<Status as Component>::Storage>();
         let renderables = res.borrow::<<Renderable<B> as Component>::Storage>();
 
         for cam in cameras.iter() {
             // Render the world scene.
             for (entity, model) in world_graph.iter() {
-                if let Some(data) = renderables.get(entity) {
-                    #[cfg(any(test, feature = "diagnostics"))]
-                    {
-                        self.draw_calls += 1;
+                if statuses.get(entity).map(|s| s.enabled()) == Some(true) {
+                    if let Some(data) = renderables.get(entity) {
+                        #[cfg(any(test, feature = "diagnostics"))]
+                        {
+                            self.draw_calls += 1;
+                        }
+                        target
+                            .render(&(cam.world_matrix() * model.matrix()), data)
+                            .expect("Unable to render the world");
                     }
-                    target
-                        .render(&(cam.world_matrix() * model.matrix()), data)
-                        .expect("Unable to render the world");
                 }
             }
 
             // Render the ui scene.
             for (entity, model) in ui_graph.iter() {
-                if let Some(data) = renderables.get(entity) {
-                    #[cfg(any(test, feature = "diagnostics"))]
-                    {
-                        self.draw_calls += 1;
+                if statuses.get(entity).map(|s| s.enabled()) == Some(true) {
+                    if let Some(data) = renderables.get(entity) {
+                        #[cfg(any(test, feature = "diagnostics"))]
+                        {
+                            self.draw_calls += 1;
+                        }
+                        target
+                            .render(&(cam.ui_matrix() * model.matrix()), data)
+                            .expect("Unable to render the UI");
                     }
-                    target
-                        .render(&(cam.ui_matrix() * model.matrix()), data)
-                        .expect("Unable to render the UI");
                 }
             }
         }

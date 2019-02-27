@@ -1,10 +1,10 @@
 use crate::{
-    components::{camera::Camera, info::Info, model::Model, ui_model::UiModel},
+    components::{Camera, Info, Model, Status, UiModel},
     event::EngineEventTrait,
     scene_graph::SceneGraph,
 };
-use clap::{App, AppSettings, Arg, SubCommand};
-use ecs::{Component, Entities, EventManager, Resources, Storage};
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use ecs::{Component, Entities, Entity, EventManager, Resources, Storage};
 use failure::Error;
 use std::marker::PhantomData;
 
@@ -112,6 +112,61 @@ impl CommandTrait for CameraCommand {
 #[derive(Debug, Clone, Default)]
 pub struct EntityCommand;
 
+impl EntityCommand {
+    fn list_entity(
+        &self,
+        args: &ArgMatches,
+        cameras: &<Camera as Component>::Storage,
+        infos: &<Info as Component>::Storage,
+        world_graph: &SceneGraph<Model>,
+        ui_graph: &SceneGraph<UiModel>,
+        entity: &Entity,
+    ) {
+        let mut output = String::new();
+
+        if args.is_present("names") || args.is_present("positions") {
+            output.push(':');
+        }
+
+        if args.is_present("names") {
+            if let Some(i) = infos.get(entity) {
+                output.push(' ');
+                output.push_str(i.name());
+            } else {
+                output.push_str(" (no name)");
+            }
+        }
+
+        if args.is_present("positions") {
+            if let Some(m) = world_graph.get(entity) {
+                let pos = m.position();
+                output.push_str(&format!(" world-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+            } else if let Some(m) = ui_graph.get(entity) {
+                let pos = m.position();
+                output.push_str(&format!(" ui-pos=[{}, {}]", pos.x, pos.y));
+            } else {
+                output.push_str(" (no position)");
+            }
+        }
+
+        if args.is_present("ndc-positions") {
+            for (i, camera) in cameras.iter().enumerate() {
+                if let Some(m) = world_graph.get(entity) {
+                    let pos = camera.world_point_to_ndc(&m.position());
+                    output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", i, pos.x, pos.y, pos.z));
+                } else if let Some(m) = ui_graph.get(entity) {
+                    let pos = camera.ui_point_to_ndc(&m.position(), m.depth());
+                    output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", i, pos.x, pos.y, pos.z));
+                } else {
+                    output.push_str(" (no ndc position)");
+                }
+            }
+        }
+
+        println!("{}{}", entity, output);
+    }
+}
+
 impl CommandTrait for EntityCommand {
     fn name(&self) -> &'static str {
         "entity"
@@ -126,11 +181,17 @@ impl CommandTrait for EntityCommand {
             .about("Provides access to entities within the world")
             .setting(AppSettings::DisableVersion)
             .setting(AppSettings::SubcommandRequiredElseHelp)
+            .arg(
+                Arg::with_name("index")
+                    .short("i")
+                    .long("index")
+                    .takes_value(true)
+                    .help("Specify the index of the desired entity"),
+            )
             .subcommand(
                 SubCommand::with_name("list")
                     .about("Prints a list of entities")
                     .setting(AppSettings::DisableVersion)
-                    .setting(AppSettings::ArgRequiredElseHelp)
                     .arg(
                         Arg::with_name("count")
                             .short("c")
@@ -156,10 +217,30 @@ impl CommandTrait for EntityCommand {
                             .help("Displays the positions of entities in NDC space"),
                     ),
             )
+            .subcommand(
+                SubCommand::with_name("set")
+                    .about("Updates one or more entities")
+                    .setting(AppSettings::DisableVersion)
+                    .setting(AppSettings::ArgRequiredElseHelp)
+                    .arg(
+                        Arg::with_name("enable")
+                            .short("e")
+                            .long("enable")
+                            .conflicts_with("disable")
+                            .help("Activates the selected entity"),
+                    )
+                    .arg(
+                        Arg::with_name("disable")
+                            .short("d")
+                            .long("disable")
+                            .conflicts_with("enable")
+                            .help("Disables the selected entity"),
+                    ),
+            )
             .get_matches_from_safe(args)?;
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
-            let entities: Vec<_> = res.borrow::<Entities>().iter().collect();
+            let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
             let cameras = res.borrow::<<Camera as Component>::Storage>();
             let infos = res.borrow::<<Info as Component>::Storage>();
             let world_graph = res.borrow::<SceneGraph<Model>>();
@@ -169,49 +250,41 @@ impl CommandTrait for EntityCommand {
                 println!("Loaded entities: {}", entities.len());
             }
 
-            for camera in cameras.iter() {
+            if let Some(index) = matches.value_of("index") {
+                let index: usize = index.parse()?;
+                let entity = entities
+                    .get(index)
+                    .ok_or(format_err!("The entity with index {} was not found", index))?;
+                self.list_entity(list_matches, &cameras, &infos, &world_graph, &ui_graph, entity);
+            } else {
                 for entity in &entities {
-                    let mut output = String::new();
-
-                    if list_matches.is_present("names") || list_matches.is_present("positions") {
-                        output.push(':');
-                    }
-
-                    if list_matches.is_present("names") {
-                        if let Some(i) = infos.get(entity) {
-                            output.push(' ');
-                            output.push_str(i.name());
-                        } else {
-                            output.push_str(" (no name)");
-                        }
-                    }
-
-                    if list_matches.is_present("positions") {
-                        if let Some(m) = world_graph.get(entity) {
-                            let pos = m.position();
-                            output.push_str(&format!(" world-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                        } else if let Some(m) = ui_graph.get(entity) {
-                            let pos = m.position();
-                            output.push_str(&format!(" ui-pos=[{}, {}]", pos.x, pos.y));
-                        } else {
-                            output.push_str(" (no position)");
-                        }
-                    }
-
-                    if list_matches.is_present("ndc-positions") {
-                        if let Some(m) = world_graph.get(entity) {
-                            let pos = camera.world_point_to_ndc(&m.position());
-                            output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                        } else if let Some(m) = ui_graph.get(entity) {
-                            let pos = camera.ui_point_to_ndc(&m.position(), m.depth());
-                            output.push_str(&format!(" ndc-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-                        } else {
-                            output.push_str(" (no ndc position)");
-                        }
-                    }
-
-                    println!("{}{}", entity, output);
+                    self.list_entity(list_matches, &cameras, &infos, &world_graph, &ui_graph, entity);
                 }
+            }
+        }
+
+        if let Some(set_matches) = matches.subcommand_matches("set") {
+            let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
+            let mut statuses = res.borrow_mut::<<Status as Component>::Storage>();
+
+            if let Some(index) = matches.value_of("index") {
+                let index: usize = index.parse()?;
+                let entity = entities
+                    .get(index)
+                    .ok_or(format_err!("The entity with index {} was not found", index))?;
+
+                if set_matches.is_present("enable") {
+                    statuses.get_mut(entity)
+                        .map(|s| s.enable())
+                        .ok_or(format_err!("The entity with index {} could not be enabled", index))?;
+                } else if set_matches.is_present("disable") {
+                    statuses.get_mut(entity)
+                        .map(|s| s.disable())
+                        .ok_or(format_err!("The entity with index {} could not be disabled", index))?;
+                }
+
+            } else {
+                return Err(format_err!("You must specify an entity index if you want to change an entity"));
             }
         }
 

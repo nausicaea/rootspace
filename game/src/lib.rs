@@ -12,13 +12,10 @@ mod event;
 use crate::event::Event;
 use ecs::{EventManager, LoopStage, World};
 use engine::{
-    components::{camera::Camera, info::Info, model::Model, renderable::Renderable, ui_model::UiModel},
+    components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEventTrait,
     scene_graph::SceneGraph,
-    systems::{
-        camera_manager::CameraManager, debug_console::DebugConsole, debug_shell::DebugShell,
-        event_coordinator::EventCoordinator, event_monitor::EventMonitor, force_shutdown::ForceShutdown,
-    },
+    systems::{CameraManager, DebugConsole, DebugShell, EventCoordinator, EventMonitor, ForceShutdown},
     DefaultOrchestrator, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
 };
 use failure::Error;
@@ -44,10 +41,14 @@ impl Game {
         self.orchestrator.reset();
 
         let camera = self.world_mut().create_entity();
+        self.world_mut().add_component(camera, Status::default());
         self.world_mut().add_component(camera, Camera::default());
+        self.world_mut()
+            .add_component(camera, Info::new("Camera", "The main camera"));
 
         let ea = self.world_mut().create_entity();
         self.world_mut().get_resource_mut::<SceneGraph<Model>>().insert(ea);
+        self.world_mut().add_component(ea, Status::default());
         self.world_mut()
             .add_component(ea, Info::new("Entity A", "Rotated cube example"));
         self.world_mut().add_component(
@@ -61,6 +62,7 @@ impl Game {
 
         let eb = self.world_mut().create_entity();
         self.world_mut().get_resource_mut::<SceneGraph<Model>>().insert(eb);
+        self.world_mut().add_component(eb, Status::default());
         self.world_mut()
             .add_component(eb, Info::new("Entity B", "Text example"));
         self.world_mut().add_component(
@@ -74,6 +76,7 @@ impl Game {
 
         let ec = self.world_mut().create_entity();
         self.world_mut().get_resource_mut::<SceneGraph<UiModel>>().insert(ec);
+        self.world_mut().add_component(ec, Status::default());
         self.world_mut()
             .add_component(ec, Info::new("Entity C", "UI Text example"));
         self.world_mut().add_component(
