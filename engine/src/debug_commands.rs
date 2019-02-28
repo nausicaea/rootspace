@@ -83,7 +83,7 @@ impl CommandTrait for CameraCommand {
             .get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
-            let cameras = res.borrow::<<Camera as Component>::Storage>();
+            let cameras = res.borrow_component::<Camera>();
 
             for (i, cam) in cameras.iter().enumerate() {
                 println!("Camera {}:", i);
@@ -241,8 +241,8 @@ impl CommandTrait for EntityCommand {
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
             let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
-            let cameras = res.borrow::<<Camera as Component>::Storage>();
-            let infos = res.borrow::<<Info as Component>::Storage>();
+            let cameras = res.borrow_component::<Camera>();
+            let infos = res.borrow_component::<Info>();
             let world_graph = res.borrow::<SceneGraph<Model>>();
             let ui_graph = res.borrow::<SceneGraph<UiModel>>();
 
@@ -265,7 +265,7 @@ impl CommandTrait for EntityCommand {
 
         if let Some(set_matches) = matches.subcommand_matches("set") {
             let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
-            let mut statuses = res.borrow_mut::<<Status as Component>::Storage>();
+            let mut statuses = res.borrow_mut_component::<Status>();
 
             if let Some(index) = matches.value_of("index") {
                 let index: usize = index.parse()?;

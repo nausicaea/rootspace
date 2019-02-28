@@ -1,6 +1,7 @@
 //! Provides the resource manager.
 
 use mopa::Any;
+use crate::components::Component;
 use std::{
     any::TypeId,
     cell::{Ref, RefCell, RefMut},
@@ -96,5 +97,22 @@ impl Resources {
                     .expect("Could not downcast the resource")
             })
             .expect("Could not find the resource")
+    }
+
+    /// Borrows the requested component storage (this is a convenience method to `borrow`).
+    pub fn borrow_component<C>(&self) -> Ref<C::Storage>
+    where
+        C: Component,
+    {
+        self.borrow::<C::Storage>()
+    }
+
+    /// Mutably borrows the requested component storage (this is a convenience method to
+    /// `borrow_mut`).
+    pub fn borrow_mut_component<C>(&self) -> RefMut<C::Storage>
+    where
+        C: Component,
+    {
+        self.borrow_mut::<C::Storage>()
     }
 }

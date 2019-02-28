@@ -1,26 +1,42 @@
+//! Provides facilities for reasoning about data (e.g. components) coupled to entities.
+
 use crate::{entities::Entity, resources::Resource};
 use hibitset::{BitIter, BitSet, BitSetLike};
 use std::{fmt, iter, ptr, slice};
 
+/// A component is a data type that is associated with a particular `Entity`.
 pub trait Component: Sized {
+    /// Components are stored in a `Resource` and the implementor of a component may choose the
+    /// type of storage used.
     type Storage: Storage<Self> + Resource + Default;
 }
 
+/// A component storage resource must provide the following methods.
 pub trait Storage<T> {
+    /// Insert a component of type `T` into the storage provider for the specified `Entity`.
     fn insert(&mut self, entity: Entity, datum: T) -> Option<T>;
+    /// Remove the specified component type from the specified `Entity`.
     fn remove(&mut self, entity: &Entity) -> Option<T>;
+    /// Return `true` if the specified entity has a component of type `T`.
     fn has(&self, entity: &Entity) -> bool;
+    /// Empties the component storage.
     fn clear(&mut self);
+    /// Borrows the component of type `T` for the specified `Entity`.
     fn get(&self, entity: &Entity) -> Option<&T>;
+    /// Mutably borrows the component of type `T` for the specified `Entity`.
     fn get_mut(&mut self, entity: &Entity) -> Option<&mut T>;
 }
 
+/// Implements component storage based on a `Vec<T>`. Occupied spaces are tracked with a `BitSet`.
 pub struct VecStorage<T> {
+    /// The index into the data vector.
     index: BitSet,
+    /// The data vector containing the components.
     data: Vec<T>,
 }
 
 impl<T> VecStorage<T> {
+    /// Return an iterator over all occupied entries.
     pub fn iter(&self) -> VecStorageIter<T> {
         VecStorageIter {
             idx_iter: (&self.index).iter(),
@@ -28,6 +44,7 @@ impl<T> VecStorage<T> {
         }
     }
 
+    /// Return a mutable iterator over all occupied entries.
     pub fn iter_mut(&mut self) -> VecStorageIterMut<T> {
         VecStorageIterMut {
             idx: &self.index,
@@ -139,6 +156,7 @@ impl<T> fmt::Debug for VecStorage<T> {
 
 impl<T> Resource for VecStorage<T> where T: 'static {}
 
+/// Provides read-only iteration over components of type `T`.
 pub struct VecStorageIter<'a, T: 'a> {
     idx_iter: BitIter<&'a BitSet>,
     data: &'a [T],
@@ -156,6 +174,7 @@ impl<'a, T: 'a> Iterator for VecStorageIter<'a, T> {
     }
 }
 
+/// Provides mutable iteration over components of type `T`.
 pub struct VecStorageIterMut<'a, T: 'a> {
     idx: &'a BitSet,
     data_iter: iter::Enumerate<slice::IterMut<'a, T>>,

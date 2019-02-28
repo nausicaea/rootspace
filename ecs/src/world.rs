@@ -1,3 +1,5 @@
+//! Provides the `WorldTrait` and the `World` which manages resources and systems.
+
 use crate::{
     components::{Component, Storage},
     entities::{Entities, Entity},
@@ -8,7 +10,8 @@ use crate::{
 };
 use std::{marker::PhantomData, time::Duration};
 
-/// A World must perform actions for four types of calls.
+/// A World must perform actions for four types of calls that each allow a subset of the registered
+/// systems to operate on the stored resources, components and entities.
 pub trait WorldTrait {
     /// Clears the state of the world. This removes all resources and systems added by the user.
     fn clear(&mut self);
@@ -64,6 +67,8 @@ impl<E> World<E>
 where
     E: EventTrait,
 {
+    /// Return a mutable references to the specified resource type. Panics, if the resource is not
+    /// registered.
     pub fn get_resource_mut<R>(&mut self) -> &mut R
     where
         R: Resource,
@@ -71,6 +76,7 @@ where
         self.resources.get_mut::<R>()
     }
 
+    /// Add the specified system to the specified loop stage.
     pub fn add_system<S>(&mut self, stage: LoopStage, system: S)
     where
         S: System + 'static,
@@ -83,6 +89,7 @@ where
         }
     }
 
+    /// Add an event handler system.
     pub fn add_event_handler_system<H>(&mut self, system: H)
     where
         H: EventHandlerSystem<E> + 'static,
@@ -90,10 +97,12 @@ where
         self.event_handler_systems.push(Box::new(system))
     }
 
+    /// Create a new `Entity`.
     pub fn create_entity(&mut self) -> Entity {
         self.resources.get_mut::<Entities>().create()
     }
 
+    /// Add a component to the specified `Entity`.
     pub fn add_component<C>(&mut self, entity: Entity, component: C) -> Option<C>
     where
         C: Component,

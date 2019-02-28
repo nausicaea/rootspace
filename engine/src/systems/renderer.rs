@@ -4,7 +4,7 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     scene_graph::SceneGraph,
 };
-use ecs::{Component, EventManager, Resources, Storage, System};
+use ecs::{EventManager, Resources, Storage, System};
 use failure::Error;
 use std::{marker::PhantomData, time::Duration};
 
@@ -68,12 +68,12 @@ where
 
         // Update the scene graphs.
         res.borrow_mut::<SceneGraph<Model>>()
-            .update(&res.borrow::<<Model as Component>::Storage>());
+            .update(&res.borrow_component::<Model>());
         res.borrow_mut::<SceneGraph<UiModel>>()
-            .update(&res.borrow::<<UiModel as Component>::Storage>());
+            .update(&res.borrow_component::<UiModel>());
 
         // Obtain a reference to the camera.
-        let cameras = res.borrow::<<Camera as Component>::Storage>();
+        let cameras = res.borrow_component::<Camera>();
 
         // Create a new frame.
         let mut target = self.backend.create_frame();
@@ -81,8 +81,8 @@ where
 
         let world_graph = res.borrow::<SceneGraph<Model>>();
         let ui_graph = res.borrow::<SceneGraph<UiModel>>();
-        let statuses = res.borrow::<<Status as Component>::Storage>();
-        let renderables = res.borrow::<<Renderable<B> as Component>::Storage>();
+        let statuses = res.borrow_component::<Status>();
+        let renderables = res.borrow_component::<Renderable<B>>();
 
         for cam in cameras.iter() {
             // Render the world scene.
