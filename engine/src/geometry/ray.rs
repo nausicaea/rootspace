@@ -1,5 +1,5 @@
 use affine_transform::AffineTransform;
-use nalgebra::{Point3, Real, Scalar, Unit, Vector3};
+use nalgebra::{Point3, RealField, Scalar, Unit, Vector3};
 use std::fmt;
 
 /// A `Ray` characterises a ray (a line segment with an origin, direction and infinite length in
@@ -7,7 +7,7 @@ use std::fmt;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Ray<N>
 where
-    N: Scalar + Real,
+    N: Scalar + RealField,
 {
     /// Specifies the origin of the `Ray`.
     pub origin: Point3<N>,
@@ -17,7 +17,7 @@ where
 
 impl<N> Ray<N>
 where
-    N: Scalar + Real,
+    N: Scalar + RealField,
 {
     /// Creates a new `Ray`.
     pub fn new(origin: Point3<N>, direction: Unit<Vector3<N>>) -> Self {
@@ -61,7 +61,7 @@ where
 
 impl<N> fmt::Display for Ray<N>
 where
-    N: Scalar + Real,
+    N: Scalar + RealField,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(

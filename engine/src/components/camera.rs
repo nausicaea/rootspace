@@ -1,5 +1,4 @@
 use crate::geometry::ray::Ray;
-use alga::linear::{ProjectiveTransformation, Transformation};
 use ecs::{Component, VecStorage};
 use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
 use std::f32;

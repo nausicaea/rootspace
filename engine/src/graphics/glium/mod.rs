@@ -242,7 +242,7 @@ impl BackendTrait for GliumBackend {
     }
 
     fn dpi_factor(&self) -> f64 {
-        self.display.gl_window().get_hidpi_factor()
+        self.display.gl_window().window().get_hidpi_factor()
     }
 
     fn physical_dimensions(&self) -> (u32, u32) {
