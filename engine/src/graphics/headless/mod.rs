@@ -1,12 +1,14 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use crate::{
-    event::MaybeFrom,
     geometry::rect::Rect,
     resources::{Image, Mesh},
 };
 use ecs::EventTrait;
 use failure::Error;
-use std::borrow::{Borrow, Cow};
+use std::{
+    borrow::{Borrow, Cow},
+    convert::TryFrom,
+};
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;
@@ -18,7 +20,7 @@ impl Sealed for HeadlessEventsLoop {}
 
 impl<Evt> EventsLoopTrait<Evt> for HeadlessEventsLoop
 where
-    Evt: EventTrait + MaybeFrom<HeadlessEvent>,
+    Evt: EventTrait + TryFrom<HeadlessEvent>,
 {
     type InputEvent = HeadlessEvent;
 

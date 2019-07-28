@@ -1,9 +1,10 @@
 use crate::{
-    event::{EngineEventTrait, MaybeFrom},
+    event::EngineEventTrait,
     graphics::{glium::GliumEvent, headless::HeadlessEvent},
 };
 use ecs::EventTrait;
-use glium::glutin::{Event as GlutinEvent, WindowEvent};
+use glium::glutin::{Event as GlutinEvent, WindowEvent, KeyboardInput, ModifiersState, VirtualKeyCode};
+use std::convert::TryFrom;
 
 bitflags! {
     pub struct MockEvtFlag: u64 {
@@ -129,23 +130,29 @@ impl EventTrait for MockEvt {
     }
 }
 
-impl MaybeFrom<HeadlessEvent> for MockEvt {
-    fn maybe_from(_value: HeadlessEvent) -> Option<MockEvt> {
-        None
+impl TryFrom<HeadlessEvent> for MockEvt {
+    type Error = ();
+
+    fn try_from(_value: HeadlessEvent) -> Result<Self, Self::Error> {
+        Err(())
     }
 }
 
-impl MaybeFrom<GliumEvent> for MockEvt {
-    fn maybe_from(value: GliumEvent) -> Option<MockEvt> {
+impl TryFrom<GliumEvent> for MockEvt {
+    type Error = ();
+
+    fn try_from(value: GliumEvent) -> Result<Self, Self::Error> {
         if let GliumEvent(GlutinEvent::WindowEvent { event: we, .. }) = value {
             match we {
-                WindowEvent::CloseRequested => Some(MockEvt::new_shutdown()),
-                WindowEvent::Resized(l) => Some(MockEvt::new_resize(l.into())),
-                WindowEvent::HiDpiFactorChanged(f) => Some(MockEvt::new_change_dpi(f)),
-                _ => None,
+                WindowEvent::CloseRequested => Ok(MockEvt::new_shutdown()),
+                WindowEvent::Resized(l) => Ok(MockEvt::new_resize(l.into())),
+                WindowEvent::HiDpiFactorChanged(f) => Ok(MockEvt::new_change_dpi(f)),
+                #[cfg(target_os = "macos")]
+                WindowEvent::KeyboardInput { input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Q), modifiers: ModifiersState { logo: true, .. }, .. }, .. } => Ok(MockEvt::new_shutdown()),
+                _ => Err(()),
             }
         } else {
-            None
+            Err(())
         }
     }
 }

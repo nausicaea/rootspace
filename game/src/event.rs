@@ -1,9 +1,10 @@
 use ecs::EventTrait;
 use engine::{
-    event::{EngineEventTrait, MaybeFrom},
+    event::EngineEventTrait,
     graphics::{glium::GliumEvent, headless::HeadlessEvent},
 };
 use glium::glutin::{Event as GlutinEvent, WindowEvent, KeyboardInput, ModifiersState, VirtualKeyCode};
+use std::convert::TryFrom;
 
 bitflags! {
     pub struct EventFlag: u64 {
@@ -129,25 +130,29 @@ impl EventTrait for Event {
     }
 }
 
-impl MaybeFrom<HeadlessEvent> for Event {
-    fn maybe_from(_value: HeadlessEvent) -> Option<Event> {
-        None
+impl TryFrom<HeadlessEvent> for Event {
+    type Error = ();
+
+    fn try_from(_value: HeadlessEvent) -> Result<Self, Self::Error> {
+        Err(())
     }
 }
 
-impl MaybeFrom<GliumEvent> for Event {
-    fn maybe_from(value: GliumEvent) -> Option<Event> {
+impl TryFrom<GliumEvent> for Event {
+    type Error = ();
+
+    fn try_from(value: GliumEvent) -> Result<Self, Self::Error> {
         if let GliumEvent(GlutinEvent::WindowEvent { event: we, .. }) = value {
             match we {
-                WindowEvent::CloseRequested => Some(Event::new_shutdown()),
-                WindowEvent::Resized(l) => Some(Event::new_resize(l.into())),
-                WindowEvent::HiDpiFactorChanged(f) => Some(Event::new_change_dpi(f)),
+                WindowEvent::CloseRequested => Ok(Event::new_shutdown()),
+                WindowEvent::Resized(l) => Ok(Event::new_resize(l.into())),
+                WindowEvent::HiDpiFactorChanged(f) => Ok(Event::new_change_dpi(f)),
                 #[cfg(target_os = "macos")]
-                WindowEvent::KeyboardInput { input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Q), modifiers: ModifiersState { logo: true, .. }, .. }, .. } => Some(Event::new_shutdown()),
-                _ => None,
+                WindowEvent::KeyboardInput { input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Q), modifiers: ModifiersState { logo: true, .. }, .. }, .. } => Ok(Event::new_shutdown()),
+                _ => Err(()),
             }
         } else {
-            None
+            Err(())
         }
     }
 }

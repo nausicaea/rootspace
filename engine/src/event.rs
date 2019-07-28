@@ -1,7 +1,8 @@
 use crate::graphics::{glium::GliumEvent, headless::HeadlessEvent};
 use ecs::EventTrait;
+use std::convert::TryFrom;
 
-pub trait EngineEventTrait: EventTrait + MaybeFrom<GliumEvent> + MaybeFrom<HeadlessEvent> + 'static {
+pub trait EngineEventTrait: EventTrait + TryFrom<GliumEvent> + TryFrom<HeadlessEvent> + 'static {
     fn startup() -> Self::EventFlag;
     fn shutdown() -> Self::EventFlag;
     fn hard_shutdown() -> Self::EventFlag;
@@ -20,21 +21,4 @@ pub trait EngineEventTrait: EventTrait + MaybeFrom<GliumEvent> + MaybeFrom<Headl
     fn command_data(&self) -> Option<&[String]>;
     fn resize_data(&self) -> Option<(u32, u32)>;
     fn change_dpi_data(&self) -> Option<f64>;
-}
-
-pub trait MaybeFrom<T>: Sized {
-    fn maybe_from(value: T) -> Option<Self>;
-}
-
-pub trait MaybeInto<T> {
-    fn maybe_into(self) -> Option<T>;
-}
-
-impl<T, U> MaybeInto<U> for T
-where
-    U: MaybeFrom<T>,
-{
-    fn maybe_into(self) -> Option<U> {
-        MaybeFrom::maybe_from(self)
-    }
 }

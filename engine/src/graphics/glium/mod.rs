@@ -1,6 +1,5 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use crate::{
-    event::MaybeFrom,
     geometry::rect::Rect,
     resources::{Image, Vertex},
 };
@@ -16,6 +15,7 @@ use glium::{
 };
 use std::{
     borrow::{Borrow, Cow},
+    convert::TryFrom,
     fmt,
     rc::Rc,
 };
@@ -47,7 +47,7 @@ impl Sealed for GliumEventsLoop {}
 
 impl<Evt> EventsLoopTrait<Evt> for GliumEventsLoop
 where
-    Evt: EventTrait + MaybeFrom<GliumEvent>,
+    Evt: EventTrait + TryFrom<GliumEvent>,
 {
     type InputEvent = GliumEvent;
 

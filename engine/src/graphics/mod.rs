@@ -5,10 +5,13 @@ mod private {
     pub trait Sealed {}
 }
 
-use crate::{event::MaybeInto, geometry::rect::Rect, resources::Image};
+use crate::{geometry::rect::Rect, resources::Image};
 use ecs::EventTrait;
 use failure::Error;
-use std::borrow::{Borrow, Cow};
+use std::{
+    borrow::{Borrow, Cow},
+    convert::TryInto,
+};
 
 pub trait BackendTrait: Sized + private::Sealed {
     type Loop;
@@ -29,7 +32,7 @@ pub trait BackendTrait: Sized + private::Sealed {
 }
 
 pub trait EventsLoopTrait<O: EventTrait>: private::Sealed {
-    type InputEvent: MaybeInto<O>;
+    type InputEvent: TryInto<O>;
 
     fn poll<F: FnMut(Self::InputEvent)>(&mut self, f: F);
 }
