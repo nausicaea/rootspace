@@ -3,7 +3,7 @@ use engine::{
     event::{EngineEventTrait, MaybeFrom},
     graphics::{glium::GliumEvent, headless::HeadlessEvent},
 };
-use glium::glutin::{Event as GlutinEvent, WindowEvent};
+use glium::glutin::{Event as GlutinEvent, WindowEvent, KeyboardInput, ModifiersState, VirtualKeyCode};
 
 bitflags! {
     pub struct EventFlag: u64 {
@@ -142,6 +142,8 @@ impl MaybeFrom<GliumEvent> for Event {
                 WindowEvent::CloseRequested => Some(Event::new_shutdown()),
                 WindowEvent::Resized(l) => Some(Event::new_resize(l.into())),
                 WindowEvent::HiDpiFactorChanged(f) => Some(Event::new_change_dpi(f)),
+                #[cfg(target_os = "macos")]
+                WindowEvent::KeyboardInput { input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Q), modifiers: ModifiersState { logo: true, .. }, .. }, .. } => Some(Event::new_shutdown()),
                 _ => None,
             }
         } else {
