@@ -329,7 +329,7 @@ mod tests {
             .diffuse_texture(&base_path.join("tv-test-image.png"))
             .build_mesh_headless(&b);
 
-        assert!(r.is_ok());
+        assert!(r.is_ok(), "{:?}", r);
     }
 
     #[test]
@@ -343,6 +343,6 @@ mod tests {
             .text("Hello, World!")
             .build_text_headless(&b);
 
-        assert!(r.is_ok());
+        assert!(r.is_ok(), "{:?}", r);
     }
 }

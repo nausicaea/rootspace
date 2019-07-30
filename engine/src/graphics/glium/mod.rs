@@ -6,6 +6,7 @@ use crate::{
 use ecs::EventTrait;
 use failure::Error;
 use glium::{
+    backend::glutin::DisplayCreationError,
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder},
     texture::{ClientFormat, RawImage2d, Texture2d},
@@ -233,7 +234,8 @@ impl BackendTrait for GliumBackend {
 
         match Display::new(window, context, &events_loop.0) {
             Ok(display) => Ok(GliumBackend { display }),
-            Err(e) => Err(format_err!("{}", e)),
+            Err(DisplayCreationError::GlutinCreationError(e)) => Err(e.into()),
+            Err(DisplayCreationError::IncompatibleOpenGl(e)) => Err(e.into()),
         }
     }
 
@@ -342,7 +344,8 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn backend() {
-        assert!(GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0).is_ok());
+        let r = GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0);
+        assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
     #[test]

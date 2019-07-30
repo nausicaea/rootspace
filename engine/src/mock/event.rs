@@ -3,7 +3,9 @@ use crate::{
     graphics::{glium::GliumEvent, headless::HeadlessEvent},
 };
 use ecs::EventTrait;
-use glium::glutin::{Event as GlutinEvent, WindowEvent, KeyboardInput, ModifiersState, VirtualKeyCode};
+use glium::glutin::{Event as GlutinEvent, WindowEvent};
+#[cfg(target_os = "macos")]
+use glium::glutin::{KeyboardInput, ModifiersState, VirtualKeyCode};
 use std::convert::TryFrom;
 
 bitflags! {
