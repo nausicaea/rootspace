@@ -46,6 +46,50 @@ where
 }
 
 #[derive(Debug, Clone, Default)]
+pub struct RendererCommand;
+
+impl CommandTrait for RendererCommand {
+    fn name(&self) -> &'static str {
+        "renderer"
+    }
+
+    fn description(&self) -> &'static str {
+        "Provides access to the renderer"
+    }
+
+    fn run(&self, _res: &mut Resources, args: &[String]) -> Result<(), Error> {
+        let matches = App::new("renderer")
+            .setting(AppSettings::DisableVersion)
+            .setting(AppSettings::SubcommandRequiredElseHelp)
+            .subcommand(
+                SubCommand::with_name("info")
+                    .about("Prints renderer settings and statistics")
+                    .setting(AppSettings::DisableVersion)
+                    .setting(AppSettings::ArgRequiredElseHelp)
+                    .arg(
+                        Arg::with_name("draw-calls")
+                            .short("d")
+                            .long("draw-calls")
+                            .help("Displays the average number of draw calls")
+                    )
+                    .arg(
+                        Arg::with_name("frame-time")
+                            .short("f")
+                            .long("frame-time")
+                            .help("Displays the average duration of a render call")
+                    ),
+            )
+            .get_matches_from_safe(args)?;
+
+        if let Some(_info_matches) = matches.subcommand_matches("info") {
+            unimplemented!()
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct CameraCommand;
 
 impl CommandTrait for CameraCommand {

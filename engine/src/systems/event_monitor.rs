@@ -17,6 +17,10 @@ impl<Evt> EventHandlerSystem<Evt> for EventMonitor<Evt>
 where
     Evt: EventTrait,
 {
+    fn name(&self) -> &'static str {
+        "EventMonitor"
+    }
+
     fn get_event_filter(&self) -> Evt::EventFlag {
         Default::default()
     }

@@ -1,4 +1,4 @@
-use ecs::{Resource, WorldTrait};
+use ecs::{Persistence, Resource, WorldTrait};
 use std::time::Duration;
 
 #[derive(Debug)]
@@ -16,7 +16,7 @@ pub struct MockWorld {
 }
 
 impl WorldTrait for MockWorld {
-    fn clear(&mut self) {
+    fn clear(&mut self, _persistence: Persistence) {
         self.fixed_update_calls = 0;
         self.update_calls = 0;
         self.render_calls = 0;
@@ -27,7 +27,7 @@ impl WorldTrait for MockWorld {
         self.iterations = 0;
     }
 
-    fn add_resource<R>(&mut self, _res: R) -> Option<R>
+    fn add_resource<R>(&mut self, _res: R, _persistence: Persistence) -> Option<R>
     where
         R: Resource,
     {

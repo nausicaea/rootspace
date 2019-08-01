@@ -45,6 +45,10 @@ impl<Evt> System for ForceShutdown<Evt>
 where
     Evt: EngineEventTrait,
 {
+    fn name(&self) -> &'static str {
+        "ForceShutdown"
+    }
+
     fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             trace!("Recently caught a termination signal");

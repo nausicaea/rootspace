@@ -5,7 +5,7 @@ use crate::{
         headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture},
         BackendTrait, DataTrait, TextureTrait,
     },
-    resources::{Image, Mesh, Text},
+    assets::{Image, Mesh, Text},
 };
 use ecs::{Component, VecStorage};
 use failure::Error;

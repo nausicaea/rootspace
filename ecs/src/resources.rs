@@ -1,39 +1,79 @@
 //! Provides the resource manager.
 
-use mopa::Any;
-use crate::components::Component;
+use crate::{
+    components::Component,
+    persistence::Persistence,
+};
 use std::{
     any::TypeId,
     cell::{Ref, RefCell, RefMut},
     collections::HashMap,
+    ops::{Deref, DerefMut},
     fmt,
 };
+use downcast_rs::{Downcast, impl_downcast};
 
 /// A resource is a data structure that is not coupled to a specific entity. Resources can be used
 /// to provide "global" state to systems.
-pub trait Resource: Any + fmt::Debug {}
+pub trait Resource: Downcast + fmt::Debug {}
 
-mopafy!(Resource);
+impl_downcast!(Resource);
+
+#[derive(Debug)]
+struct ResourceContainer {
+    persistence: Persistence,
+    inner: RefCell<Box<Resource>>,
+}
+
+impl ResourceContainer {
+    fn new<R>(resource: R, persistence: Persistence) -> Self
+    where
+        R: Resource,
+    {
+        ResourceContainer {
+            persistence,
+            inner: RefCell::new(Box::new(resource)),
+        }
+    }
+
+    fn into_inner(self) -> RefCell<Box<Resource>> {
+        self.inner
+    }
+}
+
+impl Deref for ResourceContainer {
+    type Target = RefCell<Box<Resource>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl DerefMut for ResourceContainer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
 
 /// A container that manages resources. Allows mutable borrows of multiple resources at the same
 /// time.
 #[derive(Default)]
-pub struct Resources(HashMap<TypeId, RefCell<Box<Resource>>>);
+pub struct Resources(HashMap<TypeId, ResourceContainer>);
 
 impl Resources {
     /// Empty the resource manager.
-    pub fn clear(&mut self) {
-        self.0.clear();
+    pub fn clear(&mut self, persistence: Persistence) {
+        self.0.retain(|_, rc| rc.persistence > persistence)
     }
 
     /// Insert a new resource. Returns any previously present resource of the same type.
-    pub fn insert<R>(&mut self, res: R) -> Option<R>
+    pub fn insert<R>(&mut self, res: R, persistence: Persistence) -> Option<R>
     where
         R: Resource,
     {
         self.0
-            .insert(TypeId::of::<R>(), RefCell::new(Box::new(res)))
-            .map(|r| *r.into_inner().downcast::<R>().expect("Could not downcast the resource"))
+            .insert(TypeId::of::<R>(), ResourceContainer::new(res, persistence))
+            .map(|r| *r.into_inner().into_inner().downcast::<R>().expect("Could not downcast the resource"))
     }
 
     /// Removes the resource of the specified type.
@@ -43,7 +83,7 @@ impl Resources {
     {
         self.0
             .remove(&TypeId::of::<R>())
-            .map(|r| *r.into_inner().downcast::<R>().expect("Could not downcast the resource"))
+            .map(|r| *r.into_inner().into_inner().downcast::<R>().expect("Could not downcast the resource"))
     }
 
     /// Returns `true` if a resource of the specified type is present.
@@ -114,5 +154,15 @@ impl Resources {
         C: Component,
     {
         self.borrow_mut::<C::Storage>()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn persistence() {
+        assert!(Persistence::None < Persistence::Runtime);
     }
 }

@@ -65,7 +65,7 @@ fn main() -> Result<(), Error> {
             e
         })?;
 
-        PathBuf::from(manifest_dir).join("resources").join("rootspace")
+        PathBuf::from(manifest_dir).join("assets").join("rootspace")
     };
 
     Game::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))

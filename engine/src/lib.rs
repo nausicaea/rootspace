@@ -36,7 +36,7 @@ pub mod graphics;
 #[cfg(any(test, feature = "mock"))]
 pub mod mock;
 pub mod orchestrator;
-pub mod resources;
+pub mod assets;
 pub mod scene_graph;
 pub mod systems;
 pub mod text_manipulation;

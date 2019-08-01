@@ -4,7 +4,7 @@ use crate::{
     file_manipulation::{FileError, VerifyPath},
     scene_graph::SceneGraph,
 };
-use ecs::{EventManager, WorldTrait};
+use ecs::{Persistence, EventManager, WorldTrait};
 use std::{
     cmp,
     marker::PhantomData,
@@ -34,9 +34,9 @@ where
         resource_path.ensure_extant_directory()?;
 
         let mut world = W::default();
-        world.add_resource(EventManager::<E>::default());
-        world.add_resource(SceneGraph::<Model>::default());
-        world.add_resource(SceneGraph::<UiModel>::default());
+        world.add_resource(EventManager::<E>::default(), Persistence::Runtime);
+        world.add_resource(SceneGraph::<Model>::default(), Persistence::Runtime);
+        world.add_resource(SceneGraph::<UiModel>::default(), Persistence::Runtime);
 
         Ok(Orchestrator {
             world,
@@ -48,10 +48,7 @@ where
     }
 
     pub fn reset(&mut self) {
-        self.world.clear();
-        self.world.add_resource(EventManager::<E>::default());
-        self.world.add_resource(SceneGraph::<Model>::default());
-        self.world.add_resource(SceneGraph::<UiModel>::default());
+        self.world.clear(Persistence::None);
     }
 
     pub fn run(&mut self, iterations: Option<usize>) {

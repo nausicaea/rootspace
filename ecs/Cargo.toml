@@ -7,4 +7,4 @@ edition = "2018"
 
 [dependencies]
 hibitset = {version = "^0.6.0", default-features = false}
-mopa = "^0.2.2"
+downcast-rs = "^1.0.0"

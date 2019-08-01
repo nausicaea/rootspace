@@ -6,13 +6,13 @@
 #![warn(missing_docs)]
 
 extern crate hibitset;
-#[macro_use]
-extern crate mopa;
+extern crate downcast_rs;
 
 pub mod components;
 pub mod entities;
 pub mod events;
 pub mod loop_stage;
+pub mod persistence;
 pub mod resources;
 pub mod system;
 pub mod world;
@@ -22,6 +22,7 @@ pub use crate::{
     entities::{Entities, Entity},
     events::{EventManager, EventTrait},
     loop_stage::LoopStage,
+    persistence::Persistence,
     resources::{Resource, Resources},
     system::{EventHandlerSystem, System},
     world::{World, WorldTrait},

@@ -84,6 +84,10 @@ impl<Evt> System for DebugConsole<Evt>
 where
     Evt: EngineEventTrait,
 {
+    fn name(&self) -> &'static str {
+        "DebugConsole"
+    }
+
     fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
         self.try_read_line()
             .map(|l| split_arguments(l, self.escape_char, self.quote_char))

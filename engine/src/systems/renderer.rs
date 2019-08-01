@@ -6,14 +6,19 @@ use crate::{
 };
 use ecs::{EventManager, Resources, Storage, System};
 use failure::Error;
-use std::{marker::PhantomData, time::Duration};
+use std::{collections::VecDeque, marker::PhantomData, time::Duration};
+#[cfg(any(test, feature = "diagnostics"))]
+use std::time::Instant;
+
+static DRAW_CALL_WINDOW: usize = 10;
+static FRAME_TIME_WINDOW: usize = 10;
 
 #[derive(Debug)]
 pub struct Renderer<Evt, B> {
     pub backend: B,
     pub clear_color: [f32; 4],
-    frames: usize,
-    draw_calls: usize,
+    draw_calls: VecDeque<usize>,
+    frame_times: VecDeque<Duration>,
     initialised: bool,
     _evt: PhantomData<Evt>,
 }
@@ -32,8 +37,8 @@ where
         Ok(Renderer {
             backend: B::new(events_loop, title, dimensions, vsync, msaa)?,
             clear_color: [0.69, 0.93, 0.93, 1.0],
-            frames: 0,
-            draw_calls: 0,
+            draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
+            frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
             initialised: false,
             _evt: PhantomData::default(),
         })
@@ -41,10 +46,27 @@ where
 
     #[cfg(any(test, feature = "diagnostics"))]
     pub fn average_draw_calls(&self) -> f32 {
-        if self.frames > 0 {
-            self.draw_calls as f32 / self.frames as f32
-        } else {
-            0.0
+        self.draw_calls.iter().sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
+    }
+
+    #[cfg(any(test, feature = "diagnostics"))]
+    pub fn average_frame_time(&self) -> Duration {
+        self.frame_times.iter().sum::<Duration>() / FRAME_TIME_WINDOW as u32
+    }
+
+    #[cfg(any(test, feature = "diagnostics"))]
+    fn update_draw_calls(&mut self, draw_calls: usize) {
+        self.draw_calls.push_front(draw_calls);
+        if self.draw_calls.len() > DRAW_CALL_WINDOW {
+            self.draw_calls.truncate(DRAW_CALL_WINDOW);
+        }
+    }
+
+    #[cfg(any(test, feature = "diagnostics"))]
+    fn update_frame_time(&mut self, frame_time: Duration) {
+        self.frame_times.push_front(frame_time);
+        if self.frame_times.len() > FRAME_TIME_WINDOW {
+            self.frame_times.truncate(FRAME_TIME_WINDOW);
         }
     }
 }
@@ -54,11 +76,16 @@ where
     Evt: EngineEventTrait,
     B: BackendTrait + 'static,
 {
+    fn name(&self) -> &'static str {
+        "Renderer"
+    }
+
     fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
         #[cfg(any(test, feature = "diagnostics"))]
-        {
-            self.frames += 1;
-        }
+        let start_mark = Instant::now();
+
+        #[cfg(any(test, feature = "diagnostics"))]
+        let mut draw_calls: usize = 0;
 
         if !self.initialised {
             res.get_mut::<EventManager<Evt>>()
@@ -91,7 +118,7 @@ where
                     if let Some(data) = renderables.get(entity) {
                         #[cfg(any(test, feature = "diagnostics"))]
                         {
-                            self.draw_calls += 1;
+                            draw_calls += 1;
                         }
                         target
                             .render(&(cam.world_matrix() * model.matrix()), data)
@@ -106,7 +133,7 @@ where
                     if let Some(data) = renderables.get(entity) {
                         #[cfg(any(test, feature = "diagnostics"))]
                         {
-                            self.draw_calls += 1;
+                            draw_calls += 1;
                         }
                         target
                             .render(&(cam.ui_matrix() * model.matrix()), data)
@@ -118,5 +145,11 @@ where
 
         // Finalize the frame and thus swap the display buffers.
         target.finalize().expect("Unable to finalize the frame");
+
+        #[cfg(any(test, feature = "diagnostics"))]
+        self.update_draw_calls(draw_calls);
+
+        #[cfg(any(test, feature = "diagnostics"))]
+        self.update_frame_time(start_mark.elapsed());
     }
 }

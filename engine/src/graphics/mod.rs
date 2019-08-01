@@ -5,7 +5,7 @@ mod private {
     pub trait Sealed {}
 }
 
-use crate::{geometry::rect::Rect, resources::Image};
+use crate::{geometry::rect::Rect, assets::Image};
 use ecs::EventTrait;
 use failure::Error;
 use std::{
@@ -31,7 +31,7 @@ pub trait BackendTrait: Sized + private::Sealed {
     fn physical_dimensions(&self) -> (u32, u32);
 }
 
-pub trait EventsLoopTrait<O: EventTrait>: private::Sealed {
+pub trait EventsLoopTrait<O: EventTrait>: private::Sealed + 'static {
     type InputEvent: TryInto<O>;
 
     fn poll<F: FnMut(Self::InputEvent)>(&mut self, f: F);

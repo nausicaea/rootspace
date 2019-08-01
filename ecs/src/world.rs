@@ -5,6 +5,7 @@ use crate::{
     entities::{Entities, Entity},
     events::{EventManager, EventTrait},
     loop_stage::LoopStage,
+    persistence::Persistence,
     resources::{Resource, Resources},
     system::{EventHandlerSystem, System},
 };
@@ -13,14 +14,16 @@ use std::{marker::PhantomData, time::Duration};
 /// A World must perform actions for four types of calls that each allow a subset of the registered
 /// systems to operate on the stored resources, components and entities.
 pub trait WorldTrait {
-    /// Clears the state of the world. This removes all resources and systems added by the user.
-    fn clear(&mut self);
+    /// Clears the state of the world. This removes all resources whose persistence is less or
+    /// equal to the specified persistence value.
+    fn clear(&mut self, persistence: Persistence);
     /// Adds a resource to the world
     ///
     /// # Arguments
     ///
     /// * `res` - The resource to be added.
-    fn add_resource<R>(&mut self, res: R) -> Option<R>
+    /// * `persistence` - How persistence the resource should be.
+    fn add_resource<R>(&mut self, res: R, persistence: Persistence) -> Option<R>
     where
         R: Resource;
     /// The fixed update method is supposed to be called from the main loop at fixed time
@@ -79,7 +82,7 @@ where
     /// Add the specified system to the specified loop stage.
     pub fn add_system<S>(&mut self, stage: LoopStage, system: S)
     where
-        S: System + 'static,
+        S: System,
     {
         let sys = Box::new(system);
         match stage {
@@ -89,12 +92,46 @@ where
         }
     }
 
+    /// Try to retrieve the specified system type.
+    pub fn get_system<S>(&self, stage: LoopStage) -> Option<&S>
+    where
+        S: System,
+    {
+        match stage {
+            LoopStage::FixedUpdate => {
+                self.fixed_update_systems.iter()
+                    .filter_map(|s| s.downcast_ref::<S>())
+                    .last()
+            },
+            LoopStage::Update => {
+                self.update_systems.iter()
+                    .filter_map(|s| s.downcast_ref::<S>())
+                    .last()
+            },
+            LoopStage::Render => {
+                self.render_systems.iter()
+                    .filter_map(|s| s.downcast_ref::<S>())
+                    .last()
+            },
+        }
+    }
+
     /// Add an event handler system.
     pub fn add_event_handler_system<H>(&mut self, system: H)
     where
-        H: EventHandlerSystem<E> + 'static,
+        H: EventHandlerSystem<E>,
     {
         self.event_handler_systems.push(Box::new(system))
+    }
+
+    /// Try to retrieve the system of the specified type.
+    pub fn get_event_handler_system<H>(&self) -> Option<&H>
+    where
+        H: EventHandlerSystem<E>,
+    {
+        self.event_handler_systems.iter()
+            .filter_map(|s| s.downcast_ref::<H>())
+            .last()
     }
 
     /// Create a new `Entity`.
@@ -108,7 +145,7 @@ where
         C: Component,
     {
         if !self.resources.has::<C::Storage>() {
-            let _ = self.resources.insert(C::Storage::default());
+            let _ = self.resources.insert(C::Storage::default(), Persistence::None);
         }
 
         self.resources.get_mut::<C::Storage>().insert(entity, component)
@@ -121,8 +158,8 @@ where
 {
     fn default() -> Self {
         let mut resources = Resources::default();
-        resources.insert(Entities::default());
-        resources.insert(EventManager::<E>::default());
+        resources.insert(Entities::default(), Persistence::Runtime);
+        resources.insert(EventManager::<E>::default(), Persistence::Runtime);
 
         World {
             resources,
@@ -139,22 +176,19 @@ impl<E> WorldTrait for World<E>
 where
     E: EventTrait,
 {
-    fn clear(&mut self) {
-        self.resources.clear();
+    fn clear(&mut self, persistence: Persistence) {
+        self.resources.clear(persistence);
         self.fixed_update_systems.clear();
         self.update_systems.clear();
         self.render_systems.clear();
         self.event_handler_systems.clear();
-
-        self.resources.insert(Entities::default());
-        self.resources.insert(EventManager::<E>::default());
     }
 
-    fn add_resource<R>(&mut self, res: R) -> Option<R>
+    fn add_resource<R>(&mut self, res: R, persistence: Persistence) -> Option<R>
     where
         R: Resource,
     {
-        self.resources.insert(res)
+        self.resources.insert(res, persistence)
     }
 
     fn fixed_update(&mut self, t: &Duration, dt: &Duration) {

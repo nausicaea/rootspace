@@ -18,6 +18,10 @@ impl<Evt> EventHandlerSystem<Evt> for EventCoordinator<Evt>
 where
     Evt: EngineEventTrait,
 {
+    fn name(&self) -> &'static str {
+        "EventCoordinator"
+    }
+
     fn get_event_filter(&self) -> Evt::EventFlag {
         Evt::shutdown() | Evt::hard_shutdown()
     }

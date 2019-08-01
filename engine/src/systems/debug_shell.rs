@@ -71,6 +71,10 @@ impl<Evt> EventHandlerSystem<Evt> for DebugShell<Evt>
 where
     Evt: EngineEventTrait + 'static,
 {
+    fn name(&self) -> &'static str {
+        "DebugShell"
+    }
+
     fn get_event_filter(&self) -> Evt::EventFlag {
         Evt::command()
     }

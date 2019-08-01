@@ -38,6 +38,10 @@ impl<Evt> EventHandlerSystem<Evt> for CameraManager<Evt>
 where
     Evt: EngineEventTrait,
 {
+    fn name(&self) -> &'static str {
+        "CameraManager"
+    }
+
     fn get_event_filter(&self) -> Evt::EventFlag {
         Evt::resize() | Evt::change_dpi()
     }
