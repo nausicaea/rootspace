@@ -9,4 +9,3 @@ pub enum Persistence {
     /// The respective object should be present for the entire runtime of the program.
     Runtime,
 }
-

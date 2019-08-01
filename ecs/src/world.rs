@@ -98,21 +98,13 @@ where
         S: System,
     {
         match stage {
-            LoopStage::FixedUpdate => {
-                self.fixed_update_systems.iter()
-                    .filter_map(|s| s.downcast_ref::<S>())
-                    .last()
-            },
-            LoopStage::Update => {
-                self.update_systems.iter()
-                    .filter_map(|s| s.downcast_ref::<S>())
-                    .last()
-            },
-            LoopStage::Render => {
-                self.render_systems.iter()
-                    .filter_map(|s| s.downcast_ref::<S>())
-                    .last()
-            },
+            LoopStage::FixedUpdate => self
+                .fixed_update_systems
+                .iter()
+                .filter_map(|s| s.downcast_ref::<S>())
+                .last(),
+            LoopStage::Update => self.update_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
+            LoopStage::Render => self.render_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
         }
     }
 
@@ -129,7 +121,8 @@ where
     where
         H: EventHandlerSystem<E>,
     {
-        self.event_handler_systems.iter()
+        self.event_handler_systems
+            .iter()
             .filter_map(|s| s.downcast_ref::<H>())
             .last()
     }

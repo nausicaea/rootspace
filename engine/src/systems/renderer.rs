@@ -6,9 +6,9 @@ use crate::{
 };
 use ecs::{EventManager, Resources, Storage, System};
 use failure::Error;
-use std::{collections::VecDeque, marker::PhantomData, time::Duration};
 #[cfg(any(test, feature = "diagnostics"))]
 use std::time::Instant;
+use std::{collections::VecDeque, marker::PhantomData, time::Duration};
 
 static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;

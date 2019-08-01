@@ -5,7 +5,7 @@ mod private {
     pub trait Sealed {}
 }
 
-use crate::{geometry::rect::Rect, assets::Image};
+use crate::{assets::Image, geometry::rect::Rect};
 use ecs::EventTrait;
 use failure::Error;
 use std::{

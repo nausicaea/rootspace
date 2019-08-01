@@ -27,6 +27,7 @@ extern crate rusttype;
 extern crate tempfile;
 extern crate unicode_normalization;
 
+pub mod assets;
 pub mod components;
 pub mod debug_commands;
 pub mod event;
@@ -36,7 +37,6 @@ pub mod graphics;
 #[cfg(any(test, feature = "mock"))]
 pub mod mock;
 pub mod orchestrator;
-pub mod assets;
 pub mod scene_graph;
 pub mod systems;
 pub mod text_manipulation;

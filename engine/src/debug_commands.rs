@@ -70,13 +70,13 @@ impl CommandTrait for RendererCommand {
                         Arg::with_name("draw-calls")
                             .short("d")
                             .long("draw-calls")
-                            .help("Displays the average number of draw calls")
+                            .help("Displays the average number of draw calls"),
                     )
                     .arg(
                         Arg::with_name("frame-time")
                             .short("f")
                             .long("frame-time")
-                            .help("Displays the average duration of a render call")
+                            .help("Displays the average duration of a render call"),
                     ),
             )
             .get_matches_from_safe(args)?;
@@ -318,17 +318,20 @@ impl CommandTrait for EntityCommand {
                     .ok_or(format_err!("The entity with index {} was not found", index))?;
 
                 if set_matches.is_present("enable") {
-                    statuses.get_mut(entity)
+                    statuses
+                        .get_mut(entity)
                         .map(|s| s.enable())
                         .ok_or(format_err!("The entity with index {} could not be enabled", index))?;
                 } else if set_matches.is_present("disable") {
-                    statuses.get_mut(entity)
+                    statuses
+                        .get_mut(entity)
                         .map(|s| s.disable())
                         .ok_or(format_err!("The entity with index {} could not be disabled", index))?;
                 }
-
             } else {
-                return Err(format_err!("You must specify an entity index if you want to change an entity"));
+                return Err(format_err!(
+                    "You must specify an entity index if you want to change an entity"
+                ));
             }
         }
 

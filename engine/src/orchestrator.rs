@@ -4,7 +4,7 @@ use crate::{
     file_manipulation::{FileError, VerifyPath},
     scene_graph::SceneGraph,
 };
-use ecs::{Persistence, EventManager, WorldTrait};
+use ecs::{EventManager, Persistence, WorldTrait};
 use std::{
     cmp,
     marker::PhantomData,

@@ -1,17 +1,14 @@
 //! Provides the resource manager.
 
-use crate::{
-    components::Component,
-    persistence::Persistence,
-};
+use crate::{components::Component, persistence::Persistence};
+use downcast_rs::{impl_downcast, Downcast};
 use std::{
     any::TypeId,
     cell::{Ref, RefCell, RefMut},
     collections::HashMap,
-    ops::{Deref, DerefMut},
     fmt,
+    ops::{Deref, DerefMut},
 };
-use downcast_rs::{Downcast, impl_downcast};
 
 /// A resource is a data structure that is not coupled to a specific entity. Resources can be used
 /// to provide "global" state to systems.
@@ -73,7 +70,12 @@ impl Resources {
     {
         self.0
             .insert(TypeId::of::<R>(), ResourceContainer::new(res, persistence))
-            .map(|r| *r.into_inner().into_inner().downcast::<R>().expect("Could not downcast the resource"))
+            .map(|r| {
+                *r.into_inner()
+                    .into_inner()
+                    .downcast::<R>()
+                    .expect("Could not downcast the resource")
+            })
     }
 
     /// Removes the resource of the specified type.
@@ -81,9 +83,12 @@ impl Resources {
     where
         R: Resource,
     {
-        self.0
-            .remove(&TypeId::of::<R>())
-            .map(|r| *r.into_inner().into_inner().downcast::<R>().expect("Could not downcast the resource"))
+        self.0.remove(&TypeId::of::<R>()).map(|r| {
+            *r.into_inner()
+                .into_inner()
+                .downcast::<R>()
+                .expect("Could not downcast the resource")
+        })
     }
 
     /// Returns `true` if a resource of the specified type is present.

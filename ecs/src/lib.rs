@@ -5,8 +5,8 @@
 
 #![warn(missing_docs)]
 
-extern crate hibitset;
 extern crate downcast_rs;
+extern crate hibitset;
 
 pub mod components;
 pub mod entities;

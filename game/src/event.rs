@@ -150,7 +150,15 @@ impl TryFrom<GliumEvent> for Event {
                 WindowEvent::Resized(l) => Ok(Event::new_resize(l.into())),
                 WindowEvent::HiDpiFactorChanged(f) => Ok(Event::new_change_dpi(f)),
                 #[cfg(target_os = "macos")]
-                WindowEvent::KeyboardInput { input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Q), modifiers: ModifiersState { logo: true, .. }, .. }, .. } => Ok(Event::new_shutdown()),
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Q),
+                            modifiers: ModifiersState { logo: true, .. },
+                            ..
+                        },
+                    ..
+                } => Ok(Event::new_shutdown()),
                 _ => Err(()),
             }
         } else {

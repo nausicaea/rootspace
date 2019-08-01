@@ -1,11 +1,11 @@
 use crate::{
+    assets::{Image, Mesh, Text},
     file_manipulation::ReadPath,
     graphics::{
         glium::{GliumBackend, GliumRenderData, GliumTexture},
         headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture},
         BackendTrait, DataTrait, TextureTrait,
     },
-    assets::{Image, Mesh, Text},
 };
 use ecs::{Component, VecStorage};
 use failure::Error;

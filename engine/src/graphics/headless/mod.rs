@@ -1,7 +1,7 @@
 use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
 use crate::{
-    geometry::rect::Rect,
     assets::{Image, Mesh},
+    geometry::rect::Rect,
 };
 use ecs::EventTrait;
 use failure::Error;
