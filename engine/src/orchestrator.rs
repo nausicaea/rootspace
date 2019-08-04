@@ -2,7 +2,7 @@ use crate::{
     components::{model::Model, ui_model::UiModel},
     event::EngineEventTrait,
     file_manipulation::{FileError, VerifyPath},
-    scene_graph::SceneGraph,
+    resources::SceneGraph,
 };
 use ecs::{EventManager, Persistence, WorldTrait};
 use std::{

@@ -1,4 +1,4 @@
-use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
+use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait, ShaderTrait, VertexBufferTrait, IndexBufferTrait};
 use crate::{
     assets::{Image, Vertex},
     geometry::rect::Rect,
@@ -14,6 +14,7 @@ use glium::{
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
+use glium::index::PrimitiveType;
 use std::{
     borrow::{Borrow, Cow},
     convert::TryFrom,
@@ -124,6 +125,45 @@ impl TextureTrait<GliumBackend> for GliumTexture {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct GliumShader(Rc<Program>);
+
+impl Sealed for GliumShader {}
+
+impl ShaderTrait<GliumBackend> for GliumShader {
+    fn from_source<S: AsRef<str>>(backend: &GliumBackend, vs: S, fs: S) -> Result<Self, Error> {
+        let progr = Program::from_source(&backend.display, vs.as_ref(), fs.as_ref(), None)?;
+
+        Ok(GliumShader(Rc::new(progr)))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct GliumVertexBuffer(Rc<VertexBuffer<Vertex>>);
+
+impl Sealed for GliumVertexBuffer {}
+
+impl VertexBufferTrait<GliumBackend> for GliumVertexBuffer {
+    fn from_vertices(backend: &GliumBackend, vertices: &[Vertex]) -> Result<Self, Error> {
+        let vbuf = VertexBuffer::new(&backend.display, vertices)?;
+
+        Ok(GliumVertexBuffer(Rc::new(vbuf)))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct GliumIndexBuffer(Rc<IndexBuffer<u16>>);
+
+impl Sealed for GliumIndexBuffer {}
+
+impl IndexBufferTrait<GliumBackend> for GliumIndexBuffer {
+    fn from_indices(backend: &GliumBackend, indices: &[u16]) -> Result<Self, Error> {
+        let ibuf = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, indices)?;
+
+        Ok(GliumIndexBuffer(Rc::new(ibuf)))
+    }
+}
+
 #[derive(Debug)]
 pub struct GliumRenderData {
     pub vertices: VertexBuffer<Vertex>,
@@ -213,6 +253,9 @@ impl BackendTrait for GliumBackend {
     type Frame = GliumFrame;
     type Loop = GliumEventsLoop;
     type Texture = GliumTexture;
+    type Shader = GliumShader;
+    type VertexBuffer = GliumVertexBuffer;
+    type IndexBuffer = GliumIndexBuffer;
 
     fn new(
         events_loop: &GliumEventsLoop,

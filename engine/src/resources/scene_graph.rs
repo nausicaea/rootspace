@@ -42,7 +42,7 @@ where
     T: Clone + Default,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "SceneGraph {{ ... }}")
+        write!(f, "SceneGraph(#nodes: {})", self.hierarchy.len())
     }
 }
 

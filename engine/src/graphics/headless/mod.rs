@@ -1,6 +1,6 @@
-use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait};
+use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait, ShaderTrait, VertexBufferTrait, IndexBufferTrait};
 use crate::{
-    assets::{Image, Mesh},
+    assets::{Image, Mesh, Vertex},
     geometry::rect::Rect,
 };
 use ecs::EventTrait;
@@ -68,6 +68,39 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct HeadlessShader;
+
+impl Sealed for HeadlessShader {}
+
+impl ShaderTrait<HeadlessBackend> for HeadlessShader {
+    fn from_source<S: AsRef<str>>(_backend: &HeadlessBackend, _vs: S, _fs: S) -> Result<Self, Error> {
+        Ok(HeadlessShader)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct HeadlessVertexBuffer;
+
+impl Sealed for HeadlessVertexBuffer {}
+
+impl VertexBufferTrait<HeadlessBackend> for HeadlessVertexBuffer {
+    fn from_vertices(_backend: &HeadlessBackend, _vertices: &[Vertex]) -> Result<Self, Error> {
+        Ok(HeadlessVertexBuffer)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct HeadlessIndexBuffer;
+
+impl Sealed for HeadlessIndexBuffer {}
+
+impl IndexBufferTrait<HeadlessBackend> for HeadlessIndexBuffer {
+    fn from_indices(_backend: &HeadlessBackend, _indices: &[u16]) -> Result<Self, Error> {
+        Ok(HeadlessIndexBuffer)
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessRenderData;
 
@@ -122,6 +155,9 @@ impl BackendTrait for HeadlessBackend {
     type Frame = HeadlessFrame;
     type Loop = HeadlessEventsLoop;
     type Texture = HeadlessTexture;
+    type Shader = HeadlessShader;
+    type VertexBuffer = HeadlessVertexBuffer;
+    type IndexBuffer = HeadlessIndexBuffer;
 
     #[allow(unused_variables)]
     fn new(

@@ -14,7 +14,7 @@ use ecs::{EventManager, LoopStage, World};
 use engine::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEventTrait,
-    scene_graph::SceneGraph,
+    resources::SceneGraph,
     systems::{CameraManager, DebugConsole, DebugShell, EventCoordinator, EventMonitor, ForceShutdown},
     DefaultOrchestrator, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
 };

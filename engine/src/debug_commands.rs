@@ -1,7 +1,7 @@
 use crate::{
     components::{Camera, Info, Model, Status, UiModel},
     event::EngineEventTrait,
-    scene_graph::SceneGraph,
+    resources::SceneGraph,
 };
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use ecs::{Component, Entities, Entity, EventManager, Resources, Storage};

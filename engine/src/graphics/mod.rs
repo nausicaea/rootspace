@@ -6,11 +6,14 @@ mod private {
 }
 
 use crate::{assets::Image, geometry::rect::Rect};
+use crate::assets::Vertex;
+use crate::file_manipulation::ReadPath;
 use ecs::EventTrait;
 use failure::Error;
 use std::{
     borrow::{Borrow, Cow},
     convert::TryInto,
+    path::Path,
 };
 
 pub trait BackendTrait: Sized + private::Sealed {
@@ -18,6 +21,9 @@ pub trait BackendTrait: Sized + private::Sealed {
     type Data: DataTrait;
     type Frame: FrameTrait<Self>;
     type Texture: TextureTrait<Self>;
+    type Shader: ShaderTrait<Self>;
+    type VertexBuffer: VertexBufferTrait<Self>;
+    type IndexBuffer: IndexBufferTrait<Self>;
 
     fn new(
         events_loop: &Self::Loop,
@@ -50,4 +56,28 @@ pub trait TextureTrait<B: BackendTrait>: Sized + private::Sealed {
     fn from_image(backend: &B, image: Image) -> Result<Self, Error>;
     fn dimensions(&self) -> (u32, u32);
     fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, data: Cow<'a, [u8]>);
+    fn from_path<P: AsRef<Path>>(backend: &B, image: P) -> Result<Self, Error> {
+        let img = Image::from_path(image)?;
+
+        Self::from_image(backend, img)
+    }
+
+}
+
+pub trait ShaderTrait<B: BackendTrait>: Sized + private::Sealed {
+    fn from_source<S: AsRef<str>>(backend: &B, vs: S, fs: S) -> Result<Self, Error>;
+    fn from_paths<P: AsRef<Path>>(backend: &B, vs: P, fs: P) -> Result<Self, Error> {
+        let v = vs.read_to_string()?;
+        let f = fs.read_to_string()?;
+
+        Self::from_source(backend, v, f)
+    }
+}
+
+pub trait VertexBufferTrait<B: BackendTrait>: Sized + private::Sealed {
+    fn from_vertices(backend: &B, vertices: &[Vertex]) -> Result<Self, Error>;
+}
+
+pub trait IndexBufferTrait<B: BackendTrait>: Sized + private::Sealed {
+    fn from_indices(backend: &B, indices: &[u16]) -> Result<Self, Error>;
 }

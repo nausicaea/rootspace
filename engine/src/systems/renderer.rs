@@ -2,7 +2,7 @@ use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
     event::EngineEventTrait,
     graphics::{BackendTrait, FrameTrait},
-    scene_graph::SceneGraph,
+    resources::SceneGraph,
 };
 use ecs::{EventManager, Resources, Storage, System};
 use failure::Error;
