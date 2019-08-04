@@ -4,6 +4,7 @@ use crate::assets::Text;
 use std::marker::PhantomData;
 use std::fmt;
 use std::collections::HashMap;
+use failure::Error;
 
 pub struct VertexBufferId;
 
@@ -31,23 +32,27 @@ impl<B> RenderData<B>
 where
     B: BackendTrait,
 {
-    pub fn create_vertex_buffer() -> VertexBufferId {
+    pub fn create_texture<P: AsRef<Path>>(backend: &B, image: P) -> Result<TextureId, Error> {
+        let t = B::Texture::from_path(backend, image)?;
         unimplemented!()
     }
 
-    pub fn create_index_buffer() -> IndexBufferId {
+    pub fn create_shader<S: AsRef<str>>(backend: &B, vs: S, fs: S) -> Result<ShaderId, Error> {
+        let s = B::Shader::from_paths(backend, vs, fs)?;
         unimplemented!()
     }
 
-    pub fn create_shader() -> ShaderId {
+    pub fn create_vertex_buffer(backend: &B, vertices: &[Vertex]) -> Result<VertexBufferId, Error> {
+        let vbuf = B::VertexBuffer::from_vertices(backend, vertices)?;
         unimplemented!()
     }
 
-    pub fn create_texture() -> TextureId {
+    pub fn create_index_buffer(backend: &B, indices: &[u16]) -> Result<IndexBufferId, Error> {
+        let ibuf = B::IndexBuffer::from_indices(backend, indices)?;
         unimplemented!()
     }
 
-    pub fn create_text() -> TextId {
+    pub fn create_text() -> Result<TextId, Error> {
         unimplemented!()
     }
 }
