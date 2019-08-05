@@ -1,8 +1,6 @@
-use crate::graphics::{glium::GliumEvent, headless::HeadlessEvent};
 use ecs::EventTrait;
-use std::convert::TryFrom;
 
-pub trait EngineEventTrait: EventTrait + TryFrom<GliumEvent> + TryFrom<HeadlessEvent> + 'static {
+pub trait EngineEventTrait: EventTrait + Sized + 'static {
     fn startup() -> Self::EventFlag;
     fn shutdown() -> Self::EventFlag;
     fn hard_shutdown() -> Self::EventFlag;

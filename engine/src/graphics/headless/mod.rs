@@ -1,29 +1,26 @@
-use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait, ShaderTrait, VertexBufferTrait, IndexBufferTrait};
+use super::{private::Sealed, BackendTrait, EventTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait, ShaderTrait, VertexBufferTrait, IndexBufferTrait};
 use crate::{
     assets::{Image, Mesh, Vertex},
     geometry::rect::Rect,
 };
-use ecs::EventTrait;
 use failure::Error;
 use std::{
     borrow::{Borrow, Cow},
-    convert::TryFrom,
 };
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;
+
+impl Sealed for HeadlessEvent {}
+
+impl EventTrait for HeadlessEvent {}
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessEventsLoop;
 
 impl Sealed for HeadlessEventsLoop {}
 
-impl<Evt> EventsLoopTrait<Evt> for HeadlessEventsLoop
-where
-    Evt: EventTrait + TryFrom<HeadlessEvent>,
-{
-    type InputEvent = HeadlessEvent;
-
+impl EventsLoopTrait<HeadlessBackend> for HeadlessEventsLoop {
     fn poll<F: FnMut(HeadlessEvent)>(&mut self, _f: F) {}
 }
 
@@ -151,9 +148,10 @@ pub struct HeadlessBackend {
 impl Sealed for HeadlessBackend {}
 
 impl BackendTrait for HeadlessBackend {
+    type Event = HeadlessEvent;
     type Data = HeadlessRenderData;
     type Frame = HeadlessFrame;
-    type Loop = HeadlessEventsLoop;
+    type EventsLoop = HeadlessEventsLoop;
     type Texture = HeadlessTexture;
     type Shader = HeadlessShader;
     type VertexBuffer = HeadlessVertexBuffer;

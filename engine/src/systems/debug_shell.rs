@@ -13,7 +13,7 @@ pub struct DebugShell<Evt> {
 
 impl<Evt> Default for DebugShell<Evt>
 where
-    Evt: EngineEventTrait + 'static,
+    Evt: EngineEventTrait,
 {
     fn default() -> Self {
         let mut sys = DebugShell {
@@ -31,7 +31,7 @@ where
 
 impl<Evt> DebugShell<Evt>
 where
-    Evt: EngineEventTrait + 'static,
+    Evt: EngineEventTrait,
 {
     pub fn add_command<C: CommandTrait>(&mut self, command: C) {
         self.commands.insert(command.name(), Box::new(command));
@@ -69,7 +69,7 @@ where
 
 impl<Evt> EventHandlerSystem<Evt> for DebugShell<Evt>
 where
-    Evt: EngineEventTrait + 'static,
+    Evt: EngineEventTrait,
 {
     fn name(&self) -> &'static str {
         "DebugShell"

@@ -25,10 +25,19 @@ impl Default for MockEvtFlag {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct MockEvt {
     flag: MockEvtFlag,
     data: MockEvtData,
+}
+
+impl MockEvt {
+    pub fn new(flag: MockEvtFlag, data: MockEvtData) -> Self {
+        MockEvt {
+            flag,
+            data,
+        }
+    }
 }
 
 impl EngineEventTrait for MockEvt {
@@ -57,45 +66,45 @@ impl EngineEventTrait for MockEvt {
     }
 
     fn new_startup() -> Self {
-        MockEvt {
-            flag: MockEvtFlag::STARTUP,
-            data: MockEvtData::Empty,
-        }
+        MockEvt::new(
+            MockEvtFlag::STARTUP,
+            MockEvtData::Empty
+        )
     }
 
     fn new_shutdown() -> Self {
-        MockEvt {
-            flag: MockEvtFlag::SHUTDOWN,
-            data: MockEvtData::Empty,
-        }
+        MockEvt::new(
+            MockEvtFlag::SHUTDOWN,
+            MockEvtData::Empty,
+        )
     }
 
     fn new_hard_shutdown() -> Self {
-        MockEvt {
-            flag: MockEvtFlag::HARD_SHUTDOWN,
-            data: MockEvtData::Empty,
-        }
+        MockEvt::new(
+            MockEvtFlag::HARD_SHUTDOWN,
+            MockEvtData::Empty,
+        )
     }
 
     fn new_command(args: Vec<String>) -> Self {
-        MockEvt {
-            flag: MockEvtFlag::COMMAND,
-            data: MockEvtData::Command(args),
-        }
+        MockEvt::new(
+            MockEvtFlag::COMMAND,
+            MockEvtData::Command(args),
+        )
     }
 
     fn new_resize(dims: (u32, u32)) -> Self {
-        MockEvt {
-            flag: MockEvtFlag::RESIZE,
-            data: MockEvtData::Resize(dims),
-        }
+        MockEvt::new(
+            MockEvtFlag::RESIZE,
+            MockEvtData::Resize(dims),
+        )
     }
 
     fn new_change_dpi(factor: f64) -> Self {
-        MockEvt {
-            flag: MockEvtFlag::CHANGE_DPI,
-            data: MockEvtData::ChangeDpi(factor),
-        }
+        MockEvt::new(
+            MockEvtFlag::CHANGE_DPI,
+            MockEvtData::ChangeDpi(factor),
+        )
     }
 
     fn flag(&self) -> MockEvtFlag {
@@ -121,14 +130,6 @@ impl EngineEventTrait for MockEvt {
             MockEvtData::ChangeDpi(factor) => Some(factor),
             _ => None,
         }
-    }
-}
-
-impl EventTrait for MockEvt {
-    type EventFlag = MockEvtFlag;
-
-    fn matches_filter(&self, flag: Self::EventFlag) -> bool {
-        flag.contains(self.flag)
     }
 }
 
@@ -167,6 +168,14 @@ impl TryFrom<GliumEvent> for MockEvt {
     }
 }
 
+impl EventTrait for MockEvt {
+    type EventFlag = MockEvtFlag;
+
+    fn matches_filter(&self, flag: Self::EventFlag) -> bool {
+        flag.contains(self.flag)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum MockEvtData {
     Empty,
@@ -196,45 +205,45 @@ mod tests {
 
     #[test]
     fn accessors() {
-        let e = MockEvt::new_startup();
+        let e: MockEvt = MockEvt::new_startup();
         let _: MockEvtFlag = e.flag();
     }
 
     #[test]
     fn ready_event() {
-        let e = MockEvt::new_startup();
+        let e: MockEvt = MockEvt::new_startup();
         assert_eq!(e.flag(), MockEvtFlag::STARTUP);
     }
 
     #[test]
     fn shutdown_event() {
-        let e = MockEvt::new_shutdown();
+        let e: MockEvt = MockEvt::new_shutdown();
         assert_eq!(e.flag(), MockEvtFlag::SHUTDOWN);
     }
 
     #[test]
     fn hard_shutdown_event() {
-        let e = MockEvt::new_hard_shutdown();
+        let e: MockEvt = MockEvt::new_hard_shutdown();
         assert_eq!(e.flag(), MockEvtFlag::HARD_SHUTDOWN);
     }
 
     #[test]
     fn command_event() {
-        let e = MockEvt::new_command(vec![String::from("echo")]);
+        let e: MockEvt = MockEvt::new_command(vec![String::from("echo")]);
         assert_eq!(e.flag(), MockEvtFlag::COMMAND);
         assert_eq!(e.command_data(), Some(vec![String::from("echo")].as_slice()));
     }
 
     #[test]
     fn resize_event() {
-        let e = MockEvt::new_resize((1, 2));
+        let e: MockEvt = MockEvt::new_resize((1, 2));
         assert_eq!(e.flag(), MockEvtFlag::RESIZE);
         assert_eq!(e.resize_data(), Some((1, 2)));
     }
 
     #[test]
     fn change_dpi_event() {
-        let e = MockEvt::new_change_dpi(2.0);
+        let e: MockEvt = MockEvt::new_change_dpi(2.0);
         assert_eq!(e.flag(), MockEvtFlag::CHANGE_DPI);
         assert_eq!(e.change_dpi_data(), Some(2.0));
     }

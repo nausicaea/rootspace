@@ -28,7 +28,7 @@ where
     B: BackendTrait,
 {
     pub fn new(
-        events_loop: &B::Loop,
+        events_loop: &B::EventsLoop,
         title: &str,
         dimensions: (u32, u32),
         vsync: bool,
@@ -74,7 +74,7 @@ where
 impl<Evt, B> System for Renderer<Evt, B>
 where
     Evt: EngineEventTrait,
-    B: BackendTrait + 'static,
+    B: BackendTrait,
 {
     fn name(&self) -> &'static str {
         "Renderer"

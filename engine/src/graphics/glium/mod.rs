@@ -1,9 +1,8 @@
-use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait, ShaderTrait, VertexBufferTrait, IndexBufferTrait};
+use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait, ShaderTrait, VertexBufferTrait, IndexBufferTrait, EventTrait};
 use crate::{
     assets::{Image, Vertex},
     geometry::rect::Rect,
 };
-use ecs::EventTrait;
 use failure::Error;
 use glium::{
     backend::glutin::DisplayCreationError,
@@ -17,7 +16,6 @@ use glium::{
 use glium::index::PrimitiveType;
 use std::{
     borrow::{Borrow, Cow},
-    convert::TryFrom,
     fmt,
     rc::Rc,
 };
@@ -30,6 +28,10 @@ impl From<GlutinEvent> for GliumEvent {
         GliumEvent(value)
     }
 }
+
+impl Sealed for GliumEvent {}
+
+impl EventTrait for GliumEvent {}
 
 pub struct GliumEventsLoop(Box<EventsLoop>);
 
@@ -47,12 +49,7 @@ impl fmt::Debug for GliumEventsLoop {
 
 impl Sealed for GliumEventsLoop {}
 
-impl<Evt> EventsLoopTrait<Evt> for GliumEventsLoop
-where
-    Evt: EventTrait + TryFrom<GliumEvent>,
-{
-    type InputEvent = GliumEvent;
-
+impl EventsLoopTrait<GliumBackend> for GliumEventsLoop {
     fn poll<F: FnMut(GliumEvent)>(&mut self, mut f: F) {
         self.0.poll_events(|e| f(e.into()))
     }
@@ -249,9 +246,10 @@ pub struct GliumBackend {
 impl Sealed for GliumBackend {}
 
 impl BackendTrait for GliumBackend {
+    type Event = GliumEvent;
     type Data = GliumRenderData;
     type Frame = GliumFrame;
-    type Loop = GliumEventsLoop;
+    type EventsLoop = GliumEventsLoop;
     type Texture = GliumTexture;
     type Shader = GliumShader;
     type VertexBuffer = GliumVertexBuffer;

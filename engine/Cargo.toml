@@ -21,10 +21,11 @@ nalgebra = "^0.18.0"
 num-traits = "^0.2.6"
 rusttype = {version = "^0.7.2", features = ["gpu_cache"]}
 unicode-normalization = "^0.1.5"
+snowflake = "^1.2.0"
 affine-transform = {git = "https://gitlab.com/nausicaea/affine-transform.git"}
 hierarchy = {git = "https://gitlab.com/nausicaea/hierarchy.git"}
-ecs = {path = "../ecs"}
 ply = {git = "https://gitlab.com/nausicaea/ply.git"}
+ecs = {path = "../ecs"}
 
 [dev-dependencies]
 approx = "^0.3.0"

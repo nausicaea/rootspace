@@ -2,7 +2,8 @@ use crate::{
     components::{model::Model, ui_model::UiModel},
     event::EngineEventTrait,
     file_manipulation::{FileError, VerifyPath},
-    resources::SceneGraph,
+    graphics::BackendTrait,
+    resources::{SceneGraph, RenderData},
 };
 use ecs::{EventManager, Persistence, WorldTrait};
 use std::{
@@ -13,17 +14,19 @@ use std::{
 };
 
 #[derive(Debug)]
-pub struct Orchestrator<E, W> {
+pub struct Orchestrator<E, B, W> {
     pub world: W,
     resource_path: PathBuf,
     delta_time: Duration,
     max_frame_time: Duration,
-    _evt: PhantomData<E>,
+    _e: PhantomData<E>,
+    _b: PhantomData<B>,
 }
 
-impl<E, W> Orchestrator<E, W>
+impl<E, B, W> Orchestrator<E, B, W>
 where
     E: EngineEventTrait,
+    B: BackendTrait,
     W: Default + WorldTrait,
 {
     pub fn new<P: AsRef<Path>>(
@@ -35,6 +38,7 @@ where
 
         let mut world = W::default();
         world.add_resource(EventManager::<E>::default(), Persistence::Runtime);
+        world.add_resource(RenderData::<B>::default(), Persistence::Runtime);
         world.add_resource(SceneGraph::<Model>::default(), Persistence::Runtime);
         world.add_resource(SceneGraph::<UiModel>::default(), Persistence::Runtime);
 
@@ -43,7 +47,8 @@ where
             resource_path: resource_path.as_ref().into(),
             delta_time,
             max_frame_time,
-            _evt: PhantomData::default(),
+            _e: PhantomData::default(),
+            _b: PhantomData::default(),
         })
     }
 
@@ -88,6 +93,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::graphics::headless::HeadlessBackend;
     use crate::mock::{MockEvt, MockWorld};
     use std::env;
     use tempfile::NamedTempFile;
@@ -99,7 +105,7 @@ mod tests {
         let base = env::temp_dir();
         let render_duration = Duration::from_millis(20);
 
-        let mut o = Orchestrator::<MockEvt, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+        let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
         o.world.max_iterations = iterations as usize + 1;
         o.world.render_duration = Some(render_duration);
 
@@ -118,14 +124,14 @@ mod tests {
 
     #[test]
     fn create_orchestrator() {
-        let r = Orchestrator::<MockEvt, MockWorld>::new(&env::temp_dir(), Default::default(), Default::default());
+        let r = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&env::temp_dir(), Default::default(), Default::default());
         assert!(r.is_ok());
 
-        let r = Orchestrator::<MockEvt, MockWorld>::new("blablablabla", Default::default(), Default::default());
+        let r = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new("blablablabla", Default::default(), Default::default());
         assert!(r.is_err());
 
         let tf = NamedTempFile::new().unwrap();
-        let r = Orchestrator::<MockEvt, MockWorld>::new(tf.path(), Default::default(), Default::default());
+        let r = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(tf.path(), Default::default(), Default::default());
         assert!(r.is_err());
     }
 
@@ -136,7 +142,7 @@ mod tests {
         let base = env::temp_dir();
         let tf = NamedTempFile::new_in(&base).unwrap();
 
-        let o = Orchestrator::<MockEvt, MockWorld>::new(&base, Default::default(), Default::default()).unwrap();
+        let o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, Default::default(), Default::default()).unwrap();
 
         let r = o.file(dir_name, &tf.path().file_name().unwrap().to_string_lossy());
         assert!(r.is_ok());
@@ -165,7 +171,7 @@ mod tests {
         let base = env::temp_dir();
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<MockEvt, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+        let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
         o.run(None);
         assert_eq!(
@@ -225,7 +231,7 @@ mod tests {
             let base = env::temp_dir();
             let delta_time = Duration::from_millis(50);
             let max_frame_time = Duration::from_millis(250);
-            let mut o = Orchestrator::<MockEvt, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
             o.world.max_iterations = iterations + 1;
 
             o.run(Some(iterations));
@@ -238,7 +244,7 @@ mod tests {
             let base = env::temp_dir();
             let delta_time = Duration::from_millis(50);
             let max_frame_time = Duration::from_millis(250);
-            let mut o = Orchestrator::<MockEvt, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
             o.world.max_iterations = iterations + 1;
 
             o.run(Some(iterations));
@@ -251,7 +257,7 @@ mod tests {
             let base = env::temp_dir();
             let delta_time = Duration::from_millis(50);
             let max_frame_time = Duration::from_millis(250);
-            let mut o = Orchestrator::<MockEvt, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
             o.world.max_iterations = iterations + 1;
 
             o.run(Some(iterations));
@@ -264,7 +270,7 @@ mod tests {
         let base = env::temp_dir();
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<MockEvt, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+        let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
         o.run(None);
         let mut last_time = Duration::default();
@@ -280,7 +286,7 @@ mod tests {
         let base = env::temp_dir();
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<MockEvt, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+        let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
         o.run(None);
         let mut last_time = Duration::default();
@@ -296,7 +302,7 @@ mod tests {
         let base = env::temp_dir();
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<MockEvt, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+        let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
         o.run(None);
         let mut last_time = Duration::default();

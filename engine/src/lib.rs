@@ -26,6 +26,7 @@ extern crate rusttype;
 #[cfg(test)]
 extern crate tempfile;
 extern crate unicode_normalization;
+extern crate snowflake;
 
 pub mod assets;
 pub mod components;
@@ -51,7 +52,7 @@ use crate::{
 };
 use ecs::World;
 
-pub type DefaultOrchestrator<E> = Orchestrator<E, World<E>>;
+pub type DefaultOrchestrator<E, B> = Orchestrator<E, B, World<E>>;
 pub type GliumEventInterface<E> = EventInterface<E, GliumEventsLoop>;
 pub type HeadlessEventInterface<E> = EventInterface<E, HeadlessEventsLoop>;
 pub type GliumRenderer<E> = Renderer<E, GliumBackend>;

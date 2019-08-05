@@ -1,42 +1,40 @@
-use crate::graphics::EventsLoopTrait;
-use ecs::{EventManager, EventTrait, Resources, System};
-use std::{convert::TryInto, marker::PhantomData, time::Duration};
+use crate::graphics::{BackendTrait, EventsLoopTrait};
+use crate::event::EngineEventTrait;
+use ecs::{EventManager, Resources, System};
+use std::{marker::PhantomData, time::Duration};
+use std::convert::TryFrom;
 
-pub struct EventInterface<Evt, L> {
-    pub events_loop: L,
+pub struct EventInterface<Evt, B: BackendTrait> {
+    pub events_loop: B::EventsLoop,
     _evt: PhantomData<Evt>,
+    _b: PhantomData<B>,
 }
 
-impl<Evt, L> EventInterface<Evt, L> {
-    pub fn new(events_loop: L) -> Self {
+impl<Evt, B> Default for EventInterface<Evt, B>
+where
+    B: BackendTrait,
+{
+    fn default() -> Self {
         EventInterface {
-            events_loop,
+            events_loop: B::EventsLoop::default(),
             _evt: PhantomData::default(),
+            _b: PhantomData::default(),
         }
     }
 }
 
-impl<Evt, L> Default for EventInterface<Evt, L>
+impl<Evt, B> System for EventInterface<Evt, B>
 where
-    L: Default,
-{
-    fn default() -> Self {
-        EventInterface::new(Default::default())
-    }
-}
-
-impl<Evt, L> System for EventInterface<Evt, L>
-where
-    L: EventsLoopTrait<Evt>,
-    Evt: EventTrait,
+    Evt: EngineEventTrait + TryFrom<B::Event>,
+    B: BackendTrait,
 {
     fn name(&self) -> &'static str {
         "EventInterface"
     }
 
     fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
-        self.events_loop.poll(|input_event| {
-            if let Ok(event) = input_event.try_into() {
+        self.events_loop.poll(|input_event: B::Event| {
+            if let Ok(event) = TryFrom::try_from(input_event) {
                 res.get_mut::<EventManager<Evt>>().dispatch_later(event);
             }
         });
@@ -46,10 +44,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{graphics::headless::HeadlessEventsLoop, mock::MockEvt};
+    use crate::{graphics::headless::HeadlessBackend, mock::MockEvt};
 
     #[test]
     fn new_headless() {
-        let _: EventInterface<MockEvt, HeadlessEventsLoop> = EventInterface::default();
+        let _: EventInterface<MockEvt, HeadlessBackend> = EventInterface::default();
     }
 }

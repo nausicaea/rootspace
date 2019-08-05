@@ -8,25 +8,24 @@ mod private {
 use crate::{assets::Image, geometry::rect::Rect};
 use crate::assets::Vertex;
 use crate::file_manipulation::ReadPath;
-use ecs::EventTrait;
 use failure::Error;
 use std::{
     borrow::{Borrow, Cow},
-    convert::TryInto,
     path::Path,
 };
 
-pub trait BackendTrait: Sized + private::Sealed {
-    type Loop;
+pub trait BackendTrait: Sized + private::Sealed + 'static {
+    type Event: EventTrait;
     type Data: DataTrait;
     type Frame: FrameTrait<Self>;
+    type EventsLoop: EventsLoopTrait<Self>;
     type Texture: TextureTrait<Self>;
     type Shader: ShaderTrait<Self>;
     type VertexBuffer: VertexBufferTrait<Self>;
     type IndexBuffer: IndexBufferTrait<Self>;
 
     fn new(
-        events_loop: &Self::Loop,
+        events_loop: &Self::EventsLoop,
         title: &str,
         dimensions: (u32, u32),
         vsync: bool,
@@ -37,10 +36,10 @@ pub trait BackendTrait: Sized + private::Sealed {
     fn physical_dimensions(&self) -> (u32, u32);
 }
 
-pub trait EventsLoopTrait<O: EventTrait>: private::Sealed + 'static {
-    type InputEvent: TryInto<O>;
+pub trait EventTrait: private::Sealed {}
 
-    fn poll<F: FnMut(Self::InputEvent)>(&mut self, f: F);
+pub trait EventsLoopTrait<B: BackendTrait>: Default + private::Sealed + 'static {
+    fn poll<F: FnMut(B::Event)>(&mut self, f: F);
 }
 
 pub trait DataTrait: private::Sealed {}

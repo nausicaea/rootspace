@@ -25,10 +25,19 @@ impl Default for EventFlag {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Event {
     flag: EventFlag,
     data: EventData,
+}
+
+impl Event {
+    fn new(flag: EventFlag, data: EventData) -> Self {
+        Event {
+            flag,
+            data,
+        }
+    }
 }
 
 impl EngineEventTrait for Event {
@@ -57,45 +66,45 @@ impl EngineEventTrait for Event {
     }
 
     fn new_startup() -> Self {
-        Event {
-            flag: EventFlag::STARTUP,
-            data: EventData::Empty,
-        }
+        Event::new(
+            EventFlag::STARTUP,
+            EventData::Empty,
+        )
     }
 
     fn new_shutdown() -> Self {
-        Event {
-            flag: EventFlag::SHUTDOWN,
-            data: EventData::Empty,
-        }
+        Event::new(
+            EventFlag::SHUTDOWN,
+            EventData::Empty,
+        )
     }
 
     fn new_hard_shutdown() -> Self {
-        Event {
-            flag: EventFlag::HARD_SHUTDOWN,
-            data: EventData::Empty,
-        }
+        Event::new(
+            EventFlag::HARD_SHUTDOWN,
+            EventData::Empty,
+        )
     }
 
     fn new_command(args: Vec<String>) -> Self {
-        Event {
-            flag: EventFlag::COMMAND,
-            data: EventData::Command(args),
-        }
+        Event::new(
+            EventFlag::COMMAND,
+            EventData::Command(args),
+        )
     }
 
     fn new_resize(dims: (u32, u32)) -> Self {
-        Event {
-            flag: EventFlag::RESIZE,
-            data: EventData::Resize(dims),
-        }
+        Event::new(
+            EventFlag::RESIZE,
+            EventData::Resize(dims),
+        )
     }
 
     fn new_change_dpi(factor: f64) -> Self {
-        Event {
-            flag: EventFlag::CHANGE_DPI,
-            data: EventData::ChangeDpi(factor),
-        }
+        Event::new(
+            EventFlag::CHANGE_DPI,
+            EventData::ChangeDpi(factor),
+        )
     }
 
     fn flag(&self) -> EventFlag {
@@ -124,14 +133,6 @@ impl EngineEventTrait for Event {
     }
 }
 
-impl EventTrait for Event {
-    type EventFlag = EventFlag;
-
-    fn matches_filter(&self, flag: Self::EventFlag) -> bool {
-        flag.contains(self.flag)
-    }
-}
-
 impl TryFrom<HeadlessEvent> for Event {
     type Error = ();
 
@@ -153,7 +154,7 @@ impl TryFrom<GliumEvent> for Event {
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Q),
+                            virtual_keycode: Ok(VirtualKeyCode::Q),
                             modifiers: ModifiersState { logo: true, .. },
                             ..
                         },
@@ -164,6 +165,14 @@ impl TryFrom<GliumEvent> for Event {
         } else {
             Err(())
         }
+    }
+}
+
+impl EventTrait for Event {
+    type EventFlag = EventFlag;
+
+    fn matches_filter(&self, flag: Self::EventFlag) -> bool {
+        flag.contains(self.flag)
     }
 }
 

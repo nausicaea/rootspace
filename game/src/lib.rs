@@ -12,21 +12,25 @@ mod event;
 use crate::event::Event;
 use ecs::{EventManager, LoopStage, World};
 use engine::{
-    components::{Camera, Info, Model, Renderable, Status, UiModel},
+    components::{Camera, Info, Model, Status, UiModel},
     event::EngineEventTrait,
-    resources::SceneGraph,
-    systems::{CameraManager, DebugConsole, DebugShell, EventCoordinator, EventMonitor, ForceShutdown},
-    DefaultOrchestrator, GliumEventInterface, GliumRenderer, HeadlessEventInterface, HeadlessRenderer,
+    graphics::BackendTrait,
+    resources::{SceneGraph},
+    systems::{CameraManager, DebugConsole, DebugShell, EventCoordinator, EventMonitor, ForceShutdown, EventInterface, Renderer},
+    DefaultOrchestrator,
 };
 use failure::Error;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
 
-pub struct Game {
-    orchestrator: DefaultOrchestrator<Event>,
+pub struct Game<B> {
+    orchestrator: DefaultOrchestrator<Event, B>,
 }
 
-impl Game {
+impl<B> Game<B>
+where
+    B: BackendTrait + 'static,
+{
     pub fn new<P: AsRef<Path>>(
         resource_path: P,
         delta_time: Duration,
@@ -37,8 +41,11 @@ impl Game {
         Ok(Game { orchestrator: o })
     }
 
-    pub fn load(&mut self, headless: bool) -> Result<(), Error> {
+    pub fn load(&mut self) -> Result<(), Error> {
         self.orchestrator.reset();
+
+        let event_interface: EventInterface<Event, B> = EventInterface::default();
+        let renderer: Renderer<Event, B> = Renderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
 
         let camera = self.world_mut().create_entity();
         self.world_mut().add_component(camera, Status::default());
@@ -85,126 +92,70 @@ impl Game {
         );
 
         // Handle the regular systems.
-        let event_monitor = EventMonitor::<Event>::default();
+        let event_monitor: EventMonitor<Event> = EventMonitor::default();
         self.world_mut().add_event_handler_system(event_monitor);
 
-        let force_shutdown = ForceShutdown::<Event>::default();
+        let force_shutdown: ForceShutdown<Event> = ForceShutdown::default();
         self.world_mut().add_system(LoopStage::Update, force_shutdown);
 
-        let camera_manager = CameraManager::<Event>::default();
+        let camera_manager: CameraManager<Event> = CameraManager::default();
         self.world_mut().add_event_handler_system(camera_manager);
 
-        let debug_console = DebugConsole::<Event>::default();
+        let debug_console: DebugConsole<Event> = DebugConsole::default();
         self.world_mut().add_system(LoopStage::Update, debug_console);
 
-        let debug_shell = DebugShell::<Event>::default();
+        let debug_shell: DebugShell<Event> = DebugShell::default();
         self.world_mut().add_event_handler_system(debug_shell);
 
-        // Handle the systems that depend on a backend.
-        if headless {
-            let event_interface = HeadlessEventInterface::<Event>::default();
-            let renderer = HeadlessRenderer::<Event>::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
+        //let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
+        //let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
+        //let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
+        //let text = "Hello, World!";
+        //self.world_mut().add_component(
+        //    ea,
+        //    Renderable::builder()
+        //        .font(f)
+        //        .text_scale(16.0)
+        //        .text_width(2.0, 200)
+        //        .vertex_shader(vs)
+        //        .fragment_shader(fs)
+        //        .text(text)
+        //        .build_text_headless(&renderer.backend)?,
+        //);
 
-            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
-            let text = "Hello, World!";
-            self.world_mut().add_component(
-                ea,
-                Renderable::builder()
-                    .font(f)
-                    .text_scale(16.0)
-                    .text_width(2.0, 200)
-                    .vertex_shader(vs)
-                    .fragment_shader(fs)
-                    .text(text)
-                    .build_text_headless(&renderer.backend)?,
-            );
+        //let m = self.orchestrator.file("meshes", "cube.ply")?;
+        //let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
+        //let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
+        //let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
+        //self.world_mut().add_component(
+        //    eb,
+        //    Renderable::builder()
+        //        .mesh(m)
+        //        .vertex_shader(vs)
+        //        .fragment_shader(fs)
+        //        .diffuse_texture(dt)
+        //        .build_mesh_headless(&renderer.backend)?,
+        //);
 
-            let m = self.orchestrator.file("meshes", "cube.ply")?;
-            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
-            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            self.world_mut().add_component(
-                eb,
-                Renderable::builder()
-                    .mesh(m)
-                    .vertex_shader(vs)
-                    .fragment_shader(fs)
-                    .diffuse_texture(dt)
-                    .build_mesh_headless(&renderer.backend)?,
-            );
+        //let m = self.orchestrator.file("meshes", "quad.ply")?;
+        //let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
+        //let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
+        //let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
+        //self.world_mut().add_component(
+        //    ec,
+        //    Renderable::builder()
+        //        .mesh(m)
+        //        .vertex_shader(vs)
+        //        .fragment_shader(fs)
+        //        .diffuse_texture(dt)
+        //        .build_mesh_headless(&renderer.backend)?,
+        //);
 
-            let m = self.orchestrator.file("meshes", "quad.ply")?;
-            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
-            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            self.world_mut().add_component(
-                ec,
-                Renderable::builder()
-                    .mesh(m)
-                    .vertex_shader(vs)
-                    .fragment_shader(fs)
-                    .diffuse_texture(dt)
-                    .build_mesh_headless(&renderer.backend)?,
-            );
-
-            self.world_mut().add_system(LoopStage::Update, event_interface);
-            self.world_mut().add_system(LoopStage::Render, renderer);
-        } else {
-            let event_interface = GliumEventInterface::<Event>::default();
-            let renderer = GliumRenderer::<Event>::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
-
-            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
-            let text = "Hello, World!";
-            self.world_mut().add_component(
-                ea,
-                Renderable::builder()
-                    .font(f)
-                    .text_scale(16.0)
-                    .text_width(2.0, 200)
-                    .vertex_shader(vs)
-                    .fragment_shader(fs)
-                    .text(text)
-                    .build_text_glium(&renderer.backend)?,
-            );
-
-            let m = self.orchestrator.file("meshes", "cube.ply")?;
-            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
-            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            self.world_mut().add_component(
-                eb,
-                Renderable::builder()
-                    .mesh(m)
-                    .vertex_shader(vs)
-                    .fragment_shader(fs)
-                    .diffuse_texture(dt)
-                    .build_mesh_glium(&renderer.backend)?,
-            );
-
-            let m = self.orchestrator.file("meshes", "quad.ply")?;
-            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
-            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            self.world_mut().add_component(
-                ec,
-                Renderable::builder()
-                    .mesh(m)
-                    .vertex_shader(vs)
-                    .fragment_shader(fs)
-                    .diffuse_texture(dt)
-                    .build_mesh_glium(&renderer.backend)?,
-            );
-
-            self.world_mut().add_system(LoopStage::Update, event_interface);
-            self.world_mut().add_system(LoopStage::Render, renderer);
-        }
+        self.world_mut().add_system(LoopStage::Update, event_interface);
+        self.world_mut().add_system(LoopStage::Render, renderer);
 
         // The event coordinator should run last, because it can affect the shutdown of the engine.
-        let event_coordinator = EventCoordinator::<Event>::default();
+        let event_coordinator: EventCoordinator<Event> = EventCoordinator::default();
         self.world_mut().add_event_handler_system(event_coordinator);
 
         self.world_mut()
