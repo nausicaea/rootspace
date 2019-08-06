@@ -27,6 +27,9 @@ extern crate rusttype;
 extern crate tempfile;
 extern crate unicode_normalization;
 extern crate snowflake;
+#[cfg(feature = "diagnostics")]
+#[macro_use]
+extern crate typename;
 
 pub mod assets;
 pub mod components;

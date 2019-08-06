@@ -4,6 +4,7 @@ use crate::resources::Resource;
 use std::fmt;
 
 /// The `Entities` resource keeps track of all entities.
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Default, Debug)]
 pub struct Entities {
     /// Stores the highest assigned `Entity` index plus one.

@@ -154,7 +154,7 @@ impl TryFrom<GliumEvent> for Event {
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
-                            virtual_keycode: Ok(VirtualKeyCode::Q),
+                            virtual_keycode: Some(VirtualKeyCode::Q),
                             modifiers: ModifiersState { logo: true, .. },
                             ..
                         },

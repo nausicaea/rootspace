@@ -10,6 +10,8 @@ use crate::{
     system::{EventHandlerSystem, System},
 };
 use std::{marker::PhantomData, time::Duration};
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
 /// systems to operate on the stored resources, components and entities.
@@ -72,9 +74,20 @@ where
 {
     /// Return a mutable references to the specified resource type. Panics, if the resource is not
     /// registered.
+    #[cfg(not(feature = "diagnostics"))]
     pub fn get_resource_mut<R>(&mut self) -> &mut R
     where
         R: Resource,
+    {
+        self.resources.get_mut::<R>()
+    }
+
+    /// Return a mutable references to the specified resource type. Panics, if the resource is not
+    /// registered.
+    #[cfg(feature = "diagnostics")]
+    pub fn get_resource_mut<R>(&mut self) -> &mut R
+    where
+        R: Resource + TypeName,
     {
         self.resources.get_mut::<R>()
     }
@@ -133,9 +146,24 @@ where
     }
 
     /// Add a component to the specified `Entity`.
+    #[cfg(not(feature = "diagnostics"))]
     pub fn add_component<C>(&mut self, entity: Entity, component: C) -> Option<C>
     where
         C: Component,
+    {
+        if !self.resources.has::<C::Storage>() {
+            let _ = self.resources.insert(C::Storage::default(), Persistence::None);
+        }
+
+        self.resources.get_mut::<C::Storage>().insert(entity, component)
+    }
+
+    /// Add a component to the specified `Entity`.
+    #[cfg(feature = "diagnostics")]
+    pub fn add_component<C>(&mut self, entity: Entity, component: C) -> Option<C>
+    where
+        C: Component + TypeName,
+        C::Storage: TypeName,
     {
         if !self.resources.has::<C::Storage>() {
             let _ = self.resources.insert(C::Storage::default(), Persistence::None);
@@ -165,6 +193,7 @@ where
     }
 }
 
+#[cfg(not(feature = "diagnostics"))]
 impl<E> WorldTrait for World<E>
 where
     E: EventTrait,
@@ -221,6 +250,62 @@ where
     }
 }
 
+#[cfg(feature = "diagnostics")]
+impl<E> WorldTrait for World<E>
+where
+    E: EventTrait + TypeName,
+{
+    fn clear(&mut self, persistence: Persistence) {
+        self.resources.clear(persistence);
+        self.fixed_update_systems.clear();
+        self.update_systems.clear();
+        self.render_systems.clear();
+        self.event_handler_systems.clear();
+    }
+
+    fn add_resource<R>(&mut self, res: R, persistence: Persistence) -> Option<R>
+    where
+        R: Resource,
+    {
+        self.resources.insert(res, persistence)
+    }
+
+    fn fixed_update(&mut self, t: &Duration, dt: &Duration) {
+        for system in &mut self.fixed_update_systems {
+            system.run(&mut self.resources, t, dt);
+        }
+    }
+
+    fn update(&mut self, t: &Duration, dt: &Duration) {
+        for system in &mut self.update_systems {
+            system.run(&mut self.resources, t, dt);
+        }
+    }
+
+    fn render(&mut self, t: &Duration, dt: &Duration) {
+        for system in &mut self.render_systems {
+            system.run(&mut self.resources, t, dt);
+        }
+    }
+
+    fn handle_events(&mut self) -> bool {
+        let events = self.resources.get_mut::<EventManager<E>>().flush();
+
+        if !events.is_empty() {
+            let mut statuses: Vec<bool> = Vec::with_capacity(events.len() * self.event_handler_systems.len());
+            for event in &events {
+                for system in self.event_handler_systems.iter_mut() {
+                    if event.matches_filter(system.get_event_filter()) {
+                        statuses.push(system.run(&mut self.resources, event));
+                    }
+                }
+            }
+            statuses.into_iter().all(|s| s)
+        } else {
+            true
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;

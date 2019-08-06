@@ -8,6 +8,9 @@ use ecs::{Component, Entities, Entity, EventManager, Resources, Storage};
 use failure::Error;
 use std::marker::PhantomData;
 
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
+
 pub trait CommandTrait: 'static {
     fn name(&self) -> &'static str;
     fn description(&self) -> &'static str;
@@ -27,9 +30,29 @@ impl<Evt> Default for ExitCommand<Evt> {
     }
 }
 
+#[cfg(not(feature = "diagnostics"))]
 impl<Evt> CommandTrait for ExitCommand<Evt>
 where
     Evt: EngineEventTrait,
+{
+    fn name(&self) -> &'static str {
+        "exit"
+    }
+
+    fn description(&self) -> &'static str {
+        "Shuts down the engine (can also be done with Ctrl-C. Tap Ctrl-C twice to force a shutdown)"
+    }
+
+    fn run(&self, res: &mut Resources, _: &[String]) -> Result<(), Error> {
+        res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_shutdown());
+        Ok(())
+    }
+}
+
+#[cfg(feature = "diagnostics")]
+impl<Evt> CommandTrait for ExitCommand<Evt>
+where
+    Evt: EngineEventTrait + TypeName,
 {
     fn name(&self) -> &'static str {
         "exit"

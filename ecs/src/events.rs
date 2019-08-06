@@ -30,6 +30,7 @@ pub trait EventTrait: Clone + fmt::Debug + 'static {
 
 /// An `EventManager` contains a queue of events and provides rudimentary facilities of retrieving
 /// those events.
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 pub struct EventManager<E>(VecDeque<E>);
 
 impl<E> EventManager<E> {

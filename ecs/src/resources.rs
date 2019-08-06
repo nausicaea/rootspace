@@ -9,6 +9,8 @@ use std::{
     fmt,
     ops::{Deref, DerefMut},
 };
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 /// A resource is a data structure that is not coupled to a specific entity. Resources can be used
 /// to provide "global" state to systems.
@@ -100,6 +102,7 @@ impl Resources {
     }
 
     /// Borrows the requested resource.
+    #[cfg(not(feature = "diagnostics"))]
     pub fn borrow<R>(&self) -> Ref<R>
     where
         R: Resource,
@@ -114,7 +117,24 @@ impl Resources {
             .expect("Could not find the resource")
     }
 
+    /// Borrows the requested resource.
+    #[cfg(feature = "diagnostics")]
+    pub fn borrow<R>(&self) -> Ref<R>
+    where
+        R: Resource + TypeName,
+    {
+        self.0
+            .get(&TypeId::of::<R>())
+            .map(|r| {
+                Ref::map(r.borrow(), |i| {
+                    i.downcast_ref::<R>().expect("Could not downcast the resource")
+                })
+            })
+            .expect(&format!("Could not find the resource of type {}", R::type_name()))
+    }
+
     /// Mutably borrows the requested resource (with a runtime borrow check).
+    #[cfg(not(feature = "diagnostics"))]
     pub fn borrow_mut<R>(&self) -> RefMut<R>
     where
         R: Resource,
@@ -129,7 +149,24 @@ impl Resources {
             .expect("Could not find the resource")
     }
 
+    /// Mutably borrows the requested resource (with a runtime borrow check).
+    #[cfg(feature = "diagnostics")]
+    pub fn borrow_mut<R>(&self) -> RefMut<R>
+    where
+        R: Resource + TypeName,
+    {
+        self.0
+            .get(&TypeId::of::<R>())
+            .map(|r| {
+                RefMut::map(r.borrow_mut(), |i| {
+                    i.downcast_mut::<R>().expect("Could not downcast the resource")
+                })
+            })
+            .expect(&format!("Could not find the resource of type {}", R::type_name()))
+    }
+
     /// Mutably borrows the requested resource (with a compile-time borrow check).
+    #[cfg(not(feature = "diagnostics"))]
     pub fn get_mut<R>(&mut self) -> &mut R
     where
         R: Resource,
@@ -144,7 +181,24 @@ impl Resources {
             .expect("Could not find the resource")
     }
 
+    /// Mutably borrows the requested resource (with a compile-time borrow check).
+    #[cfg(feature = "diagnostics")]
+    pub fn get_mut<R>(&mut self) -> &mut R
+    where
+        R: Resource + TypeName,
+    {
+        self.0
+            .get_mut(&TypeId::of::<R>())
+            .map(|r| {
+                r.get_mut()
+                    .downcast_mut::<R>()
+                    .expect("Could not downcast the resource")
+            })
+            .expect(&format!("Could not find the resource of type {}", R::type_name()))
+    }
+
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
+    #[cfg(not(feature = "diagnostics"))]
     pub fn borrow_component<C>(&self) -> Ref<C::Storage>
     where
         C: Component,
@@ -152,11 +206,33 @@ impl Resources {
         self.borrow::<C::Storage>()
     }
 
+    /// Borrows the requested component storage (this is a convenience method to `borrow`).
+    #[cfg(feature = "diagnostics")]
+    pub fn borrow_component<C>(&self) -> Ref<C::Storage>
+    where
+        C: Component + TypeName,
+        C::Storage: TypeName,
+    {
+        self.borrow::<C::Storage>()
+    }
+
     /// Mutably borrows the requested component storage (this is a convenience method to
     /// `borrow_mut`).
+    #[cfg(not(feature = "diagnostics"))]
     pub fn borrow_mut_component<C>(&self) -> RefMut<C::Storage>
     where
         C: Component,
+    {
+        self.borrow_mut::<C::Storage>()
+    }
+
+    /// Mutably borrows the requested component storage (this is a convenience method to
+    /// `borrow_mut`).
+    #[cfg(feature = "diagnostics")]
+    pub fn borrow_mut_component<C>(&self) -> RefMut<C::Storage>
+    where
+        C: Component + TypeName,
+        C::Storage: TypeName,
     {
         self.borrow_mut::<C::Storage>()
     }

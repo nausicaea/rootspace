@@ -28,6 +28,7 @@ pub trait Storage<T> {
 }
 
 /// Implements component storage based on a `Vec<T>`. Occupied spaces are tracked with a `BitSet`.
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 pub struct VecStorage<T> {
     /// The index into the data vector.
     index: BitSet,
