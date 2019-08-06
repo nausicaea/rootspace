@@ -14,7 +14,7 @@ use ecs::{EventManager, LoopStage, World};
 use engine::{
     components::{Camera, Info, Model, Status, UiModel},
     event::EngineEventTrait,
-    graphics::BackendTrait,
+    graphics::{BackendTrait, headless::HeadlessBackend, glium::GliumBackend},
     resources::{SceneGraph},
     systems::{CameraManager, DebugConsole, DebugShell, EventCoordinator, EventMonitor, ForceShutdown, EventInterface, Renderer},
     DefaultOrchestrator,
@@ -29,18 +29,8 @@ pub struct Game<B> {
 
 impl<B> Game<B>
 where
-    B: BackendTrait + 'static,
+    B: BackendTrait,
 {
-    pub fn new<P: AsRef<Path>>(
-        resource_path: P,
-        delta_time: Duration,
-        max_frame_time: Duration,
-    ) -> Result<Self, Error> {
-        let o = DefaultOrchestrator::new(resource_path, delta_time, max_frame_time)?;
-
-        Ok(Game { orchestrator: o })
-    }
-
     pub fn load(&mut self) -> Result<(), Error> {
         self.orchestrator.reset();
 
@@ -151,7 +141,7 @@ where
         //        .build_mesh_headless(&renderer.backend)?,
         //);
 
-        self.world_mut().add_system(LoopStage::Update, event_interface);
+        //self.world_mut().add_system(LoopStage::Update, event_interface);
         self.world_mut().add_system(LoopStage::Render, renderer);
 
         // The event coordinator should run last, because it can affect the shutdown of the engine.
@@ -171,5 +161,29 @@ where
 
     fn world_mut(&mut self) -> &mut World<Event> {
         &mut self.orchestrator.world
+    }
+}
+
+impl Game<HeadlessBackend> {
+    pub fn new_headless<P: AsRef<Path>>(
+        resource_path: P,
+        delta_time: Duration,
+        max_frame_time: Duration,
+    ) -> Result<Self, Error> {
+        let o = DefaultOrchestrator::new(resource_path, delta_time, max_frame_time)?;
+
+        Ok(Game { orchestrator: o })
+    }
+}
+
+impl Game<GliumBackend> {
+    pub fn new_glium<P: AsRef<Path>>(
+        resource_path: P,
+        delta_time: Duration,
+        max_frame_time: Duration,
+    ) -> Result<Self, Error> {
+        let o = DefaultOrchestrator::new(resource_path, delta_time, max_frame_time)?;
+
+        Ok(Game { orchestrator: o })
     }
 }

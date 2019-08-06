@@ -8,7 +8,6 @@ extern crate log;
 use clap::{App, Arg};
 use failure::Error;
 use fern::Dispatch;
-use engine::graphics::{headless::HeadlessBackend, glium::GliumBackend};
 use game::Game;
 use log::LevelFilter;
 use std::{env, io, path::PathBuf, time::Duration};
@@ -70,7 +69,7 @@ fn main() -> Result<(), Error> {
     };
 
     if headless {
-        Game::<HeadlessBackend>::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
+        Game::new_headless(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
             .and_then(|mut g| {
                 g.load()?;
                 g.run(iterations);
@@ -85,7 +84,7 @@ fn main() -> Result<(), Error> {
                 e
             })
     } else {
-        Game::<GliumBackend>::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
+        Game::new_glium(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
             .and_then(|mut g| {
                 g.load()?;
                 g.run(iterations);
