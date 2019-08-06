@@ -1,7 +1,7 @@
 use crate::event::EngineEventTrait;
 #[cfg(not(test))]
 use ctrlc;
-use ecs::{EventManager, Resources, System};
+use ecs::{EventQueue, Resources, System};
 #[cfg(not(test))]
 use std::process;
 use std::{
@@ -55,7 +55,7 @@ where
     fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             trace!("Recently caught a termination signal");
-            res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_shutdown());
+            res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_shutdown());
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
     }
@@ -73,7 +73,7 @@ where
     fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             trace!("Recently caught a termination signal");
-            res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_shutdown());
+            res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_shutdown());
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
     }

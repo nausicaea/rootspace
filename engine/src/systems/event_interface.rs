@@ -2,7 +2,7 @@ use crate::{
     event::EngineEventTrait,
     graphics::{BackendTrait, EventsLoopTrait},
 };
-use ecs::{EventManager, Resources, System};
+use ecs::{EventQueue, Resources, System};
 use std::{convert::TryFrom, marker::PhantomData, time::Duration};
 #[cfg(feature = "diagnostics")]
 use typename::TypeName;
@@ -39,7 +39,7 @@ where
     fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
         self.events_loop.poll(|input_event: B::Event| {
             if let Ok(event) = TryFrom::try_from(input_event) {
-                res.get_mut::<EventManager<Evt>>().dispatch_later(event);
+                res.get_mut::<EventQueue<Evt>>().dispatch_later(event);
             }
         });
     }
@@ -58,7 +58,7 @@ where
     fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
         self.events_loop.poll(|input_event: B::Event| {
             if let Ok(event) = TryFrom::try_from(input_event) {
-                res.get_mut::<EventManager<Evt>>().dispatch_later(event);
+                res.get_mut::<EventQueue<Evt>>().dispatch_later(event);
             }
         });
     }

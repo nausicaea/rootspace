@@ -4,7 +4,7 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     resources::SceneGraph,
 };
-use ecs::{EventManager, Resources, Storage, System};
+use ecs::{EventQueue, Resources, Storage, System};
 use failure::Error;
 #[cfg(any(test, feature = "diagnostics"))]
 use std::time::Instant;
@@ -91,7 +91,7 @@ where
         let mut draw_calls: usize = 0;
 
         if !self.initialised {
-            res.get_mut::<EventManager<Evt>>()
+            res.get_mut::<EventQueue<Evt>>()
                 .dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
             self.initialised = true;
         }
@@ -175,7 +175,7 @@ where
         let mut draw_calls: usize = 0;
 
         if !self.initialised {
-            res.get_mut::<EventManager<Evt>>()
+            res.get_mut::<EventQueue<Evt>>()
                 .dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
             self.initialised = true;
         }

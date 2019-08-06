@@ -1,5 +1,5 @@
 use crate::event::EngineEventTrait;
-use ecs::{EventHandlerSystem, EventManager, Resources};
+use ecs::{EventHandlerSystem, EventQueue, Resources};
 use std::marker::PhantomData;
 #[cfg(feature = "diagnostics")]
 use typename::TypeName;
@@ -31,7 +31,7 @@ where
 
     fn run(&mut self, res: &mut Resources, event: &Evt) -> bool {
         if event.matches_filter(Evt::shutdown()) {
-            res.get_mut::<EventManager<Evt>>()
+            res.get_mut::<EventQueue<Evt>>()
                 .dispatch_later(Evt::new_hard_shutdown());
             true
         } else if event.matches_filter(Evt::hard_shutdown()) {
@@ -57,7 +57,7 @@ where
 
     fn run(&mut self, res: &mut Resources, event: &Evt) -> bool {
         if event.matches_filter(Evt::shutdown()) {
-            res.get_mut::<EventManager<Evt>>()
+            res.get_mut::<EventQueue<Evt>>()
                 .dispatch_later(Evt::new_hard_shutdown());
             true
         } else if event.matches_filter(Evt::hard_shutdown()) {

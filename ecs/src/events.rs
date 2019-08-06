@@ -28,12 +28,12 @@ pub trait EventTrait: Clone + fmt::Debug + 'static {
     fn matches_filter(&self, flag: Self::EventFlag) -> bool;
 }
 
-/// An `EventManager` contains a queue of events and provides rudimentary facilities of retrieving
+/// An `EventQueue` contains a queue of events and provides rudimentary facilities of retrieving
 /// those events.
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
-pub struct EventManager<E>(VecDeque<E>);
+pub struct EventQueue<E>(VecDeque<E>);
 
-impl<E> EventManager<E> {
+impl<E> EventQueue<E> {
     /// Dispatches an event to the queue.
     ///
     /// # Arguments
@@ -54,16 +54,16 @@ impl<E> EventManager<E> {
     }
 }
 
-impl<E> Default for EventManager<E> {
+impl<E> Default for EventQueue<E> {
     fn default() -> Self {
-        EventManager(VecDeque::default())
+        EventQueue(VecDeque::default())
     }
 }
 
-impl<E> fmt::Debug for EventManager<E> {
+impl<E> fmt::Debug for EventQueue<E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "EventManager {{ ... }}")
+        write!(f, "EventQueue {{ #events: {} }}", self.0.len())
     }
 }
 
-impl<E> Resource for EventManager<E> where E: 'static {}
+impl<E> Resource for EventQueue<E> where E: 'static {}

@@ -1,6 +1,6 @@
 use crate::components::model::Model;
 use crate::components::ui_model::UiModel;
-use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventManagerTrait, EventTrait};
+use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventQueueTrait, EventTrait};
 use failure::Error;
 use hierarchy::Hierarchy;
 use std::{
@@ -52,7 +52,7 @@ impl<E> Default for Context<E> {
     }
 }
 
-impl<E> EventManagerTrait<E> for Context<E>
+impl<E> EventQueueTrait<E> for Context<E>
 where
     E: EventTrait,
 {

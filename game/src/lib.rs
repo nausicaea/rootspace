@@ -16,7 +16,7 @@ use typename::TypeName;
 mod event;
 
 use crate::event::Event;
-use ecs::{EventManager, LoopStage, World};
+use ecs::{EventQueue, LoopStage, World};
 use engine::{
     components::{Camera, Info, Model, Status, UiModel},
     event::EngineEventTrait,
@@ -159,7 +159,7 @@ where
         self.world_mut().add_event_handler_system(event_coordinator);
 
         self.world_mut()
-            .get_resource_mut::<EventManager<Event>>()
+            .get_resource_mut::<EventQueue<Event>>()
             .dispatch_later(Event::new_startup());
 
         Ok(())
@@ -297,7 +297,7 @@ where
         self.world_mut().add_event_handler_system(event_coordinator);
 
         self.world_mut()
-            .get_resource_mut::<EventManager<Event>>()
+            .get_resource_mut::<EventQueue<Event>>()
             .dispatch_later(Event::new_startup());
 
         Ok(())

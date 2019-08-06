@@ -4,7 +4,7 @@
 #![cfg_attr(test, allow(dead_code))]
 
 use crate::{event::EngineEventTrait, text_manipulation::split_arguments};
-use ecs::{EventManager, Resources, System};
+use ecs::{EventQueue, Resources, System};
 use std::{
     io::{self, Read},
     marker::PhantomData,
@@ -94,7 +94,7 @@ where
     fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
         self.try_read_line()
             .map(|l| split_arguments(l, self.escape_char, self.quote_char))
-            .map(|a| res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_command(a)));
+            .map(|a| res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_command(a)));
     }
 }
 
@@ -110,7 +110,7 @@ where
     fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
         self.try_read_line()
             .map(|l| split_arguments(l, self.escape_char, self.quote_char))
-            .map(|a| res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_command(a)));
+            .map(|a| res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_command(a)));
     }
 }
 

@@ -4,7 +4,7 @@ use crate::{
     resources::SceneGraph,
 };
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
-use ecs::{Component, Entities, Entity, EventManager, Resources, Storage};
+use ecs::{Component, Entities, Entity, EventQueue, Resources, Storage};
 use failure::Error;
 use std::marker::PhantomData;
 
@@ -44,7 +44,7 @@ where
     }
 
     fn run(&self, res: &mut Resources, _: &[String]) -> Result<(), Error> {
-        res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_shutdown());
+        res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_shutdown());
         Ok(())
     }
 }
@@ -63,7 +63,7 @@ where
     }
 
     fn run(&self, res: &mut Resources, _: &[String]) -> Result<(), Error> {
-        res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_shutdown());
+        res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_shutdown());
         Ok(())
     }
 }

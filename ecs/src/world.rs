@@ -3,7 +3,7 @@
 use crate::{
     components::{Component, Storage},
     entities::{Entities, Entity},
-    events::{EventManager, EventTrait},
+    events::{EventQueue, EventTrait},
     loop_stage::LoopStage,
     persistence::Persistence,
     resources::{Resource, Resources},
@@ -180,7 +180,7 @@ where
     fn default() -> Self {
         let mut resources = Resources::default();
         resources.insert(Entities::default(), Persistence::Runtime);
-        resources.insert(EventManager::<E>::default(), Persistence::Runtime);
+        resources.insert(EventQueue::<E>::default(), Persistence::Runtime);
 
         World {
             resources,
@@ -232,7 +232,7 @@ where
     }
 
     fn handle_events(&mut self) -> bool {
-        let events = self.resources.get_mut::<EventManager<E>>().flush();
+        let events = self.resources.get_mut::<EventQueue<E>>().flush();
 
         if !events.is_empty() {
             let mut statuses: Vec<bool> = Vec::with_capacity(events.len() * self.event_handler_systems.len());
@@ -289,7 +289,7 @@ where
     }
 
     fn handle_events(&mut self) -> bool {
-        let events = self.resources.get_mut::<EventManager<E>>().flush();
+        let events = self.resources.get_mut::<EventQueue<E>>().flush();
 
         if !events.is_empty() {
             let mut statuses: Vec<bool> = Vec::with_capacity(events.len() * self.event_handler_systems.len());

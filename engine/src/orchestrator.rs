@@ -5,7 +5,7 @@ use crate::{
     graphics::BackendTrait,
     resources::{RenderData, SceneGraph},
 };
-use ecs::{EventManager, Persistence, WorldTrait};
+use ecs::{EventQueue, Persistence, WorldTrait};
 use std::{
     cmp,
     marker::PhantomData,
@@ -37,7 +37,7 @@ where
         resource_path.ensure_extant_directory()?;
 
         let mut world = W::default();
-        world.add_resource(EventManager::<E>::default(), Persistence::Runtime);
+        world.add_resource(EventQueue::<E>::default(), Persistence::Runtime);
         world.add_resource(RenderData::<B>::default(), Persistence::Runtime);
         world.add_resource(SceneGraph::<Model>::default(), Persistence::Runtime);
         world.add_resource(SceneGraph::<UiModel>::default(), Persistence::Runtime);
