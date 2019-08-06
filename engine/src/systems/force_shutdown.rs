@@ -12,6 +12,8 @@ use std::{
     },
     time::Duration,
 };
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 pub struct ForceShutdown<Evt> {
     ctrlc_triggered: Arc<AtomicUsize>,
@@ -41,9 +43,28 @@ impl<Evt> Default for ForceShutdown<Evt> {
     }
 }
 
+#[cfg(not(feature = "diagnostics"))]
 impl<Evt> System for ForceShutdown<Evt>
 where
     Evt: EngineEventTrait,
+{
+    fn name(&self) -> &'static str {
+        "ForceShutdown"
+    }
+
+    fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
+        if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
+            trace!("Recently caught a termination signal");
+            res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_shutdown());
+            self.ctrlc_triggered.store(0, Ordering::SeqCst);
+        }
+    }
+}
+
+#[cfg(feature = "diagnostics")]
+impl<Evt> System for ForceShutdown<Evt>
+where
+    Evt: EngineEventTrait + TypeName,
 {
     fn name(&self) -> &'static str {
         "ForceShutdown"

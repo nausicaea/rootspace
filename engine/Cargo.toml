@@ -5,7 +5,7 @@ authors = ["Eleanore Young"]
 edition = "2018"
 
 [features]
-diagnostics = ["typename"]
+diagnostics = ["typename", "ecs/diagnostics"]
 mock = []
 wsl = []
 

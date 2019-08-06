@@ -76,7 +76,7 @@ impl Resources {
                 *r.into_inner()
                     .into_inner()
                     .downcast::<R>()
-                    .expect("Could not downcast the resource")
+                    .expect("Could not downcast replaced resource to the specified type")
             })
     }
 
@@ -89,7 +89,7 @@ impl Resources {
             *r.into_inner()
                 .into_inner()
                 .downcast::<R>()
-                .expect("Could not downcast the resource")
+                .expect("Could not downcast the removed resource to the specified type")
         })
     }
 
@@ -111,10 +111,11 @@ impl Resources {
             .get(&TypeId::of::<R>())
             .map(|r| {
                 Ref::map(r.borrow(), |i| {
-                    i.downcast_ref::<R>().expect("Could not downcast the resource")
+                    i.downcast_ref::<R>()
+                        .expect("Could not downcast the requested resource to the specified type")
                 })
             })
-            .expect("Could not find the resource")
+            .expect("Could not find a resource with the specified type")
     }
 
     /// Borrows the requested resource.
@@ -127,10 +128,13 @@ impl Resources {
             .get(&TypeId::of::<R>())
             .map(|r| {
                 Ref::map(r.borrow(), |i| {
-                    i.downcast_ref::<R>().expect("Could not downcast the resource")
+                    i.downcast_ref::<R>().expect(&format!(
+                        "Could not downcast the requested resource to type {}",
+                        R::type_name()
+                    ))
                 })
             })
-            .expect(&format!("Could not find the resource of type {}", R::type_name()))
+            .expect(&format!("Could not find any resource of type {}", R::type_name()))
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
@@ -143,10 +147,11 @@ impl Resources {
             .get(&TypeId::of::<R>())
             .map(|r| {
                 RefMut::map(r.borrow_mut(), |i| {
-                    i.downcast_mut::<R>().expect("Could not downcast the resource")
+                    i.downcast_mut::<R>()
+                        .expect("Could not downcast the requested resource to the specified type")
                 })
             })
-            .expect("Could not find the resource")
+            .expect("Could not find a resource with the specified type")
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
@@ -159,10 +164,13 @@ impl Resources {
             .get(&TypeId::of::<R>())
             .map(|r| {
                 RefMut::map(r.borrow_mut(), |i| {
-                    i.downcast_mut::<R>().expect("Could not downcast the resource")
+                    i.downcast_mut::<R>().expect(&format!(
+                        "Could not downcast the requested resource to type {}",
+                        R::type_name()
+                    ))
                 })
             })
-            .expect(&format!("Could not find the resource of type {}", R::type_name()))
+            .expect(&format!("Could not find any resource of type {}", R::type_name()))
     }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
@@ -176,9 +184,9 @@ impl Resources {
             .map(|r| {
                 r.get_mut()
                     .downcast_mut::<R>()
-                    .expect("Could not downcast the resource")
+                    .expect("Could not downcast the requested resource to the specified type")
             })
-            .expect("Could not find the resource")
+            .expect("Could not find a resource with the specified type")
     }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
@@ -190,11 +198,12 @@ impl Resources {
         self.0
             .get_mut(&TypeId::of::<R>())
             .map(|r| {
-                r.get_mut()
-                    .downcast_mut::<R>()
-                    .expect("Could not downcast the resource")
+                r.get_mut().downcast_mut::<R>().expect(&format!(
+                    "Could not downcast the requested resource to type {}",
+                    R::type_name()
+                ))
             })
-            .expect(&format!("Could not find the resource of type {}", R::type_name()))
+            .expect(&format!("Could not find any resource of type {}", R::type_name()))
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).

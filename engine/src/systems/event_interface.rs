@@ -1,8 +1,11 @@
-use crate::graphics::{BackendTrait, EventsLoopTrait};
-use crate::event::EngineEventTrait;
+use crate::{
+    event::EngineEventTrait,
+    graphics::{BackendTrait, EventsLoopTrait},
+};
 use ecs::{EventManager, Resources, System};
-use std::{marker::PhantomData, time::Duration};
-use std::convert::TryFrom;
+use std::{convert::TryFrom, marker::PhantomData, time::Duration};
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 pub struct EventInterface<Evt, B: BackendTrait> {
     pub events_loop: B::EventsLoop,
@@ -23,9 +26,29 @@ where
     }
 }
 
+#[cfg(not(feature = "diagnostics"))]
 impl<Evt, B> System for EventInterface<Evt, B>
 where
     Evt: EngineEventTrait + TryFrom<B::Event>,
+    B: BackendTrait,
+{
+    fn name(&self) -> &'static str {
+        "EventInterface"
+    }
+
+    fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
+        self.events_loop.poll(|input_event: B::Event| {
+            if let Ok(event) = TryFrom::try_from(input_event) {
+                res.get_mut::<EventManager<Evt>>().dispatch_later(event);
+            }
+        });
+    }
+}
+
+#[cfg(feature = "diagnostics")]
+impl<Evt, B> System for EventInterface<Evt, B>
+where
+    Evt: EngineEventTrait + TryFrom<B::Event> + TypeName,
     B: BackendTrait,
 {
     fn name(&self) -> &'static str {

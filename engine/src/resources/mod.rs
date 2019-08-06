@@ -1,5 +1,4 @@
-pub mod scene_graph;
 pub mod render_data;
+pub mod scene_graph;
 
-pub use self::scene_graph::SceneGraph;
-pub use self::render_data::RenderData;
+pub use self::{render_data::RenderData, scene_graph::SceneGraph};

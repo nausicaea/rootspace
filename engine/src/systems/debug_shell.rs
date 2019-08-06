@@ -5,15 +5,37 @@ use crate::{
 use ecs::{EventHandlerSystem, Resources};
 use failure::Error;
 use std::{collections::HashMap, marker::PhantomData};
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 pub struct DebugShell<Evt> {
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
     _evt: PhantomData<Evt>,
 }
 
+#[cfg(not(feature = "diagnostics"))]
 impl<Evt> Default for DebugShell<Evt>
 where
     Evt: EngineEventTrait,
+{
+    fn default() -> Self {
+        let mut sys = DebugShell {
+            commands: HashMap::new(),
+            _evt: PhantomData::default(),
+        };
+
+        sys.add_command(ExitCommand::<Evt>::default());
+        sys.add_command(CameraCommand::default());
+        sys.add_command(EntityCommand::default());
+
+        sys
+    }
+}
+
+#[cfg(feature = "diagnostics")]
+impl<Evt> Default for DebugShell<Evt>
+where
+    Evt: EngineEventTrait + TypeName,
 {
     fn default() -> Self {
         let mut sys = DebugShell {

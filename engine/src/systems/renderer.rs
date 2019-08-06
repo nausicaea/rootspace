@@ -9,6 +9,8 @@ use failure::Error;
 #[cfg(any(test, feature = "diagnostics"))]
 use std::time::Instant;
 use std::{collections::VecDeque, marker::PhantomData, time::Duration};
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;
@@ -71,10 +73,95 @@ where
     }
 }
 
+#[cfg(not(feature = "diagnostics"))]
 impl<Evt, B> System for Renderer<Evt, B>
 where
     Evt: EngineEventTrait,
     B: BackendTrait,
+{
+    fn name(&self) -> &'static str {
+        "Renderer"
+    }
+
+    fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
+        #[cfg(any(test, feature = "diagnostics"))]
+        let start_mark = Instant::now();
+
+        #[cfg(any(test, feature = "diagnostics"))]
+        let mut draw_calls: usize = 0;
+
+        if !self.initialised {
+            res.get_mut::<EventManager<Evt>>()
+                .dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
+            self.initialised = true;
+        }
+
+        // Update the scene graphs.
+        res.borrow_mut::<SceneGraph<Model>>()
+            .update(&res.borrow_component::<Model>());
+        res.borrow_mut::<SceneGraph<UiModel>>()
+            .update(&res.borrow_component::<UiModel>());
+
+        // Obtain a reference to the camera.
+        let cameras = res.borrow_component::<Camera>();
+
+        // Create a new frame.
+        let mut target = self.backend.create_frame();
+        target.initialize(self.clear_color, 1.0);
+
+        let world_graph = res.borrow::<SceneGraph<Model>>();
+        let ui_graph = res.borrow::<SceneGraph<UiModel>>();
+        let statuses = res.borrow_component::<Status>();
+        let renderables = res.borrow_component::<Renderable<B>>();
+
+        for cam in cameras.iter() {
+            // Render the world scene.
+            for (entity, model) in world_graph.iter() {
+                if statuses.get(entity).map(|s| s.enabled()) == Some(true) {
+                    if let Some(data) = renderables.get(entity) {
+                        #[cfg(any(test, feature = "diagnostics"))]
+                        {
+                            draw_calls += 1;
+                        }
+                        target
+                            .render(&(cam.world_matrix() * model.matrix()), data)
+                            .expect("Unable to render the world");
+                    }
+                }
+            }
+
+            // Render the ui scene.
+            for (entity, model) in ui_graph.iter() {
+                if statuses.get(entity).map(|s| s.enabled()) == Some(true) {
+                    if let Some(data) = renderables.get(entity) {
+                        #[cfg(any(test, feature = "diagnostics"))]
+                        {
+                            draw_calls += 1;
+                        }
+                        target
+                            .render(&(cam.ui_matrix() * model.matrix()), data)
+                            .expect("Unable to render the UI");
+                    }
+                }
+            }
+        }
+
+        // Finalize the frame and thus swap the display buffers.
+        target.finalize().expect("Unable to finalize the frame");
+
+        #[cfg(any(test, feature = "diagnostics"))]
+        self.update_draw_calls(draw_calls);
+
+        #[cfg(any(test, feature = "diagnostics"))]
+        self.update_frame_time(start_mark.elapsed());
+    }
+}
+
+#[cfg(feature = "diagnostics")]
+impl<Evt, B> System for Renderer<Evt, B>
+where
+    Evt: EngineEventTrait + TypeName,
+    B: BackendTrait + TypeName,
 {
     fn name(&self) -> &'static str {
         "Renderer"

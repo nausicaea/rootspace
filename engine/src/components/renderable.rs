@@ -21,6 +21,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 pub struct Renderable<B: BackendTrait> {
     data: B::Data,
     _b: PhantomData<B>,

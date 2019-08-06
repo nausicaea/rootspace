@@ -5,7 +5,7 @@ authors = ["Eleanore Young"]
 edition = "2018"
 
 [features]
-diagnostics = []
+diagnostics = ["typename", "engine/diagnostics", "ecs/diagnostics"]
 
 [dependencies]
 bitflags = "^1.0.3"
@@ -13,5 +13,6 @@ log = "^0.4.1"
 failure = "^0.1.1"
 glium = "^0.25.0"
 nalgebra = "^0.18.0"
+typename = {version = "^0.1.0", optional = true}
 ecs = {path = "../ecs"}
 engine = {path = "../engine"}

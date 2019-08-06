@@ -13,6 +13,8 @@ use std::{
     thread::spawn,
     time::Duration,
 };
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 pub struct DebugConsole<Evt> {
     escape_char: char,
@@ -80,9 +82,26 @@ impl<Evt> Default for DebugConsole<Evt> {
     }
 }
 
+#[cfg(not(feature = "diagnostics"))]
 impl<Evt> System for DebugConsole<Evt>
 where
     Evt: EngineEventTrait,
+{
+    fn name(&self) -> &'static str {
+        "DebugConsole"
+    }
+
+    fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
+        self.try_read_line()
+            .map(|l| split_arguments(l, self.escape_char, self.quote_char))
+            .map(|a| res.get_mut::<EventManager<Evt>>().dispatch_later(Evt::new_command(a)));
+    }
+}
+
+#[cfg(feature = "diagnostics")]
+impl<Evt> System for DebugConsole<Evt>
+where
+    Evt: EngineEventTrait + TypeName,
 {
     fn name(&self) -> &'static str {
         "DebugConsole"

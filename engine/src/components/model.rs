@@ -4,6 +4,7 @@ use affine_transform::AffineTransform;
 use nalgebra::{Affine3, Isometry3, Matrix4, Point3, UnitQuaternion, Vector3};
 use std::{f32, ops::Mul};
 
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct Model {
     model: Affine3<f32>,

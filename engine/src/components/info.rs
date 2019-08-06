@@ -1,5 +1,8 @@
 use ecs::{Component, VecStorage};
+use std::fmt;
 
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Info {
     name: String,
     description: String,
@@ -24,4 +27,10 @@ impl Info {
 
 impl Component for Info {
     type Storage = VecStorage<Self>;
+}
+
+impl fmt::Display for Info {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.name)
+    }
 }

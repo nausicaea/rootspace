@@ -1,12 +1,13 @@
-use super::{private::Sealed, BackendTrait, EventTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait, ShaderTrait, VertexBufferTrait, IndexBufferTrait};
+use super::{
+    private::Sealed, BackendTrait, DataTrait, EventTrait, EventsLoopTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
+    TextureTrait, VertexBufferTrait,
+};
 use crate::{
     assets::{Image, Mesh, Vertex},
     geometry::rect::Rect,
 };
 use failure::Error;
-use std::{
-    borrow::{Borrow, Cow},
-};
+use std::borrow::{Borrow, Cow};
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;
@@ -140,6 +141,7 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
     }
 }
 
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessBackend {
     dimensions: (u32, u32),
@@ -148,14 +150,14 @@ pub struct HeadlessBackend {
 impl Sealed for HeadlessBackend {}
 
 impl BackendTrait for HeadlessBackend {
-    type Event = HeadlessEvent;
     type Data = HeadlessRenderData;
-    type Frame = HeadlessFrame;
+    type Event = HeadlessEvent;
     type EventsLoop = HeadlessEventsLoop;
-    type Texture = HeadlessTexture;
-    type Shader = HeadlessShader;
-    type VertexBuffer = HeadlessVertexBuffer;
+    type Frame = HeadlessFrame;
     type IndexBuffer = HeadlessIndexBuffer;
+    type Shader = HeadlessShader;
+    type Texture = HeadlessTexture;
+    type VertexBuffer = HeadlessVertexBuffer;
 
     #[allow(unused_variables)]
     fn new(

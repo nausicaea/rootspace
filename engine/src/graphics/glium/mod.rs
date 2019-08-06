@@ -1,4 +1,7 @@
-use super::{private::Sealed, BackendTrait, DataTrait, EventsLoopTrait, FrameTrait, TextureTrait, ShaderTrait, VertexBufferTrait, IndexBufferTrait, EventTrait};
+use super::{
+    private::Sealed, BackendTrait, DataTrait, EventTrait, EventsLoopTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
+    TextureTrait, VertexBufferTrait,
+};
 use crate::{
     assets::{Image, Vertex},
     geometry::rect::Rect,
@@ -8,12 +11,12 @@ use glium::{
     backend::glutin::DisplayCreationError,
     draw_parameters::DepthTest,
     glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder},
+    index::PrimitiveType,
     texture::{ClientFormat, RawImage2d, Texture2d},
     uniforms::{UniformValue, Uniforms},
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
-use glium::index::PrimitiveType;
 use std::{
     borrow::{Borrow, Cow},
     fmt,
@@ -238,6 +241,7 @@ impl fmt::Debug for GliumFrame {
     }
 }
 
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Clone)]
 pub struct GliumBackend {
     pub display: Display,
@@ -246,14 +250,14 @@ pub struct GliumBackend {
 impl Sealed for GliumBackend {}
 
 impl BackendTrait for GliumBackend {
-    type Event = GliumEvent;
     type Data = GliumRenderData;
-    type Frame = GliumFrame;
+    type Event = GliumEvent;
     type EventsLoop = GliumEventsLoop;
-    type Texture = GliumTexture;
-    type Shader = GliumShader;
-    type VertexBuffer = GliumVertexBuffer;
+    type Frame = GliumFrame;
     type IndexBuffer = GliumIndexBuffer;
+    type Shader = GliumShader;
+    type Texture = GliumTexture;
+    type VertexBuffer = GliumVertexBuffer;
 
     fn new(
         events_loop: &GliumEventsLoop,

@@ -2,6 +2,7 @@ use ecs::{Component, VecStorage};
 use nalgebra::{zero, Affine3, Isometry3, Matrix4, Point2, Vector2, Vector3};
 use std::ops::Mul;
 
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, Clone, PartialEq)]
 pub struct UiModel {
     model: Affine3<f32>,

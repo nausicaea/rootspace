@@ -5,9 +5,11 @@ mod private {
     pub trait Sealed {}
 }
 
-use crate::{assets::Image, geometry::rect::Rect};
-use crate::assets::Vertex;
-use crate::file_manipulation::ReadPath;
+use crate::{
+    assets::{Image, Vertex},
+    file_manipulation::ReadPath,
+    geometry::rect::Rect,
+};
 use failure::Error;
 use std::{
     borrow::{Borrow, Cow},
@@ -60,7 +62,6 @@ pub trait TextureTrait<B: BackendTrait>: Sized + private::Sealed {
 
         Self::from_image(backend, img)
     }
-
 }
 
 pub trait ShaderTrait<B: BackendTrait>: Sized + private::Sealed {

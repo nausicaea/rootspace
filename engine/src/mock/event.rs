@@ -25,6 +25,7 @@ impl Default for MockEvtFlag {
     }
 }
 
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, Clone)]
 pub struct MockEvt {
     flag: MockEvtFlag,
@@ -33,10 +34,7 @@ pub struct MockEvt {
 
 impl MockEvt {
     pub fn new(flag: MockEvtFlag, data: MockEvtData) -> Self {
-        MockEvt {
-            flag,
-            data,
-        }
+        MockEvt { flag, data }
     }
 }
 
@@ -66,45 +64,27 @@ impl EngineEventTrait for MockEvt {
     }
 
     fn new_startup() -> Self {
-        MockEvt::new(
-            MockEvtFlag::STARTUP,
-            MockEvtData::Empty
-        )
+        MockEvt::new(MockEvtFlag::STARTUP, MockEvtData::Empty)
     }
 
     fn new_shutdown() -> Self {
-        MockEvt::new(
-            MockEvtFlag::SHUTDOWN,
-            MockEvtData::Empty,
-        )
+        MockEvt::new(MockEvtFlag::SHUTDOWN, MockEvtData::Empty)
     }
 
     fn new_hard_shutdown() -> Self {
-        MockEvt::new(
-            MockEvtFlag::HARD_SHUTDOWN,
-            MockEvtData::Empty,
-        )
+        MockEvt::new(MockEvtFlag::HARD_SHUTDOWN, MockEvtData::Empty)
     }
 
     fn new_command(args: Vec<String>) -> Self {
-        MockEvt::new(
-            MockEvtFlag::COMMAND,
-            MockEvtData::Command(args),
-        )
+        MockEvt::new(MockEvtFlag::COMMAND, MockEvtData::Command(args))
     }
 
     fn new_resize(dims: (u32, u32)) -> Self {
-        MockEvt::new(
-            MockEvtFlag::RESIZE,
-            MockEvtData::Resize(dims),
-        )
+        MockEvt::new(MockEvtFlag::RESIZE, MockEvtData::Resize(dims))
     }
 
     fn new_change_dpi(factor: f64) -> Self {
-        MockEvt::new(
-            MockEvtFlag::CHANGE_DPI,
-            MockEvtData::ChangeDpi(factor),
-        )
+        MockEvt::new(MockEvtFlag::CHANGE_DPI, MockEvtData::ChangeDpi(factor))
     }
 
     fn flag(&self) -> MockEvtFlag {

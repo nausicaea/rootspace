@@ -1,14 +1,17 @@
+use crate::{
+    assets::Vertex,
+    graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait},
+};
 use ecs::Resource;
-use crate::assets::Vertex;
-use crate::graphics::{BackendTrait, TextureTrait, ShaderTrait, VertexBufferTrait, IndexBufferTrait};
-use std::marker::PhantomData;
-use std::fmt;
-use std::path::Path;
-use std::collections::HashMap;
-use std::collections::hash_map::DefaultHasher;
 use failure::Error;
-use std::hash::{Hash, Hasher};
 use snowflake::ProcessUniqueId;
+use std::{
+    collections::{hash_map::DefaultHasher, HashMap},
+    fmt,
+    hash::{Hash, Hasher},
+    marker::PhantomData,
+    path::Path,
+};
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TextureId(u64);
@@ -103,7 +106,14 @@ where
     B: BackendTrait,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "RenderData(#t: {}, #s: {}, #vbuf: {}, #ibuf: {})", self.textures.len(), self.shaders.len(), self.vertex_buffers.len(), self.index_buffers.len())
+        write!(
+            f,
+            "RenderData(#t: {}, #s: {}, #vbuf: {}, #ibuf: {})",
+            self.textures.len(),
+            self.shaders.len(),
+            self.vertex_buffers.len(),
+            self.index_buffers.len()
+        )
     }
 }
 

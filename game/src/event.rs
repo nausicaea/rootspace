@@ -25,6 +25,7 @@ impl Default for EventFlag {
     }
 }
 
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, Clone)]
 pub struct Event {
     flag: EventFlag,
@@ -33,10 +34,7 @@ pub struct Event {
 
 impl Event {
     fn new(flag: EventFlag, data: EventData) -> Self {
-        Event {
-            flag,
-            data,
-        }
+        Event { flag, data }
     }
 }
 
@@ -66,45 +64,27 @@ impl EngineEventTrait for Event {
     }
 
     fn new_startup() -> Self {
-        Event::new(
-            EventFlag::STARTUP,
-            EventData::Empty,
-        )
+        Event::new(EventFlag::STARTUP, EventData::Empty)
     }
 
     fn new_shutdown() -> Self {
-        Event::new(
-            EventFlag::SHUTDOWN,
-            EventData::Empty,
-        )
+        Event::new(EventFlag::SHUTDOWN, EventData::Empty)
     }
 
     fn new_hard_shutdown() -> Self {
-        Event::new(
-            EventFlag::HARD_SHUTDOWN,
-            EventData::Empty,
-        )
+        Event::new(EventFlag::HARD_SHUTDOWN, EventData::Empty)
     }
 
     fn new_command(args: Vec<String>) -> Self {
-        Event::new(
-            EventFlag::COMMAND,
-            EventData::Command(args),
-        )
+        Event::new(EventFlag::COMMAND, EventData::Command(args))
     }
 
     fn new_resize(dims: (u32, u32)) -> Self {
-        Event::new(
-            EventFlag::RESIZE,
-            EventData::Resize(dims),
-        )
+        Event::new(EventFlag::RESIZE, EventData::Resize(dims))
     }
 
     fn new_change_dpi(factor: f64) -> Self {
-        Event::new(
-            EventFlag::CHANGE_DPI,
-            EventData::ChangeDpi(factor),
-        )
+        Event::new(EventFlag::CHANGE_DPI, EventData::ChangeDpi(factor))
     }
 
     fn flag(&self) -> EventFlag {

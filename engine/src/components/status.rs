@@ -1,5 +1,6 @@
 use ecs::{Component, VecStorage};
 
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, PartialEq, Eq)]
 pub struct Status(bool);
 

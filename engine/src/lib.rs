@@ -23,10 +23,10 @@ extern crate nalgebra;
 extern crate num_traits;
 extern crate ply;
 extern crate rusttype;
+extern crate snowflake;
 #[cfg(test)]
 extern crate tempfile;
 extern crate unicode_normalization;
-extern crate snowflake;
 #[cfg(feature = "diagnostics")]
 #[macro_use]
 extern crate typename;
@@ -41,8 +41,8 @@ pub mod graphics;
 #[cfg(any(test, feature = "mock"))]
 pub mod mock;
 pub mod orchestrator;
-pub mod systems;
 pub mod resources;
+pub mod systems;
 pub mod text_manipulation;
 
 use crate::{
