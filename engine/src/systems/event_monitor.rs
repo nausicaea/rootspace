@@ -1,5 +1,6 @@
 use ecs::{EventHandlerSystem, EventTrait, Resources};
 use std::marker::PhantomData;
+use std::fmt;
 
 pub struct EventMonitor<Evt> {
     _evt: PhantomData<Evt>,
@@ -15,7 +16,7 @@ impl<Evt> Default for EventMonitor<Evt> {
 
 impl<Evt> EventHandlerSystem<Evt> for EventMonitor<Evt>
 where
-    Evt: EventTrait,
+    Evt: EventTrait + fmt::Debug,
 {
     fn name(&self) -> &'static str {
         "EventMonitor"

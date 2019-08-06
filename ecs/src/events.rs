@@ -9,7 +9,7 @@ use std::{
 
 /// Events sent around within the `World` need to implement this trait such that individual
 /// `EventHandlerSystem`s may filter for particular events.
-pub trait EventTrait: Clone + fmt::Debug + 'static {
+pub trait EventTrait: Clone + 'static {
     /// Defines the event filter type.
     type EventFlag: Default
         + Clone
