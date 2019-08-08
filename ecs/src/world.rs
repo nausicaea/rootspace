@@ -3,13 +3,13 @@
 use crate::{
     components::{Component, Storage},
     entities::{Entities, Entity},
-    events::{EventQueue, EventTrait},
+    event_queue::{ReceiverId, EventQueue},
     loop_stage::LoopStage,
     persistence::Persistence,
     resources::{Resource, Resources},
-    system::{EventHandlerSystem, System},
+    system::System,
 };
-use std::{marker::PhantomData, time::Duration};
+use std::time::Duration;
 #[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
@@ -52,26 +52,30 @@ pub trait WorldTrait {
     /// * `time` - Interpreted as the current game time.
     /// * `delta_time` - Interpreted as the time interval between calls to `render`.
     fn render(&mut self, time: &Duration, delta_time: &Duration);
-    /// The handle events method is supposed to be called when pending events or messages should be
-    /// handled by the connected systems. If this method returns `Ok(true)`, the execution of the
+    /// This method is supposed to be called when pending events or messages should be
+    /// handled by the world. If this method returns `true`, the execution of the
     /// main loop shall continue, otherwise it shall abort.
-    fn handle_events(&mut self) -> bool;
+    fn maintain(&mut self) -> bool;
+}
+
+/// Events defined and processed by the world itself.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub enum WorldEvent {
+    /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game
+    /// engine to abort.
+    Abort,
 }
 
 /// This is the default implementation of the `WorldTrait` provided by this library.
-pub struct World<E> {
+pub struct World {
     resources: Resources,
     fixed_update_systems: Vec<Box<System>>,
     update_systems: Vec<Box<System>>,
     render_systems: Vec<Box<System>>,
-    event_handler_systems: Vec<Box<EventHandlerSystem<E>>>,
-    _e: PhantomData<E>,
+    receiver: ReceiverId<WorldEvent>,
 }
 
-impl<E> World<E>
-where
-    E: EventTrait,
-{
+impl World {
     /// Return a mutable references to the specified resource type. Panics, if the resource is not
     /// registered.
     #[cfg(not(feature = "diagnostics"))]
@@ -116,28 +120,17 @@ where
                 .iter()
                 .filter_map(|s| s.downcast_ref::<S>())
                 .last(),
-            LoopStage::Update => self.update_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
-            LoopStage::Render => self.render_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
+            LoopStage::Update => self
+                .update_systems
+                .iter()
+                .filter_map(|s| s.downcast_ref::<S>())
+                .last(),
+            LoopStage::Render => self
+                .render_systems
+                .iter()
+                .filter_map(|s| s.downcast_ref::<S>())
+                .last(),
         }
-    }
-
-    /// Add an event handler system.
-    pub fn add_event_handler_system<H>(&mut self, system: H)
-    where
-        H: EventHandlerSystem<E>,
-    {
-        self.event_handler_systems.push(Box::new(system))
-    }
-
-    /// Try to retrieve the system of the specified type.
-    pub fn get_event_handler_system<H>(&self) -> Option<&H>
-    where
-        H: EventHandlerSystem<E>,
-    {
-        self.event_handler_systems
-            .iter()
-            .filter_map(|s| s.downcast_ref::<H>())
-            .last()
     }
 
     /// Create a new `Entity`.
@@ -173,37 +166,32 @@ where
     }
 }
 
-impl<E> Default for World<E>
-where
-    E: 'static,
-{
+impl Default for World {
     fn default() -> Self {
+        let entities = Entities::default();
+        let mut events: EventQueue<WorldEvent> = EventQueue::default();
+        let receiver = events.subscribe();
+
         let mut resources = Resources::default();
-        resources.insert(Entities::default(), Persistence::Runtime);
-        resources.insert(EventQueue::<E>::default(), Persistence::Runtime);
+        resources.insert(entities, Persistence::Runtime);
+        resources.insert(events, Persistence::Runtime);
 
         World {
             resources,
             fixed_update_systems: Vec::default(),
             update_systems: Vec::default(),
             render_systems: Vec::default(),
-            event_handler_systems: Vec::default(),
-            _e: PhantomData::default(),
+            receiver,
         }
     }
 }
 
-#[cfg(not(feature = "diagnostics"))]
-impl<E> WorldTrait for World<E>
-where
-    E: EventTrait,
-{
+impl WorldTrait for World {
     fn clear(&mut self, persistence: Persistence) {
         self.resources.clear(persistence);
         self.fixed_update_systems.clear();
         self.update_systems.clear();
         self.render_systems.clear();
-        self.event_handler_systems.clear();
     }
 
     fn add_resource<R>(&mut self, res: R, persistence: Persistence) -> Option<R>
@@ -231,89 +219,19 @@ where
         }
     }
 
-    fn handle_events(&mut self) -> bool {
-        let events = self.resources.get_mut::<EventQueue<E>>().flush();
+    fn maintain(&mut self) -> bool {
+        let events = self.resources.get_mut::<EventQueue<WorldEvent>>().receive(&self.receiver);
 
-        if !events.is_empty() {
-            let mut statuses: Vec<bool> = Vec::with_capacity(events.len() * self.event_handler_systems.len());
-            for event in &events {
-                for system in self.event_handler_systems.iter_mut() {
-                    if event.matches_filter(system.get_event_filter()) {
-                        statuses.push(system.run(&mut self.resources, event));
-                    }
-                }
-            }
-            statuses.into_iter().all(|s| s)
-        } else {
-            true
-        }
+        !events.iter().any(|e| e == &WorldEvent::Abort)
     }
 }
 
-#[cfg(feature = "diagnostics")]
-impl<E> WorldTrait for World<E>
-where
-    E: EventTrait + TypeName,
-{
-    fn clear(&mut self, persistence: Persistence) {
-        self.resources.clear(persistence);
-        self.fixed_update_systems.clear();
-        self.update_systems.clear();
-        self.render_systems.clear();
-        self.event_handler_systems.clear();
-    }
-
-    fn add_resource<R>(&mut self, res: R, persistence: Persistence) -> Option<R>
-    where
-        R: Resource,
-    {
-        self.resources.insert(res, persistence)
-    }
-
-    fn fixed_update(&mut self, t: &Duration, dt: &Duration) {
-        for system in &mut self.fixed_update_systems {
-            system.run(&mut self.resources, t, dt);
-        }
-    }
-
-    fn update(&mut self, t: &Duration, dt: &Duration) {
-        for system in &mut self.update_systems {
-            system.run(&mut self.resources, t, dt);
-        }
-    }
-
-    fn render(&mut self, t: &Duration, dt: &Duration) {
-        for system in &mut self.render_systems {
-            system.run(&mut self.resources, t, dt);
-        }
-    }
-
-    fn handle_events(&mut self) -> bool {
-        let events = self.resources.get_mut::<EventQueue<E>>().flush();
-
-        if !events.is_empty() {
-            let mut statuses: Vec<bool> = Vec::with_capacity(events.len() * self.event_handler_systems.len());
-            for event in &events {
-                for system in self.event_handler_systems.iter_mut() {
-                    if event.matches_filter(system.get_event_filter()) {
-                        statuses.push(system.run(&mut self.resources, event));
-                    }
-                }
-            }
-            statuses.into_iter().all(|s| s)
-        } else {
-            true
-        }
-    }
-}
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    struct MockEvt;
-
     #[test]
     fn default() {
-        let _: World<MockEvt> = Default::default();
+        let _: World = Default::default();
     }
 }

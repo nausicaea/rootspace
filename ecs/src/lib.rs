@@ -14,6 +14,7 @@ extern crate typename;
 pub mod components;
 pub mod entities;
 pub mod events;
+pub mod event_queue;
 mod indexing;
 pub mod loop_stage;
 pub mod persistence;
@@ -24,10 +25,11 @@ pub mod world;
 pub use crate::{
     components::{Component, Storage, VecStorage},
     entities::{Entities, Entity},
-    events::{EventQueue, EventTrait},
+    events::EventTrait,
+    event_queue::{ReceiverId, EventQueue},
     loop_stage::LoopStage,
     persistence::Persistence,
     resources::{Resource, Resources},
-    system::{EventHandlerSystem, System},
+    system::System,
     world::{World, WorldTrait},
 };
