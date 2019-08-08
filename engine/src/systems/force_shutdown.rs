@@ -1,26 +1,22 @@
-use crate::event::EngineEventTrait;
+use crate::event::EngineEvent;
 #[cfg(not(test))]
 use ctrlc;
 use ecs::{EventQueue, Resources, System};
 #[cfg(not(test))]
 use std::process;
 use std::{
-    marker::PhantomData,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
     },
     time::Duration,
 };
-#[cfg(feature = "diagnostics")]
-use typename::TypeName;
 
-pub struct ForceShutdown<Evt> {
+pub struct ForceShutdown {
     ctrlc_triggered: Arc<AtomicUsize>,
-    _evt: PhantomData<Evt>,
 }
 
-impl<Evt> Default for ForceShutdown<Evt> {
+impl Default for ForceShutdown {
     fn default() -> Self {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
         #[cfg(not(test))]
@@ -38,42 +34,19 @@ impl<Evt> Default for ForceShutdown<Evt> {
 
         ForceShutdown {
             ctrlc_triggered,
-            _evt: PhantomData::default(),
         }
     }
 }
 
-#[cfg(not(feature = "diagnostics"))]
-impl<Evt> System for ForceShutdown<Evt>
-where
-    Evt: EngineEventTrait,
-{
+impl System for ForceShutdown {
     fn name(&self) -> &'static str {
         "ForceShutdown"
     }
 
-    fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
+    fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             trace!("Recently caught a termination signal");
-            res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_shutdown());
-            self.ctrlc_triggered.store(0, Ordering::SeqCst);
-        }
-    }
-}
-
-#[cfg(feature = "diagnostics")]
-impl<Evt> System for ForceShutdown<Evt>
-where
-    Evt: EngineEventTrait + TypeName,
-{
-    fn name(&self) -> &'static str {
-        "ForceShutdown"
-    }
-
-    fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
-        if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
-            trace!("Recently caught a termination signal");
-            res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_shutdown());
+            res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::Shutdown);
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
     }

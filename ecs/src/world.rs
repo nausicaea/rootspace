@@ -59,6 +59,7 @@ pub trait WorldTrait {
 }
 
 /// Events defined and processed by the world itself.
+#[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub enum WorldEvent {
     /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game
@@ -68,7 +69,7 @@ pub enum WorldEvent {
 
 /// This is the default implementation of the `WorldTrait` provided by this library.
 pub struct World {
-    resources: Resources,
+    pub resources: Resources,
     fixed_update_systems: Vec<Box<System>>,
     update_systems: Vec<Box<System>>,
     render_systems: Vec<Box<System>>,
@@ -203,19 +204,19 @@ impl WorldTrait for World {
 
     fn fixed_update(&mut self, t: &Duration, dt: &Duration) {
         for system in &mut self.fixed_update_systems {
-            system.run(&mut self.resources, t, dt);
+            system.run(&self.resources, t, dt);
         }
     }
 
     fn update(&mut self, t: &Duration, dt: &Duration) {
         for system in &mut self.update_systems {
-            system.run(&mut self.resources, t, dt);
+            system.run(&self.resources, t, dt);
         }
     }
 
     fn render(&mut self, t: &Duration, dt: &Duration) {
         for system in &mut self.render_systems {
-            system.run(&mut self.resources, t, dt);
+            system.run(&self.resources, t, dt);
         }
     }
 

@@ -7,12 +7,14 @@ mod private {
 
 use crate::{
     assets::{Image, Vertex},
+    event::EngineEvent,
     file_manipulation::ReadPath,
     geometry::rect::Rect,
 };
 use failure::Error;
 use std::{
     borrow::{Borrow, Cow},
+    convert::TryInto,
     path::Path,
 };
 
@@ -38,7 +40,7 @@ pub trait BackendTrait: Sized + private::Sealed + 'static {
     fn physical_dimensions(&self) -> (u32, u32);
 }
 
-pub trait EventTrait: private::Sealed {}
+pub trait EventTrait: TryInto<EngineEvent> + private::Sealed {}
 
 pub trait EventsLoopTrait<B: BackendTrait>: Default + private::Sealed + 'static {
     fn poll<F: FnMut(B::Event)>(&mut self, f: F);

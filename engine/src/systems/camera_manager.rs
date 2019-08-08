@@ -1,21 +1,22 @@
-use crate::{components::camera::Camera, event::EngineEventTrait};
-use ecs::{EventHandlerSystem, Resources};
-use std::marker::PhantomData;
+use crate::{components::camera::Camera, event::EngineEvent};
+use ecs::{ReceiverId, EventQueue, System, Resources};
+use std::time::Duration;
 
-pub struct CameraManager<Evt> {
-    _evt: PhantomData<Evt>,
+pub struct CameraManager {
+    receiver: ReceiverId<EngineEvent>,
 }
 
-impl<Evt> Default for CameraManager<Evt> {
-    fn default() -> Self {
+impl CameraManager {
+    pub fn new(res: &mut Resources) -> Self {
+        let events = res.get_mut::<EventQueue<EngineEvent>>();
+        let receiver = events.subscribe();
+
         CameraManager {
-            _evt: PhantomData::default(),
+            receiver,
         }
     }
-}
 
-impl<Evt> CameraManager<Evt> {
-    fn on_resize(&self, res: &mut Resources, dims: (u32, u32)) {
+    fn on_resize(&self, res: &Resources, dims: (u32, u32)) {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Updating the camera dimensions (dims={:?})", dims);
 
@@ -24,7 +25,7 @@ impl<Evt> CameraManager<Evt> {
             .for_each(|c| c.set_dimensions(dims));
     }
 
-    fn on_change_dpi(&self, res: &mut Resources, factor: f64) {
+    fn on_change_dpi(&self, res: &Resources, factor: f64) {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Updating the camera dpi factor (factor={:?})", factor);
 
@@ -34,25 +35,19 @@ impl<Evt> CameraManager<Evt> {
     }
 }
 
-impl<Evt> EventHandlerSystem<Evt> for CameraManager<Evt>
-where
-    Evt: EngineEventTrait,
-{
+impl System for CameraManager {
     fn name(&self) -> &'static str {
         "CameraManager"
     }
 
-    fn get_event_filter(&self) -> Evt::EventFlag {
-        Evt::resize() | Evt::change_dpi()
-    }
-
-    fn run(&mut self, res: &mut Resources, event: &Evt) -> bool {
-        if let Some(dims) = event.resize_data() {
-            self.on_resize(res, dims);
-        } else if let Some(factor) = event.change_dpi_data() {
-            self.on_change_dpi(res, factor);
+    fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
+        let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
+        for event in events {
+            match event {
+                EngineEvent::Resize(dims) => self.on_resize(res, dims),
+                EngineEvent::ChangeDpi(factor) => self.on_change_dpi(res, factor),
+                _ => (),
+            }
         }
-
-        true
     }
 }

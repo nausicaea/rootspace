@@ -1,33 +1,73 @@
-use ecs::{EventHandlerSystem, EventTrait, Resources};
-use std::marker::PhantomData;
+use ecs::{ReceiverId, EventQueue, System, Resources};
+use std::time::Duration;
 use std::fmt;
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
-pub struct EventMonitor<Evt> {
-    _evt: PhantomData<Evt>,
+pub struct EventMonitor<E> {
+    receiver: ReceiverId<E>,
 }
 
-impl<Evt> Default for EventMonitor<Evt> {
-    fn default() -> Self {
+#[cfg(not(feature = "diagnostics"))]
+impl<E> EventMonitor<E>
+where
+    E: 'static + Clone,
+{
+    pub fn new(res: &mut Resources) -> Self {
+        let events = res.get_mut::<EventQueue<E>>();
+        let receiver = events.subscribe();
+
         EventMonitor {
-            _evt: PhantomData::default(),
+            receiver,
         }
     }
 }
 
-impl<Evt> EventHandlerSystem<Evt> for EventMonitor<Evt>
+#[cfg(feature = "diagnostics")]
+impl<E> EventMonitor<E>
 where
-    Evt: EventTrait + fmt::Debug,
+    E: 'static + Clone + TypeName,
+{
+    pub fn new(res: &mut Resources) -> Self {
+        let events = res.get_mut::<EventQueue<E>>();
+        let receiver = events.subscribe();
+
+        EventMonitor {
+            receiver,
+        }
+    }
+}
+
+#[cfg(not(feature = "diagnostics"))]
+impl<E> System for EventMonitor<E>
+where
+    E: 'static + Clone + fmt::Debug,
 {
     fn name(&self) -> &'static str {
         "EventMonitor"
     }
 
-    fn get_event_filter(&self) -> Evt::EventFlag {
-        Default::default()
+    fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
+        let events = res.borrow_mut::<EventQueue<E>>().receive(&self.receiver);
+        for event in events {
+            trace!("Received {:?}", event);
+        }
+    }
+}
+
+#[cfg(feature = "diagnostics")]
+impl<E> System for EventMonitor<E>
+where
+    E: 'static + Clone + fmt::Debug + TypeName,
+{
+    fn name(&self) -> &'static str {
+        "EventMonitor"
     }
 
-    fn run(&mut self, _res: &mut Resources, event: &Evt) -> bool {
-        trace!("Received {:?}", event);
-        true
+    fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
+        let events = res.borrow_mut::<EventQueue<E>>().receive(&self.receiver);
+        for event in events {
+            trace!("Received {:?}", event);
+        }
     }
 }

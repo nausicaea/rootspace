@@ -1,5 +1,3 @@
-#[macro_use]
-extern crate bitflags;
 extern crate ecs;
 extern crate engine;
 extern crate failure;
@@ -7,19 +5,15 @@ extern crate glium;
 extern crate log;
 extern crate nalgebra;
 #[cfg(feature = "diagnostics")]
-#[macro_use]
 extern crate typename;
 
 #[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
-mod event;
-
-use crate::event::Event;
-use ecs::{EventQueue, LoopStage, World};
+use ecs::{Resources, EventQueue, LoopStage, World};
 use engine::{
     components::{Camera, Info, Model, Status, UiModel},
-    event::EngineEventTrait,
+    event::EngineEvent,
     graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait},
     resources::SceneGraph,
     systems::{
@@ -33,7 +27,7 @@ use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
 
 pub struct Game<B> {
-    orchestrator: DefaultOrchestrator<Event, B>,
+    orchestrator: DefaultOrchestrator<B>,
 }
 
 #[cfg(not(feature = "diagnostics"))]
@@ -44,8 +38,8 @@ where
     pub fn load(&mut self) -> Result<(), Error> {
         self.orchestrator.reset();
 
-        let event_interface: EventInterface<Event, B> = EventInterface::default();
-        let renderer: Renderer<Event, B> = Renderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
+        let event_interface: EventInterface<B> = EventInterface::default();
+        let renderer: Renderer<B> = Renderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
 
         let camera = self.world_mut().create_entity();
         self.world_mut().add_component(camera, Status::default());
@@ -92,20 +86,20 @@ where
         );
 
         // Handle the regular systems.
-        let event_monitor: EventMonitor<Event> = EventMonitor::default();
-        self.world_mut().add_event_handler_system(event_monitor);
+        let event_monitor: EventMonitor<EngineEvent> = EventMonitor::new(&mut self.res_mut());
+        self.world_mut().add_system(LoopStage::Update, event_monitor);
 
-        let force_shutdown: ForceShutdown<Event> = ForceShutdown::default();
+        let force_shutdown = ForceShutdown::default();
         self.world_mut().add_system(LoopStage::Update, force_shutdown);
 
-        let camera_manager: CameraManager<Event> = CameraManager::default();
-        self.world_mut().add_event_handler_system(camera_manager);
+        let camera_manager = CameraManager::new(&mut self.res_mut());
+        self.world_mut().add_system(LoopStage::Update, camera_manager);
 
-        let debug_console: DebugConsole<Event> = DebugConsole::default();
+        let debug_console = DebugConsole::default();
         self.world_mut().add_system(LoopStage::Update, debug_console);
 
-        let debug_shell: DebugShell<Event> = DebugShell::default();
-        self.world_mut().add_event_handler_system(debug_shell);
+        let debug_shell = DebugShell::new(&mut self.res_mut());
+        self.world_mut().add_system(LoopStage::Update, debug_shell);
 
         //let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
         //let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
@@ -155,12 +149,12 @@ where
         self.world_mut().add_system(LoopStage::Render, renderer);
 
         // The event coordinator should run last, because it can affect the shutdown of the engine.
-        let event_coordinator: EventCoordinator<Event> = EventCoordinator::default();
-        self.world_mut().add_event_handler_system(event_coordinator);
+        let event_coordinator = EventCoordinator::new(&mut self.res_mut());
+        self.world_mut().add_system(LoopStage::Update, event_coordinator);
 
         self.world_mut()
-            .get_resource_mut::<EventQueue<Event>>()
-            .dispatch_later(Event::new_startup());
+            .get_resource_mut::<EventQueue<EngineEvent>>()
+            .send(EngineEvent::Startup);
 
         Ok(())
     }
@@ -169,8 +163,12 @@ where
         self.orchestrator.run(iterations)
     }
 
-    fn world_mut(&mut self) -> &mut World<Event> {
+    fn world_mut(&mut self) -> &mut World {
         &mut self.orchestrator.world
+    }
+
+    fn res_mut(&mut self) -> &mut Resources {
+        &mut self.orchestrator.world.resources
     }
 }
 
@@ -182,8 +180,8 @@ where
     pub fn load(&mut self) -> Result<(), Error> {
         self.orchestrator.reset();
 
-        let event_interface: EventInterface<Event, B> = EventInterface::default();
-        let renderer: Renderer<Event, B> = Renderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
+        let event_interface: EventInterface<B> = EventInterface::default();
+        let renderer: Renderer<B> = Renderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
 
         let camera = self.world_mut().create_entity();
         self.world_mut().add_component(camera, Status::default());
@@ -230,20 +228,20 @@ where
         );
 
         // Handle the regular systems.
-        let event_monitor: EventMonitor<Event> = EventMonitor::default();
-        self.world_mut().add_event_handler_system(event_monitor);
+        let event_monitor: EventMonitor<EngineEvent> = EventMonitor::new(&mut self.res_mut());
+        self.world_mut().add_system(LoopStage::Update, event_monitor);
 
-        let force_shutdown: ForceShutdown<Event> = ForceShutdown::default();
+        let force_shutdown = ForceShutdown::default();
         self.world_mut().add_system(LoopStage::Update, force_shutdown);
 
-        let camera_manager: CameraManager<Event> = CameraManager::default();
-        self.world_mut().add_event_handler_system(camera_manager);
+        let camera_manager = CameraManager::new(&mut self.res_mut());
+        self.world_mut().add_system(LoopStage::Update, camera_manager);
 
-        let debug_console: DebugConsole<Event> = DebugConsole::default();
+        let debug_console = DebugConsole::default();
         self.world_mut().add_system(LoopStage::Update, debug_console);
 
-        let debug_shell: DebugShell<Event> = DebugShell::default();
-        self.world_mut().add_event_handler_system(debug_shell);
+        let debug_shell = DebugShell::new(&mut self.res_mut());
+        self.world_mut().add_system(LoopStage::Update, debug_shell);
 
         //let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
         //let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
@@ -293,12 +291,12 @@ where
         self.world_mut().add_system(LoopStage::Render, renderer);
 
         // The event coordinator should run last, because it can affect the shutdown of the engine.
-        let event_coordinator: EventCoordinator<Event> = EventCoordinator::default();
-        self.world_mut().add_event_handler_system(event_coordinator);
+        let event_coordinator = EventCoordinator::new(&mut self.res_mut());
+        self.world_mut().add_system(LoopStage::Update, event_coordinator);
 
         self.world_mut()
-            .get_resource_mut::<EventQueue<Event>>()
-            .dispatch_later(Event::new_startup());
+            .get_resource_mut::<EventQueue<EngineEvent>>()
+            .send(EngineEvent::Startup);
 
         Ok(())
     }
@@ -307,8 +305,12 @@ where
         self.orchestrator.run(iterations)
     }
 
-    fn world_mut(&mut self) -> &mut World<Event> {
+    fn world_mut(&mut self) -> &mut World {
         &mut self.orchestrator.world
+    }
+
+    fn res_mut(&mut self) -> &mut Resources {
+        &mut self.orchestrator.world.resources
     }
 }
 

@@ -4,8 +4,12 @@ use super::{
 };
 use crate::{
     assets::{Image, Vertex},
+    event::EngineEvent,
     geometry::rect::Rect,
 };
+use glium::glutin::WindowEvent;
+#[cfg(target_os = "macos")]
+use glium::glutin::{KeyboardInput, ModifiersState, VirtualKeyCode};
 use failure::Error;
 use glium::{
     backend::glutin::DisplayCreationError,
@@ -19,6 +23,7 @@ use glium::{
 };
 use std::{
     borrow::{Borrow, Cow},
+    convert::TryInto,
     fmt,
     rc::Rc,
 };
@@ -35,6 +40,33 @@ impl From<GlutinEvent> for GliumEvent {
 impl Sealed for GliumEvent {}
 
 impl EventTrait for GliumEvent {}
+
+impl TryInto<EngineEvent> for GliumEvent {
+    type Error = ();
+
+    fn try_into(self) -> Result<EngineEvent, Self::Error> {
+        if let GliumEvent(GlutinEvent::WindowEvent { event: we, .. }) = self {
+            match we {
+                WindowEvent::CloseRequested => Ok(EngineEvent::Shutdown),
+                WindowEvent::Resized(l) => Ok(EngineEvent::Resize(l.into())),
+                WindowEvent::HiDpiFactorChanged(f) => Ok(EngineEvent::ChangeDpi(f)),
+                #[cfg(target_os = "macos")]
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Q),
+                            modifiers: ModifiersState { logo: true, .. },
+                            ..
+                        },
+                    ..
+                } => Ok(EngineEvent::Shutdown),
+                _ => Err(()),
+            }
+        } else {
+            Err(())
+        }
+    }
+}
 
 pub struct GliumEventsLoop(Box<EventsLoop>);
 

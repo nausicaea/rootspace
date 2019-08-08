@@ -1,11 +1,11 @@
 use crate::{
     components::{model::Model, ui_model::UiModel},
-    event::EngineEventTrait,
     file_manipulation::{FileError, VerifyPath},
     graphics::BackendTrait,
     resources::{RenderData, SceneGraph},
+    event::EngineEvent,
 };
-use ecs::{EventQueue, Persistence, WorldTrait};
+use ecs::{ReceiverId, EventQueue, Persistence, WorldTrait};
 use std::{
     cmp,
     marker::PhantomData,
@@ -14,18 +14,17 @@ use std::{
 };
 
 #[derive(Debug)]
-pub struct Orchestrator<E, B, W> {
+pub struct Orchestrator<B, W> {
     pub world: W,
     resource_path: PathBuf,
     delta_time: Duration,
     max_frame_time: Duration,
-    _e: PhantomData<E>,
+    receiver: ReceiverId<EngineEvent>,
     _b: PhantomData<B>,
 }
 
-impl<E, B, W> Orchestrator<E, B, W>
+impl<B, W> Orchestrator<B, W>
 where
-    E: EngineEventTrait,
     B: BackendTrait,
     W: Default + WorldTrait,
 {
@@ -36,8 +35,11 @@ where
     ) -> Result<Self, FileError> {
         resource_path.ensure_extant_directory()?;
 
+        let mut events: EventQueue<EngineEvent> = EventQueue::default();
+        let receiver = events.subscribe();
+
         let mut world = W::default();
-        world.add_resource(EventQueue::<E>::default(), Persistence::Runtime);
+        world.add_resource(events, Persistence::Runtime);
         world.add_resource(RenderData::<B>::default(), Persistence::Runtime);
         world.add_resource(SceneGraph::<Model>::default(), Persistence::Runtime);
         world.add_resource(SceneGraph::<UiModel>::default(), Persistence::Runtime);
@@ -47,7 +49,7 @@ where
             resource_path: resource_path.as_ref().into(),
             delta_time,
             max_frame_time,
-            _e: PhantomData::default(),
+            receiver,
             _b: PhantomData::default(),
         })
     }
@@ -78,7 +80,7 @@ where
 
             self.world.update(&dynamic_game_time, &frame_time);
             self.world.render(&dynamic_game_time, &frame_time);
-            running = self.world.handle_events();
+            running = self.world.maintain();
             i += 1;
         }
     }
@@ -95,7 +97,7 @@ mod tests {
     use super::*;
     use crate::{
         graphics::headless::HeadlessBackend,
-        mock::{MockEvt, MockWorld},
+        mock::MockWorld,
     };
     use std::env;
     use tempfile::NamedTempFile;
@@ -108,7 +110,7 @@ mod tests {
         let render_duration = Duration::from_millis(20);
 
         let mut o =
-            Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
         o.world.max_iterations = iterations as usize + 1;
         o.world.render_duration = Some(render_duration);
 
@@ -127,14 +129,14 @@ mod tests {
 
     #[test]
     fn create_orchestrator() {
-        let r = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(
+        let r = Orchestrator::<HeadlessBackend, MockWorld>::new(
             &env::temp_dir(),
             Default::default(),
             Default::default(),
         );
         assert!(r.is_ok());
 
-        let r = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(
+        let r = Orchestrator::<HeadlessBackend, MockWorld>::new(
             "blablablabla",
             Default::default(),
             Default::default(),
@@ -143,7 +145,7 @@ mod tests {
 
         let tf = NamedTempFile::new().unwrap();
         let r =
-            Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(tf.path(), Default::default(), Default::default());
+            Orchestrator::<HeadlessBackend, MockWorld>::new(tf.path(), Default::default(), Default::default());
         assert!(r.is_err());
     }
 
@@ -154,7 +156,7 @@ mod tests {
         let base = env::temp_dir();
         let tf = NamedTempFile::new_in(&base).unwrap();
 
-        let o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, Default::default(), Default::default())
+        let o = Orchestrator::<HeadlessBackend, MockWorld>::new(&base, Default::default(), Default::default())
             .unwrap();
 
         let r = o.file(dir_name, &tf.path().file_name().unwrap().to_string_lossy());
@@ -185,13 +187,13 @@ mod tests {
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
         let mut o =
-            Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
         o.run(None);
         assert_eq!(
-            o.world.max_iterations, o.world.handle_events_calls,
+            o.world.max_iterations, o.world.maintain_calls,
             "Expected {} iterations, got {} instead",
-            o.world.max_iterations, o.world.handle_events_calls
+            o.world.max_iterations, o.world.maintain_calls
         );
     }
 
@@ -245,7 +247,7 @@ mod tests {
             let base = env::temp_dir();
             let delta_time = Duration::from_millis(50);
             let max_frame_time = Duration::from_millis(250);
-            let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            let mut o = Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
             o.world.max_iterations = iterations + 1;
 
             o.run(Some(iterations));
@@ -258,7 +260,7 @@ mod tests {
             let base = env::temp_dir();
             let delta_time = Duration::from_millis(50);
             let max_frame_time = Duration::from_millis(250);
-            let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            let mut o = Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
             o.world.max_iterations = iterations + 1;
 
             o.run(Some(iterations));
@@ -267,15 +269,15 @@ mod tests {
     }
 
     quickcheck! {
-        fn check_handle_events_calls(iterations: usize) -> bool {
+        fn check_maintain_calls(iterations: usize) -> bool {
             let base = env::temp_dir();
             let delta_time = Duration::from_millis(50);
             let max_frame_time = Duration::from_millis(250);
-            let mut o = Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            let mut o = Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
             o.world.max_iterations = iterations + 1;
 
             o.run(Some(iterations));
-            o.world.handle_events_calls == iterations
+            o.world.maintain_calls == iterations
         }
     }
 
@@ -285,7 +287,7 @@ mod tests {
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
         let mut o =
-            Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
         o.run(None);
         let mut last_time = Duration::default();
@@ -302,7 +304,7 @@ mod tests {
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
         let mut o =
-            Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
         o.run(None);
         let mut last_time = Duration::default();
@@ -319,7 +321,7 @@ mod tests {
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
         let mut o =
-            Orchestrator::<MockEvt, HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
 
         o.run(None);
         let mut last_time = Duration::default();

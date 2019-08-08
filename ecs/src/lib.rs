@@ -31,5 +31,5 @@ pub use crate::{
     persistence::Persistence,
     resources::{Resource, Resources},
     system::System,
-    world::{World, WorldTrait},
+    world::{WorldEvent, World, WorldTrait},
 };

@@ -3,27 +3,23 @@
 #![cfg_attr(test, allow(unused_mut))]
 #![cfg_attr(test, allow(dead_code))]
 
-use crate::{event::EngineEventTrait, text_manipulation::split_arguments};
+use crate::{event::EngineEvent, text_manipulation::split_arguments};
 use ecs::{EventQueue, Resources, System};
 use std::{
     io::{self, Read},
-    marker::PhantomData,
     string,
     sync::mpsc::{self, channel, Receiver},
     thread::spawn,
     time::Duration,
 };
-#[cfg(feature = "diagnostics")]
-use typename::TypeName;
 
-pub struct DebugConsole<Evt> {
+pub struct DebugConsole {
     escape_char: char,
     quote_char: char,
     worker_rx: Receiver<Result<String, DebugConsoleError>>,
-    _evt: PhantomData<Evt>,
 }
 
-impl<Evt> DebugConsole<Evt> {
+impl DebugConsole {
     pub fn new<S>(mut input_stream: S, escape_char: Option<char>, quote_char: Option<char>) -> Self
     where
         S: Read + Send + 'static,
@@ -61,7 +57,6 @@ impl<Evt> DebugConsole<Evt> {
             escape_char: escape_char.unwrap_or('\\'),
             quote_char: quote_char.unwrap_or('"'),
             worker_rx: rx,
-            _evt: PhantomData::default(),
         }
     }
 
@@ -76,41 +71,21 @@ impl<Evt> DebugConsole<Evt> {
     }
 }
 
-impl<Evt> Default for DebugConsole<Evt> {
+impl Default for DebugConsole {
     fn default() -> Self {
         DebugConsole::new(io::stdin(), Some('\\'), Some('"'))
     }
 }
 
-#[cfg(not(feature = "diagnostics"))]
-impl<Evt> System for DebugConsole<Evt>
-where
-    Evt: EngineEventTrait,
-{
+impl System for DebugConsole {
     fn name(&self) -> &'static str {
         "DebugConsole"
     }
 
-    fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
+    fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
         self.try_read_line()
             .map(|l| split_arguments(l, self.escape_char, self.quote_char))
-            .map(|a| res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_command(a)));
-    }
-}
-
-#[cfg(feature = "diagnostics")]
-impl<Evt> System for DebugConsole<Evt>
-where
-    Evt: EngineEventTrait + TypeName,
-{
-    fn name(&self) -> &'static str {
-        "DebugConsole"
-    }
-
-    fn run(&mut self, res: &mut Resources, _: &Duration, _: &Duration) {
-        self.try_read_line()
-            .map(|l| split_arguments(l, self.escape_char, self.quote_char))
-            .map(|a| res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_command(a)));
+            .map(|a| res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::Command(a)));
     }
 }
 

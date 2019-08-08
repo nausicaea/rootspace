@@ -1,65 +1,39 @@
 use crate::{
     debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand},
-    event::EngineEventTrait,
+    event::EngineEvent,
 };
-use ecs::{EventHandlerSystem, Resources};
+use ecs::{ReceiverId, EventQueue, System, Resources};
 use failure::Error;
-use std::{collections::HashMap, marker::PhantomData};
-#[cfg(feature = "diagnostics")]
-use typename::TypeName;
+use std::collections::HashMap;
+use std::time::Duration;
 
-pub struct DebugShell<Evt> {
+pub struct DebugShell {
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
-    _evt: PhantomData<Evt>,
+    receiver: ReceiverId<EngineEvent>,
 }
 
-#[cfg(not(feature = "diagnostics"))]
-impl<Evt> Default for DebugShell<Evt>
-where
-    Evt: EngineEventTrait,
-{
-    fn default() -> Self {
+impl DebugShell {
+    pub fn new(res: &mut Resources) -> Self {
+        let events = res.get_mut::<EventQueue<EngineEvent>>();
+        let receiver = events.subscribe();
+
         let mut sys = DebugShell {
             commands: HashMap::new(),
-            _evt: PhantomData::default(),
+            receiver,
         };
 
-        sys.add_command(ExitCommand::<Evt>::default());
+        sys.add_command(ExitCommand::default());
         sys.add_command(CameraCommand::default());
         sys.add_command(EntityCommand::default());
 
         sys
     }
-}
 
-#[cfg(feature = "diagnostics")]
-impl<Evt> Default for DebugShell<Evt>
-where
-    Evt: EngineEventTrait + TypeName,
-{
-    fn default() -> Self {
-        let mut sys = DebugShell {
-            commands: HashMap::new(),
-            _evt: PhantomData::default(),
-        };
-
-        sys.add_command(ExitCommand::<Evt>::default());
-        sys.add_command(CameraCommand::default());
-        sys.add_command(EntityCommand::default());
-
-        sys
-    }
-}
-
-impl<Evt> DebugShell<Evt>
-where
-    Evt: EngineEventTrait,
-{
     pub fn add_command<C: CommandTrait>(&mut self, command: C) {
         self.commands.insert(command.name(), Box::new(command));
     }
 
-    fn interpret(&self, res: &mut Resources, args: &[String]) -> Result<(), Error> {
+    fn interpret(&self, res: &Resources, args: &[String]) -> Result<(), Error> {
         if !args.is_empty() {
             let command_name = args[0].as_str();
             if command_name == "help" {
@@ -89,24 +63,19 @@ where
     }
 }
 
-impl<Evt> EventHandlerSystem<Evt> for DebugShell<Evt>
-where
-    Evt: EngineEventTrait,
-{
+impl System for DebugShell {
     fn name(&self) -> &'static str {
         "DebugShell"
     }
 
-    fn get_event_filter(&self) -> Evt::EventFlag {
-        Evt::command()
-    }
-
-    fn run(&mut self, res: &mut Resources, event: &Evt) -> bool {
-        if let Some(ref args) = event.command_data() {
-            self.interpret(res, args).unwrap_or_else(|e| eprintln!("{}", e));
+    fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
+        let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
+        for event in events {
+            match event {
+                EngineEvent::Command(ref args) => self.interpret(res, args).unwrap_or_else(|e| eprintln!("{}", e)),
+                _ => (),
+            }
         }
-
-        true
     }
 }
 

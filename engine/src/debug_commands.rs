@@ -1,40 +1,22 @@
 use crate::{
     components::{Camera, Info, Model, Status, UiModel},
-    event::EngineEventTrait,
+    event::EngineEvent,
     resources::SceneGraph,
 };
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use ecs::{Component, Entities, Entity, EventQueue, Resources, Storage};
 use failure::Error;
-use std::marker::PhantomData;
-
-#[cfg(feature = "diagnostics")]
-use typename::TypeName;
 
 pub trait CommandTrait: 'static {
     fn name(&self) -> &'static str;
     fn description(&self) -> &'static str;
-    fn run(&self, res: &mut Resources, args: &[String]) -> Result<(), Error>;
+    fn run(&self, res: &Resources, args: &[String]) -> Result<(), Error>;
 }
 
-#[derive(Debug, Clone)]
-pub struct ExitCommand<Evt> {
-    _evt: PhantomData<Evt>,
-}
+#[derive(Debug, Clone, Default)]
+pub struct ExitCommand;
 
-impl<Evt> Default for ExitCommand<Evt> {
-    fn default() -> Self {
-        ExitCommand {
-            _evt: PhantomData::default(),
-        }
-    }
-}
-
-#[cfg(not(feature = "diagnostics"))]
-impl<Evt> CommandTrait for ExitCommand<Evt>
-where
-    Evt: EngineEventTrait,
-{
+impl CommandTrait for ExitCommand {
     fn name(&self) -> &'static str {
         "exit"
     }
@@ -43,27 +25,8 @@ where
         "Shuts down the engine (can also be done with Ctrl-C. Tap Ctrl-C twice to force a shutdown)"
     }
 
-    fn run(&self, res: &mut Resources, _: &[String]) -> Result<(), Error> {
-        res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_shutdown());
-        Ok(())
-    }
-}
-
-#[cfg(feature = "diagnostics")]
-impl<Evt> CommandTrait for ExitCommand<Evt>
-where
-    Evt: EngineEventTrait + TypeName,
-{
-    fn name(&self) -> &'static str {
-        "exit"
-    }
-
-    fn description(&self) -> &'static str {
-        "Shuts down the engine (can also be done with Ctrl-C. Tap Ctrl-C twice to force a shutdown)"
-    }
-
-    fn run(&self, res: &mut Resources, _: &[String]) -> Result<(), Error> {
-        res.get_mut::<EventQueue<Evt>>().dispatch_later(Evt::new_shutdown());
+    fn run(&self, res: &Resources, _: &[String]) -> Result<(), Error> {
+        res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::Shutdown);
         Ok(())
     }
 }
@@ -80,7 +43,7 @@ impl CommandTrait for RendererCommand {
         "Provides access to the renderer"
     }
 
-    fn run(&self, _res: &mut Resources, args: &[String]) -> Result<(), Error> {
+    fn run(&self, _res: &Resources, args: &[String]) -> Result<(), Error> {
         let matches = App::new("renderer")
             .setting(AppSettings::DisableVersion)
             .setting(AppSettings::SubcommandRequiredElseHelp)
@@ -124,7 +87,7 @@ impl CommandTrait for CameraCommand {
         "Provides access to the camera"
     }
 
-    fn run(&self, res: &mut Resources, args: &[String]) -> Result<(), Error> {
+    fn run(&self, res: &Resources, args: &[String]) -> Result<(), Error> {
         let matches = App::new("camera")
             .about("Provides access to the camera")
             .setting(AppSettings::DisableVersion)
@@ -243,7 +206,7 @@ impl CommandTrait for EntityCommand {
         "Provides access to entities within the world"
     }
 
-    fn run(&self, res: &mut Resources, args: &[String]) -> Result<(), Error> {
+    fn run(&self, res: &Resources, args: &[String]) -> Result<(), Error> {
         let matches = App::new("entity")
             .about("Provides access to entities within the world")
             .setting(AppSettings::DisableVersion)

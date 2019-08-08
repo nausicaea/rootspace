@@ -1,6 +1,6 @@
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
-    event::EngineEventTrait,
+    event::EngineEvent,
     graphics::{BackendTrait, FrameTrait},
     resources::SceneGraph,
 };
@@ -8,7 +8,7 @@ use ecs::{EventQueue, Resources, Storage, System};
 use failure::Error;
 #[cfg(any(test, feature = "diagnostics"))]
 use std::time::Instant;
-use std::{collections::VecDeque, marker::PhantomData, time::Duration};
+use std::{collections::VecDeque, time::Duration};
 #[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
@@ -16,16 +16,15 @@ static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;
 
 #[derive(Debug)]
-pub struct Renderer<Evt, B> {
+pub struct Renderer<B> {
     pub backend: B,
     pub clear_color: [f32; 4],
     draw_calls: VecDeque<usize>,
     frame_times: VecDeque<Duration>,
     initialised: bool,
-    _evt: PhantomData<Evt>,
 }
 
-impl<Evt, B> Renderer<Evt, B>
+impl<B> Renderer<B>
 where
     B: BackendTrait,
 {
@@ -42,7 +41,6 @@ where
             draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
             frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
             initialised: false,
-            _evt: PhantomData::default(),
         })
     }
 
@@ -74,16 +72,15 @@ where
 }
 
 #[cfg(not(feature = "diagnostics"))]
-impl<Evt, B> System for Renderer<Evt, B>
+impl<B> System for Renderer<B>
 where
-    Evt: EngineEventTrait,
     B: BackendTrait,
 {
     fn name(&self) -> &'static str {
         "Renderer"
     }
 
-    fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
+    fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         #[cfg(any(test, feature = "diagnostics"))]
         let start_mark = Instant::now();
 
@@ -91,8 +88,8 @@ where
         let mut draw_calls: usize = 0;
 
         if !self.initialised {
-            res.get_mut::<EventQueue<Evt>>()
-                .dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
+            res.borrow_mut::<EventQueue<EngineEvent>>()
+                .send(EngineEvent::ChangeDpi(self.backend.dpi_factor()));
             self.initialised = true;
         }
 
@@ -158,16 +155,15 @@ where
 }
 
 #[cfg(feature = "diagnostics")]
-impl<Evt, B> System for Renderer<Evt, B>
+impl<B> System for Renderer<B>
 where
-    Evt: EngineEventTrait + TypeName,
     B: BackendTrait + TypeName,
 {
     fn name(&self) -> &'static str {
         "Renderer"
     }
 
-    fn run(&mut self, res: &mut Resources, _t: &Duration, _dt: &Duration) {
+    fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         #[cfg(any(test, feature = "diagnostics"))]
         let start_mark = Instant::now();
 
@@ -175,8 +171,8 @@ where
         let mut draw_calls: usize = 0;
 
         if !self.initialised {
-            res.get_mut::<EventQueue<Evt>>()
-                .dispatch_later(Evt::new_change_dpi(self.backend.dpi_factor()));
+            res.borrow_mut::<EventQueue<EngineEvent>>()
+                .send(EngineEvent::ChangeDpi(self.backend.dpi_factor()));
             self.initialised = true;
         }
 

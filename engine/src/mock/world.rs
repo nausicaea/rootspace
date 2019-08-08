@@ -8,7 +8,7 @@ pub struct MockWorld {
     pub fixed_update_calls: usize,
     pub update_calls: usize,
     pub render_calls: usize,
-    pub handle_events_calls: usize,
+    pub maintain_calls: usize,
     pub fixed_update_arguments: Vec<(Duration, Duration)>,
     pub update_arguments: Vec<(Duration, Duration)>,
     pub render_arguments: Vec<(Duration, Duration)>,
@@ -20,7 +20,7 @@ impl WorldTrait for MockWorld {
         self.fixed_update_calls = 0;
         self.update_calls = 0;
         self.render_calls = 0;
-        self.handle_events_calls = 0;
+        self.maintain_calls = 0;
         self.fixed_update_arguments.clear();
         self.update_arguments.clear();
         self.render_arguments.clear();
@@ -49,8 +49,8 @@ impl WorldTrait for MockWorld {
         self.render_arguments.push((time.clone(), delta_time.clone()));
     }
 
-    fn handle_events(&mut self) -> bool {
-        self.handle_events_calls += 1;
+    fn maintain(&mut self) -> bool {
+        self.maintain_calls += 1;
         self.iterations += 1;
         if self.iterations < self.max_iterations {
             true
@@ -68,7 +68,7 @@ impl Default for MockWorld {
             fixed_update_calls: 0,
             update_calls: 0,
             render_calls: 0,
-            handle_events_calls: 0,
+            maintain_calls: 0,
             fixed_update_arguments: Vec::default(),
             update_arguments: Vec::default(),
             render_arguments: Vec::default(),

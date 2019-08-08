@@ -2,9 +2,6 @@
 #[macro_use]
 extern crate approx;
 extern crate affine_transform;
-#[cfg(any(test, feature = "mock"))]
-#[macro_use]
-extern crate bitflags;
 extern crate clap;
 extern crate ctrlc;
 #[macro_use]
@@ -55,8 +52,8 @@ use crate::{
 };
 use ecs::World;
 
-pub type DefaultOrchestrator<E, B> = Orchestrator<E, B, World<E>>;
-pub type GliumEventInterface<E> = EventInterface<E, GliumEventsLoop>;
-pub type HeadlessEventInterface<E> = EventInterface<E, HeadlessEventsLoop>;
-pub type GliumRenderer<E> = Renderer<E, GliumBackend>;
-pub type HeadlessRenderer<E> = Renderer<E, HeadlessBackend>;
+pub type DefaultOrchestrator<B> = Orchestrator<B, World>;
+pub type GliumEventInterface = EventInterface<GliumEventsLoop>;
+pub type HeadlessEventInterface = EventInterface<HeadlessEventsLoop>;
+pub type GliumRenderer = Renderer<GliumBackend>;
+pub type HeadlessRenderer = Renderer<HeadlessBackend>;

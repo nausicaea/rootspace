@@ -1,69 +1,40 @@
-use crate::event::EngineEventTrait;
-use ecs::{EventHandlerSystem, EventQueue, Resources};
-use std::marker::PhantomData;
-#[cfg(feature = "diagnostics")]
-use typename::TypeName;
+use crate::event::EngineEvent;
+use ecs::{WorldEvent, ReceiverId, System, EventQueue, Resources};
+use std::time::Duration;
 
-pub struct EventCoordinator<Evt> {
-    _evt: PhantomData<Evt>,
+pub struct EventCoordinator {
+    receiver: ReceiverId<EngineEvent>,
 }
 
-impl<Evt> Default for EventCoordinator<Evt> {
-    fn default() -> Self {
+impl EventCoordinator {
+    pub fn new(res: &mut Resources) -> Self {
+        let events = res.get_mut::<EventQueue<EngineEvent>>();
+        let receiver = events.subscribe();
+
         EventCoordinator {
-            _evt: PhantomData::default(),
+            receiver,
         }
     }
+
 }
 
-#[cfg(not(feature = "diagnostics"))]
-impl<Evt> EventHandlerSystem<Evt> for EventCoordinator<Evt>
-where
-    Evt: EngineEventTrait,
-{
+impl System for EventCoordinator {
     fn name(&self) -> &'static str {
         "EventCoordinator"
     }
 
-    fn get_event_filter(&self) -> Evt::EventFlag {
-        Evt::shutdown() | Evt::hard_shutdown()
-    }
-
-    fn run(&mut self, res: &mut Resources, event: &Evt) -> bool {
-        if event.matches_filter(Evt::shutdown()) {
-            res.get_mut::<EventQueue<Evt>>()
-                .dispatch_later(Evt::new_hard_shutdown());
-            true
-        } else if event.matches_filter(Evt::hard_shutdown()) {
-            false
-        } else {
-            true
-        }
-    }
-}
-
-#[cfg(feature = "diagnostics")]
-impl<Evt> EventHandlerSystem<Evt> for EventCoordinator<Evt>
-where
-    Evt: EngineEventTrait + TypeName,
-{
-    fn name(&self) -> &'static str {
-        "EventCoordinator"
-    }
-
-    fn get_event_filter(&self) -> Evt::EventFlag {
-        Evt::shutdown() | Evt::hard_shutdown()
-    }
-
-    fn run(&mut self, res: &mut Resources, event: &Evt) -> bool {
-        if event.matches_filter(Evt::shutdown()) {
-            res.get_mut::<EventQueue<Evt>>()
-                .dispatch_later(Evt::new_hard_shutdown());
-            true
-        } else if event.matches_filter(Evt::hard_shutdown()) {
-            false
-        } else {
-            true
+    fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
+        let mut queue = res.borrow_mut::<EventQueue<EngineEvent>>();
+        let events = queue.receive(&self.receiver);
+        for event in events {
+            match event {
+                EngineEvent::Shutdown => queue.send(EngineEvent::HardShutdown),
+                EngineEvent::HardShutdown => {
+                    let mut queue = res.borrow_mut::<EventQueue<WorldEvent>>();
+                    queue.send(WorldEvent::Abort)
+                },
+                _ => (),
+            }
         }
     }
 }

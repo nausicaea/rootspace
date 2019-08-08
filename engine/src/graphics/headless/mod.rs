@@ -4,10 +4,12 @@ use super::{
 };
 use crate::{
     assets::{Image, Mesh, Vertex},
+    event::EngineEvent,
     geometry::rect::Rect,
 };
 use failure::Error;
 use std::borrow::{Borrow, Cow};
+use std::convert::TryInto;
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;
@@ -15,6 +17,14 @@ pub struct HeadlessEvent;
 impl Sealed for HeadlessEvent {}
 
 impl EventTrait for HeadlessEvent {}
+
+impl TryInto<EngineEvent> for HeadlessEvent {
+    type Error = ();
+
+    fn try_into(self) -> Result<EngineEvent, Self::Error> {
+        Err(())
+    }
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessEventsLoop;

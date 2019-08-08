@@ -8,7 +8,6 @@ edition = "2018"
 diagnostics = ["typename", "engine/diagnostics", "ecs/diagnostics"]
 
 [dependencies]
-bitflags = "^1.0.3"
 log = "^0.4.1"
 failure = "^0.1.1"
 glium = "^0.25.0"
