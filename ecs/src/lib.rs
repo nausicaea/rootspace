@@ -14,6 +14,7 @@ extern crate typename;
 pub mod components;
 pub mod entities;
 pub mod events;
+mod indexing;
 pub mod loop_stage;
 pub mod persistence;
 pub mod resources;

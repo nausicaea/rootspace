@@ -1,6 +1,7 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
 use crate::resources::Resource;
+use crate::indexing::{Index, Generation};
 use std::fmt;
 
 /// The `Entities` resource keeps track of all entities.
@@ -24,11 +25,11 @@ impl Entities {
             self.max_idx.post_increment()
         };
 
-        if idx.0 as usize >= self.generations.len() {
-            self.generations.resize(idx.0 as usize + 1, Generation::default());
+        if idx.idx() as usize >= self.generations.len() {
+            self.generations.resize(idx.idx() as usize + 1, Generation::default());
         }
 
-        let gen = self.generations[idx.0 as usize].activate();
+        let gen = self.generations[idx.idx() as usize].activate();
 
         Entity { idx, gen }
     }
@@ -39,7 +40,7 @@ impl Entities {
     ///
     /// * `entity` - The `Entity` to be destroyed.
     pub fn destroy(&mut self, entity: Entity) {
-        self.generations[entity.idx.0 as usize].deactivate();
+        self.generations[entity.idx() as usize].deactivate();
         self.free_idx.push(entity.idx);
     }
 
@@ -75,7 +76,7 @@ impl<'a> Iterator for EntitiesIter<'a> {
             while self.idx < self.gens.len() {
                 if self.gens[self.idx].is_active() {
                     let tmp = Entity {
-                        idx: Index(self.idx as u32),
+                        idx: Index::new(self.idx as u32),
                         gen: self.gens[self.idx],
                     };
                     self.idx += 1;
@@ -104,78 +105,20 @@ impl Entity {
     #[cfg(test)]
     pub fn new(idx: u32, gen: u32) -> Entity {
         Entity {
-            idx: Index(idx),
-            gen: Generation(gen),
+            idx: Index::new(idx),
+            gen: Generation::new(gen),
         }
     }
 
     /// Return the integer index of the entity, which can be used to index into data structures.
     pub fn idx(&self) -> u32 {
-        self.idx.0
+        self.idx.idx()
     }
 }
 
 impl fmt::Display for Entity {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Entity({}, {})", self.idx, self.gen)
-    }
-}
-
-/// A zero-based index that can be used as index into data structures. Entities may reuse these
-/// indices.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Index(u32);
-
-impl Index {
-    /// Return a copy of the current index and then increments the current index.
-    fn post_increment(&mut self) -> Index {
-        let tmp = *self;
-        self.0 += 1;
-        tmp
-    }
-}
-
-impl fmt::Display for Index {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-/// A zero-based generation that can be used to track the number of times that a corresponding
-/// index has been used previously.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-struct Generation(u32);
-
-impl Generation {
-    /// Activates the current generation. Panics if the generation is already active.
-    fn activate(&mut self) -> Generation {
-        if !self.is_active() {
-            self.0 += 1;
-            *self
-        } else {
-            panic!("Attempted to activate an active generation")
-        }
-    }
-
-    /// Deactivates the current generation. Panics if the generation is already inactive.
-    fn deactivate(&mut self) -> Generation {
-        if self.is_active() {
-            self.0 += 1;
-            *self
-        } else {
-            panic!("Attempted to deactivate an inactive generation")
-        }
-    }
-
-    /// Returns `true`, if the current generation is an odd number, `false` if even or zero.
-    fn is_active(&self) -> bool {
-        self.0 % 2 == 1
-    }
-}
-
-impl fmt::Display for Generation {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
     }
 }
 
@@ -239,16 +182,16 @@ mod tests {
         let mut r = Entities::default();
 
         let a = r.create();
-        assert_eq!(a.idx, Index(0));
-        assert_eq!(a.gen, Generation(1));
+        assert_eq!(a.idx, Index::new(0));
+        assert_eq!(a.gen, Generation::new(1));
 
         let b = r.create();
-        assert_eq!(b.idx, Index(1));
-        assert_eq!(b.gen, Generation(1));
+        assert_eq!(b.idx, Index::new(1));
+        assert_eq!(b.gen, Generation::new(1));
 
         r.destroy(a);
         let c = r.create();
-        assert_eq!(c.idx, Index(0));
-        assert_eq!(c.gen, Generation(3));
+        assert_eq!(c.idx, Index::new(0));
+        assert_eq!(c.gen, Generation::new(3));
     }
 }
