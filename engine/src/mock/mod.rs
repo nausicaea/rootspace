@@ -1,5 +1,3 @@
 pub mod world;
 
-pub use self::{
-    world::MockWorld,
-};
+pub use self::world::MockWorld;

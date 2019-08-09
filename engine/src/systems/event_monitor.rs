@@ -1,6 +1,6 @@
-use ecs::{ReceiverId, EventQueue, System, Resources};
-use std::time::Duration;
+use ecs::{EventQueue, ReceiverId, Resources, System};
 use std::fmt;
+use std::time::Duration;
 #[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
@@ -17,9 +17,7 @@ where
         let events = res.get_mut::<EventQueue<E>>();
         let receiver = events.subscribe();
 
-        EventMonitor {
-            receiver,
-        }
+        EventMonitor { receiver }
     }
 }
 
@@ -32,9 +30,7 @@ where
         let events = res.get_mut::<EventQueue<E>>();
         let receiver = events.subscribe();
 
-        EventMonitor {
-            receiver,
-        }
+        EventMonitor { receiver }
     }
 }
 

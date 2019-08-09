@@ -1,5 +1,5 @@
 use crate::event::EngineEvent;
-use ecs::{WorldEvent, ReceiverId, System, EventQueue, Resources};
+use ecs::{EventQueue, ReceiverId, Resources, System, WorldEvent};
 use std::time::Duration;
 
 pub struct EventCoordinator {
@@ -11,11 +11,8 @@ impl EventCoordinator {
         let events = res.get_mut::<EventQueue<EngineEvent>>();
         let receiver = events.subscribe();
 
-        EventCoordinator {
-            receiver,
-        }
+        EventCoordinator { receiver }
     }
-
 }
 
 impl System for EventCoordinator {
@@ -32,7 +29,7 @@ impl System for EventCoordinator {
                 EngineEvent::HardShutdown => {
                     let mut queue = res.borrow_mut::<EventQueue<WorldEvent>>();
                     queue.send(WorldEvent::Abort)
-                },
+                }
                 _ => (),
             }
         }

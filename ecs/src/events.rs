@@ -1,8 +1,6 @@
 //! Provides facilities to define and manage events.
 
-use std::{
-    ops::{BitAnd, BitOr, BitXor},
-};
+use std::ops::{BitAnd, BitOr, BitXor};
 
 /// Events sent around within the `World` need to implement this trait such that individual
 /// `EventHandlerSystem`s may filter for particular events.

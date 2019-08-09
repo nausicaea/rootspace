@@ -85,7 +85,10 @@ impl System for DebugConsole {
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
         self.try_read_line()
             .map(|l| split_arguments(l, self.escape_char, self.quote_char))
-            .map(|a| res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::Command(a)));
+            .map(|a| {
+                res.borrow_mut::<EventQueue<EngineEvent>>()
+                    .send(EngineEvent::Command(a))
+            });
     }
 }
 

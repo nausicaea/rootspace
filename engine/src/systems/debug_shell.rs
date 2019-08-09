@@ -2,7 +2,7 @@ use crate::{
     debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand},
     event::EngineEvent,
 };
-use ecs::{ReceiverId, EventQueue, System, Resources};
+use ecs::{EventQueue, ReceiverId, Resources, System};
 use failure::Error;
 use std::collections::HashMap;
 use std::time::Duration;

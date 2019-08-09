@@ -2,7 +2,7 @@
 
 use crate::resources::Resource;
 use std::{
-    collections::{VecDeque, HashMap},
+    collections::{HashMap, VecDeque},
     fmt,
     marker::PhantomData,
 };
@@ -43,7 +43,7 @@ impl<E> Default for ReceiverState<E> {
 /// An `EventQueue` contains a queue of events and provides rudimentary facilities of retrieving
 /// those events.
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
-pub struct EventQueue<E>{
+pub struct EventQueue<E> {
     events: VecDeque<E>,
     max_id: usize,
     receivers: HashMap<usize, ReceiverState<E>>,
@@ -79,15 +79,16 @@ where
     pub fn send(&mut self, event: E) {
         if !self.receivers.is_empty() {
             self.events.push_front(event);
-            self.receivers.values_mut()
-                .for_each(|s| s.events_received += 1);
+            self.receivers.values_mut().for_each(|s| s.events_received += 1);
         }
     }
 
     /// Receive all unread events from the queue.
     pub fn receive(&mut self, id: &ReceiverId<E>) -> Vec<E> {
         let events = &self.events;
-        let evs: Vec<E> = self.receivers.get_mut(&id.id)
+        let evs: Vec<E> = self
+            .receivers
+            .get_mut(&id.id)
             .filter(|s| s.events_read < s.events_received)
             .map(|s| {
                 let unread = s.events_received - s.events_read;
@@ -96,7 +97,8 @@ where
             })
             .unwrap_or_default();
 
-        let unread = self.receivers
+        let unread = self
+            .receivers
             .values()
             .map(|s| s.events_received - s.events_read)
             .max()
@@ -130,7 +132,12 @@ impl<E> Default for EventQueue<E> {
 
 impl<E> fmt::Debug for EventQueue<E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "EventQueue {{ #events: {}, #receivers: {} }}", self.events.len(), self.receivers.len())
+        write!(
+            f,
+            "EventQueue {{ #events: {}, #receivers: {} }}",
+            self.events.len(),
+            self.receivers.len()
+        )
     }
 }
 

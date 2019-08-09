@@ -7,10 +7,10 @@ use crate::{
     event::EngineEvent,
     geometry::rect::Rect,
 };
+use failure::Error;
 use glium::glutin::WindowEvent;
 #[cfg(target_os = "macos")]
 use glium::glutin::{KeyboardInput, ModifiersState, VirtualKeyCode};
-use failure::Error;
 use glium::{
     backend::glutin::DisplayCreationError,
     draw_parameters::DepthTest,

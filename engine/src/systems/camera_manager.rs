@@ -1,5 +1,5 @@
 use crate::{components::camera::Camera, event::EngineEvent};
-use ecs::{ReceiverId, EventQueue, System, Resources};
+use ecs::{EventQueue, ReceiverId, Resources, System};
 use std::time::Duration;
 
 pub struct CameraManager {
@@ -11,9 +11,7 @@ impl CameraManager {
         let events = res.get_mut::<EventQueue<EngineEvent>>();
         let receiver = events.subscribe();
 
-        CameraManager {
-            receiver,
-        }
+        CameraManager { receiver }
     }
 
     fn on_resize(&self, res: &Resources, dims: (u32, u32)) {

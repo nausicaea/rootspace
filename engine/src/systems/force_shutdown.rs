@@ -32,9 +32,7 @@ impl Default for ForceShutdown {
             .expect("Unable to set a termination handler");
         }
 
-        ForceShutdown {
-            ctrlc_triggered,
-        }
+        ForceShutdown { ctrlc_triggered }
     }
 }
 

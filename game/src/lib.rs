@@ -10,7 +10,7 @@ extern crate typename;
 #[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
-use ecs::{Resources, EventQueue, LoopStage, World};
+use ecs::{EventQueue, LoopStage, Resources, World};
 use engine::{
     components::{Camera, Info, Model, Status, UiModel},
     event::EngineEvent,

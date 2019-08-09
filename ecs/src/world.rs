@@ -3,7 +3,7 @@
 use crate::{
     components::{Component, Storage},
     entities::{Entities, Entity},
-    event_queue::{ReceiverId, EventQueue},
+    event_queue::{EventQueue, ReceiverId},
     loop_stage::LoopStage,
     persistence::Persistence,
     resources::{Resource, Resources},
@@ -121,16 +121,8 @@ impl World {
                 .iter()
                 .filter_map(|s| s.downcast_ref::<S>())
                 .last(),
-            LoopStage::Update => self
-                .update_systems
-                .iter()
-                .filter_map(|s| s.downcast_ref::<S>())
-                .last(),
-            LoopStage::Render => self
-                .render_systems
-                .iter()
-                .filter_map(|s| s.downcast_ref::<S>())
-                .last(),
+            LoopStage::Update => self.update_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
+            LoopStage::Render => self.render_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
         }
     }
 
@@ -221,7 +213,10 @@ impl WorldTrait for World {
     }
 
     fn maintain(&mut self) -> bool {
-        let events = self.resources.get_mut::<EventQueue<WorldEvent>>().receive(&self.receiver);
+        let events = self
+            .resources
+            .get_mut::<EventQueue<WorldEvent>>()
+            .receive(&self.receiver);
 
         !events.iter().any(|e| e == &WorldEvent::Abort)
     }
