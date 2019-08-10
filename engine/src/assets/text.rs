@@ -2,29 +2,28 @@ use crate::{
     assets::{Mesh, Vertex},
     file_manipulation::ReadPath,
     graphics::{BackendTrait, TextureTrait},
+    resources::{TextureId, RenderData},
 };
 use failure::Error;
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use std::{
     borrow::{Borrow, Cow},
     fmt,
-    marker::PhantomData,
     path::{Path, PathBuf},
 };
 use unicode_normalization::UnicodeNormalization;
 
-pub struct Text<'a, B: BackendTrait> {
+pub struct Text<'a> {
     text: String,
     dimensions: (u32, u32),
     scale: f32,
     glyphs: Vec<PositionedGlyph<'a>>,
     cache_cpu: Cache<'a>,
-    cache_gpu: B::Texture,
+    cache_gpu: TextureId,
     font: Font<'a>,
-    _b: PhantomData<B>,
 }
 
-impl<'a, B: BackendTrait> fmt::Debug for Text<'a, B> {
+impl<'a> fmt::Debug for Text<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -34,8 +33,8 @@ impl<'a, B: BackendTrait> fmt::Debug for Text<'a, B> {
     }
 }
 
-impl<'a, B: BackendTrait> Text<'a, B> {
-    pub fn builder() -> TextBuilder<B> {
+impl<'a> Text<'a> {
+    pub fn builder() -> TextBuilder {
         TextBuilder::default()
     }
 
@@ -44,11 +43,13 @@ impl<'a, B: BackendTrait> Text<'a, B> {
         generate_mesh(&self.cache_cpu, &self.glyphs, self.dimensions, scale)
     }
 
-    pub fn text(&mut self, text: &str) -> Result<(), Error> {
+    pub fn text<B: BackendTrait>(&mut self, factory: &RenderData<B>, text: &str) -> Result<(), Error> {
         let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions.0, text);
 
+        let cache_gpu = factory.borrow_texture(&self.cache_gpu);
+
         enqueue_glyphs(&mut self.cache_cpu, &glyphs);
-        update_cache::<B, B::Texture, _>(&mut self.cache_cpu, &self.cache_gpu)?;
+        update_cache::<B, B::Texture, _>(&mut self.cache_cpu, cache_gpu)?;
 
         self.text = text.into();
         self.dimensions.1 = text_height;
@@ -67,33 +68,31 @@ impl<'a, B: BackendTrait> Text<'a, B> {
 }
 
 #[derive(Debug)]
-pub struct TextBuilder<B: BackendTrait> {
+pub struct TextBuilder {
     font_path: Option<PathBuf>,
-    cache_gpu: Option<B::Texture>,
+    cache_gpu: Option<TextureId>,
     font_scale: f32,
     text_width: u32,
-    _b: PhantomData<B>,
 }
 
-impl<B: BackendTrait> Default for TextBuilder<B> {
+impl Default for TextBuilder {
     fn default() -> Self {
         TextBuilder {
             font_path: None,
             cache_gpu: None,
             font_scale: 1.0,
             text_width: 100,
-            _b: PhantomData::default(),
         }
     }
 }
 
-impl<B: BackendTrait> TextBuilder<B> {
+impl TextBuilder {
     pub fn font<P: AsRef<Path>>(mut self, path: P) -> Self {
         self.font_path = Some(path.as_ref().into());
         self
     }
 
-    pub fn cache(mut self, texture: B::Texture) -> Self {
+    pub fn cache(mut self, texture: TextureId) -> Self {
         self.cache_gpu = Some(texture);
         self
     }
@@ -108,14 +107,15 @@ impl<B: BackendTrait> TextBuilder<B> {
         self
     }
 
-    pub fn layout<'a>(self, text: &str) -> Result<Text<'a, B>, Error> {
+    pub fn layout<'a, B: BackendTrait>(self, factory: &RenderData<B>, text: &str) -> Result<Text<'a>, Error> {
         let font_data = self
             .font_path
             .as_ref()
             .ok_or(TextRenderError::MissingFont)?
             .read_to_bytes()?;
 
-        let cache_gpu = self.cache_gpu.ok_or(TextRenderError::MissingCache)?;
+        let cache_gpu_id = self.cache_gpu.ok_or(TextRenderError::MissingCache)?;
+        let cache_gpu = factory.borrow_texture(&cache_gpu_id);
 
         let dims = cache_gpu.dimensions();
         let mut cache_cpu = Cache::builder().dimensions(dims.0, dims.1).build();
@@ -133,9 +133,8 @@ impl<B: BackendTrait> TextBuilder<B> {
             scale: self.font_scale,
             glyphs,
             cache_cpu,
-            cache_gpu,
+            cache_gpu: cache_gpu_id,
             font,
-            _b: PhantomData::default(),
         })
     }
 }
@@ -310,22 +309,23 @@ fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dim
 mod tests {
     use super::*;
     use crate::graphics::{
-        headless::{HeadlessBackend, HeadlessEventsLoop, HeadlessTexture},
-        BackendTrait, TextureTrait,
+        headless::{HeadlessBackend, HeadlessEventsLoop},
+        BackendTrait,
     };
 
     #[test]
     fn text_builder_headless() {
         let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let cache = HeadlessTexture::empty(&backend, (512, 512)).unwrap();
+        let mut f = RenderData::<HeadlessBackend>::default();
+        let cache = f.create_empty_texture(&backend, (512, 512)).unwrap();
 
-        let r: Result<Text<HeadlessBackend>, Error> = Text::builder()
+        let r: Result<Text, Error> = Text::builder()
             .font(&font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout("Hello, World!");
+            .layout(&mut f, "Hello, World!");
 
         assert!(r.is_ok());
     }
@@ -334,14 +334,15 @@ mod tests {
     fn text_mesh_headless() {
         let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let cache = HeadlessTexture::empty(&backend, (512, 512)).unwrap();
+        let mut f = RenderData::<HeadlessBackend>::default();
+        let cache = f.create_empty_texture(&backend, (512, 512)).unwrap();
 
-        let text: Text<HeadlessBackend> = Text::builder()
+        let text: Text = Text::builder()
             .font(&font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout("Hello, World!")
+            .layout(&mut f, "Hello, World!")
             .unwrap();
 
         let model_width: f32 = 2.0;
@@ -360,14 +361,15 @@ mod tests {
     fn text_scale_headless() {
         let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let cache = HeadlessTexture::empty(&backend, (512, 512)).unwrap();
+        let mut f = RenderData::<HeadlessBackend>::default();
+        let cache = f.create_empty_texture(&backend, (512, 512)).unwrap();
 
-        let mut text: Text<HeadlessBackend> = Text::builder()
+        let mut text: Text = Text::builder()
             .font(&font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout("Hello, World!")
+            .layout(&mut f, "Hello, World!")
             .unwrap();
 
         text.scale(24.0f32);
@@ -377,14 +379,15 @@ mod tests {
     fn text_width_headless() {
         let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let cache = HeadlessTexture::empty(&backend, (512, 512)).unwrap();
+        let mut f = RenderData::<HeadlessBackend>::default();
+        let cache = f.create_empty_texture(&backend, (512, 512)).unwrap();
 
-        let mut text: Text<HeadlessBackend> = Text::builder()
+        let mut text: Text = Text::builder()
             .font(&font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout("Hello, World!")
+            .layout(&mut f, "Hello, World!")
             .unwrap();
 
         text.width(200u32);
@@ -394,16 +397,17 @@ mod tests {
     fn text_update_headless() {
         let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let cache = HeadlessTexture::empty(&backend, (512, 512)).unwrap();
+        let mut f = RenderData::<HeadlessBackend>::default();
+        let cache = f.create_empty_texture(&backend, (512, 512)).unwrap();
 
-        let mut text: Text<HeadlessBackend> = Text::builder()
+        let mut text: Text = Text::builder()
             .font(&font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout("Hello, World!")
+            .layout(&mut f, "Hello, World!")
             .unwrap();
 
-        assert!(text.text("Hello, you!").is_ok());
+        assert!(text.text(&mut f, "Hello, you!").is_ok());
     }
 }

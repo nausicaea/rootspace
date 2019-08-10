@@ -1,14 +1,16 @@
 use super::{
-    private::Sealed, BackendTrait, DataTrait, EventTrait, EventsLoopTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
+    private::Sealed, BackendTrait, EventTrait, EventsLoopTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
     TextureTrait, VertexBufferTrait,
 };
+use crate::components::Renderable;
 use crate::{
-    assets::{Image, Mesh, Vertex},
+    assets::{Image, Vertex},
     event::EngineEvent,
     geometry::rect::Rect,
+    resources::RenderData,
 };
 use failure::Error;
-use std::borrow::{Borrow, Cow};
+use std::borrow::Cow;
 use std::convert::TryInto;
 
 #[derive(Debug, Clone, Default, Copy)]
@@ -110,27 +112,6 @@ impl IndexBufferTrait<HeadlessBackend> for HeadlessIndexBuffer {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct HeadlessRenderData;
-
-impl HeadlessRenderData {
-    #[allow(unused_variables)]
-    pub fn new(_backend: &HeadlessBackend, mesh: &Mesh) -> Result<Self, Error> {
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!(
-            "Created render data ({} vertices, {} triangles)",
-            mesh.vertices.len(),
-            mesh.indices.len() as f32 / 3.0
-        );
-
-        Ok(HeadlessRenderData::default())
-    }
-}
-
-impl Sealed for HeadlessRenderData {}
-
-impl DataTrait for HeadlessRenderData {}
-
-#[derive(Debug, Clone, Default)]
 pub struct HeadlessFrame;
 
 impl Sealed for HeadlessFrame {}
@@ -138,10 +119,11 @@ impl Sealed for HeadlessFrame {}
 impl FrameTrait<HeadlessBackend> for HeadlessFrame {
     fn initialize(&mut self, _color: [f32; 4], _depth: f32) {}
 
-    fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<HeadlessRenderData>>(
+    fn render<T: AsRef<[[f32; 4]; 4]>>(
         &mut self,
         _transform: &T,
-        _data: &R,
+        _factory: &RenderData<HeadlessBackend>,
+        _data: &Renderable,
     ) -> Result<(), Error> {
         Ok(())
     }
@@ -160,7 +142,6 @@ pub struct HeadlessBackend {
 impl Sealed for HeadlessBackend {}
 
 impl BackendTrait for HeadlessBackend {
-    type Data = HeadlessRenderData;
     type Event = HeadlessEvent;
     type EventsLoop = HeadlessEventsLoop;
     type Frame = HeadlessFrame;
@@ -210,11 +191,6 @@ mod tests {
     }
 
     #[test]
-    fn data() {
-        let _ = HeadlessRenderData::default();
-    }
-
-    #[test]
     fn backend() {
         assert!(HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).is_ok());
     }
@@ -229,13 +205,61 @@ mod tests {
     #[test]
     fn frame() {
         let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
+        let mut f: RenderData<HeadlessBackend> = RenderData::default();
 
-        let mut f: HeadlessFrame = b.create_frame();
-        f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
-        assert!(f
-            .render(&MockLocation::default(), &HeadlessRenderData::default())
-            .is_ok());
-        let r = f.finalize();
+        let vertices = f.create_vertex_buffer(
+            &b,
+            &[
+                Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
+                Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
+                Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
+            ],
+        ).unwrap();
+
+        let indices = f.create_index_buffer(
+            &b,
+            &[0, 1, 2],
+        ).unwrap();
+
+        let shader = f.create_source_shader(
+            &b,
+            r#"
+                    #version 330 core
+
+                    uniform mat4 transform;
+
+                    layout (location = 0) in vec3 position;
+                    layout (location = 1) in vec2 tex_coord;
+                    layout (location = 2) in vec3 normals;
+
+                    void main() {
+                            gl_Position = transform * vec4(position, 1.0);
+                    }
+                    "#,
+            r#"
+                    #version 330 core
+
+                    uniform vec2 dimensions;
+                    uniform sampler2D diffuse_texture;
+                    // uniform sampler2D normal_texture;
+
+                    out vec4 color;
+
+                    void main() {
+                            color = vec4(0.3, 0.12, 0.9, 1.0);
+                    }
+                    "#,
+        ).unwrap();
+
+        let diffuse_texture = f.create_empty_texture(&b, (32, 32)).unwrap();
+        let normal_texture = Some(f.create_empty_texture(&b, (32, 32)).unwrap());
+
+        let data = Renderable::new(vertices, indices, shader, diffuse_texture, normal_texture);
+
+        let mut frame: HeadlessFrame = b.create_frame();
+        frame.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
+        assert!(frame.render(&MockLocation::default(), &mut f, &data).is_ok());
+        let r = frame.finalize();
         assert!(r.is_ok());
     }
 }

@@ -1,78 +1,69 @@
 use crate::{
-    assets::{Image, Mesh, Text},
-    file_manipulation::ReadPath,
+    assets::{Mesh, Text},
     graphics::{
-        glium::{GliumBackend, GliumRenderData, GliumTexture},
-        headless::{HeadlessBackend, HeadlessRenderData, HeadlessTexture},
-        BackendTrait, DataTrait, TextureTrait,
+        BackendTrait,
     },
+    resources::RenderData,
 };
 use ecs::{Component, VecStorage};
 use failure::Error;
-use glium::{
-    index::{IndexBuffer, PrimitiveType},
-    program::Program,
-    vertex::VertexBuffer,
-};
 use std::{
-    borrow::Borrow,
-    fmt,
-    marker::PhantomData,
     path::{Path, PathBuf},
 };
+use crate::resources::render_data::{VertexBufferId, IndexBufferId, ShaderId, TextureId};
 
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
-pub struct Renderable<B: BackendTrait> {
-    data: B::Data,
-    _b: PhantomData<B>,
+#[derive(Debug)]
+pub struct Renderable {
+    vertices: VertexBufferId,
+    indices: IndexBufferId,
+    shader: ShaderId,
+    diffuse_texture: TextureId,
+    normal_texture: Option<TextureId>,
 }
 
-impl<B> Renderable<B>
-where
-    B: BackendTrait,
-{
-    pub fn builder() -> RenderableBuilder<B> {
+impl Renderable {
+    pub fn builder() -> RenderableBuilder {
         RenderableBuilder::default()
     }
-}
 
-impl<B> fmt::Debug for Renderable<B>
-where
-    B: BackendTrait,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Renderable {{ ... }}")
-    }
-}
-
-impl Default for Renderable<HeadlessBackend> {
-    fn default() -> Self {
+    pub fn new(v: VertexBufferId, i: IndexBufferId, s: ShaderId, dt: TextureId, nt: Option<TextureId>) -> Self {
         Renderable {
-            data: HeadlessRenderData::default(),
-            _b: PhantomData::default(),
+            vertices: v,
+            indices: i,
+            shader: s,
+            diffuse_texture: dt,
+            normal_texture: nt,
         }
     }
+
+    pub fn vertices(&self) -> &VertexBufferId {
+        &self.vertices
+    }
+
+    pub fn indices(&self) -> &IndexBufferId {
+        &self.indices
+    }
+
+    pub fn shader(&self) -> &ShaderId {
+        &self.shader
+    }
+
+    pub fn diffuse_texture(&self) -> &TextureId {
+        &self.diffuse_texture
+    }
+
+    pub fn normal_texture(&self) -> Option<&TextureId> {
+        self.normal_texture.as_ref()
+    }
 }
 
-impl<B> Component for Renderable<B>
-where
-    B: BackendTrait + 'static,
-{
+impl Component for Renderable {
     type Storage = VecStorage<Self>;
 }
 
-impl<B, D> Borrow<D> for Renderable<B>
-where
-    B: BackendTrait<Data = D>,
-    D: DataTrait,
-{
-    fn borrow(&self) -> &D {
-        &self.data
-    }
-}
-
 #[derive(Debug)]
-pub struct RenderableBuilder<B: BackendTrait> {
+pub struct RenderableBuilder {
     mesh: Option<PathBuf>,
     vs: Option<PathBuf>,
     fs: Option<PathBuf>,
@@ -84,10 +75,9 @@ pub struct RenderableBuilder<B: BackendTrait> {
     text_width: f32,
     virtual_pixel_text_width: u32,
     text: Option<String>,
-    _b: PhantomData<B>,
 }
 
-impl<B: BackendTrait> Default for RenderableBuilder<B> {
+impl Default for RenderableBuilder {
     fn default() -> Self {
         RenderableBuilder {
             mesh: None,
@@ -101,12 +91,11 @@ impl<B: BackendTrait> Default for RenderableBuilder<B> {
             text_width: 1.0,
             virtual_pixel_text_width: 100,
             text: None,
-            _b: PhantomData::default(),
         }
     }
 }
 
-impl<B: BackendTrait> RenderableBuilder<B> {
+impl RenderableBuilder {
     pub fn mesh<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.mesh = Some(path.as_ref().into());
         self
@@ -157,103 +146,35 @@ impl<B: BackendTrait> RenderableBuilder<B> {
         self.text = Some(text.into());
         self
     }
-}
 
-impl RenderableBuilder<HeadlessBackend> {
-    pub fn build_mesh_headless(&self, backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
+    pub fn build_mesh<B: BackendTrait>(&self, backend: &B, factory: &mut RenderData<B>) -> Result<Renderable, Error> {
         let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
         let dt_path = self.dt.as_ref().ok_or(RenderableError::MissingDiffuseTexture)?;
 
         let mesh = Mesh::from_path(mesh_path)?;
-        let _dt_image = Image::from_path(dt_path)?;
-        let _nt_image = if let Some(ref p) = self.nt {
-            Some(Image::from_path(p)?)
-        } else {
-            None
-        };
-        let _vs = vs_path.read_to_string()?;
-        let _fs = fs_path.read_to_string()?;
 
-        Ok(Renderable {
-            data: HeadlessRenderData::new(backend, &mesh)?,
-            _b: PhantomData::default(),
-        })
-    }
-
-    pub fn build_text_headless(&self, backend: &HeadlessBackend) -> Result<Renderable<HeadlessBackend>, Error> {
-        let dpi_factor = backend.dpi_factor();
-
-        let cache_size = (
-            (self.cache_size.0 as f64 * dpi_factor) as u32,
-            (self.cache_size.1 as f64 * dpi_factor) as u32,
-        );
-        let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
-        let text_scale = (self.text_scale as f64 * dpi_factor) as f32;
-        let text_width = self.text_width;
-        let pixel_width = self.virtual_pixel_text_width;
-        let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
-        let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
-        let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
-
-        let diffuse_texture = HeadlessTexture::empty(backend, cache_size)?;
-
-        let text: Text<HeadlessBackend> = Text::builder()
-            .font(font_path)
-            .cache(diffuse_texture.clone())
-            .scale(text_scale)
-            .width(pixel_width)
-            .layout(&text)?;
-
-        let mesh = text.mesh(text_width);
-
-        let _vs = vs_path.read_to_string()?;
-        let _fs = fs_path.read_to_string()?;
-
-        Ok(Renderable {
-            data: HeadlessRenderData::new(backend, &mesh)?,
-            _b: PhantomData::default(),
-        })
-    }
-}
-
-impl RenderableBuilder<GliumBackend> {
-    pub fn build_mesh_glium(&self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
-        let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
-        let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
-        let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
-        let dt_path = self.dt.as_ref().ok_or(RenderableError::MissingDiffuseTexture)?;
-
-        let mesh = Mesh::from_path(mesh_path)?;
-        let dt_image = Image::from_path(dt_path)?;
-        let vs = vs_path.read_to_string()?;
-        let fs = fs_path.read_to_string()?;
-
-        let vertices = VertexBuffer::new(&backend.display, &mesh.vertices)?;
-        let indices = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, &mesh.indices)?;
-        let program = Program::from_source(&backend.display, &vs, &fs, None)?;
-        let diffuse_texture = GliumTexture::from_image(backend, dt_image)?;
+        let vertices = factory.create_vertex_buffer(backend, &mesh.vertices)?;
+        let indices = factory.create_index_buffer(backend, &mesh.indices)?;
+        let shader = factory.create_shader(backend, &vs_path, &fs_path)?;
+        let diffuse_texture = factory.create_texture(backend, &dt_path)?;
         let normal_texture = if let Some(ref p) = self.nt {
-            let nt_image = Image::from_path(p)?;
-            Some(GliumTexture::from_image(backend, nt_image)?)
+            Some(factory.create_texture(backend, p)?)
         } else {
             None
         };
 
         Ok(Renderable {
-            data: GliumRenderData {
-                vertices,
-                indices,
-                program,
-                diffuse_texture,
-                normal_texture,
-            },
-            _b: PhantomData::default(),
+            vertices,
+            indices,
+            shader,
+            diffuse_texture,
+            normal_texture,
         })
     }
 
-    pub fn build_text_glium(&self, backend: &GliumBackend) -> Result<Renderable<GliumBackend>, Error> {
+    pub fn build_text<B: BackendTrait>(&self, backend: &B, factory: &mut RenderData<B>) -> Result<Renderable, Error> {
         let dpi_factor = backend.dpi_factor();
 
         let cache_size = (
@@ -268,32 +189,27 @@ impl RenderableBuilder<GliumBackend> {
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
 
-        let diffuse_texture = GliumTexture::empty(backend, cache_size)?;
+        let diffuse_texture = factory.create_empty_texture(backend, cache_size)?;
 
-        let text: Text<GliumBackend> = Text::builder()
+        let text = Text::builder()
             .font(font_path)
-            .cache(diffuse_texture.clone())
+            .cache(diffuse_texture)
             .scale(text_scale)
             .width(pixel_width)
-            .layout(&text)?;
+            .layout(factory, &text)?;
 
         let mesh = text.mesh(text_width);
-        let vertices = VertexBuffer::new(&backend.display, &mesh.vertices)?;
-        let indices = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, &mesh.indices)?;
+        let vertices = factory.create_vertex_buffer(backend, &mesh.vertices)?;
+        let indices = factory.create_index_buffer(backend, &mesh.indices)?;
 
-        let vs = vs_path.read_to_string()?;
-        let fs = fs_path.read_to_string()?;
-        let program = Program::from_source(&backend.display, &vs, &fs, None)?;
+        let shader = factory.create_shader(backend, &vs_path, &fs_path)?;
 
         Ok(Renderable {
-            data: GliumRenderData {
-                vertices,
-                indices,
-                program,
-                diffuse_texture: diffuse_texture,
-                normal_texture: None,
-            },
-            _b: PhantomData::default(),
+            vertices,
+            indices,
+            shader,
+            diffuse_texture,
+            normal_texture: None,
         })
     }
 }
@@ -317,18 +233,19 @@ pub enum RenderableError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graphics::headless::HeadlessEventsLoop;
+    use crate::graphics::headless::{HeadlessBackend, HeadlessEventsLoop};
 
     #[test]
     fn headless_builder_mesh() {
         let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
+        let mut f = RenderData::<HeadlessBackend>::default();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
-        let r: Result<Renderable<HeadlessBackend>, Error> = Renderable::builder()
+        let r: Result<Renderable, Error> = Renderable::builder()
             .mesh(&base_path.join("cube.ply"))
             .vertex_shader(&base_path.join("vertex.glsl"))
             .fragment_shader(&base_path.join("fragment.glsl"))
             .diffuse_texture(&base_path.join("tv-test-image.png"))
-            .build_mesh_headless(&b);
+            .build_mesh(&b, &mut f);
 
         assert!(r.is_ok(), "{:?}", r);
     }
@@ -336,13 +253,14 @@ mod tests {
     #[test]
     fn headless_builder_text() {
         let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
+        let mut f = RenderData::<HeadlessBackend>::default();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
-        let r: Result<Renderable<HeadlessBackend>, Error> = Renderable::builder()
+        let r: Result<Renderable, Error> = Renderable::builder()
             .font(&base_path.join("SourceSansPro-Regular.ttf"))
             .vertex_shader(&base_path.join("vertex.glsl"))
             .fragment_shader(&base_path.join("fragment.glsl"))
             .text("Hello, World!")
-            .build_text_headless(&b);
+            .build_text(&b, &mut f);
 
         assert!(r.is_ok(), "{:?}", r);
     }

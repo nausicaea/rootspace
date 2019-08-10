@@ -1,11 +1,13 @@
 use super::{
-    private::Sealed, BackendTrait, DataTrait, EventTrait, EventsLoopTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
+    private::Sealed, BackendTrait, EventTrait, EventsLoopTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
     TextureTrait, VertexBufferTrait,
 };
 use crate::{
     assets::{Image, Vertex},
     event::EngineEvent,
     geometry::rect::Rect,
+    components::Renderable,
+    resources::RenderData,
 };
 use failure::Error;
 use glium::glutin::WindowEvent;
@@ -196,19 +198,6 @@ impl IndexBufferTrait<GliumBackend> for GliumIndexBuffer {
     }
 }
 
-#[derive(Debug)]
-pub struct GliumRenderData {
-    pub vertices: VertexBuffer<Vertex>,
-    pub indices: IndexBuffer<u16>,
-    pub program: Program,
-    pub diffuse_texture: GliumTexture,
-    pub normal_texture: Option<GliumTexture>,
-}
-
-impl Sealed for GliumRenderData {}
-
-impl DataTrait for GliumRenderData {}
-
 pub struct GliumFrame(Frame);
 
 impl Sealed for GliumFrame {}
@@ -218,20 +207,17 @@ impl FrameTrait<GliumBackend> for GliumFrame {
         self.0.clear_color_and_depth((c[0], c[1], c[2], c[3]), d)
     }
 
-    fn render<T, R>(&mut self, transform: &T, renderable: &R) -> Result<(), Error>
+    fn render<T>(&mut self, transform: &T, factory: &RenderData<GliumBackend>, data: &Renderable) -> Result<(), Error>
     where
         T: AsRef<[[f32; 4]; 4]>,
-        R: Borrow<GliumRenderData>,
     {
-        let data = renderable.borrow();
-
         let physical_dimensions = self.0.get_dimensions();
 
         let u = GliumUniforms {
             transform: transform,
             physical_dimensions,
-            diffuse_texture: &data.diffuse_texture.0,
-            normal_texture: data.normal_texture.as_ref().map(|t| t.0.borrow()),
+            diffuse_texture: &factory.borrow_texture(data.diffuse_texture()).0,
+            normal_texture: data.normal_texture().map(|id| factory.borrow_texture(id).0.borrow()),
         };
 
         let dp = DrawParameters {
@@ -254,7 +240,11 @@ impl FrameTrait<GliumBackend> for GliumFrame {
             ..DrawParameters::default()
         };
 
-        match self.0.draw(&data.vertices, &data.indices, &data.program, &u, &dp) {
+        let vertices = factory.borrow_vertex_buffer(data.vertices());
+        let indices = factory.borrow_index_buffer(data.indices());
+        let shader = factory.borrow_shader(data.shader());
+
+        match self.0.draw(Borrow::<VertexBuffer<Vertex>>::borrow(&vertices.0), Borrow::<IndexBuffer<u16>>::borrow(&indices.0), shader.0.borrow(), &u, &dp) {
             Ok(()) => Ok(()),
             Err(e) => Err(Into::into(e)),
         }
@@ -282,7 +272,6 @@ pub struct GliumBackend {
 impl Sealed for GliumBackend {}
 
 impl BackendTrait for GliumBackend {
-    type Data = GliumRenderData;
     type Event = GliumEvent;
     type EventsLoop = GliumEventsLoop;
     type Frame = GliumFrame;
@@ -333,66 +322,6 @@ impl fmt::Debug for GliumBackend {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "GliumBackend {{ display: glium::Display }}")
     }
-}
-
-#[cfg(test)]
-pub fn triangle(backend: &GliumBackend) -> Result<GliumRenderData, Error> {
-    let vertices = VertexBuffer::new(
-        &backend.display,
-        &[
-            Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
-            Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
-            Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
-        ],
-    )?;
-
-    let indices = IndexBuffer::new(
-        &backend.display,
-        ::glium::index::PrimitiveType::TrianglesList,
-        &[0, 1, 2],
-    )?;
-
-    let program = Program::from_source(
-        &backend.display,
-        r#"
-                #version 330 core
-
-                uniform mat4 transform;
-
-                layout (location = 0) in vec3 position;
-                layout (location = 1) in vec2 tex_coord;
-                layout (location = 2) in vec3 normals;
-
-                void main() {
-                        gl_Position = transform * vec4(position, 1.0);
-                }
-                "#,
-        r#"
-                #version 330 core
-
-                uniform vec2 dimensions;
-                uniform sampler2D diffuse_texture;
-                // uniform sampler2D normal_texture;
-
-                out vec4 color;
-
-                void main() {
-                        color = vec4(0.3, 0.12, 0.9, 1.0);
-                }
-                "#,
-        None,
-    )?;
-
-    let diffuse_texture = GliumTexture::empty(&backend, (32, 32))?;
-    let normal_texture = Some(GliumTexture::empty(&backend, (32, 32))?);
-
-    Ok(GliumRenderData {
-        vertices,
-        indices,
-        program,
-        diffuse_texture,
-        normal_texture,
-    })
 }
 
 #[cfg(test)]
@@ -455,13 +384,61 @@ mod tests {
     )]
     fn frame() {
         let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
+        let mut f: RenderData<GliumBackend> = RenderData::default();
 
-        let data = triangle(&b).unwrap();
+        let vertices = f.create_vertex_buffer(
+            &b,
+            &[
+                Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
+                Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
+                Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
+            ],
+        ).unwrap();
 
-        let mut f: GliumFrame = b.create_frame();
-        f.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
-        assert!(f.render(&MockLocation::default(), &data).is_ok());
-        let r = f.finalize();
+        let indices = f.create_index_buffer(
+            &b,
+            &[0, 1, 2],
+        ).unwrap();
+
+        let shader = f.create_source_shader(
+            &b,
+            r#"
+                    #version 330 core
+
+                    uniform mat4 transform;
+
+                    layout (location = 0) in vec3 position;
+                    layout (location = 1) in vec2 tex_coord;
+                    layout (location = 2) in vec3 normals;
+
+                    void main() {
+                            gl_Position = transform * vec4(position, 1.0);
+                    }
+                    "#,
+            r#"
+                    #version 330 core
+
+                    uniform vec2 dimensions;
+                    uniform sampler2D diffuse_texture;
+                    // uniform sampler2D normal_texture;
+
+                    out vec4 color;
+
+                    void main() {
+                            color = vec4(0.3, 0.12, 0.9, 1.0);
+                    }
+                    "#,
+        ).unwrap();
+
+        let diffuse_texture = f.create_empty_texture(&b, (32, 32)).unwrap();
+        let normal_texture = Some(f.create_empty_texture(&b, (32, 32)).unwrap());
+
+        let data = Renderable::new(vertices, indices, shader, diffuse_texture, normal_texture);
+
+        let mut frame: GliumFrame = b.create_frame();
+        frame.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
+        assert!(frame.render(&MockLocation::default(), &mut f, &data).is_ok());
+        let r = frame.finalize();
         assert!(r.is_ok());
     }
 }

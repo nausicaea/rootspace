@@ -10,17 +10,43 @@ use crate::{
     event::EngineEvent,
     file_manipulation::ReadPath,
     geometry::rect::Rect,
+    components::Renderable,
+    resources::RenderData,
 };
 use failure::Error;
 use std::{
-    borrow::{Borrow, Cow},
+    borrow::Cow,
     convert::TryInto,
     path::Path,
 };
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
+#[cfg(not(feature = "diagnostics"))]
 pub trait BackendTrait: Sized + private::Sealed + 'static {
     type Event: EventTrait;
-    type Data: DataTrait;
+    type Frame: FrameTrait<Self>;
+    type EventsLoop: EventsLoopTrait<Self>;
+    type Texture: TextureTrait<Self>;
+    type Shader: ShaderTrait<Self>;
+    type VertexBuffer: VertexBufferTrait<Self>;
+    type IndexBuffer: IndexBufferTrait<Self>;
+
+    fn new(
+        events_loop: &Self::EventsLoop,
+        title: &str,
+        dimensions: (u32, u32),
+        vsync: bool,
+        msaa: u16,
+    ) -> Result<Self, Error>;
+    fn create_frame(&self) -> Self::Frame;
+    fn dpi_factor(&self) -> f64;
+    fn physical_dimensions(&self) -> (u32, u32);
+}
+
+#[cfg(feature = "diagnostics")]
+pub trait BackendTrait: Sized + private::Sealed + 'static + TypeName {
+    type Event: EventTrait;
     type Frame: FrameTrait<Self>;
     type EventsLoop: EventsLoopTrait<Self>;
     type Texture: TextureTrait<Self>;
@@ -46,11 +72,9 @@ pub trait EventsLoopTrait<B: BackendTrait>: Default + private::Sealed + 'static 
     fn poll<F: FnMut(B::Event)>(&mut self, f: F);
 }
 
-pub trait DataTrait: private::Sealed {}
-
 pub trait FrameTrait<B: BackendTrait>: private::Sealed {
     fn initialize(&mut self, color: [f32; 4], depth: f32);
-    fn render<T: AsRef<[[f32; 4]; 4]>, R: Borrow<B::Data>>(&mut self, transform: &T, data: &R) -> Result<(), Error>;
+    fn render<T: AsRef<[[f32; 4]; 4]>>(&mut self, transform: &T, factory: &RenderData<B>, data: &Renderable) -> Result<(), Error>;
     fn finalize(self) -> Result<(), Error>;
 }
 
