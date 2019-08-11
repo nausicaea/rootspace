@@ -2,7 +2,7 @@ use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
     event::EngineEvent,
     graphics::{BackendTrait, FrameTrait},
-    resources::{RenderData, SceneGraph},
+    resources::{Backend, SceneGraph},
 };
 use ecs::{EventQueue, Resources, Storage, System};
 use failure::Error;
@@ -105,7 +105,7 @@ where
 
         let world_graph = res.borrow::<SceneGraph<Model>>();
         let ui_graph = res.borrow::<SceneGraph<UiModel>>();
-        let factory = res.borrow::<RenderData<B>>();
+        let factory = res.borrow::<Backend<B>>();
         let statuses = res.borrow_component::<Status>();
         let renderables = res.borrow_component::<Renderable>();
 

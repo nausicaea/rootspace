@@ -7,7 +7,7 @@ use crate::{
     assets::{Image, Vertex},
     event::EngineEvent,
     geometry::rect::Rect,
-    resources::RenderData,
+    resources::Backend,
 };
 use failure::Error;
 use std::borrow::Cow;
@@ -122,7 +122,7 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
     fn render<T: AsRef<[[f32; 4]; 4]>>(
         &mut self,
         _transform: &T,
-        _factory: &RenderData<HeadlessBackend>,
+        _factory: &Backend<HeadlessBackend>,
         _data: &Renderable,
     ) -> Result<(), Error> {
         Ok(())
@@ -205,7 +205,7 @@ mod tests {
     #[test]
     fn frame() {
         let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f: RenderData<HeadlessBackend> = RenderData::default();
+        let mut f: Backend<HeadlessBackend> = Backend::default();
 
         let vertices = f.create_vertex_buffer(
             &b,

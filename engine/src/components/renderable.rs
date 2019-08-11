@@ -3,14 +3,14 @@ use crate::{
     graphics::{
         BackendTrait,
     },
-    resources::RenderData,
+    resources::Backend,
 };
 use ecs::{Component, VecStorage};
 use failure::Error;
 use std::{
     path::{Path, PathBuf},
 };
-use crate::resources::render_data::{VertexBufferId, IndexBufferId, ShaderId, TextureId};
+use crate::resources::{VertexBufferId, IndexBufferId, ShaderId, TextureId};
 
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug)]
@@ -147,7 +147,7 @@ impl RenderableBuilder {
         self
     }
 
-    pub fn build_mesh<B: BackendTrait>(&self, backend: &B, factory: &mut RenderData<B>) -> Result<Renderable, Error> {
+    pub fn build_mesh<B: BackendTrait>(&self, backend: &B, factory: &mut Backend<B>) -> Result<Renderable, Error> {
         let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
@@ -174,7 +174,7 @@ impl RenderableBuilder {
         })
     }
 
-    pub fn build_text<B: BackendTrait>(&self, backend: &B, factory: &mut RenderData<B>) -> Result<Renderable, Error> {
+    pub fn build_text<B: BackendTrait>(&self, backend: &B, factory: &mut Backend<B>) -> Result<Renderable, Error> {
         let dpi_factor = backend.dpi_factor();
 
         let cache_size = (
@@ -238,7 +238,7 @@ mod tests {
     #[test]
     fn headless_builder_mesh() {
         let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f = RenderData::<HeadlessBackend>::default();
+        let mut f = Backend::<HeadlessBackend>::default();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let r: Result<Renderable, Error> = Renderable::builder()
             .mesh(&base_path.join("cube.ply"))
@@ -253,7 +253,7 @@ mod tests {
     #[test]
     fn headless_builder_text() {
         let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f = RenderData::<HeadlessBackend>::default();
+        let mut f = Backend::<HeadlessBackend>::default();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let r: Result<Renderable, Error> = Renderable::builder()
             .font(&base_path.join("SourceSansPro-Regular.ttf"))

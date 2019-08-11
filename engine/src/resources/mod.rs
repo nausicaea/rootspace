@@ -1,4 +1,4 @@
-pub mod render_data;
+pub mod backend;
 pub mod scene_graph;
 
-pub use self::{render_data::{TextureId, ShaderId, VertexBufferId, IndexBufferId, RenderData}, scene_graph::SceneGraph};
+pub use self::{backend::{TextureId, ShaderId, VertexBufferId, IndexBufferId, Backend}, scene_graph::SceneGraph};

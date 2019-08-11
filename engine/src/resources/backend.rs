@@ -25,7 +25,7 @@ pub struct VertexBufferId(ProcessUniqueId);
 pub struct IndexBufferId(ProcessUniqueId);
 
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
-pub struct RenderData<B>
+pub struct Backend<B>
 where
     B: BackendTrait,
 {
@@ -36,7 +36,7 @@ where
     _b: PhantomData<B>,
 }
 
-impl<B> RenderData<B>
+impl<B> Backend<B>
 where
     B: BackendTrait,
 {
@@ -99,12 +99,12 @@ where
     }
 }
 
-impl<B> Default for RenderData<B>
+impl<B> Default for Backend<B>
 where
     B: BackendTrait,
 {
     fn default() -> Self {
-        RenderData {
+        Backend {
             textures: HashMap::default(),
             shaders: HashMap::default(),
             vertex_buffers: HashMap::default(),
@@ -114,14 +114,14 @@ where
     }
 }
 
-impl<B> fmt::Debug for RenderData<B>
+impl<B> fmt::Debug for Backend<B>
 where
     B: BackendTrait,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "RenderData(#t: {}, #s: {}, #vbuf: {}, #ibuf: {})",
+            "Backend(#t: {}, #s: {}, #vbuf: {}, #ibuf: {})",
             self.textures.len(),
             self.shaders.len(),
             self.vertex_buffers.len(),
@@ -130,4 +130,4 @@ where
     }
 }
 
-impl<B> Resource for RenderData<B> where B: BackendTrait + 'static {}
+impl<B> Resource for Backend<B> where B: BackendTrait + 'static {}

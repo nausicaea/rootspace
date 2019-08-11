@@ -7,7 +7,7 @@ use crate::{
     event::EngineEvent,
     geometry::rect::Rect,
     components::Renderable,
-    resources::RenderData,
+    resources::Backend,
 };
 use failure::Error;
 use glium::glutin::WindowEvent;
@@ -207,7 +207,7 @@ impl FrameTrait<GliumBackend> for GliumFrame {
         self.0.clear_color_and_depth((c[0], c[1], c[2], c[3]), d)
     }
 
-    fn render<T>(&mut self, transform: &T, factory: &RenderData<GliumBackend>, data: &Renderable) -> Result<(), Error>
+    fn render<T>(&mut self, transform: &T, factory: &Backend<GliumBackend>, data: &Renderable) -> Result<(), Error>
     where
         T: AsRef<[[f32; 4]; 4]>,
     {
@@ -384,7 +384,7 @@ mod tests {
     )]
     fn frame() {
         let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f: RenderData<GliumBackend> = RenderData::default();
+        let mut f: Backend<GliumBackend> = Backend::default();
 
         let vertices = f.create_vertex_buffer(
             &b,
