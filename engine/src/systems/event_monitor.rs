@@ -13,11 +13,10 @@ impl<E> EventMonitor<E>
 where
     E: 'static + Clone,
 {
-    pub fn new(res: &mut Resources) -> Self {
-        let events = res.get_mut::<EventQueue<E>>();
-        let receiver = events.subscribe();
-
-        EventMonitor { receiver }
+    pub fn new(queue: &mut EventQueue<E>) -> Self {
+        EventMonitor {
+            receiver: queue.subscribe(),
+        }
     }
 }
 
@@ -26,11 +25,10 @@ impl<E> EventMonitor<E>
 where
     E: 'static + Clone + TypeName,
 {
-    pub fn new(res: &mut Resources) -> Self {
-        let events = res.get_mut::<EventQueue<E>>();
-        let receiver = events.subscribe();
-
-        EventMonitor { receiver }
+    pub fn new(queue: &mut EventQueue<E>) -> Self {
+        EventMonitor {
+            receiver: queue.subscribe(),
+        }
     }
 }
 

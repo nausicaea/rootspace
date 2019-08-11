@@ -13,13 +13,10 @@ pub struct DebugShell {
 }
 
 impl DebugShell {
-    pub fn new(res: &mut Resources) -> Self {
-        let events = res.get_mut::<EventQueue<EngineEvent>>();
-        let receiver = events.subscribe();
-
+    pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
         let mut sys = DebugShell {
             commands: HashMap::new(),
-            receiver,
+            receiver: queue.subscribe(),
         };
 
         sys.add_command(ExitCommand::default());

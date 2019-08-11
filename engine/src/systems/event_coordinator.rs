@@ -7,11 +7,10 @@ pub struct EventCoordinator {
 }
 
 impl EventCoordinator {
-    pub fn new(res: &mut Resources) -> Self {
-        let events = res.get_mut::<EventQueue<EngineEvent>>();
-        let receiver = events.subscribe();
-
-        EventCoordinator { receiver }
+    pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
+        EventCoordinator {
+            receiver: queue.subscribe(),
+        }
     }
 }
 

@@ -133,26 +133,29 @@ where
         );
 
         // Handle the regular systems.
-        let event_monitor: EventMonitor<EngineEvent> = EventMonitor::new(&mut self.res_mut());
-        self.world_mut().add_system(LoopStage::Update, event_monitor);
-
         let force_shutdown = ForceShutdown::default();
         self.world_mut().add_system(LoopStage::Update, force_shutdown);
-
-        let camera_manager = CameraManager::new(&mut self.res_mut());
-        self.world_mut().add_system(LoopStage::Update, camera_manager);
 
         let debug_console = DebugConsole::default();
         self.world_mut().add_system(LoopStage::Update, debug_console);
 
-        let debug_shell = DebugShell::new(&mut self.res_mut());
-        self.world_mut().add_system(LoopStage::Update, debug_shell);
-
         self.world_mut().add_system(LoopStage::Update, event_interface);
         self.world_mut().add_system(LoopStage::Render, renderer);
 
-        // The event coordinator should run last, because it can affect the shutdown of the engine.
-        let event_coordinator = EventCoordinator::new(&mut self.res_mut());
+        let queue = self.res_mut().get_mut::<EventQueue<EngineEvent>>();
+        let event_monitor: EventMonitor<EngineEvent> = EventMonitor::new(queue);
+        self.world_mut().add_system(LoopStage::Update, event_monitor);
+
+        let queue = self.res_mut().get_mut::<EventQueue<EngineEvent>>();
+        let camera_manager = CameraManager::new(queue);
+        self.world_mut().add_system(LoopStage::Update, camera_manager);
+
+        let queue = self.res_mut().get_mut::<EventQueue<EngineEvent>>();
+        let debug_shell = DebugShell::new(queue);
+        self.world_mut().add_system(LoopStage::Update, debug_shell);
+
+        let queue = self.res_mut().get_mut::<EventQueue<EngineEvent>>();
+        let event_coordinator = EventCoordinator::new(queue);
         self.world_mut().add_system(LoopStage::Update, event_coordinator);
 
         self.world_mut()

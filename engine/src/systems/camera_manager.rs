@@ -7,11 +7,10 @@ pub struct CameraManager {
 }
 
 impl CameraManager {
-    pub fn new(res: &mut Resources) -> Self {
-        let events = res.get_mut::<EventQueue<EngineEvent>>();
-        let receiver = events.subscribe();
-
-        CameraManager { receiver }
+    pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
+        CameraManager {
+            receiver: queue.subscribe(),
+        }
     }
 
     fn on_resize(&self, res: &Resources, dims: (u32, u32)) {
