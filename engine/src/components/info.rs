@@ -2,7 +2,7 @@ use ecs::{Component, VecStorage};
 use std::fmt;
 
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Info {
     name: String,
     description: String,
