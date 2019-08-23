@@ -17,5 +17,6 @@ ecs = {path = "../ecs"}
 engine = {path = "../engine"}
 
 [dev-dependencies]
+proptest = "^0.9.0"
 quickcheck = {version = "^0.8.0", default_features = false}
 quickcheck_macros = "^0.8.0"

@@ -1,7 +1,9 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
-use crate::indexing::{Generation, Index};
-use crate::resources::Resource;
+use crate::{
+    indexing::{Generation, Index},
+    resources::Resource,
+};
 use std::fmt;
 
 /// The `Entities` resource keeps track of all entities.

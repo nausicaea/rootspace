@@ -4,8 +4,7 @@ use crate::{
 };
 use ecs::{EventQueue, ReceiverId, Resources, System};
 use failure::Error;
-use std::collections::HashMap;
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
 pub struct DebugShell {
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,

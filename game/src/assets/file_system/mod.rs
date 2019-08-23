@@ -1,14 +1,11 @@
-mod user_id;
 mod group_id;
 mod mode;
 mod node;
+mod user_id;
 
-use self::node::Node;
-use self::mode::Mode;
-use self::user_id::UserId;
-use self::group_id::GroupId;
-use std::fmt;
+use self::{group_id::GroupId, mode::Mode, node::Node, user_id::UserId};
 use daggy::{Dag, NodeIndex, Walker};
+use std::fmt;
 
 #[derive(Debug)]
 pub enum Error {
@@ -34,14 +31,12 @@ impl FileSystem {
     where
         S: AsRef<str>,
     {
-        let parent_node = self.graph.node_weight(parent)
-            .ok_or(Error::NodeNotFound)?;
+        let parent_node = self.graph.node_weight(parent).ok_or(Error::NodeNotFound)?;
 
         if parent_node.may_execute(uid, gids) {
             let mut children = self.graph.children(parent);
             while let Some((_, child)) = children.walk_next(&self.graph) {
-                let child_node = self.graph.node_weight(child)
-                    .ok_or(Error::NodeNotFound)?;
+                let child_node = self.graph.node_weight(child).ok_or(Error::NodeNotFound)?;
 
                 if child_node.name() == child_name.as_ref() {
                     return Ok(child);

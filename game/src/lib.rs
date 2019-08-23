@@ -14,12 +14,13 @@ extern crate daggy;
 mod assets;
 mod resources;
 
-use ecs::{EventQueue, LoopStage, Resources, World, WorldTrait, Persistence};
+use self::assets::FileSystem;
+use ecs::{EventQueue, LoopStage, Persistence, Resources, World, WorldTrait};
 use engine::{
-    components::{Camera, Info, Model, Status, UiModel, Renderable},
+    components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,
     graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait},
-    resources::{SceneGraph, Backend},
+    resources::{Backend, SceneGraph},
     systems::{
         CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor, ForceShutdown,
         Renderer,
@@ -29,7 +30,6 @@ use engine::{
 use failure::Error;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
-use self::assets::FileSystem;
 
 pub struct Game<B> {
     orchestrator: DefaultOrchestrator<B>,
@@ -89,10 +89,7 @@ where
                 .text(text)
                 .build_text(&renderer.backend, factory)?
         };
-        self.world_mut().add_component(
-            ea,
-            renderable,
-        );
+        self.world_mut().add_component(ea, renderable);
 
         let eb = self.world_mut().create_entity();
         self.world_mut().get_resource_mut::<SceneGraph<Model>>().insert(eb);
@@ -120,10 +117,7 @@ where
                 .diffuse_texture(dt)
                 .build_mesh(&renderer.backend, factory)?
         };
-        self.world_mut().add_component(
-            eb,
-            renderable,
-        );
+        self.world_mut().add_component(eb, renderable);
 
         let ec = self.world_mut().create_entity();
         self.world_mut().get_resource_mut::<SceneGraph<UiModel>>().insert(ec);
@@ -147,10 +141,7 @@ where
                 .diffuse_texture(dt)
                 .build_mesh(&renderer.backend, factory)?
         };
-        self.world_mut().add_component(
-            ec,
-            renderable,
-        );
+        self.world_mut().add_component(ec, renderable);
 
         // Handle the regular systems.
         let force_shutdown = ForceShutdown::default();

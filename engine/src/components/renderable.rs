@@ -1,16 +1,11 @@
 use crate::{
     assets::{Mesh, Text},
-    graphics::{
-        BackendTrait,
-    },
-    resources::Backend,
+    graphics::BackendTrait,
+    resources::{Backend, IndexBufferId, ShaderId, TextureId, VertexBufferId},
 };
 use ecs::{Component, VecStorage};
 use failure::Error;
-use std::{
-    path::{Path, PathBuf},
-};
-use crate::resources::{VertexBufferId, IndexBufferId, ShaderId, TextureId};
+use std::path::{Path, PathBuf};
 
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug)]

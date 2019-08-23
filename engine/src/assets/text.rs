@@ -2,7 +2,7 @@ use crate::{
     assets::{Mesh, Vertex},
     file_manipulation::ReadPath,
     graphics::{BackendTrait, TextureTrait},
-    resources::{TextureId, Backend},
+    resources::{Backend, TextureId},
 };
 use failure::Error;
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};

@@ -1,6 +1,5 @@
 use ecs::{EventQueue, ReceiverId, Resources, System};
-use std::fmt;
-use std::time::Duration;
+use std::{fmt, time::Duration};
 #[cfg(feature = "diagnostics")]
 use typename::TypeName;
 

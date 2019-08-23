@@ -7,18 +7,14 @@ mod private {
 
 use crate::{
     assets::{Image, Vertex},
+    components::Renderable,
     event::EngineEvent,
     file_manipulation::ReadPath,
     geometry::rect::Rect,
-    components::Renderable,
     resources::Backend,
 };
 use failure::Error;
-use std::{
-    borrow::Cow,
-    convert::TryInto,
-    path::Path,
-};
+use std::{borrow::Cow, convert::TryInto, path::Path};
 #[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
@@ -74,7 +70,12 @@ pub trait EventsLoopTrait<B: BackendTrait>: Default + private::Sealed + 'static 
 
 pub trait FrameTrait<B: BackendTrait>: private::Sealed {
     fn initialize(&mut self, color: [f32; 4], depth: f32);
-    fn render<T: AsRef<[[f32; 4]; 4]>>(&mut self, transform: &T, factory: &Backend<B>, data: &Renderable) -> Result<(), Error>;
+    fn render<T: AsRef<[[f32; 4]; 4]>>(
+        &mut self,
+        transform: &T,
+        factory: &Backend<B>,
+        data: &Renderable,
+    ) -> Result<(), Error>;
     fn finalize(self) -> Result<(), Error>;
 }
 

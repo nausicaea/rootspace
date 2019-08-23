@@ -4,19 +4,18 @@ use super::{
 };
 use crate::{
     assets::{Image, Vertex},
+    components::Renderable,
     event::EngineEvent,
     geometry::rect::Rect,
-    components::Renderable,
     resources::Backend,
 };
 use failure::Error;
-use glium::glutin::WindowEvent;
 #[cfg(target_os = "macos")]
 use glium::glutin::{KeyboardInput, ModifiersState, VirtualKeyCode};
 use glium::{
     backend::glutin::DisplayCreationError,
     draw_parameters::DepthTest,
-    glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder},
+    glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder, WindowEvent},
     index::PrimitiveType,
     texture::{ClientFormat, RawImage2d, Texture2d},
     uniforms::{UniformValue, Uniforms},
@@ -244,7 +243,13 @@ impl FrameTrait<GliumBackend> for GliumFrame {
         let indices = factory.borrow_index_buffer(data.indices());
         let shader = factory.borrow_shader(data.shader());
 
-        match self.0.draw(Borrow::<VertexBuffer<Vertex>>::borrow(&vertices.0), Borrow::<IndexBuffer<u16>>::borrow(&indices.0), shader.0.borrow(), &u, &dp) {
+        match self.0.draw(
+            Borrow::<VertexBuffer<Vertex>>::borrow(&vertices.0),
+            Borrow::<IndexBuffer<u16>>::borrow(&indices.0),
+            shader.0.borrow(),
+            &u,
+            &dp,
+        ) {
             Ok(()) => Ok(()),
             Err(e) => Err(Into::into(e)),
         }
@@ -386,23 +391,23 @@ mod tests {
         let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
         let mut f: Backend<GliumBackend> = Backend::default();
 
-        let vertices = f.create_vertex_buffer(
-            &b,
-            &[
-                Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
-                Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
-                Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
-            ],
-        ).unwrap();
+        let vertices = f
+            .create_vertex_buffer(
+                &b,
+                &[
+                    Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
+                    Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
+                    Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
+                ],
+            )
+            .unwrap();
 
-        let indices = f.create_index_buffer(
-            &b,
-            &[0, 1, 2],
-        ).unwrap();
+        let indices = f.create_index_buffer(&b, &[0, 1, 2]).unwrap();
 
-        let shader = f.create_source_shader(
-            &b,
-            r#"
+        let shader = f
+            .create_source_shader(
+                &b,
+                r#"
                     #version 330 core
 
                     uniform mat4 transform;
@@ -415,7 +420,7 @@ mod tests {
                             gl_Position = transform * vec4(position, 1.0);
                     }
                     "#,
-            r#"
+                r#"
                     #version 330 core
 
                     uniform vec2 dimensions;
@@ -428,7 +433,8 @@ mod tests {
                             color = vec4(0.3, 0.12, 0.9, 1.0);
                     }
                     "#,
-        ).unwrap();
+            )
+            .unwrap();
 
         let diffuse_texture = f.create_empty_texture(&b, (32, 32)).unwrap();
         let normal_texture = Some(f.create_empty_texture(&b, (32, 32)).unwrap());

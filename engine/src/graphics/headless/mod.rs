@@ -2,16 +2,15 @@ use super::{
     private::Sealed, BackendTrait, EventTrait, EventsLoopTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
     TextureTrait, VertexBufferTrait,
 };
-use crate::components::Renderable;
 use crate::{
     assets::{Image, Vertex},
+    components::Renderable,
     event::EngineEvent,
     geometry::rect::Rect,
     resources::Backend,
 };
 use failure::Error;
-use std::borrow::Cow;
-use std::convert::TryInto;
+use std::{borrow::Cow, convert::TryInto};
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;
@@ -207,23 +206,23 @@ mod tests {
         let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
         let mut f: Backend<HeadlessBackend> = Backend::default();
 
-        let vertices = f.create_vertex_buffer(
-            &b,
-            &[
-                Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
-                Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
-                Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
-            ],
-        ).unwrap();
+        let vertices = f
+            .create_vertex_buffer(
+                &b,
+                &[
+                    Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
+                    Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
+                    Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
+                ],
+            )
+            .unwrap();
 
-        let indices = f.create_index_buffer(
-            &b,
-            &[0, 1, 2],
-        ).unwrap();
+        let indices = f.create_index_buffer(&b, &[0, 1, 2]).unwrap();
 
-        let shader = f.create_source_shader(
-            &b,
-            r#"
+        let shader = f
+            .create_source_shader(
+                &b,
+                r#"
                     #version 330 core
 
                     uniform mat4 transform;
@@ -236,7 +235,7 @@ mod tests {
                             gl_Position = transform * vec4(position, 1.0);
                     }
                     "#,
-            r#"
+                r#"
                     #version 330 core
 
                     uniform vec2 dimensions;
@@ -249,7 +248,8 @@ mod tests {
                             color = vec4(0.3, 0.12, 0.9, 1.0);
                     }
                     "#,
-        ).unwrap();
+            )
+            .unwrap();
 
         let diffuse_texture = f.create_empty_texture(&b, (32, 32)).unwrap();
         let normal_texture = Some(f.create_empty_texture(&b, (32, 32)).unwrap());

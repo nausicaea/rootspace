@@ -1,5 +1,5 @@
+use super::{group_id::GroupId, mode::Mode, user_id::UserId};
 use std::time::Instant;
-use super::{user_id::UserId, group_id::GroupId, mode::Mode};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Node {
@@ -13,7 +13,12 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new<S: AsRef<str>, U: Into<UserId>, G: Into<GroupId>, M: Into<Mode>>(name: S, uid: U, gid: G, mode: M) -> Self {
+    pub fn new<S: AsRef<str>, U: Into<UserId>, G: Into<GroupId>, M: Into<Mode>>(
+        name: S,
+        uid: U,
+        gid: G,
+        mode: M,
+    ) -> Self {
         let zero = Instant::now();
 
         Node {

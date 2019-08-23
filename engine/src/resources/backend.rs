@@ -5,12 +5,7 @@ use crate::{
 use ecs::Resource;
 use failure::Error;
 use snowflake::ProcessUniqueId;
-use std::{
-    fmt,
-    collections::HashMap,
-    marker::PhantomData,
-    path::Path,
-};
+use std::{collections::HashMap, fmt, marker::PhantomData, path::Path};
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TextureId(ProcessUniqueId);
@@ -91,11 +86,15 @@ where
     }
 
     pub fn borrow_vertex_buffer(&self, id: &VertexBufferId) -> &B::VertexBuffer {
-        self.vertex_buffers.get(id).expect("Could not find the requested vertex buffer")
+        self.vertex_buffers
+            .get(id)
+            .expect("Could not find the requested vertex buffer")
     }
 
     pub fn borrow_index_buffer(&self, id: &IndexBufferId) -> &B::IndexBuffer {
-        self.index_buffers.get(id).expect("Could not find the requested index buffer")
+        self.index_buffers
+            .get(id)
+            .expect("Could not find the requested index buffer")
     }
 }
 
