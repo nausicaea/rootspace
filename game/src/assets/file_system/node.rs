@@ -100,64 +100,63 @@ impl Node {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use quickcheck_macros::quickcheck;
+    use proptest::prelude::*;
 
     #[test]
     fn new() {
         let _: Node = Node::new("", 0, 0, 0);
     }
 
-    #[quickcheck]
-    fn may_read(nuid: u32, ngid: u32, nmode: u32, uid: u32, gid: u32) -> bool {
-        let nu = UserId::from(nuid);
-        let ng = GroupId::from(ngid);
-        let nm = Mode::from(nmode);
-        let u = UserId::from(uid);
-        let g = GroupId::from(gid);
+    proptest! {
+        #[test]
+        fn may_read(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, uid in 0u32..65535, gid in 0u32..65535) {
+            let nu = UserId::from(nuid);
+            let ng = GroupId::from(ngid);
+            let nm = Mode::from(nmode);
+            let u = UserId::from(uid);
+            let g = GroupId::from(gid);
 
-        let privileged = u.privileged();
-        let user_perm = nm.user_read() && (nu == u);
-        let group_perm = nm.group_read() && (ng == g);
-        let other_perm = nm.other_read();
-        let expected = privileged || user_perm || group_perm || other_perm;
+            let privileged = u.privileged();
+            let user_perm = nm.user_read() && (nu == u);
+            let group_perm = nm.group_read() && (ng == g);
+            let other_perm = nm.other_read();
 
-        let n = Node::new("", nuid, ngid, nmode);
-        n.may_read(&u, &[g]) == expected
-    }
+            let n = Node::new("", nuid, ngid, nmode);
+            prop_assert_eq!(n.may_read(&u, &[g]), privileged || user_perm || group_perm || other_perm);
+        }
 
-    #[quickcheck]
-    fn may_write(nuid: u32, ngid: u32, nmode: u32, uid: u32, gid: u32) -> bool {
-        let nu = UserId::from(nuid);
-        let ng = GroupId::from(ngid);
-        let nm = Mode::from(nmode);
-        let u = UserId::from(uid);
-        let g = GroupId::from(gid);
+        #[test]
+        fn may_write(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, uid in 0u32..65535, gid in 0u32..65535) {
+            let nu = UserId::from(nuid);
+            let ng = GroupId::from(ngid);
+            let nm = Mode::from(nmode);
+            let u = UserId::from(uid);
+            let g = GroupId::from(gid);
 
-        let privileged = u.privileged();
-        let user_perm = nm.user_write() && (nu == u);
-        let group_perm = nm.group_write() && (ng == g);
-        let other_perm = nm.other_write();
-        let expected = privileged || user_perm || group_perm || other_perm;
+            let privileged = u.privileged();
+            let user_perm = nm.user_write() && (nu == u);
+            let group_perm = nm.group_write() && (ng == g);
+            let other_perm = nm.other_write();
 
-        let n = Node::new("", nuid, ngid, nmode);
-        n.may_write(&u, &[g]) == expected
-    }
+            let n = Node::new("", nuid, ngid, nmode);
+            prop_assert_eq!(n.may_write(&u, &[g]), privileged || user_perm || group_perm || other_perm);
+        }
 
-    #[quickcheck]
-    fn may_execute(nuid: u32, ngid: u32, nmode: u32, uid: u32, gid: u32) -> bool {
-        let nu = UserId::from(nuid);
-        let ng = GroupId::from(ngid);
-        let nm = Mode::from(nmode);
-        let u = UserId::from(uid);
-        let g = GroupId::from(gid);
+        #[test]
+        fn may_execute(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, uid in 0u32..65535, gid in 0u32..65535) {
+            let nu = UserId::from(nuid);
+            let ng = GroupId::from(ngid);
+            let nm = Mode::from(nmode);
+            let u = UserId::from(uid);
+            let g = GroupId::from(gid);
 
-        let privileged = nm.any_execute() && u.privileged();
-        let user_perm = nm.user_execute() && (nu == u);
-        let group_perm = nm.group_execute() && (ng == g);
-        let other_perm = nm.other_execute();
-        let expected = privileged || user_perm || group_perm || other_perm;
+            let privileged = nm.any_execute() && u.privileged();
+            let user_perm = nm.user_execute() && (nu == u);
+            let group_perm = nm.group_execute() && (ng == g);
+            let other_perm = nm.other_execute();
 
-        let n = Node::new("", nuid, ngid, nmode);
-        n.may_execute(&u, &[g]) == expected
+            let n = Node::new("", nuid, ngid, nmode);
+            prop_assert_eq!(n.may_execute(&u, &[g]), privileged || user_perm || group_perm || other_perm);
+        }
     }
 }

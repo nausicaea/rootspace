@@ -98,7 +98,7 @@ mod tests {
     use crate::{graphics::headless::HeadlessBackend, mock::MockWorld};
     use std::env;
     use tempfile::NamedTempFile;
-    use quickcheck_macros::quickcheck;
+    use proptest::prelude::*;
 
     /// Danger! This test works with thread::sleep() to test fixed loop timing. Note that the
     /// estimate of update calls is not always accurate, that's why this test is fuzzy by +/-1
@@ -229,40 +229,42 @@ mod tests {
         ));
     }
 
-    #[quickcheck]
-    fn check_update_calls(iterations: usize) -> bool {
-        let base = env::temp_dir();
-        let delta_time = Duration::from_millis(50);
-        let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
-        o.world.max_iterations = iterations + 1;
+    proptest! {
+        #[test]
+        fn check_update_calls(iterations in 0usize..1000) {
+            let base = env::temp_dir();
+            let delta_time = Duration::from_millis(50);
+            let max_frame_time = Duration::from_millis(250);
+            let mut o = Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            o.world.max_iterations = iterations + 1;
 
-        o.run(Some(iterations));
-        o.world.update_calls == iterations
-    }
+            o.run(Some(iterations));
+            prop_assert_eq!(o.world.update_calls, iterations)
+        }
 
-    #[quickcheck]
-    fn check_render_calls(iterations: usize) -> bool {
-        let base = env::temp_dir();
-        let delta_time = Duration::from_millis(50);
-        let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
-        o.world.max_iterations = iterations + 1;
+        #[test]
+        fn check_render_calls(iterations in 0usize..1000) {
+            let base = env::temp_dir();
+            let delta_time = Duration::from_millis(50);
+            let max_frame_time = Duration::from_millis(250);
+            let mut o = Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            o.world.max_iterations = iterations + 1;
 
-        o.run(Some(iterations));
-        o.world.render_calls == iterations
-    }
+            o.run(Some(iterations));
+            prop_assert_eq!(o.world.render_calls, iterations)
+        }
 
-    #[quickcheck]
-    fn check_maintain_calls(iterations: usize) -> bool {
-        let base = env::temp_dir();
-        let delta_time = Duration::from_millis(50);
-        let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
-        o.world.max_iterations = iterations + 1;
+        #[test]
+        fn check_maintain_calls(iterations in 0usize..1000) {
+            let base = env::temp_dir();
+            let delta_time = Duration::from_millis(50);
+            let max_frame_time = Duration::from_millis(250);
+            let mut o = Orchestrator::<HeadlessBackend, MockWorld>::new(&base, delta_time, max_frame_time).unwrap();
+            o.world.max_iterations = iterations + 1;
 
-        o.run(Some(iterations));
-        o.world.maintain_calls == iterations
+            o.run(Some(iterations));
+            prop_assert_eq!(o.world.maintain_calls, iterations)
+        }
     }
 
     #[test]

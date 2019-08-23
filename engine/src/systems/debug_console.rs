@@ -1,3 +1,7 @@
+#![cfg_attr(test, allow(unused_variables))]
+#![cfg_attr(test, allow(unused_mut))]
+#![cfg_attr(test, allow(dead_code))]
+
 use crate::{event::EngineEvent, text_manipulation::split_arguments};
 use ecs::{EventQueue, Resources, System};
 use std::{

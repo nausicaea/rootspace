@@ -22,12 +22,13 @@ impl From<u32> for GroupId {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use quickcheck_macros::quickcheck;
+    use proptest::prelude::*;
 
-    #[quickcheck]
-    fn privileged(gid: u32) -> bool {
-        let expected = gid == 0;
-        let g = GroupId::from(gid);
-        g.privileged() == expected
+    proptest! {
+        #[test]
+        fn privileged(gid in 0u32..65535) {
+            let g = GroupId::from(gid);
+            prop_assert_eq!(g.privileged(), gid == 0);
+        }
     }
 }

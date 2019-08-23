@@ -58,68 +58,61 @@ impl From<u32> for Mode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use quickcheck_macros::quickcheck;
+    use proptest::prelude::*;
 
-    #[quickcheck]
-    fn user_read(mode: u32) -> bool {
-        let expected = (mode & 0o400) > 0;
-        let m = Mode(mode);
-        m.user_read() == expected
-    }
+    proptest! {
+        #[test]
+        fn user_read(mode in 0u32..0o777) {
+            let m = Mode(mode);
+            prop_assert_eq!(m.user_read(), (mode & 0o400) > 0);
+        }
 
-    #[quickcheck]
-    fn user_write(mode: u32) -> bool {
-        let expected = (mode & 0o200) > 0;
-        let m = Mode(mode);
-        m.user_write() == expected
-    }
+        #[test]
+        fn user_write(mode in 0u32..0o777) {
+            let m = Mode(mode);
+            prop_assert_eq!(m.user_write(), (mode & 0o200) > 0);
+        }
 
-    #[quickcheck]
-    fn user_execute(mode: u32) -> bool {
-        let expected = (mode & 0o100) > 0;
-        let m = Mode(mode);
-        m.user_execute() == expected
-    }
+        #[test]
+        fn user_execute(mode in 0u32..0o777) {
+            let m = Mode(mode);
+            prop_assert_eq!(m.user_execute(), (mode & 0o100) > 0);
+        }
 
-    #[quickcheck]
-    fn group_read(mode: u32) -> bool {
-        let expected = (mode & 0o40) > 0;
-        let m = Mode(mode);
-        m.group_read() == expected
-    }
+        #[test]
+        fn group_read(mode in 0u32..0o777) {
+            let m = Mode(mode);
+            prop_assert_eq!(m.group_read(), (mode & 0o40) > 0);
+        }
 
-    #[quickcheck]
-    fn group_write(mode: u32) -> bool {
-        let expected = (mode & 0o20) > 0;
-        let m = Mode(mode);
-        m.group_write() == expected
-    }
+        #[test]
+        fn group_write(mode in 0u32..0o777) {
+            let m = Mode(mode);
+            prop_assert_eq!(m.group_write(), (mode & 0o20) > 0);
+        }
 
-    #[quickcheck]
-    fn group_execute(mode: u32) -> bool {
-        let expected = (mode & 0o10) > 0;
-        let m = Mode(mode);
-        m.group_execute() == expected
-    }
+        #[test]
+        fn group_execute(mode in 0u32..0o777) {
+            let m = Mode(mode);
+            prop_assert_eq!(m.group_execute(), (mode & 0o10) > 0);
+        }
 
-    #[quickcheck]
-    fn other_read(mode: u32) -> bool {
-        let expected = (mode & 0o4) > 0;
-        let m = Mode(mode);
-        m.other_read() == expected
-    }
+        #[test]
+        fn other_read(mode in 0u32..0o777) {
+            let m = Mode(mode);
+            prop_assert_eq!(m.other_read(), (mode & 0o4) > 0);
+        }
 
-    #[quickcheck]
-    fn other_write(mode: u32) -> bool {
-        let expected = (mode & 0o2) > 0;
-        let m = Mode(mode);
-        m.other_write() == expected
-    }
+        #[test]
+        fn other_write(mode in 0u32..0o777) {
+            let m = Mode(mode);
+            prop_assert_eq!(m.other_write(), (mode & 0o2) > 0);
+        }
 
-    #[quickcheck]
-    fn other_execute(mode: u32) -> bool {
-        let expected = (mode & 0o1) > 0;
-        let m = Mode(mode);
-        m.other_execute() == expected
+        #[test]
+        fn other_execute(mode in 0u32..0o777) {
+            let m = Mode(mode);
+            prop_assert_eq!(m.other_execute(), (mode & 0o1) > 0);
+        }
     }
 }
