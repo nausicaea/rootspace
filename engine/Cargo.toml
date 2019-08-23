@@ -30,5 +30,5 @@ ecs = {path = "../ecs"}
 [dev-dependencies]
 approx = "^0.3.0"
 tempfile = "^3.0.1"
-quickcheck = "^0.8.0"
+quickcheck = {version = "^0.8.0", default_features = false}
 quickcheck_macros = "^0.8.0"

@@ -8,7 +8,6 @@ use self::mode::Mode;
 use self::user_id::UserId;
 use self::group_id::GroupId;
 use std::fmt;
-use ecs::Resource;
 use daggy::{Dag, NodeIndex, Walker};
 
 #[derive(Debug)]
@@ -94,5 +93,3 @@ impl fmt::Debug for FileSystem {
         write!(f, "FileSystem(#nodes: {})", self.graph.node_count())
     }
 }
-
-impl Resource for FileSystem {}

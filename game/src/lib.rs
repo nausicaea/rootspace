@@ -11,7 +11,8 @@ extern crate quickcheck;
 extern crate quickcheck_macros;
 extern crate daggy;
 
-mod file_system;
+mod assets;
+mod resources;
 
 use ecs::{EventQueue, LoopStage, Resources, World, WorldTrait, Persistence};
 use engine::{
@@ -28,7 +29,7 @@ use engine::{
 use failure::Error;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
-use self::file_system::FileSystem;
+use self::assets::FileSystem;
 
 pub struct Game<B> {
     orchestrator: DefaultOrchestrator<B>,
@@ -43,10 +44,9 @@ where
         delta_time: Duration,
         max_frame_time: Duration,
     ) -> Result<Self, Error> {
-        let mut o = DefaultOrchestrator::new(resource_path, delta_time, max_frame_time)?;
-        o.world.add_resource(FileSystem::default(), Persistence::Runtime);
-
-        Ok(Game { orchestrator: o })
+        Ok(Game {
+            orchestrator: DefaultOrchestrator::new(resource_path, delta_time, max_frame_time)?,
+        })
     }
 
     pub fn load(&mut self) -> Result<(), Error> {
