@@ -39,34 +39,28 @@ impl Node {
     /// Return `true` if the supplied UID and GIDs have read permission on this node. A privileged
     /// user (UID 0) always has read access.
     pub fn may_read(&self, uid: &UserId, gids: &[GroupId]) -> bool {
-        let privileged = self.uid.privileged();
-        let user_perm = self.mode.user_read() && (self.uid == *uid);
-        let group_perm = self.mode.group_read() && gids.iter().any(|gid| self.gid == *gid);
-        let other_perm = self.mode.other_read();
-
-        privileged || user_perm || group_perm || other_perm
+        uid.privileged()
+            || (self.uid == *uid) && self.mode.user_read()
+            || gids.iter().any(|gid| self.gid == *gid) && self.mode.group_read()
+            || self.mode.other_read()
     }
 
     /// Return `true` if the supplied UID and GIDs have write permission on this node. A privileged
     /// user (UID 0) always has write access.
     pub fn may_write(&self, uid: &UserId, gids: &[GroupId]) -> bool {
-        let privileged = self.uid.privileged();
-        let user_perm = self.mode.user_write() && (self.uid == *uid);
-        let group_perm = self.mode.group_write() && gids.iter().any(|gid| self.gid == *gid);
-        let other_perm = self.mode.other_write();
-
-        privileged || user_perm || group_perm || other_perm
+        uid.privileged()
+            || (self.uid == *uid) && self.mode.user_write()
+            || gids.iter().any(|gid| self.gid == *gid) && self.mode.group_write()
+            || self.mode.other_write()
     }
 
     /// Return `true` if the supplied UID and GIDs have execute permission on this node. A
     /// privileged user (UID 0) has access if any executable bit is set.
     pub fn may_execute(&self, uid: &UserId, gids: &[GroupId]) -> bool {
-        let privileged = self.mode.any_execute() && self.uid.privileged();
-        let user_perm = self.mode.user_execute() && (self.uid == *uid);
-        let group_perm = self.mode.group_execute() && gids.iter().any(|gid| self.gid == *gid);
-        let other_perm = self.mode.other_execute();
-
-        privileged || user_perm || group_perm || other_perm
+        uid.privileged() && self.mode.any_execute()
+            || (self.uid == *uid) && self.mode.user_execute()
+            || gids.iter().any(|gid| self.gid == *gid) && self.mode.group_execute()
+            || self.mode.other_execute()
     }
 
     /// If the supplied UID is the owner of the Node, change the Node owner. A privileged user may
@@ -109,54 +103,39 @@ mod tests {
 
     proptest! {
         #[test]
-        fn may_read(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, uid in 0u32..65535, gid in 0u32..65535) {
-            let nu = UserId::from(nuid);
-            let ng = GroupId::from(ngid);
-            let nm = Mode::from(nmode);
-            let u = UserId::from(uid);
-            let g = GroupId::from(gid);
-
-            let privileged = u.privileged();
-            let user_perm = nm.user_read() && (nu == u);
-            let group_perm = nm.group_read() && (ng == g);
-            let other_perm = nm.other_read();
-
+        fn privileged_user_may_always_read(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, gid in 0u32..65535) {
             let n = Node::new("", nuid, ngid, nmode);
-            prop_assert_eq!(n.may_read(&u, &[g]), privileged || user_perm || group_perm || other_perm);
+            prop_assert_eq!(n.may_read(&UserId::from(0), &[GroupId::from(gid)]), true);
         }
 
         #[test]
-        fn may_write(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, uid in 0u32..65535, gid in 0u32..65535) {
-            let nu = UserId::from(nuid);
-            let ng = GroupId::from(ngid);
-            let nm = Mode::from(nmode);
-            let u = UserId::from(uid);
-            let g = GroupId::from(gid);
-
-            let privileged = u.privileged();
-            let user_perm = nm.user_write() && (nu == u);
-            let group_perm = nm.group_write() && (ng == g);
-            let other_perm = nm.other_write();
-
-            let n = Node::new("", nuid, ngid, nmode);
-            prop_assert_eq!(n.may_write(&u, &[g]), privileged || user_perm || group_perm || other_perm);
+        fn user_may_read_own_readable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
+            let n = Node::new("", uid, ngid, nmode);
+            prop_assert_eq!(n.may_read(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o400) > 0);
         }
 
         #[test]
-        fn may_execute(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, uid in 0u32..65535, gid in 0u32..65535) {
-            let nu = UserId::from(nuid);
-            let ng = GroupId::from(ngid);
-            let nm = Mode::from(nmode);
-            let u = UserId::from(uid);
-            let g = GroupId::from(gid);
-
-            let privileged = nm.any_execute() && u.privileged();
-            let user_perm = nm.user_execute() && (nu == u);
-            let group_perm = nm.group_execute() && (ng == g);
-            let other_perm = nm.other_execute();
-
+        fn privileged_user_may_always_write(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, gid in 0u32..65535) {
             let n = Node::new("", nuid, ngid, nmode);
-            prop_assert_eq!(n.may_execute(&u, &[g]), privileged || user_perm || group_perm || other_perm);
+            prop_assert_eq!(n.may_write(&UserId::from(0), &[GroupId::from(gid)]), true);
+        }
+
+        #[test]
+        fn user_may_write_own_writable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
+            let n = Node::new("", uid, ngid, nmode);
+            prop_assert_eq!(n.may_write(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o200) > 0);
+        }
+
+        #[test]
+        fn privileged_user_may_execute_mostly(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, gid in 0u32..65535) {
+            let n = Node::new("", nuid, ngid, nmode);
+            prop_assert_eq!(n.may_execute(&UserId::from(0), &[GroupId::from(gid)]), (nmode & 0o111) > 0);
+        }
+
+        #[test]
+        fn user_may_execute_own_executable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
+            let n = Node::new("", uid, ngid, nmode);
+            prop_assert_eq!(n.may_execute(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o100) > 0);
         }
     }
 }
