@@ -121,21 +121,27 @@ mod tests {
         }
 
         #[test]
-        fn user_may_read_own_readable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
-            let n = Node::new("", uid, ngid, nmode);
-            prop_assert_eq!(n.may_read(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o444) > 0);
+        fn user_may_read_own_readable(ngid in 1u32..65535, uid in 1u32..65535, gid in 1u32..65535) {
+            prop_assert!(Node::new("", uid, ngid, 0o400).may_read(&UserId::from(uid), &[GroupId::from(gid)]));
+            prop_assert!(Node::new("", uid, ngid, 0o500).may_read(&UserId::from(uid), &[GroupId::from(gid)]));
+            prop_assert!(Node::new("", uid, ngid, 0o600).may_read(&UserId::from(uid), &[GroupId::from(gid)]));
+            prop_assert!(Node::new("", uid, ngid, 0o700).may_read(&UserId::from(uid), &[GroupId::from(gid)]));
         }
 
         #[test]
-        fn user_may_write_own_writable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
-            let n = Node::new("", uid, ngid, nmode);
-            prop_assert_eq!(n.may_write(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o222) > 0);
+        fn user_may_write_own_writable(ngid in 1u32..65535, uid in 1u32..65535, gid in 1u32..65535) {
+            prop_assert!(Node::new("", uid, ngid, 0o200).may_write(&UserId::from(uid), &[GroupId::from(gid)]));
+            prop_assert!(Node::new("", uid, ngid, 0o300).may_write(&UserId::from(uid), &[GroupId::from(gid)]));
+            prop_assert!(Node::new("", uid, ngid, 0o600).may_write(&UserId::from(uid), &[GroupId::from(gid)]));
+            prop_assert!(Node::new("", uid, ngid, 0o700).may_write(&UserId::from(uid), &[GroupId::from(gid)]));
         }
 
         #[test]
-        fn user_may_execute_own_executable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
-            let n = Node::new("", uid, ngid, nmode);
-            prop_assert_eq!(n.may_execute(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o111) > 0);
+        fn user_may_execute_own_executable(ngid in 1u32..65535, uid in 1u32..65535, gid in 1u32..65535) {
+            prop_assert!(Node::new("", uid, ngid, 0o100).may_execute(&UserId::from(uid), &[GroupId::from(gid)]));
+            prop_assert!(Node::new("", uid, ngid, 0o300).may_execute(&UserId::from(uid), &[GroupId::from(gid)]));
+            prop_assert!(Node::new("", uid, ngid, 0o500).may_execute(&UserId::from(uid), &[GroupId::from(gid)]));
+            prop_assert!(Node::new("", uid, ngid, 0o700).may_execute(&UserId::from(uid), &[GroupId::from(gid)]));
         }
     }
 }
