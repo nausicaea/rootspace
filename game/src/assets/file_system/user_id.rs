@@ -24,11 +24,17 @@ mod tests {
     use super::*;
     use proptest::prelude::*;
 
+    #[test]
+    fn privileged() {
+        let u = UserId::from(0);
+        assert!(u.privileged());
+    }
+
     proptest! {
         #[test]
-        fn privileged(uid in 0u32..65535) {
+        fn unprivileged(uid in 1u32..65535) {
             let u = UserId::from(uid);
-            prop_assert_eq!(u.privileged(), uid == 0);
+            prop_assert!(!u.privileged());
         }
     }
 }

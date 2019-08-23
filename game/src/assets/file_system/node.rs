@@ -40,8 +40,8 @@ impl Node {
     /// user (UID 0) always has read access.
     pub fn may_read(&self, uid: &UserId, gids: &[GroupId]) -> bool {
         uid.privileged()
-            || (self.uid == *uid) && self.mode.user_read()
-            || gids.iter().any(|gid| self.gid == *gid) && self.mode.group_read()
+            || ((self.uid == *uid) && self.mode.user_read())
+            || (gids.iter().any(|gid| self.gid == *gid) && self.mode.group_read())
             || self.mode.other_read()
     }
 
@@ -49,8 +49,8 @@ impl Node {
     /// user (UID 0) always has write access.
     pub fn may_write(&self, uid: &UserId, gids: &[GroupId]) -> bool {
         uid.privileged()
-            || (self.uid == *uid) && self.mode.user_write()
-            || gids.iter().any(|gid| self.gid == *gid) && self.mode.group_write()
+            || ((self.uid == *uid) && self.mode.user_write())
+            || (gids.iter().any(|gid| self.gid == *gid) && self.mode.group_write())
             || self.mode.other_write()
     }
 
@@ -58,8 +58,8 @@ impl Node {
     /// privileged user (UID 0) has access if any executable bit is set.
     pub fn may_execute(&self, uid: &UserId, gids: &[GroupId]) -> bool {
         uid.privileged() && self.mode.any_execute()
-            || (self.uid == *uid) && self.mode.user_execute()
-            || gids.iter().any(|gid| self.gid == *gid) && self.mode.group_execute()
+            || ((self.uid == *uid) && self.mode.user_execute())
+            || (gids.iter().any(|gid| self.gid == *gid) && self.mode.group_execute())
             || self.mode.other_execute()
     }
 
@@ -109,33 +109,33 @@ mod tests {
         }
 
         #[test]
-        fn user_may_read_own_readable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
-            let n = Node::new("", uid, ngid, nmode);
-            prop_assert_eq!(n.may_read(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o400) > 0);
-        }
-
-        #[test]
         fn privileged_user_may_always_write(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, gid in 0u32..65535) {
             let n = Node::new("", nuid, ngid, nmode);
             prop_assert_eq!(n.may_write(&UserId::from(0), &[GroupId::from(gid)]), true);
         }
 
         #[test]
-        fn user_may_write_own_writable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
-            let n = Node::new("", uid, ngid, nmode);
-            prop_assert_eq!(n.may_write(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o200) > 0);
-        }
-
-        #[test]
-        fn privileged_user_may_execute_mostly(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, gid in 0u32..65535) {
+        fn privileged_user_may_execute_any_executable(nuid in 0u32..65535, ngid in 0u32..65535, nmode in 0u32..0o777, gid in 0u32..65535) {
             let n = Node::new("", nuid, ngid, nmode);
             prop_assert_eq!(n.may_execute(&UserId::from(0), &[GroupId::from(gid)]), (nmode & 0o111) > 0);
         }
 
         #[test]
+        fn user_may_read_own_readable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
+            let n = Node::new("", uid, ngid, nmode);
+            prop_assert_eq!(n.may_read(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o444) > 0);
+        }
+
+        #[test]
+        fn user_may_write_own_writable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
+            let n = Node::new("", uid, ngid, nmode);
+            prop_assert_eq!(n.may_write(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o222) > 0);
+        }
+
+        #[test]
         fn user_may_execute_own_executable(ngid in 1u32..65535, nmode in 0u32..0o777, uid in 1u32..65535, gid in 1u32..65535) {
             let n = Node::new("", uid, ngid, nmode);
-            prop_assert_eq!(n.may_execute(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o100) > 0);
+            prop_assert_eq!(n.may_execute(&UserId::from(uid), &[GroupId::from(gid)]), (nmode & 0o111) > 0);
         }
     }
 }
