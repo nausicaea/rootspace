@@ -4,8 +4,16 @@ extern crate failure;
 extern crate glium;
 extern crate log;
 extern crate nalgebra;
+#[cfg(test)]
+extern crate quickcheck;
+#[cfg(test)]
+#[macro_use(quickcheck)]
+extern crate quickcheck_macros;
+extern crate daggy;
 
-use ecs::{EventQueue, LoopStage, Resources, World};
+mod file_system;
+
+use ecs::{EventQueue, LoopStage, Resources, World, WorldTrait, Persistence};
 use engine::{
     components::{Camera, Info, Model, Status, UiModel, Renderable},
     event::EngineEvent,
@@ -20,6 +28,7 @@ use engine::{
 use failure::Error;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
+use self::file_system::FileSystem;
 
 pub struct Game<B> {
     orchestrator: DefaultOrchestrator<B>,
@@ -29,6 +38,17 @@ impl<B> Game<B>
 where
     B: BackendTrait,
 {
+    pub fn new<P: AsRef<Path>>(
+        resource_path: P,
+        delta_time: Duration,
+        max_frame_time: Duration,
+    ) -> Result<Self, Error> {
+        let mut o = DefaultOrchestrator::new(resource_path, delta_time, max_frame_time)?;
+        o.world.add_resource(FileSystem::default(), Persistence::Runtime);
+
+        Ok(Game { orchestrator: o })
+    }
+
     pub fn load(&mut self) -> Result<(), Error> {
         self.orchestrator.reset();
 
@@ -184,9 +204,7 @@ impl Game<HeadlessBackend> {
         delta_time: Duration,
         max_frame_time: Duration,
     ) -> Result<Self, Error> {
-        let o = DefaultOrchestrator::new(resource_path, delta_time, max_frame_time)?;
-
-        Ok(Game { orchestrator: o })
+        Self::new(resource_path, delta_time, max_frame_time)
     }
 }
 
@@ -196,8 +214,6 @@ impl Game<GliumBackend> {
         delta_time: Duration,
         max_frame_time: Duration,
     ) -> Result<Self, Error> {
-        let o = DefaultOrchestrator::new(resource_path, delta_time, max_frame_time)?;
-
-        Ok(Game { orchestrator: o })
+        Self::new(resource_path, delta_time, max_frame_time)
     }
 }

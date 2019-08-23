@@ -10,7 +10,12 @@ diagnostics = ["engine/diagnostics", "ecs/diagnostics"]
 [dependencies]
 log = "^0.4.1"
 failure = "^0.1.1"
+daggy = "^0.6.0"
 glium = "^0.25.0"
 nalgebra = "^0.18.0"
 ecs = {path = "../ecs"}
 engine = {path = "../engine"}
+
+[dev-dependencies]
+quickcheck = "^0.8.0"
+quickcheck_macros = "^0.8.0"

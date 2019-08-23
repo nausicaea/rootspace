@@ -21,7 +21,7 @@ impl_downcast!(Resource);
 #[derive(Debug)]
 struct ResourceContainer {
     persistence: Persistence,
-    inner: RefCell<Box<Resource>>,
+    inner: RefCell<Box<dyn Resource>>,
 }
 
 impl ResourceContainer {

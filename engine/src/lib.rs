@@ -13,8 +13,10 @@ extern crate image;
 #[macro_use]
 extern crate log;
 #[cfg(test)]
-#[macro_use]
 extern crate quickcheck;
+#[cfg(test)]
+#[macro_use(quickcheck)]
+extern crate quickcheck_macros;
 extern crate ecs;
 extern crate nalgebra;
 extern crate num_traits;
