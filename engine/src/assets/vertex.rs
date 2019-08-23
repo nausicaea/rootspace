@@ -1,3 +1,5 @@
+use glium::implement_vertex;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Vertex {
     position: [f32; 3],

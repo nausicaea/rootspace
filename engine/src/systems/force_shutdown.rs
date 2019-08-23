@@ -11,6 +11,9 @@ use std::{
     },
     time::Duration,
 };
+use log::trace;
+#[cfg(not(test))]
+use log::error;
 
 pub struct ForceShutdown {
     ctrlc_triggered: Arc<AtomicUsize>,

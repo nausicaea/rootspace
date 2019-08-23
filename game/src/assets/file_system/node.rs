@@ -100,6 +100,7 @@ impl Node {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck_macros::quickcheck;
 
     #[test]
     fn new() {

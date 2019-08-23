@@ -1,3 +1,6 @@
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
+
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, Clone, PartialEq)]
 pub enum EngineEvent {

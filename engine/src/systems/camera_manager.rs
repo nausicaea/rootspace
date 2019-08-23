@@ -1,6 +1,8 @@
 use crate::{components::camera::Camera, event::EngineEvent};
 use ecs::{EventQueue, ReceiverId, Resources, System};
 use std::time::Duration;
+#[cfg(any(test, feature = "diagnostics"))]
+use log::trace;
 
 pub struct CameraManager {
     receiver: ReceiverId<EngineEvent>,

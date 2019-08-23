@@ -5,6 +5,8 @@ use crate::{
     resources::Resource,
 };
 use std::fmt;
+#[cfg(feature = "typename")]
+use typename::TypeName;
 
 /// The `Entities` resource keeps track of all entities.
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]

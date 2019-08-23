@@ -58,6 +58,7 @@ impl From<u32> for Mode {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck_macros::quickcheck;
 
     #[quickcheck]
     fn user_read(mode: u32) -> bool {

@@ -5,12 +5,6 @@
 
 #![warn(missing_docs)]
 
-extern crate downcast_rs;
-extern crate hibitset;
-#[cfg(feature = "diagnostics")]
-#[macro_use]
-extern crate typename;
-
 pub mod components;
 pub mod entities;
 pub mod event_queue;

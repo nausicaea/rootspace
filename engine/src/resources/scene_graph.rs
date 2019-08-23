@@ -1,6 +1,8 @@
 use ecs::{Component, Entity, Resource, Storage};
 use hierarchy::{Hierarchy, RawNodes};
 use std::{fmt, ops::Mul};
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Default)]

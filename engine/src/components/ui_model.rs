@@ -1,6 +1,8 @@
 use ecs::{Component, VecStorage};
 use nalgebra::{zero, Affine3, Isometry3, Matrix4, Point2, Vector2, Vector3};
 use std::ops::Mul;
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, Clone, PartialEq)]

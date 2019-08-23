@@ -3,6 +3,7 @@ use std::{
     io::{self, Read},
     path::Path,
 };
+use failure::Fail;
 
 pub trait VerifyPath {
     /// Verifies that `self` refers to an existing file in the file system.

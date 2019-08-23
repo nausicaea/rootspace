@@ -1,17 +1,15 @@
-#![cfg_attr(test, allow(unused_variables))]
-#![cfg_attr(test, allow(unused_imports))]
-#![cfg_attr(test, allow(unused_mut))]
-#![cfg_attr(test, allow(dead_code))]
-
 use crate::{event::EngineEvent, text_manipulation::split_arguments};
 use ecs::{EventQueue, Resources, System};
 use std::{
     io::{self, Read},
     string,
     sync::mpsc::{self, channel, Receiver},
-    thread::spawn,
     time::Duration,
 };
+#[cfg(not(test))]
+use std::thread::spawn;
+use log::{warn, error};
+use failure::Fail;
 
 pub struct DebugConsole {
     escape_char: char,

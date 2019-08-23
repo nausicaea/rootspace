@@ -1,21 +1,7 @@
-extern crate ecs;
-extern crate engine;
-extern crate failure;
-extern crate glium;
-extern crate log;
-extern crate nalgebra;
-#[cfg(test)]
-extern crate quickcheck;
-#[cfg(test)]
-#[macro_use(quickcheck)]
-extern crate quickcheck_macros;
-extern crate daggy;
-
 mod assets;
 mod resources;
 
-use self::assets::FileSystem;
-use ecs::{EventQueue, LoopStage, Persistence, Resources, World, WorldTrait};
+use ecs::{EventQueue, LoopStage, Resources, World};
 use engine::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,

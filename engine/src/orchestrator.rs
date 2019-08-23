@@ -98,6 +98,7 @@ mod tests {
     use crate::{graphics::headless::HeadlessBackend, mock::MockWorld};
     use std::env;
     use tempfile::NamedTempFile;
+    use quickcheck_macros::quickcheck;
 
     /// Danger! This test works with thread::sleep() to test fixed loop timing. Note that the
     /// estimate of update calls is not always accurate, that's why this test is fuzzy by +/-1

@@ -6,6 +6,8 @@ use ecs::Resource;
 use failure::Error;
 use snowflake::ProcessUniqueId;
 use std::{collections::HashMap, fmt, marker::PhantomData, path::Path};
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TextureId(ProcessUniqueId);

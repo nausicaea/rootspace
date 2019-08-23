@@ -1,5 +1,7 @@
 use ecs::{Component, VecStorage};
 use std::fmt;
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, Clone, PartialEq, Eq)]

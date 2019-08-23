@@ -12,6 +12,9 @@ use std::{
     path::{Path, PathBuf},
 };
 use unicode_normalization::UnicodeNormalization;
+use failure::Fail;
+#[cfg(any(test, feature = "diagnostics"))]
+use log::trace;
 
 pub struct Text<'a> {
     text: String,

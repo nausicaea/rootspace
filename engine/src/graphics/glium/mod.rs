@@ -28,6 +28,8 @@ use std::{
     fmt,
     rc::Rc,
 };
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 #[derive(Debug)]
 pub struct GliumEvent(pub GlutinEvent);
@@ -333,6 +335,7 @@ impl fmt::Debug for GliumBackend {
 mod tests {
     use super::*;
     use std::f64;
+    use approx::assert_ulps_ne;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);

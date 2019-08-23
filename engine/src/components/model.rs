@@ -3,6 +3,8 @@ use ecs::{Component, VecStorage};
 use affine_transform::AffineTransform;
 use nalgebra::{Affine3, Isometry3, Matrix4, Point3, UnitQuaternion, Vector3};
 use std::{f32, ops::Mul};
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug, Clone, PartialEq)]

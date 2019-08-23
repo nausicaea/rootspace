@@ -35,13 +35,13 @@ impl ResourceContainer {
         }
     }
 
-    fn into_inner(self) -> RefCell<Box<Resource>> {
+    fn into_inner(self) -> RefCell<Box<dyn Resource>> {
         self.inner
     }
 }
 
 impl Deref for ResourceContainer {
-    type Target = RefCell<Box<Resource>>;
+    type Target = RefCell<Box<dyn Resource>>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

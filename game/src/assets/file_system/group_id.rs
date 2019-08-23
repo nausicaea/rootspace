@@ -22,6 +22,7 @@ impl From<u32> for GroupId {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck_macros::quickcheck;
 
     #[quickcheck]
     fn privileged(gid: u32) -> bool {

@@ -11,6 +11,10 @@ use crate::{
 };
 use failure::Error;
 use std::{borrow::Cow, convert::TryInto};
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
+#[cfg(any(test, feature = "diagnostics"))]
+use log::trace;
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;

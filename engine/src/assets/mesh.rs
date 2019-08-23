@@ -3,6 +3,7 @@ use crate::file_manipulation::VerifyPath;
 use failure::Error;
 use ply::{self, CoerceTo};
 use std::path::Path;
+use failure::Fail;
 
 #[derive(Debug)]
 pub struct Mesh {

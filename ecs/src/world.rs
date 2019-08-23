@@ -69,10 +69,11 @@ pub enum WorldEvent {
 
 /// This is the default implementation of the `WorldTrait` provided by this library.
 pub struct World {
+    /// The resources container.
     pub resources: Resources,
-    fixed_update_systems: Vec<Box<System>>,
-    update_systems: Vec<Box<System>>,
-    render_systems: Vec<Box<System>>,
+    fixed_update_systems: Vec<Box<dyn System>>,
+    update_systems: Vec<Box<dyn System>>,
+    render_systems: Vec<Box<dyn System>>,
     receiver: ReceiverId<WorldEvent>,
 }
 

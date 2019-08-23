@@ -6,6 +6,9 @@ use crate::{
 use ecs::{Component, VecStorage};
 use failure::Error;
 use std::path::{Path, PathBuf};
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
+use failure::Fail;
 
 #[cfg_attr(feature = "diagnostics", derive(TypeName))]
 #[derive(Debug)]

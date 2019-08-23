@@ -3,6 +3,8 @@
 use crate::{entities::Entity, resources::Resource};
 use hibitset::{BitIter, BitSet, BitSetLike};
 use std::{fmt, iter, ptr, slice};
+#[cfg(feature = "diagnostics")]
+use typename::TypeName;
 
 /// A component is a data type that is associated with a particular `Entity`.
 pub trait Component: Sized {

@@ -6,6 +6,8 @@ use std::{
     fmt,
     marker::PhantomData,
 };
+#[cfg(feature = "typename")]
+use typename::TypeName;
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Debug, Clone)]

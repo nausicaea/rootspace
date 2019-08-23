@@ -2,6 +2,7 @@ use ecs::{EventQueue, ReceiverId, Resources, System};
 use std::{fmt, time::Duration};
 #[cfg(feature = "diagnostics")]
 use typename::TypeName;
+use log::trace;
 
 pub struct EventMonitor<E> {
     receiver: ReceiverId<E>,
