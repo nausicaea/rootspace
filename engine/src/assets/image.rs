@@ -3,23 +3,26 @@ use failure::Error;
 use glium::texture::RawImage2d;
 use image::{self, GenericImageView};
 use std::{fmt, path::Path};
+use super::AssetTrait;
 
 pub struct Image(image::DynamicImage);
 
 impl Image {
-    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
-        path.ensure_extant_file()?;
-        let data = image::open(path)?;
-
-        Ok(Image(data))
-    }
-
     pub fn new_rgba8(width: u32, height: u32) -> Self {
         Image(image::DynamicImage::new_rgba8(width, height))
     }
 
     pub fn dimensions(&self) -> (u32, u32) {
         (self.0.width(), self.0.height())
+    }
+}
+
+impl AssetTrait for Image {
+    fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+        path.ensure_extant_file()?;
+        let data = image::open(path)?;
+
+        Ok(Image(data))
     }
 }
 

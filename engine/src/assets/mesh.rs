@@ -4,6 +4,7 @@ use failure::Error;
 use ply::{self, CoerceTo};
 use std::path::Path;
 use failure::Fail;
+use super::AssetTrait;
 
 #[derive(Debug)]
 pub struct Mesh {
@@ -12,14 +13,6 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
-        path.ensure_extant_file()?;
-        let data = ply::Ply::from_path(path)?;
-        let mesh = Mesh::from_ply(&data)?;
-
-        Ok(mesh)
-    }
-
     pub fn from_ply(data: &ply::Ply) -> Result<Self, MeshError> {
         let vtx_keyword = "vertex";
         let (eidx, el) = data
@@ -80,6 +73,16 @@ impl Mesh {
             .collect();
 
         Ok(Mesh { vertices, indices })
+    }
+}
+
+impl AssetTrait for Mesh {
+    fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+        path.ensure_extant_file()?;
+        let data = ply::Ply::from_path(path)?;
+        let mesh = Mesh::from_ply(&data)?;
+
+        Ok(mesh)
     }
 }
 

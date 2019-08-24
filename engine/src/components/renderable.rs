@@ -1,5 +1,5 @@
 use crate::{
-    assets::{Mesh, Text},
+    assets::{AssetTrait, Mesh, Text},
     graphics::BackendTrait,
     resources::{Backend, IndexBufferId, ShaderId, TextureId, VertexBufferId},
 };

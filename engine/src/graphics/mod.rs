@@ -6,7 +6,7 @@ mod private {
 }
 
 use crate::{
-    assets::{Image, Vertex},
+    assets::{AssetTrait, Image, Vertex},
     components::Renderable,
     event::EngineEvent,
     file_manipulation::ReadPath,
