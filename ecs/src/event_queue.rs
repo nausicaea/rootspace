@@ -6,7 +6,6 @@ use std::{
     fmt,
     marker::PhantomData,
 };
-#[cfg(feature = "typename")]
 use typename::TypeName;
 
 /// A handle that allows a receiver to receive events from the related event queue.
@@ -44,7 +43,7 @@ impl<E> Default for ReceiverState<E> {
 
 /// An `EventQueue` contains a queue of events and provides rudimentary facilities of retrieving
 /// those events.
-#[cfg_attr(feature = "diagnostics", derive(TypeName))]
+#[derive(TypeName)]
 pub struct EventQueue<E> {
     events: VecDeque<E>,
     max_id: usize,

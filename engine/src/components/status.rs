@@ -1,9 +1,7 @@
 use ecs::{Component, VecStorage};
-#[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
-#[cfg_attr(feature = "diagnostics", derive(TypeName))]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, TypeName)]
 pub struct Status(bool);
 
 impl Status {

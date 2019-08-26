@@ -5,7 +5,7 @@ authors = ["Eleanore Young"]
 edition = "2018"
 
 [features]
-diagnostics = ["typename", "ecs/diagnostics"]
+diagnostics = ["ecs/diagnostics"]
 mock = []
 wsl = []
 
@@ -21,7 +21,7 @@ num-traits = "^0.2.6"
 rusttype = {version = "^0.7.2", features = ["gpu_cache"]}
 unicode-normalization = "^0.1.5"
 snowflake = "^1.2.0"
-typename = {version = "^0.1.0", optional = true}
+typename = "^0.1.0"
 affine-transform = {git = "https://gitlab.com/nausicaea/affine-transform.git"}
 hierarchy = {git = "https://gitlab.com/nausicaea/hierarchy.git"}
 ply = {git = "https://gitlab.com/nausicaea/ply.git"}

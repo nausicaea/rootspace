@@ -11,7 +11,6 @@ use crate::{
 };
 use failure::Error;
 use std::{borrow::Cow, convert::TryInto};
-#[cfg(feature = "diagnostics")]
 use typename::TypeName;
 #[cfg(any(test, feature = "diagnostics"))]
 use log::trace;
@@ -136,8 +135,7 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
     }
 }
 
-#[cfg_attr(feature = "diagnostics", derive(TypeName))]
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, TypeName)]
 pub struct HeadlessBackend {
     dimensions: (u32, u32),
 }

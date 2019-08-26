@@ -28,7 +28,6 @@ use std::{
     fmt,
     rc::Rc,
 };
-#[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
 #[derive(Debug)]
@@ -270,8 +269,7 @@ impl fmt::Debug for GliumFrame {
     }
 }
 
-#[cfg_attr(feature = "diagnostics", derive(TypeName))]
-#[derive(Clone)]
+#[derive(Clone, TypeName)]
 pub struct GliumBackend {
     pub display: Display,
 }

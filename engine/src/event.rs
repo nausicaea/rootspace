@@ -1,8 +1,6 @@
-#[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
-#[cfg_attr(feature = "diagnostics", derive(TypeName))]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, TypeName)]
 pub enum EngineEvent {
     Startup,
     Shutdown,

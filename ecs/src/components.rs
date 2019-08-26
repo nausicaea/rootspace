@@ -3,7 +3,6 @@
 use crate::{entities::Entity, resources::Resource};
 use hibitset::{BitIter, BitSet, BitSetLike};
 use std::{fmt, iter, ptr, slice};
-#[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
 /// A component is a data type that is associated with a particular `Entity`.
@@ -30,7 +29,7 @@ pub trait Storage<T> {
 }
 
 /// Implements component storage based on a `Vec<T>`. Occupied spaces are tracked with a `BitSet`.
-#[cfg_attr(feature = "diagnostics", derive(TypeName))]
+#[derive(TypeName)]
 pub struct VecStorage<T> {
     /// The index into the data vector.
     index: BitSet,

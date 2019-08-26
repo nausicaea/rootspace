@@ -5,12 +5,10 @@ use crate::{
     resources::Resource,
 };
 use std::fmt;
-#[cfg(feature = "typename")]
 use typename::TypeName;
 
 /// The `Entities` resource keeps track of all entities.
-#[cfg_attr(feature = "diagnostics", derive(TypeName))]
-#[derive(Default, Debug)]
+#[derive(Default, Debug, TypeName)]
 pub struct Entities {
     /// Stores the highest assigned `Entity` index plus one.
     max_idx: Index,

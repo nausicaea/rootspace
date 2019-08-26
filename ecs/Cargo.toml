@@ -6,9 +6,9 @@ description = "The ecs library provides facilities to build an Entity-Component-
 edition = "2018"
 
 [features]
-diagnostics = ["typename"]
+diagnostics = []
 
 [dependencies]
 hibitset = {version = "^0.6.0", default-features = false}
 downcast-rs = "^1.0.0"
-typename = {version = "^0.1.0", optional = true}
+typename = "^0.1.0"

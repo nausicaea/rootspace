@@ -10,7 +10,6 @@ use crate::{
     system::System,
 };
 use std::time::Duration;
-#[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
@@ -59,8 +58,7 @@ pub trait WorldTrait {
 }
 
 /// Events defined and processed by the world itself.
-#[cfg_attr(feature = "diagnostics", derive(TypeName))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy, TypeName)]
 pub enum WorldEvent {
     /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game
     /// engine to abort.
@@ -80,17 +78,6 @@ pub struct World {
 impl World {
     /// Return a mutable references to the specified resource type. Panics, if the resource is not
     /// registered.
-    #[cfg(not(feature = "diagnostics"))]
-    pub fn get_resource_mut<R>(&mut self) -> &mut R
-    where
-        R: Resource,
-    {
-        self.resources.get_mut::<R>()
-    }
-
-    /// Return a mutable references to the specified resource type. Panics, if the resource is not
-    /// registered.
-    #[cfg(feature = "diagnostics")]
     pub fn get_resource_mut<R>(&mut self) -> &mut R
     where
         R: Resource + TypeName,
@@ -133,20 +120,6 @@ impl World {
     }
 
     /// Add a component to the specified `Entity`.
-    #[cfg(not(feature = "diagnostics"))]
-    pub fn add_component<C>(&mut self, entity: Entity, component: C) -> Option<C>
-    where
-        C: Component,
-    {
-        if !self.resources.has::<C::Storage>() {
-            let _ = self.resources.insert(C::Storage::default(), Persistence::None);
-        }
-
-        self.resources.get_mut::<C::Storage>().insert(entity, component)
-    }
-
-    /// Add a component to the specified `Entity`.
-    #[cfg(feature = "diagnostics")]
     pub fn add_component<C>(&mut self, entity: Entity, component: C) -> Option<C>
     where
         C: Component + TypeName,

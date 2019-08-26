@@ -9,7 +9,6 @@ use std::{
     fmt,
     ops::{Deref, DerefMut},
 };
-#[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
 /// A resource is a data structure that is not coupled to a specific entity. Resources can be used
@@ -18,7 +17,6 @@ pub trait Resource: Downcast + fmt::Debug {}
 
 impl_downcast!(Resource);
 
-#[derive(Debug)]
 struct ResourceContainer {
     persistence: Persistence,
     inner: RefCell<Box<dyn Resource>>,
@@ -54,15 +52,21 @@ impl DerefMut for ResourceContainer {
     }
 }
 
-/// A container that manages resources. Allows mutable borrows of multiple resources at the same
-/// time.
+impl fmt::Debug for ResourceContainer {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ResourceContainer(persistence: {:?}, ...)", self.persistence)
+    }
+}
+
+/// A container that manages resources. Allows mutable borrows of multiple different resources at
+/// the same time.
 #[derive(Default)]
 pub struct Resources(HashMap<TypeId, ResourceContainer>);
 
 impl Resources {
     /// Empty the resource manager.
     pub fn clear(&mut self, persistence: Persistence) {
-        self.0.retain(|_, rc| rc.persistence > persistence)
+        self.0.retain(|_, rc| rc.persistence >= persistence)
     }
 
     /// Insert a new resource. Returns any previously present resource of the same type.
@@ -102,24 +106,6 @@ impl Resources {
     }
 
     /// Borrows the requested resource.
-    #[cfg(not(feature = "diagnostics"))]
-    pub fn borrow<R>(&self) -> Ref<R>
-    where
-        R: Resource,
-    {
-        self.0
-            .get(&TypeId::of::<R>())
-            .map(|r| {
-                Ref::map(r.borrow(), |i| {
-                    i.downcast_ref::<R>()
-                        .expect("Could not downcast the requested resource to the specified type")
-                })
-            })
-            .expect("Could not find a resource with the specified type")
-    }
-
-    /// Borrows the requested resource.
-    #[cfg(feature = "diagnostics")]
     pub fn borrow<R>(&self) -> Ref<R>
     where
         R: Resource + TypeName,
@@ -138,24 +124,6 @@ impl Resources {
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
-    #[cfg(not(feature = "diagnostics"))]
-    pub fn borrow_mut<R>(&self) -> RefMut<R>
-    where
-        R: Resource,
-    {
-        self.0
-            .get(&TypeId::of::<R>())
-            .map(|r| {
-                RefMut::map(r.borrow_mut(), |i| {
-                    i.downcast_mut::<R>()
-                        .expect("Could not downcast the requested resource to the specified type")
-                })
-            })
-            .expect("Could not find a resource with the specified type")
-    }
-
-    /// Mutably borrows the requested resource (with a runtime borrow check).
-    #[cfg(feature = "diagnostics")]
     pub fn borrow_mut<R>(&self) -> RefMut<R>
     where
         R: Resource + TypeName,
@@ -174,23 +142,6 @@ impl Resources {
     }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
-    #[cfg(not(feature = "diagnostics"))]
-    pub fn get_mut<R>(&mut self) -> &mut R
-    where
-        R: Resource,
-    {
-        self.0
-            .get_mut(&TypeId::of::<R>())
-            .map(|r| {
-                r.get_mut()
-                    .downcast_mut::<R>()
-                    .expect("Could not downcast the requested resource to the specified type")
-            })
-            .expect("Could not find a resource with the specified type")
-    }
-
-    /// Mutably borrows the requested resource (with a compile-time borrow check).
-    #[cfg(feature = "diagnostics")]
     pub fn get_mut<R>(&mut self) -> &mut R
     where
         R: Resource + TypeName,
@@ -207,16 +158,6 @@ impl Resources {
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
-    #[cfg(not(feature = "diagnostics"))]
-    pub fn borrow_component<C>(&self) -> Ref<C::Storage>
-    where
-        C: Component,
-    {
-        self.borrow::<C::Storage>()
-    }
-
-    /// Borrows the requested component storage (this is a convenience method to `borrow`).
-    #[cfg(feature = "diagnostics")]
     pub fn borrow_component<C>(&self) -> Ref<C::Storage>
     where
         C: Component + TypeName,
@@ -227,23 +168,18 @@ impl Resources {
 
     /// Mutably borrows the requested component storage (this is a convenience method to
     /// `borrow_mut`).
-    #[cfg(not(feature = "diagnostics"))]
-    pub fn borrow_mut_component<C>(&self) -> RefMut<C::Storage>
-    where
-        C: Component,
-    {
-        self.borrow_mut::<C::Storage>()
-    }
-
-    /// Mutably borrows the requested component storage (this is a convenience method to
-    /// `borrow_mut`).
-    #[cfg(feature = "diagnostics")]
     pub fn borrow_mut_component<C>(&self) -> RefMut<C::Storage>
     where
         C: Component + TypeName,
         C::Storage: TypeName,
     {
         self.borrow_mut::<C::Storage>()
+    }
+}
+
+impl fmt::Debug for Resources {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Resources(#res: {})", self.0.len())
     }
 }
 

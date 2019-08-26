@@ -2,11 +2,9 @@ use crate::geometry::ray::Ray;
 use ecs::{Component, VecStorage};
 use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
 use std::f32;
-#[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
-#[cfg_attr(feature = "diagnostics", derive(TypeName))]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, TypeName)]
 pub struct Camera {
     world_matrix: Matrix4<f32>,
     ui_matrix: Matrix4<f32>,

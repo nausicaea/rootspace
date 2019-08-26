@@ -6,7 +6,6 @@ use ecs::Resource;
 use failure::Error;
 use snowflake::ProcessUniqueId;
 use std::{collections::HashMap, fmt, marker::PhantomData, path::Path};
-#[cfg(feature = "diagnostics")]
 use typename::TypeName;
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
@@ -21,7 +20,7 @@ pub struct VertexBufferId(ProcessUniqueId);
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IndexBufferId(ProcessUniqueId);
 
-#[cfg_attr(feature = "diagnostics", derive(TypeName))]
+#[derive(TypeName)]
 pub struct Backend<B>
 where
     B: BackendTrait,
