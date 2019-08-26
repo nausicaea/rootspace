@@ -17,6 +17,7 @@ pub trait Resource: Downcast + fmt::Debug {}
 
 impl_downcast!(Resource);
 
+#[derive(Debug)]
 struct ResourceContainer {
     persistence: Persistence,
     inner: RefCell<Box<dyn Resource>>,
@@ -52,15 +53,9 @@ impl DerefMut for ResourceContainer {
     }
 }
 
-impl fmt::Debug for ResourceContainer {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ResourceContainer(persistence: {:?}, ...)", self.persistence)
-    }
-}
-
 /// A container that manages resources. Allows mutable borrows of multiple different resources at
 /// the same time.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Resources(HashMap<TypeId, ResourceContainer>);
 
 impl Resources {
@@ -174,12 +169,6 @@ impl Resources {
         C::Storage: TypeName,
     {
         self.borrow_mut::<C::Storage>()
-    }
-}
-
-impl fmt::Debug for Resources {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Resources(#res: {})", self.0.len())
     }
 }
 
