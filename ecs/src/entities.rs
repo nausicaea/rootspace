@@ -2,13 +2,14 @@
 
 use crate::{
     indexing::{Generation, Index},
-    resources::Resource,
+    resource::Resource,
 };
 use std::fmt;
 use typename::TypeName;
+use serde::{Serialize, Deserialize};
 
 /// The `Entities` resource keeps track of all entities.
-#[derive(Default, Debug, TypeName)]
+#[derive(Default, Debug, TypeName, Serialize, Deserialize)]
 pub struct Entities {
     /// Stores the highest assigned `Entity` index plus one.
     max_idx: Index,
@@ -94,7 +95,7 @@ impl<'a> Iterator for EntitiesIter<'a> {
 }
 
 /// An entity serves as an identifier to an object within the world.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Entity {
     /// Holds the entity index.
     idx: Index,

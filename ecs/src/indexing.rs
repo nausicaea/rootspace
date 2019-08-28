@@ -1,8 +1,9 @@
 use std::fmt;
+use serde::{Serialize, Deserialize};
 
 /// A zero-based index that can be used as index into data structures. Entities may reuse these
 /// indices.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Index(u32);
 
 impl Index {
@@ -31,7 +32,7 @@ impl fmt::Display for Index {
 
 /// A zero-based generation that can be used to track the number of times that a corresponding
 /// index has been used previously.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Generation(u32);
 
 impl Generation {

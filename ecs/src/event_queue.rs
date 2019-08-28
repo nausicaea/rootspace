@@ -1,6 +1,6 @@
 //! Provides facilities to define and manage events.
 
-use crate::resources::Resource;
+use crate::resource::Resource;
 use std::{
     collections::{HashMap, VecDeque},
     fmt,

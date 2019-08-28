@@ -1,21 +1,14 @@
 //! Provides the resource manager.
 
-use crate::{components::Component, persistence::Persistence};
-use downcast_rs::{impl_downcast, Downcast};
+use crate::{resource::Resource, components::Component, persistence::Persistence};
 use std::{
     any::TypeId,
     cell::{Ref, RefCell, RefMut},
     collections::HashMap,
-    fmt,
     ops::{Deref, DerefMut},
 };
 use typename::TypeName;
-
-/// A resource is a data structure that is not coupled to a specific entity. Resources can be used
-/// to provide "global" state to systems.
-pub trait Resource: Downcast + fmt::Debug {}
-
-impl_downcast!(Resource);
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 #[derive(Debug)]
 struct ResourceContainer {
@@ -170,14 +163,85 @@ impl Resources {
     {
         self.borrow_mut::<C::Storage>()
     }
+
+    /// Serialize the specified resource to the provided serializer.
+    pub fn serialize<R, S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        R: Resource + TypeName + Serialize,
+        S: Serializer,
+    {
+        self.borrow::<R>().serialize(serializer)
+    }
+
+    /// Deserialize and insert the specified resource type from the provided deserializer.
+    pub fn deserialize<'de, R, D>(&mut self, deserializer: D, persistence: Persistence) -> Result<(), D::Error>
+    where
+        R: Resource + Deserialize<'de>,
+        D: Deserializer<'de>,
+    {
+        let value: R = Deserialize::deserialize(deserializer)?;
+        self.insert::<R>(value, persistence);
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    #[derive(Debug, TypeName, Serialize, Deserialize)]
+    struct TestResource(usize);
+
+    impl Default for TestResource {
+        fn default() -> Self {
+            TestResource(100)
+        }
+    }
+
+    impl Resource for TestResource {}
+
     #[test]
     fn persistence() {
         assert!(Persistence::None < Persistence::Runtime);
+    }
+
+    #[test]
+    fn default() {
+        let _: Resources = Default::default();
+    }
+
+    #[test]
+    fn insert() {
+        let mut resources = Resources::default();
+        resources.insert(TestResource::default(), Persistence::Runtime);
+    }
+
+    #[test]
+    fn borrow() {
+        let mut resources = Resources::default();
+        resources.insert(TestResource::default(), Persistence::Runtime);
+
+        let _: Ref<TestResource> = resources.borrow();
+    }
+
+    #[test]
+    fn serialize() {
+        let mut resources = Resources::default();
+        resources.insert(TestResource::default(), Persistence::Runtime);
+
+        let mut writer: Vec<u8> = Vec::with_capacity(128);
+        let mut s = serde_json::Serializer::new(&mut writer);
+        assert!(resources.serialize::<TestResource, _>(&mut s).is_ok());
+        assert_eq!(unsafe { String::from_utf8_unchecked(writer) }, "100");
+    }
+
+    #[test]
+    fn deserialize() {
+        let mut resources = Resources::default();
+
+        let mut d = serde_json::Deserializer::from_slice(b"100");
+        assert!(resources.deserialize::<TestResource, _>(&mut d, Persistence::Runtime).is_ok());
+        assert!(d.end().is_ok());
+        let _: Ref<TestResource> = resources.borrow();
     }
 }

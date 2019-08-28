@@ -1,6 +1,6 @@
 //! Provides facilities for reasoning about data (e.g. components) coupled to entities.
 
-use crate::{entities::Entity, resources::Resource};
+use crate::{entities::Entity, resource::Resource};
 use hibitset::{BitIter, BitSet, BitSetLike};
 use std::{fmt, iter, ptr, slice};
 use typename::TypeName;

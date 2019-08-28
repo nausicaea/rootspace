@@ -12,6 +12,7 @@ pub mod events;
 mod indexing;
 pub mod loop_stage;
 pub mod persistence;
+pub mod resource;
 pub mod resources;
 pub mod system;
 pub mod world;
@@ -23,7 +24,8 @@ pub use crate::{
     events::EventTrait,
     loop_stage::LoopStage,
     persistence::Persistence,
-    resources::{Resource, Resources},
+    resource::Resource,
+    resources::Resources,
     system::System,
     world::{World, WorldEvent, WorldTrait},
 };

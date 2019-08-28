@@ -6,11 +6,13 @@ use crate::{
     event_queue::{EventQueue, ReceiverId},
     loop_stage::LoopStage,
     persistence::Persistence,
-    resources::{Resource, Resources},
+    resource::Resource,
+    resources::Resources,
     system::System,
 };
 use std::time::Duration;
 use typename::TypeName;
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
 /// systems to operate on the stored resources, components and entities.
@@ -131,16 +133,47 @@ impl World {
 
         self.resources.get_mut::<C::Storage>().insert(entity, component)
     }
+
+    pub fn serialize_entities<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.resources.serialize::<Entities, S>(serializer)
+    }
+
+    pub fn deserialize_entities<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        self.resources.deserialize::<Entities, D>(deserializer, Persistence::Runtime)
+    }
+
+    pub fn serialize_components<C, S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        C: Component + TypeName,
+        C::Storage: TypeName + Serialize,
+        S: Serializer,
+    {
+        self.resources.serialize::<C::Storage, S>(serializer)
+    }
+
+    pub fn deserialize_components<'de, C, D>(&mut self, deserializer: D) -> Result<(), D::Error>
+    where
+        C: Component,
+        C::Storage: Deserialize<'de>,
+        D: Deserializer<'de>,
+    {
+        self.resources.deserialize::<C::Storage, D>(deserializer, Persistence::None)
+    }
 }
 
 impl Default for World {
     fn default() -> Self {
-        let entities = Entities::default();
         let mut events: EventQueue<WorldEvent> = EventQueue::default();
         let receiver = events.subscribe();
 
         let mut resources = Resources::default();
-        resources.insert(entities, Persistence::Runtime);
+        resources.insert(Entities::default(), Persistence::Runtime);
         resources.insert(events, Persistence::Runtime);
 
         World {
