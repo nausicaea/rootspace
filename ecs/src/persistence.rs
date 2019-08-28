@@ -1,8 +1,10 @@
 //! Provides a way to select the persistence of an object.
 
+use serde::{Serialize, Deserialize};
+
 /// Determines how persistent a particular objec should be. This allows selectively deleting and
 /// retaining objects upon multiple re-initialisations of the world.
-#[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum Persistence {
     /// The respective object will be deleted when resetting the world.
     None,

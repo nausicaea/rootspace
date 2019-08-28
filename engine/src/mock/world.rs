@@ -27,12 +27,7 @@ impl WorldTrait for MockWorld {
         self.iterations = 0;
     }
 
-    fn add_resource<R>(&mut self, _res: R, _persistence: Persistence) -> Option<R>
-    where
-        R: Resource,
-    {
-        None
-    }
+    fn add_resource<R: Resource>(&mut self, _res: R, _persistence: Persistence) {}
 
     fn fixed_update(&mut self, time: &Duration, delta_time: &Duration) {
         self.fixed_update_calls += 1;
