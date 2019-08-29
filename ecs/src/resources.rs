@@ -1,6 +1,11 @@
 //! Provides the resource manager.
 
-use crate::{resource::Resource, components::Component, persistence::Persistence};
+use crate::{components::Component, persistence::Persistence, resource::Resource};
+use serde::{
+    de::{self, Deserializer, MapAccess, Visitor},
+    ser::{self, Serialize, SerializeMap, SerializeStruct, Serializer},
+    Deserialize,
+};
 use std::{
     any::TypeId,
     cell::{Ref, RefCell, RefMut},
@@ -9,7 +14,6 @@ use std::{
     marker::PhantomData,
 };
 use typename::TypeName;
-use serde::{ser::{self, SerializeStruct, Serialize, Serializer, SerializeMap}, de::{self, Deserializer, Visitor, MapAccess}, Deserialize};
 
 macro_rules! count_tts {
     () => { 0usize };
@@ -162,6 +166,75 @@ pub struct Resources {
 }
 
 impl Resources {
+    impl_serialize_with!(serialize_with_1, R0);
+
+    impl_serialize_with!(serialize_with_2, R0, R1);
+
+    impl_serialize_with!(serialize_with_3, R0, R1, R2);
+
+    impl_serialize_with!(serialize_with_4, R0, R1, R2, R3);
+
+    impl_serialize_with!(serialize_with_5, R0, R1, R2, R3, R4);
+
+    impl_serialize_with!(serialize_with_6, R0, R1, R2, R3, R4, R5);
+
+    impl_serialize_with!(serialize_with_7, R0, R1, R2, R3, R4, R5, R6);
+
+    impl_serialize_with!(serialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
+
+    impl_deserialize_with!(deserialize_with_1, R0);
+
+    impl_deserialize_with!(deserialize_with_2, R0, R1);
+
+    impl_deserialize_with!(deserialize_with_3, R0, R1, R2);
+
+    impl_deserialize_with!(deserialize_with_4, R0, R1, R2, R3);
+
+    impl_deserialize_with!(deserialize_with_5, R0, R1, R2, R3, R4);
+
+    impl_deserialize_with!(deserialize_with_6, R0, R1, R2, R3, R4, R5);
+
+    impl_deserialize_with!(deserialize_with_7, R0, R1, R2, R3, R4, R5, R6);
+
+    impl_deserialize_with!(deserialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
+
+    impl_deserialize_additive_with!(deserialize_additive_with_1, deserialize_with_1, R0);
+
+    impl_deserialize_additive_with!(deserialize_additive_with_2, deserialize_with_2, R0, R1);
+
+    impl_deserialize_additive_with!(deserialize_additive_with_3, deserialize_with_3, R0, R1, R2);
+
+    impl_deserialize_additive_with!(deserialize_additive_with_4, deserialize_with_4, R0, R1, R2, R3);
+
+    impl_deserialize_additive_with!(deserialize_additive_with_5, deserialize_with_5, R0, R1, R2, R3, R4);
+
+    impl_deserialize_additive_with!(deserialize_additive_with_6, deserialize_with_6, R0, R1, R2, R3, R4, R5);
+
+    impl_deserialize_additive_with!(
+        deserialize_additive_with_7,
+        deserialize_with_7,
+        R0,
+        R1,
+        R2,
+        R3,
+        R4,
+        R5,
+        R6
+    );
+
+    impl_deserialize_additive_with!(
+        deserialize_additive_with_8,
+        deserialize_with_8,
+        R0,
+        R1,
+        R2,
+        R3,
+        R4,
+        R5,
+        R6,
+        R7
+    );
+
     /// Create a new, empty resources container.
     pub fn new() -> Self {
         Default::default()
@@ -193,142 +266,117 @@ impl Resources {
 
     /// Insert a new resource.
     pub fn insert<R>(&mut self, res: R, persistence: Persistence)
-        where
+    where
         R: Resource + TypeName,
-        {
-            self.resources.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
-            self.persistences.insert(TypeId::of::<R>(), persistence);
-        }
+    {
+        self.resources.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
+        self.persistences.insert(TypeId::of::<R>(), persistence);
+    }
 
     /// Removes the resource of the specified type.
     pub fn remove<R>(&mut self)
-        where
+    where
         R: Resource + TypeName,
-        {
-            self.resources.remove(&TypeId::of::<R>());
-            self.persistences.remove(&TypeId::of::<R>());
-        }
+    {
+        self.resources.remove(&TypeId::of::<R>());
+        self.persistences.remove(&TypeId::of::<R>());
+    }
 
     /// Returns `true` if a resource of the specified type is present.
     pub fn has<R>(&self) -> bool
-        where
+    where
         R: Resource,
-        {
-            self.resources.contains_key(&TypeId::of::<R>())
-        }
+    {
+        self.resources.contains_key(&TypeId::of::<R>())
+    }
 
     /// Returns the persistence of the specified resource type.
     pub fn persistence_of<R>(&self) -> Persistence
     where
         R: Resource + TypeName,
     {
-        *self.persistences.get(&TypeId::of::<R>())
+        *self
+            .persistences
+            .get(&TypeId::of::<R>())
             .expect(&format!("Could not find any resource of type {}", R::type_name()))
     }
 
     /// Borrows the requested resource.
     pub fn borrow<R>(&self) -> Ref<R>
-        where
+    where
         R: Resource + TypeName,
-        {
-            self.resources
-                .get(&TypeId::of::<R>())
-                .map(|r| {
-                    Ref::map(r.borrow(), |i| {
-                        i.downcast_ref::<R>().expect(&format!(
-                                "Could not downcast the requested resource to type {}",
-                                R::type_name()
-                        ))
-                    })
+    {
+        self.resources
+            .get(&TypeId::of::<R>())
+            .map(|r| {
+                Ref::map(r.borrow(), |i| {
+                    i.downcast_ref::<R>().expect(&format!(
+                        "Could not downcast the requested resource to type {}",
+                        R::type_name()
+                    ))
                 })
+            })
             .expect(&format!("Could not find any resource of type {}", R::type_name()))
-        }
+    }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
     pub fn borrow_mut<R>(&self) -> RefMut<R>
-        where
+    where
         R: Resource + TypeName,
-        {
-            self.resources
-                .get(&TypeId::of::<R>())
-                .map(|r| {
-                    RefMut::map(r.borrow_mut(), |i| {
-                        i.downcast_mut::<R>().expect(&format!(
-                                "Could not downcast the requested resource to type {}",
-                                R::type_name()
-                        ))
-                    })
+    {
+        self.resources
+            .get(&TypeId::of::<R>())
+            .map(|r| {
+                RefMut::map(r.borrow_mut(), |i| {
+                    i.downcast_mut::<R>().expect(&format!(
+                        "Could not downcast the requested resource to type {}",
+                        R::type_name()
+                    ))
                 })
+            })
             .expect(&format!("Could not find any resource of type {}", R::type_name()))
-        }
+    }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
     pub fn get_mut<R>(&mut self) -> &mut R
-        where
+    where
         R: Resource + TypeName,
-        {
-            self.resources
-                .get_mut(&TypeId::of::<R>())
-                .map(|r| {
-                    r.get_mut().downcast_mut::<R>().expect(&format!(
-                            "Could not downcast the requested resource to type {}",
-                            R::type_name()
-                    ))
-                })
+    {
+        self.resources
+            .get_mut(&TypeId::of::<R>())
+            .map(|r| {
+                r.get_mut().downcast_mut::<R>().expect(&format!(
+                    "Could not downcast the requested resource to type {}",
+                    R::type_name()
+                ))
+            })
             .expect(&format!("Could not find any resource of type {}", R::type_name()))
-        }
+    }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
     pub fn borrow_component<C>(&self) -> Ref<C::Storage>
-        where
+    where
         C: Component + TypeName,
         C::Storage: TypeName,
-        {
-            self.borrow::<C::Storage>()
-        }
+    {
+        self.borrow::<C::Storage>()
+    }
 
     /// Mutably borrows the requested component storage (this is a convenience method to
     /// `borrow_mut`).
     pub fn borrow_mut_component<C>(&self) -> RefMut<C::Storage>
-        where
+    where
         C: Component + TypeName,
         C::Storage: TypeName,
-        {
-            self.borrow_mut::<C::Storage>()
-        }
-
-    impl_serialize_with!(serialize_with_1, R0);
-    impl_serialize_with!(serialize_with_2, R0, R1);
-    impl_serialize_with!(serialize_with_3, R0, R1, R2);
-    impl_serialize_with!(serialize_with_4, R0, R1, R2, R3);
-    impl_serialize_with!(serialize_with_5, R0, R1, R2, R3, R4);
-    impl_serialize_with!(serialize_with_6, R0, R1, R2, R3, R4, R5);
-    impl_serialize_with!(serialize_with_7, R0, R1, R2, R3, R4, R5, R6);
-    impl_serialize_with!(serialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
-
-    impl_deserialize_with!(deserialize_with_1, R0);
-    impl_deserialize_with!(deserialize_with_2, R0, R1);
-    impl_deserialize_with!(deserialize_with_3, R0, R1, R2);
-    impl_deserialize_with!(deserialize_with_4, R0, R1, R2, R3);
-    impl_deserialize_with!(deserialize_with_5, R0, R1, R2, R3, R4);
-    impl_deserialize_with!(deserialize_with_6, R0, R1, R2, R3, R4, R5);
-    impl_deserialize_with!(deserialize_with_7, R0, R1, R2, R3, R4, R5, R6);
-    impl_deserialize_with!(deserialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
-
-    impl_deserialize_additive_with!(deserialize_additive_with_1, deserialize_with_1, R0);
-    impl_deserialize_additive_with!(deserialize_additive_with_2, deserialize_with_2, R0, R1);
-    impl_deserialize_additive_with!(deserialize_additive_with_3, deserialize_with_3, R0, R1, R2);
-    impl_deserialize_additive_with!(deserialize_additive_with_4, deserialize_with_4, R0, R1, R2, R3);
-    impl_deserialize_additive_with!(deserialize_additive_with_5, deserialize_with_5, R0, R1, R2, R3, R4);
-    impl_deserialize_additive_with!(deserialize_additive_with_6, deserialize_with_6, R0, R1, R2, R3, R4, R5);
-    impl_deserialize_additive_with!(deserialize_additive_with_7, deserialize_with_7, R0, R1, R2, R3, R4, R5, R6);
-    impl_deserialize_additive_with!(deserialize_additive_with_8, deserialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
+    {
+        self.borrow_mut::<C::Storage>()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde::{Serialize, Deserialize};
+    use serde::{Deserialize, Serialize};
 
     #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
     struct TestResourceA(usize);
@@ -382,17 +430,24 @@ mod tests {
         let mut writer: Vec<u8> = Vec::with_capacity(128);
         let mut s = serde_json::Serializer::new(&mut writer);
         assert!(resources.serialize_with_1::<TestResourceA, _>(&mut s).is_ok());
-        assert_eq!(unsafe { String::from_utf8_unchecked(writer) }, "{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0}}");
+        assert_eq!(
+            unsafe { String::from_utf8_unchecked(writer) },
+            "{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0}}"
+        );
 
         let mut writer: Vec<u8> = Vec::with_capacity(128);
         let mut s = serde_json::Serializer::new(&mut writer);
-        assert!(resources.serialize_with_2::<TestResourceA, TestResourceB, _>(&mut s).is_ok());
+        assert!(resources
+            .serialize_with_2::<TestResourceA, TestResourceB, _>(&mut s)
+            .is_ok());
         assert_eq!(unsafe { String::from_utf8_unchecked(writer) }, "{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0},\"ecs::resources::tests::TestResourceB\":{\"persistence\":\"None\",\"resource\":0.0}}");
     }
 
     #[test]
     fn deserialize() {
-        let mut d = serde_json::Deserializer::from_slice(b"{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0}}");
+        let mut d = serde_json::Deserializer::from_slice(
+            b"{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0}}",
+        );
         let resources = Resources::deserialize_with_1::<TestResourceA, _>(&mut d).unwrap();
         assert!(d.end().is_ok());
         let _: Ref<TestResourceA> = resources.borrow();
@@ -408,8 +463,12 @@ mod tests {
     fn deserialize_additive() {
         let mut resources = Resources::default();
 
-        let mut d = serde_json::Deserializer::from_slice(b"{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0}}");
-        resources.deserialize_additive_with_1::<TestResourceA, _>(&mut d).unwrap();
+        let mut d = serde_json::Deserializer::from_slice(
+            b"{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0}}",
+        );
+        resources
+            .deserialize_additive_with_1::<TestResourceA, _>(&mut d)
+            .unwrap();
         assert!(d.end().is_ok());
         let _: Ref<TestResourceA> = resources.borrow();
     }

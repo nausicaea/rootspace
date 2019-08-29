@@ -4,16 +4,16 @@
 
 use crate::{event::EngineEvent, text_manipulation::split_arguments};
 use ecs::{EventQueue, Resources, System};
+use failure::Fail;
+use log::{error, warn};
+#[cfg(not(test))]
+use std::thread::spawn;
 use std::{
     io::{self, Read},
     string,
     sync::mpsc::{self, channel, Receiver},
     time::Duration,
 };
-#[cfg(not(test))]
-use std::thread::spawn;
-use log::{warn, error};
-use failure::Fail;
 
 pub struct DebugConsole {
     escape_char: char,

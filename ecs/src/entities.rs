@@ -4,9 +4,9 @@ use crate::{
     indexing::{Generation, Index},
     resource::Resource,
 };
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use typename::TypeName;
-use serde::{Serialize, Deserialize};
 
 /// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug, TypeName, Serialize, Deserialize)]

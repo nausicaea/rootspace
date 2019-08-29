@@ -2,9 +2,8 @@ use clap::{App, Arg};
 use failure::Error;
 use fern::Dispatch;
 use game::Game;
-use log::LevelFilter;
+use log::{error, LevelFilter};
 use std::{env, io, path::PathBuf, time::Duration};
-use log::error;
 
 fn main() -> Result<(), Error> {
     let matches = App::new(env!("CARGO_PKG_NAME"))

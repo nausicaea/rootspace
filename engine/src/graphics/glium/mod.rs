@@ -332,8 +332,8 @@ impl fmt::Debug for GliumBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::f64;
     use approx::assert_ulps_ne;
+    use std::f64;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);

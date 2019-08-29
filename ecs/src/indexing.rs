@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use std::fmt;
-use serde::{Serialize, Deserialize};
 
 /// A zero-based index that can be used as index into data structures. Entities may reuse these
 /// indices.

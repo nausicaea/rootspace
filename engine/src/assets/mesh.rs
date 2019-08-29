@@ -1,10 +1,8 @@
-use super::vertex::Vertex;
+use super::{vertex::Vertex, AssetTrait};
 use crate::file_manipulation::VerifyPath;
-use failure::Error;
+use failure::{Error, Fail};
 use ply::{self, CoerceTo};
 use std::path::Path;
-use failure::Fail;
-use super::AssetTrait;
 
 #[derive(Debug)]
 pub struct Mesh {

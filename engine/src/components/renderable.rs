@@ -4,10 +4,9 @@ use crate::{
     resources::{Backend, IndexBufferId, ShaderId, TextureId, VertexBufferId},
 };
 use ecs::{Component, VecStorage};
-use failure::Error;
+use failure::{Error, Fail};
 use std::path::{Path, PathBuf};
 use typename::TypeName;
-use failure::Fail;
 
 #[derive(Debug, TypeName)]
 pub struct Renderable {

@@ -5,8 +5,7 @@ use crate::{
 };
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use ecs::{Component, Entities, Entity, EventQueue, Resources, Storage};
-use failure::Error;
-use failure::format_err;
+use failure::{format_err, Error};
 
 pub trait CommandTrait: 'static {
     fn name(&self) -> &'static str;

@@ -1,13 +1,13 @@
 //! Provides facilities to define and manage events.
 
 use crate::resource::Resource;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, VecDeque},
     fmt,
     marker::PhantomData,
 };
 use typename::TypeName;
-use serde::{Serialize, Deserialize};
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,7 +1,7 @@
 use ecs::{EventQueue, ReceiverId, Resources, System};
+use log::trace;
 use std::{fmt, time::Duration};
 use typename::TypeName;
-use log::trace;
 
 pub struct EventMonitor<E> {
     receiver: ReceiverId<E>,

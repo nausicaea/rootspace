@@ -96,9 +96,9 @@ where
 mod tests {
     use super::*;
     use crate::{graphics::headless::HeadlessBackend, mock::MockWorld};
+    use proptest::prelude::*;
     use std::env;
     use tempfile::NamedTempFile;
-    use proptest::prelude::*;
 
     /// Danger! This test works with thread::sleep() to test fixed loop timing. Note that the
     /// estimate of update calls is not always accurate, that's why this test is fuzzy by +/-1

@@ -3,6 +3,9 @@ use crate::event::EngineEvent;
 use ctrlc;
 use ecs::{EventQueue, Resources, System};
 #[cfg(not(test))]
+use log::error;
+use log::trace;
+#[cfg(not(test))]
 use std::process;
 use std::{
     sync::{
@@ -11,9 +14,6 @@ use std::{
     },
     time::Duration,
 };
-use log::trace;
-#[cfg(not(test))]
-use log::error;
 
 pub struct ForceShutdown {
     ctrlc_triggered: Arc<AtomicUsize>,

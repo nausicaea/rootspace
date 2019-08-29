@@ -1,6 +1,6 @@
 //! Provides a way to select the persistence of an object.
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Determines how persistent a particular objec should be. This allows selectively deleting and
 /// retaining objects upon multiple re-initialisations of the world.

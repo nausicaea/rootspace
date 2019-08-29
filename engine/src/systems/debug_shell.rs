@@ -3,9 +3,8 @@ use crate::{
     event::EngineEvent,
 };
 use ecs::{EventQueue, ReceiverId, Resources, System};
-use failure::Error;
+use failure::{Error, Fail};
 use std::{collections::HashMap, time::Duration};
-use failure::Fail;
 
 pub struct DebugShell {
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,

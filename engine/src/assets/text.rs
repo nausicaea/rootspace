@@ -4,7 +4,9 @@ use crate::{
     graphics::{BackendTrait, TextureTrait},
     resources::{Backend, TextureId},
 };
-use failure::Error;
+use failure::{Error, Fail};
+#[cfg(any(test, feature = "diagnostics"))]
+use log::trace;
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use std::{
     borrow::{Borrow, Cow},
@@ -12,9 +14,6 @@ use std::{
     path::{Path, PathBuf},
 };
 use unicode_normalization::UnicodeNormalization;
-use failure::Fail;
-#[cfg(any(test, feature = "diagnostics"))]
-use log::trace;
 
 pub struct Text<'a> {
     text: String,
