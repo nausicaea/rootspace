@@ -27,7 +27,7 @@ pub trait WorldTrait {
     /// * `persistence` - How persistence the resource should be.
     fn add_resource<R>(&mut self, res: R, persistence: Persistence)
     where
-        R: Resource;
+        R: Resource + TypeName;
     /// The fixed update method is supposed to be called from the main loop at fixed time
     /// intervals.
     ///
@@ -163,7 +163,7 @@ impl WorldTrait for World {
 
     fn add_resource<R>(&mut self, res: R, persistence: Persistence)
     where
-        R: Resource,
+        R: Resource + TypeName,
     {
         self.resources.insert(res, persistence)
     }
