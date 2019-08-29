@@ -159,7 +159,6 @@ macro_rules! impl_deserialize_additive_with {
 pub struct Resources {
     resources: HashMap<TypeId, RefCell<Box<dyn Resource>>>,
     persistences: HashMap<TypeId, Persistence>,
-    registry: HashMap<String, TypeId>,
 }
 
 impl Resources {
@@ -173,7 +172,6 @@ impl Resources {
         Resources {
             resources: HashMap::with_capacity(cap),
             persistences: HashMap::with_capacity(cap),
-            registry: HashMap::with_capacity(cap),
         }
     }
 
@@ -184,9 +182,6 @@ impl Resources {
         }
         for (k, v) in resources.persistences {
             self.persistences.insert(k, v);
-        }
-        for (k, v) in resources.registry {
-            self.registry.insert(k, v);
         }
     }
 
@@ -203,7 +198,6 @@ impl Resources {
         {
             self.resources.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
             self.persistences.insert(TypeId::of::<R>(), persistence);
-            self.registry.insert(R::type_name(), TypeId::of::<R>());
         }
 
     /// Removes the resource of the specified type.
@@ -213,7 +207,6 @@ impl Resources {
         {
             self.resources.remove(&TypeId::of::<R>());
             self.persistences.remove(&TypeId::of::<R>());
-            self.registry.remove(&R::type_name());
         }
 
     /// Returns `true` if a resource of the specified type is present.
@@ -223,16 +216,6 @@ impl Resources {
         {
             self.resources.contains_key(&TypeId::of::<R>())
         }
-
-    /// Checks for the existence of the specified resource type and panics if it is not found.
-    pub fn require<R>(&self)
-    where
-        R: Resource + TypeName,
-    {
-        if !self.has::<R>() {
-            panic!("Could not find any resource of type {}", R::type_name());
-        }
-    }
 
     /// Returns the persistence of the specified resource type.
     pub fn persistence_of<R>(&self) -> Persistence

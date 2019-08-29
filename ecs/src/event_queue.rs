@@ -7,9 +7,10 @@ use std::{
     marker::PhantomData,
 };
 use typename::TypeName;
+use serde::{Serialize, Deserialize};
 
 /// A handle that allows a receiver to receive events from the related event queue.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReceiverId<E> {
     id: usize,
     _e: PhantomData<E>,
@@ -24,7 +25,7 @@ impl<E> ReceiverId<E> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct ReceiverState<E> {
     events_read: usize,
     events_received: usize,
@@ -43,7 +44,7 @@ impl<E> Default for ReceiverState<E> {
 
 /// An `EventQueue` contains a queue of events and provides rudimentary facilities of retrieving
 /// those events.
-#[derive(TypeName)]
+#[derive(TypeName, Serialize, Deserialize)]
 pub struct EventQueue<E> {
     events: VecDeque<E>,
     max_id: usize,
