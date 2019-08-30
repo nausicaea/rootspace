@@ -27,5 +27,5 @@ pub use crate::{
     resource::Resource,
     resources::Resources,
     system::System,
-    world::{World, WorldEvent, WorldTrait},
+    world::{World, WorldEvent, ResourcesTrait, WorldTrait},
 };

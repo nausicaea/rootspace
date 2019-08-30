@@ -5,13 +5,14 @@ use crate::{
     graphics::BackendTrait,
     resources::{Backend, SceneGraph},
 };
-use ecs::{EventQueue, Persistence, ReceiverId, WorldTrait};
+use ecs::{LoopStage, System, Component, Entity, EventQueue, Persistence, Resource, ReceiverId, ResourcesTrait, WorldTrait};
 use std::{
     cmp,
     marker::PhantomData,
     path::{Path, PathBuf},
     time::{Duration, Instant},
 };
+use typename::TypeName;
 
 #[derive(Debug)]
 pub struct Orchestrator<B, W> {
@@ -26,7 +27,7 @@ pub struct Orchestrator<B, W> {
 impl<B, W> Orchestrator<B, W>
 where
     B: BackendTrait,
-    W: Default + WorldTrait,
+    W: Default + WorldTrait + ResourcesTrait,
 {
     pub fn new<P: AsRef<Path>>(
         resource_path: P,
@@ -54,10 +55,6 @@ where
         })
     }
 
-    pub fn reset(&mut self) {
-        self.world.clear(Persistence::None);
-    }
-
     pub fn run(&mut self, iterations: Option<usize>) {
         let mut loop_time = Instant::now();
         let mut accumulator = Duration::default();
@@ -83,6 +80,37 @@ where
             running = self.world.maintain();
             i += 1;
         }
+    }
+
+    pub fn add_resource<R: Resource + TypeName>(&mut self, res: R, persistence: Persistence) {
+        self.world.add_resource::<R>(res, persistence)
+    }
+
+    pub fn get_resource_mut<R: Resource + TypeName>(&mut self) -> &mut R {
+        self.world.get_resource_mut::<R>()
+    }
+
+    pub fn create_entity(&mut self) -> Entity {
+        self.world.create_entity()
+    }
+
+    pub fn add_component<C>(&mut self, entity: Entity, component: C)
+    where
+        C: Component + TypeName,
+        C::Storage: TypeName,
+    {
+        self.world.add_component::<C>(entity, component)
+    }
+
+    pub fn reset(&mut self) {
+        self.world.clear(Persistence::None);
+    }
+
+    pub fn add_system<S>(&mut self, stage: LoopStage, system: S)
+    where
+        S: System,
+    {
+        self.world.add_system::<S>(stage, system)
     }
 
     pub fn file(&self, folder: &str, file: &str) -> Result<PathBuf, FileError> {

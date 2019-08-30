@@ -13,9 +13,8 @@ use crate::{
 use std::time::Duration;
 use typename::TypeName;
 
-/// A World must perform actions for four types of calls that each allow a subset of the registered
-/// systems to operate on the stored resources, components and entities.
-pub trait WorldTrait {
+/// Exposes resource management methods.
+pub trait ResourcesTrait {
     /// Clears the state of the world. This removes all resources whose persistence is less or
     /// equal to the specified persistence value.
     fn clear(&mut self, persistence: Persistence);
@@ -25,9 +24,30 @@ pub trait WorldTrait {
     ///
     /// * `res` - The resource to be added.
     /// * `persistence` - How persistence the resource should be.
-    fn add_resource<R>(&mut self, res: R, persistence: Persistence)
+    fn add_resource<R: Resource + TypeName>(&mut self, res: R, persistence: Persistence);
+    /// Retrieves a mutable reference to a resource in the world
+    fn get_resource_mut<R: Resource + TypeName>(&mut self) -> &mut R;
+    /// Create a new `Entity`.
+    fn create_entity(&mut self) -> Entity;
+    /// Add a component to the specified `Entity`.
+    fn add_component<C>(&mut self, entity: Entity, component: C)
     where
-        R: Resource + TypeName;
+        C: Component + TypeName,
+        C::Storage: TypeName;
+}
+
+/// A World must perform actions for four types of calls that each allow a subset of the registered
+/// systems to operate on the stored resources, components and entities.
+pub trait WorldTrait {
+    /// Add the specified system to the specified loop stage.
+    fn add_system<S>(&mut self, stage: LoopStage, system: S)
+    where
+        S: System;
+
+    /// Try to retrieve the specified system type.
+    fn get_system<S>(&self, stage: LoopStage) -> Option<&S>
+    where
+        S: System;
     /// The fixed update method is supposed to be called from the main loop at fixed time
     /// intervals.
     ///
@@ -51,7 +71,7 @@ pub trait WorldTrait {
     ///
     /// * `time` - Interpreted as the current game time.
     /// * `delta_time` - Interpreted as the time interval between calls to `render`.
-    fn render(&mut self, time: &Duration, delta_time: &Duration);
+   fn render(&mut self, time: &Duration, delta_time: &Duration);
     /// This method is supposed to be called when pending events or messages should be
     /// handled by the world. If this method returns `true`, the execution of the
     /// main loop shall continue, otherwise it shall abort.
@@ -68,70 +88,11 @@ pub enum WorldEvent {
 
 /// This is the default implementation of the `WorldTrait` provided by this library.
 pub struct World {
-    /// The resources container.
-    pub resources: Resources,
+    resources: Resources,
     fixed_update_systems: Vec<Box<dyn System>>,
     update_systems: Vec<Box<dyn System>>,
     render_systems: Vec<Box<dyn System>>,
     receiver: ReceiverId<WorldEvent>,
-}
-
-impl World {
-    /// Return a mutable references to the specified resource type. Panics, if the resource is not
-    /// registered.
-    pub fn get_resource_mut<R>(&mut self) -> &mut R
-    where
-        R: Resource + TypeName,
-    {
-        self.resources.get_mut::<R>()
-    }
-
-    /// Add the specified system to the specified loop stage.
-    pub fn add_system<S>(&mut self, stage: LoopStage, system: S)
-    where
-        S: System,
-    {
-        let sys = Box::new(system);
-        match stage {
-            LoopStage::FixedUpdate => self.fixed_update_systems.push(sys),
-            LoopStage::Update => self.update_systems.push(sys),
-            LoopStage::Render => self.render_systems.push(sys),
-        }
-    }
-
-    /// Try to retrieve the specified system type.
-    pub fn get_system<S>(&self, stage: LoopStage) -> Option<&S>
-    where
-        S: System,
-    {
-        match stage {
-            LoopStage::FixedUpdate => self
-                .fixed_update_systems
-                .iter()
-                .filter_map(|s| s.downcast_ref::<S>())
-                .last(),
-            LoopStage::Update => self.update_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
-            LoopStage::Render => self.render_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
-        }
-    }
-
-    /// Create a new `Entity`.
-    pub fn create_entity(&mut self) -> Entity {
-        self.resources.get_mut::<Entities>().create()
-    }
-
-    /// Add a component to the specified `Entity`.
-    pub fn add_component<C>(&mut self, entity: Entity, component: C) -> Option<C>
-    where
-        C: Component + TypeName,
-        C::Storage: TypeName,
-    {
-        if !self.resources.has::<C::Storage>() {
-            let _ = self.resources.insert(C::Storage::default(), Persistence::None);
-        }
-
-        self.resources.get_mut::<C::Storage>().insert(entity, component)
-    }
 }
 
 impl Default for World {
@@ -153,7 +114,7 @@ impl Default for World {
     }
 }
 
-impl WorldTrait for World {
+impl ResourcesTrait for World {
     fn clear(&mut self, persistence: Persistence) {
         self.resources.clear(persistence);
         self.fixed_update_systems.clear();
@@ -166,6 +127,58 @@ impl WorldTrait for World {
         R: Resource + TypeName,
     {
         self.resources.insert(res, persistence)
+    }
+
+    fn get_resource_mut<R>(&mut self) -> &mut R
+    where
+        R: Resource + TypeName,
+    {
+        self.resources.get_mut::<R>()
+    }
+
+    fn create_entity(&mut self) -> Entity {
+        self.resources.get_mut::<Entities>().create()
+    }
+
+    fn add_component<C>(&mut self, entity: Entity, component: C)
+    where
+        C: Component + TypeName,
+        C::Storage: TypeName,
+    {
+        if !self.resources.has::<C::Storage>() {
+            let _ = self.resources.insert(C::Storage::default(), Persistence::None);
+        }
+
+        self.resources.get_mut::<C::Storage>().insert(entity, component);
+    }
+}
+
+impl WorldTrait for World {
+    fn add_system<S>(&mut self, stage: LoopStage, system: S)
+    where
+        S: System,
+    {
+        let sys = Box::new(system);
+        match stage {
+            LoopStage::FixedUpdate => self.fixed_update_systems.push(sys),
+            LoopStage::Update => self.update_systems.push(sys),
+            LoopStage::Render => self.render_systems.push(sys),
+        }
+    }
+
+    fn get_system<S>(&self, stage: LoopStage) -> Option<&S>
+    where
+        S: System,
+    {
+        match stage {
+            LoopStage::FixedUpdate => self
+                .fixed_update_systems
+                .iter()
+                .filter_map(|s| s.downcast_ref::<S>())
+                .last(),
+            LoopStage::Update => self.update_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
+            LoopStage::Render => self.render_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
+        }
     }
 
     fn fixed_update(&mut self, t: &Duration, dt: &Duration) {

@@ -1,4 +1,4 @@
-use ecs::{Persistence, Resource, WorldTrait};
+use ecs::{Entity, LoopStage, Persistence, Resource, ResourcesTrait, WorldTrait};
 use std::time::Duration;
 
 #[derive(Debug)]
@@ -15,7 +15,7 @@ pub struct MockWorld {
     iterations: usize,
 }
 
-impl WorldTrait for MockWorld {
+impl ResourcesTrait for MockWorld {
     fn clear(&mut self, _persistence: Persistence) {
         self.fixed_update_calls = 0;
         self.update_calls = 0;
@@ -28,6 +28,18 @@ impl WorldTrait for MockWorld {
     }
 
     fn add_resource<R: Resource>(&mut self, _res: R, _persistence: Persistence) {}
+
+    fn get_resource_mut<R: Resource>(&mut self) -> &mut R { unimplemented!() }
+
+    fn create_entity(&mut self) -> Entity { unimplemented!() }
+
+    fn add_component<C>(&mut self, _entity: Entity, _component: C) { unimplemented!() }
+}
+
+impl WorldTrait for MockWorld {
+    fn add_system<S>(&mut self, _stage: LoopStage, _system: S) { unimplemented!() }
+
+    fn get_system<S>(&self, _stage: LoopStage) -> Option<&S> { unimplemented!() }
 
     fn fixed_update(&mut self, time: &Duration, delta_time: &Duration) {
         self.fixed_update_calls += 1;

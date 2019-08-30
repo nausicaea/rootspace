@@ -20,7 +20,7 @@ macro_rules! count_tts {
     ($_head:tt $($tail:tt)*) => { 1usize + count_tts!($($tail)*) };
 }
 
-macro_rules! impl_serialize_with {
+macro_rules! impl_ser_with {
     ($name:ident, $($r:tt),+) => {
         /// Serialize `Resources` to a set of specified resource types.
         pub fn $name<$($r),+, S>(&self, serializer: S) -> Result<(), S::Error>
@@ -70,7 +70,7 @@ macro_rules! impl_serialize_with {
     };
 }
 
-macro_rules! impl_deserialize_with {
+macro_rules! impl_de_with {
     ($name:ident, $($r:tt),+) => {
         /// Deserialize `Resources` from a set of specified resource types.
         pub fn $name<'de, $($r),+, D>(deserializer: D) -> Result<Self, D::Error>
@@ -140,7 +140,7 @@ macro_rules! impl_deserialize_with {
     };
 }
 
-macro_rules! impl_deserialize_additive_with {
+macro_rules! impl_de_additive_with {
     ($name:ident, $deser_name:ident, $($r:tt),+) => {
         /// Deserialize a set of resource types into an existing instance of `Resources`.
         pub fn $name<'de, $($r),+, D>(&mut self, deserializer: D) -> Result<(), D::Error>
@@ -166,51 +166,51 @@ pub struct Resources {
 }
 
 impl Resources {
-    impl_serialize_with!(serialize_with_1, R0);
+    impl_ser_with!(serialize_with_1, R0);
 
-    impl_serialize_with!(serialize_with_2, R0, R1);
+    impl_ser_with!(serialize_with_2, R0, R1);
 
-    impl_serialize_with!(serialize_with_3, R0, R1, R2);
+    impl_ser_with!(serialize_with_3, R0, R1, R2);
 
-    impl_serialize_with!(serialize_with_4, R0, R1, R2, R3);
+    impl_ser_with!(serialize_with_4, R0, R1, R2, R3);
 
-    impl_serialize_with!(serialize_with_5, R0, R1, R2, R3, R4);
+    impl_ser_with!(serialize_with_5, R0, R1, R2, R3, R4);
 
-    impl_serialize_with!(serialize_with_6, R0, R1, R2, R3, R4, R5);
+    impl_ser_with!(serialize_with_6, R0, R1, R2, R3, R4, R5);
 
-    impl_serialize_with!(serialize_with_7, R0, R1, R2, R3, R4, R5, R6);
+    impl_ser_with!(serialize_with_7, R0, R1, R2, R3, R4, R5, R6);
 
-    impl_serialize_with!(serialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
+    impl_ser_with!(serialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
 
-    impl_deserialize_with!(deserialize_with_1, R0);
+    impl_de_with!(deserialize_with_1, R0);
 
-    impl_deserialize_with!(deserialize_with_2, R0, R1);
+    impl_de_with!(deserialize_with_2, R0, R1);
 
-    impl_deserialize_with!(deserialize_with_3, R0, R1, R2);
+    impl_de_with!(deserialize_with_3, R0, R1, R2);
 
-    impl_deserialize_with!(deserialize_with_4, R0, R1, R2, R3);
+    impl_de_with!(deserialize_with_4, R0, R1, R2, R3);
 
-    impl_deserialize_with!(deserialize_with_5, R0, R1, R2, R3, R4);
+    impl_de_with!(deserialize_with_5, R0, R1, R2, R3, R4);
 
-    impl_deserialize_with!(deserialize_with_6, R0, R1, R2, R3, R4, R5);
+    impl_de_with!(deserialize_with_6, R0, R1, R2, R3, R4, R5);
 
-    impl_deserialize_with!(deserialize_with_7, R0, R1, R2, R3, R4, R5, R6);
+    impl_de_with!(deserialize_with_7, R0, R1, R2, R3, R4, R5, R6);
 
-    impl_deserialize_with!(deserialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
+    impl_de_with!(deserialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
 
-    impl_deserialize_additive_with!(deserialize_additive_with_1, deserialize_with_1, R0);
+    impl_de_additive_with!(deserialize_additive_with_1, deserialize_with_1, R0);
 
-    impl_deserialize_additive_with!(deserialize_additive_with_2, deserialize_with_2, R0, R1);
+    impl_de_additive_with!(deserialize_additive_with_2, deserialize_with_2, R0, R1);
 
-    impl_deserialize_additive_with!(deserialize_additive_with_3, deserialize_with_3, R0, R1, R2);
+    impl_de_additive_with!(deserialize_additive_with_3, deserialize_with_3, R0, R1, R2);
 
-    impl_deserialize_additive_with!(deserialize_additive_with_4, deserialize_with_4, R0, R1, R2, R3);
+    impl_de_additive_with!(deserialize_additive_with_4, deserialize_with_4, R0, R1, R2, R3);
 
-    impl_deserialize_additive_with!(deserialize_additive_with_5, deserialize_with_5, R0, R1, R2, R3, R4);
+    impl_de_additive_with!(deserialize_additive_with_5, deserialize_with_5, R0, R1, R2, R3, R4);
 
-    impl_deserialize_additive_with!(deserialize_additive_with_6, deserialize_with_6, R0, R1, R2, R3, R4, R5);
+    impl_de_additive_with!(deserialize_additive_with_6, deserialize_with_6, R0, R1, R2, R3, R4, R5);
 
-    impl_deserialize_additive_with!(
+    impl_de_additive_with!(
         deserialize_additive_with_7,
         deserialize_with_7,
         R0,
@@ -222,7 +222,7 @@ impl Resources {
         R6
     );
 
-    impl_deserialize_additive_with!(
+    impl_de_additive_with!(
         deserialize_additive_with_8,
         deserialize_with_8,
         R0,

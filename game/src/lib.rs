@@ -1,7 +1,7 @@
 mod assets;
 mod resources;
 
-use ecs::{EventQueue, LoopStage, Resources, World};
+use ecs::{EventQueue, LoopStage};
 use engine::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,
@@ -41,18 +41,18 @@ where
         let event_interface: EventInterface<B> = EventInterface::default();
         let renderer: Renderer<B> = Renderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
 
-        let camera = self.world_mut().create_entity();
-        self.world_mut().add_component(camera, Status::default());
-        self.world_mut().add_component(camera, Camera::default());
-        self.world_mut()
+        let camera = self.orchestrator.create_entity();
+        self.orchestrator.add_component(camera, Status::default());
+        self.orchestrator.add_component(camera, Camera::default());
+        self.orchestrator
             .add_component(camera, Info::new("Camera", "The main camera"));
 
-        let ea = self.world_mut().create_entity();
-        self.world_mut().get_resource_mut::<SceneGraph<Model>>().insert(ea);
-        self.world_mut().add_component(ea, Status::default());
-        self.world_mut()
+        let ea = self.orchestrator.create_entity();
+        self.orchestrator.get_resource_mut::<SceneGraph<Model>>().insert(ea);
+        self.orchestrator.add_component(ea, Status::default());
+        self.orchestrator
             .add_component(ea, Info::new("Entity A", "Rotated cube example"));
-        self.world_mut().add_component(
+        self.orchestrator.add_component(
             ea,
             Model::new(
                 Vector3::new(0.0, 0.0, -10.0),
@@ -65,7 +65,7 @@ where
             let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
             let text = "Hello, World!";
-            let factory = self.res_mut().get_mut::<Backend<B>>();
+            let factory = self.orchestrator.get_resource_mut::<Backend<B>>();
             Renderable::builder()
                 .font(f)
                 .text_scale(16.0)
@@ -75,14 +75,14 @@ where
                 .text(text)
                 .build_text(&renderer.backend, factory)?
         };
-        self.world_mut().add_component(ea, renderable);
+        self.orchestrator.add_component(ea, renderable);
 
-        let eb = self.world_mut().create_entity();
-        self.world_mut().get_resource_mut::<SceneGraph<Model>>().insert(eb);
-        self.world_mut().add_component(eb, Status::default());
-        self.world_mut()
+        let eb = self.orchestrator.create_entity();
+        self.orchestrator.get_resource_mut::<SceneGraph<Model>>().insert(eb);
+        self.orchestrator.add_component(eb, Status::default());
+        self.orchestrator
             .add_component(eb, Info::new("Entity B", "Text example"));
-        self.world_mut().add_component(
+        self.orchestrator.add_component(
             eb,
             Model::new(
                 Vector3::new(-2.0, 1.0, -7.0),
@@ -95,7 +95,7 @@ where
             let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            let factory = self.res_mut().get_mut::<Backend<B>>();
+            let factory = self.orchestrator.get_resource_mut::<Backend<B>>();
             Renderable::builder()
                 .mesh(m)
                 .vertex_shader(vs)
@@ -103,14 +103,14 @@ where
                 .diffuse_texture(dt)
                 .build_mesh(&renderer.backend, factory)?
         };
-        self.world_mut().add_component(eb, renderable);
+        self.orchestrator.add_component(eb, renderable);
 
-        let ec = self.world_mut().create_entity();
-        self.world_mut().get_resource_mut::<SceneGraph<UiModel>>().insert(ec);
-        self.world_mut().add_component(ec, Status::default());
-        self.world_mut()
+        let ec = self.orchestrator.create_entity();
+        self.orchestrator.get_resource_mut::<SceneGraph<UiModel>>().insert(ec);
+        self.orchestrator.add_component(ec, Status::default());
+        self.orchestrator
             .add_component(ec, Info::new("Entity C", "UI Text example"));
-        self.world_mut().add_component(
+        self.orchestrator.add_component(
             ec,
             UiModel::new(Vector2::new(0.0, 0.0), Vector2::new(800.0, 600.0), -1.0),
         );
@@ -119,7 +119,7 @@ where
             let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            let factory = self.res_mut().get_mut::<Backend<B>>();
+            let factory = self.orchestrator.get_resource_mut::<Backend<B>>();
             Renderable::builder()
                 .mesh(m)
                 .vertex_shader(vs)
@@ -127,35 +127,35 @@ where
                 .diffuse_texture(dt)
                 .build_mesh(&renderer.backend, factory)?
         };
-        self.world_mut().add_component(ec, renderable);
+        self.orchestrator.add_component(ec, renderable);
 
         // Handle the regular systems.
         let force_shutdown = ForceShutdown::default();
-        self.world_mut().add_system(LoopStage::Update, force_shutdown);
+        self.orchestrator.add_system(LoopStage::Update, force_shutdown);
 
         let debug_console = DebugConsole::default();
-        self.world_mut().add_system(LoopStage::Update, debug_console);
+        self.orchestrator.add_system(LoopStage::Update, debug_console);
 
-        self.world_mut().add_system(LoopStage::Update, event_interface);
-        self.world_mut().add_system(LoopStage::Render, renderer);
+        self.orchestrator.add_system(LoopStage::Update, event_interface);
+        self.orchestrator.add_system(LoopStage::Render, renderer);
 
-        let queue = self.res_mut().get_mut::<EventQueue<EngineEvent>>();
+        let queue = self.orchestrator.get_resource_mut::<EventQueue<EngineEvent>>();
         let event_monitor: EventMonitor<EngineEvent> = EventMonitor::new(queue);
-        self.world_mut().add_system(LoopStage::Update, event_monitor);
+        self.orchestrator.add_system(LoopStage::Update, event_monitor);
 
-        let queue = self.res_mut().get_mut::<EventQueue<EngineEvent>>();
+        let queue = self.orchestrator.get_resource_mut::<EventQueue<EngineEvent>>();
         let camera_manager = CameraManager::new(queue);
-        self.world_mut().add_system(LoopStage::Update, camera_manager);
+        self.orchestrator.add_system(LoopStage::Update, camera_manager);
 
-        let queue = self.res_mut().get_mut::<EventQueue<EngineEvent>>();
+        let queue = self.orchestrator.get_resource_mut::<EventQueue<EngineEvent>>();
         let debug_shell = DebugShell::new(queue);
-        self.world_mut().add_system(LoopStage::Update, debug_shell);
+        self.orchestrator.add_system(LoopStage::Update, debug_shell);
 
-        let queue = self.res_mut().get_mut::<EventQueue<EngineEvent>>();
+        let queue = self.orchestrator.get_resource_mut::<EventQueue<EngineEvent>>();
         let event_coordinator = EventCoordinator::new(queue);
-        self.world_mut().add_system(LoopStage::Update, event_coordinator);
+        self.orchestrator.add_system(LoopStage::Update, event_coordinator);
 
-        self.world_mut()
+        self.orchestrator
             .get_resource_mut::<EventQueue<EngineEvent>>()
             .send(EngineEvent::Startup);
 
@@ -164,14 +164,6 @@ where
 
     pub fn run(&mut self, iterations: Option<usize>) {
         self.orchestrator.run(iterations)
-    }
-
-    fn world_mut(&mut self) -> &mut World {
-        &mut self.orchestrator.world
-    }
-
-    fn res_mut(&mut self) -> &mut Resources {
-        &mut self.orchestrator.world.resources
     }
 }
 
