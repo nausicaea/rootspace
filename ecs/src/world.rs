@@ -12,9 +12,20 @@ use crate::{
 };
 use std::time::Duration;
 use typename::TypeName;
+use hlist::{HList, Element};
+use failure::Error;
+use std::marker::PhantomData;
+use std::path::Path;
+use std::fs::File;
+use serde::{Deserialize, Serialize};
+use serde_json;
 
 /// Exposes resource management methods.
 pub trait ResourcesTrait {
+    /// Loads all registered resources from the specified path.
+    fn load_from<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Error>;
+    /// Saves all registered resources to the specified path.
+    fn save_to<P: AsRef<Path>>(&self, path: P) -> Result<(), Error>;
     /// Clears the state of the world. This removes all resources whose persistence is less or
     /// equal to the specified persistence value.
     fn clear(&mut self, persistence: Persistence);
@@ -79,7 +90,7 @@ pub trait WorldTrait {
 }
 
 /// Events defined and processed by the world itself.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy, TypeName)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy, TypeName, Serialize, Deserialize)]
 pub enum WorldEvent {
     /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game
     /// engine to abort.
@@ -87,15 +98,16 @@ pub enum WorldEvent {
 }
 
 /// This is the default implementation of the `WorldTrait` provided by this library.
-pub struct World {
+pub struct World<H> {
     resources: Resources,
     fixed_update_systems: Vec<Box<dyn System>>,
     update_systems: Vec<Box<dyn System>>,
     render_systems: Vec<Box<dyn System>>,
     receiver: ReceiverId<WorldEvent>,
+    _h: PhantomData<H>,
 }
 
-impl Default for World {
+impl<H> Default for World<H> {
     fn default() -> Self {
         let mut events: EventQueue<WorldEvent> = EventQueue::default();
         let receiver = events.subscribe();
@@ -110,11 +122,29 @@ impl Default for World {
             update_systems: Vec::default(),
             render_systems: Vec::default(),
             receiver,
+            _h: PhantomData::default(),
         }
     }
 }
 
-impl ResourcesTrait for World {
+impl<H> ResourcesTrait for World<H>
+where
+    H: HList + Serialize + for<'de> Deserialize<'de>,
+{
+    fn load_from<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Error> {
+        let file = File::open(path)?;
+        let mut de = serde_json::Deserializer::from_reader(file);
+        self.resources = Resources::deserialize::<Element<Entities, Element<EventQueue<WorldEvent>, H>>, _>(&mut de)?;
+        Ok(())
+    }
+
+    fn save_to<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+        let file = File::create(path)?;
+        let mut ser = serde_json::Serializer::new(file);
+        self.resources.serialize::<Element<Entities, Element<EventQueue<WorldEvent>, H>>, _>(&mut ser)?;
+        Ok(())
+    }
+
     fn clear(&mut self, persistence: Persistence) {
         self.resources.clear(persistence);
         self.fixed_update_systems.clear();
@@ -153,7 +183,7 @@ impl ResourcesTrait for World {
     }
 }
 
-impl WorldTrait for World {
+impl<H> WorldTrait for World<H> {
     fn add_system<S>(&mut self, stage: LoopStage, system: S)
     where
         S: System,
@@ -205,7 +235,7 @@ impl WorldTrait for World {
             .get_mut::<EventQueue<WorldEvent>>()
             .receive(&self.receiver);
 
-        !events.iter().any(|e| e == &WorldEvent::Abort)
+        !events.into_iter().any(|e| e == WorldEvent::Abort)
     }
 }
 
@@ -215,6 +245,6 @@ mod tests {
 
     #[test]
     fn default() {
-        let _: World = Default::default();
+        let _: World<()> = Default::default();
     }
 }

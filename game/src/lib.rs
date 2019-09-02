@@ -1,4 +1,4 @@
-mod assets;
+// mod assets;
 mod resources;
 
 use ecs::{EventQueue, LoopStage};
@@ -16,9 +16,10 @@ use engine::{
 use failure::Error;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
+use hlist::Hlist;
 
 pub struct Game<B> {
-    orchestrator: DefaultOrchestrator<B>,
+    orchestrator: DefaultOrchestrator<B, Hlist![]>,
 }
 
 impl<B> Game<B>

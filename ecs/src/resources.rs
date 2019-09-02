@@ -12,8 +12,10 @@ use std::{
     collections::HashMap,
     fmt,
     marker::PhantomData,
+    mem::MaybeUninit,
 };
 use typename::TypeName;
+use hlist::HList;
 
 macro_rules! count_tts {
     () => { 0usize };
@@ -166,6 +168,64 @@ pub struct Resources {
 }
 
 impl Resources {
+    pub fn serialize<H, S>(&self, serializer: S) -> Result<(), S::Error>
+    where
+        H: HList + Serialize,
+        S: Serializer,
+    {
+        struct SerContainer<'a, R> {
+            persistence: Persistence,
+            resource: &'a R,
+        }
+
+        impl<'a, R> SerContainer<'a, R> {
+            fn new(p: Persistence, r: &'a R) -> Self {
+                SerContainer { persistence: p, resource: r }
+            }
+        }
+
+        impl<'a, R> Serialize for SerContainer<'a, R>
+        where
+            R: Resource + Serialize,
+        {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: Serializer,
+            {
+                let mut state = serializer.serialize_struct("SerContainer", 2)?;
+                state.serialize_field("persistence", &self.persistence)?;
+                state.serialize_field("resource", self.resource)?;
+                state.end()
+            }
+        }
+
+        fn serialize_element<E: Resource + TypeName + Serialize, S: SerializeMap>(res: &Resources, state: &mut S, _element: &E) -> Result<(), S::Error> {
+            if res.has::<E>() {
+                state.serialize_entry(&E::type_name(), &SerContainer::new(res.persistence_of::<E>(), &*res.borrow::<E>()))?;
+                Ok(())
+            } else {
+                Err(ser::Error::custom(format!("resource {} was not found", E::type_name())))
+            }
+        }
+
+        let mut state = serializer.serialize_map(Some(H::LEN))?;
+        let h = MaybeUninit::<H>::uninit();
+        for i in 0..H::LEN {
+            let (e, h) = h.pop().unwrap();
+            serialize_element(self, &mut state, e)?;
+        }
+        state.end()?;
+        Ok(())
+    }
+
+    pub fn deserialize<'de, H, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        H: HList + Deserialize<'de>,
+        D: Deserializer<'de>,
+    {
+        unimplemented!()
+    }
+
     impl_ser_with!(serialize_with_1, R0);
 
     impl_ser_with!(serialize_with_2, R0, R1);
@@ -377,6 +437,7 @@ impl Resources {
 mod tests {
     use super::*;
     use serde::{Deserialize, Serialize};
+    use serde_json;
 
     #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
     struct TestResourceA(usize);

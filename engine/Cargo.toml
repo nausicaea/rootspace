@@ -10,22 +10,22 @@ mock = []
 wsl = []
 
 [dependencies]
-clap = {version = "^2.0.0", default-features = false}
-ctrlc = {version = "^3.0.0", features = ["termination"]}
+clap = { version = "^2.0.0", default-features = false }
+ctrlc = { version = "^3.0.0", features = ["termination"] }
 failure = "^0.1.1"
 glium = "^0.25.0"
-image = {version = "^0.22.0", default-features = false, features = ["png_codec"]}
+image = { version = "^0.22.0", default-features = false, features = ["png_codec"] }
 log = "^0.4.1"
 nalgebra = "^0.18.0"
 num-traits = "^0.2.6"
-rusttype = {version = "^0.7.2", features = ["gpu_cache"]}
+rusttype = { version = "^0.7.2", features = ["gpu_cache"] }
 unicode-normalization = "^0.1.5"
 snowflake = "^1.2.0"
 typename = "^0.1.0"
-affine-transform = {git = "https://gitlab.com/nausicaea/affine-transform.git"}
-hierarchy = {git = "https://gitlab.com/nausicaea/hierarchy.git"}
-ply = {git = "https://gitlab.com/nausicaea/ply.git"}
-ecs = {path = "../ecs"}
+affine-transform = { git = "https://gitlab.com/nausicaea/affine-transform.git" }
+hierarchy = { git = "https://gitlab.com/nausicaea/hierarchy.git" }
+ply = { git = "https://gitlab.com/nausicaea/ply.git" }
+ecs = { path = "../ecs" }
 
 [dev-dependencies]
 approx = "^0.3.0"

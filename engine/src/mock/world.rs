@@ -1,5 +1,6 @@
 use ecs::{Entity, LoopStage, Persistence, Resource, ResourcesTrait, WorldTrait};
 use std::time::Duration;
+use failure::Error;
 
 #[derive(Debug)]
 pub struct MockWorld {
@@ -16,6 +17,14 @@ pub struct MockWorld {
 }
 
 impl ResourcesTrait for MockWorld {
+    fn load_from<P>(&mut self, _path: P) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    fn save_to<P>(&self, _path: P) -> Result<(), Error> {
+        unimplemented!()
+    }
+
     fn clear(&mut self, _persistence: Persistence) {
         self.fixed_update_calls = 0;
         self.update_calls = 0;
