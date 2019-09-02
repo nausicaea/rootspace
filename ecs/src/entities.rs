@@ -2,7 +2,6 @@
 
 use crate::{
     indexing::{Generation, Index},
-    resource::Resource,
 };
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -61,7 +60,7 @@ impl Entities {
     }
 }
 
-impl Resource for Entities {}
+// impl Resource for Entities {}
 
 /// An iterator over all active entities.
 pub struct EntitiesIter<'a> {

@@ -1,4 +1,4 @@
-use ecs::{Component, Entity, Resource, Storage};
+use ecs::{Component, Entity, Storage};
 use hierarchy::{Hierarchy, RawNodes};
 use std::{fmt, ops::Mul};
 use typename::TypeName;
@@ -47,4 +47,4 @@ where
     }
 }
 
-impl<T> Resource for SceneGraph<T> where T: 'static + Clone + Default {}
+// impl<T> Resource for SceneGraph<T> where T: 'static + Clone + Default {}

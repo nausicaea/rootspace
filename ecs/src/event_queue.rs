@@ -1,6 +1,5 @@
 //! Provides facilities to define and manage events.
 
-use crate::resource::Resource;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, VecDeque},
@@ -143,7 +142,7 @@ impl<E> fmt::Debug for EventQueue<E> {
     }
 }
 
-impl<E> Resource for EventQueue<E> where E: 'static {}
+// impl<E> Resource for EventQueue<E> where E: 'static {}
 
 #[cfg(test)]
 mod tests {

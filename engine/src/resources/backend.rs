@@ -2,7 +2,6 @@ use crate::{
     assets::Vertex,
     graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait},
 };
-use ecs::Resource;
 use failure::Error;
 use snowflake::ProcessUniqueId;
 use std::{collections::HashMap, fmt, marker::PhantomData, path::Path};
@@ -130,4 +129,4 @@ where
     }
 }
 
-impl<B> Resource for Backend<B> where B: BackendTrait + 'static {}
+// impl<B> Resource for Backend<B> where B: BackendTrait + 'static {}

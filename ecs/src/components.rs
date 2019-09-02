@@ -156,7 +156,7 @@ impl<T> fmt::Debug for VecStorage<T> {
     }
 }
 
-impl<T> Resource for VecStorage<T> where T: 'static {}
+// impl<T> Resource for VecStorage<T> where T: 'static {}
 
 /// Provides read-only iteration over components of type `T`.
 pub struct VecStorageIter<'a, T: 'a> {

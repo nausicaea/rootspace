@@ -396,17 +396,17 @@ mod tests {
     #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
     struct TestResourceA(usize);
 
-    impl Resource for TestResourceA {}
+    // impl Resource for TestResourceA {}
 
     #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
     struct TestResourceB(f32);
 
-    impl Resource for TestResourceB {}
+    // impl Resource for TestResourceB {}
 
     #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
     struct TestResourceC(String);
 
-    impl Resource for TestResourceC {}
+    // impl Resource for TestResourceC {}
 
     #[test]
     fn persistence() {

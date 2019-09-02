@@ -1,6 +1,6 @@
 use crate::resource::Resource;
 use typename::TypeName;
-use serde::{de::Deserialize, ser::Serialize};
+use serde::{Serialize, Deserialize};
 
 #[macro_export]
 macro_rules! Reg {
@@ -57,7 +57,7 @@ pub trait Registry: Sized {
     }
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Element<H, T>(H, T);
 
 impl<H, T> Element<H, T>
@@ -88,7 +88,7 @@ where
     }
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct End;
 
 impl Registry for End {
@@ -110,13 +110,13 @@ impl Registry for End {
 mod tests {
     use super::*;
     use proptest::prelude::*;
-    use serde::{Serialize, Deserialize};
     use serde_test::{Token, assert_tokens};
+    use typename::TypeName;
 
-    #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Default, Debug, PartialEq, Serialize, Deserialize, TypeName)]
     struct TestElementA(usize);
 
-    #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Default, Debug, PartialEq, Serialize, Deserialize, TypeName)]
     struct TestElementB(String);
 
     #[test]
@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn push_one() {
         let l: Element<TestElementA, End> = End.push(TestElementA::default());
-        assert_eq!(l, Element { head: TestElementA::default(), tail: End });
+        assert_eq!(l, Element::new(TestElementA::default(), End));
     }
 
     #[test]
@@ -182,12 +182,12 @@ mod tests {
         let l: Element<TestElementB, Element<TestElementA, End>> = End
             .push(TestElementA::default())
             .push(TestElementB::default());
-        assert_eq!(l, Element { head: TestElementB::default(), tail: Element { head: TestElementA::default(), tail: End } });
+        assert_eq!(l, Element::new(TestElementB::default(), Element::new(TestElementA::default(), End)));
 
         let l: Element<TestElementA, Element<TestElementB, End>> = End
             .push(TestElementB::default())
             .push(TestElementA::default());
-        assert_eq!(l, Element { head: TestElementA::default(), tail: Element { head: TestElementB::default(), tail: End } });
+        assert_eq!(l, Element::new(TestElementA::default(), Element::new(TestElementB::default(), End)));
     }
 
     #[test]
@@ -205,7 +205,6 @@ mod tests {
         }
 
         eval(&h);
-        assert!(false);
     }
 
     #[test]
@@ -246,13 +245,11 @@ mod tests {
             .push(TestElementA::default());
 
         assert_tokens(&h, &[
-            Token::Struct { name: "Element", len: 2 },
-            Token::Str("head"),
+            Token::TupleStruct { name: "Element", len: 2 },
             Token::NewtypeStruct { name: "TestElementA" },
             Token::U64(0),
-            Token::Str("tail"),
             Token::UnitStruct { name: "End" },
-            Token::StructEnd,
+            Token::TupleStructEnd,
         ]);
     }
 
@@ -263,17 +260,13 @@ mod tests {
             .push(8u8);
 
         assert_tokens(&h, &[
-            Token::Struct { name: "Element", len: 2 },
-            Token::Str("head"),
+            Token::TupleStruct { name: "Element", len: 2 },
             Token::U8(8),
-            Token::Str("tail"),
-            Token::Struct { name: "Element", len: 2 },
-            Token::Str("head"),
+            Token::TupleStruct { name: "Element", len: 2 },
             Token::U32(1),
-            Token::Str("tail"),
             Token::UnitStruct { name: "End" },
-            Token::StructEnd,
-            Token::StructEnd,
+            Token::TupleStructEnd,
+            Token::TupleStructEnd,
         ]);
     }
 
@@ -286,7 +279,7 @@ mod tests {
                 let list_n = list_n.push(i);
 
                 if i == n - 1 {
-                    prop_assert_eq!(list_n, Element { head: i, tail: list_nm1 });
+                    prop_assert_eq!(list_n, Element::new(i, list_nm1));
                 }
             }
         }
