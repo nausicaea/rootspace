@@ -12,7 +12,6 @@ use crate::{
 };
 use std::time::Duration;
 use typename::TypeName;
-use hlist::{HList, Element};
 use failure::Error;
 use std::marker::PhantomData;
 use std::path::Path;
@@ -127,21 +126,18 @@ impl<H> Default for World<H> {
     }
 }
 
-impl<H> ResourcesTrait for World<H>
-where
-    H: HList + Serialize + for<'de> Deserialize<'de>,
-{
+impl<H> ResourcesTrait for World<H> {
     fn load_from<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Error> {
         let file = File::open(path)?;
         let mut de = serde_json::Deserializer::from_reader(file);
-        self.resources = Resources::deserialize::<Element<Entities, Element<EventQueue<WorldEvent>, H>>, _>(&mut de)?;
+        self.resources = Resources::deserialize::<H, _>(&mut de)?;
         Ok(())
     }
 
     fn save_to<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
         let file = File::create(path)?;
         let mut ser = serde_json::Serializer::new(file);
-        self.resources.serialize::<Element<Entities, Element<EventQueue<WorldEvent>, H>>, _>(&mut ser)?;
+        self.resources.serialize::<H, _>(&mut ser)?;
         Ok(())
     }
 

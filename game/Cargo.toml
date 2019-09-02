@@ -13,7 +13,6 @@ failure = "^0.1.1"
 daggy = "^0.6.0"
 glium = "^0.25.0"
 nalgebra = "^0.18.0"
-hlist = { git = "https://gitlab.com/nausicaea/hlist.git", features = ["serde_support"] }
 ecs = {path = "../ecs"}
 engine = {path = "../engine"}
 

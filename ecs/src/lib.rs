@@ -3,7 +3,7 @@
 //! relationship with Entities, and finally, Systems encode (mostly) behaviour. The World manages
 //! all three type categories and provides access to each.
 
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 
 pub mod components;
 pub mod entities;
@@ -12,6 +12,7 @@ pub mod events;
 mod indexing;
 pub mod loop_stage;
 pub mod persistence;
+pub mod registry;
 pub mod resource;
 pub mod resources;
 pub mod system;
@@ -24,6 +25,7 @@ pub use crate::{
     events::EventTrait,
     loop_stage::LoopStage,
     persistence::Persistence,
+    registry::{Registry, Element, End},
     resource::Resource,
     resources::Resources,
     system::System,

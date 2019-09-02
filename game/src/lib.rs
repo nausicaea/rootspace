@@ -16,10 +16,9 @@ use engine::{
 use failure::Error;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
-use hlist::Hlist;
 
 pub struct Game<B> {
-    orchestrator: DefaultOrchestrator<B, Hlist![]>,
+    orchestrator: DefaultOrchestrator<B, ()>,
 }
 
 impl<B> Game<B>

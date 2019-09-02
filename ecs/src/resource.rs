@@ -8,3 +8,5 @@ use std::fmt::Debug;
 pub trait Resource: Downcast + Debug {}
 
 impl_downcast!(Resource);
+
+impl Resource for () {}
