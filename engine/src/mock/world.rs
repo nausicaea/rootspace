@@ -17,11 +17,11 @@ pub struct MockWorld {
 }
 
 impl ResourcesTrait for MockWorld {
-    fn load_from<P>(&mut self, _path: P) -> Result<(), Error> {
+    fn load_from<RR, P>(&mut self, _path: P) -> Result<(), Error> {
         unimplemented!()
     }
 
-    fn save_to<P>(&self, _path: P) -> Result<(), Error> {
+    fn save_to<RR, P>(&self, _path: P) -> Result<(), Error> {
         unimplemented!()
     }
 

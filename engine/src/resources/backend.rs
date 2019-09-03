@@ -128,5 +128,3 @@ where
         )
     }
 }
-
-// impl<B> Resource for Backend<B> where B: BackendTrait + 'static {}

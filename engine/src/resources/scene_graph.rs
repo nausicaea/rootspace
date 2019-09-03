@@ -46,5 +46,3 @@ where
         write!(f, "SceneGraph(#nodes: {})", self.hierarchy.len())
     }
 }
-
-// impl<T> Resource for SceneGraph<T> where T: 'static + Clone + Default {}

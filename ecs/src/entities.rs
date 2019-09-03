@@ -60,8 +60,6 @@ impl Entities {
     }
 }
 
-// impl Resource for Entities {}
-
 /// An iterator over all active entities.
 pub struct EntitiesIter<'a> {
     /// Tracks the current index into the generations slice.

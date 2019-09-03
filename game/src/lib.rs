@@ -1,7 +1,7 @@
 // mod assets;
 mod resources;
 
-use ecs::{EventQueue, LoopStage};
+use ecs::{Reg, Component, EventQueue, LoopStage};
 use engine::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,
@@ -17,8 +17,17 @@ use failure::Error;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
 
+type ReourceRegistry = Reg![
+    <Camera as Component>::Storage,
+    <Info as Component>::Storage,
+    <Model as Component>::Storage,
+    <Renderable as Component>::Storage,
+    <Status as Component>::Storage,
+    <UiModel as Component>::Storage,
+];
+
 pub struct Game<B> {
-    orchestrator: DefaultOrchestrator<B, ()>,
+    orchestrator: DefaultOrchestrator<B>,
 }
 
 impl<B> Game<B>

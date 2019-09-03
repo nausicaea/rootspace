@@ -1,6 +1,6 @@
 //! Provides the resource manager.
 
-use crate::{components::Component, persistence::Persistence, resource::Resource};
+use crate::{components::Component, persistence::Persistence, registry::Registry, resource::Resource};
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
     ser::{self, Serialize, SerializeMap, SerializeStruct, Serializer},
@@ -166,15 +166,74 @@ pub struct Resources {
 }
 
 impl Resources {
-    pub fn serialize<H, S>(&self, _serializer: S) -> Result<(), S::Error>
+    pub fn serialize<RR, S>(&self, serializer: S) -> Result<(), S::Error>
     where
+        RR: Registry + Default,
         S: Serializer,
     {
-        unimplemented!()
+        struct SerContainer<'a, R> {
+            persistence: Persistence,
+            resource: &'a R,
+        }
+
+        impl<'a, R> SerContainer<'a, R> {
+            fn new(p: Persistence, r: &'a R) -> Self {
+                SerContainer { persistence: p, resource: r }
+            }
+        }
+
+        impl<'a, R> Serialize for SerContainer<'a, R>
+        where
+            R: Resource + Serialize,
+        {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: Serializer,
+            {
+                let mut state = serializer.serialize_struct("SerContainer", 2)?;
+                state.serialize_field("persistence", &self.persistence)?;
+                state.serialize_field("resource", self.resource)?;
+                state.end()
+            }
+        }
+
+        fn serialize_entry<SM, R>(res: &Resources, state: &mut SM, _entry: &R)  -> Result<(), SM::Error>
+        where
+            SM: SerializeMap,
+            R: Resource + TypeName + Serialize,
+        {
+            if res.has::<R>() {
+                state.serialize_entry(&R::type_name(), &SerContainer::new(res.persistence_of::<R>(), &*res.borrow::<R>()))?;
+                Ok(())
+            } else {
+                Err(ser::Error::custom(format!("resource {} was not found", R::type_name())))
+            }
+        }
+
+        fn recurse<SM, RR>(res: &Resources, state: &mut SM, reg: &RR) -> Result<(), SM::Error>
+        where
+            SM: SerializeMap,
+            RR: Registry,
+        {
+            if RR::LEN > 0 {
+                let head = reg.head();
+                serialize_entry(res, state, head)?;
+                recurse(res, state, reg.tail())
+            } else {
+                Ok(())
+            }
+        }
+
+        let reg: RR = Default::default();
+        let mut state = serializer.serialize_map(Some(RR::LEN))?;
+        recurse(self, &mut state, &reg)?;
+        state.end()?;
+        Ok(())
     }
 
-    pub fn deserialize<'de, H, D>(_deserializer: D) -> Result<Self, D::Error>
+    pub fn deserialize<'de, RR, D>(_deserializer: D) -> Result<Self, D::Error>
     where
+        RR: Registry,
         D: Deserializer<'de>,
     {
         unimplemented!()
@@ -396,17 +455,11 @@ mod tests {
     #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
     struct TestResourceA(usize);
 
-    // impl Resource for TestResourceA {}
-
     #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
     struct TestResourceB(f32);
 
-    // impl Resource for TestResourceB {}
-
     #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
     struct TestResourceC(String);
-
-    // impl Resource for TestResourceC {}
 
     #[test]
     fn persistence() {

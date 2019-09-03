@@ -2,6 +2,15 @@ use crate::resource::Resource;
 use typename::TypeName;
 use serde::{Serialize, Deserialize};
 
+/// Construct the type signature of a `Registry`.
+///
+/// # Examples
+///
+/// ```
+/// use ecs::Reg;
+///
+/// let _l: Reg![usize, f32, bool] = Default::default();
+/// ```
 #[macro_export]
 macro_rules! Reg {
     () => {
@@ -18,6 +27,36 @@ macro_rules! Reg {
     };
 }
 
+/// Use this macro to expand the type of an existing `Registry`.
+/// # Examples
+///
+/// ```
+/// use ecs::{RegAdd, Element, End};
+///
+/// let _l: RegAdd![usize, f32, Element<bool, End>] = Default::default();
+/// ```
+#[macro_export]
+macro_rules! RegAdd {
+    ($ta:ty, $tb:ty) => {
+        $crate::registry::Element<$ta, $tb>
+    };
+    ($t:ty, $tp:tt) => {
+        $crate::registry::Element<$t, $tp>
+    };
+    ($t:ty, $($rest:tt)+) => {
+        $crate::registry::Element<$t, $crate::RegAdd![$($rest)+]>
+    };
+}
+
+/// Construct an instance of a `Registry`.
+///
+/// # Examples
+///
+/// ```
+/// use ecs::reg;
+///
+/// let _l = reg![0usize, 100.0f32, false];
+/// ```
 #[macro_export]
 macro_rules! reg {
     () => {
@@ -34,13 +73,42 @@ macro_rules! reg {
     };
 }
 
+/// Use this macro to add upon an existing `Registry`.
+///
+/// # Examples
+///
+/// ```
+/// use ecs::{reg_add, Element, End};
+///
+/// let _l = reg_add![0usize, 100.0f32, Element::new(false, End)];
+/// ```
+#[macro_export]
+macro_rules! reg_add {
+    ($ea:expr, $eb:expr) => {
+        $crate::registry::Element::new($ea, $eb)
+    };
+    ($e:expr, $rest:tt) => {
+        $crate::registry::Element::new($e, $rest)
+    };
+    ($t:expr, $($rest:tt)+) => {
+        $crate::registry::Element::new($t, $crate::reg_add![$($rest)+])
+    };
+}
 
+/// The `Registry` is used to register types with the world, so that the ecs can manage
+/// serialization and deserialization of the entire world state without knowing the specific types
+/// stored within it. The `Registry` is implemented as a heterogeneous list (more or less
+/// equivalent to a series of nested two-tuples).
 pub trait Registry: Sized {
+    /// Statically provides the length of the `Registry`.
     const LEN: usize;
 
+    /// Signifies the type stored at the head position of the list.
     type Head: Resource + TypeName + Serialize + for<'de> Deserialize<'de>;
+    /// Signifies the type of the rest of the list.
     type Tail: Registry;
 
+    /// Push an element to the head of the heterogeneous list.
     fn push<T>(self, element: T) -> Element<T, Self>
     where
         T: Resource + TypeName + Serialize + for<'de> Deserialize<'de>,
@@ -48,15 +116,31 @@ pub trait Registry: Sized {
         Element::new(element, self)
     }
 
-    fn head(&self) -> &Self::Head;
-
-    fn tail(&self) -> &Self::Tail;
-
+    /// Return the length of the heterogeneous list.
     fn len(&self) -> usize {
         Self::LEN
     }
+
+    /// Return a reference to the current head of the heterogeneous list.
+    fn head(&self) -> &Self::Head;
+
+    /// Return a reference to the tail of the heterogeneous list.
+    fn tail(&self) -> &Self::Tail;
+
+    // /// Apply a closure to each element of the heterogeneous list.
+    // fn for_each<F>(&self, f: &F)
+    // where
+    //     F: Fn(&Self::Head),
+    // {
+    //     if <Self as Registry>::LEN > 0 {
+    //         let head = self.head();
+    //         f(head);
+    //         self.tail().for_each(f);
+    //     }
+    // }
 }
 
+/// An element within the `Registry`.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Element<H, T>(H, T);
 
@@ -64,6 +148,7 @@ impl<H, T> Element<H, T>
 where
     T: Registry,
 {
+    /// Create a new `Element`, given a head and a tail argument.
     pub fn new(head: H, tail: T) -> Self {
         Element(head, tail)
     }
@@ -88,6 +173,7 @@ where
     }
 }
 
+/// The end of the `Registry`.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct End;
 
@@ -118,6 +204,16 @@ mod tests {
 
     #[derive(Default, Debug, PartialEq, Serialize, Deserialize, TypeName)]
     struct TestElementB(String);
+
+    #[test]
+    fn macro_additive() {
+        let a: Element<usize, Element<f32, End>> = Default::default();
+        let b: RegAdd![usize, Element<f32, End>] = Default::default();
+        let c: RegAdd![usize, Element<f32, End>] = reg_add![0usize, Element::new(0.0f32, End)];
+
+        assert_eq!(a, b);
+        assert_eq!(a, c);
+    }
 
     #[test]
     fn macros_empty() {

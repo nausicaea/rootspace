@@ -142,8 +142,6 @@ impl<E> fmt::Debug for EventQueue<E> {
     }
 }
 
-// impl<E> Resource for EventQueue<E> where E: 'static {}
-
 #[cfg(test)]
 mod tests {
     use super::*;
