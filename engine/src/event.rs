@@ -1,6 +1,7 @@
 use typename::TypeName;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, PartialEq, TypeName)]
+#[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
 pub enum EngineEvent {
     Startup,
     Shutdown,

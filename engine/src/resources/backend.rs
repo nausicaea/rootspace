@@ -8,16 +8,64 @@ use std::{collections::HashMap, fmt, marker::PhantomData, path::Path};
 use typename::TypeName;
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct TextureId(ProcessUniqueId);
+pub struct TextureId(Option<ProcessUniqueId>);
+
+impl TextureId {
+    fn generate() -> Self {
+        TextureId(Some(ProcessUniqueId::new()))
+    }
+}
+
+impl Default for TextureId {
+    fn default() -> Self {
+        TextureId(None)
+    }
+}
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ShaderId(ProcessUniqueId);
+pub struct ShaderId(Option<ProcessUniqueId>);
+
+impl ShaderId {
+    fn generate() -> Self {
+        ShaderId(Some(ProcessUniqueId::new()))
+    }
+}
+
+impl Default for ShaderId {
+    fn default() -> Self {
+        ShaderId(None)
+    }
+}
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct VertexBufferId(ProcessUniqueId);
+pub struct VertexBufferId(Option<ProcessUniqueId>);
+
+impl VertexBufferId {
+    fn generate() -> Self {
+        VertexBufferId(Some(ProcessUniqueId::new()))
+    }
+}
+
+impl Default for VertexBufferId {
+    fn default() -> Self {
+        VertexBufferId(None)
+    }
+}
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct IndexBufferId(ProcessUniqueId);
+pub struct IndexBufferId(Option<ProcessUniqueId>);
+
+impl IndexBufferId {
+    fn generate() -> Self {
+        IndexBufferId(Some(ProcessUniqueId::new()))
+    }
+}
+
+impl Default for IndexBufferId {
+    fn default() -> Self {
+        IndexBufferId(None)
+    }
+}
 
 #[derive(TypeName)]
 pub struct Backend<B>
@@ -37,42 +85,42 @@ where
 {
     pub fn create_texture<P: AsRef<Path>>(&mut self, backend: &B, image: P) -> Result<TextureId, Error> {
         let t = B::Texture::from_path(backend, &image)?;
-        let id = TextureId(ProcessUniqueId::default());
+        let id = TextureId::generate();
         self.textures.insert(id, t);
         Ok(id)
     }
 
     pub fn create_empty_texture(&mut self, backend: &B, dimensions: (u32, u32)) -> Result<TextureId, Error> {
         let t = B::Texture::empty(backend, dimensions)?;
-        let id = TextureId(ProcessUniqueId::default());
+        let id = TextureId::generate();
         self.textures.insert(id, t);
         Ok(id)
     }
 
     pub fn create_shader<P: AsRef<Path>>(&mut self, backend: &B, vs: P, fs: P) -> Result<ShaderId, Error> {
         let s = B::Shader::from_paths(backend, &vs, &fs)?;
-        let id = ShaderId(ProcessUniqueId::default());
+        let id = ShaderId::generate();
         self.shaders.insert(id, s);
         Ok(id)
     }
 
     pub fn create_source_shader<S: AsRef<str>>(&mut self, backend: &B, vs: S, fs: S) -> Result<ShaderId, Error> {
         let s = B::Shader::from_source(backend, &vs, &fs)?;
-        let id = ShaderId(ProcessUniqueId::default());
+        let id = ShaderId::generate();
         self.shaders.insert(id, s);
         Ok(id)
     }
 
     pub fn create_vertex_buffer(&mut self, backend: &B, vertices: &[Vertex]) -> Result<VertexBufferId, Error> {
         let vbuf = B::VertexBuffer::from_vertices(backend, vertices)?;
-        let id = VertexBufferId(ProcessUniqueId::default());
+        let id = VertexBufferId::generate();
         self.vertex_buffers.insert(id, vbuf);
         Ok(id)
     }
 
     pub fn create_index_buffer(&mut self, backend: &B, indices: &[u16]) -> Result<IndexBufferId, Error> {
         let ibuf = B::IndexBuffer::from_indices(backend, indices)?;
-        let id = IndexBufferId(ProcessUniqueId::default());
+        let id = IndexBufferId::generate();
         self.index_buffers.insert(id, ibuf);
         Ok(id)
     }

@@ -4,6 +4,7 @@ use crate::{entities::Entity, resource::Resource};
 use hibitset::{BitIter, BitSet, BitSetLike};
 use std::{fmt, iter, ptr, slice};
 use typename::TypeName;
+use serde::{Deserialize, Serialize};
 
 /// A component is a data type that is associated with a particular `Entity`.
 pub trait Component: Sized {
@@ -29,7 +30,7 @@ pub trait Storage<T> {
 }
 
 /// Implements component storage based on a `Vec<T>`. Occupied spaces are tracked with a `BitSet`.
-#[derive(TypeName)]
+#[derive(TypeName, Serialize, Deserialize)]
 pub struct VecStorage<T> {
     /// The index into the data vector.
     index: BitSet,
@@ -152,7 +153,7 @@ impl<T> Default for VecStorage<T> {
 
 impl<T> fmt::Debug for VecStorage<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "VecStorage {{ ... }}")
+        write!(f, "VecStorage(#len: {})", self.data.len())
     }
 }
 

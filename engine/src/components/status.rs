@@ -1,7 +1,8 @@
 use ecs::{Component, VecStorage};
 use typename::TypeName;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, TypeName)]
+#[derive(Debug, Clone, PartialEq, Eq, TypeName, Serialize, Deserialize)]
 pub struct Status(bool);
 
 impl Status {

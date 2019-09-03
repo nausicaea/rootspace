@@ -17,12 +17,12 @@ use crate::{
         glium::{GliumBackend, GliumEventsLoop},
         headless::{HeadlessBackend, HeadlessEventsLoop},
     },
-    orchestrator::Orchestrator,
+    orchestrator::{JoinedRegistry, Orchestrator},
     systems::{event_interface::EventInterface, renderer::Renderer},
 };
 use ecs::World;
 
-pub type DefaultOrchestrator<B> = Orchestrator<B, World>;
+pub type DefaultOrchestrator<B, RR> = Orchestrator<B, RR, World<JoinedRegistry<RR>>>;
 pub type GliumEventInterface = EventInterface<GliumEventsLoop>;
 pub type HeadlessEventInterface = EventInterface<HeadlessEventsLoop>;
 pub type GliumRenderer = Renderer<GliumBackend>;

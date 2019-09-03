@@ -1,8 +1,9 @@
 use ecs::{Component, VecStorage};
 use std::fmt;
 use typename::TypeName;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, TypeName)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, TypeName, Serialize, Deserialize)]
 pub struct Info {
     name: String,
     description: String,

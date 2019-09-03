@@ -11,6 +11,7 @@ pub mod event_queue;
 pub mod events;
 mod indexing;
 pub mod loop_stage;
+pub mod macros;
 pub mod persistence;
 pub mod registry;
 pub mod resource;

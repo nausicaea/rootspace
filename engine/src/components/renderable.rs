@@ -7,13 +7,19 @@ use ecs::{Component, VecStorage};
 use failure::{Error, Fail};
 use std::path::{Path, PathBuf};
 use typename::TypeName;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, TypeName)]
+#[derive(Debug, Default, TypeName, Serialize, Deserialize)]
 pub struct Renderable {
+    #[serde(skip)]
     vertices: VertexBufferId,
+    #[serde(skip)]
     indices: IndexBufferId,
+    #[serde(skip)]
     shader: ShaderId,
+    #[serde(skip)]
     diffuse_texture: TextureId,
+    #[serde(skip)]
     normal_texture: Option<TextureId>,
 }
 

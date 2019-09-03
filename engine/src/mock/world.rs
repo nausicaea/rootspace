@@ -1,9 +1,10 @@
-use ecs::{Entity, LoopStage, Persistence, Resource, ResourcesTrait, WorldTrait};
+use ecs::{RegAdd, Registry, Entity, LoopStage, Persistence, Resource, ResourcesTrait, WorldTrait};
 use std::time::Duration;
-use failure::Error;
+use serde::{de::Deserializer, ser::Serializer};
+use std::marker::PhantomData;
 
 #[derive(Debug)]
-pub struct MockWorld {
+pub struct MockWorld<RR> {
     pub max_iterations: usize,
     pub render_duration: Option<Duration>,
     pub fixed_update_calls: usize,
@@ -14,14 +15,26 @@ pub struct MockWorld {
     pub update_arguments: Vec<(Duration, Duration)>,
     pub render_arguments: Vec<(Duration, Duration)>,
     iterations: usize,
+    _rr: PhantomData<RR>,
 }
 
-impl ResourcesTrait for MockWorld {
-    fn load_from<RR, P>(&mut self, _path: P) -> Result<(), Error> {
+impl<RR> ResourcesTrait<RR> for MockWorld<RR>
+where
+    RR: Registry + Default,
+{
+    type ResourceRegistry = RegAdd![RR];
+
+    fn serialize<S>(&self, _serializer: S) -> Result<(), S::Error>
+    where
+        S: Serializer,
+    {
         unimplemented!()
     }
 
-    fn save_to<RR, P>(&self, _path: P) -> Result<(), Error> {
+    fn deserialize<'de, D>(&mut self, _deserializer: D) -> Result<(), D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         unimplemented!()
     }
 
@@ -45,7 +58,7 @@ impl ResourcesTrait for MockWorld {
     fn add_component<C>(&mut self, _entity: Entity, _component: C) { unimplemented!() }
 }
 
-impl WorldTrait for MockWorld {
+impl<RR> WorldTrait for MockWorld<RR> {
     fn add_system<S>(&mut self, _stage: LoopStage, _system: S) { unimplemented!() }
 
     fn get_system<S>(&self, _stage: LoopStage) -> Option<&S> { unimplemented!() }
@@ -76,7 +89,7 @@ impl WorldTrait for MockWorld {
     }
 }
 
-impl Default for MockWorld {
+impl<RR> Default for MockWorld<RR> {
     fn default() -> Self {
         MockWorld {
             max_iterations: 1,
@@ -89,6 +102,7 @@ impl Default for MockWorld {
             update_arguments: Vec::default(),
             render_arguments: Vec::default(),
             iterations: 0,
+            _rr: PhantomData::default(),
         }
     }
 }

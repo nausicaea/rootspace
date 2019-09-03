@@ -2,8 +2,9 @@ use ecs::{Component, VecStorage};
 use nalgebra::{zero, Affine3, Isometry3, Matrix4, Point2, Vector2, Vector3};
 use std::ops::Mul;
 use typename::TypeName;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, PartialEq, TypeName)]
+#[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
 pub struct UiModel {
     model: Affine3<f32>,
     translation: Vector2<f32>,

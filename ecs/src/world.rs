@@ -13,14 +13,19 @@ use crate::{
     RegAdd,
 };
 use std::time::Duration;
+use std::marker::PhantomData;
 use typename::TypeName;
-use failure::Error;
 use serde::{Deserialize, Serialize, de::Deserializer, ser::Serializer};
 
 /// Exposes resource management methods.
-pub trait ResourcesTrait {
-    fn serialize<RR: Registry + Default, S: Serializer>(&self, serializer: S) -> Result<(), Error>;
-    fn deserialize<'de, RR: Registry + Default, D: Deserializer<'de>>(&mut self, deserializer: D) -> Result<(), Error>;
+pub trait ResourcesTrait<RR>
+where
+    RR: Registry + Default,
+{
+    type ResourceRegistry: Registry + Default;
+
+    fn serialize<S>(&self, serializer: S) -> Result<(), S::Error> where S: Serializer;
+    fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error> where D: Deserializer<'de>;
     /// Clears the state of the world. This removes all resources whose persistence is less or
     /// equal to the specified persistence value.
     fn clear(&mut self, persistence: Persistence);
@@ -93,15 +98,16 @@ pub enum WorldEvent {
 }
 
 /// This is the default implementation of the `WorldTrait` provided by this library.
-pub struct World {
+pub struct World<RR> {
     resources: Resources,
     fixed_update_systems: Vec<Box<dyn System>>,
     update_systems: Vec<Box<dyn System>>,
     render_systems: Vec<Box<dyn System>>,
     receiver: ReceiverId<WorldEvent>,
+    _rr: PhantomData<RR>,
 }
 
-impl Default for World {
+impl<RR> Default for World<RR> {
     fn default() -> Self {
         let mut events: EventQueue<WorldEvent> = EventQueue::default();
         let receiver = events.subscribe();
@@ -116,17 +122,33 @@ impl Default for World {
             update_systems: Vec::default(),
             render_systems: Vec::default(),
             receiver,
+            _rr: PhantomData::default(),
         }
     }
 }
 
-impl ResourcesTrait for World {
-    fn serialize<RR: Registry + Default, S: Serializer>(&self, serializer: S) -> Result<(), Error> {
-        self.resources.serialize::<RegAdd![Entities, EventQueue<WorldEvent>, RR], S>(serializer)
+impl<RR> ResourcesTrait<RR> for World<RR>
+where
+    RR: Registry + Default,
+{
+    type ResourceRegistry = RegAdd![
+        Entities,
+        EventQueue<WorldEvent>,
+        RR
+    ];
+
+    fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
+    where
+        S: Serializer,
+    {
+        self.resources.serialize::<Self::ResourceRegistry, S>(serializer)
     }
 
-    fn deserialize<'de, RR: Registry + Default, D: Deserializer<'de>>(&mut self, deserializer: D) -> Result<(), Error> {
-        self.resources = Resources::deserialize::<RegAdd![Entities, EventQueue<WorldEvent>, RR], D>(deserializer)?;
+    fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        self.resources = Resources::deserialize::<Self::ResourceRegistry, D>(deserializer)?;
         Ok(())
     }
 
@@ -168,7 +190,7 @@ impl ResourcesTrait for World {
     }
 }
 
-impl WorldTrait for World {
+impl<RR> WorldTrait for World<RR> {
     fn add_system<S>(&mut self, stage: LoopStage, system: S)
     where
         S: System,
@@ -227,9 +249,10 @@ impl WorldTrait for World {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Reg;
 
     #[test]
     fn default() {
-        let _: World = Default::default();
+        let _: World<Reg![]> = Default::default();
     }
 }
