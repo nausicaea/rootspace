@@ -15,148 +15,6 @@ use std::{
 };
 use typename::TypeName;
 
-macro_rules! count_tts {
-    () => { 0usize };
-    ($_head:tt $($tail:tt)*) => { 1usize + count_tts!($($tail)*) };
-}
-
-macro_rules! impl_ser_with {
-    ($name:ident, $($r:tt),+) => {
-        /// Serialize `Resources` to a set of specified resource types.
-        pub fn $name<$($r),+, S>(&self, serializer: S) -> Result<(), S::Error>
-        where
-            $(
-            $r: Resource + TypeName + Serialize,
-            )+
-            S: Serializer,
-        {
-            struct SerContainer<'a, R> {
-                persistence: Persistence,
-                resource: &'a R,
-            }
-
-            impl<'a, R> SerContainer<'a, R> {
-                fn new(p: Persistence, r: &'a R) -> Self {
-                    SerContainer { persistence: p, resource: r }
-                }
-            }
-
-            impl<'a, R> Serialize for SerContainer<'a, R>
-            where
-                R: Resource + Serialize,
-            {
-                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-                where
-                    S: Serializer,
-                {
-                    let mut state = serializer.serialize_struct("SerContainer", 2)?;
-                    state.serialize_field("persistence", &self.persistence)?;
-                    state.serialize_field("resource", self.resource)?;
-                    state.end()
-                }
-            }
-
-            let mut state = serializer.serialize_map(Some(count_tts!($($r)+)))?;
-            $(
-            if self.has::<$r>() {
-                state.serialize_entry(&$r::type_name(), &SerContainer::new(self.persistence_of::<$r>(), &*self.borrow::<$r>()))?;
-            } else {
-                return Err(ser::Error::custom(format!("resource {} was not found", $r::type_name())));
-            }
-            )+
-            state.end()?;
-            Ok(())
-        }
-    };
-}
-
-macro_rules! impl_de_with {
-    ($name:ident, $($r:tt),+) => {
-        /// Deserialize `Resources` from a set of specified resource types.
-        pub fn $name<'de, $($r),+, D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            $(
-            $r: Resource + TypeName + Deserialize<'de>,
-            )+
-            D: Deserializer<'de>,
-        {
-            #[derive(Deserialize)]
-            struct DeContainer<R> {
-                persistence: Persistence,
-                resource: R,
-            }
-
-            struct ResourcesVisitor<$($r),+> {
-                _r: PhantomData<($($r),+)>,
-            }
-
-            impl<$($r),+> Default for ResourcesVisitor<$($r),+> {
-                fn default() -> Self {
-                    ResourcesVisitor {
-                        _r: PhantomData::default(),
-                    }
-                }
-            }
-
-            impl<'de, $($r),+> Visitor<'de> for ResourcesVisitor<$($r),+>
-            where
-                $(
-                $r: Resource + TypeName + Deserialize<'de>,
-                )+
-            {
-                type Value = Resources;
-
-                fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                    write!(f, "a map of type names and their serialized data including a persistence marker")
-                }
-
-                fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
-                where
-                    A: MapAccess<'de>,
-                {
-                    let mut resources = Resources::with_capacity(access.size_hint().unwrap_or(count_tts!($($r)+)));
-
-                    while let Some(key) = access.next_key()? {
-                        if false {
-                            // This clause is just here to make the macro easier to write.
-                        }
-                        $(
-                        else if key == <$r as TypeName>::type_name() {
-                            let c = access.next_value::<DeContainer<$r>>()?;
-                            resources.insert(c.resource, c.persistence);
-                        }
-                        )+
-                        else {
-                            return Err(de::Error::unknown_field(key, &[]));
-                        }
-                    }
-
-                    Ok(resources)
-                }
-            }
-
-            deserializer.deserialize_map(ResourcesVisitor::<$($r),+>::default())
-        }
-    };
-}
-
-macro_rules! impl_de_additive_with {
-    ($name:ident, $deser_name:ident, $($r:tt),+) => {
-        /// Deserialize a set of resource types into an existing instance of `Resources`.
-        pub fn $name<'de, $($r),+, D>(&mut self, deserializer: D) -> Result<(), D::Error>
-        where
-            $(
-            $r: Resource + TypeName + Deserialize<'de>,
-            )+
-            D: Deserializer<'de>,
-        {
-            let resources = Resources::$deser_name::<$($r),+, D>(deserializer)?;
-            self.join(resources);
-            Ok(())
-        }
-    };
-}
-
 /// A container that manages resources. Allows mutable borrows of multiple different resources at
 /// the same time.
 #[derive(Default, Debug)]
@@ -231,82 +89,79 @@ impl Resources {
         Ok(())
     }
 
-    pub fn deserialize<'de, RR, D>(_deserializer: D) -> Result<Self, D::Error>
+    pub fn deserialize<'de, RR, D>(deserializer: D) -> Result<Self, D::Error>
     where
-        RR: Registry,
+        RR: Registry + Default,
         D: Deserializer<'de>,
     {
-        unimplemented!()
+        #[derive(Deserialize)]
+        struct DeContainer<R> {
+            persistence: Persistence,
+            resource: R,
+        }
+
+        fn deserialize_element<'de, A, R>(res: &mut Resources, access: &mut A, _entry: &R) -> Result<(), A::Error>
+        where
+            A: MapAccess<'de>,
+            R: Resource + TypeName + Deserialize<'de>,
+        {
+            let c = access.next_value::<DeContainer<R>>()?;
+            res.insert(c.resource, c.persistence);
+            Ok(())
+        }
+
+        fn recurse<'de, A, RR>(res: &mut Resources, access: &mut A, key: &str, reg: &RR) -> Result<(), A::Error>
+        where
+            A: MapAccess<'de>,
+            RR: Registry,
+        {
+            if RR::LEN > 0 {
+                let head = reg.head();
+                if key == head.type_name_of() {
+                    deserialize_element(res, access, head)
+                } else {
+                    recurse(res, access, key, reg.tail())
+                }
+            } else {
+                Err(de::Error::unknown_field(key, &[]))
+            }
+        }
+
+        struct ResourcesVisitor<RR>(PhantomData<RR>);
+
+        impl<RR> Default for ResourcesVisitor<RR> {
+            fn default() -> Self {
+                ResourcesVisitor(PhantomData::default())
+            }
+        }
+
+        impl<'de, RR> Visitor<'de> for ResourcesVisitor<RR>
+        where
+            RR: Registry + Default,
+        {
+            type Value = Resources;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "a map of type names and their serialized data including a persistence marker")
+            }
+
+            fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let reg: RR = Default::default();
+                let mut resources = Resources::with_capacity(access.size_hint().unwrap_or(RR::LEN));
+
+                while let Some(key) = access.next_key()? {
+                    recurse(&mut resources, &mut access, key, &reg)?;
+                }
+
+                Ok(resources)
+            }
+        }
+
+        deserializer.deserialize_map(ResourcesVisitor::<RR>::default())
     }
-
-    impl_ser_with!(serialize_with_1, R0);
-
-    impl_ser_with!(serialize_with_2, R0, R1);
-
-    impl_ser_with!(serialize_with_3, R0, R1, R2);
-
-    impl_ser_with!(serialize_with_4, R0, R1, R2, R3);
-
-    impl_ser_with!(serialize_with_5, R0, R1, R2, R3, R4);
-
-    impl_ser_with!(serialize_with_6, R0, R1, R2, R3, R4, R5);
-
-    impl_ser_with!(serialize_with_7, R0, R1, R2, R3, R4, R5, R6);
-
-    impl_ser_with!(serialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
-
-    impl_de_with!(deserialize_with_1, R0);
-
-    impl_de_with!(deserialize_with_2, R0, R1);
-
-    impl_de_with!(deserialize_with_3, R0, R1, R2);
-
-    impl_de_with!(deserialize_with_4, R0, R1, R2, R3);
-
-    impl_de_with!(deserialize_with_5, R0, R1, R2, R3, R4);
-
-    impl_de_with!(deserialize_with_6, R0, R1, R2, R3, R4, R5);
-
-    impl_de_with!(deserialize_with_7, R0, R1, R2, R3, R4, R5, R6);
-
-    impl_de_with!(deserialize_with_8, R0, R1, R2, R3, R4, R5, R6, R7);
-
-    impl_de_additive_with!(deserialize_additive_with_1, deserialize_with_1, R0);
-
-    impl_de_additive_with!(deserialize_additive_with_2, deserialize_with_2, R0, R1);
-
-    impl_de_additive_with!(deserialize_additive_with_3, deserialize_with_3, R0, R1, R2);
-
-    impl_de_additive_with!(deserialize_additive_with_4, deserialize_with_4, R0, R1, R2, R3);
-
-    impl_de_additive_with!(deserialize_additive_with_5, deserialize_with_5, R0, R1, R2, R3, R4);
-
-    impl_de_additive_with!(deserialize_additive_with_6, deserialize_with_6, R0, R1, R2, R3, R4, R5);
-
-    impl_de_additive_with!(
-        deserialize_additive_with_7,
-        deserialize_with_7,
-        R0,
-        R1,
-        R2,
-        R3,
-        R4,
-        R5,
-        R6
-    );
-
-    impl_de_additive_with!(
-        deserialize_additive_with_8,
-        deserialize_with_8,
-        R0,
-        R1,
-        R2,
-        R3,
-        R4,
-        R5,
-        R6,
-        R7
-    );
 
     /// Create a new, empty resources container.
     pub fn new() -> Self {
@@ -449,17 +304,24 @@ impl Resources {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Reg;
     use serde::{Deserialize, Serialize};
     use serde_json;
 
-    #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
+    #[derive(Debug, Default, TypeName, Serialize, Deserialize, PartialEq)]
     struct TestResourceA(usize);
 
-    #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
+    #[derive(Debug, Default, TypeName, Serialize, Deserialize, PartialEq)]
     struct TestResourceB(f32);
 
-    #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
+    #[derive(Debug, Default, TypeName, Serialize, Deserialize, PartialEq)]
     struct TestResourceC(String);
+
+    type TestRegistry = Reg![
+        TestResourceA,
+        TestResourceB,
+        TestResourceC,
+    ];
 
     #[test]
     fn persistence() {
@@ -488,56 +350,28 @@ mod tests {
     #[test]
     fn serialize() {
         let mut resources = Resources::default();
-        resources.insert(TestResourceA::default(), Persistence::Runtime);
-        resources.insert(TestResourceB::default(), Persistence::None);
+        resources.insert(TestResourceA(25), Persistence::Runtime);
+        resources.insert(TestResourceB(0.141), Persistence::None);
+        resources.insert(TestResourceC(String::from("Bye")), Persistence::None);
 
         let mut writer: Vec<u8> = Vec::with_capacity(128);
         let mut s = serde_json::Serializer::new(&mut writer);
-        assert!(resources.serialize_with_1::<TestResourceC, _>(&mut s).is_err());
-
-        let mut writer: Vec<u8> = Vec::with_capacity(128);
-        let mut s = serde_json::Serializer::new(&mut writer);
-        assert!(resources.serialize_with_1::<TestResourceA, _>(&mut s).is_ok());
+        assert!(resources.serialize::<TestRegistry, _>(&mut s).is_ok());
         assert_eq!(
             unsafe { String::from_utf8_unchecked(writer) },
-            "{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0}}"
+            "{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":25},\"ecs::resources::tests::TestResourceB\":{\"persistence\":\"None\",\"resource\":0.141},\"ecs::resources::tests::TestResourceC\":{\"persistence\":\"None\",\"resource\":\"Bye\"}}"
         );
-
-        let mut writer: Vec<u8> = Vec::with_capacity(128);
-        let mut s = serde_json::Serializer::new(&mut writer);
-        assert!(resources
-            .serialize_with_2::<TestResourceA, TestResourceB, _>(&mut s)
-            .is_ok());
-        assert_eq!(unsafe { String::from_utf8_unchecked(writer) }, "{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0},\"ecs::resources::tests::TestResourceB\":{\"persistence\":\"None\",\"resource\":0.0}}");
     }
 
     #[test]
     fn deserialize() {
         let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0}}",
+            b"{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":10},\"ecs::resources::tests::TestResourceB\":{\"persistence\":\"None\",\"resource\":0.25},\"ecs::resources::tests::TestResourceC\":{\"persistence\":\"None\",\"resource\":\"Hello, World!\"}}",
         );
-        let resources = Resources::deserialize_with_1::<TestResourceA, _>(&mut d).unwrap();
+        let resources = Resources::deserialize::<TestRegistry, _>(&mut d).unwrap();
         assert!(d.end().is_ok());
-        let _: Ref<TestResourceA> = resources.borrow();
-
-        let mut d = serde_json::Deserializer::from_slice(b"{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0},\"ecs::resources::tests::TestResourceB\":{\"persistence\":\"None\",\"resource\":0.0}}");
-        let resources = Resources::deserialize_with_2::<TestResourceA, TestResourceB, _>(&mut d).unwrap();
-        assert!(d.end().is_ok());
-        let _: Ref<TestResourceA> = resources.borrow();
-        let _: Ref<TestResourceB> = resources.borrow();
-    }
-
-    #[test]
-    fn deserialize_additive() {
-        let mut resources = Resources::default();
-
-        let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":0}}",
-        );
-        resources
-            .deserialize_additive_with_1::<TestResourceA, _>(&mut d)
-            .unwrap();
-        assert!(d.end().is_ok());
-        let _: Ref<TestResourceA> = resources.borrow();
+        assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(10));
+        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(0.25));
+        assert_eq!(*resources.borrow::<TestResourceC>(), TestResourceC(String::from("Hello, World!")));
     }
 }

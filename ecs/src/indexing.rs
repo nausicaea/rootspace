@@ -30,6 +30,42 @@ impl fmt::Display for Index {
     }
 }
 
+impl From<u32> for Index {
+    fn from(value: u32) -> Self {
+        Index(value)
+    }
+}
+
+impl From<&u32> for Index {
+    fn from(value: &u32) -> Self {
+        Index(*value)
+    }
+}
+
+impl From<usize> for Index {
+    fn from(value: usize) -> Self {
+        Index(value as u32)
+    }
+}
+
+impl From<&usize> for Index {
+    fn from(value: &usize) -> Self {
+        Index(*value as u32)
+    }
+}
+
+impl From<Index> for usize {
+    fn from(value: Index) -> Self {
+        value.0 as usize
+    }
+}
+
+impl<'a> From<&'a Index> for usize {
+    fn from(value: &'a Index) -> Self {
+        value.0 as usize
+    }
+}
+
 /// A zero-based generation that can be used to track the number of times that a corresponding
 /// index has been used previously.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

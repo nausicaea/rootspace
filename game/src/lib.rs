@@ -17,15 +17,13 @@ use failure::Error;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
 
-// type ResourceRegistry = Reg![
-//     <Camera as Component>::Storage,
-//     <Info as Component>::Storage,
-//     <Model as Component>::Storage,
-//     <Renderable as Component>::Storage,
-//     <Status as Component>::Storage,
-//     <UiModel as Component>::Storage,
-// ];
 type ResourceRegistry = Reg![
+    <Camera as Component>::Storage,
+    <Info as Component>::Storage,
+    <Model as Component>::Storage,
+    <Renderable as Component>::Storage,
+    <Status as Component>::Storage,
+    <UiModel as Component>::Storage,
 ];
 
 pub struct Game<B> {

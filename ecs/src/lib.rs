@@ -3,12 +3,11 @@
 //! relationship with Entities, and finally, Systems encode (mostly) behaviour. The World manages
 //! all three type categories and provides access to each.
 
-//#![warn(missing_docs)]
-
 pub mod components;
 pub mod entities;
 pub mod event_queue;
 pub mod events;
+//mod hibitset;
 mod indexing;
 pub mod loop_stage;
 pub mod macros;

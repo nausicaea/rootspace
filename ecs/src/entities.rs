@@ -42,8 +42,9 @@ impl Entities {
     ///
     /// * `entity` - The `Entity` to be destroyed.
     pub fn destroy(&mut self, entity: Entity) {
-        self.generations[entity.idx() as usize].deactivate();
-        self.free_idx.push(entity.idx);
+        let idx_usize: usize = entity.idx().into();
+        self.generations[idx_usize].deactivate();
+        self.free_idx.push(entity.idx());
     }
 
     /// Return the number of active entities.
@@ -111,8 +112,8 @@ impl Entity {
     }
 
     /// Return the integer index of the entity, which can be used to index into data structures.
-    pub fn idx(&self) -> u32 {
-        self.idx.idx()
+    pub fn idx(&self) -> Index {
+        self.idx
     }
 }
 

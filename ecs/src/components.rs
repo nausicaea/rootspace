@@ -1,10 +1,13 @@
 //! Provides facilities for reasoning about data (e.g. components) coupled to entities.
 
 use crate::{entities::Entity, resource::Resource};
-use hibitset::{BitIter, BitSet, BitSetLike};
-use std::{fmt, iter, ptr, slice};
+use crate::indexing::Index;
+//use crate::hibitset::{BitSet, BitSetIter};
+// use hibitset::{BitIter, BitSet, BitSetLike};
+use std::{fmt, ptr};
 use typename::TypeName;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 /// A component is a data type that is associated with a particular `Entity`.
 pub trait Component: Sized {
@@ -33,33 +36,35 @@ pub trait Storage<T> {
 #[derive(TypeName, Serialize, Deserialize)]
 pub struct VecStorage<T> {
     /// The index into the data vector.
-    index: BitSet,
+    index: HashSet<Index>,
     /// The data vector containing the components.
     data: Vec<T>,
 }
 
 impl<T> VecStorage<T> {
     /// Return an iterator over all occupied entries.
-    pub fn iter(&self) -> VecStorageIter<T> {
-        VecStorageIter {
-            idx_iter: (&self.index).iter(),
-            data: &self.data,
-        }
+    pub fn iter(&self) -> impl Iterator<Item = &T> + '_ {
+        let index = &self.index;
+        self.data.iter()
+            .enumerate()
+            .filter(move |(idx, _)| index.contains(&idx.into()))
+            .map(|(_, d)| d)
     }
 
     /// Return a mutable iterator over all occupied entries.
-    pub fn iter_mut(&mut self) -> VecStorageIterMut<T> {
-        VecStorageIterMut {
-            idx: &self.index,
-            data_iter: self.data.iter_mut().enumerate(),
-        }
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> + '_ {
+        let index = &self.index;
+        self.data.iter_mut()
+            .enumerate()
+            .filter(move |(idx, _)| index.contains(&idx.into()))
+            .map(|(_, d)| d)
     }
 }
 
 impl<T> Storage<T> for VecStorage<T> {
     fn insert(&mut self, entity: Entity, datum: T) -> Option<T> {
         let idx = entity.idx();
-        let idx_usize = idx as usize;
+        let idx_usize: usize = idx.into();
 
         // Adjust the length of the data container if necessary.
         if self.data.len() <= idx_usize {
@@ -70,7 +75,7 @@ impl<T> Storage<T> for VecStorage<T> {
         }
 
         // If the index was previously occupied, return the old piece of data.
-        if self.index.add(idx) {
+        if !self.index.insert(idx) {
             unsafe {
                 let old_datum = ptr::read(self.data.get_unchecked(idx_usize));
                 ptr::write(self.data.get_unchecked_mut(idx_usize), datum);
@@ -88,9 +93,10 @@ impl<T> Storage<T> for VecStorage<T> {
         let idx = entity.idx();
 
         // If the index was previously occupied, return the old piece of data.
-        if self.index.remove(idx) {
+        if self.index.remove(&idx) {
+            let idx_usize: usize = idx.into();
             unsafe {
-                let old_datum = ptr::read(self.data.get_unchecked(idx as usize));
+                let old_datum = ptr::read(self.data.get_unchecked(idx_usize));
                 Some(old_datum)
             }
         } else {
@@ -99,14 +105,15 @@ impl<T> Storage<T> for VecStorage<T> {
     }
 
     fn has(&self, entity: &Entity) -> bool {
-        self.index.contains(entity.idx() as u32)
+        self.index.contains(&entity.idx())
     }
 
     fn clear(&mut self) {
         let data = &mut self.data;
 
-        for idx in (&self.index).iter() {
-            unsafe { ptr::drop_in_place(data.get_unchecked_mut(idx as usize)) }
+        for idx in self.index.iter() {
+            let idx_usize: usize = idx.into();
+            unsafe { ptr::drop_in_place(data.get_unchecked_mut(idx_usize)) }
         }
 
         self.index.clear();
@@ -118,8 +125,9 @@ impl<T> Storage<T> for VecStorage<T> {
     fn get(&self, entity: &Entity) -> Option<&T> {
         let idx = entity.idx();
 
-        if self.index.contains(idx) {
-            unsafe { Some(self.data.get_unchecked(idx as usize)) }
+        if self.index.contains(&idx) {
+            let idx_usize: usize = idx.into();
+            unsafe { Some(self.data.get_unchecked(idx_usize)) }
         } else {
             None
         }
@@ -128,8 +136,9 @@ impl<T> Storage<T> for VecStorage<T> {
     fn get_mut(&mut self, entity: &Entity) -> Option<&mut T> {
         let idx = entity.idx();
 
-        if self.index.contains(idx) {
-            unsafe { Some(self.data.get_unchecked_mut(idx as usize)) }
+        if self.index.contains(&idx) {
+            let idx_usize: usize = idx.into();
+            unsafe { Some(self.data.get_unchecked_mut(idx_usize)) }
         } else {
             None
         }
@@ -145,7 +154,7 @@ impl<T> Drop for VecStorage<T> {
 impl<T> Default for VecStorage<T> {
     fn default() -> Self {
         VecStorage {
-            index: BitSet::default(),
+            index: HashSet::default(),
             data: Vec::default(),
         }
     }
@@ -154,44 +163,6 @@ impl<T> Default for VecStorage<T> {
 impl<T> fmt::Debug for VecStorage<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "VecStorage(#len: {})", self.data.len())
-    }
-}
-
-/// Provides read-only iteration over components of type `T`.
-pub struct VecStorageIter<'a, T: 'a> {
-    idx_iter: BitIter<&'a BitSet>,
-    data: &'a [T],
-}
-
-impl<'a, T: 'a> Iterator for VecStorageIter<'a, T> {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(idx) = self.idx_iter.next() {
-            unsafe { Some(self.data.get_unchecked(idx as usize)) }
-        } else {
-            None
-        }
-    }
-}
-
-/// Provides mutable iteration over components of type `T`.
-pub struct VecStorageIterMut<'a, T: 'a> {
-    idx: &'a BitSet,
-    data_iter: iter::Enumerate<slice::IterMut<'a, T>>,
-}
-
-impl<'a, T: 'a> Iterator for VecStorageIterMut<'a, T> {
-    type Item = &'a mut T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        while let Some((i, data)) = self.data_iter.next() {
-            if self.idx.contains(i as u32) {
-                return Some(data);
-            }
-        }
-
-        None
     }
 }
 

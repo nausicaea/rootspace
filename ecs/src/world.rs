@@ -16,6 +16,7 @@ use std::time::Duration;
 use std::marker::PhantomData;
 use typename::TypeName;
 use serde::{Deserialize, Serialize, de::Deserializer, ser::Serializer};
+use std::path::PathBuf;
 
 /// Exposes resource management methods.
 pub trait ResourcesTrait<RR>
@@ -90,8 +91,10 @@ pub trait WorldTrait {
 }
 
 /// Events defined and processed by the world itself.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy, TypeName, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, TypeName, Serialize, Deserialize)]
 pub enum WorldEvent {
+    Serialize(PathBuf),
+    Deserialize(PathBuf),
     /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game
     /// engine to abort.
     Abort,

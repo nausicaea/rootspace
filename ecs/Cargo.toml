@@ -9,7 +9,6 @@ edition = "2018"
 diagnostics = []
 
 [dependencies]
-hibitset = { version = "^0.6.0", default-features = false }
 downcast-rs = "^1.0.0"
 typename = "^0.1.0"
 serde = { version = "^1.0.0", features = ["derive"] }
