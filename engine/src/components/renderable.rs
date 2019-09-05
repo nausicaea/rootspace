@@ -5,9 +5,9 @@ use crate::{
 };
 use ecs::{Component, VecStorage};
 use failure::{Error, Fail};
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use typename::TypeName;
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
 pub struct Renderable {

@@ -1,6 +1,6 @@
 use crate::resource::Resource;
+use serde::{Deserialize, Serialize};
 use typename::TypeName;
-use serde::{Serialize, Deserialize};
 
 /// The `Registry` is used to register types with the world, so that the ecs can manage
 /// serialization and deserialization of the entire world state without knowing the specific types
@@ -66,10 +66,10 @@ where
     H: Resource + TypeName + Serialize + for<'de> Deserialize<'de>,
     T: Registry,
 {
-    const LEN: usize = 1 + <T as Registry>::LEN;
-
     type Head = H;
     type Tail = T;
+
+    const LEN: usize = 1 + <T as Registry>::LEN;
 
     fn head(&self) -> &H {
         &self.0
@@ -85,10 +85,10 @@ where
 pub struct End;
 
 impl Registry for End {
-    const LEN: usize = 0;
-
     type Head = ();
     type Tail = End;
+
+    const LEN: usize = 0;
 
     fn head(&self) -> &() {
         &()
@@ -103,7 +103,7 @@ impl Registry for End {
 mod tests {
     use super::*;
     use proptest::prelude::*;
-    use serde_test::{Token, assert_tokens};
+    use serde_test::{assert_tokens, Token};
     use typename::TypeName;
 
     #[derive(Default, Debug, PartialEq, Serialize, Deserialize, TypeName)]
@@ -125,22 +125,24 @@ mod tests {
 
     #[test]
     fn push_two() {
-        let l: Element<TestElementB, Element<TestElementA, End>> = End
-            .push(TestElementA::default())
-            .push(TestElementB::default());
-        assert_eq!(l, Element::new(TestElementB::default(), Element::new(TestElementA::default(), End)));
+        let l: Element<TestElementB, Element<TestElementA, End>> =
+            End.push(TestElementA::default()).push(TestElementB::default());
+        assert_eq!(
+            l,
+            Element::new(TestElementB::default(), Element::new(TestElementA::default(), End))
+        );
 
-        let l: Element<TestElementA, Element<TestElementB, End>> = End
-            .push(TestElementB::default())
-            .push(TestElementA::default());
-        assert_eq!(l, Element::new(TestElementA::default(), Element::new(TestElementB::default(), End)));
+        let l: Element<TestElementA, Element<TestElementB, End>> =
+            End.push(TestElementB::default()).push(TestElementA::default());
+        assert_eq!(
+            l,
+            Element::new(TestElementA::default(), Element::new(TestElementB::default(), End))
+        );
     }
 
     #[test]
     fn eval_arbitrary_recursive() {
-        let h = End
-            .push(0usize)
-            .push(String::from("Hello, World"));
+        let h = End.push(0usize).push(String::from("Hello, World"));
 
         fn eval<H: Registry>(list: &H) {
             if H::LEN > 0 {
@@ -161,17 +163,14 @@ mod tests {
 
     #[test]
     fn len_one() {
-        let h = End
-            .push(TestElementA::default());
+        let h = End.push(TestElementA::default());
 
         assert_eq!(h.len(), 1);
     }
 
     #[test]
     fn len_two() {
-        let h = End
-            .push(TestElementA::default())
-            .push(TestElementB::default());
+        let h = End.push(TestElementA::default()).push(TestElementB::default());
 
         assert_eq!(h.len(), 2);
     }
@@ -180,40 +179,50 @@ mod tests {
     fn serde_empty() {
         let h = End;
 
-        assert_tokens(&h, &[
-            Token::UnitStruct { name: "End" },
-        ]);
+        assert_tokens(&h, &[Token::UnitStruct { name: "End" }]);
     }
 
     #[test]
     fn serde_one() {
-        let h = End
-            .push(TestElementA::default());
+        let h = End.push(TestElementA::default());
 
-        assert_tokens(&h, &[
-            Token::TupleStruct { name: "Element", len: 2 },
-            Token::NewtypeStruct { name: "TestElementA" },
-            Token::U64(0),
-            Token::UnitStruct { name: "End" },
-            Token::TupleStructEnd,
-        ]);
+        assert_tokens(
+            &h,
+            &[
+                Token::TupleStruct {
+                    name: "Element",
+                    len: 2,
+                },
+                Token::NewtypeStruct { name: "TestElementA" },
+                Token::U64(0),
+                Token::UnitStruct { name: "End" },
+                Token::TupleStructEnd,
+            ],
+        );
     }
 
     #[test]
     fn serde_two() {
-        let h = End
-            .push(1u32)
-            .push(8u8);
+        let h = End.push(1u32).push(8u8);
 
-        assert_tokens(&h, &[
-            Token::TupleStruct { name: "Element", len: 2 },
-            Token::U8(8),
-            Token::TupleStruct { name: "Element", len: 2 },
-            Token::U32(1),
-            Token::UnitStruct { name: "End" },
-            Token::TupleStructEnd,
-            Token::TupleStructEnd,
-        ]);
+        assert_tokens(
+            &h,
+            &[
+                Token::TupleStruct {
+                    name: "Element",
+                    len: 2,
+                },
+                Token::U8(8),
+                Token::TupleStruct {
+                    name: "Element",
+                    len: 2,
+                },
+                Token::U32(1),
+                Token::UnitStruct { name: "End" },
+                Token::TupleStructEnd,
+                Token::TupleStructEnd,
+            ],
+        );
     }
 
     proptest! {

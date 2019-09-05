@@ -5,7 +5,11 @@ use crate::{
     graphics::BackendTrait,
     resources::{Backend, SceneGraph},
 };
-use ecs::{RegAdd, Registry, LoopStage, System, Component, Entity, EventQueue, Persistence, Resource, ReceiverId, ResourcesTrait, WorldTrait};
+use ecs::{
+    Component, Entity, EventQueue, LoopStage, Persistence, ReceiverId, RegAdd, Registry, Resource, ResourcesTrait,
+    System, WorldTrait,
+};
+use serde::{de::Deserializer, ser::Serializer};
 use std::{
     cmp,
     marker::PhantomData,
@@ -13,14 +17,8 @@ use std::{
     time::{Duration, Instant},
 };
 use typename::TypeName;
-use serde::{de::Deserializer, ser::Serializer};
 
-pub type JoinedRegistry<RR> = RegAdd![
-    SceneGraph<UiModel>,
-    SceneGraph<Model>,
-    EventQueue<EngineEvent>,
-    RR
-];
+pub type JoinedRegistry<RR> = RegAdd![SceneGraph<UiModel>, SceneGraph<Model>, EventQueue<EngineEvent>, RR];
 
 #[derive(Debug)]
 pub struct Orchestrator<B, RR, W> {
@@ -148,8 +146,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::Reg;
     use crate::{graphics::headless::HeadlessBackend, mock::MockWorld};
+    use ecs::Reg;
     use proptest::prelude::*;
     use std::env;
     use tempfile::NamedTempFile;
@@ -163,7 +161,12 @@ mod tests {
         let base = env::temp_dir();
         let render_duration = Duration::from_millis(20);
 
-        let mut o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(&base, delta_time, max_frame_time).unwrap();
+        let mut o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(
+            &base,
+            delta_time,
+            max_frame_time,
+        )
+        .unwrap();
         o.world.max_iterations = iterations as usize + 1;
         o.world.render_duration = Some(render_duration);
 
@@ -182,15 +185,26 @@ mod tests {
 
     #[test]
     fn create_orchestrator() {
-        let r =
-            Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(&env::temp_dir(), Default::default(), Default::default());
+        let r = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(
+            &env::temp_dir(),
+            Default::default(),
+            Default::default(),
+        );
         assert!(r.is_ok());
 
-        let r = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new("blablablabla", Default::default(), Default::default());
+        let r = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(
+            "blablablabla",
+            Default::default(),
+            Default::default(),
+        );
         assert!(r.is_err());
 
         let tf = NamedTempFile::new().unwrap();
-        let r = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(tf.path(), Default::default(), Default::default());
+        let r = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(
+            tf.path(),
+            Default::default(),
+            Default::default(),
+        );
         assert!(r.is_err());
     }
 
@@ -201,7 +215,12 @@ mod tests {
         let base = env::temp_dir();
         let tf = NamedTempFile::new_in(&base).unwrap();
 
-        let o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(&base, Default::default(), Default::default()).unwrap();
+        let o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(
+            &base,
+            Default::default(),
+            Default::default(),
+        )
+        .unwrap();
 
         let r = o.file(dir_name, &tf.path().file_name().unwrap().to_string_lossy());
         assert!(r.is_ok());
@@ -230,7 +249,12 @@ mod tests {
         let base = env::temp_dir();
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(&base, delta_time, max_frame_time).unwrap();
+        let mut o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(
+            &base,
+            delta_time,
+            max_frame_time,
+        )
+        .unwrap();
 
         o.run(None);
         assert_eq!(
@@ -328,7 +352,12 @@ mod tests {
         let base = env::temp_dir();
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(&base, delta_time, max_frame_time).unwrap();
+        let mut o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(
+            &base,
+            delta_time,
+            max_frame_time,
+        )
+        .unwrap();
 
         o.run(None);
         let mut last_time = Duration::default();
@@ -344,7 +373,12 @@ mod tests {
         let base = env::temp_dir();
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(&base, delta_time, max_frame_time).unwrap();
+        let mut o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(
+            &base,
+            delta_time,
+            max_frame_time,
+        )
+        .unwrap();
 
         o.run(None);
         let mut last_time = Duration::default();
@@ -360,7 +394,12 @@ mod tests {
         let base = env::temp_dir();
         let delta_time = Duration::from_millis(50);
         let max_frame_time = Duration::from_millis(250);
-        let mut o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(&base, delta_time, max_frame_time).unwrap();
+        let mut o = Orchestrator::<HeadlessBackend, TestRegistry, MockWorld<JoinedRegistry<TestRegistry>>>::new(
+            &base,
+            delta_time,
+            max_frame_time,
+        )
+        .unwrap();
 
         o.run(None);
         let mut last_time = Duration::default();

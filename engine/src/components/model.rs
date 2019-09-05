@@ -2,9 +2,9 @@ use ecs::{Component, VecStorage};
 
 use affine_transform::AffineTransform;
 use nalgebra::{Affine3, Isometry3, Matrix4, Point3, UnitQuaternion, Vector3};
+use serde::{Deserialize, Serialize};
 use std::{f32, ops::Mul};
 use typename::TypeName;
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
 pub struct Model {

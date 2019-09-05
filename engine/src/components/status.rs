@@ -1,6 +1,6 @@
 use ecs::{Component, VecStorage};
+use serde::{Deserialize, Serialize};
 use typename::TypeName;
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, TypeName, Serialize, Deserialize)]
 pub struct Status(bool);

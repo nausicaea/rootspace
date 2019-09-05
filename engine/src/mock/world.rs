@@ -1,7 +1,6 @@
-use ecs::{RegAdd, Registry, Entity, LoopStage, Persistence, Resource, ResourcesTrait, WorldTrait};
-use std::time::Duration;
+use ecs::{Entity, LoopStage, Persistence, RegAdd, Registry, Resource, ResourcesTrait, WorldTrait};
 use serde::{de::Deserializer, ser::Serializer};
-use std::marker::PhantomData;
+use std::{marker::PhantomData, time::Duration};
 
 #[derive(Debug)]
 pub struct MockWorld<RR> {
@@ -51,17 +50,27 @@ where
 
     fn add_resource<R: Resource>(&mut self, _res: R, _persistence: Persistence) {}
 
-    fn get_resource_mut<R: Resource>(&mut self) -> &mut R { unimplemented!() }
+    fn get_resource_mut<R: Resource>(&mut self) -> &mut R {
+        unimplemented!()
+    }
 
-    fn create_entity(&mut self) -> Entity { unimplemented!() }
+    fn create_entity(&mut self) -> Entity {
+        unimplemented!()
+    }
 
-    fn add_component<C>(&mut self, _entity: Entity, _component: C) { unimplemented!() }
+    fn add_component<C>(&mut self, _entity: Entity, _component: C) {
+        unimplemented!()
+    }
 }
 
 impl<RR> WorldTrait for MockWorld<RR> {
-    fn add_system<S>(&mut self, _stage: LoopStage, _system: S) { unimplemented!() }
+    fn add_system<S>(&mut self, _stage: LoopStage, _system: S) {
+        unimplemented!()
+    }
 
-    fn get_system<S>(&self, _stage: LoopStage) -> Option<&S> { unimplemented!() }
+    fn get_system<S>(&self, _stage: LoopStage) -> Option<&S> {
+        unimplemented!()
+    }
 
     fn fixed_update(&mut self, time: &Duration, delta_time: &Duration) {
         self.fixed_update_calls += 1;

@@ -129,37 +129,16 @@ mod tests {
 
     #[test]
     fn two_elements() {
-        let _: Element<u16, Element<u8, End>> = reg![
-            100u16,
-            0u8,
-        ];
-        let _: Reg![u16, u8] = reg![
-            100u16,
-            0u8,
-        ];
+        let _: Element<u16, Element<u8, End>> = reg![100u16, 0u8,];
+        let _: Reg![u16, u8] = reg![100u16, 0u8,];
 
-        let _: Element<u8, Element<u16, End>> = reg![
-            2u8,
-            1u16,
-        ];
-        let _: Reg![u8, u16] = reg![
-            2u8,
-            1u16,
-        ];
+        let _: Element<u8, Element<u16, End>> = reg![2u8, 1u16,];
+        let _: Reg![u8, u16] = reg![2u8, 1u16,];
     }
 
     #[test]
     fn three_elements() {
-        let _: Element<u32, Element<u16, Element<u8, End>>> = reg![
-            2u32,
-            100u16,
-            0u8,
-        ];
-        let _: Reg![u32, u16, u8] = reg![
-            2u32,
-            100u16,
-            0u8,
-        ];
+        let _: Element<u32, Element<u16, Element<u8, End>>> = reg![2u32, 100u16, 0u8,];
+        let _: Reg![u32, u16, u8] = reg![2u32, 100u16, 0u8,];
     }
-
 }

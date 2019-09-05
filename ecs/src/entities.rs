@@ -1,8 +1,6 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
-use crate::{
-    indexing::{Generation, Index},
-};
+use crate::indexing::{Generation, Index};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use typename::TypeName;

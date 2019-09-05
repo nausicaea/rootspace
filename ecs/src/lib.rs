@@ -25,9 +25,9 @@ pub use crate::{
     events::EventTrait,
     loop_stage::LoopStage,
     persistence::Persistence,
-    registry::{Registry, Element, End},
+    registry::{Element, End, Registry},
     resource::Resource,
     resources::Resources,
     system::System,
-    world::{World, WorldEvent, ResourcesTrait, WorldTrait},
+    world::{ResourcesTrait, World, WorldEvent, WorldTrait},
 };

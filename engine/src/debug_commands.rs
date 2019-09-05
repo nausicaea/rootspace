@@ -4,7 +4,7 @@ use crate::{
     resources::SceneGraph,
 };
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
-use ecs::{WorldEvent, Component, Entities, Entity, EventQueue, Resources, Storage};
+use ecs::{Component, Entities, Entity, EventQueue, Resources, Storage, WorldEvent};
 use failure::{format_err, Error};
 use std::path::PathBuf;
 
@@ -77,14 +77,16 @@ impl CommandTrait for StateCommand {
         if let Some(save_matches) = matches.subcommand_matches("save") {
             if let Some(path_str) = save_matches.value_of("path") {
                 let path = PathBuf::from(path_str);
-                res.borrow_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Serialize(path));
+                res.borrow_mut::<EventQueue<WorldEvent>>()
+                    .send(WorldEvent::Serialize(path));
             }
         }
 
         if let Some(load_matches) = matches.subcommand_matches("load") {
             if let Some(path_str) = load_matches.value_of("path") {
                 let path = PathBuf::from(path_str);
-                res.borrow_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Deserialize(path));
+                res.borrow_mut::<EventQueue<WorldEvent>>()
+                    .send(WorldEvent::Deserialize(path));
             }
         }
 

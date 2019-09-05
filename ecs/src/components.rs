@@ -1,13 +1,11 @@
 //! Provides facilities for reasoning about data (e.g. components) coupled to entities.
 
-use crate::{entities::Entity, resource::Resource};
-use crate::indexing::Index;
+use crate::{entities::Entity, indexing::Index, resource::Resource};
 //use crate::hibitset::{BitSet, BitSetIter};
 // use hibitset::{BitIter, BitSet, BitSetLike};
-use std::{fmt, ptr};
-use typename::TypeName;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::{collections::HashSet, fmt, ptr};
+use typename::TypeName;
 
 /// A component is a data type that is associated with a particular `Entity`.
 pub trait Component: Sized {
@@ -45,7 +43,8 @@ impl<T> VecStorage<T> {
     /// Return an iterator over all occupied entries.
     pub fn iter(&self) -> impl Iterator<Item = &T> + '_ {
         let index = &self.index;
-        self.data.iter()
+        self.data
+            .iter()
             .enumerate()
             .filter(move |(idx, _)| index.contains(&idx.into()))
             .map(|(_, d)| d)
@@ -54,7 +53,8 @@ impl<T> VecStorage<T> {
     /// Return a mutable iterator over all occupied entries.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> + '_ {
         let index = &self.index;
-        self.data.iter_mut()
+        self.data
+            .iter_mut()
             .enumerate()
             .filter(move |(idx, _)| index.contains(&idx.into()))
             .map(|(_, d)| d)

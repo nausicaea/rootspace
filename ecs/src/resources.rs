@@ -36,7 +36,10 @@ impl Resources {
 
         impl<'a, R> SerContainer<'a, R> {
             fn new(p: Persistence, r: &'a R) -> Self {
-                SerContainer { persistence: p, resource: r }
+                SerContainer {
+                    persistence: p,
+                    resource: r,
+                }
             }
         }
 
@@ -55,14 +58,17 @@ impl Resources {
             }
         }
 
-        fn serialize_entry<SM, R>(res: &Resources, state: &mut SM, _entry: &R)  -> Result<(), SM::Error>
+        fn serialize_entry<SM, R>(res: &Resources, state: &mut SM, _entry: &R) -> Result<(), SM::Error>
         where
             SM: SerializeMap,
             R: Resource + TypeName + Serialize,
         {
             if res.has::<R>() {
                 eprintln!("Serializing {}", R::type_name());
-                state.serialize_entry(&R::type_name(), &SerContainer::new(res.persistence_of::<R>(), &*res.borrow::<R>()))?;
+                state.serialize_entry(
+                    &R::type_name(),
+                    &SerContainer::new(res.persistence_of::<R>(), &*res.borrow::<R>()),
+                )?;
                 eprintln!("Completed serializing {}", R::type_name());
                 Ok(())
             } else {
@@ -144,7 +150,10 @@ impl Resources {
             type Value = Resources;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f, "a map of type names and their serialized data including a persistence marker")
+                write!(
+                    f,
+                    "a map of type names and their serialized data including a persistence marker"
+                )
             }
 
             fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
@@ -319,11 +328,7 @@ mod tests {
     #[derive(Debug, Default, TypeName, Serialize, Deserialize, PartialEq)]
     struct TestResourceC(String);
 
-    type TestRegistry = Reg![
-        TestResourceA,
-        TestResourceB,
-        TestResourceC,
-    ];
+    type TestRegistry = Reg![TestResourceA, TestResourceB, TestResourceC,];
 
     #[test]
     fn persistence() {
@@ -374,6 +379,9 @@ mod tests {
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(10));
         assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(0.25));
-        assert_eq!(*resources.borrow::<TestResourceC>(), TestResourceC(String::from("Hello, World!")));
+        assert_eq!(
+            *resources.borrow::<TestResourceC>(),
+            TestResourceC(String::from("Hello, World!"))
+        );
     }
 }

@@ -1,7 +1,7 @@
 // mod assets;
 mod resources;
 
-use ecs::{WorldEvent, Reg, Component, EventQueue, LoopStage};
+use ecs::{Component, EventQueue, LoopStage, Reg, WorldEvent};
 use engine::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,

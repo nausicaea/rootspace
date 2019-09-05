@@ -12,13 +12,10 @@ use crate::{
     system::System,
     RegAdd,
 };
-use std::time::Duration;
-use std::marker::PhantomData;
-use std::fs::File;
-use typename::TypeName;
-use serde::{Deserialize, Serialize, de::Deserializer, ser::Serializer};
+use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use serde_json;
-use std::path::PathBuf;
+use std::{fs::File, marker::PhantomData, path::PathBuf, time::Duration};
+use typename::TypeName;
 
 /// Exposes resource management methods.
 pub trait ResourcesTrait<RR>
@@ -27,8 +24,12 @@ where
 {
     type ResourceRegistry: Registry + Default;
 
-    fn serialize<S>(&self, serializer: S) -> Result<(), S::Error> where S: Serializer;
-    fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error> where D: Deserializer<'de>;
+    fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
+    where
+        S: Serializer;
+    fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
+    where
+        D: Deserializer<'de>;
     /// Clears the state of the world. This removes all resources whose persistence is less or
     /// equal to the specified persistence value.
     fn clear(&mut self, persistence: Persistence);
@@ -85,7 +86,7 @@ pub trait WorldTrait {
     ///
     /// * `time` - Interpreted as the current game time.
     /// * `delta_time` - Interpreted as the time interval between calls to `render`.
-   fn render(&mut self, time: &Duration, delta_time: &Duration);
+    fn render(&mut self, time: &Duration, delta_time: &Duration);
     /// This method is supposed to be called when pending events or messages should be
     /// handled by the world. If this method returns `true`, the execution of the
     /// main loop shall continue, otherwise it shall abort.
@@ -136,11 +137,7 @@ impl<RR> ResourcesTrait<RR> for World<RR>
 where
     RR: Registry + Default,
 {
-    type ResourceRegistry = RegAdd![
-        Entities,
-        EventQueue<WorldEvent>,
-        RR
-    ];
+    type ResourceRegistry = RegAdd![Entities, EventQueue<WorldEvent>, RR];
 
     fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
     where
@@ -256,24 +253,21 @@ where
             match e {
                 WorldEvent::Abort => {
                     abort = true;
-                },
+                }
                 WorldEvent::Serialize(p) => {
-                    let mut file = File::create(&p)
-                        .expect(&format!("Could not create the file {}: ", p.display()));
+                    let mut file = File::create(&p).expect(&format!("Could not create the file {}: ", p.display()));
                     let mut s = serde_json::Serializer::pretty(&mut file);
                     self.serialize(&mut s)
                         .expect(&format!("Could not serialize to the file {}: ", p.display()));
-                },
+                }
                 WorldEvent::Deserialize(p) => {
-                    let mut file = File::open(&p)
-                        .expect(&format!("Could not open the file {}: ", p.display()));
+                    let mut file = File::open(&p).expect(&format!("Could not open the file {}: ", p.display()));
                     let mut d = serde_json::Deserializer::from_reader(&mut file);
                     self.deserialize(&mut d)
                         .expect(&format!("Could not deserialize from the file {}: ", p.display()));
-                },
+                }
             }
         }
-
 
         !abort
     }
