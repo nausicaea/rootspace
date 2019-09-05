@@ -61,7 +61,9 @@ impl Resources {
             R: Resource + TypeName + Serialize,
         {
             if res.has::<R>() {
+                eprintln!("Serializing {}", R::type_name());
                 state.serialize_entry(&R::type_name(), &SerContainer::new(res.persistence_of::<R>(), &*res.borrow::<R>()))?;
+                eprintln!("Completed serializing {}", R::type_name());
                 Ok(())
             } else {
                 Err(ser::Error::custom(format!("resource {} was not found", R::type_name())))

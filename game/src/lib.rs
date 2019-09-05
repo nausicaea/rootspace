@@ -1,7 +1,7 @@
 // mod assets;
 mod resources;
 
-use ecs::{Reg, Component, EventQueue, LoopStage};
+use ecs::{WorldEvent, Reg, Component, EventQueue, LoopStage};
 use engine::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,
@@ -147,6 +147,10 @@ where
 
         self.orchestrator.add_system(LoopStage::Update, event_interface);
         self.orchestrator.add_system(LoopStage::Render, renderer);
+
+        let queue = self.orchestrator.get_resource_mut::<EventQueue<WorldEvent>>();
+        let event_monitor: EventMonitor<WorldEvent> = EventMonitor::new(queue);
+        self.orchestrator.add_system(LoopStage::Update, event_monitor);
 
         let queue = self.orchestrator.get_resource_mut::<EventQueue<EngineEvent>>();
         let event_monitor: EventMonitor<EngineEvent> = EventMonitor::new(queue);

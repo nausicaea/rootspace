@@ -4,8 +4,9 @@ use crate::{
     resources::SceneGraph,
 };
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
-use ecs::{Component, Entities, Entity, EventQueue, Resources, Storage};
+use ecs::{WorldEvent, Component, Entities, Entity, EventQueue, Resources, Storage};
 use failure::{format_err, Error};
+use std::path::PathBuf;
 
 pub trait CommandTrait: 'static {
     fn name(&self) -> &'static str;
@@ -27,6 +28,66 @@ impl CommandTrait for ExitCommand {
 
     fn run(&self, res: &Resources, _: &[String]) -> Result<(), Error> {
         res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::Shutdown);
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct StateCommand;
+
+impl CommandTrait for StateCommand {
+    fn name(&self) -> &'static str {
+        "state"
+    }
+
+    fn description(&self) -> &'static str {
+        "Provides access to state serialization functions"
+    }
+
+    fn run(&self, res: &Resources, args: &[String]) -> Result<(), Error> {
+        let matches = App::new("state")
+            .setting(AppSettings::DisableVersion)
+            .setting(AppSettings::SubcommandRequiredElseHelp)
+            .subcommand(
+                SubCommand::with_name("save")
+                    .about("Saves the world state to a file")
+                    .setting(AppSettings::DisableVersion)
+                    .setting(AppSettings::ArgRequiredElseHelp)
+                    .arg(
+                        Arg::with_name("path")
+                            .required(true)
+                            .takes_value(true)
+                            .help("Sets the path of the file to write to"),
+                    ),
+            )
+            .subcommand(
+                SubCommand::with_name("load")
+                    .about("Loads the world state from a file")
+                    .setting(AppSettings::DisableVersion)
+                    .setting(AppSettings::ArgRequiredElseHelp)
+                    .arg(
+                        Arg::with_name("path")
+                            .required(true)
+                            .takes_value(true)
+                            .help("Sets the path of the file to read from"),
+                    ),
+            )
+            .get_matches_from_safe(args)?;
+
+        if let Some(save_matches) = matches.subcommand_matches("save") {
+            if let Some(path_str) = save_matches.value_of("path") {
+                let path = PathBuf::from(path_str);
+                res.borrow_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Serialize(path));
+            }
+        }
+
+        if let Some(load_matches) = matches.subcommand_matches("load") {
+            if let Some(path_str) = load_matches.value_of("path") {
+                let path = PathBuf::from(path_str);
+                res.borrow_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Deserialize(path));
+            }
+        }
+
         Ok(())
     }
 }

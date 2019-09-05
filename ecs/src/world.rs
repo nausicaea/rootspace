@@ -14,8 +14,10 @@ use crate::{
 };
 use std::time::Duration;
 use std::marker::PhantomData;
+use std::fs::File;
 use typename::TypeName;
 use serde::{Deserialize, Serialize, de::Deserializer, ser::Serializer};
+use serde_json;
 use std::path::PathBuf;
 
 /// Exposes resource management methods.
@@ -193,7 +195,10 @@ where
     }
 }
 
-impl<RR> WorldTrait for World<RR> {
+impl<RR> WorldTrait for World<RR>
+where
+    RR: Registry + Default,
+{
     fn add_system<S>(&mut self, stage: LoopStage, system: S)
     where
         S: System,
@@ -245,7 +250,32 @@ impl<RR> WorldTrait for World<RR> {
             .get_mut::<EventQueue<WorldEvent>>()
             .receive(&self.receiver);
 
-        !events.into_iter().any(|e| e == WorldEvent::Abort)
+        let mut abort = false;
+
+        for e in events {
+            match e {
+                WorldEvent::Abort => {
+                    abort = true;
+                },
+                WorldEvent::Serialize(p) => {
+                    let mut file = File::create(&p)
+                        .expect(&format!("Could not create the file {}: ", p.display()));
+                    let mut s = serde_json::Serializer::pretty(&mut file);
+                    self.serialize(&mut s)
+                        .expect(&format!("Could not serialize to the file {}: ", p.display()));
+                },
+                WorldEvent::Deserialize(p) => {
+                    let mut file = File::open(&p)
+                        .expect(&format!("Could not open the file {}: ", p.display()));
+                    let mut d = serde_json::Deserializer::from_reader(&mut file);
+                    self.deserialize(&mut d)
+                        .expect(&format!("Could not deserialize from the file {}: ", p.display()));
+                },
+            }
+        }
+
+
+        !abort
     }
 }
 
