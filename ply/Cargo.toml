@@ -1,0 +1,13 @@
+[package]
+name = "ply"
+version = "0.1.1"
+authors = ["Eleanore Young"]
+description = "The ply crate provides facilities to read from Stanford PLY 3d-data files."
+repository = "https://gitlab.com/nausicaea/ply.git"
+edition = "2018"
+
+[dependencies]
+combine = "^3.5.1"
+failure = "^0.1.1"
+log = "^0.4.1"
+num-traits = "^0.2.5"

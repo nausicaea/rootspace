@@ -10,10 +10,13 @@ edition = "2018"
 diagnostics = ["game/diagnostics", "engine/diagnostics", "ecs/diagnostics"]
 
 [dependencies]
-clap = {version = "^2.0.0", default-features = false}
+clap = { version = "^2.0.0", default-features = false }
 log = "^0.4.1"
 failure = "^0.1.1"
 fern = "^0.5.5"
-ecs = {path = "ecs"}
-engine = {path = "engine"}
-game = {path = "game"}
+affine-transform = { path = "affine-transform" }
+ply = { path = "ply" }
+hierarchy = { path = "hierarchy" }
+ecs = { path = "ecs" }
+engine = { path = "engine" }
+game = { path = "game" }

@@ -23,9 +23,9 @@ unicode-normalization = "^0.1.5"
 snowflake = "^1.2.0"
 typename = "^0.1.0"
 serde = { version = "^1.0.0", features = ["derive"] }
-affine-transform = { git = "https://gitlab.com/nausicaea/affine-transform.git", features = ["serde_support"] }
-hierarchy = { git = "https://gitlab.com/nausicaea/hierarchy.git", features = ["serde_support"] }
-ply = { git = "https://gitlab.com/nausicaea/ply.git" }
+affine-transform = { path = "../affine-transform", features = ["serde_support"] }
+hierarchy = { path = "../hierarchy", features = ["serde_support"] }
+ply = { path = "../ply" }
 ecs = { path = "../ecs" }
 
 [dev-dependencies]
