@@ -1,9 +1,11 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
 use crate::indexing::{Generation, Index};
-use serde::{Deserialize, Serialize, ser::Serializer, de::Deserializer};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use typename::TypeName;
+use std::str::FromStr;
+use std::num::ParseIntError;
 
 /// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug, TypeName, Serialize, Deserialize)]
@@ -91,7 +93,8 @@ impl<'a> Iterator for EntitiesIter<'a> {
 }
 
 /// An entity serves as an identifier to an object within the world.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(from = "(Index, Generation)", into = "(Index, Generation)")]
 pub struct Entity {
     /// Holds the entity index.
     idx: Index,
@@ -117,28 +120,37 @@ impl Entity {
 
 impl fmt::Display for Entity {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Entity({}, {})", self.idx, self.gen)
+        write!(f, "({}, {})", self.idx, self.gen)
     }
 }
 
-impl Serialize for Entity {
-    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = ser.serialize_seq(Some(2))?;
-        state.serialize_element(self.idx)?;
-        state.serialize_element(self.gen)?;
-        state.end()
+impl FromStr for Entity {
+    type Err = ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.trim_matches(|p| p == '(' || p == ')' || p == ' ' )
+                                 .split(',')
+                                 .collect();
+
+        let idx = parts[0].parse::<Index>()?;
+        let gen = parts[1].parse::<Generation>()?;
+
+        Ok(Entity { idx, gen })
     }
 }
 
-impl<'de> Deserialize<'de> for Entity {
-    fn deserialize<D>(de: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        unimplemented!()
+impl From<Entity> for (Index, Generation) {
+    fn from(value: Entity) -> Self {
+        (value.idx, value.gen)
+    }
+}
+
+impl From<(Index, Generation)> for Entity {
+    fn from(value: (Index, Generation)) -> Entity {
+        Entity {
+            idx: value.0,
+            gen: value.1,
+        }
     }
 }
 

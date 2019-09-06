@@ -1,7 +1,8 @@
 use super::{vertex::Vertex, AssetTrait};
 use crate::file_manipulation::VerifyPath;
 use failure::{Error, Fail};
-use ply::{self, CoerceTo};
+use std::convert::TryInto;
+use ply;
 use std::path::Path;
 
 #[derive(Debug)]
@@ -12,60 +13,61 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn from_ply(data: &ply::Ply) -> Result<Self, MeshError> {
-        let vtx_keyword = "vertex";
         let (eidx, el) = data
-            .element(&[vtx_keyword, "vertices"])
-            .ok_or(MeshError::ElementNotFound(vtx_keyword))?;
+            .element(&["vertex", "vertices"])
+            .ok_or(MeshError::ElementNotFound("vertex"))?;
         let (pos_x_idx, _) = el
             .scalar_property(&["x", "pos_x"])
-            .ok_or(MeshError::PropertyNotFound(vtx_keyword, "x"))?;
+            .ok_or(MeshError::PropertyNotFound("vertex", "x"))?;
         let (pos_y_idx, _) = el
             .scalar_property(&["y", "pos_y"])
-            .ok_or(MeshError::PropertyNotFound(vtx_keyword, "y"))?;
+            .ok_or(MeshError::PropertyNotFound("vertex", "y"))?;
         let (pos_z_idx, _) = el
             .scalar_property(&["z", "pos_z"])
-            .ok_or(MeshError::PropertyNotFound(vtx_keyword, "z"))?;
+            .ok_or(MeshError::PropertyNotFound("vertex", "z"))?;
         let (tex_u_idx, _) = el
             .scalar_property(&["s", "u", "tex_u"])
-            .ok_or(MeshError::PropertyNotFound(vtx_keyword, "s"))?;
+            .ok_or(MeshError::PropertyNotFound("vertex", "s"))?;
         let (tex_v_idx, _) = el
             .scalar_property(&["t", "v", "tex_v"])
-            .ok_or(MeshError::PropertyNotFound(vtx_keyword, "t"))?;
+            .ok_or(MeshError::PropertyNotFound("vertex", "t"))?;
         let (norm_x_idx, _) = el
             .scalar_property(&["nx", "norm_x"])
-            .ok_or(MeshError::PropertyNotFound(vtx_keyword, "nx"))?;
+            .ok_or(MeshError::PropertyNotFound("vertex", "nx"))?;
         let (norm_y_idx, _) = el
             .scalar_property(&["ny", "norm_y"])
-            .ok_or(MeshError::PropertyNotFound(vtx_keyword, "ny"))?;
+            .ok_or(MeshError::PropertyNotFound("vertex", "ny"))?;
         let (norm_z_idx, _) = el
             .scalar_property(&["nz", "norm_z"])
-            .ok_or(MeshError::PropertyNotFound(vtx_keyword, "nz"))?;
+            .ok_or(MeshError::PropertyNotFound("vertex", "nz"))?;
 
         let vertices = data.generate(eidx, |props| {
             let p = [
-                props[pos_x_idx].coerce().unwrap(),
-                props[pos_y_idx].coerce().unwrap(),
-                props[pos_z_idx].coerce().unwrap(),
+                (&props[pos_x_idx]).try_into().unwrap(),
+                (&props[pos_y_idx]).try_into().unwrap(),
+                (&props[pos_z_idx]).try_into().unwrap(),
             ];
-            let t = [props[tex_u_idx].coerce().unwrap(), props[tex_v_idx].coerce().unwrap()];
+            let t = [
+                (&props[tex_u_idx]).try_into().unwrap(),
+                (&props[tex_v_idx]).try_into().unwrap()
+            ];
             let n = [
-                props[norm_x_idx].coerce().unwrap(),
-                props[norm_y_idx].coerce().unwrap(),
-                props[norm_z_idx].coerce().unwrap(),
+                (&props[norm_x_idx]).try_into().unwrap(),
+                (&props[norm_y_idx]).try_into().unwrap(),
+                (&props[norm_z_idx]).try_into().unwrap(),
             ];
             Vertex::new(p, t, n)
         });
 
-        let fc_keyword = "face";
         let (eidx, el) = data
-            .element(&[fc_keyword, "faces"])
-            .ok_or(MeshError::ElementNotFound(fc_keyword))?;
+            .element(&["face", "faces"])
+            .ok_or(MeshError::ElementNotFound("face"))?;
         let (idx, _) = el
-            .vector_property(&["vertex_index", "vertex_indices"])
-            .ok_or(MeshError::PropertyNotFound(fc_keyword, "vertex_index"))?;
+            .vector_property(&["vertex_indices", "vertex_index"])
+            .ok_or(MeshError::PropertyNotFound("face", "vertex_indices"))?;
 
         let indices = data
-            .generate(eidx, |p| CoerceTo::<Vec<u16>>::coerce(&p[idx]).unwrap())
+            .generate(eidx, |p| TryInto::<Vec<u16>>::try_into(&p[idx]).unwrap())
             .into_iter()
             .flatten()
             .collect();

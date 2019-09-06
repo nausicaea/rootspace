@@ -295,60 +295,94 @@ impl_property_data! {
     }
 }
 
-/// This trait allows type coercions. It functions like `Into<Option<T>>` or `TryInto<T>`, but does
-/// not consume the source type. This is due to the fact that copying data cannot be prevented in
-/// the case of PLY files.
-pub trait CoerceTo<T> {
-    /// Performs the coercion.
-    fn coerce(&self) -> Option<T>;
-}
-
-macro_rules! impl_coercions {
+macro_rules! impl_conversions {
     ($type:ty) => {
-        impl CoerceTo<$type> for PropertyData {
-            fn coerce(&self) -> Option<$type> {
-                use self::PropertyData::*;
-                match *self {
-                    Int8(ref t) => Some(*t as $type),
-                    Uint8(ref t) => Some(*t as $type),
-                    Int16(ref t) => Some(*t as $type),
-                    Uint16(ref t) => Some(*t as $type),
-                    Int32(ref t) => Some(*t as $type),
-                    Uint32(ref t) => Some(*t as $type),
-                    Float32(ref t) => Some(*t as $type),
-                    Float64(ref t) => Some(*t as $type),
-                    _ => None,
+        impl std::convert::TryFrom<$crate::types::PropertyData> for $type {
+            type Error = ();
+
+            fn try_from(value: $crate::types::PropertyData) -> Result<Self, Self::Error> {
+                use $crate::types::PropertyData::*;
+                match value {
+                    Int8(t) => Ok(t as $type),
+                    Uint8(t) => Ok(t as $type),
+                    Int16(t) => Ok(t as $type),
+                    Uint16(t) => Ok(t as $type),
+                    Int32(t) => Ok(t as $type),
+                    Uint32(t) => Ok(t as $type),
+                    Float32(t) => Ok(t as $type),
+                    Float64(t) => Ok(t as $type),
+                    _ => Err(()),
                 }
             }
         }
 
-        impl CoerceTo<Vec<$type>> for PropertyData {
-            fn coerce(&self) -> Option<Vec<$type>> {
-                use self::PropertyData::*;
-                match *self {
-                    Vint8(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
-                    Vuint8(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
-                    Vint16(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
-                    Vuint16(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
-                    Vint32(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
-                    Vuint32(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
-                    Vfloat32(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
-                    Vfloat64(ref t) => Some(t.iter().map(|el| *el as $type).collect()),
-                    _ => None,
+        impl std::convert::TryFrom<&$crate::types::PropertyData> for $type {
+            type Error = ();
+
+            fn try_from(value: &$crate::types::PropertyData) -> Result<Self, Self::Error> {
+                use $crate::types::PropertyData::*;
+                match value {
+                    Int8(ref t) => Ok(*t as $type),
+                    Uint8(ref t) => Ok(*t as $type),
+                    Int16(ref t) => Ok(*t as $type),
+                    Uint16(ref t) => Ok(*t as $type),
+                    Int32(ref t) => Ok(*t as $type),
+                    Uint32(ref t) => Ok(*t as $type),
+                    Float32(ref t) => Ok(*t as $type),
+                    Float64(ref t) => Ok(*t as $type),
+                    _ => Err(()),
+                }
+            }
+        }
+
+        impl std::convert::TryFrom<$crate::types::PropertyData> for Vec<$type> {
+            type Error = ();
+
+            fn try_from(value: $crate::types::PropertyData) -> Result<Self, Self::Error> {
+                use $crate::types::PropertyData::*;
+                match value {
+                    Vint8(t) => Ok(t.into_iter().map(|el| el as $type).collect()),
+                    Vuint8(t) => Ok(t.into_iter().map(|el| el as $type).collect()),
+                    Vint16(t) => Ok(t.into_iter().map(|el| el as $type).collect()),
+                    Vuint16(t) => Ok(t.into_iter().map(|el| el as $type).collect()),
+                    Vint32(t) => Ok(t.into_iter().map(|el| el as $type).collect()),
+                    Vuint32(t) => Ok(t.into_iter().map(|el| el as $type).collect()),
+                    Vfloat32(t) => Ok(t.into_iter().map(|el| el as $type).collect()),
+                    Vfloat64(t) => Ok(t.into_iter().map(|el| el as $type).collect()),
+                    _ => Err(()),
+                }
+            }
+        }
+
+        impl std::convert::TryFrom<&$crate::types::PropertyData> for Vec<$type> {
+            type Error = ();
+
+            fn try_from(value: &$crate::types::PropertyData) -> Result<Self, Self::Error> {
+                use $crate::types::PropertyData::*;
+                match value {
+                    Vint8(ref t) => Ok(t.iter().map(|el| *el as $type).collect()),
+                    Vuint8(ref t) => Ok(t.iter().map(|el| *el as $type).collect()),
+                    Vint16(ref t) => Ok(t.iter().map(|el| *el as $type).collect()),
+                    Vuint16(ref t) => Ok(t.iter().map(|el| *el as $type).collect()),
+                    Vint32(ref t) => Ok(t.iter().map(|el| *el as $type).collect()),
+                    Vuint32(ref t) => Ok(t.iter().map(|el| *el as $type).collect()),
+                    Vfloat32(ref t) => Ok(t.iter().map(|el| *el as $type).collect()),
+                    Vfloat64(ref t) => Ok(t.iter().map(|el| *el as $type).collect()),
+                    _ => Err(()),
                 }
             }
         }
     };
 }
 
-impl_coercions!(i8);
-impl_coercions!(u8);
-impl_coercions!(i16);
-impl_coercions!(u16);
-impl_coercions!(i32);
-impl_coercions!(u32);
-impl_coercions!(f32);
-impl_coercions!(f64);
+impl_conversions!(i8);
+impl_conversions!(u8);
+impl_conversions!(i16);
+impl_conversions!(u16);
+impl_conversions!(i32);
+impl_conversions!(u32);
+impl_conversions!(f32);
+impl_conversions!(f64);
 
 /// Holds data of a single element.
 #[derive(Debug, Clone, PartialEq)]

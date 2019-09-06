@@ -175,9 +175,8 @@ impl Resources {
         }
 
         debug!("Beginning the deserialization of Resources");
-        let resources = deserializer.deserialize_map(ResourcesVisitor::<RR>::default())?;
+        deserializer.deserialize_map(ResourcesVisitor::<RR>::default())
         debug!("Completed the deserialization of Resources");
-        Ok(resources)
     }
 
     /// Create a new, empty resources container.

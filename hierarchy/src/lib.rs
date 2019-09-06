@@ -56,6 +56,7 @@ where
     root_idx: NodeIndex,
     /// Provides an indexing relationship between keys and `NodeIndex` instances that in turn index
     /// into the directed acyclic graph (`Dag`).
+    #[serde(skip, default = "HashMap::default")]
     index: HashMap<K, NodeIndex>,
     /// Holds the directed acyclic graph of `HierNode`s.
     graph: Dag<HierNode<K, V>, ()>,
@@ -236,6 +237,17 @@ where
         RawNodes::new(self)
     }
 
+    /// Rebuilds the `Key`-`HierNode` index from the underlying `Graph`.
+    pub fn rebuild_index(&mut self) {
+        self.index.clear();
+        for idx in self.graph.graph().node_indices() {
+            let node = self.graph.node_weight(idx).unwrap_or_else(|| unreachable!());
+            if let Some((ref key, _)) = node.0 {
+                self.index.insert(key.clone(), idx);
+            }
+        }
+    }
+
     /// Insert a new node as a child of another node.
     fn insert_child_internal(&mut self, parent: NodeIndex, child: K, data: V) {
         let child_node = HierNode::new(child.clone(), data);
@@ -246,17 +258,6 @@ where
     /// Returns the `NodeIndex` for a particular key.
     fn get_index(&self, key: &K) -> Result<NodeIndex, HierarchyError> {
         self.index.get(key).cloned().ok_or(HierarchyError::KeyNotFound)
-    }
-
-    /// Rebuilds the `Key`-`HierNode` index from the underlying `Graph`.
-    fn rebuild_index(&mut self) {
-        self.index.clear();
-        for idx in self.graph.graph().node_indices() {
-            let node = self.graph.node_weight(idx).unwrap_or_else(|| unreachable!());
-            if let Some((ref key, _)) = node.0 {
-                self.index.insert(key.clone(), idx);
-            }
-        }
     }
 }
 
@@ -355,9 +356,26 @@ pub enum HierarchyError {
 mod tests {
     use super::*;
     use serde_test::{Token, assert_ser_tokens};
+    use std::str::FromStr;
+    use std::num::ParseIntError;
 
     #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
     struct TestKey(u64);
+
+    impl fmt::Display for TestKey {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    impl FromStr for TestKey {
+        type Err = ParseIntError;
+
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            let idx: u64 = s.parse()?;
+            Ok(TestKey(idx))
+        }
+    }
 
     #[test]
     fn default() {
@@ -461,18 +479,9 @@ mod tests {
         h.insert(TestKey(2), 2.0);
 
         assert_ser_tokens(&h, &[
-            Token::Struct { name: "Hierarchy", len: 3 },
+            Token::Struct { name: "Hierarchy", len: 2 },
             Token::Str("root_idx"),
             Token::U32(0),
-            Token::Str("index"),
-            Token::Map { len: Some(2) },
-            Token::NewtypeStruct { name: "TestKey" },
-            Token::U64(1),
-            Token::U32(1),
-            Token::NewtypeStruct { name: "TestKey" },
-            Token::U64(2),
-            Token::U32(2),
-            Token::MapEnd,
             Token::Str("graph"),
             Token::Struct { name: "Graph", len: 4 },
             Token::Str("nodes"),

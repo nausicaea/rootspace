@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn ply_ascii() {
-        let data_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-ascii.ply");
+        let data_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply");
         let file = File::open(data_path).unwrap();
         let stream = BufferedStream::new(State::new(ReadStream::new(file)), 32);
         let r = ply().parse(stream);

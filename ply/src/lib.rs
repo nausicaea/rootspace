@@ -6,7 +6,7 @@ mod macros;
 mod parsers;
 pub mod types;
 
-pub use self::types::{Ply, CoerceTo};
+pub use self::types::Ply;
 use self::types::{PropertyData, Element};
 use combine::{
     parser::Parser,
@@ -70,7 +70,7 @@ impl Ply {
     /// use std::path::PathBuf;
     /// use ply::Ply;
     ///
-    /// let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-ascii.ply"));
+    /// let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"));
     /// let data = Ply::from_path(&path).unwrap();
     ///
     /// assert!(data.element(&["vertex", "vertices"]).is_some());
@@ -88,16 +88,17 @@ impl Ply {
     /// extern crate ply;
     ///
     /// use std::path::PathBuf;
-    /// use ply::{Ply, CoerceTo};
+    /// use ply::Ply;
+    /// use std::convert::TryInto;
     ///
-    /// let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-ascii.ply"));
+    /// let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"));
     /// let data = Ply::from_path(&path).unwrap();
     ///
     /// let (eidx, el) = data.element(&["face", "faces"]).unwrap();
     /// let (idx, _) = el.vector_property(&["vertex_index", "vertex_indices"]).unwrap();
     ///
     /// let indices: Vec<u16> = data
-    ///     .generate(eidx, |p| CoerceTo::<Vec<u16>>::coerce(&p[idx]).unwrap())
+    ///     .generate(eidx, |p| TryInto::<Vec<u16>>::try_into(&p[idx]).unwrap())
     ///     .into_iter()
     ///     .flatten()
     ///     .collect();
@@ -116,10 +117,11 @@ impl Ply {
 mod tests {
     use super::*;
     use std::path::PathBuf;
+    use std::convert::TryInto;
 
     #[test]
     fn from_valid_path() {
-        let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-ascii.ply"));
+        let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"));
         let r = Ply::from_path(&path);
 
         assert!(r.is_ok());
@@ -152,7 +154,7 @@ mod tests {
             }
         }
 
-        let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-ascii.ply"));
+        let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"));
         let data = Ply::from_path(&path).unwrap();
 
         let (eidx, el) = data.element(&["vertex", "vertices"]).unwrap();
@@ -161,24 +163,24 @@ mod tests {
         let (pos_z_idx, _) = el.scalar_property(&["z", "pos_z"]).unwrap();
         let (tex_u_idx, _) = el.scalar_property(&["s", "u", "tex_u"]).unwrap();
         let (tex_v_idx, _) = el.scalar_property(&["t", "v", "tex_v"]).unwrap();
-        let (norm_x_idx, _) = el.scalar_property(&["norm_x"]).unwrap();
-        let (norm_y_idx, _) = el.scalar_property(&["norm_y"]).unwrap();
-        let (norm_z_idx, _) = el.scalar_property(&["norm_z"]).unwrap();
+        let (norm_x_idx, _) = el.scalar_property(&["nx", "norm_x"]).unwrap();
+        let (norm_y_idx, _) = el.scalar_property(&["ny", "norm_y"]).unwrap();
+        let (norm_z_idx, _) = el.scalar_property(&["nz", "norm_z"]).unwrap();
 
         let vertices = data.generate(eidx, |props| {
             let p = [
-                props[pos_x_idx].coerce().unwrap(),
-                props[pos_y_idx].coerce().unwrap(),
-                props[pos_z_idx].coerce().unwrap(),
+                (&props[pos_x_idx]).try_into().unwrap(),
+                (&props[pos_y_idx]).try_into().unwrap(),
+                (&props[pos_z_idx]).try_into().unwrap(),
             ];
             let t = [
-                props[tex_u_idx].coerce().unwrap(),
-                props[tex_v_idx].coerce().unwrap(),
+                (&props[tex_u_idx]).try_into().unwrap(),
+                (&props[tex_v_idx]).try_into().unwrap(),
             ];
             let n = [
-                props[norm_x_idx].coerce().unwrap(),
-                props[norm_y_idx].coerce().unwrap(),
-                props[norm_z_idx].coerce().unwrap(),
+                (&props[norm_x_idx]).try_into().unwrap(),
+                (&props[norm_y_idx]).try_into().unwrap(),
+                (&props[norm_z_idx]).try_into().unwrap(),
             ];
             Vertex::new(p, t, n)
         });
@@ -188,14 +190,14 @@ mod tests {
 
     #[test]
     fn generate_indices() {
-        let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube-ascii.ply"));
+        let path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"));
         let data = Ply::from_path(&path).unwrap();
 
         let (eidx, el) = data.element(&["face", "faces"]).unwrap();
-        let (idx_idx, _) = el.vector_property(&["vertex_index", "vertex_indices"]).unwrap();
+        let (idx_idx, _) = el.vector_property(&["vertex_indices", "vertex_index"]).unwrap();
 
         let faces = data.generate(eidx, |props| {
-            let f: Vec<u16> = props[idx_idx].coerce().unwrap();
+            let f: Vec<u16> = (&props[idx_idx]).try_into().unwrap();
             f
         });
 
