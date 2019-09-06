@@ -1,18 +1,11 @@
 //! This crate provides a decomposed version of an affine TRS matrix, one missing in `nalgebra`.
 #![deny(missing_docs)]
 
-extern crate nalgebra;
-#[cfg(feature = "serde_support")]
-extern crate serde;
-#[cfg(feature = "serde_support")]
-#[macro_use]
-extern crate serde_derive;
-#[cfg(test)]
-extern crate serde_test;
-
 use nalgebra::{
     one, zero, Affine3, Matrix4, Point3, RealField, Rotation3, Scalar, Translation3, UnitQuaternion, Vector3, U1, U3,
 };
+#[cfg(any(test, feature = "serde_support"))]
+use serde::{Deserialize, Serialize};
 
 /// Unfortunately, `nalgebra` does not provide a decomposed affine matrix representation
 /// (equivalent to Isometry but with translational, rotational, and non-uniform scaling
@@ -22,9 +15,6 @@ use nalgebra::{
 /// # Example
 ///
 /// ```
-/// extern crate affine_transform;
-/// extern crate nalgebra;
-///
 /// use affine_transform::AffineTransform;
 /// use nalgebra::Affine3;
 ///
@@ -34,8 +24,8 @@ use nalgebra::{
 /// assert_eq!(Into::<Affine3<_>>::into(a), b);
 /// assert_eq!(a, AffineTransform::<_>::from(b));
 /// ```
+#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq)]
-#[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 pub struct AffineTransform<N>
 where
     N: Scalar + RealField,
@@ -185,7 +175,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(feature = "serde_support")]
     use serde_test::{Token, assert_tokens};
 
     #[test]
@@ -283,7 +272,6 @@ mod tests {
         assert_eq!(c, Vector3::new(1.0, 1.0, 1.0));
     }
 
-    #[cfg(feature = "serde_support")]
     #[test]
     fn serde() {
         let a = AffineTransform::from_parts(

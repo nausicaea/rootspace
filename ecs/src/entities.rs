@@ -1,7 +1,7 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
 use crate::indexing::{Generation, Index};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, ser::Serializer, de::Deserializer};
 use std::fmt;
 use typename::TypeName;
 
@@ -91,7 +91,7 @@ impl<'a> Iterator for EntitiesIter<'a> {
 }
 
 /// An entity serves as an identifier to an object within the world.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Entity {
     /// Holds the entity index.
     idx: Index,
@@ -118,6 +118,27 @@ impl Entity {
 impl fmt::Display for Entity {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Entity({}, {})", self.idx, self.gen)
+    }
+}
+
+impl Serialize for Entity {
+    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = ser.serialize_seq(Some(2))?;
+        state.serialize_element(self.idx)?;
+        state.serialize_element(self.gen)?;
+        state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Entity {
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        unimplemented!()
     }
 }
 

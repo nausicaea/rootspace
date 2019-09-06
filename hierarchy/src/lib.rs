@@ -5,17 +5,6 @@
 //! associated with each identifier.
 #![deny(missing_docs)]
 
-#[macro_use]
-extern crate failure;
-extern crate daggy;
-#[cfg(feature = "serde_support")]
-extern crate serde;
-#[cfg(feature = "serde_support")]
-#[macro_use]
-extern crate serde_derive;
-#[cfg(test)]
-extern crate serde_test;
-
 use daggy::{
     petgraph::{
         graph::{DefaultIx, Node},
@@ -24,6 +13,9 @@ use daggy::{
     Dag, NodeIndex,
 };
 use std::{collections::HashMap, fmt, hash::Hash};
+#[cfg(any(test, feature = "serde_support"))]
+use serde::{Serialize, Deserialize};
+use failure::Fail;
 
 /// Given a set of identifying keys and corresponding data, `Hierarchy` allows users to establish
 /// hierarchical relationships between individual instances of the data type.
@@ -54,8 +46,8 @@ use std::{collections::HashMap, fmt, hash::Hash};
 ///     Some(*value)
 /// });
 /// ```
+#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[derive(Clone)]
-#[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
 pub struct Hierarchy<K, V>
 where
     K: Eq + Hash,
@@ -85,6 +77,31 @@ where
             graph: dag,
         }
     }
+}
+
+impl<K, V> PartialEq<Hierarchy<K, V>> for Hierarchy<K, V>
+where
+    K: PartialEq + Eq + Hash,
+    V: PartialEq,
+{
+    fn eq(&self, rhs: &Self) -> bool {
+        if !self.index.keys().all(|lhsv| rhs.index.keys().any(|rhsv| lhsv == rhsv)) {
+            return false;
+        }
+
+        let lhs_bfs = Bfs::new(self.graph.graph(), self.root_idx).iter(self.graph.graph());
+        let rhs_bfs = Bfs::new(rhs.graph.graph(), rhs.root_idx).iter(rhs.graph.graph());
+
+        lhs_bfs.zip(rhs_bfs)
+            .all(|(lhs_nidx, rhs_nidx)| self.graph.node_weight(lhs_nidx) == rhs.graph.node_weight(rhs_nidx))
+    }
+}
+
+impl<K, V> Eq for Hierarchy<K, V>
+where
+    K: Eq + Hash,
+    V: Eq,
+{
 }
 
 impl<K, V> fmt::Debug for Hierarchy<K, V>
@@ -244,8 +261,8 @@ where
 }
 
 /// Each `HierNode` consists of an identifying key and the associated data.
-#[derive(Clone)]
-#[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
+#[derive(Clone, PartialEq, Eq)]
 struct HierNode<K, V>(Option<(K, V)>);
 
 impl<K, V> HierNode<K, V>
@@ -337,24 +354,22 @@ pub enum HierarchyError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(feature = "serde_support")]
     use serde_test::{Token, assert_ser_tokens};
 
-    #[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
-    #[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
-    struct MockKey(usize);
+    #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+    struct TestKey(u64);
 
     #[test]
     fn default() {
-        let _h: Hierarchy<MockKey, f32> = Default::default();
+        let _h: Hierarchy<TestKey, f32> = Default::default();
     }
 
     #[test]
     fn clear() {
-        let mut h: Hierarchy<MockKey, f32> = Hierarchy::default();
+        let mut h: Hierarchy<TestKey, f32> = Hierarchy::default();
         assert_eq!(h.len(), 0);
         assert!(h.is_empty());
-        let key = MockKey(1);
+        let key = TestKey(1);
         h.insert(key.clone(), 2.0);
         assert!(h.has(&key));
         assert_eq!(h.len(), 1);
@@ -367,8 +382,8 @@ mod tests {
 
     #[test]
     fn insertion_existence_and_deletion() {
-        let mut h: Hierarchy<MockKey, f32> = Default::default();
-        let key = MockKey(1);
+        let mut h: Hierarchy<TestKey, f32> = Default::default();
+        let key = TestKey(1);
         assert!(!h.has(&key));
 
         h.insert(key.clone(), 2.0);
@@ -380,14 +395,14 @@ mod tests {
 
     #[test]
     fn update() {
-        let mut h: Hierarchy<MockKey, f32> = Default::default();
+        let mut h: Hierarchy<TestKey, f32> = Default::default();
 
-        h.insert(MockKey(1), 1.0);
-        h.insert(MockKey(2), 2.0);
-        h.insert_child(&MockKey(1), MockKey(3), 3.0).unwrap();
-        h.insert_child(&MockKey(1), MockKey(4), 4.0).unwrap();
-        h.insert_child(&MockKey(2), MockKey(5), 5.0).unwrap();
-        h.insert_child(&MockKey(2), MockKey(6), 6.0).unwrap();
+        h.insert(TestKey(1), 1.0);
+        h.insert(TestKey(2), 2.0);
+        h.insert_child(&TestKey(1), TestKey(3), 3.0).unwrap();
+        h.insert_child(&TestKey(1), TestKey(4), 4.0).unwrap();
+        h.insert_child(&TestKey(2), TestKey(5), 5.0).unwrap();
+        h.insert_child(&TestKey(2), TestKey(6), 6.0).unwrap();
 
         assert_eq!(h.len(), 6);
         assert!(!h.is_empty());
@@ -401,14 +416,14 @@ mod tests {
 
     #[test]
     fn iteration() {
-        let mut h: Hierarchy<MockKey, f32> = Default::default();
+        let mut h: Hierarchy<TestKey, f32> = Default::default();
 
-        h.insert(MockKey(1), 1.0);
-        h.insert(MockKey(2), 2.0);
-        h.insert_child(&MockKey(1), MockKey(3), 3.0).unwrap();
-        h.insert_child(&MockKey(1), MockKey(4), 4.0).unwrap();
-        h.insert_child(&MockKey(2), MockKey(5), 5.0).unwrap();
-        h.insert_child(&MockKey(2), MockKey(6), 6.0).unwrap();
+        h.insert(TestKey(1), 1.0);
+        h.insert(TestKey(2), 2.0);
+        h.insert_child(&TestKey(1), TestKey(3), 3.0).unwrap();
+        h.insert_child(&TestKey(1), TestKey(4), 4.0).unwrap();
+        h.insert_child(&TestKey(2), TestKey(5), 5.0).unwrap();
+        h.insert_child(&TestKey(2), TestKey(6), 6.0).unwrap();
 
         // The node count will be the number of inserted nodes plus 1, because the root node will
         // always be in the hierarchy.
@@ -416,32 +431,68 @@ mod tests {
         assert_eq!(h.iter().map(|(_, v)| v).sum::<f32>(), 21.0);
     }
 
-    #[cfg(feature = "serde_support")]
     #[test]
-    fn ser_default() {
-        let h: Hierarchy<MockKey, f32> = Hierarchy::default();
+    fn partial_eq() {
+        let mut h: Hierarchy<TestKey, f32> = Default::default();
+
+        h.insert(TestKey(1), 1.0);
+        h.insert(TestKey(2), 2.0);
+
+        let mut i: Hierarchy<TestKey, f32> = Default::default();
+
+        i.insert(TestKey(1), 1.0);
+        i.insert(TestKey(2), 2.0);
+
+        let mut j: Hierarchy<TestKey, f32> = Default::default();
+
+        j.insert(TestKey(1), 1.0);
+        j.insert(TestKey(2), 3.0);
+
+        assert_eq!(h, i);
+        assert_ne!(h, j);
+        assert_ne!(i, j);
+    }
+
+    #[test]
+    fn serde() {
+        let mut h: Hierarchy<TestKey, f32> = Default::default();
+
+        h.insert(TestKey(1), 1.0);
+        h.insert(TestKey(2), 2.0);
 
         assert_ser_tokens(&h, &[
             Token::Struct { name: "Hierarchy", len: 3 },
             Token::Str("root_idx"),
-            Token::NewtypeStruct { name: "MockKey" },
-            Token::U64(0),
+            Token::U32(0),
             Token::Str("index"),
-            Token::Map { len: Some(1) },
-            Token::NewtypeStruct { name: "MockKey" },
-            Token::U64(0),
+            Token::Map { len: Some(2) },
+            Token::NewtypeStruct { name: "TestKey" },
+            Token::U64(1),
+            Token::U32(1),
+            Token::NewtypeStruct { name: "TestKey" },
+            Token::U64(2),
+            Token::U32(2),
             Token::MapEnd,
             Token::Str("graph"),
             Token::Struct { name: "Graph", len: 4 },
             Token::Str("nodes"),
-            Token::Seq { len: Some(1) },
-            Token::Struct { name: "HierNode", len: 2 },
-            Token::Str("key"),
-            Token::NewtypeStruct { name: "MockKey" },
-            Token::U64(0),
-            Token::Str("data"),
-            Token::F32(0.0),
-            Token::StructEnd,
+            Token::Seq { len: Some(3) },
+            Token::NewtypeStruct { name: "HierNode" },
+            Token::None,
+            Token::NewtypeStruct { name: "HierNode" },
+            Token::Some,
+            Token::Tuple { len: 2 },
+            Token::NewtypeStruct { name: "TestKey" },
+            Token::U64(1),
+            Token::F32(1.0),
+            Token::TupleEnd,
+            Token::NewtypeStruct { name: "HierNode" },
+            Token::Some,
+            Token::Tuple { len: 2 },
+            Token::NewtypeStruct { name: "TestKey" },
+            Token::U64(2),
+            Token::F32(2.0),
+            Token::TupleEnd,
             Token::SeqEnd,
             Token::Str("node_holes"),
             Token::Seq { len: Some(0) },
@@ -449,7 +500,19 @@ mod tests {
             Token::Str("edge_property"),
             Token::UnitVariant { name: "EdgeProperty", variant: "directed" },
             Token::Str("edges"),
-            Token::Seq { len: Some(0) },
+            Token::Seq { len: Some(2) },
+            Token::Some,
+            Token::Tuple { len: 3 },
+            Token::U32(0),
+            Token::U32(1),
+            Token::Unit,
+            Token::TupleEnd,
+            Token::Some,
+            Token::Tuple { len: 3 },
+            Token::U32(0),
+            Token::U32(2),
+            Token::Unit,
+            Token::TupleEnd,
             Token::SeqEnd,
             Token::StructEnd,
             Token::StructEnd,
