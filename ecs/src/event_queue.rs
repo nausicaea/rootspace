@@ -12,6 +12,7 @@ use typename::TypeName;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReceiverId<E> {
     id: usize,
+    #[serde(ignore, default = "PhantomData::default")]
     _e: PhantomData<E>,
 }
 
@@ -26,16 +27,17 @@ impl<E> ReceiverId<E> {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct ReceiverState<E> {
-    events_read: usize,
-    events_received: usize,
+    read: usize,
+    received: usize,
+    #[serde(ignore, default = "PhantomData::default")]
     _e: PhantomData<E>,
 }
 
 impl<E> Default for ReceiverState<E> {
     fn default() -> Self {
         ReceiverState {
-            events_read: 0,
-            events_received: 0,
+            read: 0,
+            received: 0,
             _e: PhantomData::default(),
         }
     }
@@ -80,7 +82,7 @@ where
     pub fn send(&mut self, event: E) {
         if !self.receivers.is_empty() {
             self.events.push_front(event);
-            self.receivers.values_mut().for_each(|s| s.events_received += 1);
+            self.receivers.values_mut().for_each(|s| s.received += 1);
         }
     }
 
@@ -90,10 +92,10 @@ where
         let evs: Vec<E> = self
             .receivers
             .get_mut(&id.id)
-            .filter(|s| s.events_read < s.events_received)
+            .filter(|s| s.read < s.received)
             .map(|s| {
-                let unread = s.events_received - s.events_read;
-                s.events_read += unread;
+                let unread = s.received - s.read;
+                s.read += unread;
                 events.iter().take(unread).cloned().collect()
             })
             .unwrap_or_default();
@@ -101,7 +103,7 @@ where
         let unread = self
             .receivers
             .values()
-            .map(|s| s.events_received - s.events_read)
+            .map(|s| s.received - s.read)
             .max()
             .unwrap_or_default();
         self.events.truncate(unread);

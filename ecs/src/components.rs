@@ -3,9 +3,10 @@
 use crate::{entities::Entity, indexing::Index, resource::Resource};
 //use crate::hibitset::{BitSet, BitSetIter};
 // use hibitset::{BitIter, BitSet, BitSetLike};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, ser::{Serializer, SerializeMap}, de::{Visitor, Deserializer, MapAccess}};
 use std::{collections::HashSet, fmt, ptr};
 use typename::TypeName;
+use std::marker::PhantomData;
 
 /// A component is a data type that is associated with a particular `Entity`.
 pub trait Component: Sized {
@@ -31,7 +32,7 @@ pub trait Storage<T> {
 }
 
 /// Implements component storage based on a `Vec<T>`. Occupied spaces are tracked with a `BitSet`.
-#[derive(TypeName, Serialize, Deserialize)]
+#[derive(TypeName)]
 pub struct VecStorage<T> {
     /// The index into the data vector.
     index: HashSet<Index>,
@@ -59,11 +60,8 @@ impl<T> VecStorage<T> {
             .filter(move |(idx, _)| index.contains(&idx.into()))
             .map(|(_, d)| d)
     }
-}
 
-impl<T> Storage<T> for VecStorage<T> {
-    fn insert(&mut self, entity: Entity, datum: T) -> Option<T> {
-        let idx = entity.idx();
+    fn insert_internal(&mut self, idx: Index, datum: T) -> Option<T> {
         let idx_usize: usize = idx.into();
 
         // Adjust the length of the data container if necessary.
@@ -87,6 +85,13 @@ impl<T> Storage<T> for VecStorage<T> {
                 None
             }
         }
+    }
+}
+
+impl<T> Storage<T> for VecStorage<T> {
+    fn insert(&mut self, entity: Entity, datum: T) -> Option<T> {
+        let idx = entity.idx();
+        self.insert_internal(idx, datum)
     }
 
     fn remove(&mut self, entity: &Entity) -> Option<T> {
@@ -160,15 +165,92 @@ impl<T> Default for VecStorage<T> {
     }
 }
 
+impl<T> PartialEq<VecStorage<T>> for VecStorage<T>
+where
+    T: PartialEq<T>,
+{
+    fn eq(&self, rhs: &Self) -> bool {
+        if !self.index.eq(&rhs.index) {
+            return false;
+        }
+
+        self.index.iter()
+            .map(|idx| Into::<usize>::into(idx))
+            .all(|idx| self.data[idx].eq(&rhs.data[idx]))
+    }
+}
+
 impl<T> fmt::Debug for VecStorage<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "VecStorage(#len: {})", self.data.len())
     }
 }
 
+impl<T> Serialize for VecStorage<T>
+where
+    T: Serialize,
+{
+    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = ser.serialize_map(Some(self.index.len()))?;
+        for idx in &self.index {
+            state.serialize_entry(idx, &self.data[Into::<usize>::into(idx)])?;
+        }
+        state.end()
+    }
+}
+
+impl<'de, T> Deserialize<'de> for VecStorage<T>
+where
+    T: Deserialize<'de>,
+{
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct VecStorageVisitor<T>(PhantomData<T>);
+
+        impl<T> Default for VecStorageVisitor<T> {
+            fn default() -> Self {
+                VecStorageVisitor(PhantomData::default())
+            }
+        }
+
+        impl<'de, T> Visitor<'de> for VecStorageVisitor<T>
+        where
+            T: Deserialize<'de>,
+        {
+            type Value = VecStorage<T>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "a map of indices to components")
+            }
+
+            fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let mut storage = VecStorage::default();
+
+                while let Some((idx, v)) = access.next_entry::<Index, T>()? {
+                    storage.insert_internal(idx, v);
+                }
+
+                Ok(storage)
+            }
+        }
+
+        de.deserialize_map(VecStorageVisitor::<T>::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::entities::Entities;
+    use serde_test::{assert_tokens, Token};
 
     struct DropCounter<'a> {
         count: &'a mut usize,
@@ -178,6 +260,13 @@ mod tests {
         fn drop(&mut self) {
             *self.count += 1;
         }
+    }
+
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    struct TestComponent(usize);
+
+    impl Component for TestComponent {
+        type Storage = VecStorage<Self>;
     }
 
     #[test]
@@ -308,5 +397,25 @@ mod tests {
 
         let data: Vec<u32> = s.iter().cloned().collect();
         assert_eq!(data, vec![101, 102, 103]);
+    }
+
+    #[test]
+    fn vec_storage_serde() {
+        let mut entities = Entities::default();
+        let mut v: <TestComponent as Component>::Storage = Default::default();
+
+        let _a = entities.create();
+        let _b = entities.create();
+        let c = entities.create();
+
+        v.insert(c, TestComponent(100));
+
+        assert_tokens(&v, &[
+            Token::Map { len: Some(1) },
+            Token::U32(2),
+            Token::NewtypeStruct { name: "TestComponent" },
+            Token::U64(100),
+            Token::MapEnd,
+        ]);
     }
 }
