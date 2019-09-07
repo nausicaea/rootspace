@@ -1,5 +1,5 @@
 use super::{
-    private::Sealed, BackendTrait, EventTrait, EventsLoopTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
+    private::Sealed, BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
     TextureTrait, VertexBufferTrait,
 };
 use crate::{
@@ -7,7 +7,7 @@ use crate::{
     components::Renderable,
     event::EngineEvent,
     geometry::rect::Rect,
-    resources::Backend,
+    resources::BackendResource,
 };
 use failure::Error;
 #[cfg(any(test, feature = "diagnostics"))]
@@ -28,15 +28,6 @@ impl TryInto<EngineEvent> for HeadlessEvent {
     fn try_into(self) -> Result<EngineEvent, Self::Error> {
         Err(())
     }
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct HeadlessEventsLoop;
-
-impl Sealed for HeadlessEventsLoop {}
-
-impl EventsLoopTrait<HeadlessBackend> for HeadlessEventsLoop {
-    fn poll<F: FnMut(HeadlessEvent)>(&mut self, _f: F) {}
 }
 
 #[derive(Debug, Clone, Default)]
@@ -124,7 +115,7 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
     fn render<T: AsRef<[[f32; 4]; 4]>>(
         &mut self,
         _transform: &T,
-        _factory: &Backend<HeadlessBackend>,
+        _factory: &BackendResource<HeadlessBackend>,
         _data: &Renderable,
     ) -> Result<(), Error> {
         Ok(())
@@ -144,7 +135,6 @@ impl Sealed for HeadlessBackend {}
 
 impl BackendTrait for HeadlessBackend {
     type Event = HeadlessEvent;
-    type EventsLoop = HeadlessEventsLoop;
     type Frame = HeadlessFrame;
     type IndexBuffer = HeadlessIndexBuffer;
     type Shader = HeadlessShader;
@@ -153,7 +143,6 @@ impl BackendTrait for HeadlessBackend {
 
     #[allow(unused_variables)]
     fn new(
-        _events_loop: &HeadlessEventsLoop,
         title: &str,
         dimensions: (u32, u32),
         _vsync: bool,
@@ -164,6 +153,8 @@ impl BackendTrait for HeadlessBackend {
 
         Ok(HeadlessBackend { dimensions })
     }
+
+    fn poll_events<F: FnMut(HeadlessEvent)>(&mut self, _f: F) {}
 
     fn create_frame(&self) -> HeadlessFrame {
         HeadlessFrame::default()
@@ -193,20 +184,20 @@ mod tests {
 
     #[test]
     fn backend() {
-        assert!(HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).is_ok());
+        assert!(HeadlessBackend::new("Title", (800, 600), false, 0).is_ok());
     }
 
     #[test]
     fn dpi_factor() {
-        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
+        let b = HeadlessBackend::new("Title", (800, 600), false, 0).unwrap();
 
         assert_eq!(b.dpi_factor(), 1.0f64);
     }
 
     #[test]
     fn frame() {
-        let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f: Backend<HeadlessBackend> = Backend::default();
+        let b = HeadlessBackend::new("Title", (800, 600), false, 0).unwrap();
+        let mut f: BackendResource<HeadlessBackend> = BackendResource::default();
 
         let vertices = f
             .create_vertex_buffer(

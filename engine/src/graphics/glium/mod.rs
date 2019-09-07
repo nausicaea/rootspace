@@ -1,5 +1,5 @@
 use super::{
-    private::Sealed, BackendTrait, EventTrait, EventsLoopTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
+    private::Sealed, BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
     TextureTrait, VertexBufferTrait,
 };
 use crate::{
@@ -7,7 +7,7 @@ use crate::{
     components::Renderable,
     event::EngineEvent,
     geometry::rect::Rect,
-    resources::Backend,
+    resources::BackendResource,
 };
 use failure::Error;
 #[cfg(target_os = "macos")]
@@ -67,28 +67,6 @@ impl TryInto<EngineEvent> for GliumEvent {
         } else {
             Err(())
         }
-    }
-}
-
-pub struct GliumEventsLoop(Box<EventsLoop>);
-
-impl Default for GliumEventsLoop {
-    fn default() -> Self {
-        GliumEventsLoop(Box::new(EventsLoop::new()))
-    }
-}
-
-impl fmt::Debug for GliumEventsLoop {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "GliumEventsLoop(...)")
-    }
-}
-
-impl Sealed for GliumEventsLoop {}
-
-impl EventsLoopTrait<GliumBackend> for GliumEventsLoop {
-    fn poll<F: FnMut(GliumEvent)>(&mut self, mut f: F) {
-        self.0.poll_events(|e| f(e.into()))
     }
 }
 
@@ -207,7 +185,7 @@ impl FrameTrait<GliumBackend> for GliumFrame {
         self.0.clear_color_and_depth((c[0], c[1], c[2], c[3]), d)
     }
 
-    fn render<T>(&mut self, transform: &T, factory: &Backend<GliumBackend>, data: &Renderable) -> Result<(), Error>
+    fn render<T>(&mut self, transform: &T, factory: &BackendResource<GliumBackend>, data: &Renderable) -> Result<(), Error>
     where
         T: AsRef<[[f32; 4]; 4]>,
     {
@@ -272,13 +250,13 @@ impl fmt::Debug for GliumFrame {
 #[derive(Clone, TypeName)]
 pub struct GliumBackend {
     pub display: Display,
+    pub events_loop: EventsLoop,
 }
 
 impl Sealed for GliumBackend {}
 
 impl BackendTrait for GliumBackend {
     type Event = GliumEvent;
-    type EventsLoop = GliumEventsLoop;
     type Frame = GliumFrame;
     type IndexBuffer = GliumIndexBuffer;
     type Shader = GliumShader;
@@ -286,7 +264,6 @@ impl BackendTrait for GliumBackend {
     type VertexBuffer = GliumVertexBuffer;
 
     fn new(
-        events_loop: &GliumEventsLoop,
         title: &str,
         dimensions: (u32, u32),
         vsync: bool,
@@ -308,6 +285,10 @@ impl BackendTrait for GliumBackend {
             Err(DisplayCreationError::GlutinCreationError(e)) => Err(e.into()),
             Err(DisplayCreationError::IncompatibleOpenGl(e)) => Err(e.into()),
         }
+    }
+
+    fn poll_events<F: FnMut(GliumEvent)>(&mut self, mut f: F) {
+        self.0.poll_events(|e| f(e.into()))
     }
 
     fn create_frame(&self) -> GliumFrame {
@@ -356,7 +337,7 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn backend() {
-        let r = GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0);
+        let r = GliumBackend::new("Title", (800, 600), false, 0);
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -372,7 +353,7 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn dpi_factor() {
-        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
+        let b = GliumBackend::new("Title", (800, 600), false, 0).unwrap();
 
         assert_ulps_ne!(b.dpi_factor(), 0.0f64, epsilon = f64::EPSILON);
     }
@@ -389,8 +370,8 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn frame() {
-        let b = GliumBackend::new(&GliumEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f: Backend<GliumBackend> = Backend::default();
+        let b = GliumBackend::new("Title", (800, 600), false, 0).unwrap();
+        let mut f: BackendResource<GliumBackend> = BackendResource::default();
 
         let vertices = f
             .create_vertex_buffer(

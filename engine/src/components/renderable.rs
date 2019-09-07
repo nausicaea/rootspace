@@ -1,7 +1,7 @@
 use crate::{
     assets::{AssetTrait, Mesh, Text},
     graphics::BackendTrait,
-    resources::{Backend, IndexBufferId, ShaderId, TextureId, VertexBufferId},
+    resources::{BackendResource, IndexBufferId, ShaderId, TextureId, VertexBufferId},
 };
 use ecs::{Component, VecStorage};
 use failure::{Error, Fail};
@@ -9,8 +9,29 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use typename::TypeName;
 
+#[derive(Debug, Clone, TypeName, Serialize, Deserialize)]
+pub enum SourceData {
+    Mesh {
+        file: PathBuf,
+        vertex_shader: PathBuf,
+        fragment_shader: PathBuf,
+        diffuse_texture: PathBuf,
+        normal_texture: Option<PathBuf>,
+    },
+    Text {
+        text: String,
+        font: PathBuf,
+        text_scale: f32,
+        text_width: f32,
+        virtual_pixel_text_width: u32,
+        vertex_shader: PathBuf,
+        fragment_shader: PathBuf,
+    },
+}
+
 #[derive(Debug, Default, TypeName, Serialize, Deserialize)]
 pub struct Renderable {
+    source: Option<SourceData>,
     #[serde(skip)]
     vertices: VertexBufferId,
     #[serde(skip)]
@@ -28,8 +49,10 @@ impl Renderable {
         RenderableBuilder::default()
     }
 
+    #[cfg(test)]
     pub fn new(v: VertexBufferId, i: IndexBufferId, s: ShaderId, dt: TextureId, nt: Option<TextureId>) -> Self {
         Renderable {
+            source: None,
             vertices: v,
             indices: i,
             shader: s,
@@ -148,13 +171,13 @@ impl RenderableBuilder {
         self
     }
 
-    pub fn build_mesh<B: BackendTrait>(&self, backend: &B, factory: &mut Backend<B>) -> Result<Renderable, Error> {
+    pub fn build_mesh<B: BackendTrait>(&self, backend: &B, factory: &mut BackendResource<B>) -> Result<Renderable, Error> {
         let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
         let dt_path = self.dt.as_ref().ok_or(RenderableError::MissingDiffuseTexture)?;
 
-        let mesh = Mesh::from_path(mesh_path)?;
+        let mesh = Mesh::from_path(&mesh_path)?;
 
         let vertices = factory.create_vertex_buffer(backend, &mesh.vertices)?;
         let indices = factory.create_index_buffer(backend, &mesh.indices)?;
@@ -167,6 +190,13 @@ impl RenderableBuilder {
         };
 
         Ok(Renderable {
+            source: Some(SourceData::Mesh {
+                file: mesh_path.to_path_buf(),
+                vertex_shader: vs_path.to_path_buf(),
+                fragment_shader: fs_path.to_path_buf(),
+                diffuse_texture: dt_path.to_path_buf(),
+                normal_texture: self.nt.clone(),
+            }),
             vertices,
             indices,
             shader,
@@ -175,7 +205,7 @@ impl RenderableBuilder {
         })
     }
 
-    pub fn build_text<B: BackendTrait>(&self, backend: &B, factory: &mut Backend<B>) -> Result<Renderable, Error> {
+    pub fn build_text<B: BackendTrait>(&self, backend: &B, factory: &mut BackendResource<B>) -> Result<Renderable, Error> {
         let dpi_factor = backend.dpi_factor();
 
         let cache_size = (
@@ -192,20 +222,29 @@ impl RenderableBuilder {
 
         let diffuse_texture = factory.create_empty_texture(backend, cache_size)?;
 
-        let text = Text::builder()
+        let text_data = Text::builder()
             .font(font_path)
             .cache(diffuse_texture)
             .scale(text_scale)
             .width(pixel_width)
             .layout(factory, &text)?;
 
-        let mesh = text.mesh(text_width);
+        let mesh = text_data.mesh(text_width);
         let vertices = factory.create_vertex_buffer(backend, &mesh.vertices)?;
         let indices = factory.create_index_buffer(backend, &mesh.indices)?;
 
         let shader = factory.create_shader(backend, &vs_path, &fs_path)?;
 
         Ok(Renderable {
+            source: Some(SourceData::Text {
+                text: text.to_string(),
+                font: font_path.to_path_buf(),
+                text_scale,
+                text_width,
+                virtual_pixel_text_width: pixel_width,
+                vertex_shader: vs_path.to_path_buf(),
+                fragment_shader: fs_path.to_path_buf(),
+            }),
             vertices,
             indices,
             shader,
@@ -239,7 +278,7 @@ mod tests {
     #[test]
     fn headless_builder_mesh() {
         let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f = Backend::<HeadlessBackend>::default();
+        let mut f = BackendResource::<HeadlessBackend>::default();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let r: Result<Renderable, Error> = Renderable::builder()
             .mesh(&base_path.join("cube.ply"))
@@ -254,7 +293,7 @@ mod tests {
     #[test]
     fn headless_builder_text() {
         let b = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f = Backend::<HeadlessBackend>::default();
+        let mut f = BackendResource::<HeadlessBackend>::default();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let r: Result<Renderable, Error> = Renderable::builder()
             .font(&base_path.join("SourceSansPro-Regular.ttf"))

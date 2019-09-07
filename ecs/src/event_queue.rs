@@ -12,7 +12,7 @@ use typename::TypeName;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReceiverId<E> {
     id: usize,
-    #[serde(ignore, default = "PhantomData::default")]
+    #[serde(skip, default = "PhantomData::default")]
     _e: PhantomData<E>,
 }
 
@@ -29,7 +29,7 @@ impl<E> ReceiverId<E> {
 struct ReceiverState<E> {
     read: usize,
     received: usize,
-    #[serde(ignore, default = "PhantomData::default")]
+    #[serde(skip, default = "PhantomData::default")]
     _e: PhantomData<E>,
 }
 

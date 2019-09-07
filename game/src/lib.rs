@@ -6,7 +6,7 @@ use engine::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,
     graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait},
-    resources::{Backend, SceneGraph},
+    resources::{BackendResource, SceneGraph},
     systems::{
         CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor, ForceShutdown,
         Renderer,
@@ -74,7 +74,7 @@ where
             let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
             let text = "Hello, World!";
-            let factory = self.orchestrator.get_resource_mut::<Backend<B>>();
+            let factory = self.orchestrator.get_resource_mut::<BackendResource<B>>();
             Renderable::builder()
                 .font(f)
                 .text_scale(16.0)
@@ -104,7 +104,7 @@ where
             let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            let factory = self.orchestrator.get_resource_mut::<Backend<B>>();
+            let factory = self.orchestrator.get_resource_mut::<BackendResource<B>>();
             Renderable::builder()
                 .mesh(m)
                 .vertex_shader(vs)
@@ -128,7 +128,7 @@ where
             let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
             let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
             let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
-            let factory = self.orchestrator.get_resource_mut::<Backend<B>>();
+            let factory = self.orchestrator.get_resource_mut::<BackendResource<B>>();
             Renderable::builder()
                 .mesh(m)
                 .vertex_shader(vs)

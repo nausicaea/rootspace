@@ -3,7 +3,7 @@ use crate::{
     event::EngineEvent,
     file_manipulation::{FileError, VerifyPath},
     graphics::BackendTrait,
-    resources::{Backend, SceneGraph},
+    resources::{BackendResource, SceneGraph},
 };
 use ecs::{
     Component, Entity, EventQueue, LoopStage, Persistence, ReceiverId, RegAdd, Registry, Resource, ResourcesTrait,
@@ -49,7 +49,7 @@ where
 
         let mut world = W::default();
         world.add_resource(events, Persistence::Runtime);
-        world.add_resource(Backend::<B>::default(), Persistence::Runtime);
+        world.add_resource(BackendResource::<B>::default(), Persistence::Runtime);
         world.add_resource(SceneGraph::<Model>::default(), Persistence::Runtime);
         world.add_resource(SceneGraph::<UiModel>::default(), Persistence::Runtime);
 

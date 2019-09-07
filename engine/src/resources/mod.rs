@@ -1,7 +1,7 @@
-pub mod backend;
+pub mod backend_resource;
 pub mod scene_graph;
 
 pub use self::{
-    backend::{Backend, IndexBufferId, ShaderId, TextureId, VertexBufferId},
+    backend_resource::{BackendResource, IndexBufferId, ShaderId, TextureId, VertexBufferId},
     scene_graph::SceneGraph,
 };

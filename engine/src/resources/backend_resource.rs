@@ -4,85 +4,36 @@ use crate::{
 };
 use failure::Error;
 use snowflake::ProcessUniqueId;
-use std::{collections::HashMap, fmt, marker::PhantomData, path::Path};
+use std::{collections::HashMap, fmt, path::Path};
 use typename::TypeName;
 
-#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct TextureId(Option<ProcessUniqueId>);
-
-impl TextureId {
-    fn generate() -> Self {
-        TextureId(Some(ProcessUniqueId::new()))
-    }
-}
-
-impl Default for TextureId {
-    fn default() -> Self {
-        TextureId(None)
-    }
-}
-
-#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ShaderId(Option<ProcessUniqueId>);
-
-impl ShaderId {
-    fn generate() -> Self {
-        ShaderId(Some(ProcessUniqueId::new()))
-    }
-}
-
-impl Default for ShaderId {
-    fn default() -> Self {
-        ShaderId(None)
-    }
-}
-
-#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct VertexBufferId(Option<ProcessUniqueId>);
-
-impl VertexBufferId {
-    fn generate() -> Self {
-        VertexBufferId(Some(ProcessUniqueId::new()))
-    }
-}
-
-impl Default for VertexBufferId {
-    fn default() -> Self {
-        VertexBufferId(None)
-    }
-}
-
-#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct IndexBufferId(Option<ProcessUniqueId>);
-
-impl IndexBufferId {
-    fn generate() -> Self {
-        IndexBufferId(Some(ProcessUniqueId::new()))
-    }
-}
-
-impl Default for IndexBufferId {
-    fn default() -> Self {
-        IndexBufferId(None)
-    }
-}
-
 #[derive(TypeName)]
-pub struct Backend<B>
+pub struct BackendResource<B>
 where
     B: BackendTrait,
 {
+    inner: Option<B>,
     textures: HashMap<TextureId, B::Texture>,
     shaders: HashMap<ShaderId, B::Shader>,
     vertex_buffers: HashMap<VertexBufferId, B::VertexBuffer>,
     index_buffers: HashMap<IndexBufferId, B::IndexBuffer>,
-    _b: PhantomData<B>,
 }
 
-impl<B> Backend<B>
+impl<B> BackendResource<B>
 where
     B: BackendTrait,
 {
+    pub fn new() -> Result<Self, Error> {
+        Ok(BackendResource {
+            inner: Some(B::new()?),
+            textures: HashMap::default(),
+            shaders: HashMap::default(),
+            vertex_buffers: HashMap::default(),
+            index_buffers: HashMap::default(),
+            _b: PhantomData::default(),
+        })
+    }
+
     pub fn create_texture<P: AsRef<Path>>(&mut self, backend: &B, image: P) -> Result<TextureId, Error> {
         let t = B::Texture::from_path(backend, &image)?;
         let id = TextureId::generate();
@@ -146,33 +97,93 @@ where
     }
 }
 
-impl<B> Default for Backend<B>
+impl<B> Default for BackendResource<B>
 where
     B: BackendTrait,
 {
     fn default() -> Self {
-        Backend {
+        BackendResource {
+            inner: None,
             textures: HashMap::default(),
             shaders: HashMap::default(),
             vertex_buffers: HashMap::default(),
             index_buffers: HashMap::default(),
-            _b: PhantomData::default(),
         }
     }
 }
 
-impl<B> fmt::Debug for Backend<B>
+impl<B> fmt::Debug for BackendResource<B>
 where
     B: BackendTrait,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "Backend(#t: {}, #s: {}, #vbuf: {}, #ibuf: {})",
+            "BackendResource(#t: {}, #s: {}, #vbuf: {}, #ibuf: {})",
             self.textures.len(),
             self.shaders.len(),
             self.vertex_buffers.len(),
             self.index_buffers.len()
         )
+    }
+}
+
+#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct TextureId(Option<ProcessUniqueId>);
+
+impl TextureId {
+    fn generate() -> Self {
+        TextureId(Some(ProcessUniqueId::new()))
+    }
+}
+
+impl Default for TextureId {
+    fn default() -> Self {
+        TextureId(None)
+    }
+}
+
+#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ShaderId(Option<ProcessUniqueId>);
+
+impl ShaderId {
+    fn generate() -> Self {
+        ShaderId(Some(ProcessUniqueId::new()))
+    }
+}
+
+impl Default for ShaderId {
+    fn default() -> Self {
+        ShaderId(None)
+    }
+}
+
+#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct VertexBufferId(Option<ProcessUniqueId>);
+
+impl VertexBufferId {
+    fn generate() -> Self {
+        VertexBufferId(Some(ProcessUniqueId::new()))
+    }
+}
+
+impl Default for VertexBufferId {
+    fn default() -> Self {
+        VertexBufferId(None)
+    }
+}
+
+#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct IndexBufferId(Option<ProcessUniqueId>);
+
+impl IndexBufferId {
+    fn generate() -> Self {
+        IndexBufferId(Some(ProcessUniqueId::new()))
+    }
+}
+
+impl Default for IndexBufferId {
+    fn default() -> Self {
+        IndexBufferId(None)
     }
 }

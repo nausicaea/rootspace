@@ -2,7 +2,7 @@ use crate::{
     assets::{Mesh, Vertex},
     file_manipulation::ReadPath,
     graphics::{BackendTrait, TextureTrait},
-    resources::{Backend, TextureId},
+    resources::{BackendResource, TextureId},
 };
 use failure::{Error, Fail};
 #[cfg(any(test, feature = "diagnostics"))]
@@ -45,7 +45,7 @@ impl<'a> Text<'a> {
         generate_mesh(&self.cache_cpu, &self.glyphs, self.dimensions, scale)
     }
 
-    pub fn text<B: BackendTrait>(&mut self, factory: &Backend<B>, text: &str) -> Result<(), Error> {
+    pub fn text<B: BackendTrait>(&mut self, factory: &BackendResource<B>, text: &str) -> Result<(), Error> {
         let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions.0, text);
 
         let cache_gpu = factory.borrow_texture(&self.cache_gpu);
@@ -109,7 +109,7 @@ impl TextBuilder {
         self
     }
 
-    pub fn layout<'a, B: BackendTrait>(self, factory: &Backend<B>, text: &str) -> Result<Text<'a>, Error> {
+    pub fn layout<'a, B: BackendTrait>(self, factory: &BackendResource<B>, text: &str) -> Result<Text<'a>, Error> {
         let font_data = self
             .font_path
             .as_ref()
@@ -319,7 +319,7 @@ mod tests {
     fn text_builder_headless() {
         let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f = Backend::<HeadlessBackend>::default();
+        let mut f = BackendResource::<HeadlessBackend>::default();
         let cache = f.create_empty_texture(&backend, (512, 512)).unwrap();
 
         let r: Result<Text, Error> = Text::builder()
@@ -336,7 +336,7 @@ mod tests {
     fn text_mesh_headless() {
         let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f = Backend::<HeadlessBackend>::default();
+        let mut f = BackendResource::<HeadlessBackend>::default();
         let cache = f.create_empty_texture(&backend, (512, 512)).unwrap();
 
         let text: Text = Text::builder()
@@ -363,7 +363,7 @@ mod tests {
     fn text_scale_headless() {
         let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f = Backend::<HeadlessBackend>::default();
+        let mut f = BackendResource::<HeadlessBackend>::default();
         let cache = f.create_empty_texture(&backend, (512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
@@ -381,7 +381,7 @@ mod tests {
     fn text_width_headless() {
         let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f = Backend::<HeadlessBackend>::default();
+        let mut f = BackendResource::<HeadlessBackend>::default();
         let cache = f.create_empty_texture(&backend, (512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
@@ -399,7 +399,7 @@ mod tests {
     fn text_update_headless() {
         let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
         let backend = HeadlessBackend::new(&HeadlessEventsLoop::default(), "Title", (800, 600), false, 0).unwrap();
-        let mut f = Backend::<HeadlessBackend>::default();
+        let mut f = BackendResource::<HeadlessBackend>::default();
         let cache = f.create_empty_texture(&backend, (512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
