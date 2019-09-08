@@ -34,7 +34,7 @@ pub struct Orchestrator<B, RR, W> {
 impl<B, RR, W> Orchestrator<B, RR, W>
 where
     B: BackendTrait,
-    RR: Registry + Default,
+    RR: Registry,
     W: Default + WorldTrait + ResourcesTrait<JoinedRegistry<RR>>,
 {
     pub fn new<P: AsRef<Path>>(
@@ -47,9 +47,12 @@ where
         let mut events: EventQueue<EngineEvent> = EventQueue::default();
         let receiver = events.subscribe();
 
+        let backend = BackendResource::<B>::new("Title", (800, 600), true, 4)
+            .expect("Failed to initialise the backend");
+
         let mut world = W::default();
         world.add_resource(events, Persistence::Runtime);
-        world.add_resource(BackendResource::<B>::default(), Persistence::Runtime);
+        world.add_resource(backend, Persistence::Runtime);
         world.add_resource(SceneGraph::<Model>::default(), Persistence::Runtime);
         world.add_resource(SceneGraph::<UiModel>::default(), Persistence::Runtime);
 

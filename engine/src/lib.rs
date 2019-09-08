@@ -14,8 +14,8 @@ pub mod text_manipulation;
 
 use crate::{
     graphics::{
-        glium::{GliumBackend, GliumEventsLoop},
-        headless::{HeadlessBackend, HeadlessEventsLoop},
+        glium::GliumBackend,
+        headless::HeadlessBackend,
     },
     orchestrator::{JoinedRegistry, Orchestrator},
     systems::{event_interface::EventInterface, renderer::Renderer},
@@ -23,7 +23,7 @@ use crate::{
 use ecs::World;
 
 pub type DefaultOrchestrator<B, RR> = Orchestrator<B, RR, World<JoinedRegistry<RR>>>;
-pub type GliumEventInterface = EventInterface<GliumEventsLoop>;
-pub type HeadlessEventInterface = EventInterface<HeadlessEventsLoop>;
+pub type GliumEventInterface = EventInterface<GliumBackend>;
+pub type HeadlessEventInterface = EventInterface<HeadlessBackend>;
 pub type GliumRenderer = Renderer<GliumBackend>;
 pub type HeadlessRenderer = Renderer<HeadlessBackend>;

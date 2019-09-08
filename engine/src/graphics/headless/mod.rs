@@ -1,5 +1,5 @@
 use super::{
-    private::Sealed, BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
+    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
     TextureTrait, VertexBufferTrait,
 };
 use crate::{
@@ -18,8 +18,6 @@ use typename::TypeName;
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;
 
-impl Sealed for HeadlessEvent {}
-
 impl EventTrait for HeadlessEvent {}
 
 impl TryInto<EngineEvent> for HeadlessEvent {
@@ -34,8 +32,6 @@ impl TryInto<EngineEvent> for HeadlessEvent {
 pub struct HeadlessTexture {
     dimensions: (u32, u32),
 }
-
-impl Sealed for HeadlessTexture {}
 
 impl TextureTrait<HeadlessBackend> for HeadlessTexture {
     fn empty(_backend: &HeadlessBackend, dimensions: (u32, u32)) -> Result<Self, Error> {
@@ -74,8 +70,6 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
 #[derive(Debug, Clone)]
 pub struct HeadlessShader;
 
-impl Sealed for HeadlessShader {}
-
 impl ShaderTrait<HeadlessBackend> for HeadlessShader {
     fn from_source<S: AsRef<str>>(_backend: &HeadlessBackend, _vs: S, _fs: S) -> Result<Self, Error> {
         Ok(HeadlessShader)
@@ -84,8 +78,6 @@ impl ShaderTrait<HeadlessBackend> for HeadlessShader {
 
 #[derive(Debug, Clone)]
 pub struct HeadlessVertexBuffer;
-
-impl Sealed for HeadlessVertexBuffer {}
 
 impl VertexBufferTrait<HeadlessBackend> for HeadlessVertexBuffer {
     fn from_vertices(_backend: &HeadlessBackend, _vertices: &[Vertex]) -> Result<Self, Error> {
@@ -96,8 +88,6 @@ impl VertexBufferTrait<HeadlessBackend> for HeadlessVertexBuffer {
 #[derive(Debug, Clone)]
 pub struct HeadlessIndexBuffer;
 
-impl Sealed for HeadlessIndexBuffer {}
-
 impl IndexBufferTrait<HeadlessBackend> for HeadlessIndexBuffer {
     fn from_indices(_backend: &HeadlessBackend, _indices: &[u16]) -> Result<Self, Error> {
         Ok(HeadlessIndexBuffer)
@@ -106,8 +96,6 @@ impl IndexBufferTrait<HeadlessBackend> for HeadlessIndexBuffer {
 
 #[derive(Debug, Clone, Default)]
 pub struct HeadlessFrame;
-
-impl Sealed for HeadlessFrame {}
 
 impl FrameTrait<HeadlessBackend> for HeadlessFrame {
     fn initialize(&mut self, _color: [f32; 4], _depth: f32) {}
@@ -130,8 +118,6 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
 pub struct HeadlessBackend {
     dimensions: (u32, u32),
 }
-
-impl Sealed for HeadlessBackend {}
 
 impl BackendTrait for HeadlessBackend {
     type Event = HeadlessEvent;
@@ -196,12 +182,10 @@ mod tests {
 
     #[test]
     fn frame() {
-        let b = HeadlessBackend::new("Title", (800, 600), false, 0).unwrap();
-        let mut f: BackendResource<HeadlessBackend> = BackendResource::default();
+        let mut f: BackendResource<HeadlessBackend> = BackendResource::new("Title", (800, 600), false, 0).unwrap();
 
         let vertices = f
             .create_vertex_buffer(
-                &b,
                 &[
                     Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
                     Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
@@ -210,11 +194,10 @@ mod tests {
             )
             .unwrap();
 
-        let indices = f.create_index_buffer(&b, &[0, 1, 2]).unwrap();
+        let indices = f.create_index_buffer(&[0, 1, 2]).unwrap();
 
         let shader = f
             .create_source_shader(
-                &b,
                 r#"
                     #version 330 core
 
@@ -244,12 +227,12 @@ mod tests {
             )
             .unwrap();
 
-        let diffuse_texture = f.create_empty_texture(&b, (32, 32)).unwrap();
-        let normal_texture = Some(f.create_empty_texture(&b, (32, 32)).unwrap());
+        let diffuse_texture = f.create_empty_texture((32, 32)).unwrap();
+        let normal_texture = Some(f.create_empty_texture((32, 32)).unwrap());
 
         let data = Renderable::new(vertices, indices, shader, diffuse_texture, normal_texture);
 
-        let mut frame: HeadlessFrame = b.create_frame();
+        let mut frame: HeadlessFrame = f.create_frame();
         frame.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
         assert!(frame.render(&MockLocation::default(), &mut f, &data).is_ok());
         let r = frame.finalize();

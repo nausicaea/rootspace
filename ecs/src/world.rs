@@ -20,9 +20,9 @@ use typename::TypeName;
 /// Exposes resource management methods.
 pub trait ResourcesTrait<RR>
 where
-    RR: Registry + Default,
+    RR: Registry,
 {
-    type ResourceRegistry: Registry + Default;
+    type ResourceRegistry: Registry;
 
     fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
     where
@@ -135,7 +135,7 @@ impl<RR> Default for World<RR> {
 
 impl<RR> ResourcesTrait<RR> for World<RR>
 where
-    RR: Registry + Default,
+    RR: Registry,
 {
     type ResourceRegistry = RegAdd![Entities, EventQueue<WorldEvent>, RR];
 
@@ -194,7 +194,7 @@ where
 
 impl<RR> WorldTrait for World<RR>
 where
-    RR: Registry + Default,
+    RR: Registry,
 {
     fn add_system<S>(&mut self, stage: LoopStage, system: S)
     where

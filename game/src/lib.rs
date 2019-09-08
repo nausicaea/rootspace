@@ -47,9 +47,6 @@ where
     pub fn load(&mut self) -> Result<(), Error> {
         self.orchestrator.reset();
 
-        let event_interface: EventInterface<B> = EventInterface::default();
-        let renderer: Renderer<B> = Renderer::new(&event_interface.events_loop, "Title", (800, 600), true, 4)?;
-
         let camera = self.orchestrator.create_entity();
         self.orchestrator.add_component(camera, Status::default());
         self.orchestrator.add_component(camera, Camera::default());
@@ -82,7 +79,7 @@ where
                 .vertex_shader(vs)
                 .fragment_shader(fs)
                 .text(text)
-                .build_text(&renderer.backend, factory)?
+                .build_text(factory)?
         };
         self.orchestrator.add_component(ea, renderable);
 
@@ -110,7 +107,7 @@ where
                 .vertex_shader(vs)
                 .fragment_shader(fs)
                 .diffuse_texture(dt)
-                .build_mesh(&renderer.backend, factory)?
+                .build_mesh(factory)?
         };
         self.orchestrator.add_component(eb, renderable);
 
@@ -134,7 +131,7 @@ where
                 .vertex_shader(vs)
                 .fragment_shader(fs)
                 .diffuse_texture(dt)
-                .build_mesh(&renderer.backend, factory)?
+                .build_mesh(factory)?
         };
         self.orchestrator.add_component(ec, renderable);
 
@@ -145,7 +142,10 @@ where
         let debug_console = DebugConsole::default();
         self.orchestrator.add_system(LoopStage::Update, debug_console);
 
+        let event_interface: EventInterface<B> = EventInterface::default();
         self.orchestrator.add_system(LoopStage::Update, event_interface);
+
+        let renderer: Renderer<B> = Renderer::default();
         self.orchestrator.add_system(LoopStage::Render, renderer);
 
         let queue = self.orchestrator.get_resource_mut::<EventQueue<WorldEvent>>();

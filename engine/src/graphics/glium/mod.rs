@@ -1,5 +1,5 @@
 use super::{
-    private::Sealed, BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
+    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
     TextureTrait, VertexBufferTrait,
 };
 use crate::{
@@ -38,8 +38,6 @@ impl From<GlutinEvent> for GliumEvent {
         GliumEvent(value)
     }
 }
-
-impl Sealed for GliumEvent {}
 
 impl EventTrait for GliumEvent {}
 
@@ -103,8 +101,6 @@ where
 #[derive(Debug, Clone)]
 pub struct GliumTexture(Rc<Texture2d>);
 
-impl Sealed for GliumTexture {}
-
 impl TextureTrait<GliumBackend> for GliumTexture {
     fn empty(backend: &GliumBackend, dimensions: (u32, u32)) -> Result<Self, Error> {
         let tex = Texture2d::empty(&backend.display, dimensions.0, dimensions.1)?;
@@ -140,8 +136,6 @@ impl TextureTrait<GliumBackend> for GliumTexture {
 #[derive(Debug, Clone)]
 pub struct GliumShader(Rc<Program>);
 
-impl Sealed for GliumShader {}
-
 impl ShaderTrait<GliumBackend> for GliumShader {
     fn from_source<S: AsRef<str>>(backend: &GliumBackend, vs: S, fs: S) -> Result<Self, Error> {
         let progr = Program::from_source(&backend.display, vs.as_ref(), fs.as_ref(), None)?;
@@ -152,8 +146,6 @@ impl ShaderTrait<GliumBackend> for GliumShader {
 
 #[derive(Debug, Clone)]
 pub struct GliumVertexBuffer(Rc<VertexBuffer<Vertex>>);
-
-impl Sealed for GliumVertexBuffer {}
 
 impl VertexBufferTrait<GliumBackend> for GliumVertexBuffer {
     fn from_vertices(backend: &GliumBackend, vertices: &[Vertex]) -> Result<Self, Error> {
@@ -166,8 +158,6 @@ impl VertexBufferTrait<GliumBackend> for GliumVertexBuffer {
 #[derive(Debug, Clone)]
 pub struct GliumIndexBuffer(Rc<IndexBuffer<u16>>);
 
-impl Sealed for GliumIndexBuffer {}
-
 impl IndexBufferTrait<GliumBackend> for GliumIndexBuffer {
     fn from_indices(backend: &GliumBackend, indices: &[u16]) -> Result<Self, Error> {
         let ibuf = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, indices)?;
@@ -177,8 +167,6 @@ impl IndexBufferTrait<GliumBackend> for GliumIndexBuffer {
 }
 
 pub struct GliumFrame(Frame);
-
-impl Sealed for GliumFrame {}
 
 impl FrameTrait<GliumBackend> for GliumFrame {
     fn initialize(&mut self, c: [f32; 4], d: f32) {
@@ -247,13 +235,11 @@ impl fmt::Debug for GliumFrame {
     }
 }
 
-#[derive(Clone, TypeName)]
+#[derive(TypeName)]
 pub struct GliumBackend {
     pub display: Display,
     pub events_loop: EventsLoop,
 }
-
-impl Sealed for GliumBackend {}
 
 impl BackendTrait for GliumBackend {
     type Event = GliumEvent;
@@ -280,15 +266,17 @@ impl BackendTrait for GliumBackend {
             .with_vsync(vsync)
             .with_multisampling(msaa);
 
-        match Display::new(window, context, &events_loop.0) {
-            Ok(display) => Ok(GliumBackend { display }),
+        let events_loop = EventsLoop::new();
+
+        match Display::new(window, context, &events_loop) {
+            Ok(display) => Ok(GliumBackend { display, events_loop }),
             Err(DisplayCreationError::GlutinCreationError(e)) => Err(e.into()),
             Err(DisplayCreationError::IncompatibleOpenGl(e)) => Err(e.into()),
         }
     }
 
     fn poll_events<F: FnMut(GliumEvent)>(&mut self, mut f: F) {
-        self.0.poll_events(|e| f(e.into()))
+        self.events_loop.poll_events(|e| f(e.into()))
     }
 
     fn create_frame(&self) -> GliumFrame {
@@ -370,12 +358,10 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn frame() {
-        let b = GliumBackend::new("Title", (800, 600), false, 0).unwrap();
-        let mut f: BackendResource<GliumBackend> = BackendResource::default();
+        let mut f: BackendResource<GliumBackend> = BackendResource::new("Title", (800, 600), false, 0).unwrap();
 
         let vertices = f
             .create_vertex_buffer(
-                &b,
                 &[
                     Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
                     Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
@@ -384,11 +370,10 @@ mod tests {
             )
             .unwrap();
 
-        let indices = f.create_index_buffer(&b, &[0, 1, 2]).unwrap();
+        let indices = f.create_index_buffer(&[0, 1, 2]).unwrap();
 
         let shader = f
             .create_source_shader(
-                &b,
                 r#"
                     #version 330 core
 
@@ -418,12 +403,12 @@ mod tests {
             )
             .unwrap();
 
-        let diffuse_texture = f.create_empty_texture(&b, (32, 32)).unwrap();
-        let normal_texture = Some(f.create_empty_texture(&b, (32, 32)).unwrap());
+        let diffuse_texture = f.create_empty_texture((32, 32)).unwrap();
+        let normal_texture = Some(f.create_empty_texture((32, 32)).unwrap());
 
         let data = Renderable::new(vertices, indices, shader, diffuse_texture, normal_texture);
 
-        let mut frame: GliumFrame = b.create_frame();
+        let mut frame: GliumFrame = f.create_frame();
         frame.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
         assert!(frame.render(&MockLocation::default(), &mut f, &data).is_ok());
         let r = frame.finalize();

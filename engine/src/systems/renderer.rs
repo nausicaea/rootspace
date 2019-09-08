@@ -5,43 +5,27 @@ use crate::{
     resources::{BackendResource, SceneGraph},
 };
 use ecs::{EventQueue, Resources, Storage, System};
-use failure::Error;
 #[cfg(any(test, feature = "diagnostics"))]
 use std::time::Instant;
 use std::{collections::VecDeque, time::Duration};
+use std::marker::PhantomData;
 
 static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;
 
 #[derive(Debug)]
 pub struct Renderer<B> {
-    pub backend: B,
-    pub clear_color: [f32; 4],
+    clear_color: [f32; 4],
     draw_calls: VecDeque<usize>,
     frame_times: VecDeque<Duration>,
     initialised: bool,
+    _b: PhantomData<B>,
 }
 
 impl<B> Renderer<B>
 where
     B: BackendTrait,
 {
-    pub fn new(
-        events_loop: &B::EventsLoop,
-        title: &str,
-        dimensions: (u32, u32),
-        vsync: bool,
-        msaa: u16,
-    ) -> Result<Self, Error> {
-        Ok(Renderer {
-            backend: B::new(events_loop, title, dimensions, vsync, msaa)?,
-            clear_color: [0.69, 0.93, 0.93, 1.0],
-            draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
-            frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
-            initialised: false,
-        })
-    }
-
     #[cfg(any(test, feature = "diagnostics"))]
     pub fn average_draw_calls(&self) -> f32 {
         self.draw_calls.iter().sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
@@ -69,6 +53,18 @@ where
     }
 }
 
+impl<B> Default for Renderer<B> {
+    fn default() -> Self {
+        Renderer {
+            clear_color: [0.69, 0.93, 0.93, 1.0],
+            draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
+            frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
+            initialised: false,
+            _b: PhantomData::default(),
+        }
+    }
+}
+
 impl<B> System for Renderer<B>
 where
     B: BackendTrait,
@@ -85,8 +81,9 @@ where
         let mut draw_calls: usize = 0;
 
         if !self.initialised {
+            let dpi_factor = res.borrow::<BackendResource<B>>().dpi_factor();
             res.borrow_mut::<EventQueue<EngineEvent>>()
-                .send(EngineEvent::ChangeDpi(self.backend.dpi_factor()));
+                .send(EngineEvent::ChangeDpi(dpi_factor));
             self.initialised = true;
         }
 
@@ -100,7 +97,7 @@ where
         let cameras = res.borrow_component::<Camera>();
 
         // Create a new frame.
-        let mut target = self.backend.create_frame();
+        let mut target = res.borrow::<BackendResource<B>>().create_frame();
         target.initialize(self.clear_color, 1.0);
 
         let world_graph = res.borrow::<SceneGraph<Model>>();

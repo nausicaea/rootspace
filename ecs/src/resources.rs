@@ -27,7 +27,7 @@ pub struct Resources {
 impl Resources {
     pub fn serialize<RR, S>(&self, serializer: S) -> Result<(), S::Error>
     where
-        RR: Registry + Default,
+        RR: Registry,
         S: Serializer,
     {
         struct SerContainer<'a, R> {
@@ -91,9 +91,10 @@ impl Resources {
         }
 
         debug!("Beginning the serialization of Resources");
-        let reg: RR = Default::default();
         let mut state = serializer.serialize_map(Some(RR::LEN))?;
-        recurse(self, &mut state, &reg)?;
+        unsafe {
+            recurse(self, &mut state, &RR::zeroed())?;
+        }
         state.end()?;
         debug!("Completed the serialization of Resources");
         Ok(())
@@ -101,7 +102,7 @@ impl Resources {
 
     pub fn deserialize<'de, RR, D>(deserializer: D) -> Result<Self, D::Error>
     where
-        RR: Registry + Default,
+        RR: Registry,
         D: Deserializer<'de>,
     {
         #[derive(Deserialize)]
@@ -147,7 +148,7 @@ impl Resources {
 
         impl<'de, RR> Visitor<'de> for ResourcesVisitor<RR>
         where
-            RR: Registry + Default,
+            RR: Registry,
         {
             type Value = Resources;
 
@@ -162,12 +163,14 @@ impl Resources {
             where
                 A: MapAccess<'de>,
             {
-                let reg: RR = Default::default();
                 let mut resources = Resources::with_capacity(access.size_hint().unwrap_or(RR::LEN));
 
-                while let Some(key) = access.next_key::<String>()? {
-                    trace!("Deserializing the resource {}", &key);
-                    recurse(&mut resources, &mut access, &key, &reg)?;
+                unsafe {
+                    let reg = RR::zeroed();
+                    while let Some(key) = access.next_key::<String>()? {
+                        trace!("Deserializing the resource {}", &key);
+                        recurse(&mut resources, &mut access, &key, &reg)?;
+                    }
                 }
 
                 Ok(resources)
@@ -178,11 +181,6 @@ impl Resources {
         let resources = deserializer.deserialize_map(ResourcesVisitor::<RR>::default())?;
         debug!("Completed the deserialization of Resources");
         Ok(resources)
-    }
-
-    /// Create a new, empty resources container.
-    pub fn new() -> Self {
-        Default::default()
     }
 
     /// Create a new resources container with the specified capacity.

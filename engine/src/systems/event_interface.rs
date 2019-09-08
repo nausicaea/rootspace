@@ -1,12 +1,12 @@
 use crate::{
     event::EngineEvent,
-    graphics::{BackendTrait, EventsLoopTrait},
+    graphics::BackendTrait,
+    resources::BackendResource,
 };
 use ecs::{EventQueue, Resources, System};
 use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
 pub struct EventInterface<B: BackendTrait> {
-    pub events_loop: B::EventsLoop,
     _b: PhantomData<B>,
 }
 
@@ -16,7 +16,6 @@ where
 {
     fn default() -> Self {
         EventInterface {
-            events_loop: B::EventsLoop::default(),
             _b: PhantomData::default(),
         }
     }
@@ -31,11 +30,18 @@ where
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
-        self.events_loop.poll(|input_event: B::Event| {
-            if let Ok(event) = input_event.try_into() {
-                res.borrow_mut::<EventQueue<EngineEvent>>().send(event);
-            }
-        });
+        let mut events: Vec<EngineEvent> = Vec::default();
+
+        res.borrow_mut::<BackendResource<B>>()
+            .poll_events(|input_event: B::Event| {
+                if let Ok(event) = input_event.try_into() {
+                    events.push(event);
+                }
+            });
+
+        let mut queue = res.borrow_mut::<EventQueue<EngineEvent>>();
+        events.into_iter()
+            .for_each(|e| queue.send(e));
     }
 }
 
