@@ -14,8 +14,9 @@ use daggy::{
 };
 use std::{collections::HashMap, fmt, hash::Hash};
 #[cfg(any(test, feature = "serde_support"))]
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, de::{self, Deserializer, Visitor, MapAccess}, ser::{Serializer, SerializeStruct}};
 use failure::Fail;
+use std::marker::PhantomData;
 
 /// Given a set of identifying keys and corresponding data, `Hierarchy` allows users to establish
 /// hierarchical relationships between individual instances of the data type.
@@ -46,7 +47,6 @@ use failure::Fail;
 ///     Some(*value)
 /// });
 /// ```
-#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[derive(Clone)]
 pub struct Hierarchy<K, V>
 where
@@ -56,67 +56,9 @@ where
     root_idx: NodeIndex,
     /// Provides an indexing relationship between keys and `NodeIndex` instances that in turn index
     /// into the directed acyclic graph (`Dag`).
-    #[serde(skip, default = "HashMap::default")]
     index: HashMap<K, NodeIndex>,
     /// Holds the directed acyclic graph of `HierNode`s.
     graph: Dag<HierNode<K, V>, ()>,
-}
-
-impl<K, V> Default for Hierarchy<K, V>
-where
-    K: Clone + Eq + Hash,
-    V: Clone + Default,
-{
-    /// Creates a default `Hierarchy` with just a root node.
-    fn default() -> Self {
-        let mut dag = Dag::new();
-        let root_idx = dag.add_node(HierNode::root());
-
-        Hierarchy {
-            root_idx,
-            index: HashMap::default(),
-            graph: dag,
-        }
-    }
-}
-
-impl<K, V> PartialEq<Hierarchy<K, V>> for Hierarchy<K, V>
-where
-    K: PartialEq + Eq + Hash,
-    V: PartialEq,
-{
-    fn eq(&self, rhs: &Self) -> bool {
-        if !self.index.keys().all(|lhsv| rhs.index.keys().any(|rhsv| lhsv == rhsv)) {
-            return false;
-        }
-
-        let lhs_bfs = Bfs::new(self.graph.graph(), self.root_idx).iter(self.graph.graph());
-        let rhs_bfs = Bfs::new(rhs.graph.graph(), rhs.root_idx).iter(rhs.graph.graph());
-
-        lhs_bfs.zip(rhs_bfs)
-            .all(|(lhs_nidx, rhs_nidx)| self.graph.node_weight(lhs_nidx) == rhs.graph.node_weight(rhs_nidx))
-    }
-}
-
-impl<K, V> Eq for Hierarchy<K, V>
-where
-    K: Eq + Hash,
-    V: Eq,
-{
-}
-
-impl<K, V> fmt::Debug for Hierarchy<K, V>
-where
-    K: Eq + Hash,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Hierarchy(nodes: {}, edges: {})",
-            self.graph.node_count(),
-            self.graph.edge_count()
-        )
-    }
 }
 
 impl<K, V> Hierarchy<K, V>
@@ -258,6 +200,161 @@ where
     /// Returns the `NodeIndex` for a particular key.
     fn get_index(&self, key: &K) -> Result<NodeIndex, HierarchyError> {
         self.index.get(key).cloned().ok_or(HierarchyError::KeyNotFound)
+    }
+}
+
+impl<K, V> Default for Hierarchy<K, V>
+where
+    K: Clone + Eq + Hash,
+    V: Clone,
+{
+    /// Creates a default `Hierarchy` with just a root node.
+    fn default() -> Self {
+        let mut dag = Dag::new();
+        let root_idx = dag.add_node(HierNode::root());
+
+        Hierarchy {
+            root_idx,
+            index: HashMap::default(),
+            graph: dag,
+        }
+    }
+}
+
+impl<K, V> PartialEq<Hierarchy<K, V>> for Hierarchy<K, V>
+where
+    K: PartialEq + Eq + Hash,
+    V: PartialEq,
+{
+    fn eq(&self, rhs: &Self) -> bool {
+        if !self.index.keys().all(|lhsv| rhs.index.keys().any(|rhsv| lhsv == rhsv)) {
+            return false;
+        }
+
+        let lhs_bfs = Bfs::new(self.graph.graph(), self.root_idx).iter(self.graph.graph());
+        let rhs_bfs = Bfs::new(rhs.graph.graph(), rhs.root_idx).iter(rhs.graph.graph());
+
+        lhs_bfs.zip(rhs_bfs)
+            .all(|(lhs_nidx, rhs_nidx)| self.graph.node_weight(lhs_nidx) == rhs.graph.node_weight(rhs_nidx))
+    }
+}
+
+impl<K, V> Eq for Hierarchy<K, V>
+where
+    K: Eq + Hash,
+    V: Eq,
+{
+}
+
+impl<K, V> fmt::Debug for Hierarchy<K, V>
+where
+    K: Eq + Hash,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Hierarchy(nodes: {}, edges: {})",
+            self.graph.node_count(),
+            self.graph.edge_count()
+        )
+    }
+}
+
+#[cfg(any(test, feature = "serde_support"))]
+impl<K, V> Serialize for Hierarchy<K, V>
+where
+    K: Eq + Hash + Serialize,
+    V: Serialize,
+{
+    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        let mut state = ser.serialize_struct("Hierarchy", 2)?;
+        state.serialize_field("root_idx", &self.root_idx)?;
+        state.serialize_field("graph", &self.graph)?;
+        state.end()
+    }
+}
+
+#[cfg(any(test, feature = "serde_support"))]
+impl<'de, K, V> Deserialize<'de> for Hierarchy<K, V>
+where
+    K: Clone + Eq + Hash + Deserialize<'de>,
+    V: Clone + Default + Deserialize<'de>,
+{
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        const FIELDS: &'static [&'static str] = &["root_idx", "graph"];
+
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "snake_case")]
+        enum Field {
+            RootIdx,
+            Graph,
+        }
+
+        struct HierarchyVisitor<K, V>(PhantomData<(K, V)>);
+
+        impl<K, V> Default for HierarchyVisitor<K, V> {
+            fn default() -> Self {
+                HierarchyVisitor(PhantomData::default())
+            }
+        }
+
+        impl<'de, K, V> Visitor<'de> for HierarchyVisitor<K, V>
+        where
+            K: Clone + Eq + Hash + Deserialize<'de>,
+            V: Clone + Default + Deserialize<'de>,
+        {
+            type Value = Hierarchy<K, V>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "a struct Hierarchy")
+            }
+
+            fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let mut root_idx = None;
+                let mut graph = None;
+
+                while let Some(key) = access.next_key()? {
+                    match key {
+                        Field::RootIdx => {
+                            if root_idx.is_some() {
+                                return Err(de::Error::duplicate_field("root_idx"));
+                            }
+                            root_idx = Some(access.next_value()?);
+                        },
+                        Field::Graph => {
+                            if graph.is_some() {
+                                return Err(de::Error::duplicate_field("graph"));
+                            }
+                            graph = Some(access.next_value()?);
+                        },
+                    }
+                }
+
+                let root_idx = root_idx.ok_or_else(|| de::Error::missing_field("root_idx"))?;
+                let graph = graph.ok_or_else(|| de::Error::missing_field("graph"))?;
+
+                let mut h = Hierarchy {
+                    root_idx,
+                    index: HashMap::default(),
+                    graph,
+                };
+
+                h.rebuild_index();
+
+                Ok(h)
+            }
+        }
+
+        de.deserialize_struct("Hierarchy", FIELDS, HierarchyVisitor::<K, V>::default())
     }
 }
 
