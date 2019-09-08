@@ -5,12 +5,8 @@ use std::{fmt, ops::Mul};
 use typename::TypeName;
 
 #[derive(Default, Clone, PartialEq, TypeName, Serialize, Deserialize)]
-pub struct SceneGraph<T>
-where
-    T: Clone + Default,
-{
-    hierarchy: Hierarchy<Entity, T>,
-}
+#[serde(transparent)]
+pub struct SceneGraph<T>(Hierarchy<Entity, T>) where T: Clone + Default;
 
 impl<T> SceneGraph<T>
 where
@@ -18,16 +14,16 @@ where
     for<'r> &'r T: Mul<&'r T, Output = T>,
 {
     pub fn update(&mut self, data: &<T as Component>::Storage) {
-        self.hierarchy
+        self.0
             .update(&|entity, _, parent_datum| data.get(entity).map(|current_datum| parent_datum * current_datum))
     }
 
     pub fn insert(&mut self, entity: Entity) {
-        self.hierarchy.insert(entity, Default::default())
+        self.0.insert(entity, Default::default())
     }
 
     pub fn get(&self, entity: &Entity) -> Option<&T> {
-        self.hierarchy
+        self.0
             .iter()
             .filter(|&(k, _)| k == entity)
             .map(|(_, v)| v)
@@ -35,7 +31,7 @@ where
     }
 
     pub fn iter(&self) -> RawNodes<Entity, T> {
-        self.hierarchy.iter()
+        self.0.iter()
     }
 }
 
@@ -44,7 +40,7 @@ where
     T: Clone + Default,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "SceneGraph(#nodes: {})", self.hierarchy.len())
+        write!(f, "SceneGraph(#nodes: {})", self.0.len())
     }
 }
 
@@ -85,8 +81,6 @@ mod tests {
         sg.insert(entities.create());
 
         assert_tokens(&sg, &[
-            Token::Struct { name: "SceneGraph", len: 1 },
-            Token::Str("hierarchy"),
             Token::Struct { name: "Hierarchy", len: 2 },
             Token::Str("root_idx"),
             Token::U32(0),
@@ -121,7 +115,6 @@ mod tests {
             Token::Unit,
             Token::TupleEnd,
             Token::SeqEnd,
-            Token::StructEnd,
             Token::StructEnd,
             Token::StructEnd,
         ]);

@@ -9,6 +9,8 @@ use snowflake::ProcessUniqueId;
 use std::{collections::HashMap, fmt, path::Path};
 use typename::TypeName;
 use std::ops::{Deref, DerefMut};
+use serde::{Deserialize, de::{self, Deserializer, Visitor, MapAccess}, ser::{Serialize, Serializer, SerializeStruct}};
+use std::marker::PhantomData;
 
 #[derive(TypeName)]
 pub struct BackendResource<B>
@@ -19,11 +21,11 @@ where
     dimensions: (u32, u32),
     vsync: bool,
     msaa: u16,
-    inner: B,
     textures: HashMap<TextureId, B::Texture>,
     shaders: HashMap<ShaderId, B::Shader>,
     vertex_buffers: HashMap<VertexBufferId, B::VertexBuffer>,
     index_buffers: HashMap<IndexBufferId, B::IndexBuffer>,
+    inner: B,
 }
 
 impl<B> BackendResource<B>
@@ -36,11 +38,11 @@ where
             dimensions,
             vsync,
             msaa,
-            inner: B::new(title, dimensions, vsync, msaa)?,
             textures: HashMap::default(),
             shaders: HashMap::default(),
             vertex_buffers: HashMap::default(),
             index_buffers: HashMap::default(),
+            inner: B::new(title, dimensions, vsync, msaa)?,
         })
     }
 
@@ -137,6 +139,126 @@ where
     }
 }
 
+impl<B> PartialEq<BackendResource<B>> for BackendResource<B>
+where
+    B: BackendTrait,
+{
+    fn eq(&self, rhs: &Self) -> bool {
+        self.title.eq(&rhs.title)
+            && self.dimensions.eq(&rhs.dimensions)
+            && self.vsync.eq(&rhs.vsync)
+            && self.msaa.eq(&rhs.msaa)
+    }
+}
+
+impl<B> Serialize for BackendResource<B>
+where
+    B: BackendTrait,
+{
+    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = ser.serialize_struct("BackendResource", 4)?;
+        state.serialize_field("title", &self.title)?;
+        state.serialize_field("dimensions", &self.dimensions)?;
+        state.serialize_field("vsync", &self.vsync)?;
+        state.serialize_field("msaa", &self.msaa)?;
+        state.end()
+    }
+}
+
+impl<'de, B> Deserialize<'de> for BackendResource<B>
+where
+    B: BackendTrait,
+{
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        const FIELDS: &'static [&'static str] = &["title", "dimensions", "vsync", "msaa"];
+
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "snake_case")]
+        enum Field {
+            Title,
+            Dimensions,
+            Vsync,
+            Msaa,
+        }
+
+        struct BackendResourceVisitor<B>(PhantomData<B>);
+
+        impl<B> Default for BackendResourceVisitor<B> {
+            fn default() -> Self {
+                BackendResourceVisitor(PhantomData::default())
+            }
+        }
+
+        impl<'de, B> Visitor<'de> for BackendResourceVisitor<B>
+        where
+            B: BackendTrait,
+        {
+            type Value = BackendResource<B>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "a struct BackendResource")
+            }
+
+            fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+            where
+                A: MapAccess<'de>,
+            {
+                let mut title: Option<String> = None;
+                let mut dimensions = None;
+                let mut vsync = None;
+                let mut msaa = None;
+
+                while let Some(key) = access.next_key()? {
+                    match key {
+                        Field::Title => {
+                            if title.is_some() {
+                                return Err(de::Error::duplicate_field("title"));
+                            }
+                            title = Some(access.next_value()?);
+                        },
+                        Field::Dimensions => {
+                            if dimensions.is_some() {
+                                return Err(de::Error::duplicate_field("dimensions"));
+                            }
+                            dimensions = Some(access.next_value()?);
+                        },
+                        Field::Vsync => {
+                            if vsync.is_some() {
+                                return Err(de::Error::duplicate_field("vsync"));
+                            }
+                            vsync = Some(access.next_value()?);
+                        },
+                        Field::Msaa => {
+                            if msaa.is_some() {
+                                return Err(de::Error::duplicate_field("msaa"));
+                            }
+                            msaa = Some(access.next_value()?);
+                        },
+                    }
+                }
+
+                let title = title.ok_or_else(|| de::Error::missing_field("title"))?;
+                let dimensions = dimensions.ok_or_else(|| de::Error::missing_field("dimensions"))?;
+                let vsync = vsync.ok_or_else(|| de::Error::missing_field("vsync"))?;
+                let msaa = msaa.ok_or_else(|| de::Error::missing_field("msaa"))?;
+
+                let b = BackendResource::new(&title, dimensions, vsync, msaa)
+                    .map_err(|e| de::Error::custom(format!("failed to initialise the graphical backend ({})", e)))?;
+
+                Ok(b)
+            }
+        }
+
+        de.deserialize_struct("BackendResource", FIELDS, BackendResourceVisitor::<B>::default())
+    }
+}
+
 impl<B> Deref for BackendResource<B>
 where
     B: BackendTrait,
@@ -214,5 +336,62 @@ impl IndexBufferId {
 impl Default for IndexBufferId {
     fn default() -> Self {
         IndexBufferId(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::graphics::headless::HeadlessBackend;
+    use serde_test::{assert_tokens, Token};
+
+    #[test]
+    fn backend_resource_headless() {
+        let _: BackendResource<HeadlessBackend> = BackendResource::new("Title", (800, 600), true, 8).unwrap();
+    }
+
+    #[test]
+    fn serde_headless() {
+        let b: BackendResource<HeadlessBackend> = BackendResource::new("Title", (800, 600), true, 8).unwrap();
+
+        assert_tokens(&b, &[
+            Token::Struct { name: "BackendResource", len: 4 },
+            Token::Str("title"),
+            Token::Str("Title"),
+            Token::Str("dimensions"),
+            Token::Tuple { len: 2 },
+            Token::U32(800),
+            Token::U32(600),
+            Token::TupleEnd,
+            Token::Str("vsync"),
+            Token::Bool(true),
+            Token::Str("msaa"),
+            Token::U16(8),
+            Token::StructEnd,
+        ]);
+    }
+
+    #[test]
+    fn texture_id_default() {
+        let id: TextureId = Default::default();
+        assert_eq!(id, TextureId(None));
+    }
+
+    #[test]
+    fn shader_id_default() {
+        let id: ShaderId = Default::default();
+        assert_eq!(id, ShaderId(None));
+    }
+
+    #[test]
+    fn vertex_buffer_id_default() {
+        let id: VertexBufferId = Default::default();
+        assert_eq!(id, VertexBufferId(None));
+    }
+
+    #[test]
+    fn index_buffer_id_default() {
+        let id: IndexBufferId = Default::default();
+        assert_eq!(id, IndexBufferId(None));
     }
 }

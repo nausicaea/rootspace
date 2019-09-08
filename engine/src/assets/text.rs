@@ -312,7 +312,6 @@ mod tests {
     use super::*;
     use crate::graphics::{
         headless::HeadlessBackend,
-        BackendTrait,
     };
 
     #[test]
