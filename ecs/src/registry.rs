@@ -1,7 +1,6 @@
 use crate::resource::Resource;
 use serde::{Deserialize, Serialize};
 use typename::TypeName;
-use std::mem::MaybeUninit;
 
 /// The `Registry` is used to register types with the world, so that the ecs can manage
 /// serialization and deserialization of the entire world state without knowing the specific types
@@ -34,8 +33,6 @@ pub trait Registry: Sized {
 
     /// Return a reference to the tail of the heterogeneous list.
     fn tail(&self) -> &Self::Tail;
-
-    unsafe fn zeroed() -> Self;
 }
 
 /// An element within the `Registry`.
@@ -69,10 +66,6 @@ where
     fn tail(&self) -> &T {
         &self.1
     }
-
-    unsafe fn zeroed() -> Self {
-        Element::new(MaybeUninit::<H>::zeroed().assume_init(), T::zeroed())
-    }
 }
 
 /// The end of the `Registry`.
@@ -91,10 +84,6 @@ impl Registry for End {
 
     fn tail(&self) -> &End {
         &End
-    }
-
-    unsafe fn zeroed() -> Self {
-        End
     }
 }
 

@@ -59,11 +59,12 @@ impl Resources {
             }
         }
 
-        fn serialize_entry<SM, R>(res: &Resources, state: &mut SM, _entry: &R) -> Result<(), SM::Error>
+        fn serialize_entry<SM, R>(res: &Resources, state: &mut SM, _: &R) -> Result<(), SM::Error>
         where
             SM: SerializeMap,
             R: Resource + TypeName + Serialize,
         {
+            trace!("Serializing the resource {}", &R::type_name());
             if res.has::<R>() {
                 state.serialize_entry(
                     &R::type_name(),
@@ -81,9 +82,7 @@ impl Resources {
             RR: Registry,
         {
             if RR::LEN > 0 {
-                let head = reg.head();
-                trace!("Serializing the resource {}", &head.type_name_of());
-                serialize_entry(res, state, head)?;
+                serialize_entry(res, state, reg.head())?;
                 recurse(res, state, reg.tail())
             } else {
                 Ok(())
@@ -92,9 +91,13 @@ impl Resources {
 
         debug!("Beginning the serialization of Resources");
         let mut state = serializer.serialize_map(Some(RR::LEN))?;
-        unsafe {
-            recurse(self, &mut state, &RR::zeroed())?;
-        }
+
+        let reg = unsafe {
+            std::mem::MaybeUninit::<RR>::zeroed().assume_init()
+        };
+        recurse(self, &mut state, &reg)?;
+        std::mem::forget(reg);
+
         state.end()?;
         debug!("Completed the serialization of Resources");
         Ok(())
@@ -111,28 +114,28 @@ impl Resources {
             resource: R,
         }
 
-        fn deserialize_element<'de, A, R>(res: &mut Resources, access: &mut A, _entry: &R) -> Result<(), A::Error>
-        where
-            A: MapAccess<'de>,
-            R: Resource + TypeName + Deserialize<'de>,
-        {
-            let c = access.next_value::<DeContainer<R>>()?;
-            res.insert(c.resource, c.persistence);
-            Ok(())
-        }
-
         fn recurse<'de, A, RR>(res: &mut Resources, access: &mut A, key: &str, reg: &RR) -> Result<(), A::Error>
         where
             A: MapAccess<'de>,
             RR: Registry,
         {
-            if RR::LEN > 0 {
-                let head = reg.head();
-                if key == head.type_name_of() {
-                    deserialize_element(res, access, head)
+            fn sub<'de, A, RR, R>(res: &mut Resources, access: &mut A, key: &str, reg: &RR, _: &R) -> Result<(), A::Error>
+            where
+                A: MapAccess<'de>,
+                RR: Registry,
+                R: Resource + TypeName + Deserialize<'de>,
+            {
+                if key == R::type_name() {
+                    let c = access.next_value::<DeContainer<R>>()?;
+                    res.insert(c.resource, c.persistence);
+                    Ok(())
                 } else {
                     recurse(res, access, key, reg.tail())
                 }
+            }
+
+            if RR::LEN > 0 {
+                sub(res, access, key, reg, reg.head())
             } else {
                 Err(de::Error::unknown_field(key, &[]))
             }
@@ -165,13 +168,14 @@ impl Resources {
             {
                 let mut resources = Resources::with_capacity(access.size_hint().unwrap_or(RR::LEN));
 
-                unsafe {
-                    let reg = RR::zeroed();
-                    while let Some(key) = access.next_key::<String>()? {
-                        trace!("Deserializing the resource {}", &key);
-                        recurse(&mut resources, &mut access, &key, &reg)?;
-                    }
+                let reg = unsafe {
+                    std::mem::MaybeUninit::<RR>::zeroed().assume_init()
+                };
+                while let Some(key) = access.next_key::<String>()? {
+                    trace!("Deserializing the resource {}", &key);
+                    recurse(&mut resources, &mut access, &key, &reg)?;
                 }
+                std::mem::forget(reg);
 
                 Ok(resources)
             }
