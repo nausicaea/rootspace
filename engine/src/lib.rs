@@ -22,7 +22,7 @@ use crate::{
 };
 use ecs::World;
 
-pub type DefaultOrchestrator<B, RR> = Orchestrator<B, RR, World<JoinedRegistry<RR>>>;
+pub type DefaultOrchestrator<B, RR> = Orchestrator<B, RR, World<JoinedRegistry<B, RR>>>;
 pub type GliumEventInterface = EventInterface<GliumBackend>;
 pub type HeadlessEventInterface = EventInterface<HeadlessBackend>;
 pub type GliumRenderer = Renderer<GliumBackend>;

@@ -26,7 +26,10 @@ type ResourceRegistry = Reg![
     <UiModel as Component>::Storage,
 ];
 
-pub struct Game<B> {
+pub struct Game<B>
+where
+    B: BackendTrait,
+{
     orchestrator: DefaultOrchestrator<B, ResourceRegistry>,
 }
 

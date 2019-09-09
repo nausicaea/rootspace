@@ -19,7 +19,7 @@ pub struct MockWorld<RR> {
 
 impl<RR> ResourcesTrait<RR> for MockWorld<RR>
 where
-    RR: Registry + Default,
+    RR: Registry,
 {
     type ResourceRegistry = RegAdd![RR];
 
