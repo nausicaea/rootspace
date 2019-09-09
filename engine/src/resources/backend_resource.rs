@@ -46,13 +46,11 @@ where
         })
     }
 
-    pub fn reload(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<(), Error> {
+    pub fn reload_assets(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<(), Error> {
         self.textures.clear();
         self.shaders.clear();
         self.vertex_buffers.clear();
         self.index_buffers.clear();
-        self.inner = B::new(&self.title, self.dimensions, self.vsync, self.msaa)?;
-
         for r in renderables.iter_mut() {
             r.reload(self)?;
         }

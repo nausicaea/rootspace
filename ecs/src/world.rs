@@ -96,8 +96,15 @@ pub trait WorldTrait {
 /// Events defined and processed by the world itself.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, TypeName, Serialize, Deserialize)]
 pub enum WorldEvent {
+    /// Causes the WorldTrait::maintain() method to serialize the entire world state to the given
+    /// file.
     Serialize(PathBuf),
+    /// Causes the WorldTrait::maintain() method to deserialize the entire world state from the
+    /// given file.
     Deserialize(PathBuf),
+    /// Fired when when resources have been newly initialised. This event is used to trigger
+    /// secondary initialisation of dependent resources and components.
+    Reload,
     /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game
     /// engine to abort.
     Abort,
@@ -247,29 +254,29 @@ where
             .get_mut::<EventQueue<WorldEvent>>()
             .receive(&self.receiver);
 
-        let mut abort = false;
-
         for e in events {
             match e {
                 WorldEvent::Abort => {
-                    abort = true;
-                }
+                    return false;
+                },
                 WorldEvent::Serialize(p) => {
                     let mut file = File::create(&p).expect(&format!("Could not create the file {}: ", p.display()));
                     let mut s = serde_json::Serializer::pretty(&mut file);
                     self.serialize(&mut s)
                         .expect(&format!("Could not serialize to the file {}: ", p.display()));
-                }
+                },
                 WorldEvent::Deserialize(p) => {
                     let mut file = File::open(&p).expect(&format!("Could not open the file {}: ", p.display()));
                     let mut d = serde_json::Deserializer::from_reader(&mut file);
                     self.deserialize(&mut d)
                         .expect(&format!("Could not deserialize from the file {}: ", p.display()));
-                }
+                    self.resources.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Reload);
+                },
+                _ => (),
             }
         }
 
-        !abort
+        true
     }
 }
 
