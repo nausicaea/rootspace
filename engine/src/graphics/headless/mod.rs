@@ -128,14 +128,14 @@ impl BackendTrait for HeadlessBackend {
     type VertexBuffer = HeadlessVertexBuffer;
 
     #[allow(unused_variables)]
-    fn new(
-        title: &str,
+    fn new<S: AsRef<str>>(
+        title: S,
         dimensions: (u32, u32),
         _vsync: bool,
         _msaa: u16,
     ) -> Result<Self, Error> {
         #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Created a headless backend (title='{}', dims={:?})", title, dimensions);
+        trace!("Created a headless backend (title='{}', dims={:?})", title.as_ref(), dimensions);
 
         Ok(HeadlessBackend { dimensions })
     }

@@ -32,9 +32,9 @@ impl<B> BackendResource<B>
 where
     B: BackendTrait,
 {
-    pub fn new(title: &str, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self, Error> {
+    pub fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self, Error> {
         Ok(BackendResource {
-            title: title.to_string(),
+            title: title.as_ref().to_string(),
             dimensions,
             vsync,
             msaa,

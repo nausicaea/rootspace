@@ -249,14 +249,14 @@ impl BackendTrait for GliumBackend {
     type Texture = GliumTexture;
     type VertexBuffer = GliumVertexBuffer;
 
-    fn new(
-        title: &str,
+    fn new<S: AsRef<str>>(
+        title: S,
         dimensions: (u32, u32),
         vsync: bool,
         msaa: u16,
     ) -> Result<Self, Error> {
         let window = WindowBuilder::new()
-            .with_title(title)
+            .with_title(title.as_ref())
             .with_dimensions(dimensions.into())
             .with_resizable(false);
 

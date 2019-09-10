@@ -21,8 +21,8 @@ pub trait BackendTrait: Sized + 'static + TypeName {
     type VertexBuffer: VertexBufferTrait<Self>;
     type IndexBuffer: IndexBufferTrait<Self>;
 
-    fn new(
-        title: &str,
+    fn new<S: AsRef<str>>(
+        title: S,
         dimensions: (u32, u32),
         vsync: bool,
         msaa: u16,
