@@ -7,7 +7,7 @@ use crate::{
 };
 use ecs::{
     Component, Entity, EventQueue, LoopStage, Persistence, ReceiverId, RegAdd, Registry, Resource, ResourcesTrait,
-    System, WorldTrait,
+    System, WorldTrait, Settings
 };
 use serde::{de::Deserializer, ser::Serializer};
 use std::{
@@ -114,8 +114,12 @@ where
         self.world.deserialize::<D>(deserializer)
     }
 
-    pub fn add_resource<R: Resource + TypeName>(&mut self, res: R, persistence: Persistence) {
-        self.world.add_resource::<R>(res, persistence)
+    pub fn add_resource<R, S>(&mut self, res: R, settings: S)
+    where
+        R: Resource + TypeName,
+        S: Into<Option<Settings>>,
+    {
+        self.world.add_resource::<R, S>(res, settings)
     }
 
     pub fn get_resource_mut<R: Resource + TypeName>(&mut self) -> &mut R {

@@ -1,4 +1,4 @@
-use ecs::{Entity, LoopStage, Persistence, RegAdd, Registry, Resource, ResourcesTrait, WorldTrait};
+use ecs::{Entity, LoopStage, Persistence, RegAdd, Registry, ResourcesTrait, WorldTrait};
 use serde::{de::Deserializer, ser::Serializer};
 use std::{marker::PhantomData, time::Duration};
 
@@ -48,9 +48,9 @@ where
         self.iterations = 0;
     }
 
-    fn add_resource<R: Resource>(&mut self, _res: R, _persistence: Persistence) {}
+    fn add_resource<R, S>(&mut self, _res: R, _settings: S) {}
 
-    fn get_resource_mut<R: Resource>(&mut self) -> &mut R {
+    fn get_resource_mut<R>(&mut self) -> &mut R {
         unimplemented!()
     }
 

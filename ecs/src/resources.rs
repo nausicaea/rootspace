@@ -1,9 +1,10 @@
 //! Provides the resource manager.
 
-use crate::{components::Component, persistence::Persistence, registry::Registry, resource::Resource};
+use crate::{components::Component, registry::Registry, resource::Resource};
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
-    ser::{self, Serialize, SerializeMap, SerializeStruct, Serializer},
+    ser::{self, SerializeMap, SerializeStruct, Serializer},
+    Serialize,
     Deserialize,
 };
 use std::{
@@ -14,14 +15,54 @@ use std::{
     marker::PhantomData,
 };
 use typename::TypeName;
-use log::{debug, trace};
+use log::debug;
+#[cfg(any(test, feature = "diagnostics"))]
+use log::trace;
+
+/// Determines how persistent a particular resource should be. This allows selectively deleting and
+/// retaining resources upon multiple re-initialisations of the world.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+pub enum Persistence {
+    /// The respective resource will be deleted when resetting the world.
+    None,
+    /// The respective resource should be present for the entire runtime of the program.
+    Runtime,
+}
+
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Settings {
+    pub persistence: Persistence,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Settings {
+            persistence: Persistence::None,
+        }
+    }
+}
+
+impl From<Persistence> for Settings {
+    fn from(value: Persistence) -> Self {
+        Settings {
+            persistence: value,
+            .. Default::default()
+        }
+    }
+}
+
+impl From<Persistence> for Option<Settings> {
+    fn from(value: Persistence) -> Self {
+        From::from(Into::<Settings>::into(value))
+    }
+}
 
 /// A container that manages resources. Allows mutable borrows of multiple different resources at
 /// the same time.
 #[derive(Default, Debug)]
 pub struct Resources {
     resources: HashMap<TypeId, RefCell<Box<dyn Resource>>>,
-    persistences: HashMap<TypeId, Persistence>,
+    settings: HashMap<TypeId, Settings>,
 }
 
 impl Resources {
@@ -31,14 +72,14 @@ impl Resources {
         S: Serializer,
     {
         struct SerContainer<'a, R> {
-            persistence: Persistence,
+            settings: &'a Settings,
             resource: &'a R,
         }
 
         impl<'a, R> SerContainer<'a, R> {
-            fn new(p: Persistence, r: &'a R) -> Self {
+            fn new(s: &'a Settings, r: &'a R) -> Self {
                 SerContainer {
-                    persistence: p,
+                    settings: s,
                     resource: r,
                 }
             }
@@ -53,7 +94,7 @@ impl Resources {
                 S: Serializer,
             {
                 let mut state = serializer.serialize_struct("SerContainer", 2)?;
-                state.serialize_field("persistence", &self.persistence)?;
+                state.serialize_field("settings", self.settings)?;
                 state.serialize_field("resource", self.resource)?;
                 state.end()
             }
@@ -64,11 +105,12 @@ impl Resources {
             SM: SerializeMap,
             R: Resource + TypeName + Serialize,
         {
+            #[cfg(any(test, feature = "diagnostics"))]
             trace!("Serializing the resource {}", &R::type_name());
             if res.has::<R>() {
                 state.serialize_entry(
                     &R::type_name(),
-                    &SerContainer::new(res.persistence_of::<R>(), &*res.borrow::<R>()),
+                    &SerContainer::new(res.settings_of::<R>(), &*res.borrow::<R>()),
                 )?;
                 Ok(())
             } else {
@@ -110,7 +152,7 @@ impl Resources {
     {
         #[derive(Deserialize)]
         struct DeContainer<R> {
-            persistence: Persistence,
+            settings: Settings,
             resource: R,
         }
 
@@ -127,7 +169,7 @@ impl Resources {
             {
                 if key == R::type_name() {
                     let c = access.next_value::<DeContainer<R>>()?;
-                    res.insert(c.resource, c.persistence);
+                    res.insert(c.resource, c.settings);
                     Ok(())
                 } else {
                     recurse(res, access, key, reg.tail())
@@ -158,7 +200,7 @@ impl Resources {
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(
                     f,
-                    "a map of type names and their serialized data including a persistence marker"
+                    "a map of type names to their serialized data and associated settings"
                 )
             }
 
@@ -172,6 +214,7 @@ impl Resources {
                     std::mem::MaybeUninit::<RR>::zeroed().assume_init()
                 };
                 while let Some(key) = access.next_key::<String>()? {
+                    #[cfg(any(test, feature = "diagnostics"))]
                     trace!("Deserializing the resource {}", &key);
                     recurse(&mut resources, &mut access, &key, &reg)?;
                 }
@@ -191,33 +234,33 @@ impl Resources {
     pub fn with_capacity(cap: usize) -> Self {
         Resources {
             resources: HashMap::with_capacity(cap),
-            persistences: HashMap::with_capacity(cap),
+            settings: HashMap::with_capacity(cap),
         }
     }
 
     /// Join the resources from another container.
-    pub fn join(&mut self, resources: Self) {
-        for (k, v) in resources.resources {
+    pub fn join(&mut self, other: Self) {
+        for (k, v) in other.resources {
             self.resources.insert(k, v);
         }
-        for (k, v) in resources.persistences {
-            self.persistences.insert(k, v);
+        for (k, v) in other.settings {
+            self.settings.insert(k, v);
         }
     }
 
     /// Empty the resource manager.
     pub fn clear(&mut self, persistence: Persistence) {
-        let persistences = &self.persistences;
-        self.resources.retain(|id, _| persistences[id] >= persistence)
+        let settings = &self.settings;
+        self.resources.retain(|id, _| settings[id].persistence >= persistence)
     }
 
     /// Insert a new resource.
-    pub fn insert<R>(&mut self, res: R, persistence: Persistence)
+    pub fn insert<R, S: Into<Option<Settings>>>(&mut self, res: R, settings: S)
     where
         R: Resource + TypeName,
     {
         self.resources.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
-        self.persistences.insert(TypeId::of::<R>(), persistence);
+        self.settings.insert(TypeId::of::<R>(), settings.into().unwrap_or_default());
     }
 
     /// Removes the resource of the specified type.
@@ -226,7 +269,7 @@ impl Resources {
         R: Resource + TypeName,
     {
         self.resources.remove(&TypeId::of::<R>());
-        self.persistences.remove(&TypeId::of::<R>());
+        self.settings.remove(&TypeId::of::<R>());
     }
 
     /// Returns `true` if a resource of the specified type is present.
@@ -238,12 +281,12 @@ impl Resources {
     }
 
     /// Returns the persistence of the specified resource type.
-    pub fn persistence_of<R>(&self) -> Persistence
+    pub fn settings_of<R>(&self) -> &Settings
     where
         R: Resource + TypeName,
     {
-        *self
-            .persistences
+        self
+            .settings
             .get(&TypeId::of::<R>())
             .expect(&format!("Could not find any resource of type {}", R::type_name()))
     }
@@ -351,13 +394,13 @@ mod tests {
     #[test]
     fn insert() {
         let mut resources = Resources::default();
-        resources.insert(TestResourceA::default(), Persistence::Runtime);
+        resources.insert(TestResourceA::default(), Settings::default());
     }
 
     #[test]
     fn borrow() {
         let mut resources = Resources::default();
-        resources.insert(TestResourceA::default(), Persistence::Runtime);
+        resources.insert(TestResourceA::default(), None);
 
         let _: Ref<TestResourceA> = resources.borrow();
     }
@@ -365,31 +408,31 @@ mod tests {
     #[test]
     fn serialize() {
         let mut resources = Resources::default();
-        resources.insert(TestResourceA(25), Persistence::Runtime);
-        resources.insert(TestResourceB(0.141), Persistence::None);
-        resources.insert(TestResourceC(String::from("Bye")), Persistence::None);
+        resources.insert(TestResourceA(25), Settings::default());
+        resources.insert(TestResourceB(0.141), Settings::default());
+        resources.insert(TestResourceC(String::from("Bye")), Settings::default());
 
         let mut writer: Vec<u8> = Vec::with_capacity(128);
         let mut s = serde_json::Serializer::new(&mut writer);
         assert!(resources.serialize::<TestRegistry, _>(&mut s).is_ok());
         assert_eq!(
             unsafe { String::from_utf8_unchecked(writer) },
-            "{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":25},\"ecs::resources::tests::TestResourceB\":{\"persistence\":\"None\",\"resource\":0.141},\"ecs::resources::tests::TestResourceC\":{\"persistence\":\"None\",\"resource\":\"Bye\"}}"
+            "{\"ecs::resources::tests::TestResourceA\":{\"settings\":{\"persistence\":\"None\"},\"resource\":25},\"ecs::resources::tests::TestResourceB\":{\"settings\":{\"persistence\":\"None\"},\"resource\":0.141},\"ecs::resources::tests::TestResourceC\":{\"settings\":{\"persistence\":\"None\"},\"resource\":\"Bye\"}}"
         );
     }
 
     #[test]
     fn deserialize() {
         let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceA\":{\"persistence\":\"Runtime\",\"resource\":10},\"ecs::resources::tests::TestResourceB\":{\"persistence\":\"None\",\"resource\":0.25},\"ecs::resources::tests::TestResourceC\":{\"persistence\":\"None\",\"resource\":\"Hello, World!\"}}",
+            b"{\"ecs::resources::tests::TestResourceA\":{\"settings\":{\"persistence\":\"None\"},\"resource\":25},\"ecs::resources::tests::TestResourceB\":{\"settings\":{\"persistence\":\"None\"},\"resource\":0.141},\"ecs::resources::tests::TestResourceC\":{\"settings\":{\"persistence\":\"None\"},\"resource\":\"Bye\"}}",
         );
         let resources = Resources::deserialize::<TestRegistry, _>(&mut d).unwrap();
         assert!(d.end().is_ok());
-        assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(10));
-        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(0.25));
+        assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
+        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(0.141));
         assert_eq!(
             *resources.borrow::<TestResourceC>(),
-            TestResourceC(String::from("Hello, World!"))
+            TestResourceC(String::from("Bye"))
         );
     }
 }

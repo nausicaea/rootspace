@@ -11,7 +11,6 @@ pub mod events;
 mod indexing;
 pub mod loop_stage;
 pub mod macros;
-pub mod persistence;
 pub mod registry;
 pub mod resource;
 pub mod resources;
@@ -24,10 +23,9 @@ pub use crate::{
     event_queue::{EventQueue, ReceiverId},
     events::EventTrait,
     loop_stage::LoopStage,
-    persistence::Persistence,
     registry::{Element, End, Registry},
     resource::Resource,
-    resources::Resources,
+    resources::{Persistence, Settings, Resources},
     system::System,
     world::{ResourcesTrait, World, WorldEvent, WorldTrait},
 };

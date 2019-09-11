@@ -5,10 +5,9 @@ use crate::{
     entities::{Entities, Entity},
     event_queue::{EventQueue, ReceiverId},
     loop_stage::LoopStage,
-    persistence::Persistence,
     registry::Registry,
     resource::Resource,
-    resources::Resources,
+    resources::{Persistence, Settings, Resources},
     system::System,
     RegAdd,
 };
@@ -39,7 +38,10 @@ where
     ///
     /// * `res` - The resource to be added.
     /// * `persistence` - How persistence the resource should be.
-    fn add_resource<R: Resource + TypeName>(&mut self, res: R, persistence: Persistence);
+    fn add_resource<R, S>(&mut self, res: R, settings: S)
+    where
+        R: Resource + TypeName,
+        S: Into<Option<Settings>>;
     /// Retrieves a mutable reference to a resource in the world
     fn get_resource_mut<R: Resource + TypeName>(&mut self) -> &mut R;
     /// Create a new `Entity`.
@@ -168,11 +170,12 @@ where
         self.render_systems.clear();
     }
 
-    fn add_resource<R>(&mut self, res: R, persistence: Persistence)
+    fn add_resource<R, S>(&mut self, res: R, settings: S)
     where
         R: Resource + TypeName,
+        S: Into<Option<Settings>>,
     {
-        self.resources.insert(res, persistence)
+        self.resources.insert(res, settings)
     }
 
     fn get_resource_mut<R>(&mut self) -> &mut R
