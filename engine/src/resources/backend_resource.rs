@@ -9,8 +9,16 @@ use snowflake::ProcessUniqueId;
 use std::{collections::HashMap, fmt, path::Path};
 use typename::TypeName;
 use std::ops::{Deref, DerefMut};
-use serde::{Deserialize, de::{self, Deserializer, Visitor, MapAccess}, ser::{Serialize, Serializer, SerializeStruct}};
+use serde::{Serialize, Deserialize, de::{self, Deserializer, Visitor, MapAccess}, ser::{Serializer, SerializeStruct}};
 use std::marker::PhantomData;
+
+#[derive(Debug, TypeName, Serialize, Deserialize)]
+pub struct BackendSettings {
+    title: String,
+    dimensions: (u32, u32),
+    vsync: bool,
+    msaa: u16,
+}
 
 #[derive(TypeName)]
 pub struct BackendResource<B>

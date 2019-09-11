@@ -66,6 +66,7 @@ pub struct Resources {
 }
 
 impl Resources {
+    /// Serialize the types supplied in the registry from `Resources`.
     pub fn serialize<RR, S>(&self, serializer: S) -> Result<(), S::Error>
     where
         RR: Registry,
@@ -145,6 +146,7 @@ impl Resources {
         Ok(())
     }
 
+    /// Deserialize `Resources` with the provided type registry.
     pub fn deserialize<'de, RR, D>(deserializer: D) -> Result<Self, D::Error>
     where
         RR: Registry,
@@ -230,6 +232,45 @@ impl Resources {
         Ok(resources)
     }
 
+    /// Deserialize `Resources` with the provided type registry, by adding the deserialized
+    /// resources to existing ones in `Resources`.
+    pub fn deserialize_additive<'de, RR, D>(&mut self, deserializer: D, overwrite: bool) -> Result<(), D::Error>
+    where
+        RR: Registry,
+        D: Deserializer<'de>,
+    {
+        debug!("Beginning the additive deserialization of Resources");
+        let other = Resources::deserialize::<RR, D>(deserializer)?;
+        if !other.is_consistent() {
+            return Err(de::Error::custom("The deserialized, unjoined Registry is inconsistent"));
+        }
+        for (k, v) in other.resources {
+            if !self.resources.contains_key(&k) || overwrite {
+                #[cfg(not(any(test, feature = "diagnostics")))]
+                self.resources.insert(k, v);
+                #[cfg(any(test, feature = "diagnostics"))]
+                {
+                    if let Some(old_v) = self.resources.insert(k, v) {
+                        trace!("Overwriting the resource {:?}", old_v);
+                    }
+                }
+            } else {
+                #[cfg(any(test, feature = "diagnostics"))]
+                trace!("Not adding the resource {:?}, because the same type is already present", v);
+            }
+        }
+        for (k, v) in other.settings {
+            if !self.settings.contains_key(&k) || overwrite {
+                self.settings.insert(k, v);
+            }
+        }
+        if !self.is_consistent() {
+            return Err(de::Error::custom("The joined Registry is inconsistent"));
+        }
+        debug!("Completed the additive deserialization of Resources");
+        Ok(())
+    }
+
     /// Create a new resources container with the specified capacity.
     pub fn with_capacity(cap: usize) -> Self {
         Resources {
@@ -238,29 +279,20 @@ impl Resources {
         }
     }
 
-    /// Join the resources from another container.
-    pub fn join(&mut self, other: Self) {
-        for (k, v) in other.resources {
-            self.resources.insert(k, v);
-        }
-        for (k, v) in other.settings {
-            self.settings.insert(k, v);
-        }
-    }
-
-    /// Empty the resource manager.
-    pub fn clear(&mut self, persistence: Persistence) {
+    /// Clear all resources from the resource container whose persistence is lower than the
+    /// requested one.
+    pub fn clear(&mut self, min_persistence: Persistence) {
         let settings = &self.settings;
-        self.resources.retain(|id, _| settings[id].persistence >= persistence)
+        self.resources.retain(|id, _| settings[id].persistence >= min_persistence)
     }
 
     /// Insert a new resource.
-    pub fn insert<R, S: Into<Option<Settings>>>(&mut self, res: R, settings: S)
+    pub fn insert<R, S>(&mut self, res: R, settings: S)
     where
         R: Resource + TypeName,
+        S: Into<Option<Settings>>,
     {
-        self.resources.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
-        self.settings.insert(TypeId::of::<R>(), settings.into().unwrap_or_default());
+        self.insert_internal(res, settings.into().unwrap_or_default())
     }
 
     /// Removes the resource of the specified type.
@@ -361,6 +393,19 @@ impl Resources {
     {
         self.borrow_mut::<C::Storage>()
     }
+
+    fn insert_internal<R>(&mut self, res: R, settings: Settings)
+    where
+        R: Resource + TypeName,
+    {
+        self.resources.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
+        self.settings.insert(TypeId::of::<R>(), settings);
+    }
+
+    fn is_consistent(&self) -> bool {
+        self.resources.keys()
+            .all(|rk| self.settings.keys().any(|sk| rk == sk))
+    }
 }
 
 #[cfg(test)]
@@ -433,6 +478,64 @@ mod tests {
         assert_eq!(
             *resources.borrow::<TestResourceC>(),
             TestResourceC(String::from("Bye"))
+        );
+    }
+
+    #[test]
+    fn deserialize_additive_no_overwrite() {
+        let mut resources = Resources::default();
+        resources.insert(TestResourceA(25), Settings::default());
+        resources.insert(TestResourceB(0.141), Settings::default());
+        resources.insert(TestResourceC(String::from("Bye")), Settings::default());
+
+        let mut d = serde_json::Deserializer::from_slice(
+            b"{\"ecs::resources::tests::TestResourceA\":{\"settings\":{\"persistence\":\"None\"},\"resource\":100},\"ecs::resources::tests::TestResourceB\":{\"settings\":{\"persistence\":\"None\"},\"resource\":10.01},\"ecs::resources::tests::TestResourceC\":{\"settings\":{\"persistence\":\"None\"},\"resource\":\"Hello, World!\"}}",
+        );
+        resources.deserialize_additive::<TestRegistry, _>(&mut d, false).unwrap();
+        assert!(d.end().is_ok());
+        assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
+        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(0.141));
+        assert_eq!(
+            *resources.borrow::<TestResourceC>(),
+            TestResourceC(String::from("Bye"))
+        );
+    }
+
+    #[test]
+    fn deserialize_additive_overwrite() {
+        let mut resources = Resources::default();
+        resources.insert(TestResourceA(25), Settings::default());
+        resources.insert(TestResourceB(0.141), Settings::default());
+        resources.insert(TestResourceC(String::from("Bye")), Settings::default());
+
+        let mut d = serde_json::Deserializer::from_slice(
+            b"{\"ecs::resources::tests::TestResourceA\":{\"settings\":{\"persistence\":\"None\"},\"resource\":100},\"ecs::resources::tests::TestResourceB\":{\"settings\":{\"persistence\":\"None\"},\"resource\":10.01},\"ecs::resources::tests::TestResourceC\":{\"settings\":{\"persistence\":\"None\"},\"resource\":\"Hello, World!\"}}",
+        );
+        resources.deserialize_additive::<TestRegistry, _>(&mut d, true).unwrap();
+        assert!(d.end().is_ok());
+        assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(100));
+        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(10.01));
+        assert_eq!(
+            *resources.borrow::<TestResourceC>(),
+            TestResourceC(String::from("Hello, World!"))
+        );
+    }
+
+    #[test]
+    fn deserialize_additive_partial() {
+        let mut resources = Resources::default();
+        resources.insert(TestResourceA(25), Settings::default());
+
+        let mut d = serde_json::Deserializer::from_slice(
+            b"{\"ecs::resources::tests::TestResourceB\":{\"settings\":{\"persistence\":\"None\"},\"resource\":10.01},\"ecs::resources::tests::TestResourceC\":{\"settings\":{\"persistence\":\"None\"},\"resource\":\"Hello, World!\"}}",
+        );
+        resources.deserialize_additive::<TestRegistry, _>(&mut d, false).unwrap();
+        assert!(d.end().is_ok());
+        assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
+        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(10.01));
+        assert_eq!(
+            *resources.borrow::<TestResourceC>(),
+            TestResourceC(String::from("Hello, World!"))
         );
     }
 }
