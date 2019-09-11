@@ -311,7 +311,7 @@ impl Resources {
 
     /// Mutably borrows the requested component storage (this is a convenience method to
     /// `borrow_mut`).
-    pub fn borrow_mut_component<C>(&self) -> RefMut<C::Storage>
+    pub fn borrow_component_mut<C>(&self) -> RefMut<C::Storage>
     where
         C: Component + TypeName,
         C::Storage: TypeName,

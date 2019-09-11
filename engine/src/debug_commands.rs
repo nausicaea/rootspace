@@ -358,7 +358,7 @@ impl CommandTrait for EntityCommand {
 
         if let Some(set_matches) = matches.subcommand_matches("set") {
             let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
-            let mut statuses = res.borrow_mut_component::<Status>();
+            let mut statuses = res.borrow_component_mut::<Status>();
 
             if let Some(index) = matches.value_of("index") {
                 let index: usize = index.parse()?;

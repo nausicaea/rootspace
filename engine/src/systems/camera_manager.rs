@@ -19,7 +19,7 @@ impl CameraManager {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Updating the camera dimensions (dims={:?})", dims);
 
-        res.borrow_mut_component::<Camera>()
+        res.borrow_component_mut::<Camera>()
             .iter_mut()
             .for_each(|c| c.set_dimensions(dims));
     }
@@ -28,7 +28,7 @@ impl CameraManager {
         #[cfg(any(test, feature = "diagnostics"))]
         trace!("Updating the camera dpi factor (factor={:?})", factor);
 
-        res.borrow_mut_component::<Camera>()
+        res.borrow_component_mut::<Camera>()
             .iter_mut()
             .for_each(|c| c.set_dpi_factor(factor));
     }
