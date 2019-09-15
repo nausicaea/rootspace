@@ -48,8 +48,6 @@ where
     }
 
     pub fn load(&mut self) -> Result<(), Error> {
-        self.orchestrator.reset();
-
         let camera = self.orchestrator.create_entity();
         self.orchestrator.add_component(camera, Status::default());
         self.orchestrator.add_component(camera, Camera::default());

@@ -138,10 +138,6 @@ where
         self.world.add_component::<C>(entity, component)
     }
 
-    pub fn reset(&mut self) {
-        self.world.clear(Persistence::None);
-    }
-
     pub fn add_system<S>(&mut self, stage: LoopStage, system: S)
     where
         S: System,

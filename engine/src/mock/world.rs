@@ -1,4 +1,4 @@
-use ecs::{Entity, LoopStage, Persistence, RegAdd, Registry, ResourcesTrait, WorldTrait};
+use ecs::{Entity, LoopStage, RegAdd, Registry, ResourcesTrait, WorldTrait};
 use serde::{de::Deserializer, ser::Serializer};
 use std::{marker::PhantomData, time::Duration};
 
@@ -37,7 +37,7 @@ where
         unimplemented!()
     }
 
-    fn clear(&mut self, _persistence: Persistence) {
+    fn clear(&mut self) {
         self.fixed_update_calls = 0;
         self.update_calls = 0;
         self.render_calls = 0;

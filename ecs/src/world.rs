@@ -29,9 +29,8 @@ where
     fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
     where
         D: Deserializer<'de>;
-    /// Clears the state of the world. This removes all resources whose persistence is less or
-    /// equal to the specified persistence value.
-    fn clear(&mut self, persistence: Persistence);
+    /// Clears the state of the resource manager.
+    fn clear(&mut self);
     /// Adds a resource to the world
     ///
     /// # Arguments
@@ -163,8 +162,8 @@ where
         Ok(())
     }
 
-    fn clear(&mut self, persistence: Persistence) {
-        self.resources.clear(persistence);
+    fn clear(&mut self) {
+        self.resources.clear();
         self.fixed_update_systems.clear();
         self.update_systems.clear();
         self.render_systems.clear();
@@ -194,7 +193,7 @@ where
         C: Component + TypeName,
         C::Storage: TypeName,
     {
-        if !self.resources.has::<C::Storage>() {
+        if !self.resources.contains::<C::Storage>() {
             let _ = self.resources.insert(C::Storage::default(), Persistence::None);
         }
 

@@ -3,7 +3,7 @@
 use crate::{components::Component, registry::Registry, resource::Resource};
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
-    ser::{self, SerializeMap, SerializeStruct, Serializer},
+    ser::{SerializeMap, SerializeStruct, Serializer},
     Serialize,
     Deserialize,
 };
@@ -23,8 +23,6 @@ use log::trace;
 /// retaining resources upon multiple re-initialisations of the world.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum Persistence {
-    /// The respective resource will be deleted when resetting the world.
-    None,
     /// The respective resource should be present for the entire runtime of the program.
     Runtime,
 }
@@ -106,17 +104,18 @@ impl Resources {
             SM: SerializeMap,
             R: Resource + TypeName + Serialize,
         {
-            #[cfg(any(test, feature = "diagnostics"))]
-            trace!("Serializing the resource {}", &R::type_name());
-            if res.has::<R>() {
+            if res.contains::<R>() {
+                #[cfg(any(test, feature = "diagnostics"))]
+                trace!("Serializing the resource {}", &R::type_name());
                 state.serialize_entry(
                     &R::type_name(),
                     &SerContainer::new(res.settings_of::<R>(), &*res.borrow::<R>()),
                 )?;
-                Ok(())
             } else {
-                Err(ser::Error::custom(format!("resource {} was not found", R::type_name())))
+                #[cfg(any(test, feature = "diagnostics"))]
+                trace!("Not serializing the resource {} because it was not present in Resources", &R::type_name());
             }
+            Ok(())
         }
 
         fn recurse<SM, RR>(res: &Resources, state: &mut SM, reg: &RR) -> Result<(), SM::Error>
@@ -241,9 +240,6 @@ impl Resources {
     {
         debug!("Beginning the additive deserialization of Resources");
         let other = Resources::deserialize::<RR, D>(deserializer)?;
-        if !other.is_consistent() {
-            return Err(de::Error::custom("The deserialized, unjoined Registry is inconsistent"));
-        }
         for (k, v) in other.resources {
             if !self.resources.contains_key(&k) || overwrite {
                 #[cfg(not(any(test, feature = "diagnostics")))]
@@ -264,9 +260,7 @@ impl Resources {
                 self.settings.insert(k, v);
             }
         }
-        if !self.is_consistent() {
-            return Err(de::Error::custom("The joined Registry is inconsistent"));
-        }
+        self.maintain();
         debug!("Completed the additive deserialization of Resources");
         Ok(())
     }
@@ -279,11 +273,18 @@ impl Resources {
         }
     }
 
-    /// Clear all resources from the resource container whose persistence is lower than the
-    /// requested one.
-    pub fn clear(&mut self, min_persistence: Persistence) {
-        let settings = &self.settings;
-        self.resources.retain(|id, _| settings[id].persistence >= min_persistence)
+    /// Clears the resources container.
+    pub fn clear(&mut self) {
+        self.resources.clear();
+        self.settings.clear();
+    }
+
+    pub fn len(&self) -> usize {
+        self.resources.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.resources.is_empty()
     }
 
     /// Insert a new resource.
@@ -305,7 +306,7 @@ impl Resources {
     }
 
     /// Returns `true` if a resource of the specified type is present.
-    pub fn has<R>(&self) -> bool
+    pub fn contains<R>(&self) -> bool
     where
         R: Resource,
     {
@@ -402,9 +403,9 @@ impl Resources {
         self.settings.insert(TypeId::of::<R>(), settings);
     }
 
-    fn is_consistent(&self) -> bool {
-        self.resources.keys()
-            .all(|rk| self.settings.keys().any(|sk| rk == sk))
+    fn maintain(&mut self) {
+        let resources = &self.resources;
+        self.settings.retain(|k, _| resources.contains_key(k));
     }
 }
 
