@@ -318,10 +318,13 @@ pub enum RenderableError {
 mod tests {
     use super::*;
     use crate::graphics::headless::HeadlessBackend;
+    use crate::resources::BackendSettings;
 
     #[test]
     fn headless_builder_mesh() {
-        let mut f = BackendResource::<HeadlessBackend>::new("Title", (800, 600), false, 0).unwrap();
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+            .build::<HeadlessBackend>()
+            .unwrap();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let r: Result<Renderable, Error> = Renderable::builder()
             .mesh(&base_path.join("cube.ply"))
@@ -335,7 +338,9 @@ mod tests {
 
     #[test]
     fn headless_builder_text() {
-        let mut f = BackendResource::<HeadlessBackend>::new("Title", (800, 600), false, 0).unwrap();
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+            .build::<HeadlessBackend>()
+            .unwrap();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let r: Result<Renderable, Error> = Renderable::builder()
             .font(&base_path.join("SourceSansPro-Regular.ttf"))

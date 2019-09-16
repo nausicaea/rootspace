@@ -6,7 +6,7 @@ use crate::{
 };
 #[cfg(any(test, feature = "diagnostics"))]
 use log::trace;
-use ecs::{EventQueue, Resources, ReceiverId, Storage, System, WorldEvent};
+use ecs::{EventQueue, Resources, Storage, System};
 #[cfg(any(test, feature = "diagnostics"))]
 use std::time::Instant;
 use std::{collections::VecDeque, time::Duration};
@@ -19,7 +19,6 @@ static FRAME_TIME_WINDOW: usize = 10;
 pub struct Renderer<B> {
     clear_color: [f32; 4],
     initialised: bool,
-    receiver: ReceiverId<WorldEvent>,
     draw_calls: VecDeque<usize>,
     frame_times: VecDeque<Duration>,
     _b: PhantomData<B>,
@@ -29,15 +28,20 @@ impl<B> Renderer<B>
 where
     B: BackendTrait,
 {
-    pub fn new(clear_color: [f32; 4], queue: &mut EventQueue<WorldEvent>) -> Self {
+    pub fn new(clear_color: [f32; 4]) -> Self {
         Renderer {
             clear_color,
             initialised: false,
-            receiver: queue.subscribe(),
             draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
             frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
             _b: PhantomData::default(),
         }
+    }
+
+    fn set_dpi_factor(&self, res: &Resources) {
+        let dpi_factor = res.borrow::<BackendResource<B>>().dpi_factor();
+        res.borrow_mut::<EventQueue<EngineEvent>>()
+            .send(EngineEvent::ChangeDpi(dpi_factor));
     }
 
     #[cfg(any(test, feature = "diagnostics"))]
@@ -82,26 +86,13 @@ where
         #[cfg(any(test, feature = "diagnostics"))]
         let mut draw_calls: usize = 0;
 
+        // The following is just a workaround for the DPI factor not being set properly by the
+        // backend at initialisation.
         if !self.initialised {
             #[cfg(any(test, feature = "diagnostics"))]
             trace!("Initialising the renderer");
-            let dpi_factor = res.borrow::<BackendResource<B>>().dpi_factor();
-            res.borrow_mut::<EventQueue<EngineEvent>>()
-                .send(EngineEvent::ChangeDpi(dpi_factor));
+            self.set_dpi_factor(res);
             self.initialised = true;
-        }
-
-        let events = res.borrow_mut::<EventQueue<WorldEvent>>().receive(&self.receiver);
-        if events.into_iter().any(|e| e == WorldEvent::DeserializationComplete) {
-            #[cfg(any(test, feature = "diagnostics"))]
-            trace!("Reloading all renderables");
-            #[cfg(any(test, feature = "diagnostics"))]
-            let reload_mark = Instant::now();
-            let mut backend = res.borrow_mut::<BackendResource<B>>();
-            backend.reload_assets(&mut res.borrow_component_mut::<Renderable>())
-                .expect("Could not reload all renderable assets");
-            #[cfg(any(test, feature = "diagnostics"))]
-            trace!("Completed reloading all renderables after {:?}", reload_mark.elapsed());
         }
 
         // Update the scene graphs.

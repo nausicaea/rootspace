@@ -158,6 +158,7 @@ impl BackendTrait for HeadlessBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::resources::BackendSettings;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);
@@ -182,7 +183,9 @@ mod tests {
 
     #[test]
     fn frame() {
-        let mut f: BackendResource<HeadlessBackend> = BackendResource::new("Title", (800, 600), false, 0).unwrap();
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+            .build::<HeadlessBackend>()
+            .unwrap();
 
         let vertices = f
             .create_vertex_buffer(

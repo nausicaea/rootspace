@@ -65,6 +65,149 @@ pub struct Resources {
 }
 
 impl Resources {
+    /// Create a new resources container with the specified capacity.
+    pub fn with_capacity(cap: usize) -> Self {
+        Resources {
+            resources: HashMap::with_capacity(cap),
+            settings: HashMap::with_capacity(cap),
+        }
+    }
+
+    /// Clears the resources container.
+    pub fn clear(&mut self) {
+        self.resources.clear();
+        self.settings.clear();
+    }
+
+    pub fn len(&self) -> usize {
+        self.resources.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.resources.is_empty()
+    }
+
+    /// Insert a new resource.
+    pub fn insert<R, S>(&mut self, res: R, settings: S)
+    where
+        R: Resource + TypeName,
+        S: Into<Option<Settings>>,
+    {
+        self.insert_internal(res, settings.into().unwrap_or_default())
+    }
+
+    /// Removes the resource of the specified type.
+    pub fn remove<R>(&mut self)
+    where
+        R: Resource + TypeName,
+    {
+        self.resources.remove(&TypeId::of::<R>());
+        self.settings.remove(&TypeId::of::<R>());
+    }
+
+    /// Returns `true` if a resource of the specified type is present.
+    pub fn contains<R>(&self) -> bool
+    where
+        R: Resource,
+    {
+        self.resources.contains_key(&TypeId::of::<R>())
+    }
+
+    /// Returns the persistence of the specified resource type.
+    pub fn settings_of<R>(&self) -> &Settings
+    where
+        R: Resource + TypeName,
+    {
+        self
+            .settings
+            .get(&TypeId::of::<R>())
+            .expect(&format!("Could not find any resource of type {}", R::type_name()))
+    }
+
+    /// Borrows the requested resource.
+    pub fn borrow<R>(&self) -> Ref<R>
+    where
+        R: Resource + TypeName,
+    {
+        self.resources
+            .get(&TypeId::of::<R>())
+            .map(|r| {
+                Ref::map(r.borrow(), |i| {
+                    i.downcast_ref::<R>().expect(&format!(
+                        "Could not downcast the requested resource to type {}",
+                        R::type_name()
+                    ))
+                })
+            })
+            .expect(&format!("Could not find any resource of type {}", R::type_name()))
+    }
+
+    /// Mutably borrows the requested resource (with a runtime borrow check).
+    pub fn borrow_mut<R>(&self) -> RefMut<R>
+    where
+        R: Resource + TypeName,
+    {
+        self.resources
+            .get(&TypeId::of::<R>())
+            .map(|r| {
+                RefMut::map(r.borrow_mut(), |i| {
+                    i.downcast_mut::<R>().expect(&format!(
+                        "Could not downcast the requested resource to type {}",
+                        R::type_name()
+                    ))
+                })
+            })
+            .expect(&format!("Could not find any resource of type {}", R::type_name()))
+    }
+
+    /// Mutably borrows the requested resource (with a compile-time borrow check).
+    pub fn get_mut<R>(&mut self) -> &mut R
+    where
+        R: Resource + TypeName,
+    {
+        self.resources
+            .get_mut(&TypeId::of::<R>())
+            .map(|r| {
+                r.get_mut().downcast_mut::<R>().expect(&format!(
+                    "Could not downcast the requested resource to type {}",
+                    R::type_name()
+                ))
+            })
+            .expect(&format!("Could not find any resource of type {}", R::type_name()))
+    }
+
+    /// Borrows the requested component storage (this is a convenience method to `borrow`).
+    pub fn borrow_component<C>(&self) -> Ref<C::Storage>
+    where
+        C: Component + TypeName,
+        C::Storage: TypeName,
+    {
+        self.borrow::<C::Storage>()
+    }
+
+    /// Mutably borrows the requested component storage (this is a convenience method to
+    /// `borrow_mut`).
+    pub fn borrow_component_mut<C>(&self) -> RefMut<C::Storage>
+    where
+        C: Component + TypeName,
+        C::Storage: TypeName,
+    {
+        self.borrow_mut::<C::Storage>()
+    }
+
+    fn insert_internal<R>(&mut self, res: R, settings: Settings)
+    where
+        R: Resource + TypeName,
+    {
+        self.resources.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
+        self.settings.insert(TypeId::of::<R>(), settings);
+    }
+
+    fn maintain(&mut self) {
+        let resources = &self.resources;
+        self.settings.retain(|k, _| resources.contains_key(k));
+    }
+
     /// Serialize the types supplied in the registry from `Resources`.
     pub fn serialize<RR, S>(&self, serializer: S) -> Result<(), S::Error>
     where
@@ -264,149 +407,6 @@ impl Resources {
         self.maintain();
         debug!("Completed the additive deserialization of Resources");
         Ok(())
-    }
-
-    /// Create a new resources container with the specified capacity.
-    pub fn with_capacity(cap: usize) -> Self {
-        Resources {
-            resources: HashMap::with_capacity(cap),
-            settings: HashMap::with_capacity(cap),
-        }
-    }
-
-    /// Clears the resources container.
-    pub fn clear(&mut self) {
-        self.resources.clear();
-        self.settings.clear();
-    }
-
-    pub fn len(&self) -> usize {
-        self.resources.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.resources.is_empty()
-    }
-
-    /// Insert a new resource.
-    pub fn insert<R, S>(&mut self, res: R, settings: S)
-    where
-        R: Resource + TypeName,
-        S: Into<Option<Settings>>,
-    {
-        self.insert_internal(res, settings.into().unwrap_or_default())
-    }
-
-    /// Removes the resource of the specified type.
-    pub fn remove<R>(&mut self)
-    where
-        R: Resource + TypeName,
-    {
-        self.resources.remove(&TypeId::of::<R>());
-        self.settings.remove(&TypeId::of::<R>());
-    }
-
-    /// Returns `true` if a resource of the specified type is present.
-    pub fn contains<R>(&self) -> bool
-    where
-        R: Resource,
-    {
-        self.resources.contains_key(&TypeId::of::<R>())
-    }
-
-    /// Returns the persistence of the specified resource type.
-    pub fn settings_of<R>(&self) -> &Settings
-    where
-        R: Resource + TypeName,
-    {
-        self
-            .settings
-            .get(&TypeId::of::<R>())
-            .expect(&format!("Could not find any resource of type {}", R::type_name()))
-    }
-
-    /// Borrows the requested resource.
-    pub fn borrow<R>(&self) -> Ref<R>
-    where
-        R: Resource + TypeName,
-    {
-        self.resources
-            .get(&TypeId::of::<R>())
-            .map(|r| {
-                Ref::map(r.borrow(), |i| {
-                    i.downcast_ref::<R>().expect(&format!(
-                        "Could not downcast the requested resource to type {}",
-                        R::type_name()
-                    ))
-                })
-            })
-            .expect(&format!("Could not find any resource of type {}", R::type_name()))
-    }
-
-    /// Mutably borrows the requested resource (with a runtime borrow check).
-    pub fn borrow_mut<R>(&self) -> RefMut<R>
-    where
-        R: Resource + TypeName,
-    {
-        self.resources
-            .get(&TypeId::of::<R>())
-            .map(|r| {
-                RefMut::map(r.borrow_mut(), |i| {
-                    i.downcast_mut::<R>().expect(&format!(
-                        "Could not downcast the requested resource to type {}",
-                        R::type_name()
-                    ))
-                })
-            })
-            .expect(&format!("Could not find any resource of type {}", R::type_name()))
-    }
-
-    /// Mutably borrows the requested resource (with a compile-time borrow check).
-    pub fn get_mut<R>(&mut self) -> &mut R
-    where
-        R: Resource + TypeName,
-    {
-        self.resources
-            .get_mut(&TypeId::of::<R>())
-            .map(|r| {
-                r.get_mut().downcast_mut::<R>().expect(&format!(
-                    "Could not downcast the requested resource to type {}",
-                    R::type_name()
-                ))
-            })
-            .expect(&format!("Could not find any resource of type {}", R::type_name()))
-    }
-
-    /// Borrows the requested component storage (this is a convenience method to `borrow`).
-    pub fn borrow_component<C>(&self) -> Ref<C::Storage>
-    where
-        C: Component + TypeName,
-        C::Storage: TypeName,
-    {
-        self.borrow::<C::Storage>()
-    }
-
-    /// Mutably borrows the requested component storage (this is a convenience method to
-    /// `borrow_mut`).
-    pub fn borrow_component_mut<C>(&self) -> RefMut<C::Storage>
-    where
-        C: Component + TypeName,
-        C::Storage: TypeName,
-    {
-        self.borrow_mut::<C::Storage>()
-    }
-
-    fn insert_internal<R>(&mut self, res: R, settings: Settings)
-    where
-        R: Resource + TypeName,
-    {
-        self.resources.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
-        self.settings.insert(TypeId::of::<R>(), settings);
-    }
-
-    fn maintain(&mut self) {
-        let resources = &self.resources;
-        self.settings.retain(|k, _| resources.contains_key(k));
     }
 }
 

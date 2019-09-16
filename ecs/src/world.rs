@@ -15,6 +15,7 @@ use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use serde_json;
 use std::{fs::File, marker::PhantomData, path::PathBuf, time::Duration};
 use typename::TypeName;
+use std::cell::{Ref, RefMut};
 
 /// Exposes resource management methods.
 pub trait ResourcesTrait<RR>
@@ -23,33 +24,50 @@ where
 {
     type ResourceRegistry: Registry;
 
-    fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
-    where
-        S: Serializer;
-    fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
-    where
-        D: Deserializer<'de>;
     /// Clears the state of the resource manager.
     fn clear(&mut self);
-    /// Adds a resource to the world
-    ///
-    /// # Arguments
-    ///
-    /// * `res` - The resource to be added.
-    /// * `persistence` - How persistence the resource should be.
-    fn add_resource<R, S>(&mut self, res: R, settings: S)
+
+    /// Insert a new resource.
+    fn insert<R, S>(&mut self, res: R, settings: S)
     where
         R: Resource + TypeName,
         S: Into<Option<Settings>>;
+
+    /// Removes the resource of the specified type.
+    fn remove<R>(&mut self)
+    where
+        R: Resource + TypeName;
+
+    /// Returns `true` if a resource of the specified type is present.
+    fn contains<R>(&self) -> bool
+    where
+        R: Resource;
+
     /// Retrieves a mutable reference to a resource in the world
-    fn get_resource_mut<R: Resource + TypeName>(&mut self) -> &mut R;
+    fn get_mut<R: Resource + TypeName>(&mut self) -> &mut R;
+
+    /// Borrows the requested resource.
+    fn borrow<R: Resource + TypeName>(&self) -> Ref<R>;
+
+    /// Mutably borrows the requested resource (with a runtime borrow check).
+    fn borrow_mut<R: Resource + TypeName>(&self) -> RefMut<R>;
+
     /// Create a new `Entity`.
     fn create_entity(&mut self) -> Entity;
+
     /// Add a component to the specified `Entity`.
-    fn add_component<C>(&mut self, entity: Entity, component: C)
+    fn insert_component<C>(&mut self, entity: Entity, component: C)
     where
         C: Component + TypeName,
         C::Storage: TypeName;
+
+    fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
+    where
+        S: Serializer;
+
+    fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
+    where
+        D: Deserializer<'de>;
 }
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
@@ -148,6 +166,72 @@ where
 {
     type ResourceRegistry = RegAdd![Entities, EventQueue<WorldEvent>, RR];
 
+    fn clear(&mut self) {
+        self.resources.clear();
+        self.fixed_update_systems.clear();
+        self.update_systems.clear();
+        self.render_systems.clear();
+    }
+
+    fn insert<R, S>(&mut self, res: R, settings: S)
+    where
+        R: Resource + TypeName,
+        S: Into<Option<Settings>>,
+    {
+        self.resources.insert(res, settings)
+    }
+
+    fn remove<R>(&mut self)
+    where
+        R: Resource + TypeName,
+    {
+        self.resources.remove::<R>()
+    }
+
+    fn contains<R>(&self) -> bool
+    where
+        R: Resource,
+    {
+        self.resources.contains::<R>()
+    }
+
+    fn get_mut<R>(&mut self) -> &mut R
+    where
+        R: Resource + TypeName,
+    {
+        self.resources.get_mut::<R>()
+    }
+
+    fn borrow<R>(&self) -> Ref<R>
+    where
+        R: Resource + TypeName,
+    {
+        self.resources.borrow::<R>()
+    }
+
+    fn borrow_mut<R>(&self) -> RefMut<R>
+    where
+        R: Resource + TypeName,
+    {
+        self.resources.borrow_mut::<R>()
+    }
+
+    fn create_entity(&mut self) -> Entity {
+        self.resources.get_mut::<Entities>().create()
+    }
+
+    fn insert_component<C>(&mut self, entity: Entity, component: C)
+    where
+        C: Component + TypeName,
+        C::Storage: TypeName,
+    {
+        if !self.resources.contains::<C::Storage>() {
+            let _ = self.resources.insert(C::Storage::default(), Persistence::None);
+        }
+
+        self.resources.get_mut::<C::Storage>().insert(entity, component);
+    }
+
     fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
     where
         S: Serializer,
@@ -161,44 +245,6 @@ where
     {
         self.resources = Resources::deserialize::<Self::ResourceRegistry, D>(deserializer)?;
         Ok(())
-    }
-
-    fn clear(&mut self) {
-        self.resources.clear();
-        self.fixed_update_systems.clear();
-        self.update_systems.clear();
-        self.render_systems.clear();
-    }
-
-    fn add_resource<R, S>(&mut self, res: R, settings: S)
-    where
-        R: Resource + TypeName,
-        S: Into<Option<Settings>>,
-    {
-        self.resources.insert(res, settings)
-    }
-
-    fn get_resource_mut<R>(&mut self) -> &mut R
-    where
-        R: Resource + TypeName,
-    {
-        self.resources.get_mut::<R>()
-    }
-
-    fn create_entity(&mut self) -> Entity {
-        self.resources.get_mut::<Entities>().create()
-    }
-
-    fn add_component<C>(&mut self, entity: Entity, component: C)
-    where
-        C: Component + TypeName,
-        C::Storage: TypeName,
-    {
-        if !self.resources.contains::<C::Storage>() {
-            let _ = self.resources.insert(C::Storage::default(), Persistence::None);
-        }
-
-        self.resources.get_mut::<C::Storage>().insert(entity, component);
     }
 }
 

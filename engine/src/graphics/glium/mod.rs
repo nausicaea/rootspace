@@ -303,6 +303,7 @@ mod tests {
     use super::*;
     use approx::assert_ulps_ne;
     use std::f64;
+    use crate::resources::BackendSettings;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);
@@ -316,13 +317,11 @@ mod tests {
     #[test]
     #[cfg_attr(
         feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend! Wayland status: XdgRuntimeDirNotSet X11 status: XOpenDisplayFailed"
-        )
+        ignore
     )]
     #[cfg_attr(
         target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
+        ignore
     )]
     fn backend() {
         let r = GliumBackend::new("Title", (800, 600), false, 0);
@@ -332,13 +331,11 @@ mod tests {
     #[test]
     #[cfg_attr(
         feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend! Wayland status: XdgRuntimeDirNotSet X11 status: XOpenDisplayFailed"
-        )
+        ignore
     )]
     #[cfg_attr(
         target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
+        ignore
     )]
     fn dpi_factor() {
         let b = GliumBackend::new("Title", (800, 600), false, 0).unwrap();
@@ -349,16 +346,16 @@ mod tests {
     #[test]
     #[cfg_attr(
         feature = "wsl",
-        should_panic(
-            expected = "Failed to initialize any backend! Wayland status: XdgRuntimeDirNotSet X11 status: XOpenDisplayFailed"
-        )
+        ignore
     )]
     #[cfg_attr(
         target_os = "macos",
-        should_panic(expected = "Windows can only be created on the main thread on macOS")
+        ignore
     )]
     fn frame() {
-        let mut f: BackendResource<GliumBackend> = BackendResource::new("Title", (800, 600), false, 0).unwrap();
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+            .build::<GliumBackend>()
+            .unwrap();
 
         let vertices = f
             .create_vertex_buffer(
