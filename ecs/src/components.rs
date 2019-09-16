@@ -1,9 +1,7 @@
 //! Provides facilities for reasoning about data (e.g. components) coupled to entities.
 
 use crate::{entities::Entity, indexing::Index, resource::Resource};
-//use crate::hibitset::{BitSet, BitSetIter};
-// use hibitset::{BitIter, BitSet, BitSetLike};
-use serde::{Deserialize, Serialize, ser::{Serializer, SerializeMap}, de::{Visitor, Deserializer, MapAccess}};
+use serde::{Deserialize, Serialize, ser::{Serializer, SerializeMap, SerializeSeq}, de::{Visitor, Deserializer, MapAccess, SeqAccess}};
 use std::{collections::HashSet, fmt, ptr};
 use typename::TypeName;
 use std::marker::PhantomData;
@@ -15,8 +13,39 @@ pub trait Component: Sized {
     type Storage: Storage<Self> + Resource + Default;
 }
 
+macro_rules! impl_component {
+    ($t:ty, $s:ident) => {
+        impl Component for $t {
+            type Storage = $s<Self>;
+        }
+    };
+}
+
+impl_component!((), ZstStorage);
+impl_component!(bool, VecStorage);
+impl_component!(u8, VecStorage);
+impl_component!(i8, VecStorage);
+impl_component!(u16, VecStorage);
+impl_component!(i16, VecStorage);
+impl_component!(u32, VecStorage);
+impl_component!(i32, VecStorage);
+impl_component!(u64, VecStorage);
+impl_component!(i64, VecStorage);
+impl_component!(u128, VecStorage);
+impl_component!(i128, VecStorage);
+impl_component!(usize, VecStorage);
+impl_component!(isize, VecStorage);
+impl_component!(f32, VecStorage);
+impl_component!(f64, VecStorage);
+impl_component!(char, VecStorage);
+impl_component!(String, VecStorage);
+
 /// A component storage resource must provide the following methods.
 pub trait Storage<T> {
+    /// Return the number of stored components.
+    fn len(&self) -> usize;
+    /// Return `true` if the storage is empty.
+    fn is_empty(&self) -> bool;
     /// Insert a component of type `T` into the storage provider for the specified `Entity`.
     fn insert(&mut self, entity: Entity, datum: T) -> Option<T>;
     /// Remove the specified component type from the specified `Entity`.
@@ -31,7 +60,130 @@ pub trait Storage<T> {
     fn get_mut(&mut self, entity: &Entity) -> Option<&mut T>;
 }
 
-/// Implements component storage based on a `Vec<T>`. Occupied spaces are tracked with a `BitSet`.
+/// Implements component storage for zero-sized types.
+#[derive(TypeName)]
+pub struct ZstStorage<T> {
+    index: HashSet<Index>,
+    _data: PhantomData<T>,
+}
+
+impl<T> ZstStorage<T> {
+    fn insert_internal(&mut self, idx: Index) {
+        self.index.insert(idx);
+    }
+}
+
+impl<T> Storage<T> for ZstStorage<T> {
+    fn is_empty(&self) -> bool {
+        self.index.is_empty()
+    }
+
+    fn len(&self) -> usize {
+        self.index.len()
+    }
+
+    fn insert(&mut self, entity: Entity, _datum: T) -> Option<T> {
+        self.insert_internal(entity.idx());
+        None
+    }
+
+    fn remove(&mut self, entity: &Entity) -> Option<T> {
+        self.index.remove(&entity.idx());
+        None
+    }
+
+    fn has(&self, entity: &Entity) -> bool {
+        self.index.contains(&entity.idx())
+    }
+
+    fn clear(&mut self) {
+        self.index.clear()
+    }
+
+    fn get(&self, _entity: &Entity) -> Option<&T> {
+        None
+    }
+
+    fn get_mut(&mut self, _entity: &Entity) -> Option<&mut T> {
+        None
+    }
+}
+
+impl<T> Resource for ZstStorage<T> where T: 'static {}
+
+impl<T> Default for ZstStorage<T> {
+    fn default() -> Self {
+        ZstStorage {
+            index: HashSet::default(),
+            _data: PhantomData::default(),
+        }
+    }
+}
+
+impl<T> PartialEq<ZstStorage<T>> for ZstStorage<T> {
+    fn eq(&self, rhs: &Self) -> bool {
+        self.index.eq(&rhs.index)
+    }
+}
+
+impl<T> fmt::Debug for ZstStorage<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ZstStorage(#len: {})", self.len())
+    }
+}
+
+impl<T> Serialize for ZstStorage<T> {
+    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = ser.serialize_seq(Some(self.len()))?;
+        for idx in &self.index {
+            state.serialize_element(idx)?;
+        }
+        state.end()
+    }
+}
+
+impl<'de, T> Deserialize<'de> for ZstStorage<T> {
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct ZstStorageVisitor<T>(PhantomData<T>);
+
+        impl<T> Default for ZstStorageVisitor<T> {
+            fn default() -> Self {
+                ZstStorageVisitor(PhantomData::default())
+            }
+        }
+
+        impl<'de, T> Visitor<'de> for ZstStorageVisitor<T> {
+            type Value = ZstStorage<T>;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "a sequence of indices")
+            }
+
+            fn visit_seq<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let mut storage = ZstStorage::default();
+
+                while let Some(idx) = access.next_element::<Index>()? {
+                    storage.insert_internal(idx);
+                }
+
+                Ok(storage)
+            }
+        }
+
+        de.deserialize_seq(ZstStorageVisitor::<T>::default())
+    }
+}
+
+/// Implements component storage based on a `Vec<T>`.
 #[derive(TypeName)]
 pub struct VecStorage<T> {
     /// The index into the data vector.
@@ -89,6 +241,14 @@ impl<T> VecStorage<T> {
 }
 
 impl<T> Storage<T> for VecStorage<T> {
+    fn is_empty(&self) -> bool {
+        self.index.is_empty()
+    }
+
+    fn len(&self) -> usize {
+        self.index.len()
+    }
+
     fn insert(&mut self, entity: Entity, datum: T) -> Option<T> {
         let idx = entity.idx();
         self.insert_internal(idx, datum)
@@ -184,7 +344,7 @@ where
 
 impl<T> fmt::Debug for VecStorage<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "VecStorage(#len: {})", self.data.len())
+        write!(f, "VecStorage(#len: {})", self.len())
     }
 }
 
