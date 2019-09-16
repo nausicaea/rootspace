@@ -3,7 +3,7 @@ use crate::{
     graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait},
 };
 use crate::components::Renderable;
-use ecs::Component;
+use ecs::{Component, Resource};
 use failure::Error;
 use snowflake::ProcessUniqueId;
 use std::{collections::HashMap, fmt, path::Path};
@@ -11,6 +11,16 @@ use typename::TypeName;
 use std::ops::{Deref, DerefMut};
 use serde::{Serialize, Deserialize, de::{self, Deserializer, Visitor, MapAccess}, ser::{Serializer, SerializeStruct}};
 use std::marker::PhantomData;
+
+#[derive(Debug, Clone, TypeName, Serialize, Deserialize)]
+pub struct BackendSettings {
+    title: String,
+    dimensions: (u32, u32),
+    vsync: bool,
+    msaa: u16,
+}
+
+impl Resource for BackendSettings {}
 
 #[derive(TypeName)]
 pub struct BackendResource<B>
@@ -120,6 +130,8 @@ where
             .expect("Could not find the requested index buffer")
     }
 }
+
+impl<B> Resource for BackendResource<B> where B: BackendTrait + 'static {}
 
 impl<B> fmt::Debug for BackendResource<B>
 where

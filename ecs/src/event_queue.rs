@@ -1,5 +1,6 @@
 //! Provides facilities to define and manage events.
 
+use crate::resource::Resource;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, VecDeque},
@@ -121,6 +122,8 @@ where
         self.receivers.len()
     }
 }
+
+impl<E> Resource for EventQueue<E> where E: 'static {}
 
 impl<E> Default for EventQueue<E> {
     fn default() -> Self {

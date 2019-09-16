@@ -100,12 +100,13 @@ pub enum WorldEvent {
     /// Causes the WorldTrait::maintain() method to serialize the entire world state to the given
     /// file.
     Serialize(PathBuf),
+    /// Signals the completion of serialization.
+    SerializationComplete,
     /// Causes the WorldTrait::maintain() method to deserialize the entire world state from the
     /// given file.
     Deserialize(PathBuf),
-    /// Fired when when resources have been newly initialised. This event is used to trigger
-    /// secondary initialisation of dependent resources and components.
-    Reload,
+    /// Signals the completion of deserialization.
+    DeserializationComplete,
     /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game
     /// engine to abort.
     Abort,
@@ -266,13 +267,14 @@ where
                     let mut s = serde_json::Serializer::pretty(&mut file);
                     self.serialize(&mut s)
                         .expect(&format!("Could not serialize to the file {}: ", p.display()));
+                    self.resources.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::SerializationComplete);
                 },
                 WorldEvent::Deserialize(p) => {
                     let mut file = File::open(&p).expect(&format!("Could not open the file {}: ", p.display()));
                     let mut d = serde_json::Deserializer::from_reader(&mut file);
                     self.deserialize(&mut d)
                         .expect(&format!("Could not deserialize from the file {}: ", p.display()));
-                    self.resources.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Reload);
+                    self.resources.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::DeserializationComplete);
                 },
                 _ => (),
             }

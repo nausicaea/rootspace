@@ -97,8 +97,12 @@ mod tests {
     #[derive(Default, Debug, PartialEq, Serialize, Deserialize, TypeName)]
     struct TestElementA(usize);
 
+    impl Resource for TestElementA {}
+
     #[derive(Default, Debug, PartialEq, Serialize, Deserialize, TypeName)]
     struct TestElementB(String);
+
+    impl Resource for TestElementB {}
 
     #[test]
     fn end() {
@@ -130,7 +134,7 @@ mod tests {
 
     #[test]
     fn eval_arbitrary_recursive() {
-        let h = End.push(0usize).push(String::from("Hello, World"));
+        let h = End.push(TestElementA::default()).push(TestElementB::default());
 
         fn eval<H: Registry>(list: &H) {
             if H::LEN > 0 {
@@ -191,7 +195,7 @@ mod tests {
 
     #[test]
     fn serde_two() {
-        let h = End.push(1u32).push(8u8);
+        let h = End.push(TestElementA::default()).push(TestElementB::default());
 
         assert_tokens(
             &h,
@@ -200,12 +204,14 @@ mod tests {
                     name: "Element",
                     len: 2,
                 },
-                Token::U8(8),
+                Token::NewtypeStruct { name: "TestElementB" },
+                Token::Str(""),
                 Token::TupleStruct {
                     name: "Element",
                     len: 2,
                 },
-                Token::U32(1),
+                Token::NewtypeStruct { name: "TestElementA" },
+                Token::U64(0),
                 Token::UnitStruct { name: "End" },
                 Token::TupleStructEnd,
                 Token::TupleStructEnd,
@@ -219,10 +225,10 @@ mod tests {
             let list_n = End;
             for i in 0usize..n {
                 let list_nm1 = list_n.clone();
-                let list_n = list_n.push(i);
+                let list_n = list_n.push(TestElementA(i));
 
                 if i == n - 1 {
-                    prop_assert_eq!(list_n, Element::new(i, list_nm1));
+                    prop_assert_eq!(list_n, Element::new(TestElementA(i), list_nm1));
                 }
             }
         }
@@ -232,7 +238,7 @@ mod tests {
             let list_n = End;
             for i in 0usize..n {
                 let list_nm1 = list_n.clone();
-                let list_n = list_n.push(i);
+                let list_n = list_n.push(TestElementA(i));
 
                 if i == n - 1 {
                     prop_assert_eq!(list_n.len(), list_nm1.len() + 1);

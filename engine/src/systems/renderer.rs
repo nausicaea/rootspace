@@ -92,7 +92,7 @@ where
         }
 
         let events = res.borrow_mut::<EventQueue<WorldEvent>>().receive(&self.receiver);
-        if events.into_iter().any(|e| e == WorldEvent::Reload) {
+        if events.into_iter().any(|e| e == WorldEvent::DeserializationComplete) {
             #[cfg(any(test, feature = "diagnostics"))]
             trace!("Reloading all renderables");
             #[cfg(any(test, feature = "diagnostics"))]

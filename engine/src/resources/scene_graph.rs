@@ -1,4 +1,4 @@
-use ecs::{Component, Entity, Storage};
+use ecs::{Component, Entity, Storage, Resource};
 use hierarchy::{Hierarchy, RawNodes};
 use serde::{Deserialize, Serialize};
 use std::{fmt, ops::Mul};
@@ -34,6 +34,8 @@ where
         self.0.iter()
     }
 }
+
+impl<T> Resource for SceneGraph<T> where T: Clone + Default + 'static {}
 
 impl<T> fmt::Debug for SceneGraph<T>
 where

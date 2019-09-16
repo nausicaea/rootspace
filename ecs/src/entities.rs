@@ -1,6 +1,7 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
 use crate::indexing::{Generation, Index};
+use crate::resource::Resource;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use typename::TypeName;
@@ -60,6 +61,8 @@ impl Entities {
         }
     }
 }
+
+impl Resource for Entities {}
 
 /// An iterator over all active entities.
 pub struct EntitiesIter<'a> {

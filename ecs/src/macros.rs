@@ -3,9 +3,26 @@
 /// # Examples
 ///
 /// ```
-/// use ecs::Reg;
+/// use typename::TypeName;
+/// use serde::{Deserialize, Serialize};
+/// use ecs::{Reg, Resource};
 ///
-/// let _l: Reg![usize, f32, bool] = Default::default();
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct A(usize);
+///
+/// impl Resource for A {}
+///
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct B(f32);
+///
+/// impl Resource for B {}
+///
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct C(u8);
+///
+/// impl Resource for C {}
+///
+/// let _l: Reg![A, B, C] = Default::default();
 /// ```
 #[macro_export]
 macro_rules! Reg {
@@ -27,7 +44,24 @@ macro_rules! Reg {
 /// # Examples
 ///
 /// ```
-/// use ecs::{RegAdd, Element, End};
+/// use typename::TypeName;
+/// use serde::{Deserialize, Serialize};
+/// use ecs::{RegAdd, Element, End, Resource};
+///
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct A(usize);
+///
+/// impl Resource for A {}
+///
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct B(f32);
+///
+/// impl Resource for B {}
+///
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct C(u8);
+///
+/// impl Resource for C {}
 ///
 /// let _l: RegAdd![usize, f32, Element<bool, End>] = Default::default();
 /// ```
@@ -49,9 +83,26 @@ macro_rules! RegAdd {
 /// # Examples
 ///
 /// ```
-/// use ecs::reg;
+/// use typename::TypeName;
+/// use serde::{Deserialize, Serialize};
+/// use ecs::{reg, Resource};
 ///
-/// let _l = reg![0usize, 100.0f32, false];
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct A(usize);
+///
+/// impl Resource for A {}
+///
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct B(f32);
+///
+/// impl Resource for B {}
+///
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct C(u8);
+///
+/// impl Resource for C {}
+///
+/// let _l = reg![A::default(), B::default(), C::default()];
 /// ```
 #[macro_export]
 macro_rules! reg {
@@ -74,9 +125,26 @@ macro_rules! reg {
 /// # Examples
 ///
 /// ```
-/// use ecs::{reg_add, Element, End};
+/// use typename::TypeName;
+/// use serde::{Deserialize, Serialize};
+/// use ecs::{reg_add, Element, End, Resource};
 ///
-/// let _l = reg_add![0usize, 100.0f32, Element::new(false, End)];
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct A(usize);
+///
+/// impl Resource for A {}
+///
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct B(f32);
+///
+/// impl Resource for B {}
+///
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// struct C(u8);
+///
+/// impl Resource for C {}
+///
+/// let _l = reg_add![A::default(), B::default(), Element::new(C::default(), End)];
 /// ```
 #[macro_export]
 macro_rules! reg_add {
@@ -94,12 +162,40 @@ macro_rules! reg_add {
 #[cfg(test)]
 mod tests {
     use crate::registry::{Element, End};
+    use crate::resource::Resource;
+    use typename::TypeName;
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+    struct A(usize);
+
+    impl Resource for A {}
+
+    #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+    struct B(f32);
+
+    impl Resource for B {}
+
+    #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+    struct C(u8);
+
+    impl Resource for C {}
+
+    #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+    struct D(u16);
+
+    impl Resource for D {}
+
+    #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+    struct E(u32);
+
+    impl Resource for E {}
 
     #[test]
     fn single_additive() {
-        let a: Element<usize, End> = Default::default();
-        let b: RegAdd![Element<usize, End>] = Default::default();
-        let c: RegAdd![Element<usize, End>] = reg_add![Element::new(0usize, End)];
+        let a: Element<A, End> = Default::default();
+        let b: RegAdd![Element<A, End>] = Default::default();
+        let c: RegAdd![Element<A, End>] = reg_add![Element::new(A::default(), End)];
 
         assert_eq!(a, b);
         assert_eq!(a, c);
@@ -107,9 +203,9 @@ mod tests {
 
     #[test]
     fn two_additive() {
-        let a: Element<usize, Element<f32, End>> = Default::default();
-        let b: RegAdd![usize, Element<f32, End>] = Default::default();
-        let c: RegAdd![usize, Element<f32, End>] = reg_add![0usize, Element::new(0.0f32, End)];
+        let a: Element<A, Element<B, End>> = Default::default();
+        let b: RegAdd![A, Element<B, End>] = Default::default();
+        let c: RegAdd![A, Element<B, End>] = reg_add![A::default(), Element::new(B::default(), End)];
 
         assert_eq!(a, b);
         assert_eq!(a, c);
@@ -123,22 +219,22 @@ mod tests {
 
     #[test]
     fn single_element() {
-        let _: Element<u8, End> = reg![0u8];
-        let _: Reg![u8] = reg![0u8];
+        let _: Element<C, End> = reg![C::default()];
+        let _: Reg![C] = reg![C::default()];
     }
 
     #[test]
     fn two_elements() {
-        let _: Element<u16, Element<u8, End>> = reg![100u16, 0u8,];
-        let _: Reg![u16, u8] = reg![100u16, 0u8,];
+        let _: Element<D, Element<C, End>> = reg![D::default(), C::default()];
+        let _: Reg![D, C] = reg![D::default(), C::default()];
 
-        let _: Element<u8, Element<u16, End>> = reg![2u8, 1u16,];
-        let _: Reg![u8, u16] = reg![2u8, 1u16,];
+        let _: Element<C, Element<D, End>> = reg![C::default(), D::default()];
+        let _: Reg![C, D] = reg![C::default(), D::default()];
     }
 
     #[test]
     fn three_elements() {
-        let _: Element<u32, Element<u16, Element<u8, End>>> = reg![2u32, 100u16, 0u8,];
-        let _: Reg![u32, u16, u8] = reg![2u32, 100u16, 0u8,];
+        let _: Element<E, Element<D, Element<C, End>>> = reg![E::default(), D::default(), C::default()];
+        let _: Reg![E, D, C] = reg![E::default(), D::default(), C::default()];
     }
 }

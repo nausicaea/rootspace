@@ -150,6 +150,8 @@ impl<T> Storage<T> for VecStorage<T> {
     }
 }
 
+impl<T> Resource for VecStorage<T> where T: 'static {}
+
 impl<T> Drop for VecStorage<T> {
     fn drop(&mut self) {
         self.clear()

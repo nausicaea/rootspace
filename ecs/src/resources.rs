@@ -23,6 +23,7 @@ use log::trace;
 /// retaining resources upon multiple re-initialisations of the world.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum Persistence {
+    None,
     /// The respective resource should be present for the entire runtime of the program.
     Runtime,
 }
@@ -419,11 +420,17 @@ mod tests {
     #[derive(Debug, Default, TypeName, Serialize, Deserialize, PartialEq)]
     struct TestResourceA(usize);
 
+    impl Resource for TestResourceA {}
+
     #[derive(Debug, Default, TypeName, Serialize, Deserialize, PartialEq)]
     struct TestResourceB(f32);
 
+    impl Resource for TestResourceB {}
+
     #[derive(Debug, Default, TypeName, Serialize, Deserialize, PartialEq)]
     struct TestResourceC(String);
+
+    impl Resource for TestResourceC {}
 
     type TestRegistry = Reg![TestResourceA, TestResourceB, TestResourceC,];
 
