@@ -6,7 +6,7 @@ use crate::{
 };
 #[cfg(any(test, feature = "diagnostics"))]
 use log::trace;
-use ecs::{EventQueue, Resources, Storage, System};
+use ecs::{EventQueue, Resources, Storage, System, WorldEvent, ReceiverId};
 #[cfg(any(test, feature = "diagnostics"))]
 use std::time::Instant;
 use std::{collections::VecDeque, time::Duration};
@@ -18,6 +18,7 @@ static FRAME_TIME_WINDOW: usize = 10;
 #[derive(Debug)]
 pub struct Renderer<B> {
     clear_color: [f32; 4],
+    receiver: ReceiverId<WorldEvent>,
     initialised: bool,
     draw_calls: VecDeque<usize>,
     frame_times: VecDeque<Duration>,
@@ -28,9 +29,10 @@ impl<B> Renderer<B>
 where
     B: BackendTrait,
 {
-    pub fn new(clear_color: [f32; 4]) -> Self {
+    pub fn new(clear_color: [f32; 4], queue: &mut EventQueue<WorldEvent>) -> Self {
         Renderer {
             clear_color,
+            receiver: queue.subscribe(),
             initialised: false,
             draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
             frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
@@ -42,6 +44,18 @@ where
         let dpi_factor = res.borrow::<BackendResource<B>>().dpi_factor();
         res.borrow_mut::<EventQueue<EngineEvent>>()
             .send(EngineEvent::ChangeDpi(dpi_factor));
+    }
+
+    fn reload_renderables(&self, res: &Resources) {
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Reloading all renderables");
+        #[cfg(any(test, feature = "diagnostics"))]
+        let reload_mark = Instant::now();
+        let mut backend = res.borrow_mut::<BackendResource<B>>();
+        backend.reload_assets(&mut res.borrow_component_mut::<Renderable>())
+            .expect("Could not reload all renderable assets");
+        #[cfg(any(test, feature = "diagnostics"))]
+        trace!("Completed reloading all renderables after {:?}", reload_mark.elapsed());
     }
 
     #[cfg(any(test, feature = "diagnostics"))]
@@ -93,6 +107,12 @@ where
             trace!("Initialising the renderer");
             self.set_dpi_factor(res);
             self.initialised = true;
+        }
+
+        // Reload all renderables.
+        let events = res.borrow_mut::<EventQueue<WorldEvent>>().receive(&self.receiver);
+        if events.into_iter().any(|e| e == WorldEvent::DeserializationComplete) {
+            self.reload_renderables(res);
         }
 
         // Update the scene graphs.

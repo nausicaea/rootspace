@@ -95,19 +95,20 @@ where
             .get_mut(&id.id)
             .filter(|s| s.read < s.received)
             .map(|s| {
+                let total = events.len();
                 let unread = s.received - s.read;
                 s.read += unread;
-                events.iter().take(unread).cloned().collect()
+                events.iter().rev().skip(total - unread).take(unread).cloned().collect()
             })
             .unwrap_or_default();
 
-        let unread = self
+        let max_unread = self
             .receivers
             .values()
             .map(|s| s.received - s.read)
             .max()
             .unwrap_or_default();
-        self.events.truncate(unread);
+        self.events.truncate(max_unread);
 
         evs
     }
@@ -219,10 +220,10 @@ mod tests {
 
         // Receive with both receivers
         let s_evs: Vec<MockEvent> = q.receive(&s);
-        assert_eq!(s_evs, vec![MockEvent(2), MockEvent(1)]);
+        assert_eq!(s_evs, vec![MockEvent(1), MockEvent(2)]);
         assert_eq!(q.len(), 2);
         let t_evs: Vec<MockEvent> = q.receive(&t);
-        assert_eq!(t_evs, vec![MockEvent(2), MockEvent(1)]);
+        assert_eq!(t_evs, vec![MockEvent(1), MockEvent(2)]);
         assert_eq!(q.len(), 0);
     }
 
@@ -246,7 +247,7 @@ mod tests {
 
         // Receive with the first receiver
         let s_evs: Vec<MockEvent> = q.receive(&s);
-        assert_eq!(s_evs, vec![MockEvent(1), MockEvent(0)]);
+        assert_eq!(s_evs, vec![MockEvent(0), MockEvent(1)]);
         assert_eq!(q.len(), 1);
 
         // Send the third event
@@ -258,7 +259,7 @@ mod tests {
         assert_eq!(q.len(), 2);
 
         let t_evs: Vec<MockEvent> = q.receive(&t);
-        assert_eq!(t_evs, vec![MockEvent(2), MockEvent(1)]);
+        assert_eq!(t_evs, vec![MockEvent(1), MockEvent(2)]);
         assert_eq!(q.len(), 0);
     }
 }

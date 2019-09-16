@@ -1,5 +1,5 @@
 use crate::{
-    components::{Model, UiModel, Renderable},
+    components::{Model, UiModel},
     event::EngineEvent,
     file_manipulation::{FileError, VerifyPath},
     graphics::BackendTrait,
@@ -121,17 +121,6 @@ where
                 #[cfg(any(test, feature = "diagnostics"))]
                 trace!("Completed reloading the backend after {:?}", reload_mark.elapsed());
             }
-
-            // Reload the renderables
-            #[cfg(any(test, feature = "diagnostics"))]
-            trace!("Reloading all renderables");
-            #[cfg(any(test, feature = "diagnostics"))]
-            let reload_mark = Instant::now();
-            let mut backend = self.world.borrow_mut::<BackendResource<B>>();
-            backend.reload_assets(&mut self.world.borrow_mut::<<Renderable as Component>::Storage>())
-                .expect("Could not reload all renderable assets");
-            #[cfg(any(test, feature = "diagnostics"))]
-            trace!("Completed reloading all renderables after {:?}", reload_mark.elapsed());
         }
 
         running

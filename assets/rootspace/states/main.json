@@ -1,6 +1,8 @@
 {
   "ecs::entities::Entities": {
-    "persistence": "Runtime",
+    "settings": {
+      "persistence": "Runtime"
+    },
     "resource": {
       "max_idx": 4,
       "free_idx": [],
@@ -13,21 +15,31 @@
     }
   },
   "ecs::event_queue::EventQueue<ecs::world::WorldEvent>": {
-    "persistence": "Runtime",
+    "settings": {
+      "persistence": "Runtime"
+    },
     "resource": {
       "events": [
         {
-          "Serialize": "/home/kitsune/Downloads/main.json"
+          "Serialize": "/home/kitsune/Development/rootspace/assets/rootspace/states/main.json"
         }
       ],
-      "max_id": 2,
+      "max_id": 4,
       "receivers": {
+        "0": {
+          "read": 1,
+          "received": 1
+        },
+        "3": {
+          "read": 1,
+          "received": 1
+        },
         "1": {
           "read": 0,
           "received": 1
         },
-        "0": {
-          "read": 1,
+        "2": {
+          "read": 0,
           "received": 1
         }
       },
@@ -35,7 +47,9 @@
     }
   },
   "engine::resources::scene_graph::SceneGraph<engine::components::ui_model::UiModel>": {
-    "persistence": "Runtime",
+    "settings": {
+      "persistence": "Runtime"
+    },
     "resource": {
       "root_idx": 0,
       "graph": {
@@ -90,7 +104,9 @@
     }
   },
   "engine::resources::scene_graph::SceneGraph<engine::components::model::Model>": {
-    "persistence": "Runtime",
+    "settings": {
+      "persistence": "Runtime"
+    },
     "resource": {
       "root_idx": 0,
       "graph": {
@@ -203,40 +219,26 @@
     }
   },
   "ecs::event_queue::EventQueue<engine::event::EngineEvent>": {
-    "persistence": "Runtime",
+    "settings": {
+      "persistence": "Runtime"
+    },
     "resource": {
-      "events": [
-        {
-          "Command": [
-            "state",
-            "save",
-            "/home/kitsune/Downloads/main.json"
-          ]
-        },
-        {
-          "ChangeDpi": 1.0
-        },
-        "Startup"
-      ],
-      "max_id": 5,
+      "events": [],
+      "max_id": 4,
       "receivers": {
-        "4": {
-          "read": 3,
-          "received": 3
-        },
-        "0": {
-          "read": 0,
-          "received": 3
-        },
-        "1": {
-          "read": 3,
-          "received": 3
-        },
         "2": {
           "read": 3,
           "received": 3
         },
+        "0": {
+          "read": 3,
+          "received": 3
+        },
         "3": {
+          "read": 3,
+          "received": 3
+        },
+        "1": {
           "read": 3,
           "received": 3
         }
@@ -244,8 +246,10 @@
       "free_ids": []
     }
   },
-  "engine::resources::backend_resource::BackendResource<engine::graphics::headless::HeadlessBackend>": {
-    "persistence": "Runtime",
+  "engine::resources::backend_resource::BackendSettings": {
+    "settings": {
+      "persistence": "Runtime"
+    },
     "resource": {
       "title": "Title",
       "dimensions": [
@@ -257,7 +261,9 @@
     }
   },
   "ecs::components::VecStorage<engine::components::camera::Camera>": {
-    "persistence": "None",
+    "settings": {
+      "persistence": "None"
+    },
     "resource": {
       "0": {
         "world_matrix": [
@@ -354,28 +360,32 @@
     }
   },
   "ecs::components::VecStorage<engine::components::info::Info>": {
-    "persistence": "None",
+    "settings": {
+      "persistence": "None"
+    },
     "resource": {
-      "3": {
-        "name": "Entity C",
-        "description": "UI Text example"
-      },
       "2": {
         "name": "Entity B",
         "description": "Text example"
       },
-      "1": {
-        "name": "Entity A",
-        "description": "Rotated cube example"
-      },
       "0": {
         "name": "Camera",
         "description": "The main camera"
+      },
+      "3": {
+        "name": "Entity C",
+        "description": "UI Text example"
+      },
+      "1": {
+        "name": "Entity A",
+        "description": "Rotated cube example"
       }
     }
   },
   "ecs::components::VecStorage<engine::components::model::Model>": {
-    "persistence": "None",
+    "settings": {
+      "persistence": "None"
+    },
     "resource": {
       "1": {
         "model": [
@@ -456,8 +466,27 @@
     }
   },
   "ecs::components::VecStorage<engine::components::renderable::Renderable>": {
-    "persistence": "None",
+    "settings": {
+      "persistence": "None"
+    },
     "resource": {
+      "1": {
+        "source": {
+          "Text": {
+            "text": "Hello, World!",
+            "font": "/home/kitsune/Development/rootspace/assets/rootspace/fonts/SourceSansPro-Regular.ttf",
+            "text_scale": 16.0,
+            "text_width": 2.0,
+            "virtual_pixel_text_width": 200,
+            "cache_size": [
+              512,
+              512
+            ],
+            "vertex_shader": "/home/kitsune/Development/rootspace/assets/rootspace/shaders/text-vertex.glsl",
+            "fragment_shader": "/home/kitsune/Development/rootspace/assets/rootspace/shaders/text-fragment.glsl"
+          }
+        }
+      },
       "2": {
         "source": {
           "Mesh": {
@@ -479,37 +508,24 @@
             "normal_texture": null
           }
         }
-      },
-      "1": {
-        "source": {
-          "Text": {
-            "text": "Hello, World!",
-            "font": "/home/kitsune/Development/rootspace/assets/rootspace/fonts/SourceSansPro-Regular.ttf",
-            "text_scale": 16.0,
-            "text_width": 2.0,
-            "virtual_pixel_text_width": 200,
-            "cache_size": [
-              512,
-              512
-            ],
-            "vertex_shader": "/home/kitsune/Development/rootspace/assets/rootspace/shaders/text-vertex.glsl",
-            "fragment_shader": "/home/kitsune/Development/rootspace/assets/rootspace/shaders/text-fragment.glsl"
-          }
-        }
       }
     }
   },
   "ecs::components::VecStorage<engine::components::status::Status>": {
-    "persistence": "None",
+    "settings": {
+      "persistence": "None"
+    },
     "resource": {
-      "0": true,
       "2": true,
       "1": true,
+      "0": true,
       "3": true
     }
   },
   "ecs::components::VecStorage<engine::components::ui_model::UiModel>": {
-    "persistence": "None",
+    "settings": {
+      "persistence": "None"
+    },
     "resource": {
       "3": {
         "model": [

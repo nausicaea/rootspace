@@ -146,12 +146,13 @@ where
         let event_interface: EventInterface<B> = EventInterface::default();
         self.orchestrator.add_system(LoopStage::Update, event_interface);
 
-        let renderer: Renderer<B> = Renderer::new([0.69, 0.93, 0.93, 1.0]);
-        self.orchestrator.add_system(LoopStage::Render, renderer);
-
         let queue = self.orchestrator.get_mut::<EventQueue<WorldEvent>>();
         let event_monitor: EventMonitor<WorldEvent> = EventMonitor::new(queue);
         self.orchestrator.add_system(LoopStage::Update, event_monitor);
+
+        let queue = self.orchestrator.get_mut::<EventQueue<WorldEvent>>();
+        let renderer: Renderer<B> = Renderer::new([0.69, 0.93, 0.93, 1.0], queue);
+        self.orchestrator.add_system(LoopStage::Render, renderer);
 
         let queue = self.orchestrator.get_mut::<EventQueue<EngineEvent>>();
         let event_monitor: EventMonitor<EngineEvent> = EventMonitor::new(queue);
