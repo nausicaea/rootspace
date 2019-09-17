@@ -14,7 +14,7 @@ pub trait CommandTrait: 'static {
     fn run(&self, res: &Resources, args: &[String]) -> Result<(), Error>;
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy)]
 pub struct ExitCommand;
 
 impl CommandTrait for ExitCommand {
@@ -32,7 +32,7 @@ impl CommandTrait for ExitCommand {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy)]
 pub struct StateCommand;
 
 impl CommandTrait for StateCommand {
@@ -94,51 +94,7 @@ impl CommandTrait for StateCommand {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct RendererCommand;
-
-impl CommandTrait for RendererCommand {
-    fn name(&self) -> &'static str {
-        "renderer"
-    }
-
-    fn description(&self) -> &'static str {
-        "Provides access to the renderer"
-    }
-
-    fn run(&self, _res: &Resources, args: &[String]) -> Result<(), Error> {
-        let matches = App::new("renderer")
-            .setting(AppSettings::DisableVersion)
-            .setting(AppSettings::SubcommandRequiredElseHelp)
-            .subcommand(
-                SubCommand::with_name("info")
-                    .about("Prints renderer settings and statistics")
-                    .setting(AppSettings::DisableVersion)
-                    .setting(AppSettings::ArgRequiredElseHelp)
-                    .arg(
-                        Arg::with_name("draw-calls")
-                            .short("d")
-                            .long("draw-calls")
-                            .help("Displays the average number of draw calls"),
-                    )
-                    .arg(
-                        Arg::with_name("frame-time")
-                            .short("f")
-                            .long("frame-time")
-                            .help("Displays the average duration of a render call"),
-                    ),
-            )
-            .get_matches_from_safe(args)?;
-
-        if let Some(_info_matches) = matches.subcommand_matches("info") {
-            unimplemented!()
-        }
-
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy)]
 pub struct CameraCommand;
 
 impl CommandTrait for CameraCommand {
@@ -202,7 +158,7 @@ impl CommandTrait for CameraCommand {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy)]
 pub struct EntityCommand;
 
 impl EntityCommand {
@@ -211,13 +167,14 @@ impl EntityCommand {
         args: &ArgMatches,
         cameras: &<Camera as Component>::Storage,
         infos: &<Info as Component>::Storage,
+        statuses: &<Status as Component>::Storage,
         world_graph: &SceneGraph<Model>,
         ui_graph: &SceneGraph<UiModel>,
         entity: &Entity,
     ) {
         let mut output = String::new();
 
-        if args.is_present("names") || args.is_present("positions") {
+        if args.is_present("names") || args.is_present("statuses") || args.is_present("positions") {
             output.push(':');
         }
 
@@ -227,6 +184,14 @@ impl EntityCommand {
                 output.push_str(i.name());
             } else {
                 output.push_str(" (no name)");
+            }
+        }
+
+        if args.is_present("statuses") {
+            if let Some(s) = statuses.get(entity) {
+                output.push_str(&format!(" status=({}, {})", if s.enabled() {"enabled"} else {"disabled"}, if s.visible() {"visible"} else {"hidden"}));
+            } else {
+                output.push_str(" (no status)");
             }
         }
 
@@ -298,6 +263,12 @@ impl CommandTrait for EntityCommand {
                             .help("Displays the names of entities"),
                     )
                     .arg(
+                        Arg::with_name("statuses")
+                            .short("s")
+                            .long("statuses")
+                            .help("Displays the statuses of entities"),
+                    )
+                    .arg(
                         Arg::with_name("positions")
                             .short("p")
                             .long("positions")
@@ -311,8 +282,8 @@ impl CommandTrait for EntityCommand {
                     ),
             )
             .subcommand(
-                SubCommand::with_name("set")
-                    .about("Updates one or more entities")
+                SubCommand::with_name("status")
+                    .about("Updates the status of one or more entities")
                     .setting(AppSettings::DisableVersion)
                     .setting(AppSettings::ArgRequiredElseHelp)
                     .arg(
@@ -320,7 +291,7 @@ impl CommandTrait for EntityCommand {
                             .short("e")
                             .long("enable")
                             .conflicts_with("disable")
-                            .help("Activates the selected entity"),
+                            .help("Enables the selected entity"),
                     )
                     .arg(
                         Arg::with_name("disable")
@@ -328,6 +299,20 @@ impl CommandTrait for EntityCommand {
                             .long("disable")
                             .conflicts_with("enable")
                             .help("Disables the selected entity"),
+                    )
+                    .arg(
+                        Arg::with_name("show")
+                            .short("s")
+                            .long("show")
+                            .conflicts_with("hide")
+                            .help("Shows the selected entity"),
+                    )
+                    .arg(
+                        Arg::with_name("hide")
+                            .short("h")
+                            .long("hide")
+                            .conflicts_with("show")
+                            .help("Hides the selected entity"),
                     ),
             )
             .get_matches_from_safe(args)?;
@@ -336,6 +321,7 @@ impl CommandTrait for EntityCommand {
             let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
             let cameras = res.borrow_component::<Camera>();
             let infos = res.borrow_component::<Info>();
+            let statuses = res.borrow_component::<Status>();
             let world_graph = res.borrow::<SceneGraph<Model>>();
             let ui_graph = res.borrow::<SceneGraph<UiModel>>();
 
@@ -348,15 +334,15 @@ impl CommandTrait for EntityCommand {
                 let entity = entities
                     .get(index)
                     .ok_or(format_err!("The entity with index {} was not found", index))?;
-                self.list_entity(list_matches, &cameras, &infos, &world_graph, &ui_graph, entity);
+                self.list_entity(list_matches, &cameras, &infos, &statuses, &world_graph, &ui_graph, entity);
             } else {
                 for entity in &entities {
-                    self.list_entity(list_matches, &cameras, &infos, &world_graph, &ui_graph, entity);
+                    self.list_entity(list_matches, &cameras, &infos, &statuses, &world_graph, &ui_graph, entity);
                 }
             }
         }
 
-        if let Some(set_matches) = matches.subcommand_matches("set") {
+        if let Some(status_matches) = matches.subcommand_matches("status") {
             let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
             let mut statuses = res.borrow_component_mut::<Status>();
 
@@ -366,20 +352,30 @@ impl CommandTrait for EntityCommand {
                     .get(index)
                     .ok_or(format_err!("The entity with index {} was not found", index))?;
 
-                if set_matches.is_present("enable") {
+                if status_matches.is_present("enable") {
                     statuses
                         .get_mut(entity)
                         .map(|s| s.enable())
                         .ok_or(format_err!("The entity with index {} could not be enabled", index))?;
-                } else if set_matches.is_present("disable") {
+                } else if status_matches.is_present("disable") {
                     statuses
                         .get_mut(entity)
                         .map(|s| s.disable())
                         .ok_or(format_err!("The entity with index {} could not be disabled", index))?;
+                } else if status_matches.is_present("show") {
+                    statuses
+                        .get_mut(entity)
+                        .map(|s| s.show())
+                        .ok_or(format_err!("The entity with index {} could not be show", index))?;
+                } else if status_matches.is_present("hide") {
+                    statuses
+                        .get_mut(entity)
+                        .map(|s| s.hide())
+                        .ok_or(format_err!("The entity with index {} could not be hidden", index))?;
                 }
             } else {
                 return Err(format_err!(
-                    "You must specify an entity index if you want to change an entity"
+                    "You must specify an entity index if you want to change the status of an entity"
                 ));
             }
         }

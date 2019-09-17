@@ -1,5 +1,5 @@
 use crate::{
-    debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand, RendererCommand, StateCommand},
+    debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand, StateCommand},
     event::EngineEvent,
 };
 use ecs::{EventQueue, ReceiverId, Resources, System};
@@ -18,11 +18,10 @@ impl DebugShell {
             receiver: queue.subscribe(),
         };
 
-        sys.add_command(ExitCommand::default());
-        sys.add_command(CameraCommand::default());
-        sys.add_command(EntityCommand::default());
-        sys.add_command(RendererCommand::default());
-        sys.add_command(StateCommand::default());
+        sys.add_command(ExitCommand);
+        sys.add_command(CameraCommand);
+        sys.add_command(EntityCommand);
+        sys.add_command(StateCommand);
 
         sys
     }

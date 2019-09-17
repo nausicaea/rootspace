@@ -17,7 +17,7 @@ image = { version = "^0.22.0", default-features = false, features = ["png_codec"
 log = "^0.4.1"
 nalgebra = { version = "^0.18.0", features = ["serde-serialize"] }
 num-traits = "^0.2.6"
-rusttype = { version = "^0.7.2", features = ["gpu_cache"] }
+rusttype = { version = "^0.8.0", features = ["gpu_cache"] }
 unicode-normalization = "^0.1.5"
 snowflake = "^1.2.0"
 typename = "^0.1.0"

@@ -3,25 +3,43 @@ use serde::{Deserialize, Serialize};
 use typename::TypeName;
 
 #[derive(Debug, Clone, PartialEq, Eq, TypeName, Serialize, Deserialize)]
-pub struct Status(bool);
+pub struct Status {
+    enabled: bool,
+    visible: bool,
+}
 
 impl Status {
     pub fn enabled(&self) -> bool {
-        self.0
+        self.enabled
     }
 
     pub fn enable(&mut self) {
-        self.0 = true;
+        self.enabled = true;
     }
 
     pub fn disable(&mut self) {
-        self.0 = false;
+        self.enabled = false;
+    }
+
+    pub fn visible(&self) -> bool {
+        self.visible
+    }
+
+    pub fn show(&mut self) {
+        self.visible = true;
+    }
+
+    pub fn hide(&mut self) {
+        self.visible = false;
     }
 }
 
 impl Default for Status {
     fn default() -> Self {
-        Status(true)
+        Status {
+            enabled: true,
+            visible: true,
+        }
     }
 }
 
