@@ -19,28 +19,24 @@
       "persistence": "Runtime"
     },
     "resource": {
-      "events": [
-        {
-          "Serialize": "/home/kitsune/Downloads/main.json"
-        }
-      ],
+      "events": [],
       "max_id": 4,
       "receivers": {
         "1": {
           "read": 0,
-          "received": 1
+          "received": 0
         },
         "0": {
-          "read": 1,
-          "received": 1
+          "read": 0,
+          "received": 0
         },
         "3": {
-          "read": 1,
-          "received": 1
+          "read": 0,
+          "received": 0
         },
         "2": {
           "read": 0,
-          "received": 1
+          "received": 0
         }
       },
       "free_ids": []
