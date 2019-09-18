@@ -16,6 +16,7 @@ use serde_json;
 use std::{fs::File, marker::PhantomData, path::PathBuf, time::Duration};
 use typename::TypeName;
 use std::cell::{Ref, RefMut};
+use log::trace;
 
 /// Exposes resource management methods.
 pub trait ResourcesTrait<RR>
@@ -143,6 +144,7 @@ pub struct World<RR> {
 impl<RR> Default for World<RR> {
     fn default() -> Self {
         let mut events: EventQueue<WorldEvent> = EventQueue::default();
+        trace!("World<RR> subscribing to EventQueue<WorldEvent>");
         let receiver = events.subscribe();
 
         let mut resources = Resources::default();

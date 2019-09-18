@@ -1,7 +1,7 @@
 use crate::{components::camera::Camera, event::EngineEvent};
 use ecs::{EventQueue, ReceiverId, Resources, System};
-#[cfg(any(test, feature = "diagnostics"))]
-use log::trace;
+#[cfg(any(test, debug_assertions))]
+use log::{debug, trace};
 use std::time::Duration;
 
 pub struct CameraManager {
@@ -10,14 +10,15 @@ pub struct CameraManager {
 
 impl CameraManager {
     pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
+        trace!("CameraManager subscribing to EventQueue<EngineEvent>");
         CameraManager {
             receiver: queue.subscribe(),
         }
     }
 
     fn on_resize(&self, res: &Resources, dims: (u32, u32)) {
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Updating the camera dimensions (dims={:?})", dims);
+        #[cfg(any(test, debug_assertions))]
+        debug!("Updating the camera dimensions (dims={:?})", dims);
 
         res.borrow_component_mut::<Camera>()
             .iter_mut()
@@ -25,8 +26,8 @@ impl CameraManager {
     }
 
     fn on_change_dpi(&self, res: &Resources, factor: f64) {
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Updating the camera dpi factor (factor={:?})", factor);
+        #[cfg(any(test, debug_assertions))]
+        debug!("Updating the camera dpi factor (factor={:?})", factor);
 
         res.borrow_component_mut::<Camera>()
             .iter_mut()

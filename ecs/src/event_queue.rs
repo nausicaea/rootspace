@@ -8,6 +8,8 @@ use std::{
     marker::PhantomData,
 };
 use typename::TypeName;
+#[cfg(any(test, debug_assertions))]
+use log::trace;
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -34,6 +36,13 @@ struct ReceiverState<E> {
     _e: PhantomData<E>,
 }
 
+impl<E> ReceiverState<E> {
+    fn reset(&mut self) {
+        self.read = 0;
+        self.received = 0;
+    }
+}
+
 impl<E> Default for ReceiverState<E> {
     fn default() -> Self {
         ReceiverState {
@@ -46,17 +55,17 @@ impl<E> Default for ReceiverState<E> {
 
 /// An `EventQueue` contains a queue of events and provides rudimentary facilities of retrieving
 /// those events.
-#[derive(TypeName, Serialize, Deserialize)]
+#[derive(Debug, TypeName, Serialize, Deserialize)]
 pub struct EventQueue<E> {
     events: VecDeque<E>,
-    max_id: usize,
     receivers: HashMap<usize, ReceiverState<E>>,
+    max_id: usize,
     free_ids: Vec<usize>,
 }
 
 impl<E> EventQueue<E>
 where
-    E: Clone,
+    E: Clone + TypeName,
 {
     /// Subscribe to this event queue.
     pub fn subscribe(&mut self) -> ReceiverId<E> {
@@ -70,6 +79,8 @@ where
 
         self.receivers.insert(id, ReceiverState::default());
 
+        #[cfg(any(test, debug_assertions))]
+        trace!("Adding a subscriber with id {} for queue {}", id, Self::type_name());
         ReceiverId::new(id)
     }
 
@@ -110,6 +121,11 @@ where
             .unwrap_or_default();
         self.events.truncate(max_unread);
 
+        if self.events.is_empty() {
+            self.receivers.values_mut()
+                .for_each(|s| s.reset());
+        }
+
         evs
     }
 
@@ -124,35 +140,35 @@ where
     }
 }
 
-impl<E> Resource for EventQueue<E> where E: 'static {}
+impl<E> Resource for EventQueue<E> where E: fmt::Debug + 'static {}
 
 impl<E> Default for EventQueue<E> {
     fn default() -> Self {
         EventQueue {
             events: VecDeque::default(),
-            max_id: 0,
             receivers: HashMap::default(),
+            max_id: 0,
             free_ids: Vec::default(),
         }
     }
 }
 
-impl<E> fmt::Debug for EventQueue<E> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "EventQueue {{ #events: {}, #receivers: {} }}",
-            self.events.len(),
-            self.receivers.len()
-        )
-    }
-}
+// impl<E> fmt::Debug for EventQueue<E> {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         write!(
+//             f,
+//             "EventQueue {{ #events: {}, #receivers: {} }}",
+//             self.events.len(),
+//             self.receivers.len()
+//         )
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[derive(Debug, PartialEq, Eq, Clone)]
+    #[derive(Debug, PartialEq, Eq, Clone, TypeName)]
     struct MockEvent(usize);
 
     #[test]

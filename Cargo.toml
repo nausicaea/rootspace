@@ -6,9 +6,6 @@ edition = "2018"
 
 [workspace]
 
-[features]
-diagnostics = ["game/diagnostics", "engine/diagnostics", "ecs/diagnostics"]
-
 [dependencies]
 clap = { version = "^2.0.0", default-features = false }
 log = "^0.4.1"

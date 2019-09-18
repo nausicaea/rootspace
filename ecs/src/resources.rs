@@ -16,8 +16,6 @@ use std::{
 };
 use typename::TypeName;
 use log::debug;
-#[cfg(any(test, feature = "diagnostics"))]
-use log::trace;
 
 /// Determines how persistent a particular resource should be. This allows selectively deleting and
 /// retaining resources upon multiple re-initialisations of the world.
@@ -249,15 +247,15 @@ impl Resources {
             R: Resource + TypeName + Serialize,
         {
             if res.contains::<R>() {
-                #[cfg(any(test, feature = "diagnostics"))]
-                trace!("Serializing the resource {}", &R::type_name());
+                #[cfg(any(test, debug_assertions))]
+                debug!("Serializing the resource {}", &R::type_name());
                 state.serialize_entry(
                     &R::type_name(),
                     &SerContainer::new(res.settings_of::<R>(), &*res.borrow::<R>()),
                 )?;
             } else {
-                #[cfg(any(test, feature = "diagnostics"))]
-                trace!("Not serializing the resource {} because it was not present in Resources", &R::type_name());
+                #[cfg(any(test, debug_assertions))]
+                debug!("Not serializing the resource {} because it was not present in Resources", &R::type_name());
             }
             Ok(())
         }
@@ -359,8 +357,8 @@ impl Resources {
                     std::mem::MaybeUninit::<RR>::zeroed().assume_init()
                 };
                 while let Some(key) = access.next_key::<String>()? {
-                    #[cfg(any(test, feature = "diagnostics"))]
-                    trace!("Deserializing the resource {}", &key);
+                    #[cfg(any(test, debug_assertions))]
+                    debug!("Deserializing the resource {}", &key);
                     recurse(&mut resources, &mut access, &key, &reg)?;
                 }
                 std::mem::forget(reg);
@@ -386,17 +384,17 @@ impl Resources {
         let other = Resources::deserialize::<RR, D>(deserializer)?;
         for (k, v) in other.resources {
             if !self.resources.contains_key(&k) || overwrite {
-                #[cfg(not(any(test, feature = "diagnostics")))]
+                #[cfg(not(any(test, debug_assertions)))]
                 self.resources.insert(k, v);
-                #[cfg(any(test, feature = "diagnostics"))]
+                #[cfg(any(test, debug_assertions))]
                 {
                     if let Some(old_v) = self.resources.insert(k, v) {
-                        trace!("Overwriting the resource {:?}", old_v);
+                        debug!("Overwriting the resource {:?}", old_v);
                     }
                 }
             } else {
-                #[cfg(any(test, feature = "diagnostics"))]
-                trace!("Not adding the resource {:?}, because the same type is already present", v);
+                #[cfg(any(test, debug_assertions))]
+                debug!("Not adding the resource {:?}, because the same type is already present", v);
             }
         }
         for (k, v) in other.settings {

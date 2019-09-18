@@ -10,8 +10,8 @@ use crate::{
     resources::BackendResource,
 };
 use failure::Error;
-#[cfg(any(test, feature = "diagnostics"))]
-use log::trace;
+#[cfg(any(test, debug_assertions))]
+use log::{debug, trace};
 use std::{borrow::Cow, convert::TryInto};
 use typename::TypeName;
 
@@ -35,15 +35,15 @@ pub struct HeadlessTexture {
 
 impl TextureTrait<HeadlessBackend> for HeadlessTexture {
     fn empty(_backend: &HeadlessBackend, dimensions: (u32, u32)) -> Result<Self, Error> {
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Created an empty texture (dims={:?})", dimensions);
+        #[cfg(any(test, debug_assertions))]
+        debug!("Created an empty texture (dims={:?})", dimensions);
 
         Ok(HeadlessTexture { dimensions })
     }
 
     fn from_image(_backend: &HeadlessBackend, image: Image) -> Result<Self, Error> {
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Created a texture from an image (dims={:?})", image.dimensions());
+        #[cfg(any(test, debug_assertions))]
+        debug!("Created a texture from an image (dims={:?})", image.dimensions());
 
         Ok(HeadlessTexture {
             dimensions: image.dimensions(),
@@ -56,7 +56,7 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
 
     #[cfg_attr(not(test), allow(unused_variables))]
     fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, _data: Cow<'a, [u8]>) {
-        #[cfg(any(test, feature = "diagnostics"))]
+        #[cfg(any(test, debug_assertions))]
         {
             let rect = rect.into();
             assert!(rect.max().x() < self.dimensions.0);
@@ -134,8 +134,8 @@ impl BackendTrait for HeadlessBackend {
         _vsync: bool,
         _msaa: u16,
     ) -> Result<Self, Error> {
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Created a headless backend (title='{}', dims={:?})", title.as_ref(), dimensions);
+        #[cfg(any(test, debug_assertions))]
+        debug!("Created a headless backend (title='{}', dims={:?})", title.as_ref(), dimensions);
 
         Ok(HeadlessBackend { dimensions })
     }

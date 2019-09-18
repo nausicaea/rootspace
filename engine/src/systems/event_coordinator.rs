@@ -1,6 +1,7 @@
 use crate::event::EngineEvent;
 use ecs::{EventQueue, ReceiverId, Resources, System, WorldEvent};
 use std::time::Duration;
+use log::trace;
 
 pub struct EventCoordinator {
     receiver: ReceiverId<EngineEvent>,
@@ -8,6 +9,7 @@ pub struct EventCoordinator {
 
 impl EventCoordinator {
     pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
+        trace!("EventCoordinator subscribing to EventQueue<EngineEvent>");
         EventCoordinator {
             receiver: queue.subscribe(),
         }

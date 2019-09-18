@@ -5,6 +5,7 @@ use crate::{
 use ecs::{EventQueue, ReceiverId, Resources, System};
 use failure::{Error, Fail};
 use std::{collections::HashMap, time::Duration};
+use log::trace;
 
 pub struct DebugShell {
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
@@ -13,6 +14,7 @@ pub struct DebugShell {
 
 impl DebugShell {
     pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
+        trace!("DebugShell subscribing to EventQueue<EngineEvent>");
         let mut sys = DebugShell {
             commands: HashMap::new(),
             receiver: queue.subscribe(),

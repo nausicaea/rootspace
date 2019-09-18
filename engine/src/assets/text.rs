@@ -5,8 +5,8 @@ use crate::{
     resources::{BackendResource, TextureId},
 };
 use failure::{Error, Fail};
-#[cfg(any(test, feature = "diagnostics"))]
-use log::trace;
+#[cfg(any(test, debug_assertions))]
+use log::debug;
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use std::{
     borrow::{Borrow, Cow},
@@ -229,8 +229,8 @@ fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> 
 
     let height = (caret.y - caret_origin.y + advance_height).ceil() as u32;
 
-    #[cfg(any(test, feature = "diagnostics"))]
-    trace!(
+    #[cfg(any(test, debug_assertions))]
+    debug!(
         "Layouted text ({} characters, {} glyphs, {}px wide, {}px high)",
         text.len(),
         glyphs.len(),

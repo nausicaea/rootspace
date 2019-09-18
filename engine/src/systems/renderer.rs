@@ -4,10 +4,11 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     resources::{BackendResource, SceneGraph},
 };
-#[cfg(any(test, feature = "diagnostics"))]
+#[cfg(any(test, debug_assertions))]
+use log::debug;
 use log::trace;
 use ecs::{EventQueue, Resources, Storage, System, WorldEvent, ReceiverId};
-#[cfg(any(test, feature = "diagnostics"))]
+#[cfg(any(test, debug_assertions))]
 use std::time::Instant;
 use std::{collections::VecDeque, time::Duration};
 use std::marker::PhantomData;
@@ -30,6 +31,7 @@ where
     B: BackendTrait,
 {
     pub fn new(clear_color: [f32; 4], queue: &mut EventQueue<WorldEvent>) -> Self {
+        trace!("Renderer<B> subscribing to EventQueue<WorldEvent>");
         Renderer {
             clear_color,
             receiver: queue.subscribe(),
@@ -47,28 +49,28 @@ where
     }
 
     fn reload_renderables(&self, res: &Resources) {
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Reloading all renderables");
-        #[cfg(any(test, feature = "diagnostics"))]
+        #[cfg(any(test, debug_assertions))]
+        debug!("Reloading all renderables");
+        #[cfg(any(test, debug_assertions))]
         let reload_mark = Instant::now();
         let mut backend = res.borrow_mut::<BackendResource<B>>();
         backend.reload_assets(&mut res.borrow_component_mut::<Renderable>())
             .expect("Could not reload all renderable assets");
-        #[cfg(any(test, feature = "diagnostics"))]
-        trace!("Completed reloading all renderables after {:?}", reload_mark.elapsed());
+        #[cfg(any(test, debug_assertions))]
+        debug!("Completed reloading all renderables after {:?}", reload_mark.elapsed());
     }
 
-    #[cfg(any(test, feature = "diagnostics"))]
+    #[cfg(any(test, debug_assertions))]
     pub fn average_draw_calls(&self) -> f32 {
         self.draw_calls.iter().sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
     }
 
-    #[cfg(any(test, feature = "diagnostics"))]
+    #[cfg(any(test, debug_assertions))]
     pub fn average_frame_time(&self) -> Duration {
         self.frame_times.iter().sum::<Duration>() / FRAME_TIME_WINDOW as u32
     }
 
-    #[cfg(any(test, feature = "diagnostics"))]
+    #[cfg(any(test, debug_assertions))]
     fn update_draw_calls(&mut self, draw_calls: usize) {
         self.draw_calls.push_front(draw_calls);
         if self.draw_calls.len() > DRAW_CALL_WINDOW {
@@ -76,7 +78,7 @@ where
         }
     }
 
-    #[cfg(any(test, feature = "diagnostics"))]
+    #[cfg(any(test, debug_assertions))]
     fn update_frame_time(&mut self, frame_time: Duration) {
         self.frame_times.push_front(frame_time);
         if self.frame_times.len() > FRAME_TIME_WINDOW {
@@ -94,17 +96,17 @@ where
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
-        #[cfg(any(test, feature = "diagnostics"))]
+        #[cfg(any(test, debug_assertions))]
         let start_mark = Instant::now();
 
-        #[cfg(any(test, feature = "diagnostics"))]
+        #[cfg(any(test, debug_assertions))]
         let mut draw_calls: usize = 0;
 
         // The following is just a workaround for the DPI factor not being set properly by the
         // backend at initialisation.
         if !self.initialised {
-            #[cfg(any(test, feature = "diagnostics"))]
-            trace!("Initialising the renderer");
+            #[cfg(any(test, debug_assertions))]
+            debug!("Initialising the renderer");
             self.set_dpi_factor(res);
             self.initialised = true;
         }
@@ -139,7 +141,7 @@ where
             for (entity, model) in world_graph.iter() {
                 if statuses.get(entity).map(|s| s.enabled()) == Some(true) {
                     if let Some(data) = renderables.get(entity) {
-                        #[cfg(any(test, feature = "diagnostics"))]
+                        #[cfg(any(test, debug_assertions))]
                         {
                             draw_calls += 1;
                         }
@@ -154,7 +156,7 @@ where
             for (entity, model) in ui_graph.iter() {
                 if statuses.get(entity).map(|s| s.enabled()) == Some(true) {
                     if let Some(data) = renderables.get(entity) {
-                        #[cfg(any(test, feature = "diagnostics"))]
+                        #[cfg(any(test, debug_assertions))]
                         {
                             draw_calls += 1;
                         }
@@ -169,10 +171,10 @@ where
         // Finalize the frame and thus swap the display buffers.
         target.finalize().expect("Unable to finalize the frame");
 
-        #[cfg(any(test, feature = "diagnostics"))]
+        #[cfg(any(test, debug_assertions))]
         self.update_draw_calls(draw_calls);
 
-        #[cfg(any(test, feature = "diagnostics"))]
+        #[cfg(any(test, debug_assertions))]
         self.update_frame_time(start_mark.elapsed());
     }
 }

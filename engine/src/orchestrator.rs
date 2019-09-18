@@ -17,7 +17,8 @@ use std::{
     time::{Duration, Instant},
 };
 use typename::TypeName;
-#[cfg(any(test, feature = "diagnostics"))]
+#[cfg(any(test, debug_assertions))]
+use log::debug;
 use log::trace;
 
 pub type JoinedRegistry<RR> = RegAdd![
@@ -61,6 +62,7 @@ where
         world.insert(SceneGraph::<Model>::default(), Persistence::Runtime);
         world.insert(SceneGraph::<UiModel>::default(), Persistence::Runtime);
 
+        trace!("Orchestrator<B, RR> subscribing to EventQueue<WorldEvent>");
         let world_receiver = world.get_mut::<EventQueue<WorldEvent>>()
             .subscribe();
 
@@ -110,16 +112,16 @@ where
         if events.into_iter().any(|e| e == WorldEvent::DeserializationComplete) {
             // Reload the backend
             if !self.world.contains::<BackendResource<B>>() {
-                #[cfg(any(test, feature = "diagnostics"))]
-                trace!("Reloading the backend");
-                #[cfg(any(test, feature = "diagnostics"))]
+                #[cfg(any(test, debug_assertions))]
+                debug!("Reloading the backend");
+                #[cfg(any(test, debug_assertions))]
                 let reload_mark = Instant::now();
                 let backend = self.world.borrow_mut::<BackendSettings>()
                     .build::<B>()
                     .expect("Unable to reload the backend");
                 self.world.insert(backend, Persistence::Runtime);
-                #[cfg(any(test, feature = "diagnostics"))]
-                trace!("Completed reloading the backend after {:?}", reload_mark.elapsed());
+                #[cfg(any(test, debug_assertions))]
+                debug!("Completed reloading the backend after {:?}", reload_mark.elapsed());
             }
         }
 
