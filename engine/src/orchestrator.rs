@@ -51,7 +51,7 @@ where
     ) -> Result<Self, FileError> {
         resource_path.ensure_extant_directory()?;
 
-        let backend = BackendSettings::new("Title", (800, 600), true, 4)
+        let backend = BackendSettings::new("Title", (800, 600), true, 4, resource_path.as_ref())
             .build::<B>()
             .expect("Failed to initialise the backend");
 
@@ -68,7 +68,7 @@ where
 
         Ok(Orchestrator {
             world,
-            resource_path: resource_path.as_ref().into(),
+            resource_path: resource_path.as_ref().to_path_buf(),
             delta_time,
             max_frame_time,
             world_receiver,

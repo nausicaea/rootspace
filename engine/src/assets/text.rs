@@ -317,28 +317,31 @@ mod tests {
 
     #[test]
     fn text_builder_headless() {
-        let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
+
+        let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
-        let r: Result<Text, Error> = Text::builder()
+        let _: Text = Text::builder()
             .font(&font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, "Hello, World!");
-
-        assert!(r.is_ok());
+            .layout(&mut f, "Hello, World!")
+            .unwrap();
     }
 
     #[test]
     fn text_mesh_headless() {
-        let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
+
+        let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let text: Text = Text::builder()
@@ -363,10 +366,12 @@ mod tests {
 
     #[test]
     fn text_scale_headless() {
-        let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
+
+        let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
@@ -382,10 +387,12 @@ mod tests {
 
     #[test]
     fn text_width_headless() {
-        let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
+
+        let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
@@ -401,10 +408,12 @@ mod tests {
 
     #[test]
     fn text_update_headless() {
-        let font_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf");
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
+
+        let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
@@ -415,6 +424,6 @@ mod tests {
             .layout(&mut f, "Hello, World!")
             .unwrap();
 
-        assert!(text.text(&mut f, "Hello, you!").is_ok());
+        text.text(&mut f, "Hello, you!").unwrap();
     }
 }

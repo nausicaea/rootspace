@@ -1,12 +1,12 @@
 use crate::{
-    assets::Vertex,
+    assets::{AssetError, Vertex},
     graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait},
 };
 use crate::components::Renderable;
 use ecs::{Component, Resource};
 use failure::Error;
 use snowflake::ProcessUniqueId;
-use std::{collections::HashMap, fmt, path::Path};
+use std::{collections::HashMap, fmt, path::{Path, PathBuf}};
 use typename::TypeName;
 use std::ops::{Deref, DerefMut};
 use serde::{Deserialize, Serialize};
@@ -18,15 +18,22 @@ pub struct BackendSettings {
     dimensions: (u32, u32),
     vsync: bool,
     msaa: u16,
+    asset_tree: PathBuf,
 }
 
 impl BackendSettings {
-    pub fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Self {
+    pub fn new<S: AsRef<str>, P: AsRef<Path>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16, asset_tree: P) -> Self {
+        let asset_tree = asset_tree
+            .as_ref()
+            .canonicalize()
+            .expect(&format!("Could not canonicalize the path {}", asset_tree.as_ref().display()));
+
         BackendSettings {
             title: title.as_ref().to_string(),
             dimensions,
             vsync,
             msaa,
+            asset_tree,
         }
     }
 
@@ -65,6 +72,27 @@ where
 {
     pub fn settings(&self) -> &BackendSettings {
         &self.settings
+    }
+
+    pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<PathBuf, AssetError> {
+        let abs_path = self.settings.asset_tree
+            .join(path);
+
+        let abs_path = abs_path
+            .canonicalize()
+            .map_err(move |e| AssetError::Generic(abs_path, e))?;
+
+        if !abs_path.starts_with(&self.settings.asset_tree) {
+            return Err(AssetError::OutOfTree(abs_path));
+        }
+        if !abs_path.exists() {
+            return Err(AssetError::DoesNotExist(abs_path));
+        }
+        if !abs_path.is_file() {
+            return Err(AssetError::NotAFile(abs_path));
+        }
+
+        Ok(abs_path)
     }
 
     pub fn reload_assets(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<(), Error> {
@@ -284,12 +312,14 @@ mod tests {
 
     #[test]
     fn backend_settings_new() {
-        let _: BackendSettings = BackendSettings::new("Title", (800, 600), true, 8);
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let _: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
     }
 
     #[test]
     fn backend_settings_serde() {
-        let b: BackendSettings = BackendSettings::new("Title", (800, 600), true, 8);
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let b: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
 
         assert_tokens(&b, &[
             Token::Struct { name: "BackendSettings", len: 4 },
@@ -310,7 +340,8 @@ mod tests {
 
     #[test]
     fn backend_resource_headless() {
-        let b: BackendSettings = BackendSettings::new("Title", (800, 600), true, 8);
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let b: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
         let _: BackendResource<HeadlessBackend> = BackendResource::try_from(b).unwrap();
     }
 

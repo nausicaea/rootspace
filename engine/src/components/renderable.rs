@@ -65,7 +65,8 @@ impl Renderable {
     pub fn reload<B: BackendTrait>(&mut self, factory: &mut BackendResource<B>) -> Result<(), Error> {
         match self.source {
             Some(SourceData::Mesh { ref file, ref vertex_shader, ref fragment_shader, ref diffuse_texture, ref normal_texture }) => {
-                let mesh = Mesh::from_path(file)?;
+                let mesh_path = factory.find_asset(file)?;
+                let mesh = Mesh::from_path(mesh_path)?;
 
                 self.vertices = factory.create_vertex_buffer(&mesh.vertices)?;
                 self.indices = factory.create_index_buffer(&mesh.indices)?;
@@ -87,8 +88,9 @@ impl Renderable {
                 let scaled_text_scale = (text_scale as f64 * dpi_factor) as f32;
 
                 self.diffuse_texture = factory.create_empty_texture(scaled_cache_size)?;
+                let font_path = factory.find_asset(font)?;
                 let text_data = Text::builder()
-                    .font(font)
+                    .font(font_path)
                     .cache(self.diffuse_texture)
                     .scale(scaled_text_scale)
                     .width(virtual_pixel_text_width)
@@ -220,19 +222,7 @@ impl RenderableBuilder {
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
         let dt_path = self.dt.as_ref().ok_or(RenderableError::MissingDiffuseTexture)?;
 
-        let mesh = Mesh::from_path(&mesh_path)?;
-
-        let vertices = factory.create_vertex_buffer(&mesh.vertices)?;
-        let indices = factory.create_index_buffer(&mesh.indices)?;
-        let shader = factory.create_shader(&vs_path, &fs_path)?;
-        let diffuse_texture = factory.create_texture(&dt_path)?;
-        let normal_texture = if let Some(ref p) = self.nt {
-            Some(factory.create_texture(p)?)
-        } else {
-            None
-        };
-
-        Ok(Renderable {
+        let mut renderable = Renderable {
             source: Some(SourceData::Mesh {
                 file: mesh_path.to_path_buf(),
                 vertex_shader: vs_path.to_path_buf(),
@@ -240,61 +230,38 @@ impl RenderableBuilder {
                 diffuse_texture: dt_path.to_path_buf(),
                 normal_texture: self.nt.clone(),
             }),
-            vertices,
-            indices,
-            shader,
-            diffuse_texture,
-            normal_texture,
-        })
+            ..Default::default()
+        };
+
+        renderable.reload(factory)?;
+
+        Ok(renderable)
     }
 
     pub fn build_text<B: BackendTrait>(&self, factory: &mut BackendResource<B>) -> Result<Renderable, Error> {
-        let dpi_factor = factory.dpi_factor();
-
-        let scaled_cache_size = (
-            (self.cache_size.0 as f64 * dpi_factor) as u32,
-            (self.cache_size.1 as f64 * dpi_factor) as u32,
-        );
-        let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
-        let scaled_text_scale = (self.text_scale as f64 * dpi_factor) as f32;
-        let text_width = self.text_width;
-        let pixel_width = self.virtual_pixel_text_width;
         let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
+        let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
 
-        let diffuse_texture = factory.create_empty_texture(scaled_cache_size)?;
 
-        let text_data = Text::builder()
-            .font(font_path)
-            .cache(diffuse_texture)
-            .scale(scaled_text_scale)
-            .width(pixel_width)
-            .layout(factory, &text)?;
-
-        let mesh = text_data.mesh(text_width);
-        let vertices = factory.create_vertex_buffer(&mesh.vertices)?;
-        let indices = factory.create_index_buffer(&mesh.indices)?;
-
-        let shader = factory.create_shader(&vs_path, &fs_path)?;
-
-        Ok(Renderable {
+        let mut renderable = Renderable {
             source: Some(SourceData::Text {
                 text: text.to_string(),
                 font: font_path.to_path_buf(),
                 text_scale: self.text_scale,
-                text_width,
-                virtual_pixel_text_width: pixel_width,
+                text_width: self.text_width,
+                virtual_pixel_text_width: self.virtual_pixel_text_width,
                 cache_size: self.cache_size,
                 vertex_shader: vs_path.to_path_buf(),
                 fragment_shader: fs_path.to_path_buf(),
             }),
-            vertices,
-            indices,
-            shader,
-            diffuse_texture,
-            normal_texture: None,
-        })
+            ..Default::default()
+        };
+
+        renderable.reload(factory)?;
+
+        Ok(renderable)
     }
 }
 
@@ -322,7 +289,8 @@ mod tests {
 
     #[test]
     fn headless_builder_mesh() {
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
@@ -338,7 +306,8 @@ mod tests {
 
     #[test]
     fn headless_builder_text() {
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0)
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
         let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
