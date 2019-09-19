@@ -68,18 +68,14 @@ where
             ),
         );
         let renderable = {
-            let f = self.orchestrator.file("fonts", "SourceSansPro-Regular.ttf")?;
-            let vs = self.orchestrator.file("shaders", "text-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "text-fragment.glsl")?;
-            let text = "Hello, World!";
             let factory = self.orchestrator.get_mut::<BackendResource<B>>();
             Renderable::builder()
-                .font(f)
+                .font("fonts/SourceSansPro-Regular.ttf")
                 .text_scale(16.0)
                 .text_width(2.0, 200)
-                .vertex_shader(vs)
-                .fragment_shader(fs)
-                .text(text)
+                .vertex_shader("shaders/text-vertex.glsl")
+                .fragment_shader("shaders/text-fragment.glsl")
+                .text("Hello, World!")
                 .build_text(factory)?
         };
         self.orchestrator.insert_component(ea, renderable);
@@ -98,16 +94,12 @@ where
             ),
         );
         let renderable = {
-            let m = self.orchestrator.file("meshes", "cube.ply")?;
-            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
-            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
             let factory = self.orchestrator.get_mut::<BackendResource<B>>();
             Renderable::builder()
-                .mesh(m)
-                .vertex_shader(vs)
-                .fragment_shader(fs)
-                .diffuse_texture(dt)
+                .mesh("meshes/cube.ply")
+                .vertex_shader("shaders/base-vertex.glsl")
+                .fragment_shader("shaders/base-fragment.glsl")
+                .diffuse_texture("textures/tv-test-image.png")
                 .build_mesh(factory)?
         };
         self.orchestrator.insert_component(eb, renderable);
@@ -122,16 +114,12 @@ where
             UiModel::new(Vector2::new(0.0, 0.0), Vector2::new(800.0, 600.0), -1.0),
         );
         let renderable = {
-            let m = self.orchestrator.file("meshes", "quad.ply")?;
-            let vs = self.orchestrator.file("shaders", "base-vertex.glsl")?;
-            let fs = self.orchestrator.file("shaders", "base-fragment.glsl")?;
-            let dt = self.orchestrator.file("textures", "tv-test-image.png")?;
             let factory = self.orchestrator.get_mut::<BackendResource<B>>();
             Renderable::builder()
-                .mesh(m)
-                .vertex_shader(vs)
-                .fragment_shader(fs)
-                .diffuse_texture(dt)
+                .mesh("meshes/quad.ply")
+                .vertex_shader("shaders/base-vertex.glsl")
+                .fragment_shader("shaders/base-fragment.glsl")
+                .diffuse_texture("textures/tv-test-image.png")
                 .build_mesh(factory)?
         };
         self.orchestrator.insert_component(ec, renderable);
