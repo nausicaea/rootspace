@@ -353,7 +353,7 @@ mod tests {
         ignore
     )]
     fn frame() {
-        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/rootspace");
+        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<GliumBackend>()
             .unwrap();

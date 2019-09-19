@@ -293,15 +293,14 @@ mod tests {
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
-        let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let r: Result<Renderable, Error> = Renderable::builder()
-            .mesh(&base_path.join("cube.ply"))
-            .vertex_shader(&base_path.join("vertex.glsl"))
-            .fragment_shader(&base_path.join("fragment.glsl"))
-            .diffuse_texture(&base_path.join("tv-test-image.png"))
+            .mesh("meshes/cube.ply")
+            .vertex_shader("shaders/test-vertex.glsl")
+            .fragment_shader("shaders/test-fragment.glsl")
+            .diffuse_texture("textures/tv-test-image.png")
             .build_mesh(&mut f);
 
-        assert!(r.is_ok(), "{:?}", r);
+        r.unwrap();
     }
 
     #[test]
@@ -310,14 +309,13 @@ mod tests {
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
-        let base_path = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let r: Result<Renderable, Error> = Renderable::builder()
-            .font(&base_path.join("SourceSansPro-Regular.ttf"))
-            .vertex_shader(&base_path.join("vertex.glsl"))
-            .fragment_shader(&base_path.join("fragment.glsl"))
+            .font("fonts/SourceSansPro-Regular.ttf")
+            .vertex_shader("shaders/test-vertex.glsl")
+            .fragment_shader("shaders/test-fragment.glsl")
             .text("Hello, World!")
             .build_text(&mut f);
 
-        assert!(r.is_ok(), "{:?}", r);
+        r.unwrap();
     }
 }

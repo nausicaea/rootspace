@@ -108,7 +108,8 @@ where
     }
 
     pub fn create_texture<P: AsRef<Path>>(&mut self, image: P) -> Result<TextureId, Error> {
-        let t = B::Texture::from_path(&self.inner, &image)?;
+        let image = self.find_asset(image)?;
+        let t = B::Texture::from_path(&self.inner, image)?;
         let id = TextureId::generate();
         self.textures.insert(id, t);
         Ok(id)
@@ -122,7 +123,9 @@ where
     }
 
     pub fn create_shader<P: AsRef<Path>>(&mut self, vs: P, fs: P) -> Result<ShaderId, Error> {
-        let s = B::Shader::from_paths(&self.inner, &vs, &fs)?;
+        let vs = self.find_asset(vs)?;
+        let fs = self.find_asset(fs)?;
+        let s = B::Shader::from_paths(&self.inner, vs, fs)?;
         let id = ShaderId::generate();
         self.shaders.insert(id, s);
         Ok(id)
@@ -318,11 +321,11 @@ mod tests {
 
     #[test]
     fn backend_settings_serde() {
-        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let resource_path = env!("CARGO_MANIFEST_DIR");
         let b: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
 
         assert_tokens(&b, &[
-            Token::Struct { name: "BackendSettings", len: 4 },
+            Token::Struct { name: "BackendSettings", len: 5 },
             Token::Str("title"),
             Token::Str("Title"),
             Token::Str("dimensions"),
@@ -331,9 +334,11 @@ mod tests {
             Token::U32(600),
             Token::TupleEnd,
             Token::Str("vsync"),
-            Token::Bool(true),
+            Token::Bool(false),
             Token::Str("msaa"),
-            Token::U16(8),
+            Token::U16(0),
+            Token::Str("asset_tree"),
+            Token::Str(resource_path),
             Token::StructEnd,
         ]);
     }
