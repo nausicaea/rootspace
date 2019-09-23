@@ -2,11 +2,12 @@ use ecs::{Component, VecStorage};
 
 use affine_transform::AffineTransform;
 use nalgebra::{Affine3, Isometry3, Matrix4, Point3, UnitQuaternion, Vector3};
-use serde::{Deserialize, Serialize};
+use serde::{Serialize, Deserialize};
 use std::{f32, ops::Mul};
 use typename::TypeName;
 
 #[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
+#[serde(into = "AffineTransform<f32>", from = "AffineTransform<f32>")]
 pub struct Model {
     model: Affine3<f32>,
     decomposed: AffineTransform<f32>,
@@ -102,6 +103,21 @@ impl<'a, 'b> Mul<&'a Model> for &'b Model {
             model: product,
             decomposed: product.into(),
         }
+    }
+}
+
+impl From<AffineTransform<f32>> for Model {
+    fn from(value: AffineTransform<f32>) -> Self {
+        Model {
+            model: value.recompose(),
+            decomposed: value,
+        }
+    }
+}
+
+impl From<Model> for AffineTransform<f32> {
+    fn from(value: Model) -> Self {
+        value.decomposed
     }
 }
 

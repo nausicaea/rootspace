@@ -1,10 +1,34 @@
 use ecs::{Component, VecStorage};
 use nalgebra::{zero, Affine3, Isometry3, Matrix4, Point2, Vector2, Vector3};
-use serde::{Deserialize, Serialize};
+use serde::{Serialize, Deserialize};
 use std::ops::Mul;
 use typename::TypeName;
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct UiModelSerDe {
+    translation: Vector2<f32>,
+    scale: Vector2<f32>,
+    depth: f32,
+}
+
+impl From<UiModel> for UiModelSerDe {
+    fn from(value: UiModel) -> Self {
+        UiModelSerDe {
+            translation: value.translation,
+            scale: value.scale,
+            depth: value.depth,
+        }
+    }
+}
+
+impl From<UiModelSerDe> for UiModel {
+    fn from(value: UiModelSerDe) -> Self {
+        UiModel::new(value.translation, value.scale, value.depth)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
+#[serde(into = "UiModelSerDe", from = "UiModelSerDe")]
 pub struct UiModel {
     model: Affine3<f32>,
     translation: Vector2<f32>,

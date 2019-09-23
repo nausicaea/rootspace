@@ -4,8 +4,41 @@ use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point2, Point3, 
 use serde::{Deserialize, Serialize};
 use std::f32;
 use typename::TypeName;
+use approx::ulps_eq;
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct CameraSerDe {
+    dimensions: (u32, u32),
+    fov_y: f32,
+    frustum_z: (f32, f32),
+    eye: Point3<f32>,
+    target: Point3<f32>,
+    up: Vector3<f32>,
+    dpi_factor: f64,
+}
+
+impl From<Camera> for CameraSerDe {
+    fn from(value: Camera) -> Self {
+        CameraSerDe {
+            dimensions: value.dimensions,
+            fov_y: value.fov_y,
+            frustum_z: value.frustum_z,
+            eye: value.eye,
+            target: value.target,
+            up: value.up,
+            dpi_factor: value.dpi_factor,
+        }
+    }
+}
+
+impl From<CameraSerDe> for Camera {
+    fn from(value: CameraSerDe) -> Self {
+        Camera::new(value.dimensions, value.fov_y, value.frustum_z, value.eye, value.target, value.up, value.dpi_factor)
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
+#[serde(into = "CameraSerDe", from = "CameraSerDe")]
 pub struct Camera {
     world_matrix: Matrix4<f32>,
     ui_matrix: Matrix4<f32>,
@@ -13,17 +46,23 @@ pub struct Camera {
     perspective: Perspective3<f32>,
     view: Isometry3<f32>,
     dimensions: (u32, u32),
+    fov_y: f32,
+    frustum_z: (f32, f32),
+    eye: Point3<f32>,
+    target: Point3<f32>,
+    up: Vector3<f32>,
     dpi_factor: f64,
 }
 
 impl Camera {
-    pub fn new(
+    pub fn new<D: Into<Option<f64>>>(
         dimensions: (u32, u32),
         fov_y: f32,
         frustum_z: (f32, f32),
         eye: Point3<f32>,
         target: Point3<f32>,
         up: Vector3<f32>,
+        dpi_factor: D,
     ) -> Self {
         let orthographic = Orthographic3::new(
             dimensions.0 as f32 / -2.0,
@@ -48,23 +87,55 @@ impl Camera {
             perspective,
             view,
             dimensions,
-            dpi_factor: 1.0,
+            fov_y,
+            frustum_z,
+            eye,
+            target,
+            up,
+            dpi_factor: dpi_factor.into().unwrap_or(1.0),
         }
     }
 
     pub fn set_dimensions(&mut self, value: (u32, u32)) {
-        if value != self.dimensions {
-            self.perspective.set_aspect(value.0 as f32 / value.1 as f32);
-            self.dimensions = value;
-            self.recalculate_matrices();
+        if value == self.dimensions {
+            return;
         }
+        if value.0 != self.dimensions.0 {
+            self.orthographic.set_left_and_right(value.0 as f32 / -2.0, value.0 as f32 / 2.0);
+        }
+        if value.1 != self.dimensions.1 {
+            self.orthographic.set_bottom_and_top(value.1 as f32 / -2.0, value.1 as f32 / 2.0);
+        }
+        self.perspective.set_aspect(value.0 as f32 / value.1 as f32);
+        self.dimensions = value;
+        self.recalculate_matrices();
     }
 
     pub fn set_dpi_factor(&mut self, value: f64) {
-        if value != self.dpi_factor {
-            self.dpi_factor = value;
-            self.recalculate_matrices();
+        if ulps_eq!(value, self.dpi_factor) {
+            return;
         }
+        self.dpi_factor = value;
+        self.recalculate_matrices();
+    }
+
+    pub fn set_fov_y(&mut self, value: f32) {
+        if ulps_eq!(value, self.fov_y) {
+            return;
+        }
+        self.perspective.set_fovy(value);
+        self.fov_y = value;
+        self.recalculate_matrices();
+    }
+
+    pub fn set_frustum_z(&mut self, value: (f32, f32)) {
+        if ulps_eq!(value.0, self.frustum_z.0) && ulps_eq!(value.1, self.frustum_z.1) {
+            return;
+        }
+        self.orthographic.set_znear_and_zfar(value.0, value.1);
+        self.perspective.set_znear_and_zfar(value.0, value.1);
+        self.frustum_z = value;
+        self.recalculate_matrices();
     }
 
     pub fn world_matrix(&self) -> &Matrix4<f32> {
@@ -189,6 +260,7 @@ impl Default for Camera {
             Point3::new(0.0, 0.0, 1.0),
             Point3::new(0.0, 0.0, -1.0),
             Vector3::y(),
+            1.0,
         )
     }
 }
@@ -210,6 +282,7 @@ mod tests {
             Point3::new(0.0, 0.0, 1.0),
             Point3::new(0.0, 0.0, -1.0),
             Vector3::y(),
+            1.0,
         );
     }
 
@@ -223,7 +296,8 @@ mod tests {
                 (0.1, 1000.0),
                 Point3::new(0.0, 0.0, 1.0),
                 Point3::new(0.0, 0.0, -1.0),
-                Vector3::y()
+                Vector3::y(),
+                1.0,
             )
         );
     }
