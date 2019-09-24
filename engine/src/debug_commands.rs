@@ -6,7 +6,8 @@ use crate::{
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use ecs::{Component, Entities, Entity, EventQueue, Resources, Storage, WorldEvent};
 use failure::{format_err, Error};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::ffi::OsString;
 
 pub trait CommandTrait: 'static {
     fn name(&self) -> &'static str;
@@ -57,6 +58,13 @@ impl CommandTrait for StateCommand {
                         Arg::with_name("path")
                             .required(true)
                             .takes_value(true)
+                            .validator_os(|s| {
+                                Path::new(s)
+                                    .parent()
+                                    .filter(|p| p.is_dir())
+                                    .map(|_| ())
+                                    .ok_or(OsString::from("expected a path to a new or existing writable file"))
+                            })
                             .help("Sets the path of the file to write to"),
                     ),
             )
@@ -69,6 +77,13 @@ impl CommandTrait for StateCommand {
                         Arg::with_name("path")
                             .required(true)
                             .takes_value(true)
+                            .validator_os(|s| {
+                                if Path::new(s).is_file() {
+                                    Ok(())
+                                } else {
+                                    Err(OsString::from("expected a path to an existing readable file"))
+                                }
+                            })
                             .help("Sets the path of the file to read from"),
                     ),
             )
