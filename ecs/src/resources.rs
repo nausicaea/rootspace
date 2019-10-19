@@ -3,7 +3,7 @@
 use crate::{components::Component, registry::Registry, resource::Resource};
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
-    ser::{SerializeMap, Serializer},
+    ser::{SerializeMap, SerializeStruct, Serializer},
     Serialize,
     Deserialize,
 };
@@ -51,130 +51,6 @@ impl From<Persistence> for Settings {
 impl From<Persistence> for Option<Settings> {
     fn from(value: Persistence) -> Self {
         From::from(Into::<Settings>::into(value))
-    }
-}
-
-pub struct ResourcesSer<'a, RR> {
-    resources: &'a HashMap<TypeId, RefCell<Box<dyn Resource>>>,
-    settings: &'a HashMap<TypeId, Settings>,
-    _rr: PhantomData<RR>,
-}
-
-impl<'a, RR> ResourcesSer<'a, RR>
-where
-    RR: Registry,
-{
-    fn new(res: &'a Resources) -> Self {
-        ResourcesSer {
-            resources: &res.resources,
-            settings: &res.settings,
-            _rr: PhantomData::default(),
-        }
-    }
-
-    fn contains<R>(&self) -> bool
-    where
-        R: Resource,
-    {
-        self.resources.contains_key(&TypeId::of::<R>())
-    }
-
-    fn settings_of<R>(&self) -> &Settings
-    where
-        R: Resource + TypeName,
-    {
-        self
-            .settings
-            .get(&TypeId::of::<R>())
-            .expect(&format!("Could not find any resource of type {}", R::type_name()))
-    }
-
-    fn borrow<R>(&self) -> Ref<R>
-    where
-        R: Resource + TypeName,
-    {
-        self.resources
-            .get(&TypeId::of::<R>())
-            .map(|r| {
-                Ref::map(r.borrow(), |i| {
-                    i.downcast_ref::<R>().expect(&format!(
-                        "Could not downcast the requested resource to type {}",
-                        R::type_name()
-                    ))
-                })
-            })
-            .expect(&format!("Could not find any resource of type {}", R::type_name()))
-    }
-}
-
-impl<'a, RR> Serialize for ResourcesSer<'a, RR>
-where
-    RR: Registry,
-{
-    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        #[derive(Serialize)]
-        struct SerContainer<'a, R> {
-            settings: &'a Settings,
-            resource: &'a R,
-        }
-
-        impl<'a, R> SerContainer<'a, R> {
-            fn new(s: &'a Settings, r: &'a R) -> Self {
-                SerContainer {
-                    settings: s,
-                    resource: r,
-                }
-            }
-        }
-
-        fn serialize_entry<SM, RR, R>(res: &ResourcesSer<RR>, state: &mut SM, _: &R) -> Result<(), SM::Error>
-        where
-            SM: SerializeMap,
-            RR: Registry,
-            R: Resource + TypeName + Serialize,
-        {
-            if res.contains::<R>() {
-                #[cfg(any(test, debug_assertions))]
-                debug!("Serializing the resource {}", &R::type_name());
-                state.serialize_entry(
-                    &R::type_name(),
-                    &SerContainer::new(res.settings_of::<R>(), &*res.borrow::<R>()),
-                )?;
-            } else {
-                #[cfg(any(test, debug_assertions))]
-                debug!("Not serializing the resource {} because it was not present in Resources", &R::type_name());
-            }
-            Ok(())
-        }
-
-        fn recurse<SM, RR, RRSub>(res: &ResourcesSer<RR>, state: &mut SM, reg: &RRSub) -> Result<(), SM::Error>
-        where
-            SM: SerializeMap,
-            RR: Registry,
-            RRSub: Registry,
-        {
-            if RR::LEN > 0 {
-                serialize_entry(res, state, reg.head())?;
-                recurse(res, state, reg.tail())
-            } else {
-                Ok(())
-            }
-        }
-
-        let mut state = ser.serialize_map(Some(RR::LEN))?;
-        debug!("Beginning the serialization of Resources");
-
-        let reg = unsafe {
-            std::mem::MaybeUninit::<RR>::zeroed().assume_init()
-        };
-        recurse(self, &mut state, &reg)?;
-        std::mem::forget(reg);
-
-        debug!("Completed the serialization of Resources");
-        state.end()
     }
 }
 
@@ -330,21 +206,85 @@ impl Resources {
         self.settings.retain(|k, _| resources.contains_key(k));
     }
 
-    pub fn as_serializable<RR>(&self) -> ResourcesSer<RR>
-    where
-        RR: Registry,
-    {
-        ResourcesSer::new(self)
-    }
-
     /// Serialize the types supplied in the registry from `Resources`.
-    pub fn serialize<RR, S>(&self, ser: S) -> Result<(), S::Error>
+    pub fn serialize<RR, S>(&self, serializer: S) -> Result<(), S::Error>
     where
         RR: Registry,
         S: Serializer,
     {
-        let reg: ResourcesSer<RR> = ResourcesSer::new(self);
-        reg.serialize(ser).map(|_| ())
+        struct SerContainer<'a, R> {
+            settings: &'a Settings,
+            resource: &'a R,
+        }
+
+        impl<'a, R> SerContainer<'a, R> {
+            fn new(s: &'a Settings, r: &'a R) -> Self {
+                SerContainer {
+                    settings: s,
+                    resource: r,
+                }
+            }
+        }
+
+        impl<'a, R> Serialize for SerContainer<'a, R>
+        where
+            R: Resource + Serialize,
+        {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: Serializer,
+            {
+                let mut state = serializer.serialize_struct("SerContainer", 2)?;
+                state.serialize_field("settings", self.settings)?;
+                state.serialize_field("resource", self.resource)?;
+                state.end()
+            }
+        }
+
+        fn serialize_entry<SM, R>(res: &Resources, state: &mut SM, _: &R) -> Result<(), SM::Error>
+        where
+            SM: SerializeMap,
+            R: Resource + TypeName + Serialize,
+        {
+            if res.contains::<R>() {
+                #[cfg(any(test, debug_assertions))]
+                debug!("Serializing the resource {}", &R::type_name());
+                state.serialize_entry(
+                    &R::type_name(),
+                    &SerContainer::new(res.settings_of::<R>(), &*res.borrow::<R>()),
+                )?;
+            } else {
+                #[cfg(any(test, debug_assertions))]
+                debug!("Not serializing the resource {} because it was not present in Resources", &R::type_name());
+            }
+            Ok(())
+        }
+
+        fn recurse<SM, RR>(res: &Resources, state: &mut SM, reg: &RR) -> Result<(), SM::Error>
+        where
+            SM: SerializeMap,
+            RR: Registry,
+        {
+            if RR::LEN > 0 {
+                serialize_entry(res, state, reg.head())?;
+                recurse(res, state, reg.tail())
+            } else {
+                Ok(())
+            }
+        }
+
+        debug!("Beginning the serialization of Resources");
+        let mut state = serializer.serialize_map(Some(RR::LEN))?;
+
+        let reg = unsafe {
+            std::mem::MaybeUninit::<RR>::zeroed().assume_init()
+        };
+        recurse(self, &mut state, &reg)?;
+        std::mem::forget(reg);
+
+        state.end()?;
+        debug!("Completed the serialization of Resources");
+        Ok(())
     }
 
     /// Deserialize `Resources` with the provided type registry.

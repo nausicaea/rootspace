@@ -272,7 +272,6 @@ where
     {
         let mut state = ser.serialize_struct("Hierarchy", 2)?;
         state.serialize_field("root_idx", &self.root_idx)?;
-        state.skip_field("index")?;
         state.serialize_field("graph", &self.graph)?;
         state.end()
     }
