@@ -235,11 +235,18 @@ where
         self.resources.get_mut::<C::Storage>().insert(entity, component);
     }
 
-    fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
+    fn serialize<S>(&self, ser: S) -> Result<(), S::Error>
     where
         S: Serializer,
     {
-        self.resources.serialize::<Self::ResourceRegistry, S>(serializer)
+        // let mut state = ser.serialize_struct("World", 5)?;
+        // state.serialize_field("resources", self.resources.as_serializable::<RR>())?;
+        // state.serialize_field("fixed_update_systems", ())?;
+        // state.serialize_field("update_systems", ())?;
+        // state.serialize_field("render_systems", ())?;
+        // state.serialize_field("receiver", &self.receiver)?;
+        // state.end()
+        self.resources.serialize::<Self::ResourceRegistry, S>(ser)
     }
 
     fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
