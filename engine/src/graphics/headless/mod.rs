@@ -1,7 +1,4 @@
-use super::{
-    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
-    TextureTrait, VertexBufferTrait,
-};
+use super::{BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait};
 use crate::{
     assets::{Image, Vertex},
     components::Renderable,
@@ -128,14 +125,13 @@ impl BackendTrait for HeadlessBackend {
     type VertexBuffer = HeadlessVertexBuffer;
 
     #[allow(unused_variables)]
-    fn new<S: AsRef<str>>(
-        title: S,
-        dimensions: (u32, u32),
-        _vsync: bool,
-        _msaa: u16,
-    ) -> Result<Self, Error> {
+    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), _vsync: bool, _msaa: u16) -> Result<Self, Error> {
         #[cfg(any(test, debug_assertions))]
-        debug!("Created a headless backend (title='{}', dims={:?})", title.as_ref(), dimensions);
+        debug!(
+            "Created a headless backend (title='{}', dims={:?})",
+            title.as_ref(),
+            dimensions
+        );
 
         Ok(HeadlessBackend { dimensions })
     }
@@ -189,13 +185,11 @@ mod tests {
             .unwrap();
 
         let vertices = f
-            .create_vertex_buffer(
-                &[
-                    Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
-                    Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
-                    Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
-                ],
-            )
+            .create_vertex_buffer(&[
+                Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
+                Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
+                Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
+            ])
             .unwrap();
 
         let indices = f.create_index_buffer(&[0, 1, 2]).unwrap();

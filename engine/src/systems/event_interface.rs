@@ -1,8 +1,4 @@
-use crate::{
-    event::EngineEvent,
-    graphics::BackendTrait,
-    resources::BackendResource,
-};
+use crate::{event::EngineEvent, graphics::BackendTrait, resources::BackendResource};
 use ecs::{EventQueue, Resources, System};
 use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
@@ -40,8 +36,7 @@ where
             });
 
         let mut queue = res.borrow_mut::<EventQueue<EngineEvent>>();
-        events.into_iter()
-            .for_each(|e| queue.send(e));
+        events.into_iter().for_each(|e| queue.send(e));
     }
 }
 

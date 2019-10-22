@@ -1,12 +1,12 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
-use crate::indexing::{Generation, Index};
-use crate::resource::Resource;
+use crate::{
+    indexing::{Generation, Index},
+    resource::Resource,
+};
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use std::{fmt, num::ParseIntError, str::FromStr};
 use typename::TypeName;
-use std::str::FromStr;
-use std::num::ParseIntError;
 
 /// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug, TypeName, Serialize, Deserialize)]
@@ -131,9 +131,10 @@ impl FromStr for Entity {
     type Err = ParseIntError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<&str> = s.trim_matches(|p| p == '(' || p == ')' || p == ' ' )
-                                 .split(',')
-                                 .collect();
+        let parts: Vec<&str> = s
+            .trim_matches(|p| p == '(' || p == ')' || p == ' ')
+            .split(',')
+            .collect();
 
         let idx = parts[0].parse::<Index>()?;
         let gen = parts[1].parse::<Generation>()?;

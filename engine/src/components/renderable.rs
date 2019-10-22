@@ -4,7 +4,7 @@ use crate::{
     resources::{BackendResource, IndexBufferId, ShaderId, TextureId, VertexBufferId},
 };
 use ecs::{Component, VecStorage};
-use failure::{Error, Fail, format_err};
+use failure::{format_err, Error, Fail};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use typename::TypeName;
@@ -64,7 +64,13 @@ impl Renderable {
 
     pub fn reload<B: BackendTrait>(&mut self, factory: &mut BackendResource<B>) -> Result<(), Error> {
         match self.source {
-            Some(SourceData::Mesh { ref file, ref vertex_shader, ref fragment_shader, ref diffuse_texture, ref normal_texture }) => {
+            Some(SourceData::Mesh {
+                ref file,
+                ref vertex_shader,
+                ref fragment_shader,
+                ref diffuse_texture,
+                ref normal_texture,
+            }) => {
                 let mesh_path = factory.find_asset(file)?;
                 let mesh = Mesh::from_path(mesh_path)?;
 
@@ -78,13 +84,22 @@ impl Renderable {
                     None
                 };
                 Ok(())
-            },
-            Some(SourceData::Text { ref text, ref font, text_scale, text_width, virtual_pixel_text_width, cache_size, ref vertex_shader, ref fragment_shader }) => {
+            }
+            Some(SourceData::Text {
+                ref text,
+                ref font,
+                text_scale,
+                text_width,
+                virtual_pixel_text_width,
+                cache_size,
+                ref vertex_shader,
+                ref fragment_shader,
+            }) => {
                 let dpi_factor = factory.dpi_factor();
                 let scaled_cache_size = (
                     (cache_size.0 as f64 * dpi_factor) as u32,
                     (cache_size.1 as f64 * dpi_factor) as u32,
-                    );
+                );
                 let scaled_text_scale = (text_scale as f64 * dpi_factor) as f32;
 
                 self.diffuse_texture = factory.create_empty_texture(scaled_cache_size)?;
@@ -101,8 +116,11 @@ impl Renderable {
                 self.shader = factory.create_shader(&vertex_shader, &fragment_shader)?;
                 self.normal_texture = None;
                 Ok(())
-            },
-            None => Err(format_err!("Cannot reload the renderable because no source data is present: {:?}", self)),
+            }
+            None => Err(format_err!(
+                "Cannot reload the renderable because no source data is present: {:?}",
+                self
+            )),
         }
     }
 
@@ -244,7 +262,6 @@ impl RenderableBuilder {
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
 
-
         let mut renderable = Renderable {
             source: Some(SourceData::Text {
                 text: text.to_string(),
@@ -284,8 +301,7 @@ pub enum RenderableError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graphics::headless::HeadlessBackend;
-    use crate::resources::BackendSettings;
+    use crate::{graphics::headless::HeadlessBackend, resources::BackendSettings};
 
     #[test]
     fn headless_builder_mesh() {

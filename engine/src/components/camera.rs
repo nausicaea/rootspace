@@ -1,10 +1,10 @@
 use crate::geometry::ray::Ray;
+use approx::ulps_eq;
 use ecs::{Component, VecStorage};
 use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
 use serde::{Deserialize, Serialize};
 use std::f32;
 use typename::TypeName;
-use approx::ulps_eq;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct CameraSerDe {
@@ -33,7 +33,15 @@ impl From<Camera> for CameraSerDe {
 
 impl From<CameraSerDe> for Camera {
     fn from(value: CameraSerDe) -> Self {
-        Camera::new(value.dimensions, value.fov_y, value.frustum_z, value.eye, value.target, value.up, value.dpi_factor)
+        Camera::new(
+            value.dimensions,
+            value.fov_y,
+            value.frustum_z,
+            value.eye,
+            value.target,
+            value.up,
+            value.dpi_factor,
+        )
     }
 }
 
@@ -101,10 +109,12 @@ impl Camera {
             return;
         }
         if value.0 != self.dimensions.0 {
-            self.orthographic.set_left_and_right(value.0 as f32 / -2.0, value.0 as f32 / 2.0);
+            self.orthographic
+                .set_left_and_right(value.0 as f32 / -2.0, value.0 as f32 / 2.0);
         }
         if value.1 != self.dimensions.1 {
-            self.orthographic.set_bottom_and_top(value.1 as f32 / -2.0, value.1 as f32 / 2.0);
+            self.orthographic
+                .set_bottom_and_top(value.1 as f32 / -2.0, value.1 as f32 / 2.0);
         }
         self.perspective.set_aspect(value.0 as f32 / value.1 as f32);
         self.dimensions = value;

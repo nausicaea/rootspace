@@ -100,7 +100,11 @@ where
         AffineTransform {
             translation: self.translation.inverse(),
             rotation: self.rotation.inverse(),
-            scale: Vector3::new(one::<N>() / self.scale.x, one::<N>() / self.scale.y, one::<N>() / self.scale.z),
+            scale: Vector3::new(
+                one::<N>() / self.scale.x,
+                one::<N>() / self.scale.y,
+                one::<N>() / self.scale.z,
+            ),
         }
     }
 
@@ -175,7 +179,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_test::{Token, assert_tokens};
+    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn identity() {
@@ -279,28 +283,34 @@ mod tests {
             UnitQuaternion::identity(),
             Vector3::new(1.0, 2.0, 3.0),
         );
-        assert_tokens(&a, &[
-            Token::Struct { name: "AffineTransform".into(), len: 3 },
-            Token::Str("translation"),
-            Token::Seq { len: Some(3) },
-            Token::F64(0.1),
-            Token::F64(0.2),
-            Token::F64(0.3),
-            Token::SeqEnd,
-            Token::Str("rotation"),
-            Token::Seq { len: Some(4) },
-            Token::F64(0.0),
-            Token::F64(0.0),
-            Token::F64(0.0),
-            Token::F64(1.0),
-            Token::SeqEnd,
-            Token::Str("scale"),
-            Token::Seq { len: Some(3) },
-            Token::F64(1.0),
-            Token::F64(2.0),
-            Token::F64(3.0),
-            Token::SeqEnd,
-            Token::StructEnd,
-        ]);
+        assert_tokens(
+            &a,
+            &[
+                Token::Struct {
+                    name: "AffineTransform".into(),
+                    len: 3,
+                },
+                Token::Str("translation"),
+                Token::Seq { len: Some(3) },
+                Token::F64(0.1),
+                Token::F64(0.2),
+                Token::F64(0.3),
+                Token::SeqEnd,
+                Token::Str("rotation"),
+                Token::Seq { len: Some(4) },
+                Token::F64(0.0),
+                Token::F64(0.0),
+                Token::F64(0.0),
+                Token::F64(1.0),
+                Token::SeqEnd,
+                Token::Str("scale"),
+                Token::Seq { len: Some(3) },
+                Token::F64(1.0),
+                Token::F64(2.0),
+                Token::F64(3.0),
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+        );
     }
 }

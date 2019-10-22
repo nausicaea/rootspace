@@ -2,10 +2,10 @@ use crate::event::EngineEvent;
 #[cfg(not(test))]
 use ctrlc;
 use ecs::{EventQueue, Resources, System};
-#[cfg(not(test))]
-use log::error;
 #[cfg(any(test, debug_assertions))]
 use log::debug;
+#[cfg(not(test))]
+use log::error;
 #[cfg(not(test))]
 use std::process;
 use std::{

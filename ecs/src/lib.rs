@@ -25,7 +25,7 @@ pub use crate::{
     loop_stage::LoopStage,
     registry::{Element, End, Registry},
     resource::Resource,
-    resources::{Persistence, Settings, Resources},
+    resources::{Persistence, Resources, Settings},
     system::System,
     world::{ResourcesTrait, World, WorldEvent, WorldTrait},
 };

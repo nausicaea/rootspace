@@ -1,7 +1,4 @@
-use super::{
-    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
-    TextureTrait, VertexBufferTrait,
-};
+use super::{BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait};
 use crate::{
     assets::{Image, Vertex},
     components::Renderable,
@@ -173,7 +170,12 @@ impl FrameTrait<GliumBackend> for GliumFrame {
         self.0.clear_color_and_depth((c[0], c[1], c[2], c[3]), d)
     }
 
-    fn render<T>(&mut self, transform: &T, factory: &BackendResource<GliumBackend>, data: &Renderable) -> Result<(), Error>
+    fn render<T>(
+        &mut self,
+        transform: &T,
+        factory: &BackendResource<GliumBackend>,
+        data: &Renderable,
+    ) -> Result<(), Error>
     where
         T: AsRef<[[f32; 4]; 4]>,
     {
@@ -249,12 +251,7 @@ impl BackendTrait for GliumBackend {
     type Texture = GliumTexture;
     type VertexBuffer = GliumVertexBuffer;
 
-    fn new<S: AsRef<str>>(
-        title: S,
-        dimensions: (u32, u32),
-        vsync: bool,
-        msaa: u16,
-    ) -> Result<Self, Error> {
+    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self, Error> {
         let window = WindowBuilder::new()
             .with_title(title.as_ref())
             .with_dimensions(dimensions.into())
@@ -301,9 +298,9 @@ impl fmt::Debug for GliumBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::resources::BackendSettings;
     use approx::assert_ulps_ne;
     use std::f64;
-    use crate::resources::BackendSettings;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);
@@ -315,28 +312,16 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        ignore
-    )]
-    #[cfg_attr(
-        target_os = "macos",
-        ignore
-    )]
+    #[cfg_attr(feature = "wsl", ignore)]
+    #[cfg_attr(target_os = "macos", ignore)]
     fn backend() {
         let r = GliumBackend::new("Title", (800, 600), false, 0);
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
     #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        ignore
-    )]
-    #[cfg_attr(
-        target_os = "macos",
-        ignore
-    )]
+    #[cfg_attr(feature = "wsl", ignore)]
+    #[cfg_attr(target_os = "macos", ignore)]
     fn dpi_factor() {
         let b = GliumBackend::new("Title", (800, 600), false, 0).unwrap();
 
@@ -344,14 +329,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(
-        feature = "wsl",
-        ignore
-    )]
-    #[cfg_attr(
-        target_os = "macos",
-        ignore
-    )]
+    #[cfg_attr(feature = "wsl", ignore)]
+    #[cfg_attr(target_os = "macos", ignore)]
     fn frame() {
         let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
@@ -359,13 +338,11 @@ mod tests {
             .unwrap();
 
         let vertices = f
-            .create_vertex_buffer(
-                &[
-                    Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
-                    Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
-                    Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
-                ],
-            )
+            .create_vertex_buffer(&[
+                Vertex::new([0.0, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
+                Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
+                Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
+            ])
             .unwrap();
 
         let indices = f.create_index_buffer(&[0, 1, 2]).unwrap();

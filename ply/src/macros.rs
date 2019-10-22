@@ -93,4 +93,3 @@ macro_rules! impl_ascii_vector_property {
         }
     };
 }
-

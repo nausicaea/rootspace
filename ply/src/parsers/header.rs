@@ -1,4 +1,5 @@
 use super::base::{ascii_unsigned_integral, eol, identity, keyword, lex};
+use crate::types::{CountType, DataType, Element, Format, FormatType, Header, Property};
 use combine::{
     error::ParseError,
     parser::{
@@ -11,7 +12,6 @@ use combine::{
     },
     stream::Stream,
 };
-use crate::types::{CountType, DataType, Element, Format, FormatType, Header, Property};
 
 /// Parses the beginning of the ply header.
 fn begin_header<'a, I>() -> impl Parser<Input = I, Output = ()> + 'a
@@ -60,7 +60,8 @@ where
         attempt(keyword(&b"float"[..])),
         attempt(keyword(&b"float64"[..])),
         attempt(keyword(&b"double"[..])),
-    ]).map(|r: &[u8]| match r {
+    ])
+    .map(|r: &[u8]| match r {
         b"int8" => DataType::Int8,
         b"char" => DataType::Int8,
         b"uint8" => DataType::Uint8,
@@ -78,7 +79,8 @@ where
         b"float64" => DataType::Float64,
         b"double" => DataType::Float64,
         _ => unreachable!(),
-    }).expected("a property data type")
+    })
+    .expected("a property data type")
 }
 
 fn count_type<'a, I>() -> impl Parser<Input = I, Output = CountType> + 'a
@@ -93,7 +95,8 @@ where
         attempt(keyword(&b"ushort"[..])),
         attempt(keyword(&b"uint32"[..])),
         attempt(keyword(&b"uint"[..])),
-    ]).map(|r: &[u8]| match r {
+    ])
+    .map(|r: &[u8]| match r {
         b"uint8" => CountType::Uint8,
         b"uchar" => CountType::Uint8,
         b"uint16" => CountType::Uint16,
@@ -101,7 +104,8 @@ where
         b"uint32" => CountType::Uint32,
         b"uint" => CountType::Uint32,
         _ => unreachable!(),
-    }).expected("a count data type (an unsigned integral type)")
+    })
+    .expected("a count data type (an unsigned integral type)")
 }
 
 /// Parses the ply format type.
@@ -114,12 +118,14 @@ where
         attempt(keyword(&b"ascii"[..])),
         attempt(keyword(&b"binary_big_endian"[..])),
         attempt(keyword(&b"binary_little_endian"[..])),
-    ]).map(|r: &[u8]| match r {
+    ])
+    .map(|r: &[u8]| match r {
         b"ascii" => FormatType::Ascii,
         b"binary_big_endian" => FormatType::BinaryBigEndian,
         b"binary_little_endian" => FormatType::BinaryLittleEndian,
         _ => unreachable!(),
-    }).expected("a ply format type")
+    })
+    .expected("a ply format type")
 }
 
 /// Parses the ply format version.
@@ -132,7 +138,8 @@ where
         .with(sep_by::<Vec<_>, _, _>(
             ascii_unsigned_integral::<_, usize>(),
             byte(b'.'),
-        )).expected("a ply format version with value '1.0'")
+        ))
+        .expected("a ply format version with value '1.0'")
 }
 
 /// Parses the ply format statement.
@@ -173,7 +180,8 @@ where
             name,
             count_data_type: list.map(|l| l.1),
             data_type,
-        }).expected("a property statement")
+        })
+        .expected("a property statement")
 }
 
 /// Parses element statements.
@@ -202,7 +210,8 @@ where
             name,
             count,
             properties: properties.into_iter().map(|p| p.1).collect(),
-        }).expected("an element and at least one property")
+        })
+        .expected("an element and at least one property")
 }
 
 /// Parses the ply format statement followed by zero or more elements and their properties.
@@ -352,10 +361,12 @@ mod tests {
         let stream =
             b"ply\nformat ascii 1.0\r\nelement face 3\rproperty list uint8 uint32 vertex_indices\nend_header\r\n";
 
-        assert!(header().parse(BufferedStream::new(
-            State::new(ReadStream::new(&stream[..])),
-            BUFFER_SIZE
-        )).is_ok());
+        assert!(header()
+            .parse(BufferedStream::new(
+                State::new(ReadStream::new(&stream[..])),
+                BUFFER_SIZE
+            ))
+            .is_ok());
     }
 
     #[test]
@@ -493,21 +504,29 @@ mod tests {
         let stream_d =
             b"ply\nformat ascii 1.0\nelement vertex 3\nproperty float x\ncomment I am done now\nend_header\n";
 
-        assert!(header().parse(BufferedStream::new(
-            State::new(ReadStream::new(&stream_a[..])),
-            BUFFER_SIZE
-        )).is_ok());
-        assert!(header().parse(BufferedStream::new(
-            State::new(ReadStream::new(&stream_b[..])),
-            BUFFER_SIZE
-        )).is_ok());
-        assert!(header().parse(BufferedStream::new(
-            State::new(ReadStream::new(&stream_c[..])),
-            BUFFER_SIZE
-        )).is_ok());
-        assert!(header().parse(BufferedStream::new(
-            State::new(ReadStream::new(&stream_d[..])),
-            BUFFER_SIZE
-        )).is_err());
+        assert!(header()
+            .parse(BufferedStream::new(
+                State::new(ReadStream::new(&stream_a[..])),
+                BUFFER_SIZE
+            ))
+            .is_ok());
+        assert!(header()
+            .parse(BufferedStream::new(
+                State::new(ReadStream::new(&stream_b[..])),
+                BUFFER_SIZE
+            ))
+            .is_ok());
+        assert!(header()
+            .parse(BufferedStream::new(
+                State::new(ReadStream::new(&stream_c[..])),
+                BUFFER_SIZE
+            ))
+            .is_ok());
+        assert!(header()
+            .parse(BufferedStream::new(
+                State::new(ReadStream::new(&stream_d[..])),
+                BUFFER_SIZE
+            ))
+            .is_err());
     }
 }

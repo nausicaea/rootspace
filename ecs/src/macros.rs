@@ -161,10 +161,12 @@ macro_rules! reg_add {
 
 #[cfg(test)]
 mod tests {
-    use crate::registry::{Element, End};
-    use crate::resource::Resource;
-    use typename::TypeName;
+    use crate::{
+        registry::{Element, End},
+        resource::Resource,
+    };
     use serde::{Deserialize, Serialize};
+    use typename::TypeName;
 
     #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
     struct A(usize);

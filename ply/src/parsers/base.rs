@@ -92,7 +92,8 @@ where
                 n = n * cast::<_, O>(10).unwrap() + (cast::<_, O>(byte).unwrap() - cast::<_, O>(b'0').unwrap());
             }
             n
-        }).expected("an unsigned integer")
+        })
+        .expected("an unsigned integer")
 }
 
 /// Parses a signed integer from a stream of numeric ASCII characters.
@@ -114,7 +115,8 @@ where
             } else {
                 n
             }
-        }).expected("a signed integer")
+        })
+        .expected("a signed integer")
 }
 
 pub fn ascii_floating_point<'a, I, O>() -> impl Parser<Input = I, Output = O> + 'a
@@ -128,12 +130,14 @@ where
         optional(token(b'-')),
         skip_many1(digit()),
         optional((token(b'.'), skip_many(digit()))),
-    )).map(|bs| {
+    ))
+    .map(|bs| {
         String::from_utf8(bs)
             .expect("Failed to parse validated parser output as UTF-8 string")
             .parse::<O>()
             .expect("Failed to parse validated parser output as signed float")
-    }).expected("a signed float")
+    })
+    .expected("a signed float")
 }
 
 #[cfg(test)]

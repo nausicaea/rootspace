@@ -1,11 +1,11 @@
 //! Provides the resource manager.
 
 use crate::{components::Component, registry::Registry, resource::Resource};
+use log::debug;
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, SerializeStruct, Serializer},
-    Serialize,
-    Deserialize,
+    Deserialize, Serialize,
 };
 use std::{
     any::TypeId,
@@ -15,7 +15,6 @@ use std::{
     marker::PhantomData,
 };
 use typename::TypeName;
-use log::debug;
 
 /// Determines how persistent a particular resource should be. This allows selectively deleting and
 /// retaining resources upon multiple re-initialisations of the world.
@@ -43,7 +42,7 @@ impl From<Persistence> for Settings {
     fn from(value: Persistence) -> Self {
         Settings {
             persistence: value,
-            .. Default::default()
+            ..Default::default()
         }
     }
 }
@@ -116,8 +115,7 @@ impl Resources {
     where
         R: Resource + TypeName,
     {
-        self
-            .settings
+        self.settings
             .get(&TypeId::of::<R>())
             .expect(&format!("Could not find any resource of type {}", R::type_name()))
     }
@@ -255,7 +253,10 @@ impl Resources {
                 )?;
             } else {
                 #[cfg(any(test, debug_assertions))]
-                debug!("Not serializing the resource {} because it was not present in Resources", &R::type_name());
+                debug!(
+                    "Not serializing the resource {} because it was not present in Resources",
+                    &R::type_name()
+                );
             }
             Ok(())
         }
@@ -276,9 +277,7 @@ impl Resources {
         debug!("Beginning the serialization of Resources");
         let mut state = serializer.serialize_map(Some(RR::LEN))?;
 
-        let reg = unsafe {
-            std::mem::MaybeUninit::<RR>::zeroed().assume_init()
-        };
+        let reg = unsafe { std::mem::MaybeUninit::<RR>::zeroed().assume_init() };
         recurse(self, &mut state, &reg)?;
         std::mem::forget(reg);
 
@@ -304,7 +303,13 @@ impl Resources {
             A: MapAccess<'de>,
             RR: Registry,
         {
-            fn sub<'de, A, RR, R>(res: &mut Resources, access: &mut A, key: &str, reg: &RR, _: &R) -> Result<(), A::Error>
+            fn sub<'de, A, RR, R>(
+                res: &mut Resources,
+                access: &mut A,
+                key: &str,
+                reg: &RR,
+                _: &R,
+            ) -> Result<(), A::Error>
             where
                 A: MapAccess<'de>,
                 RR: Registry,
@@ -353,9 +358,7 @@ impl Resources {
             {
                 let mut resources = Resources::with_capacity(access.size_hint().unwrap_or(RR::LEN));
 
-                let reg = unsafe {
-                    std::mem::MaybeUninit::<RR>::zeroed().assume_init()
-                };
+                let reg = unsafe { std::mem::MaybeUninit::<RR>::zeroed().assume_init() };
                 while let Some(key) = access.next_key::<String>()? {
                     #[cfg(any(test, debug_assertions))]
                     debug!("Deserializing the resource {}", &key);
@@ -394,7 +397,10 @@ impl Resources {
                 }
             } else {
                 #[cfg(any(test, debug_assertions))]
-                debug!("Not adding the resource {:?}, because the same type is already present", v);
+                debug!(
+                    "Not adding the resource {:?}, because the same type is already present",
+                    v
+                );
             }
         }
         for (k, v) in other.settings {
@@ -481,10 +487,7 @@ mod tests {
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
         assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(0.141));
-        assert_eq!(
-            *resources.borrow::<TestResourceC>(),
-            TestResourceC(String::from("Bye"))
-        );
+        assert_eq!(*resources.borrow::<TestResourceC>(), TestResourceC(String::from("Bye")));
     }
 
     #[test]
@@ -497,14 +500,13 @@ mod tests {
         let mut d = serde_json::Deserializer::from_slice(
             b"{\"ecs::resources::tests::TestResourceA\":{\"settings\":{\"persistence\":\"None\"},\"resource\":100},\"ecs::resources::tests::TestResourceB\":{\"settings\":{\"persistence\":\"None\"},\"resource\":10.01},\"ecs::resources::tests::TestResourceC\":{\"settings\":{\"persistence\":\"None\"},\"resource\":\"Hello, World!\"}}",
         );
-        resources.deserialize_additive::<TestRegistry, _>(&mut d, false).unwrap();
+        resources
+            .deserialize_additive::<TestRegistry, _>(&mut d, false)
+            .unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
         assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(0.141));
-        assert_eq!(
-            *resources.borrow::<TestResourceC>(),
-            TestResourceC(String::from("Bye"))
-        );
+        assert_eq!(*resources.borrow::<TestResourceC>(), TestResourceC(String::from("Bye")));
     }
 
     #[test]
@@ -535,7 +537,9 @@ mod tests {
         let mut d = serde_json::Deserializer::from_slice(
             b"{\"ecs::resources::tests::TestResourceB\":{\"settings\":{\"persistence\":\"None\"},\"resource\":10.01},\"ecs::resources::tests::TestResourceC\":{\"settings\":{\"persistence\":\"None\"},\"resource\":\"Hello, World!\"}}",
         );
-        resources.deserialize_additive::<TestRegistry, _>(&mut d, false).unwrap();
+        resources
+            .deserialize_additive::<TestRegistry, _>(&mut d, false)
+            .unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
         assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(10.01));

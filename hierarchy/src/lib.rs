@@ -12,11 +12,14 @@ use daggy::{
     },
     Dag, NodeIndex,
 };
-use std::{collections::HashMap, fmt, hash::Hash};
-#[cfg(any(test, feature = "serde_support"))]
-use serde::{Serialize, Deserialize, de::{self, Deserializer, Visitor, MapAccess}, ser::{Serializer, SerializeStruct}};
 use failure::Fail;
-use std::marker::PhantomData;
+#[cfg(any(test, feature = "serde_support"))]
+use serde::{
+    de::{self, Deserializer, MapAccess, Visitor},
+    ser::{SerializeStruct, Serializer},
+    Deserialize, Serialize,
+};
+use std::{collections::HashMap, fmt, hash::Hash, marker::PhantomData};
 
 /// Given a set of identifying keys and corresponding data, `Hierarchy` allows users to establish
 /// hierarchical relationships between individual instances of the data type.
@@ -234,7 +237,8 @@ where
         let lhs_bfs = Bfs::new(self.graph.graph(), self.root_idx).iter(self.graph.graph());
         let rhs_bfs = Bfs::new(rhs.graph.graph(), rhs.root_idx).iter(rhs.graph.graph());
 
-        lhs_bfs.zip(rhs_bfs)
+        lhs_bfs
+            .zip(rhs_bfs)
             .all(|(lhs_nidx, rhs_nidx)| self.graph.node_weight(lhs_nidx) == rhs.graph.node_weight(rhs_nidx))
     }
 }
@@ -268,7 +272,7 @@ where
 {
     fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer
+        S: Serializer,
     {
         let mut state = ser.serialize_struct("Hierarchy", 2)?;
         state.serialize_field("root_idx", &self.root_idx)?;
@@ -330,13 +334,13 @@ where
                                 return Err(de::Error::duplicate_field("root_idx"));
                             }
                             root_idx = Some(access.next_value()?);
-                        },
+                        }
                         Field::Graph => {
                             if graph.is_some() {
                                 return Err(de::Error::duplicate_field("graph"));
                             }
                             graph = Some(access.next_value()?);
-                        },
+                        }
                     }
                 }
 
@@ -453,9 +457,8 @@ pub enum HierarchyError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_test::{Token, assert_ser_tokens};
-    use std::str::FromStr;
-    use std::num::ParseIntError;
+    use serde_test::{assert_ser_tokens, Token};
+    use std::{num::ParseIntError, str::FromStr};
 
     #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
     struct TestKey(u64);
@@ -576,53 +579,62 @@ mod tests {
         h.insert(TestKey(1), 1.0);
         h.insert(TestKey(2), 2.0);
 
-        assert_ser_tokens(&h, &[
-            Token::Struct { name: "Hierarchy", len: 2 },
-            Token::Str("root_idx"),
-            Token::U32(0),
-            Token::Str("graph"),
-            Token::Struct { name: "Graph", len: 4 },
-            Token::Str("nodes"),
-            Token::Seq { len: Some(3) },
-            Token::NewtypeStruct { name: "HierNode" },
-            Token::None,
-            Token::NewtypeStruct { name: "HierNode" },
-            Token::Some,
-            Token::Tuple { len: 2 },
-            Token::NewtypeStruct { name: "TestKey" },
-            Token::U64(1),
-            Token::F32(1.0),
-            Token::TupleEnd,
-            Token::NewtypeStruct { name: "HierNode" },
-            Token::Some,
-            Token::Tuple { len: 2 },
-            Token::NewtypeStruct { name: "TestKey" },
-            Token::U64(2),
-            Token::F32(2.0),
-            Token::TupleEnd,
-            Token::SeqEnd,
-            Token::Str("node_holes"),
-            Token::Seq { len: Some(0) },
-            Token::SeqEnd,
-            Token::Str("edge_property"),
-            Token::UnitVariant { name: "EdgeProperty", variant: "directed" },
-            Token::Str("edges"),
-            Token::Seq { len: Some(2) },
-            Token::Some,
-            Token::Tuple { len: 3 },
-            Token::U32(0),
-            Token::U32(1),
-            Token::Unit,
-            Token::TupleEnd,
-            Token::Some,
-            Token::Tuple { len: 3 },
-            Token::U32(0),
-            Token::U32(2),
-            Token::Unit,
-            Token::TupleEnd,
-            Token::SeqEnd,
-            Token::StructEnd,
-            Token::StructEnd,
-        ]);
+        assert_ser_tokens(
+            &h,
+            &[
+                Token::Struct {
+                    name: "Hierarchy",
+                    len: 2,
+                },
+                Token::Str("root_idx"),
+                Token::U32(0),
+                Token::Str("graph"),
+                Token::Struct { name: "Graph", len: 4 },
+                Token::Str("nodes"),
+                Token::Seq { len: Some(3) },
+                Token::NewtypeStruct { name: "HierNode" },
+                Token::None,
+                Token::NewtypeStruct { name: "HierNode" },
+                Token::Some,
+                Token::Tuple { len: 2 },
+                Token::NewtypeStruct { name: "TestKey" },
+                Token::U64(1),
+                Token::F32(1.0),
+                Token::TupleEnd,
+                Token::NewtypeStruct { name: "HierNode" },
+                Token::Some,
+                Token::Tuple { len: 2 },
+                Token::NewtypeStruct { name: "TestKey" },
+                Token::U64(2),
+                Token::F32(2.0),
+                Token::TupleEnd,
+                Token::SeqEnd,
+                Token::Str("node_holes"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::Str("edge_property"),
+                Token::UnitVariant {
+                    name: "EdgeProperty",
+                    variant: "directed",
+                },
+                Token::Str("edges"),
+                Token::Seq { len: Some(2) },
+                Token::Some,
+                Token::Tuple { len: 3 },
+                Token::U32(0),
+                Token::U32(1),
+                Token::Unit,
+                Token::TupleEnd,
+                Token::Some,
+                Token::Tuple { len: 3 },
+                Token::U32(0),
+                Token::U32(2),
+                Token::Unit,
+                Token::TupleEnd,
+                Token::SeqEnd,
+                Token::StructEnd,
+                Token::StructEnd,
+            ],
+        );
     }
 }

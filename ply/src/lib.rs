@@ -7,7 +7,7 @@ mod parsers;
 pub mod types;
 
 pub use self::types::Ply;
-use self::types::{PropertyData, Element};
+use self::types::{Element, PropertyData};
 use combine::{
     parser::Parser,
     stream::{buffered::BufferedStream, state::State, ReadStream},
@@ -39,13 +39,13 @@ impl Ply {
     /// otherwise you cannot reliably search for elements or properties by name.
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let path = path.as_ref();
-        let file = File::open(path)
-            .map_err(|e| Error::IoError(format!("{}", path.display()), e))?;
+        let file = File::open(path).map_err(|e| Error::IoError(format!("{}", path.display()), e))?;
 
         let stream = BufferedStream::new(State::new(ReadStream::new(file)), 32);
-        let data = ply().parse(stream)
+        let data = ply()
+            .parse(stream)
             .map(|(d, _)| d)
-            .map_err( |e|Error::ParserError(format!("{}", path.display()), format!("{}", e)))?;
+            .map_err(|e| Error::ParserError(format!("{}", path.display()), format!("{}", e)))?;
 
         if !data.header.has_duplicate_elements() {
             if !data.header.elements.iter().any(|e| e.has_duplicate_properties()) {
@@ -116,8 +116,7 @@ impl Ply {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
-    use std::convert::TryInto;
+    use std::{convert::TryInto, path::PathBuf};
 
     #[test]
     fn from_valid_path() {
@@ -201,11 +200,7 @@ mod tests {
             f
         });
 
-        let indices: Vec<u16> = faces
-            .iter()
-            .flatten()
-            .cloned()
-            .collect();
+        let indices: Vec<u16> = faces.iter().flatten().cloned().collect();
 
         assert_eq!(faces.len(), 12);
         assert_eq!(indices.len(), 12 * 3);

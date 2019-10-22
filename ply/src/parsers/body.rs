@@ -1,4 +1,8 @@
 use super::base::{ascii_floating_point, ascii_signed_integral, ascii_unsigned_integral, lex};
+use crate::{
+    impl_ascii_scalar_property, impl_ascii_vector_property,
+    types::{Body, CountType, DataType, Element, ElementData, FormatType, Header, PropertyData},
+};
 use combine::{
     byteorder::{ByteOrder, BE, LE},
     error::ParseError,
@@ -11,8 +15,6 @@ use combine::{
     },
     stream::Stream,
 };
-use crate::types::{Body, CountType, DataType, Element, ElementData, FormatType, Header, PropertyData};
-use crate::{impl_ascii_scalar_property, impl_ascii_vector_property};
 
 impl_ascii_scalar_property!(pai8, ascii_signed_integral, i8);
 impl_ascii_scalar_property!(pau8, ascii_unsigned_integral, u8);
@@ -262,21 +264,27 @@ where
 {
     opaque(
         move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| match format {
-            FormatType::Ascii => if count_data_type.is_some() {
-                f(&mut no_partial(ascii_vector(data_type)))
-            } else {
-                f(&mut no_partial(ascii_scalar(data_type)))
-            },
-            FormatType::BinaryBigEndian => if let Some(ct) = count_data_type {
-                f(&mut no_partial(binary_vector::<_, BE>(ct, data_type)))
-            } else {
-                f(&mut no_partial(binary_scalar::<_, BE>(data_type)))
-            },
-            FormatType::BinaryLittleEndian => if let Some(ct) = count_data_type {
-                f(&mut no_partial(binary_vector::<_, LE>(ct, data_type)))
-            } else {
-                f(&mut no_partial(binary_scalar::<_, LE>(data_type)))
-            },
+            FormatType::Ascii => {
+                if count_data_type.is_some() {
+                    f(&mut no_partial(ascii_vector(data_type)))
+                } else {
+                    f(&mut no_partial(ascii_scalar(data_type)))
+                }
+            }
+            FormatType::BinaryBigEndian => {
+                if let Some(ct) = count_data_type {
+                    f(&mut no_partial(binary_vector::<_, BE>(ct, data_type)))
+                } else {
+                    f(&mut no_partial(binary_scalar::<_, BE>(data_type)))
+                }
+            }
+            FormatType::BinaryLittleEndian => {
+                if let Some(ct) = count_data_type {
+                    f(&mut no_partial(binary_vector::<_, LE>(ct, data_type)))
+                } else {
+                    f(&mut no_partial(binary_scalar::<_, LE>(data_type)))
+                }
+            }
         },
     )
 }
@@ -327,8 +335,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
     use crate::types::Property;
+    use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
 
     #[test]
     fn property_ascii() {

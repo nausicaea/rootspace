@@ -1,6 +1,8 @@
 //! Provides facilities to define and manage events.
 
 use crate::resource::Resource;
+#[cfg(any(test, debug_assertions))]
+use log::trace;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, VecDeque},
@@ -8,8 +10,6 @@ use std::{
     marker::PhantomData,
 };
 use typename::TypeName;
-#[cfg(any(test, debug_assertions))]
-use log::trace;
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -122,8 +122,7 @@ where
         self.events.truncate(max_unread);
 
         if self.events.is_empty() {
-            self.receivers.values_mut()
-                .for_each(|s| s.reset());
+            self.receivers.values_mut().for_each(|s| s.reset());
         }
 
         evs

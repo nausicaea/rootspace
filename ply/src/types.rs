@@ -1,7 +1,7 @@
 //! The module `types` defines internal representations of parts of a Stanford PLY file.
 
-use std::collections::HashSet;
 use crate::impl_property_data;
+use std::collections::HashSet;
 
 /// Describes the recognized formats of a PLY file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -405,10 +405,7 @@ impl Body {
     where
         F: Fn(&[PropertyData]) -> T,
     {
-        self.elements[element]
-            .iter()
-            .map(|i| mapper(&i.properties))
-            .collect()
+        self.elements[element].iter().map(|i| mapper(&i.properties)).collect()
     }
 }
 
@@ -539,7 +536,17 @@ mod tests {
         };
 
         let r = h.element(&["vertex"]);
-        assert_eq!(r, Some((0, &Element { name: "vertex".into(), count: 0, properties: Vec::new() })));
+        assert_eq!(
+            r,
+            Some((
+                0,
+                &Element {
+                    name: "vertex".into(),
+                    count: 0,
+                    properties: Vec::new()
+                }
+            ))
+        );
     }
 
     #[test]
@@ -562,7 +569,17 @@ mod tests {
         };
 
         let r = e.scalar_property(&["y"]);
-        assert_eq!(r, Some((1, &Property { name: "y".into(), count_data_type: None, data_type: DataType::Float32 })));
+        assert_eq!(
+            r,
+            Some((
+                1,
+                &Property {
+                    name: "y".into(),
+                    count_data_type: None,
+                    data_type: DataType::Float32
+                }
+            ))
+        );
     }
 
     #[test]
@@ -585,6 +602,16 @@ mod tests {
         };
 
         let r = e.vector_property(&["vertex_index"]);
-        assert_eq!(r, Some((1, &Property { name: "vertex_index".into(), count_data_type: Some(CountType::Uint8), data_type: DataType::Float32 })));
+        assert_eq!(
+            r,
+            Some((
+                1,
+                &Property {
+                    name: "vertex_index".into(),
+                    count_data_type: Some(CountType::Uint8),
+                    data_type: DataType::Float32
+                }
+            ))
+        );
     }
 }

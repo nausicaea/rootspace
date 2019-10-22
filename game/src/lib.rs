@@ -6,12 +6,12 @@ use engine::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,
     graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait},
+    orchestrator::Orchestrator,
     resources::{BackendResource, SceneGraph},
     systems::{
         CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor, ForceShutdown,
         Renderer,
     },
-    orchestrator::Orchestrator,
 };
 use failure::Error;
 use nalgebra::{Vector2, Vector3};

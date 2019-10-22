@@ -1,9 +1,8 @@
 use super::{vertex::Vertex, AssetTrait};
 use crate::file_manipulation::VerifyPath;
 use failure::{Error, Fail};
-use std::convert::TryInto;
 use ply;
-use std::path::Path;
+use std::{convert::TryInto, path::Path};
 
 #[derive(Debug)]
 pub struct Mesh {
@@ -49,7 +48,7 @@ impl Mesh {
             ];
             let t = [
                 (&props[tex_u_idx]).try_into().unwrap(),
-                (&props[tex_v_idx]).try_into().unwrap()
+                (&props[tex_v_idx]).try_into().unwrap(),
             ];
             let n = [
                 (&props[norm_x_idx]).try_into().unwrap(),

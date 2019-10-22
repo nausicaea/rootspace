@@ -310,10 +310,7 @@ fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dim
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resources::BackendSettings;
-    use crate::graphics::{
-        headless::HeadlessBackend,
-    };
+    use crate::{graphics::headless::HeadlessBackend, resources::BackendSettings};
 
     #[test]
     fn text_builder_headless() {

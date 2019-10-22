@@ -1,10 +1,13 @@
 //! Provides facilities for reasoning about data (e.g. components) coupled to entities.
 
 use crate::{entities::Entity, indexing::Index, resource::Resource};
-use serde::{Deserialize, Serialize, ser::{Serializer, SerializeMap, SerializeSeq}, de::{Visitor, Deserializer, MapAccess, SeqAccess}};
-use std::{collections::HashSet, fmt, ptr};
+use serde::{
+    de::{Deserializer, MapAccess, SeqAccess, Visitor},
+    ser::{SerializeMap, SerializeSeq, Serializer},
+    Deserialize, Serialize,
+};
+use std::{collections::HashSet, fmt, marker::PhantomData, ptr};
 use typename::TypeName;
-use std::marker::PhantomData;
 
 /// A component is a data type that is associated with a particular `Entity`.
 pub trait Component: Sized {
@@ -336,7 +339,8 @@ where
             return false;
         }
 
-        self.index.iter()
+        self.index
+            .iter()
             .map(|idx| Into::<usize>::into(idx))
             .all(|idx| self.data[idx].eq(&rhs.data[idx]))
     }
@@ -572,12 +576,15 @@ mod tests {
 
         v.insert(c, TestComponent(100));
 
-        assert_tokens(&v, &[
-            Token::Map { len: Some(1) },
-            Token::U32(2),
-            Token::NewtypeStruct { name: "TestComponent" },
-            Token::U64(100),
-            Token::MapEnd,
-        ]);
+        assert_tokens(
+            &v,
+            &[
+                Token::Map { len: Some(1) },
+                Token::U32(2),
+                Token::NewtypeStruct { name: "TestComponent" },
+                Token::U64(100),
+                Token::MapEnd,
+            ],
+        );
     }
 }

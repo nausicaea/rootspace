@@ -4,14 +4,13 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     resources::{BackendResource, SceneGraph},
 };
+use ecs::{EventQueue, ReceiverId, Resources, Storage, System, WorldEvent};
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 use log::trace;
-use ecs::{EventQueue, Resources, Storage, System, WorldEvent, ReceiverId};
 #[cfg(any(test, debug_assertions))]
 use std::time::Instant;
-use std::{collections::VecDeque, time::Duration};
-use std::marker::PhantomData;
+use std::{collections::VecDeque, marker::PhantomData, time::Duration};
 
 static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;
@@ -54,7 +53,8 @@ where
         #[cfg(any(test, debug_assertions))]
         let reload_mark = Instant::now();
         let mut backend = res.borrow_mut::<BackendResource<B>>();
-        backend.reload_assets(&mut res.borrow_component_mut::<Renderable>())
+        backend
+            .reload_assets(&mut res.borrow_component_mut::<Renderable>())
             .expect("Could not reload all renderable assets");
         #[cfg(any(test, debug_assertions))]
         debug!("Completed reloading all renderables after {:?}", reload_mark.elapsed());

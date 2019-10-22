@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::str::FromStr;
-use std::num::ParseIntError;
+use std::{fmt, num::ParseIntError, str::FromStr};
 
 /// A zero-based index that can be used as index into data structures. Entities may reuse these
 /// indices.

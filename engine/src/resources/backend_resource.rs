@@ -1,16 +1,20 @@
 use crate::{
     assets::{AssetError, Vertex},
+    components::Renderable,
     graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait},
 };
-use crate::components::Renderable;
 use ecs::{Component, Resource};
 use failure::Error;
-use snowflake::ProcessUniqueId;
-use std::{collections::HashMap, fmt, path::{Path, PathBuf}};
-use typename::TypeName;
-use std::ops::{Deref, DerefMut};
 use serde::{Deserialize, Serialize};
-use std::convert::TryFrom;
+use snowflake::ProcessUniqueId;
+use std::{
+    collections::HashMap,
+    convert::TryFrom,
+    fmt,
+    ops::{Deref, DerefMut},
+    path::{Path, PathBuf},
+};
+use typename::TypeName;
 
 #[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
 pub struct BackendSettings {
@@ -22,11 +26,17 @@ pub struct BackendSettings {
 }
 
 impl BackendSettings {
-    pub fn new<S: AsRef<str>, P: AsRef<Path>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16, asset_tree: P) -> Self {
-        let asset_tree = asset_tree
-            .as_ref()
-            .canonicalize()
-            .expect(&format!("Could not canonicalize the path {}", asset_tree.as_ref().display()));
+    pub fn new<S: AsRef<str>, P: AsRef<Path>>(
+        title: S,
+        dimensions: (u32, u32),
+        vsync: bool,
+        msaa: u16,
+        asset_tree: P,
+    ) -> Self {
+        let asset_tree = asset_tree.as_ref().canonicalize().expect(&format!(
+            "Could not canonicalize the path {}",
+            asset_tree.as_ref().display()
+        ));
 
         BackendSettings {
             title: title.as_ref().to_string(),
@@ -75,8 +85,7 @@ where
     }
 
     pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<PathBuf, AssetError> {
-        let abs_path = self.settings.asset_tree
-            .join(path);
+        let abs_path = self.settings.asset_tree.join(path);
 
         let abs_path = abs_path
             .canonicalize()
@@ -324,23 +333,29 @@ mod tests {
         let resource_path = env!("CARGO_MANIFEST_DIR");
         let b: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
 
-        assert_tokens(&b, &[
-            Token::Struct { name: "BackendSettings", len: 5 },
-            Token::Str("title"),
-            Token::Str("Title"),
-            Token::Str("dimensions"),
-            Token::Tuple { len: 2 },
-            Token::U32(800),
-            Token::U32(600),
-            Token::TupleEnd,
-            Token::Str("vsync"),
-            Token::Bool(false),
-            Token::Str("msaa"),
-            Token::U16(0),
-            Token::Str("asset_tree"),
-            Token::Str(resource_path),
-            Token::StructEnd,
-        ]);
+        assert_tokens(
+            &b,
+            &[
+                Token::Struct {
+                    name: "BackendSettings",
+                    len: 5,
+                },
+                Token::Str("title"),
+                Token::Str("Title"),
+                Token::Str("dimensions"),
+                Token::Tuple { len: 2 },
+                Token::U32(800),
+                Token::U32(600),
+                Token::TupleEnd,
+                Token::Str("vsync"),
+                Token::Bool(false),
+                Token::Str("msaa"),
+                Token::U16(0),
+                Token::Str("asset_tree"),
+                Token::Str(resource_path),
+                Token::StructEnd,
+            ],
+        );
     }
 
     #[test]

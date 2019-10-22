@@ -7,17 +7,22 @@ use crate::{
     loop_stage::LoopStage,
     registry::Registry,
     resource::Resource,
-    resources::{Persistence, Settings, Resources},
+    resources::{Persistence, Resources, Settings},
     system::System,
     RegAdd,
 };
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use serde_json;
 // use rmp_serde;
-use std::{fs::File, marker::PhantomData, path::PathBuf, time::Duration};
-use typename::TypeName;
-use std::cell::{Ref, RefMut};
 use log::trace;
+use std::{
+    cell::{Ref, RefMut},
+    fs::File,
+    marker::PhantomData,
+    path::PathBuf,
+    time::Duration,
+};
+use typename::TypeName;
 
 /// Exposes resource management methods.
 pub trait ResourcesTrait<RR>
@@ -317,23 +322,27 @@ where
             match e {
                 WorldEvent::Abort => {
                     return false;
-                },
+                }
                 WorldEvent::Serialize(p) => {
                     let mut file = File::create(&p).expect(&format!("Could not create the file {}: ", p.display()));
                     let mut s = serde_json::Serializer::pretty(&mut file);
                     // let mut s = rmp_serde::Serializer::new(&mut file);
                     self.serialize(&mut s)
                         .expect(&format!("Could not serialize to the file {}: ", p.display()));
-                    self.resources.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::SerializationComplete);
-                },
+                    self.resources
+                        .get_mut::<EventQueue<WorldEvent>>()
+                        .send(WorldEvent::SerializationComplete);
+                }
                 WorldEvent::Deserialize(p) => {
                     let mut file = File::open(&p).expect(&format!("Could not open the file {}: ", p.display()));
                     let mut d = serde_json::Deserializer::from_reader(&mut file);
                     // let mut d = rmp_serde::Deserializer::new(&mut file);
                     self.deserialize(&mut d)
                         .expect(&format!("Could not deserialize from the file {}: ", p.display()));
-                    self.resources.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::DeserializationComplete);
-                },
+                    self.resources
+                        .get_mut::<EventQueue<WorldEvent>>()
+                        .send(WorldEvent::DeserializationComplete);
+                }
                 _ => (),
             }
         }

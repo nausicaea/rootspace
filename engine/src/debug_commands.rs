@@ -6,8 +6,10 @@ use crate::{
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use ecs::{Component, Entities, Entity, EventQueue, Resources, Storage, WorldEvent};
 use failure::{format_err, Error};
-use std::path::{Path, PathBuf};
-use std::ffi::OsString;
+use std::{
+    ffi::OsString,
+    path::{Path, PathBuf},
+};
 
 pub trait CommandTrait: 'static {
     fn name(&self) -> &'static str;
@@ -204,7 +206,11 @@ impl EntityCommand {
 
         if args.is_present("statuses") {
             if let Some(s) = statuses.get(entity) {
-                output.push_str(&format!(" status=({}, {})", if s.enabled() {"enabled"} else {"disabled"}, if s.visible() {"visible"} else {"hidden"}));
+                output.push_str(&format!(
+                    " status=({}, {})",
+                    if s.enabled() { "enabled" } else { "disabled" },
+                    if s.visible() { "visible" } else { "hidden" }
+                ));
             } else {
                 output.push_str(" (no status)");
             }
@@ -349,10 +355,26 @@ impl CommandTrait for EntityCommand {
                 let entity = entities
                     .get(index)
                     .ok_or(format_err!("The entity with index {} was not found", index))?;
-                self.list_entity(list_matches, &cameras, &infos, &statuses, &world_graph, &ui_graph, entity);
+                self.list_entity(
+                    list_matches,
+                    &cameras,
+                    &infos,
+                    &statuses,
+                    &world_graph,
+                    &ui_graph,
+                    entity,
+                );
             } else {
                 for entity in &entities {
-                    self.list_entity(list_matches, &cameras, &infos, &statuses, &world_graph, &ui_graph, entity);
+                    self.list_entity(
+                        list_matches,
+                        &cameras,
+                        &infos,
+                        &statuses,
+                        &world_graph,
+                        &ui_graph,
+                        entity,
+                    );
                 }
             }
         }

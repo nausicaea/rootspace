@@ -7,8 +7,11 @@ use crate::{
 };
 use ecs::{
     Component, Entity, EventQueue, LoopStage, Persistence, ReceiverId, RegAdd, Registry, Resource, ResourcesTrait,
-    System, WorldTrait, World, Settings, WorldEvent
+    Settings, System, World, WorldEvent, WorldTrait,
 };
+#[cfg(any(test, debug_assertions))]
+use log::debug;
+use log::trace;
 use serde::{de::Deserializer, ser::Serializer};
 use std::{
     cmp,
@@ -17,9 +20,6 @@ use std::{
     time::{Duration, Instant},
 };
 use typename::TypeName;
-#[cfg(any(test, debug_assertions))]
-use log::debug;
-use log::trace;
 
 pub type JoinedRegistry<RR> = RegAdd![
     SceneGraph<UiModel>,
@@ -63,8 +63,7 @@ where
         world.insert(SceneGraph::<UiModel>::default(), Persistence::Runtime);
 
         trace!("Orchestrator<B, RR> subscribing to EventQueue<WorldEvent>");
-        let world_receiver = world.get_mut::<EventQueue<WorldEvent>>()
-            .subscribe();
+        let world_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe();
 
         Ok(Orchestrator {
             world,
@@ -116,7 +115,9 @@ where
                 debug!("Reloading the backend");
                 #[cfg(any(test, debug_assertions))]
                 let reload_mark = Instant::now();
-                let backend = self.world.borrow_mut::<BackendSettings>()
+                let backend = self
+                    .world
+                    .borrow_mut::<BackendSettings>()
                     .build::<B>()
                     .expect("Unable to reload the backend");
                 self.world.insert(backend, Persistence::Runtime);
