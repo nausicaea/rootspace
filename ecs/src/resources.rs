@@ -1,6 +1,6 @@
 //! Provides the resource manager.
 
-use crate::{components::Component, registry::Registry, resource::Resource};
+use crate::{components::Component, registry::ResourceRegistry, resource::Resource};
 use log::debug;
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
@@ -207,7 +207,7 @@ impl Resources {
     /// Serialize the types supplied in the registry from `Resources`.
     pub fn serialize<RR, S>(&self, serializer: S) -> Result<(), S::Error>
     where
-        RR: Registry,
+        RR: ResourceRegistry,
         S: Serializer,
     {
         struct SerContainer<'a, R> {
@@ -264,7 +264,7 @@ impl Resources {
         fn recurse<SM, RR>(res: &Resources, state: &mut SM, reg: &RR) -> Result<(), SM::Error>
         where
             SM: SerializeMap,
-            RR: Registry,
+            RR: ResourceRegistry,
         {
             if RR::LEN > 0 {
                 serialize_entry(res, state, reg.head())?;
@@ -289,7 +289,7 @@ impl Resources {
     /// Deserialize `Resources` with the provided type registry.
     pub fn deserialize<'de, RR, D>(deserializer: D) -> Result<Self, D::Error>
     where
-        RR: Registry,
+        RR: ResourceRegistry,
         D: Deserializer<'de>,
     {
         #[derive(Deserialize)]
@@ -301,7 +301,7 @@ impl Resources {
         fn recurse<'de, A, RR>(res: &mut Resources, access: &mut A, key: &str, reg: &RR) -> Result<(), A::Error>
         where
             A: MapAccess<'de>,
-            RR: Registry,
+            RR: ResourceRegistry,
         {
             fn sub<'de, A, RR, R>(
                 res: &mut Resources,
@@ -312,7 +312,7 @@ impl Resources {
             ) -> Result<(), A::Error>
             where
                 A: MapAccess<'de>,
-                RR: Registry,
+                RR: ResourceRegistry,
                 R: Resource + TypeName + Deserialize<'de>,
             {
                 if key == R::type_name() {
@@ -341,7 +341,7 @@ impl Resources {
 
         impl<'de, RR> Visitor<'de> for ResourcesVisitor<RR>
         where
-            RR: Registry,
+            RR: ResourceRegistry,
         {
             type Value = Resources;
 
@@ -380,7 +380,7 @@ impl Resources {
     /// resources to existing ones in `Resources`.
     pub fn deserialize_additive<'de, RR, D>(&mut self, deserializer: D, overwrite: bool) -> Result<(), D::Error>
     where
-        RR: Registry,
+        RR: ResourceRegistry,
         D: Deserializer<'de>,
     {
         debug!("Beginning the additive deserialization of Resources");

@@ -23,7 +23,7 @@ pub use crate::{
     event_queue::{EventQueue, ReceiverId},
     events::EventTrait,
     loop_stage::LoopStage,
-    registry::{Element, End, Registry},
+    registry::{Element, End, ResourceRegistry},
     resource::Resource,
     resources::{Persistence, Resources, Settings},
     system::System,

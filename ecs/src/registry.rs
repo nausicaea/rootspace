@@ -1,91 +1,92 @@
 use crate::resource::Resource;
+use crate::system::System;
 use serde::{Deserialize, Serialize};
 use typename::TypeName;
 
-/// The `Registry` is used to register types with the world, so that the ecs can manage
-/// serialization and deserialization of the entire world state without knowing the specific types
-/// stored within it. The `Registry` is implemented as a heterogeneous list (more or less
-/// equivalent to a series of nested two-tuples).
-pub trait Registry: Sized {
-    /// Statically provides the length of the `Registry`.
-    const LEN: usize;
-
-    /// Signifies the type stored at the head position of the list.
-    type Head: Resource + TypeName + Serialize + for<'de> Deserialize<'de>;
-    /// Signifies the type of the rest of the list.
-    type Tail: Registry;
-
-    /// Push an element to the head of the heterogeneous list.
-    fn push<T>(self, element: T) -> Element<T, Self>
-    where
-        T: Resource + TypeName + Serialize + for<'de> Deserialize<'de>,
-    {
-        Element::new(element, self)
-    }
-
-    /// Return the length of the heterogeneous list.
-    fn len(&self) -> usize {
-        Self::LEN
-    }
-
-    /// Return a reference to the current head of the heterogeneous list.
-    fn head(&self) -> &Self::Head;
-
-    /// Return a reference to the tail of the heterogeneous list.
-    fn tail(&self) -> &Self::Tail;
-}
-
-/// An element within the `Registry`.
+/// An element within the heterogeneous list.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Element<H, T>(H, T);
 
-impl<H, T> Element<H, T>
-where
-    T: Registry,
-{
+impl<H, T> Element<H, T> {
     /// Create a new `Element`, given a head and a tail argument.
     pub fn new(head: H, tail: T) -> Self {
         Element(head, tail)
     }
 }
 
-impl<H, T> Registry for Element<H, T>
-where
-    H: Resource + TypeName + Serialize + for<'de> Deserialize<'de>,
-    T: Registry,
-{
-    type Head = H;
-    type Tail = T;
-
-    const LEN: usize = 1 + <T as Registry>::LEN;
-
-    fn head(&self) -> &H {
-        &self.0
-    }
-
-    fn tail(&self) -> &T {
-        &self.1
-    }
-}
-
-/// The end of the `Registry`.
+/// The end of the heterogeneous list;
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct End;
 
-impl Registry for End {
-    type Head = ();
-    type Tail = End;
+macro_rules! impl_registry {
+    ($name:ident, where Head: $bound:tt $(+ $others:tt)*) => {
+        pub trait $name: Sized {
+            /// Statically provides the length of the heterogeneous list.
+            const LEN: usize;
 
-    const LEN: usize = 0;
+            /// Refers to the type associated with the head element of the list.
+            type Head: $bound $(+ $others)* + TypeName + Serialize + for<'de> Deserialize<'de>;
+            /// Refers to the type of the tail of the list.
+            type Tail: $name;
 
-    fn head(&self) -> &() {
-        &()
-    }
+            /// Push a new element onto the head of the heterogeneous list.
+            fn push<E>(self, element: E) -> Element<E, Self>
+            where
+                E: $bound $(+ $others)* + TypeName + Serialize + for<'de> Deserialize<'de>,
+            {
+                Element::new(element, self)
+            }
 
-    fn tail(&self) -> &End {
-        &End
-    }
+            /// Return the length of the heterogeneous list.
+            fn len(&self) -> usize {
+                Self::LEN
+            }
+
+            /// Return a reference to the current head of the heterogeneous list.
+            fn head(&self) -> &Self::Head;
+
+            /// Return a reference to the tail of the heterogeneous list.
+            fn tail(&self) -> &Self::Tail;
+        }
+
+        impl<H, T> $name for Element<H, T>
+        where
+            H: $bound $(+ $others)* + TypeName + Serialize + for<'de> Deserialize<'de>,
+            T: $name,
+        {
+            type Head = H;
+            type Tail = T;
+
+            const LEN: usize = 1 + <T as $name>::LEN;
+
+            fn head(&self) -> &H {
+                &self.0
+            }
+
+            fn tail(&self) -> &T {
+                &self.1
+            }
+        }
+
+        impl $name for End {
+            type Head = ();
+            type Tail = End;
+
+            const LEN: usize = 0;
+
+            fn head(&self) -> &() {
+                &()
+            }
+
+            fn tail(&self) -> &End {
+                &End
+            }
+        }
+    };
 }
+
+impl_registry!(ResourceRegistry, where Head: Resource);
+impl_registry!(SystemRegistry, where Head: System);
 
 #[cfg(test)]
 mod tests {
@@ -111,21 +112,21 @@ mod tests {
 
     #[test]
     fn push_one() {
-        let l: Element<TestElementA, End> = End.push(TestElementA::default());
+        let l: Element<TestElementA, End> = ResourceRegistry::push(End, TestElementA::default());
         assert_eq!(l, Element::new(TestElementA::default(), End));
     }
 
     #[test]
     fn push_two() {
         let l: Element<TestElementB, Element<TestElementA, End>> =
-            End.push(TestElementA::default()).push(TestElementB::default());
+            ResourceRegistry::push(End, TestElementA::default()).push(TestElementB::default());
         assert_eq!(
             l,
             Element::new(TestElementB::default(), Element::new(TestElementA::default(), End))
         );
 
         let l: Element<TestElementA, Element<TestElementB, End>> =
-            End.push(TestElementB::default()).push(TestElementA::default());
+            ResourceRegistry::push(End, TestElementB::default()).push(TestElementA::default());
         assert_eq!(
             l,
             Element::new(TestElementA::default(), Element::new(TestElementB::default(), End))
@@ -134,9 +135,9 @@ mod tests {
 
     #[test]
     fn eval_arbitrary_recursive() {
-        let h = End.push(TestElementA::default()).push(TestElementB::default());
+        let h = ResourceRegistry::push(End, TestElementA::default()).push(TestElementB::default());
 
-        fn eval<H: Registry>(list: &H) {
+        fn eval<H: ResourceRegistry>(list: &H) {
             if H::LEN > 0 {
                 let head = list.head();
                 eprintln!("{:?}", head);
@@ -150,21 +151,21 @@ mod tests {
     #[test]
     fn len_empty() {
         let h = End;
-        assert_eq!(h.len(), 0);
+        assert_eq!(ResourceRegistry::len(&h), 0);
     }
 
     #[test]
     fn len_one() {
-        let h = End.push(TestElementA::default());
+        let h = ResourceRegistry::push(End, TestElementA::default());
 
-        assert_eq!(h.len(), 1);
+        assert_eq!(ResourceRegistry::len(&h), 1);
     }
 
     #[test]
     fn len_two() {
-        let h = End.push(TestElementA::default()).push(TestElementB::default());
+        let h = ResourceRegistry::push(End, TestElementA::default()).push(TestElementB::default());
 
-        assert_eq!(h.len(), 2);
+        assert_eq!(ResourceRegistry::len(&h), 2);
     }
 
     #[test]
@@ -176,7 +177,7 @@ mod tests {
 
     #[test]
     fn serde_one() {
-        let h = End.push(TestElementA::default());
+        let h = ResourceRegistry::push(End, TestElementA::default());
 
         assert_tokens(
             &h,
@@ -195,7 +196,7 @@ mod tests {
 
     #[test]
     fn serde_two() {
-        let h = End.push(TestElementA::default()).push(TestElementB::default());
+        let h = ResourceRegistry::push(End, TestElementA::default()).push(TestElementB::default());
 
         assert_tokens(
             &h,
@@ -225,7 +226,7 @@ mod tests {
             let list_n = End;
             for i in 0usize..n {
                 let list_nm1 = list_n.clone();
-                let list_n = list_n.push(TestElementA(i));
+                let list_n = ResourceRegistry::push(list_n, TestElementA(i));
 
                 if i == n - 1 {
                     prop_assert_eq!(list_n, Element::new(TestElementA(i), list_nm1));
@@ -238,10 +239,10 @@ mod tests {
             let list_n = End;
             for i in 0usize..n {
                 let list_nm1 = list_n.clone();
-                let list_n = list_n.push(TestElementA(i));
+                let list_n = ResourceRegistry::push(list_n, TestElementA(i));
 
                 if i == n - 1 {
-                    prop_assert_eq!(list_n.len(), list_nm1.len() + 1);
+                    prop_assert_eq!(ResourceRegistry::len(&list_n), ResourceRegistry::len(&list_nm1) + 1);
                 }
             }
         }

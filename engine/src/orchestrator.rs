@@ -6,7 +6,7 @@ use crate::{
     resources::{BackendResource, BackendSettings, SceneGraph},
 };
 use ecs::{
-    Component, Entity, EventQueue, LoopStage, Persistence, ReceiverId, RegAdd, Registry, Resource, ResourcesTrait,
+    Component, Entity, EventQueue, LoopStage, Persistence, ReceiverId, RegAdd, ResourceRegistry, Resource, ResourcesTrait,
     Settings, System, World, WorldEvent, WorldTrait,
 };
 #[cfg(any(test, debug_assertions))]
@@ -42,7 +42,7 @@ pub struct Orchestrator<B, RR> {
 impl<B, RR> Orchestrator<B, RR>
 where
     B: BackendTrait,
-    RR: Registry,
+    RR: ResourceRegistry,
 {
     pub fn new<P: AsRef<Path>>(
         resource_path: P,

@@ -10,5 +10,3 @@ pub trait Resource: Downcast + Debug {}
 impl_downcast!(Resource);
 
 impl Resource for () {}
-
-// impl<T> Resource for T where T: Downcast + Debug {}

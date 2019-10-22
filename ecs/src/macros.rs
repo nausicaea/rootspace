@@ -1,4 +1,4 @@
-/// Construct the type signature of a `Registry`.
+/// Construct the type signature of a `ResourceRegistry`.
 ///
 /// # Examples
 ///
@@ -78,7 +78,7 @@ macro_rules! RegAdd {
     };
 }
 
-/// Construct an instance of a `Registry`.
+/// Construct an instance of a `ResourceRegistry`.
 ///
 /// # Examples
 ///
@@ -120,7 +120,7 @@ macro_rules! reg {
     };
 }
 
-/// Use this macro to add upon an existing `Registry`.
+/// Use this macro to add upon an existing `ResourceRegistry`.
 ///
 /// # Examples
 ///

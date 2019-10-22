@@ -5,10 +5,10 @@ use crate::{
     entities::{Entities, Entity},
     event_queue::{EventQueue, ReceiverId},
     loop_stage::LoopStage,
-    registry::Registry,
+    registry::ResourceRegistry,
     resource::Resource,
     resources::{Persistence, Resources, Settings},
-    system::System,
+    system::{System, Systems},
     RegAdd,
 };
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
@@ -27,9 +27,9 @@ use typename::TypeName;
 /// Exposes resource management methods.
 pub trait ResourcesTrait<RR>
 where
-    RR: Registry,
+    RR: ResourceRegistry,
 {
-    type ResourceRegistry: Registry;
+    type ResourceRegistry: ResourceRegistry;
 
     /// Clears the state of the resource manager.
     fn clear(&mut self);
@@ -86,7 +86,7 @@ pub trait WorldTrait {
         S: System;
 
     /// Try to retrieve the specified system type.
-    fn get_system<S>(&self, stage: LoopStage) -> Option<&S>
+    fn find_system<S>(&self, stage: LoopStage) -> Option<&S>
     where
         S: System;
     /// The fixed update method is supposed to be called from the main loop at fixed time
@@ -140,9 +140,9 @@ pub enum WorldEvent {
 /// This is the default implementation of the `WorldTrait` provided by this library.
 pub struct World<RR> {
     resources: Resources,
-    fixed_update_systems: Vec<Box<dyn System>>,
-    update_systems: Vec<Box<dyn System>>,
-    render_systems: Vec<Box<dyn System>>,
+    fixed_update_systems: Systems,
+    update_systems: Systems,
+    render_systems: Systems,
     receiver: ReceiverId<WorldEvent>,
     _rr: PhantomData<RR>,
 }
@@ -159,9 +159,9 @@ impl<RR> Default for World<RR> {
 
         World {
             resources,
-            fixed_update_systems: Vec::default(),
-            update_systems: Vec::default(),
-            render_systems: Vec::default(),
+            fixed_update_systems: Systems::default(),
+            update_systems: Systems::default(),
+            render_systems: Systems::default(),
             receiver,
             _rr: PhantomData::default(),
         }
@@ -170,7 +170,7 @@ impl<RR> Default for World<RR> {
 
 impl<RR> ResourcesTrait<RR> for World<RR>
 where
-    RR: Registry,
+    RR: ResourceRegistry,
 {
     type ResourceRegistry = RegAdd![Entities, EventQueue<WorldEvent>, RR];
 
@@ -246,9 +246,9 @@ where
     {
         // let mut state = ser.serialize_struct("World", 5)?;
         // state.serialize_field("resources", self.resources.as_serializable::<RR>())?;
-        // state.serialize_field("fixed_update_systems", ())?;
-        // state.serialize_field("update_systems", ())?;
-        // state.serialize_field("render_systems", ())?;
+        // state.serialize_field("fixed_update_systems", self.fixed_update_systems.as_serializable::<SR>())?;
+        // state.serialize_field("update_systems", self.update_systems.as_serializable::<SR>())?;
+        // state.serialize_field("render_systems", self.render_systems.as_serializable::<SR>())?;
         // state.serialize_field("receiver", &self.receiver)?;
         // state.end()
         self.resources.serialize::<Self::ResourceRegistry, S>(ser)
@@ -265,49 +265,44 @@ where
 
 impl<RR> WorldTrait for World<RR>
 where
-    RR: Registry,
+    RR: ResourceRegistry,
 {
     fn add_system<S>(&mut self, stage: LoopStage, system: S)
     where
         S: System,
     {
-        let sys = Box::new(system);
         match stage {
-            LoopStage::FixedUpdate => self.fixed_update_systems.push(sys),
-            LoopStage::Update => self.update_systems.push(sys),
-            LoopStage::Render => self.render_systems.push(sys),
+            LoopStage::FixedUpdate => self.fixed_update_systems.insert(system),
+            LoopStage::Update => self.update_systems.insert(system),
+            LoopStage::Render => self.render_systems.insert(system),
         }
     }
 
-    fn get_system<S>(&self, stage: LoopStage) -> Option<&S>
+    fn find_system<S>(&self, stage: LoopStage) -> Option<&S>
     where
         S: System,
     {
         match stage {
-            LoopStage::FixedUpdate => self
-                .fixed_update_systems
-                .iter()
-                .filter_map(|s| s.downcast_ref::<S>())
-                .last(),
-            LoopStage::Update => self.update_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
-            LoopStage::Render => self.render_systems.iter().filter_map(|s| s.downcast_ref::<S>()).last(),
+            LoopStage::FixedUpdate => self.fixed_update_systems.find::<S>(),
+            LoopStage::Update => self.update_systems.find::<S>(),
+            LoopStage::Render => self.render_systems.find::<S>(),
         }
     }
 
     fn fixed_update(&mut self, t: &Duration, dt: &Duration) {
-        for system in &mut self.fixed_update_systems {
+        for system in self.fixed_update_systems.iter_mut() {
             system.run(&self.resources, t, dt);
         }
     }
 
     fn update(&mut self, t: &Duration, dt: &Duration) {
-        for system in &mut self.update_systems {
+        for system in self.update_systems.iter_mut() {
             system.run(&self.resources, t, dt);
         }
     }
 
     fn render(&mut self, t: &Duration, dt: &Duration) {
-        for system in &mut self.render_systems {
+        for system in self.render_systems.iter_mut() {
             system.run(&self.resources, t, dt);
         }
     }
