@@ -8,7 +8,8 @@ use crate::{
     registry::ResourceRegistry,
     resource::Resource,
     resources::{Persistence, Resources, Settings},
-    system::{System, Systems},
+    system::System,
+    systems::Systems,
     RegAdd,
 };
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
