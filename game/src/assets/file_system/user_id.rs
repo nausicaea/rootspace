@@ -1,9 +1,22 @@
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct UserId(u32);
 
 impl UserId {
-    pub fn privileged(&self) -> bool {
+    pub fn privileged() -> Self {
+        UserId(0)
+    }
+
+    pub fn is_privileged(&self) -> bool {
         self.0 == 0
+    }
+}
+
+impl std::fmt::Display for UserId {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -26,15 +39,15 @@ mod tests {
 
     #[test]
     fn privileged() {
-        let u = UserId::from(0);
-        assert!(u.privileged());
+        let u = UserId::privileged();
+        assert!(u.is_privileged());
     }
 
     proptest! {
         #[test]
         fn unprivileged(uid in 1u32..65535) {
             let u = UserId::from(uid);
-            prop_assert!(!u.privileged());
+            prop_assert!(!u.is_privileged());
         }
     }
 }

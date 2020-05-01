@@ -1,4 +1,4 @@
-// mod assets;
+mod assets;
 mod resources;
 
 use ecs::{Component, EventQueue, LoopStage, Reg, WorldEvent};

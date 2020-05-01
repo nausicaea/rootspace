@@ -277,6 +277,8 @@ impl Resources {
         debug!("Beginning the serialization of Resources");
         let mut state = serializer.serialize_map(Some(RR::LEN))?;
 
+        // The following lines look super scary but since recurse() only accesses the type of reg,
+        // this should be alright.
         let reg = unsafe { std::mem::MaybeUninit::<RR>::zeroed().assume_init() };
         recurse(self, &mut state, &reg)?;
         std::mem::forget(reg);
@@ -358,6 +360,8 @@ impl Resources {
             {
                 let mut resources = Resources::with_capacity(access.size_hint().unwrap_or(RR::LEN));
 
+                // The following lines look super scary but since recurse() only accesses the type of reg,
+                // this should be alright.
                 let reg = unsafe { std::mem::MaybeUninit::<RR>::zeroed().assume_init() };
                 while let Some(key) = access.next_key::<String>()? {
                     #[cfg(any(test, debug_assertions))]
