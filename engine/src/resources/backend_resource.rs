@@ -4,7 +4,7 @@ use crate::{
     graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait},
 };
 use ecs::{Component, Resource};
-use failure::Error;
+use anyhow::{Error, Result};
 use serde::{Deserialize, Serialize};
 use snowflake::ProcessUniqueId;
 use std::{
@@ -47,7 +47,7 @@ impl BackendSettings {
         }
     }
 
-    pub fn build<B: BackendTrait>(&self) -> Result<BackendResource<B>, Error> {
+    pub fn build<B: BackendTrait>(&self) -> Result<BackendResource<B>> {
         TryFrom::try_from(self)
     }
 }
@@ -104,7 +104,7 @@ where
         Ok(abs_path)
     }
 
-    pub fn reload_assets(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<(), Error> {
+    pub fn reload_assets(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<()> {
         self.textures.clear();
         self.shaders.clear();
         self.vertex_buffers.clear();
@@ -116,7 +116,7 @@ where
         Ok(())
     }
 
-    pub fn create_texture<P: AsRef<Path>>(&mut self, image: P) -> Result<TextureId, Error> {
+    pub fn create_texture<P: AsRef<Path>>(&mut self, image: P) -> Result<TextureId> {
         let image = self.find_asset(image)?;
         let t = B::Texture::from_path(&self.inner, image)?;
         let id = TextureId::generate();
@@ -124,14 +124,14 @@ where
         Ok(id)
     }
 
-    pub fn create_empty_texture(&mut self, dimensions: (u32, u32)) -> Result<TextureId, Error> {
+    pub fn create_empty_texture(&mut self, dimensions: (u32, u32)) -> Result<TextureId> {
         let t = B::Texture::empty(&self.inner, dimensions)?;
         let id = TextureId::generate();
         self.textures.insert(id, t);
         Ok(id)
     }
 
-    pub fn create_shader<P: AsRef<Path>>(&mut self, vs: P, fs: P) -> Result<ShaderId, Error> {
+    pub fn create_shader<P: AsRef<Path>>(&mut self, vs: P, fs: P) -> Result<ShaderId> {
         let vs = self.find_asset(vs)?;
         let fs = self.find_asset(fs)?;
         let s = B::Shader::from_paths(&self.inner, vs, fs)?;
@@ -140,21 +140,21 @@ where
         Ok(id)
     }
 
-    pub fn create_source_shader<S: AsRef<str>>(&mut self, vs: S, fs: S) -> Result<ShaderId, Error> {
+    pub fn create_source_shader<S: AsRef<str>>(&mut self, vs: S, fs: S) -> Result<ShaderId> {
         let s = B::Shader::from_source(&self.inner, &vs, &fs)?;
         let id = ShaderId::generate();
         self.shaders.insert(id, s);
         Ok(id)
     }
 
-    pub fn create_vertex_buffer(&mut self, vertices: &[Vertex]) -> Result<VertexBufferId, Error> {
+    pub fn create_vertex_buffer(&mut self, vertices: &[Vertex]) -> Result<VertexBufferId> {
         let vbuf = B::VertexBuffer::from_vertices(&self.inner, vertices)?;
         let id = VertexBufferId::generate();
         self.vertex_buffers.insert(id, vbuf);
         Ok(id)
     }
 
-    pub fn create_index_buffer(&mut self, indices: &[u16]) -> Result<IndexBufferId, Error> {
+    pub fn create_index_buffer(&mut self, indices: &[u16]) -> Result<IndexBufferId> {
         let ibuf = B::IndexBuffer::from_indices(&self.inner, indices)?;
         let id = IndexBufferId::generate();
         self.index_buffers.insert(id, ibuf);
@@ -190,7 +190,7 @@ where
 {
     type Error = Error;
 
-    fn try_from(value: BackendSettings) -> Result<Self, Self::Error> {
+    fn try_from(value: BackendSettings) -> Result<Self> {
         Ok(BackendResource {
             settings: value.clone(),
             textures: HashMap::default(),
@@ -208,7 +208,7 @@ where
 {
     type Error = Error;
 
-    fn try_from(value: &BackendSettings) -> Result<Self, Self::Error> {
+    fn try_from(value: &BackendSettings) -> Result<Self> {
         Ok(BackendResource {
             settings: value.clone(),
             textures: HashMap::default(),

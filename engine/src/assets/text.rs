@@ -4,7 +4,8 @@ use crate::{
     graphics::{BackendTrait, TextureTrait},
     resources::{BackendResource, TextureId},
 };
-use failure::{Error, Fail};
+use anyhow::Result;
+use thiserror::Error;
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
@@ -45,7 +46,7 @@ impl<'a> Text<'a> {
         generate_mesh(&self.cache_cpu, &self.glyphs, self.dimensions, scale)
     }
 
-    pub fn text<B: BackendTrait>(&mut self, factory: &BackendResource<B>, text: &str) -> Result<(), Error> {
+    pub fn text<B: BackendTrait>(&mut self, factory: &BackendResource<B>, text: &str) -> Result<()> {
         let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions.0, text);
 
         let cache_gpu = factory.borrow_texture(&self.cache_gpu);
@@ -109,7 +110,7 @@ impl TextBuilder {
         self
     }
 
-    pub fn layout<'a, B: BackendTrait>(self, factory: &BackendResource<B>, text: &str) -> Result<Text<'a>, Error> {
+    pub fn layout<'a, B: BackendTrait>(self, factory: &BackendResource<B>, text: &str) -> Result<Text<'a>> {
         let font_data = self
             .font_path
             .as_ref()
@@ -141,30 +142,30 @@ impl TextBuilder {
     }
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum TextRenderError {
-    #[fail(display = "You must provide a font to build an instance of Text")]
+    #[error("You must provide a font to build an instance of Text")]
     MissingFont,
-    #[fail(display = "You must provide a cache texture to build an instance of Text")]
+    #[error("You must provide a cache texture to build an instance of Text")]
     MissingCache,
-    #[fail(display = "Font data presented to rusttype is not in a format that the library recognizes")]
+    #[error("Font data presented to rusttype is not in a format that the library recognizes")]
     UnrecognizedFormat,
-    #[fail(display = "Font data presented to rusttype was ill-formed (lacking necessary tables, for example)")]
+    #[error("Font data presented to rusttype was ill-formed (lacking necessary tables, for example)")]
     IllFormed,
-    #[fail(
-        display = "The caller tried to access the i'th font from a FontCollection, but the collection doesn't contain that many fonts"
+    #[error(
+        "The caller tried to access the i'th font from a FontCollection, but the collection doesn't contain that many fonts"
     )]
     CollectionIndexOutOfBounds,
-    #[fail(
-        display = "The caller tried to convert a FontCollection into a font via into_font, but the FontCollection contains more than one font"
+    #[error(
+        "The caller tried to convert a FontCollection into a font via into_font, but the FontCollection contains more than one font"
     )]
     CollectionContainsMultipleFonts,
-    #[fail(
-        display = "At least one of the queued glyphs is too big to fit into the cache, even if all other glyphs are removed"
+    #[error(
+        "At least one of the queued glyphs is too big to fit into the cache, even if all other glyphs are removed"
     )]
     GlyphTooLarge,
-    #[fail(
-        display = "Not all of the requested glyphs can fit into the cache, even if the cache is completely cleared before the attempt"
+    #[error(
+        "Not all of the requested glyphs can fit into the cache, even if the cache is completely cleared before the attempt"
     )]
     NoRoomForWholeQueue,
 }
@@ -247,7 +248,7 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
     }
 }
 
-fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(cpu: &mut Cache, gpu: &C) -> Result<(), Error> {
+fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(cpu: &mut Cache, gpu: &C) -> Result<()> {
     cpu.cache_queued(|rect, data| {
         gpu.borrow().write(rect, Cow::Borrowed(data));
     })?;

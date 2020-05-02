@@ -1,4 +1,4 @@
-use failure::Fail;
+use thiserror::Error;
 use std::{
     fs::File,
     io::{self, Read},
@@ -71,16 +71,16 @@ impl<T: AsRef<Path>> ReadPath for T {
     }
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum FileError {
-    #[fail(display = "No such file or directory: {}", _0)]
+    #[error("No such file or directory: {0}")]
     FileOrDirectoryNotFound(String),
-    #[fail(display = "Not a file: {}", _0)]
+    #[error("Not a file: {0}")]
     NotAFile(String),
-    #[fail(display = "Not a directory: {}", _0)]
+    #[error("Not a directory: {0}")]
     NotADirectory(String),
-    #[fail(display = "{}: {}", _1, _0)]
-    IoError(String, #[cause] io::Error),
+    #[error("{1}: {0}")]
+    IoError(String, #[source] io::Error),
 }
 
 #[cfg(test)]

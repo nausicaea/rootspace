@@ -5,16 +5,33 @@ use crate::{
 };
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use ecs::{Component, Entities, Entity, EventQueue, Resources, Storage, WorldEvent};
-use failure::{format_err, Error};
+use anyhow::Result;
+use thiserror::Error;
 use std::{
     ffi::OsString,
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("You must specify an entity index if you want to change the status of an entity")]
+    NoIndexSpecified,
+    #[error("The entity with index {0} was not found")]
+    EntityNotFound(usize),
+    #[error("The entity with index {0} cannot be enabled")]
+    CannotEnableEntity(usize),
+    #[error("The entity with index {0} cannot be disabled")]
+    CannotDisableEntity(usize),
+    #[error("The entity with index {0} cannot be shown")]
+    CannotShowEntity(usize),
+    #[error("The entity with index {0} cannot be hidden")]
+    CannotHideEntity(usize),
+}
+
 pub trait CommandTrait: 'static {
     fn name(&self) -> &'static str;
     fn description(&self) -> &'static str;
-    fn run(&self, res: &Resources, args: &[String]) -> Result<(), Error>;
+    fn run(&self, res: &Resources, args: &[String]) -> Result<()>;
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -29,7 +46,7 @@ impl CommandTrait for ExitCommand {
         "Shuts down the engine (can also be done with Ctrl-C. Tap Ctrl-C twice to force a shutdown)"
     }
 
-    fn run(&self, res: &Resources, _: &[String]) -> Result<(), Error> {
+    fn run(&self, res: &Resources, _: &[String]) -> Result<()> {
         res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::Shutdown);
         Ok(())
     }
@@ -47,7 +64,7 @@ impl CommandTrait for StateCommand {
         "Provides access to state serialization functions"
     }
 
-    fn run(&self, res: &Resources, args: &[String]) -> Result<(), Error> {
+    fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
         let matches = App::new("state")
             .setting(AppSettings::DisableVersion)
             .setting(AppSettings::SubcommandRequiredElseHelp)
@@ -123,7 +140,7 @@ impl CommandTrait for CameraCommand {
         "Provides access to the camera"
     }
 
-    fn run(&self, res: &Resources, args: &[String]) -> Result<(), Error> {
+    fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
         let matches = App::new("camera")
             .about("Provides access to the camera")
             .setting(AppSettings::DisableVersion)
@@ -255,7 +272,7 @@ impl CommandTrait for EntityCommand {
         "Provides access to entities within the world"
     }
 
-    fn run(&self, res: &Resources, args: &[String]) -> Result<(), Error> {
+    fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
         let matches = App::new("entity")
             .about("Provides access to entities within the world")
             .setting(AppSettings::DisableVersion)
@@ -354,7 +371,7 @@ impl CommandTrait for EntityCommand {
                 let index: usize = index.parse()?;
                 let entity = entities
                     .get(index)
-                    .ok_or(format_err!("The entity with index {} was not found", index))?;
+                    .ok_or(Error::EntityNotFound(index))?;
                 self.list_entity(
                     list_matches,
                     &cameras,
@@ -387,33 +404,31 @@ impl CommandTrait for EntityCommand {
                 let index: usize = index.parse()?;
                 let entity = entities
                     .get(index)
-                    .ok_or(format_err!("The entity with index {} was not found", index))?;
+                    .ok_or(Error::EntityNotFound(index))?;
 
                 if status_matches.is_present("enable") {
                     statuses
                         .get_mut(entity)
                         .map(|s| s.enable())
-                        .ok_or(format_err!("The entity with index {} could not be enabled", index))?;
+                        .ok_or(Error::CannotEnableEntity(index))?;
                 } else if status_matches.is_present("disable") {
                     statuses
                         .get_mut(entity)
                         .map(|s| s.disable())
-                        .ok_or(format_err!("The entity with index {} could not be disabled", index))?;
+                        .ok_or(Error::CannotDisableEntity(index))?;
                 } else if status_matches.is_present("show") {
                     statuses
                         .get_mut(entity)
                         .map(|s| s.show())
-                        .ok_or(format_err!("The entity with index {} could not be show", index))?;
+                        .ok_or(Error::CannotShowEntity(index))?;
                 } else if status_matches.is_present("hide") {
                     statuses
                         .get_mut(entity)
                         .map(|s| s.hide())
-                        .ok_or(format_err!("The entity with index {} could not be hidden", index))?;
+                        .ok_or(Error::CannotHideEntity(index))?;
                 }
             } else {
-                return Err(format_err!(
-                    "You must specify an entity index if you want to change the status of an entity"
-                ));
+                return Err(From::from(Error::NoIndexSpecified));
             }
         }
 

@@ -6,7 +6,7 @@ use crate::{
     geometry::rect::Rect,
     resources::BackendResource,
 };
-use failure::Error;
+use anyhow::Result;
 #[cfg(any(test, debug_assertions))]
 use log::{debug, trace};
 use std::{borrow::Cow, convert::TryInto};
@@ -31,14 +31,14 @@ pub struct HeadlessTexture {
 }
 
 impl TextureTrait<HeadlessBackend> for HeadlessTexture {
-    fn empty(_backend: &HeadlessBackend, dimensions: (u32, u32)) -> Result<Self, Error> {
+    fn empty(_backend: &HeadlessBackend, dimensions: (u32, u32)) -> Result<Self> {
         #[cfg(any(test, debug_assertions))]
         debug!("Created an empty texture (dims={:?})", dimensions);
 
         Ok(HeadlessTexture { dimensions })
     }
 
-    fn from_image(_backend: &HeadlessBackend, image: Image) -> Result<Self, Error> {
+    fn from_image(_backend: &HeadlessBackend, image: Image) -> Result<Self> {
         #[cfg(any(test, debug_assertions))]
         debug!("Created a texture from an image (dims={:?})", image.dimensions());
 
@@ -68,7 +68,7 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
 pub struct HeadlessShader;
 
 impl ShaderTrait<HeadlessBackend> for HeadlessShader {
-    fn from_source<S: AsRef<str>>(_backend: &HeadlessBackend, _vs: S, _fs: S) -> Result<Self, Error> {
+    fn from_source<S: AsRef<str>>(_backend: &HeadlessBackend, _vs: S, _fs: S) -> Result<Self> {
         Ok(HeadlessShader)
     }
 }
@@ -77,7 +77,7 @@ impl ShaderTrait<HeadlessBackend> for HeadlessShader {
 pub struct HeadlessVertexBuffer;
 
 impl VertexBufferTrait<HeadlessBackend> for HeadlessVertexBuffer {
-    fn from_vertices(_backend: &HeadlessBackend, _vertices: &[Vertex]) -> Result<Self, Error> {
+    fn from_vertices(_backend: &HeadlessBackend, _vertices: &[Vertex]) -> Result<Self> {
         Ok(HeadlessVertexBuffer)
     }
 }
@@ -86,7 +86,7 @@ impl VertexBufferTrait<HeadlessBackend> for HeadlessVertexBuffer {
 pub struct HeadlessIndexBuffer;
 
 impl IndexBufferTrait<HeadlessBackend> for HeadlessIndexBuffer {
-    fn from_indices(_backend: &HeadlessBackend, _indices: &[u16]) -> Result<Self, Error> {
+    fn from_indices(_backend: &HeadlessBackend, _indices: &[u16]) -> Result<Self> {
         Ok(HeadlessIndexBuffer)
     }
 }
@@ -102,11 +102,11 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
         _transform: &T,
         _factory: &BackendResource<HeadlessBackend>,
         _data: &Renderable,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         Ok(())
     }
 
-    fn finalize(self) -> Result<(), Error> {
+    fn finalize(self) -> Result<()> {
         Ok(())
     }
 }
@@ -125,7 +125,7 @@ impl BackendTrait for HeadlessBackend {
     type VertexBuffer = HeadlessVertexBuffer;
 
     #[allow(unused_variables)]
-    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), _vsync: bool, _msaa: u16) -> Result<Self, Error> {
+    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), _vsync: bool, _msaa: u16) -> Result<Self> {
         #[cfg(any(test, debug_assertions))]
         debug!(
             "Created a headless backend (title='{}', dims={:?})",

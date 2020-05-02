@@ -1,6 +1,6 @@
 use super::AssetTrait;
 use crate::file_manipulation::VerifyPath;
-use failure::Error;
+use anyhow::Result;
 use glium::texture::RawImage2d;
 use image::{self, GenericImageView};
 use std::{fmt, path::Path};
@@ -18,7 +18,7 @@ impl Image {
 }
 
 impl AssetTrait for Image {
-    fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+    fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
         path.ensure_extant_file()?;
         let data = image::open(path)?;
 
@@ -54,7 +54,7 @@ mod tests {
     #[test]
     fn from_path() {
         let p = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/tv-test-image.png");
-        let r: Result<Image, Error> = Image::from_path(&p);
+        let r: Result<Image> = Image::from_path(&p);
         assert!(r.is_ok());
     }
 

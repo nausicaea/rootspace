@@ -4,24 +4,24 @@ pub mod text;
 pub mod vertex;
 
 pub use self::{image::Image, mesh::Mesh, text::Text, vertex::Vertex};
-use failure::{Error, Fail};
+use anyhow::Result;
+use thiserror::Error;
 use std::{
-    io::Error as IoError,
     path::{Path, PathBuf},
 };
 
 pub trait AssetTrait: Sized {
-    fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error>;
+    fn from_path<P: AsRef<Path>>(path: P) -> Result<Self>;
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum AssetError {
-    #[fail(display = "{:?} is not within the asset tree", _0)]
+    #[error("{} is not within the asset tree", .0.display())]
     OutOfTree(PathBuf),
-    #[fail(display = "{:?} does not exist", _0)]
+    #[error("{} does not exist", .0.display())]
     DoesNotExist(PathBuf),
-    #[fail(display = "{:?} is not a file", _0)]
+    #[error("{} is not a file", .0.display())]
     NotAFile(PathBuf),
-    #[fail(display = "{} ({:?})", _1, _0)]
-    Generic(PathBuf, #[cause] IoError),
+    #[error("{} ({})", .1, .0.display())]
+    Generic(PathBuf, #[source] std::io::Error),
 }

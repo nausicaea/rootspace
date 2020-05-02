@@ -1,7 +1,7 @@
 use crate::components::model::Model;
 use crate::components::ui_model::UiModel;
 use ecs::{Database, DatabaseError, DatabaseTrait, Entity, EventQueueTrait, EventTrait};
-use failure::Error;
+use anyhow::Result;
 use hierarchy::Hierarchy;
 use std::{
     any::Any,
@@ -10,7 +10,7 @@ use std::{
 };
 
 pub trait SceneGraphTrait {
-    fn update_graph(&mut self) -> Result<(), Error>;
+    fn update_graph(&mut self) -> Result<()>;
     fn insert_world_node(&mut self, entity: Entity);
     fn insert_ui_node(&mut self, entity: Entity);
     fn get_world_node(&self, entity: &Entity) -> Option<&Model>;
@@ -60,9 +60,9 @@ where
         self.events.push_back(event)
     }
 
-    fn handle_events<F>(&mut self, mut handler: F) -> Result<bool, Error>
+    fn handle_events<F>(&mut self, mut handler: F) -> Result<bool>
     where
-        F: FnMut(&mut Self, &E) -> Result<bool, Error>,
+        F: FnMut(&mut Self, &E) -> Result<bool>,
     {
         let tmp = self.events.iter().cloned().collect::<Vec<_>>();
         self.events.clear();
@@ -78,7 +78,7 @@ where
 }
 
 impl<E> SceneGraphTrait for Context<E> {
-    fn update_graph(&mut self) -> Result<(), Error> {
+    fn update_graph(&mut self) -> Result<()> {
         let db = &self.database;
         self.world_graph.update(&|entity, _, parent_model| {
             let current_model: &Model = db.get(entity).ok()?;

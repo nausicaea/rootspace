@@ -3,7 +3,8 @@ use crate::{
     event::EngineEvent,
 };
 use ecs::{EventQueue, ReceiverId, Resources, System};
-use failure::{Error, Fail};
+use anyhow::Result;
+use thiserror::Error;
 use log::trace;
 use std::{collections::HashMap, time::Duration};
 
@@ -32,7 +33,7 @@ impl DebugShell {
         self.commands.insert(command.name(), Box::new(command));
     }
 
-    fn interpret(&self, res: &Resources, args: &[String]) -> Result<(), Error> {
+    fn interpret(&self, res: &Resources, args: &[String]) -> Result<()> {
         if !args.is_empty() {
             let command_name = args[0].as_str();
             if command_name == "help" {
@@ -48,7 +49,7 @@ impl DebugShell {
         }
     }
 
-    fn command_help(&self) -> Result<(), Error> {
+    fn command_help(&self) -> Result<()> {
         let mut output = String::from("For more information on a specific command, type COMMAND -h\n");
         for (k, v) in &self.commands {
             output.push_str(k);
@@ -78,8 +79,8 @@ impl System for DebugShell {
     }
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 enum DebugShellError {
-    #[fail(display = "'{}' is not a recognized builtin or command", _0)]
+    #[error("'{0}' is not a recognized builtin or command")]
     CommandNotFound(String),
 }

@@ -4,7 +4,7 @@
 
 use crate::{event::EngineEvent, text_manipulation::split_arguments};
 use ecs::{EventQueue, Resources, System};
-use failure::Fail;
+use thiserror::Error;
 use log::{error, warn};
 #[cfg(not(test))]
 use std::thread::spawn;
@@ -94,10 +94,10 @@ impl System for DebugConsole {
     }
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 enum DebugConsoleError {
-    #[fail(display = "{}", _0)]
-    IoError(#[cause] io::Error),
-    #[fail(display = "{}", _0)]
-    Utf8Error(#[cause] string::FromUtf8Error),
+    #[error(transparent)]
+    IoError(#[from] io::Error),
+    #[error(transparent)]
+    Utf8Error(#[from] string::FromUtf8Error),
 }

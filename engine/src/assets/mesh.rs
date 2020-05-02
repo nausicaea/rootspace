@@ -1,6 +1,7 @@
 use super::{vertex::Vertex, AssetTrait};
 use crate::file_manipulation::VerifyPath;
-use failure::{Error, Fail};
+use anyhow::Result;
+use thiserror::Error;
 use ply;
 use std::{convert::TryInto, path::Path};
 
@@ -76,7 +77,7 @@ impl Mesh {
 }
 
 impl AssetTrait for Mesh {
-    fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+    fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
         path.ensure_extant_file()?;
         let data = ply::Ply::from_path(path)?;
         let mesh = Mesh::from_ply(&data)?;
@@ -85,11 +86,11 @@ impl AssetTrait for Mesh {
     }
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum MeshError {
-    #[fail(display = "The element '{}' was not found", _0)]
+    #[error("The element '{0}' was not found")]
     ElementNotFound(&'static str),
-    #[fail(display = "The property '{}' was not found on element '{}'", _1, _0)]
+    #[error("The property '{1}' was not found on element '{0}'")]
     PropertyNotFound(&'static str, &'static str),
 }
 
@@ -101,7 +102,7 @@ mod tests {
     fn from_path() {
         let p = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply");
 
-        let r: Result<Mesh, Error> = Mesh::from_path(&p);
+        let r: Result<Mesh> = Mesh::from_path(&p);
         assert!(r.is_ok());
     }
 }

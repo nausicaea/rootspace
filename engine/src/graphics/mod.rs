@@ -9,7 +9,7 @@ use crate::{
     geometry::rect::Rect,
     resources::BackendResource,
 };
-use failure::Error;
+use anyhow::Result;
 use std::{borrow::Cow, convert::TryInto, path::Path};
 use typename::TypeName;
 
@@ -21,7 +21,7 @@ pub trait BackendTrait: Sized + 'static + TypeName {
     type VertexBuffer: VertexBufferTrait<Self>;
     type IndexBuffer: IndexBufferTrait<Self>;
 
-    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self, Error>;
+    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self>;
     fn poll_events<F: FnMut(Self::Event)>(&mut self, f: F);
     fn create_frame(&self) -> Self::Frame;
     fn dpi_factor(&self) -> f64;
@@ -37,16 +37,16 @@ pub trait FrameTrait<B: BackendTrait> {
         transform: &T,
         factory: &BackendResource<B>,
         data: &Renderable,
-    ) -> Result<(), Error>;
-    fn finalize(self) -> Result<(), Error>;
+    ) -> Result<()>;
+    fn finalize(self) -> Result<()>;
 }
 
 pub trait TextureTrait<B: BackendTrait>: Sized {
-    fn empty(backend: &B, dimensions: (u32, u32)) -> Result<Self, Error>;
-    fn from_image(backend: &B, image: Image) -> Result<Self, Error>;
+    fn empty(backend: &B, dimensions: (u32, u32)) -> Result<Self>;
+    fn from_image(backend: &B, image: Image) -> Result<Self>;
     fn dimensions(&self) -> (u32, u32);
     fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, data: Cow<'a, [u8]>);
-    fn from_path<P: AsRef<Path>>(backend: &B, image: P) -> Result<Self, Error> {
+    fn from_path<P: AsRef<Path>>(backend: &B, image: P) -> Result<Self> {
         let img = Image::from_path(image)?;
 
         Self::from_image(backend, img)
@@ -54,8 +54,8 @@ pub trait TextureTrait<B: BackendTrait>: Sized {
 }
 
 pub trait ShaderTrait<B: BackendTrait>: Sized {
-    fn from_source<S: AsRef<str>>(backend: &B, vs: S, fs: S) -> Result<Self, Error>;
-    fn from_paths<P: AsRef<Path>>(backend: &B, vs: P, fs: P) -> Result<Self, Error> {
+    fn from_source<S: AsRef<str>>(backend: &B, vs: S, fs: S) -> Result<Self>;
+    fn from_paths<P: AsRef<Path>>(backend: &B, vs: P, fs: P) -> Result<Self> {
         let v = vs.read_to_string()?;
         let f = fs.read_to_string()?;
 
@@ -64,9 +64,9 @@ pub trait ShaderTrait<B: BackendTrait>: Sized {
 }
 
 pub trait VertexBufferTrait<B: BackendTrait>: Sized {
-    fn from_vertices(backend: &B, vertices: &[Vertex]) -> Result<Self, Error>;
+    fn from_vertices(backend: &B, vertices: &[Vertex]) -> Result<Self>;
 }
 
 pub trait IndexBufferTrait<B: BackendTrait>: Sized {
-    fn from_indices(backend: &B, indices: &[u16]) -> Result<Self, Error>;
+    fn from_indices(backend: &B, indices: &[u16]) -> Result<Self>;
 }

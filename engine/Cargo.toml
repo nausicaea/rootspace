@@ -11,9 +11,10 @@ wsl = []
 approx = "^0.3.2"
 clap = { version = "^2.0.0", default-features = false }
 ctrlc = { version = "^3.0.0", features = ["termination"] }
-failure = "^0.1.1"
+anyhow = "^1.0.0"
+thiserror = "^1.0.0"
 glium = "^0.25.0"
-image = { version = "^0.22.0", default-features = false, features = ["png"] }
+image = { version = "^0.22.0", default-features = true, features = ["png"] }
 log = "^0.4.1"
 nalgebra = { version = "^0.18.0", features = ["serde-serialize"] }
 num-traits = "^0.2.6"

@@ -6,7 +6,7 @@ use crate::{
     geometry::rect::Rect,
     resources::BackendResource,
 };
-use failure::Error;
+use anyhow::Result;
 #[cfg(target_os = "macos")]
 use glium::glutin::{KeyboardInput, ModifiersState, VirtualKeyCode};
 use glium::{
@@ -99,13 +99,13 @@ where
 pub struct GliumTexture(Rc<Texture2d>);
 
 impl TextureTrait<GliumBackend> for GliumTexture {
-    fn empty(backend: &GliumBackend, dimensions: (u32, u32)) -> Result<Self, Error> {
+    fn empty(backend: &GliumBackend, dimensions: (u32, u32)) -> Result<Self> {
         let tex = Texture2d::empty(&backend.display, dimensions.0, dimensions.1)?;
 
         Ok(GliumTexture(Rc::new(tex)))
     }
 
-    fn from_image(backend: &GliumBackend, image: Image) -> Result<Self, Error> {
+    fn from_image(backend: &GliumBackend, image: Image) -> Result<Self> {
         let raw: RawImage2d<u8> = image.into();
         let tex = Texture2d::new(&backend.display, raw)?;
 
@@ -134,7 +134,7 @@ impl TextureTrait<GliumBackend> for GliumTexture {
 pub struct GliumShader(Rc<Program>);
 
 impl ShaderTrait<GliumBackend> for GliumShader {
-    fn from_source<S: AsRef<str>>(backend: &GliumBackend, vs: S, fs: S) -> Result<Self, Error> {
+    fn from_source<S: AsRef<str>>(backend: &GliumBackend, vs: S, fs: S) -> Result<Self> {
         let progr = Program::from_source(&backend.display, vs.as_ref(), fs.as_ref(), None)?;
 
         Ok(GliumShader(Rc::new(progr)))
@@ -145,7 +145,7 @@ impl ShaderTrait<GliumBackend> for GliumShader {
 pub struct GliumVertexBuffer(Rc<VertexBuffer<Vertex>>);
 
 impl VertexBufferTrait<GliumBackend> for GliumVertexBuffer {
-    fn from_vertices(backend: &GliumBackend, vertices: &[Vertex]) -> Result<Self, Error> {
+    fn from_vertices(backend: &GliumBackend, vertices: &[Vertex]) -> Result<Self> {
         let vbuf = VertexBuffer::new(&backend.display, vertices)?;
 
         Ok(GliumVertexBuffer(Rc::new(vbuf)))
@@ -156,7 +156,7 @@ impl VertexBufferTrait<GliumBackend> for GliumVertexBuffer {
 pub struct GliumIndexBuffer(Rc<IndexBuffer<u16>>);
 
 impl IndexBufferTrait<GliumBackend> for GliumIndexBuffer {
-    fn from_indices(backend: &GliumBackend, indices: &[u16]) -> Result<Self, Error> {
+    fn from_indices(backend: &GliumBackend, indices: &[u16]) -> Result<Self> {
         let ibuf = IndexBuffer::new(&backend.display, PrimitiveType::TrianglesList, indices)?;
 
         Ok(GliumIndexBuffer(Rc::new(ibuf)))
@@ -175,7 +175,7 @@ impl FrameTrait<GliumBackend> for GliumFrame {
         transform: &T,
         factory: &BackendResource<GliumBackend>,
         data: &Renderable,
-    ) -> Result<(), Error>
+    ) -> Result<()>
     where
         T: AsRef<[[f32; 4]; 4]>,
     {
@@ -224,7 +224,7 @@ impl FrameTrait<GliumBackend> for GliumFrame {
         }
     }
 
-    fn finalize(self) -> Result<(), Error> {
+    fn finalize(self) -> Result<()> {
         self.0.finish()?;
 
         Ok(())
@@ -251,7 +251,7 @@ impl BackendTrait for GliumBackend {
     type Texture = GliumTexture;
     type VertexBuffer = GliumVertexBuffer;
 
-    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self, Error> {
+    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self> {
         let window = WindowBuilder::new()
             .with_title(title.as_ref())
             .with_dimensions(dimensions.into())

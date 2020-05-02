@@ -4,7 +4,8 @@ use crate::{
     resources::{BackendResource, IndexBufferId, ShaderId, TextureId, VertexBufferId},
 };
 use ecs::{Component, VecStorage};
-use failure::{format_err, Error, Fail};
+use anyhow::Result;
+use thiserror::Error;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use typename::TypeName;
@@ -62,7 +63,7 @@ impl Renderable {
         }
     }
 
-    pub fn reload<B: BackendTrait>(&mut self, factory: &mut BackendResource<B>) -> Result<(), Error> {
+    pub fn reload<B: BackendTrait>(&mut self, factory: &mut BackendResource<B>) -> Result<()> {
         match self.source {
             Some(SourceData::Mesh {
                 ref file,
@@ -117,10 +118,7 @@ impl Renderable {
                 self.normal_texture = None;
                 Ok(())
             }
-            None => Err(format_err!(
-                "Cannot reload the renderable because no source data is present: {:?}",
-                self
-            )),
+            None => Err(From::from(RenderableError::NoSourceDataPresent)),
         }
     }
 
@@ -234,7 +232,7 @@ impl RenderableBuilder {
         self
     }
 
-    pub fn build_mesh<B: BackendTrait>(&self, factory: &mut BackendResource<B>) -> Result<Renderable, Error> {
+    pub fn build_mesh<B: BackendTrait>(&self, factory: &mut BackendResource<B>) -> Result<Renderable> {
         let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
         let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
@@ -256,7 +254,7 @@ impl RenderableBuilder {
         Ok(renderable)
     }
 
-    pub fn build_text<B: BackendTrait>(&self, factory: &mut BackendResource<B>) -> Result<Renderable, Error> {
+    pub fn build_text<B: BackendTrait>(&self, factory: &mut BackendResource<B>) -> Result<Renderable> {
         let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
         let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
         let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
@@ -282,20 +280,22 @@ impl RenderableBuilder {
     }
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum RenderableError {
-    #[fail(display = "You must provide a mesh to build a Renderable")]
+    #[error("You must provide a mesh to build a Renderable")]
     MissingMesh,
-    #[fail(display = "You must provide a vertex shader to build a Renderable")]
+    #[error("You must provide a vertex shader to build a Renderable")]
     MissingVertexShader,
-    #[fail(display = "You must provide a fragment shader to build a Renderable")]
+    #[error("You must provide a fragment shader to build a Renderable")]
     MissingFragmentShader,
-    #[fail(display = "You must provide a diffuse texture to build a Renderable")]
+    #[error("You must provide a diffuse texture to build a Renderable")]
     MissingDiffuseTexture,
-    #[fail(display = "You must provide a font to build a Renderable")]
+    #[error("You must provide a font to build a Renderable")]
     MissingFont,
-    #[fail(display = "You must provide text to build a Renderable")]
+    #[error("You must provide text to build a Renderable")]
     MissingText,
+    #[error("Cannot reload the renderable because no source data is present")]
+    NoSourceDataPresent,
 }
 
 #[cfg(test)]
@@ -309,7 +309,7 @@ mod tests {
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
-        let r: Result<Renderable, Error> = Renderable::builder()
+        let r: Result<Renderable> = Renderable::builder()
             .mesh("meshes/cube.ply")
             .vertex_shader("shaders/test-vertex.glsl")
             .fragment_shader("shaders/test-fragment.glsl")
@@ -325,7 +325,7 @@ mod tests {
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
-        let r: Result<Renderable, Error> = Renderable::builder()
+        let r: Result<Renderable> = Renderable::builder()
             .font("fonts/SourceSansPro-Regular.ttf")
             .vertex_shader("shaders/test-vertex.glsl")
             .fragment_shader("shaders/test-fragment.glsl")

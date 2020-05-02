@@ -62,14 +62,14 @@ fn main() -> Result<()> {
 
         game.load().context("Cannot load the game")?;
 
-        game.run();
+        game.run(iterations);
     } else {
         let mut game = Game::new_glium(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
             .context("Cannot initialise the game")?;
 
         game.load().context("Cannot load the game")?;
 
-        game.run();
+        game.run(iterations);
     }
 
     Ok(())
