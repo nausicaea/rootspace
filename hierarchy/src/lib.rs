@@ -12,7 +12,7 @@ use daggy::{
     },
     Dag, NodeIndex,
 };
-use failure::Fail;
+use thiserror::Error;
 #[cfg(any(test, feature = "serde_support"))]
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
@@ -441,16 +441,16 @@ where
 }
 
 /// Describes possible errors when interacting with `Hierarchy`.
-#[derive(Debug, Fail, PartialEq)]
+#[derive(Debug, Error, PartialEq)]
 pub enum HierarchyError {
     /// Returned when the requested key of type `K` was not found.
-    #[fail(display = "The key was not found.")]
+    #[error("The key was not found")]
     KeyNotFound,
     /// Returned when the requested key was found more than once.
-    #[fail(display = "The key was found more than once.")]
+    #[error("The key was found more than once")]
     MultipleKeysFound,
     /// Returned if the requested node was not found.
-    #[fail(display = "The specified node was not found.")]
+    #[error("The specified node was not found")]
     NodeNotFound,
 }
 
