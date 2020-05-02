@@ -13,7 +13,7 @@ use engine::{
         Renderer,
     },
 };
-use failure::Error;
+use anyhow::Result;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
 
@@ -41,13 +41,13 @@ where
         resource_path: P,
         delta_time: Duration,
         max_frame_time: Duration,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self> {
         Ok(Game {
             orchestrator: Orchestrator::new(resource_path, delta_time, max_frame_time)?,
         })
     }
 
-    pub fn load(&mut self) -> Result<(), Error> {
+    pub fn load(&mut self) -> Result<()> {
         let camera = self.orchestrator.create_entity();
         self.orchestrator.insert_component(camera, Status::default());
         self.orchestrator.insert_component(camera, Camera::default());
@@ -175,7 +175,7 @@ impl Game<HeadlessBackend> {
         resource_path: P,
         delta_time: Duration,
         max_frame_time: Duration,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self> {
         Self::new(resource_path, delta_time, max_frame_time)
     }
 }
@@ -185,7 +185,7 @@ impl Game<GliumBackend> {
         resource_path: P,
         delta_time: Duration,
         max_frame_time: Duration,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self> {
         Self::new(resource_path, delta_time, max_frame_time)
     }
 }

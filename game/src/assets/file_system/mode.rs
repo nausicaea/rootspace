@@ -1,8 +1,6 @@
 use serde::{Serialize, Deserialize};
 use bitflags::bitflags;
-use std::collections::HashMap;
 use std::convert::TryFrom;
-use serde::de::Unexpected::Char;
 use thiserror::Error;
 
 static FILE_TYPE_MASK: u16 = 0o170000;
@@ -41,19 +39,19 @@ impl Mode {
             .with_other_perms(Permission::READ | Permission::WRITE)
             .build()
     }
-    
+
     pub fn file_type(&self) -> FileType {
         TryFrom::<u16>::try_from(self.0 & FILE_TYPE_MASK).expect("The mode contains an invalid file type value")
     }
-    
+
     pub fn set_uid(&self) -> bool {
         (self.0 & 0o4000) > 0
     }
-    
+
     pub fn set_gid(&self) -> bool {
         (self.0 & 0o2000) > 0
     }
-    
+
     pub fn sticky(&self) -> bool {
         (self.0 & 0o1000) > 0
     }
@@ -132,25 +130,25 @@ impl From<Mode> for u16 {
 impl From<ModeBuilder> for Mode {
     fn from(value: ModeBuilder) -> Self {
         let mut packed = 0u16;
-        
+
         // Pack the file type
-        packed |= (Into::<u16>::into(value.file_type) & FILE_TYPE_MASK);
-        
+        packed |= Into::<u16>::into(value.file_type) & FILE_TYPE_MASK;
+
         // Pack the set-uid, set-gid and sticky bits
         packed |= if value.set_uid { 1 << 11 } else { 0 };
         packed |= if value.set_gid { 1 << 10 } else { 0 };
         packed |= if value.sticky { 1 << 9 } else { 0 };
-        
+
         // Pack the permission scopes
         packed |= ((value.user_perms.bits as u16) & 0o7) << 6;
         packed |= ((value.group_perms.bits as u16) & 0o7) << 3;
         packed |= (value.other_perms.bits as u16) & 0o7;
-        
+
         // Apply the permission mask to the packed bits, if one is set
         if let Some(mask) = value.mask {
             packed &= !(mask.0 & 0o777);
         }
-        
+
         Mode(packed)
     }
 }
@@ -169,7 +167,7 @@ pub enum FileType {
 impl From<FileType> for u16 {
     fn from(value: FileType) -> Self {
         use self::FileType::*;
-        
+
         match value {
             FifoPipe => 0o010000,
             CharacterDevice => 0o020000,
@@ -184,10 +182,10 @@ impl From<FileType> for u16 {
 
 impl TryFrom<u16> for FileType {
     type Error = Error;
-    
+
     fn try_from(value: u16) -> Result<FileType, Self::Error> {
         use self::FileType::*;
-        
+
         match value {
             0o010000 => Ok(FifoPipe),
             0o020000 => Ok(CharacterDevice),
@@ -227,47 +225,47 @@ impl ModeBuilder {
     pub fn new() -> Self {
         ModeBuilder::default()
     }
-    
+
     pub fn with_mask(mut self, mask: Mode) -> Self {
         self.mask = Some(mask);
         self
     }
-    
+
     pub fn with_type(mut self, ft: FileType) -> Self {
         self.file_type = ft;
         self
     }
-    
+
     pub fn with_set_uid(mut self, status: bool) -> Self {
         self.set_uid = status;
         self
     }
-    
+
     pub fn with_set_gid(mut self, status: bool) -> Self {
         self.set_gid = status;
         self
     }
-    
+
     pub fn with_sticky(mut self, status: bool) -> Self {
         self.sticky = status;
         self
     }
-    
+
     pub fn with_user_perms(mut self, perms: Permission) -> Self {
         self.user_perms = perms;
         self
     }
-    
+
     pub fn with_group_perms(mut self, perms: Permission) -> Self {
         self.group_perms = perms;
         self
     }
-    
+
     pub fn with_other_perms(mut self, perms: Permission) -> Self {
         self.other_perms = perms;
         self
     }
-    
+
     pub fn build(self) -> Mode {
         self.into()
     }
@@ -292,32 +290,32 @@ impl Default for ModeBuilder {
 mod tests {
     use super::*;
     use proptest::prelude::*;
-    
+
     #[test]
     fn directory() {
         assert_eq!(Mode::directory(Mode(0o022)), Mode(0o040755));
     }
-    
+
     #[test]
     fn file() {
         assert_eq!(Mode::file(Mode(0o022)), Mode(0o100644));
     }
-    
+
     #[test]
     fn sticky() {
         assert!(Mode(0o1000).sticky());
     }
-    
+
     #[test]
     fn set_gid() {
         assert!(Mode(0o2000).set_gid());
     }
-    
+
     #[test]
     fn set_uid() {
         assert!(Mode(0o4000).set_uid());
     }
-    
+
     #[test]
     fn file_type() {
         assert_eq!(Mode(0o010000).file_type(), FileType::FifoPipe);
@@ -328,7 +326,7 @@ mod tests {
         assert_eq!(Mode(0o120000).file_type(), FileType::Symlink);
         assert_eq!(Mode(0o140000).file_type(), FileType::Socket);
     }
-    
+
     #[test]
     #[should_panic]
     fn unknown_file_type() {
