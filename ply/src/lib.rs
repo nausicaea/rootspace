@@ -12,25 +12,25 @@ use combine::{
     parser::Parser,
     stream::{buffered::BufferedStream, state::State, ReadStream},
 };
-use failure::Fail;
+use thiserror::Error;
 use parsers::ply;
 use std::{fs::File, io, path::Path};
 
 /// Describes errors that may occur when parsing a ply file.
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum Error {
     /// A ply file contains duplicate element names.
-    #[fail(display = "Some element names appeared more than once")]
+    #[error("Some element names appeared more than once")]
     DuplicateElements,
     /// An element in a ply file contains duplicate property names.
-    #[fail(display = "Some property names appeared more than once in a single element")]
+    #[error("Some property names appeared more than once in a single element")]
     DuplicateProperties,
     /// General catch-all for `combine` parser errors.
-    #[fail(display = "{}: {}", _1, _0)]
+    #[error("{1}: {0}")]
     ParserError(String, String),
     /// General catch-all for IO errors.
-    #[fail(display = "{}: {}", _1, _0)]
-    IoError(String, #[cause] io::Error),
+    #[error("{1}: {0}")]
+    IoError(String, #[source] io::Error),
 }
 
 impl Ply {

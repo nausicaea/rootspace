@@ -8,6 +8,6 @@ edition = "2018"
 
 [dependencies]
 combine = "^3.5.1"
-failure = "^0.1.1"
+thiserror = "^1.0.0"
 log = "^0.4.1"
 num-traits = "^0.2.5"
