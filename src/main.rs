@@ -1,11 +1,11 @@
 use clap::{App, Arg};
-use failure::Error;
 use fern::Dispatch;
 use game::Game;
 use log::{error, LevelFilter};
 use std::{env, io, path::PathBuf, time::Duration};
+use anyhow::{Result, Context};
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     let matches = App::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -47,49 +47,30 @@ fn main() -> Result<(), Error> {
         .level(log_level)
         .chain(io::stdout())
         .apply()
-        .map_err(|e| {
-            error!("Unable to configure the logger: {}", e);
-            e
-        })?;
+        .context("Unable to configure the logger")?;
 
     let resource_dir = {
-        let manifest_dir = env::var("CARGO_MANIFEST_DIR").map_err(|e| {
-            error!("Cannot find the `CARGO_MANIFEST_DIR` environment variable: {}", e);
-            e
-        })?;
+        let manifest_dir = env::var("CARGO_MANIFEST_DIR")
+            .context("Cannot find the `CARGO_MANIFEST_DIR` environment variable")?;
 
         PathBuf::from(manifest_dir).join("assets").join("rootspace")
     };
 
     if headless {
-        Game::new_headless(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
-            .and_then(|mut g| {
-                g.load()?;
-                g.run(iterations);
-                Ok(())
-            })
-            .map_err(|e| {
-                error!(
-                    "Error initializing the game: {} (probable cause: {})",
-                    e,
-                    e.find_root_cause()
-                );
-                e
-            })
+        let mut game = Game::new_headless(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
+            .context("Cannot initialise the game")?;
+
+        game.load().context("Cannot load the game")?;
+
+        game.run();
     } else {
-        Game::new_glium(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
-            .and_then(|mut g| {
-                g.load()?;
-                g.run(iterations);
-                Ok(())
-            })
-            .map_err(|e| {
-                error!(
-                    "Error initializing the game: {} (probable cause: {})",
-                    e,
-                    e.find_root_cause()
-                );
-                e
-            })
+        let mut game = Game::new_glium(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
+            .context("Cannot initialise the game")?;
+
+        game.load().context("Cannot load the game")?;
+
+        game.run();
     }
+
+    Ok(())
 }
