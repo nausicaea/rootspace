@@ -1,10 +1,12 @@
 use clap::{App, Arg};
 use fern::Dispatch;
 use rootspace::Rootspace;
+use pacman::Pacman;
 use log::{error, LevelFilter};
 use std::{env, io, path::PathBuf, time::Duration};
 use anyhow::{Result, Context};
 use thiserror::Error;
+use engine::{HeadlessBackend, GliumBackend};
 
 #[derive(Debug, Error)]
 enum Error {
@@ -43,8 +45,8 @@ impl Into<&'static str> for Game {
 impl Into<&'static str> for &Game {
     fn into(self) -> &'static str {
         match self {
-            Game::Rootspace => "Rootspace",
-            Game::Pacman => "Pacman",
+            Game::Rootspace => "rootspace",
+            Game::Pacman => "pacman",
         }
     }
 }
@@ -76,6 +78,7 @@ fn main() -> Result<()> {
         .arg(
             Arg::with_name("game")
                 .possible_values(&[Game::Rootspace.into(), Game::Pacman.into()])
+                .case_insensitive(true)
                 .required(true)
                 .help("Which game should I start?"),
         )
@@ -115,14 +118,14 @@ fn main() -> Result<()> {
 
     if game == Game::Rootspace {
         if headless {
-            let mut g = Rootspace::new_headless(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
+            let mut g: Rootspace<HeadlessBackend> = Rootspace::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
                 .context("Cannot initialise the game")?;
 
             g.load().context("Cannot load the game")?;
 
             g.run(iterations);
         } else {
-            let mut g = Rootspace::new_glium(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
+            let mut g: Rootspace<GliumBackend> = Rootspace::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
                 .context("Cannot initialise the game")?;
 
             g.load().context("Cannot load the game")?;
@@ -130,7 +133,21 @@ fn main() -> Result<()> {
             g.run(iterations);
         }
     } else if game == Game::Pacman {
-        todo!()
+        if headless {
+            let mut g: Pacman<HeadlessBackend> = Pacman::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
+                .context("Cannot initialise the game")?;
+
+            g.load().context("Cannot load the game")?;
+
+            g.run(iterations);
+        } else {
+            let mut g: Pacman<GliumBackend> = Pacman::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250))
+                .context("Cannot initialise the game")?;
+
+            g.load().context("Cannot load the game")?;
+
+            g.run(iterations);
+        }
     }
 
     Ok(())

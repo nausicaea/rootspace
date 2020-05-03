@@ -9,3 +9,5 @@ pub mod orchestrator;
 pub mod resources;
 pub mod systems;
 pub mod text_manipulation;
+
+pub use self::graphics::{headless::HeadlessBackend, glium::GliumBackend};

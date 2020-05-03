@@ -5,7 +5,7 @@ use ecs::{Component, EventQueue, LoopStage, Reg, WorldEvent};
 use engine::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,
-    graphics::{glium::GliumBackend, headless::HeadlessBackend, BackendTrait},
+    graphics::BackendTrait,
     orchestrator::Orchestrator,
     resources::{BackendResource, SceneGraph},
     systems::{
@@ -167,25 +167,5 @@ where
 
     pub fn run(&mut self, iterations: Option<usize>) {
         self.orchestrator.run(iterations)
-    }
-}
-
-impl Rootspace<HeadlessBackend> {
-    pub fn new_headless<P: AsRef<Path>>(
-        resource_path: P,
-        delta_time: Duration,
-        max_frame_time: Duration,
-    ) -> Result<Self> {
-        Self::new(resource_path, delta_time, max_frame_time)
-    }
-}
-
-impl Rootspace<GliumBackend> {
-    pub fn new_glium<P: AsRef<Path>>(
-        resource_path: P,
-        delta_time: Duration,
-        max_frame_time: Duration,
-    ) -> Result<Self> {
-        Self::new(resource_path, delta_time, max_frame_time)
     }
 }
