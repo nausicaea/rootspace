@@ -1,5 +1,5 @@
 [package]
-name = "game"
+name = "rootspace"
 version = "0.1.0"
 authors = ["Eleanore Young"]
 edition = "2018"

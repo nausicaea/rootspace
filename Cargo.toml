@@ -1,5 +1,5 @@
 [package]
-name = "rootspace"
+name = "ygdrasil"
 version = "0.1.0"
 authors = ["Eleanore Young"]
 edition = "2018"
@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 clap = { version = "^2.0.0", default-features = false }
 anyhow = "^1.0.0"
+thiserror = "^1.0.0"
 log = "^0.4.1"
 fern = "^0.5.5"
 affine-transform = { path = "affine-transform" }
@@ -16,5 +17,5 @@ ply = { path = "ply" }
 hierarchy = { path = "hierarchy" }
 ecs = { path = "ecs" }
 engine = { path = "engine" }
-game = { path = "game" }
+rootspace = { path = "rootspace" }
 pacman = { path = "pacman" }

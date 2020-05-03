@@ -1,5 +1,5 @@
-mod assets;
-mod resources;
+// mod assets;
+// mod resources;
 
 use ecs::{Component, EventQueue, LoopStage, Reg, WorldEvent};
 use engine::{
@@ -26,14 +26,14 @@ type ResourceRegistry = Reg![
     <UiModel as Component>::Storage,
 ];
 
-pub struct Game<B>
+pub struct Rootspace<B>
 where
     B: BackendTrait,
 {
     orchestrator: Orchestrator<B, ResourceRegistry>,
 }
 
-impl<B> Game<B>
+impl<B> Rootspace<B>
 where
     B: BackendTrait,
 {
@@ -42,7 +42,7 @@ where
         delta_time: Duration,
         max_frame_time: Duration,
     ) -> Result<Self> {
-        Ok(Game {
+        Ok(Rootspace {
             orchestrator: Orchestrator::new(resource_path, delta_time, max_frame_time)?,
         })
     }
@@ -170,7 +170,7 @@ where
     }
 }
 
-impl Game<HeadlessBackend> {
+impl Rootspace<HeadlessBackend> {
     pub fn new_headless<P: AsRef<Path>>(
         resource_path: P,
         delta_time: Duration,
@@ -180,7 +180,7 @@ impl Game<HeadlessBackend> {
     }
 }
 
-impl Game<GliumBackend> {
+impl Rootspace<GliumBackend> {
     pub fn new_glium<P: AsRef<Path>>(
         resource_path: P,
         delta_time: Duration,
