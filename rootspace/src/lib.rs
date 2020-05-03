@@ -1,29 +1,18 @@
 // mod assets;
 // mod resources;
 
-use ecs::{Component, EventQueue, LoopStage, Reg, WorldEvent};
+use ecs::Reg;
 use engine::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
-    event::EngineEvent,
     graphics::BackendTrait,
     orchestrator::Orchestrator,
     resources::{BackendResource, SceneGraph},
-    systems::{
-        CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor, ForceShutdown,
-        Renderer,
-    },
 };
 use anyhow::Result;
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path, time::Duration};
 
 type ResourceRegistry = Reg![
-    <Camera as Component>::Storage,
-    <Info as Component>::Storage,
-    <Model as Component>::Storage,
-    <Renderable as Component>::Storage,
-    <Status as Component>::Storage,
-    <UiModel as Component>::Storage,
 ];
 
 pub struct Rootspace<B>
@@ -123,44 +112,6 @@ where
                 .build_mesh(factory)?
         };
         self.orchestrator.insert_component(ec, renderable);
-
-        // Handle the regular systems.
-        let force_shutdown = ForceShutdown::default();
-        self.orchestrator.add_system(LoopStage::Update, force_shutdown);
-
-        let debug_console = DebugConsole::default();
-        self.orchestrator.add_system(LoopStage::Update, debug_console);
-
-        let event_interface: EventInterface<B> = EventInterface::default();
-        self.orchestrator.add_system(LoopStage::Update, event_interface);
-
-        let queue = self.orchestrator.get_mut::<EventQueue<WorldEvent>>();
-        let event_monitor: EventMonitor<WorldEvent> = EventMonitor::new(queue);
-        self.orchestrator.add_system(LoopStage::Update, event_monitor);
-
-        let queue = self.orchestrator.get_mut::<EventQueue<WorldEvent>>();
-        let renderer: Renderer<B> = Renderer::new([0.69, 0.93, 0.93, 1.0], queue);
-        self.orchestrator.add_system(LoopStage::Render, renderer);
-
-        let queue = self.orchestrator.get_mut::<EventQueue<EngineEvent>>();
-        let event_monitor: EventMonitor<EngineEvent> = EventMonitor::new(queue);
-        self.orchestrator.add_system(LoopStage::Update, event_monitor);
-
-        let queue = self.orchestrator.get_mut::<EventQueue<EngineEvent>>();
-        let camera_manager = CameraManager::new(queue);
-        self.orchestrator.add_system(LoopStage::Update, camera_manager);
-
-        let queue = self.orchestrator.get_mut::<EventQueue<EngineEvent>>();
-        let debug_shell = DebugShell::new(queue);
-        self.orchestrator.add_system(LoopStage::Update, debug_shell);
-
-        let queue = self.orchestrator.get_mut::<EventQueue<EngineEvent>>();
-        let event_coordinator = EventCoordinator::new(queue);
-        self.orchestrator.add_system(LoopStage::Update, event_coordinator);
-
-        self.orchestrator
-            .get_mut::<EventQueue<EngineEvent>>()
-            .send(EngineEvent::Startup);
 
         Ok(())
     }

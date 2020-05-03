@@ -234,10 +234,6 @@ where
         C: Component + TypeName,
         C::Storage: TypeName,
     {
-        if !self.resources.contains::<C::Storage>() {
-            let _ = self.resources.insert(C::Storage::default(), Persistence::None);
-        }
-
         self.resources.get_mut::<C::Storage>().insert(entity, component);
     }
 

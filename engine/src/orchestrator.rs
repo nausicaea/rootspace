@@ -1,9 +1,14 @@
+use anyhow::{Context, Result};
 use crate::{
-    components::{Model, UiModel},
+    components::{Camera, Info, Status, Renderable, Model, UiModel},
     event::EngineEvent,
     file_manipulation::{FileError, VerifyPath},
     graphics::BackendTrait,
     resources::{BackendResource, BackendSettings, SceneGraph},
+    systems::{
+        CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor, ForceShutdown,
+        Renderer,
+    },
 };
 use ecs::{
     Component, Entity, EventQueue, LoopStage, Persistence, ReceiverId, RegAdd, ResourceRegistry, Resource, ResourcesTrait,
@@ -22,6 +27,12 @@ use std::{
 use typename::TypeName;
 
 pub type JoinedRegistry<RR> = RegAdd![
+    <Info as Component>::Storage,
+    <Status as Component>::Storage,
+    <Camera as Component>::Storage,
+    <Renderable as Component>::Storage,
+    <UiModel as Component>::Storage,
+    <Model as Component>::Storage,
     SceneGraph<UiModel>,
     SceneGraph<Model>,
     EventQueue<EngineEvent>,
@@ -36,7 +47,6 @@ pub struct Orchestrator<B, RR> {
     max_frame_time: Duration,
     world_receiver: ReceiverId<WorldEvent>,
     _b: PhantomData<B>,
-    _rr: PhantomData<RR>,
 }
 
 impl<B, RR> Orchestrator<B, RR>
@@ -48,19 +58,52 @@ where
         resource_path: P,
         delta_time: Duration,
         max_frame_time: Duration,
-    ) -> Result<Self, FileError> {
+    ) -> Result<Self> {
         resource_path.ensure_extant_directory()?;
 
+        // Create the backend
         let backend = BackendSettings::new("Title", (800, 600), true, 4, resource_path.as_ref())
             .build::<B>()
-            .expect("Failed to initialise the backend");
+            .context("Failed to initialise the backend")?;
 
+        // Create the world
         let mut world = World::default();
+
+        // Insert basic resources
         world.insert(EventQueue::<EngineEvent>::default(), Persistence::Runtime);
         world.insert(backend.settings().clone(), Persistence::Runtime);
         world.insert(backend, Persistence::Runtime);
         world.insert(SceneGraph::<Model>::default(), Persistence::Runtime);
         world.insert(SceneGraph::<UiModel>::default(), Persistence::Runtime);
+        world.insert(<Info as Component>::Storage::default(), Persistence::Runtime);
+        world.insert(<Status as Component>::Storage::default(), Persistence::Runtime);
+        world.insert(<Camera as Component>::Storage::default(), Persistence::Runtime);
+        world.insert(<Renderable as Component>::Storage::default(), Persistence::Runtime);
+        world.insert(<UiModel as Component>::Storage::default(), Persistence::Runtime);
+        world.insert(<Model as Component>::Storage::default(), Persistence::Runtime);
+
+        // Insert basic systems
+        world.add_system(LoopStage::Update, ForceShutdown::default());
+        world.add_system(LoopStage::Update, DebugConsole::default());
+        world.add_system(LoopStage::Update, EventInterface::<B>::default());
+        let queue = world.get_mut::<EventQueue<WorldEvent>>();
+        let event_monitor = EventMonitor::<WorldEvent>::new(queue);
+        world.add_system(LoopStage::Update, event_monitor);
+        let queue = world.get_mut::<EventQueue<WorldEvent>>();
+        let renderer = Renderer::<B>::new([0.69, 0.93, 0.93, 1.0], queue);
+        world.add_system(LoopStage::Render, renderer);
+        let queue = world.get_mut::<EventQueue<EngineEvent>>();
+        let event_monitor = EventMonitor::<EngineEvent>::new(queue);
+        world.add_system(LoopStage::Update, event_monitor);
+        let queue = world.get_mut::<EventQueue<EngineEvent>>();
+        let camera_manager = CameraManager::new(queue);
+        world.add_system(LoopStage::Update, camera_manager);
+        let queue = world.get_mut::<EventQueue<EngineEvent>>();
+        let debug_shell = DebugShell::new(queue);
+        world.add_system(LoopStage::Update, debug_shell);
+        let queue = world.get_mut::<EventQueue<EngineEvent>>();
+        let event_coordinator = EventCoordinator::new(queue);
+        world.add_system(LoopStage::Update, event_coordinator);
 
         trace!("Orchestrator<B, RR> subscribing to EventQueue<WorldEvent>");
         let world_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe();
@@ -72,33 +115,46 @@ where
             max_frame_time,
             world_receiver,
             _b: PhantomData::default(),
-            _rr: PhantomData::default(),
         })
     }
 
     pub fn run(&mut self, iterations: Option<usize>) {
+        // Send the startup event
+        self.world
+            .get_mut::<EventQueue<EngineEvent>>()
+            .send(EngineEvent::Startup);
+
+        // Initialize the timers
         let mut loop_time = Instant::now();
         let mut accumulator = Duration::default();
         let mut dynamic_game_time = Duration::default();
         let mut fixed_game_time = Duration::default();
 
+        // Run the main game loop
         let mut i = 0;
         let mut running = true;
         while running && iterations.map(|max_iter| i < max_iter).unwrap_or(true) {
+            // Assess the duration of the last frame
             let frame_time = cmp::min(loop_time.elapsed(), self.max_frame_time);
             loop_time = Instant::now();
             accumulator += frame_time;
             dynamic_game_time += frame_time;
 
+            // Call fixed update functions until the accumulated time buffer is empty
             while accumulator >= self.delta_time {
                 self.world.fixed_update(&fixed_game_time, &self.delta_time);
                 accumulator -= self.delta_time;
                 fixed_game_time += self.delta_time;
             }
 
+            // Call the dynamic update and render functions
             self.world.update(&dynamic_game_time, &frame_time);
             self.world.render(&dynamic_game_time, &frame_time);
+
+            // Perform maintenance tasks (both Orchestrator and World listen for events themselves)
             running = self.maintain();
+
+            // Increment the iteration counter
             i += 1;
         }
     }
