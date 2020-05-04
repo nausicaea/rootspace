@@ -834,6 +834,7 @@ dependencies = [
  "anyhow 1.0.28 (registry+https://github.com/rust-lang/crates.io-index)",
  "ecs 0.5.0",
  "engine 0.1.0",
+ "nalgebra 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

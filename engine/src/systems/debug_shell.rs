@@ -65,7 +65,7 @@ impl DebugShell {
 
 impl System for DebugShell {
     fn name(&self) -> &'static str {
-        "DebugShell"
+        stringify!(DebugShell)
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {

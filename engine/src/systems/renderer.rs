@@ -92,7 +92,7 @@ where
     B: BackendTrait,
 {
     fn name(&self) -> &'static str {
-        "Renderer"
+        stringify!(Renderer)
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {

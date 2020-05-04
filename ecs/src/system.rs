@@ -16,7 +16,7 @@ impl_downcast!(System);
 
 impl System for () {
     fn name(&self) -> &'static str {
-        "()"
+        stringify!(())
     }
 
     fn run(&mut self, _: &Resources, _: &Duration, _: &Duration) {}

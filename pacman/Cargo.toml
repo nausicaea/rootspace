@@ -6,5 +6,6 @@ edition = "2018"
 
 [dependencies]
 anyhow = "^1.0.0"
+nalgebra = { version = "^0.18.0", features = ["serde-serialize"] }
 ecs = {path = "../ecs"}
 engine = {path = "../engine"}

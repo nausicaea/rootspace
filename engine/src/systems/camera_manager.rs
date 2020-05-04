@@ -37,7 +37,7 @@ impl CameraManager {
 
 impl System for CameraManager {
     fn name(&self) -> &'static str {
-        "CameraManager"
+        stringify!(CameraManager)
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {

@@ -18,7 +18,7 @@ impl EventCoordinator {
 
 impl System for EventCoordinator {
     fn name(&self) -> &'static str {
-        "EventCoordinator"
+        stringify!(EventCoordinator)
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {

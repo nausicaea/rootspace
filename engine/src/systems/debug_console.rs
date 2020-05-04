@@ -81,7 +81,7 @@ impl Default for DebugConsole {
 
 impl System for DebugConsole {
     fn name(&self) -> &'static str {
-        "DebugConsole"
+        stringify!(DebugConsole)
     }
 
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {

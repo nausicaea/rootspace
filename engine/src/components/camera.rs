@@ -6,8 +6,15 @@ use serde::{Deserialize, Serialize};
 use std::f32;
 use typename::TypeName;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Projection {
+    Perspective,
+    Orthographic,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct CameraSerDe {
+    projection: Projection,
     dimensions: (u32, u32),
     fov_y: f32,
     frustum_z: (f32, f32),
@@ -20,6 +27,7 @@ struct CameraSerDe {
 impl From<Camera> for CameraSerDe {
     fn from(value: Camera) -> Self {
         CameraSerDe {
+            projection: value.projection,
             dimensions: value.dimensions,
             fov_y: value.fov_y,
             frustum_z: value.frustum_z,
@@ -34,6 +42,7 @@ impl From<Camera> for CameraSerDe {
 impl From<CameraSerDe> for Camera {
     fn from(value: CameraSerDe) -> Self {
         Camera::new(
+            value.projection,
             value.dimensions,
             value.fov_y,
             value.frustum_z,
@@ -48,6 +57,7 @@ impl From<CameraSerDe> for Camera {
 #[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
 #[serde(into = "CameraSerDe", from = "CameraSerDe")]
 pub struct Camera {
+    projection: Projection,
     world_matrix: Matrix4<f32>,
     ui_matrix: Matrix4<f32>,
     orthographic: Orthographic3<f32>,
@@ -64,6 +74,7 @@ pub struct Camera {
 
 impl Camera {
     pub fn new<D: Into<Option<f64>>>(
+        projection: Projection,
         dimensions: (u32, u32),
         fov_y: f32,
         frustum_z: (f32, f32),
@@ -88,8 +99,14 @@ impl Camera {
         );
         let view = Isometry3::look_at_rh(&eye, &target, &up);
 
+        let world_matrix = match projection {
+            Projection::Perspective => perspective.as_matrix() * view.to_homogeneous(),
+            Projection::Orthographic => orthographic.as_matrix() * view.to_homogeneous(),
+        };
+
         Camera {
-            world_matrix: perspective.as_matrix() * view.to_homogeneous(),
+            projection,
+            world_matrix,
             ui_matrix: orthographic.as_matrix().clone(),
             orthographic,
             perspective,
@@ -178,13 +195,20 @@ impl Camera {
 
     /// Transforms a point in world-space to normalized device coordinates.
     pub fn world_point_to_ndc(&self, point: &Point3<f32>) -> Point3<f32> {
-        self.perspective.project_point(&self.view.transform_point(point))
+        match self.projection {
+            Projection::Perspective => self.perspective.project_point(&self.view.transform_point(point)),
+            Projection::Orthographic => self.orthographic.project_point(&self.view.transform_point(point)),
+        }
     }
 
     /// Transforms a point in normalized device coordinates to world-space.
     pub fn ndc_point_to_world(&self, point: &Point3<f32>) -> Point3<f32> {
-        self.view
-            .inverse_transform_point(&self.perspective.unproject_point(point))
+        let cam_space = match self.projection {
+            Projection::Perspective => self.perspective.unproject_point(point),
+            Projection::Orthographic => self.orthographic.unproject_point(point),
+        };
+
+        self.view.inverse_transform_point(&cam_space)
     }
 
     /// Transforms a point in ui-space to normalized device coordinates.
@@ -256,7 +280,10 @@ impl Camera {
 
     /// Updates the cached matrices to speed up the rendering calls.
     fn recalculate_matrices(&mut self) {
-        self.world_matrix = self.perspective.as_matrix() * self.view.to_homogeneous();
+        self.world_matrix = match self.projection {
+            Projection::Perspective => self.perspective.as_matrix() * self.view.to_homogeneous(),
+            Projection::Orthographic => self.orthographic.as_matrix() * self.view.to_homogeneous(),
+        };
         self.ui_matrix = self.orthographic.as_matrix().clone();
     }
 }
@@ -264,6 +291,7 @@ impl Camera {
 impl Default for Camera {
     fn default() -> Self {
         Camera::new(
+            Projection::Perspective,
             (800, 600),
             f32::consts::PI / 4.0,
             (0.1, 1000.0),
@@ -286,6 +314,7 @@ mod tests {
     #[test]
     fn new() {
         let _ = Camera::new(
+            Projection::Perspective,
             (800, 600),
             f32::consts::PI / 4.0,
             (0.1, 1000.0),
@@ -301,6 +330,7 @@ mod tests {
         assert_eq!(
             Camera::default(),
             Camera::new(
+                Projection::Perspective,
                 (800, 600),
                 f32::consts::PI / 4.0,
                 (0.1, 1000.0),

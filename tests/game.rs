@@ -1,5 +1,6 @@
 use anyhow::Result;
-use game::Game;
+use rootspace::Rootspace;
+use engine::HeadlessBackend;
 use std::time::Duration;
 
 #[test]
@@ -9,7 +10,7 @@ fn create_and_run_game_headless() -> Result<()> {
     let max_frame_time = Duration::from_millis(250);
     let iterations = Some(1);
 
-    let mut g = Game::new_headless(&resource_path, delta_time, max_frame_time)?;
+    let mut g: Rootspace<HeadlessBackend> = Rootspace::new(&resource_path, delta_time, max_frame_time)?;
     g.load()?;
     g.run(iterations);
 

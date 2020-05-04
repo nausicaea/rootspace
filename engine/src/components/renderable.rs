@@ -10,6 +10,12 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use typename::TypeName;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum RenderableType {
+    Mesh,
+    Text,
+}
+
 #[derive(Debug, Clone, TypeName, Serialize, Deserialize)]
 pub enum SourceData {
     Mesh {
@@ -149,6 +155,7 @@ impl Component for Renderable {
 
 #[derive(Debug)]
 pub struct RenderableBuilder {
+    ty: RenderableType,
     mesh: Option<PathBuf>,
     vs: Option<PathBuf>,
     fs: Option<PathBuf>,
@@ -165,6 +172,7 @@ pub struct RenderableBuilder {
 impl Default for RenderableBuilder {
     fn default() -> Self {
         RenderableBuilder {
+            ty: RenderableType::Mesh,
             mesh: None,
             vs: None,
             fs: None,
@@ -181,102 +189,110 @@ impl Default for RenderableBuilder {
 }
 
 impl RenderableBuilder {
-    pub fn mesh<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
+    pub fn with_type(&mut self, ty: RenderableType) -> &mut Self {
+        self.ty = ty;
+        self
+    }
+
+    pub fn with_mesh<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.mesh = Some(path.as_ref().into());
         self
     }
 
-    pub fn vertex_shader<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
+    pub fn with_vertex_shader<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.vs = Some(path.as_ref().into());
         self
     }
 
-    pub fn fragment_shader<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
+    pub fn with_fragment_shader<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.fs = Some(path.as_ref().into());
         self
     }
 
-    pub fn diffuse_texture<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
+    pub fn with_diffuse_texture<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.dt = Some(path.as_ref().into());
         self
     }
 
-    pub fn normal_texture<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
+    pub fn with_normal_texture<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.nt = Some(path.as_ref().into());
         self
     }
 
-    pub fn cache_size(&mut self, dims: (u32, u32)) -> &mut Self {
+    pub fn with_cache_size(&mut self, dims: (u32, u32)) -> &mut Self {
         self.cache_size = dims;
         self
     }
 
-    pub fn font<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
+    pub fn with_font<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.font = Some(path.as_ref().into());
         self
     }
 
-    pub fn text_scale(&mut self, scale: f32) -> &mut Self {
+    pub fn with_text_scale(&mut self, scale: f32) -> &mut Self {
         self.text_scale = scale;
         self
     }
 
-    pub fn text_width(&mut self, model_width: f32, pixel_width: u32) -> &mut Self {
+    pub fn with_text_width(&mut self, model_width: f32, pixel_width: u32) -> &mut Self {
         self.text_width = model_width;
         self.virtual_pixel_text_width = pixel_width;
         self
     }
 
-    pub fn text(&mut self, text: &str) -> &mut Self {
+    pub fn with_text(&mut self, text: &str) -> &mut Self {
         self.text = Some(text.into());
         self
     }
 
-    pub fn build_mesh<B: BackendTrait>(&self, factory: &mut BackendResource<B>) -> Result<Renderable> {
-        let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
-        let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
-        let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
-        let dt_path = self.dt.as_ref().ok_or(RenderableError::MissingDiffuseTexture)?;
+    pub fn build<B: BackendTrait>(&self, factory: &mut BackendResource<B>) -> Result<Renderable> {
+        match self.ty {
+            RenderableType::Mesh => {
+                let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
+                let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
+                let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
+                let dt_path = self.dt.as_ref().ok_or(RenderableError::MissingDiffuseTexture)?;
 
-        let mut renderable = Renderable {
-            source: Some(SourceData::Mesh {
-                file: mesh_path.to_path_buf(),
-                vertex_shader: vs_path.to_path_buf(),
-                fragment_shader: fs_path.to_path_buf(),
-                diffuse_texture: dt_path.to_path_buf(),
-                normal_texture: self.nt.clone(),
-            }),
-            ..Default::default()
-        };
+                let mut renderable = Renderable {
+                    source: Some(SourceData::Mesh {
+                        file: mesh_path.to_path_buf(),
+                        vertex_shader: vs_path.to_path_buf(),
+                        fragment_shader: fs_path.to_path_buf(),
+                        diffuse_texture: dt_path.to_path_buf(),
+                        normal_texture: self.nt.clone(),
+                    }),
+                    ..Default::default()
+                };
 
-        renderable.reload(factory)?;
+                renderable.reload(factory)?;
 
-        Ok(renderable)
-    }
+                Ok(renderable)
+            },
+            RenderableType::Text => {
+                let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
+                let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
+                let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
+                let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
 
-    pub fn build_text<B: BackendTrait>(&self, factory: &mut BackendResource<B>) -> Result<Renderable> {
-        let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
-        let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
-        let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
-        let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
+                let mut renderable = Renderable {
+                    source: Some(SourceData::Text {
+                        text: text.to_string(),
+                        font: font_path.to_path_buf(),
+                        text_scale: self.text_scale,
+                        text_width: self.text_width,
+                        virtual_pixel_text_width: self.virtual_pixel_text_width,
+                        cache_size: self.cache_size,
+                        vertex_shader: vs_path.to_path_buf(),
+                        fragment_shader: fs_path.to_path_buf(),
+                    }),
+                    ..Default::default()
+                };
 
-        let mut renderable = Renderable {
-            source: Some(SourceData::Text {
-                text: text.to_string(),
-                font: font_path.to_path_buf(),
-                text_scale: self.text_scale,
-                text_width: self.text_width,
-                virtual_pixel_text_width: self.virtual_pixel_text_width,
-                cache_size: self.cache_size,
-                vertex_shader: vs_path.to_path_buf(),
-                fragment_shader: fs_path.to_path_buf(),
-            }),
-            ..Default::default()
-        };
+                renderable.reload(factory)?;
 
-        renderable.reload(factory)?;
-
-        Ok(renderable)
+                Ok(renderable)
+            },
+        }
     }
 }
 
@@ -310,11 +326,12 @@ mod tests {
             .build::<HeadlessBackend>()
             .unwrap();
         let r: Result<Renderable> = Renderable::builder()
-            .mesh("meshes/cube.ply")
-            .vertex_shader("shaders/test-vertex.glsl")
-            .fragment_shader("shaders/test-fragment.glsl")
-            .diffuse_texture("textures/tv-test-image.png")
-            .build_mesh(&mut f);
+            .with_mesh("meshes/cube.ply")
+            .with_vertex_shader("shaders/test-vertex.glsl")
+            .with_fragment_shader("shaders/test-fragment.glsl")
+            .with_diffuse_texture("textures/tv-test-image.png")
+            .with_type(RenderableType::Mesh)
+            .build(&mut f);
 
         r.unwrap();
     }
@@ -326,11 +343,12 @@ mod tests {
             .build::<HeadlessBackend>()
             .unwrap();
         let r: Result<Renderable> = Renderable::builder()
-            .font("fonts/SourceSansPro-Regular.ttf")
-            .vertex_shader("shaders/test-vertex.glsl")
-            .fragment_shader("shaders/test-fragment.glsl")
-            .text("Hello, World!")
-            .build_text(&mut f);
+            .with_font("fonts/SourceSansPro-Regular.ttf")
+            .with_vertex_shader("shaders/test-vertex.glsl")
+            .with_fragment_shader("shaders/test-fragment.glsl")
+            .with_text("Hello, World!")
+            .with_type(RenderableType::Text)
+            .build(&mut f);
 
         r.unwrap();
     }

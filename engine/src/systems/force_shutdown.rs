@@ -42,7 +42,7 @@ impl Default for ForceShutdown {
 
 impl System for ForceShutdown {
     fn name(&self) -> &'static str {
-        "ForceShutdown"
+        stringify!(ForceShutdown)
     }
 
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {

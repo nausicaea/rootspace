@@ -22,7 +22,7 @@ where
     B: BackendTrait,
 {
     fn name(&self) -> &'static str {
-        "EventInterface"
+        stringify!(EventInterface)
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {

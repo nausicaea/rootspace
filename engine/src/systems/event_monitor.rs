@@ -25,7 +25,7 @@ where
     E: 'static + Clone + fmt::Debug + TypeName,
 {
     fn name(&self) -> &'static str {
-        "EventMonitor"
+        stringify!(EventMonitor)
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
