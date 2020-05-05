@@ -63,7 +63,7 @@ where
             .with_mesh("meshes/quad.ply")
             .with_vertex_shader("shaders/base-vertex.glsl")
             .with_fragment_shader("shaders/base-fragment.glsl")
-            .with_diffuse_texture("textures/pacman.png")
+            .with_diffuse_texture("textures/sprites.png")
             .with_type(RenderableType::Mesh)
             .build(factory)?;
         self.orch.insert_component(pacman, renderable);

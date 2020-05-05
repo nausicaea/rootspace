@@ -8,7 +8,6 @@ use anyhow::Result;
 use thiserror::Error;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use typename::TypeName;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RenderableType {
@@ -16,7 +15,7 @@ pub enum RenderableType {
     Text,
 }
 
-#[derive(Debug, Clone, TypeName, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SourceData {
     Mesh {
         file: PathBuf,
@@ -37,7 +36,7 @@ pub enum SourceData {
     },
 }
 
-#[derive(Debug, Default, TypeName, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Renderable {
     source: Option<SourceData>,
     #[serde(skip)]

@@ -14,9 +14,8 @@ use std::{
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
 };
-use typename::TypeName;
 
-#[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BackendSettings {
     title: String,
     dimensions: (u32, u32),
@@ -63,7 +62,6 @@ where
     }
 }
 
-#[derive(TypeName)]
 pub struct BackendResource<B>
 where
     B: BackendTrait,

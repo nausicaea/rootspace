@@ -3,7 +3,6 @@
 /// # Examples
 ///
 /// ```
-/// use typename::TypeName;
 /// use serde::{Deserialize, Serialize};
 /// use ecs::{Reg, Resource};
 ///
@@ -44,7 +43,6 @@ macro_rules! Reg {
 /// # Examples
 ///
 /// ```
-/// use typename::TypeName;
 /// use serde::{Deserialize, Serialize};
 /// use ecs::{RegAdd, Element, End, Resource};
 ///
@@ -83,7 +81,6 @@ macro_rules! RegAdd {
 /// # Examples
 ///
 /// ```
-/// use typename::TypeName;
 /// use serde::{Deserialize, Serialize};
 /// use ecs::{reg, Resource};
 ///
@@ -125,7 +122,6 @@ macro_rules! reg {
 /// # Examples
 ///
 /// ```
-/// use typename::TypeName;
 /// use serde::{Deserialize, Serialize};
 /// use ecs::{reg_add, Element, End, Resource};
 ///
@@ -166,29 +162,28 @@ mod tests {
         resource::Resource,
     };
     use serde::{Deserialize, Serialize};
-    use typename::TypeName;
 
-    #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
     struct A(usize);
 
     impl Resource for A {}
 
-    #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
     struct B(f32);
 
     impl Resource for B {}
 
-    #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
     struct C(u8);
 
     impl Resource for C {}
 
-    #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
     struct D(u16);
 
     impl Resource for D {}
 
-    #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
     struct E(u32);
 
     impl Resource for E {}

@@ -4,9 +4,8 @@ use affine_transform::AffineTransform;
 use nalgebra::{Affine3, Isometry3, Matrix4, Point3, UnitQuaternion, Vector3};
 use serde::{Deserialize, Serialize};
 use std::{f32, ops::Mul};
-use typename::TypeName;
 
-#[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "AffineTransform<f32>", from = "AffineTransform<f32>")]
 pub struct Model {
     model: Affine3<f32>,

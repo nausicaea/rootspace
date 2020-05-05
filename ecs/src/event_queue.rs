@@ -9,7 +9,6 @@ use std::{
     fmt,
     marker::PhantomData,
 };
-use typename::TypeName;
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -55,7 +54,7 @@ impl<E> Default for ReceiverState<E> {
 
 /// An `EventQueue` contains a queue of events and provides rudimentary facilities of retrieving
 /// those events.
-#[derive(Debug, TypeName, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EventQueue<E> {
     events: VecDeque<E>,
     receivers: HashMap<usize, ReceiverState<E>>,
@@ -65,7 +64,7 @@ pub struct EventQueue<E> {
 
 impl<E> EventQueue<E>
 where
-    E: Clone + TypeName,
+    E: Clone,
 {
     /// Subscribe to this event queue.
     pub fn subscribe(&mut self) -> ReceiverId<E> {
@@ -80,7 +79,7 @@ where
         self.receivers.insert(id, ReceiverState::default());
 
         #[cfg(any(test, debug_assertions))]
-        trace!("Adding a subscriber with id {} for queue {}", id, Self::type_name());
+        trace!("Adding a subscriber with id {} for queue {}", id, std::any::type_name::<Self>());
         ReceiverId::new(id)
     }
 
@@ -167,7 +166,7 @@ impl<E> Default for EventQueue<E> {
 mod tests {
     use super::*;
 
-    #[derive(Debug, PartialEq, Eq, Clone, TypeName)]
+    #[derive(Debug, PartialEq, Eq, Clone)]
     struct MockEvent(usize);
 
     #[test]

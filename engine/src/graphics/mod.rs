@@ -11,9 +11,8 @@ use crate::{
 };
 use anyhow::Result;
 use std::{borrow::Cow, convert::TryInto, path::Path};
-use typename::TypeName;
 
-pub trait BackendTrait: Sized + 'static + TypeName {
+pub trait BackendTrait: Sized + 'static {
     type Event: EventTrait;
     type Frame: FrameTrait<Self>;
     type Texture: TextureTrait<Self>;

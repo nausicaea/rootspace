@@ -7,7 +7,6 @@ use serde::{
     Deserialize, Serialize,
 };
 use std::{collections::HashSet, fmt, marker::PhantomData, ptr};
-use typename::TypeName;
 
 /// A component is a data type that is associated with a particular `Entity`.
 pub trait Component: Sized {
@@ -64,7 +63,6 @@ pub trait Storage<T> {
 }
 
 /// Implements component storage for zero-sized types.
-#[derive(TypeName)]
 pub struct ZstStorage<T> {
     index: HashSet<Index>,
     _data: PhantomData<T>,
@@ -187,7 +185,6 @@ impl<'de, T> Deserialize<'de> for ZstStorage<T> {
 }
 
 /// Implements component storage based on a `Vec<T>`.
-#[derive(TypeName)]
 pub struct VecStorage<T> {
     /// The index into the data vector.
     index: HashSet<Index>,

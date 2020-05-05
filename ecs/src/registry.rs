@@ -1,7 +1,6 @@
 use crate::resource::Resource;
 use crate::system::System;
 use serde::{Deserialize, Serialize};
-use typename::TypeName;
 
 /// An element within the heterogeneous list.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -25,14 +24,14 @@ macro_rules! impl_registry {
             const LEN: usize;
 
             /// Refers to the type associated with the head element of the list.
-            type Head: $bound $(+ $others)* + TypeName + Serialize + for<'de> Deserialize<'de>;
+            type Head: $bound $(+ $others)* + Serialize + for<'de> Deserialize<'de>;
             /// Refers to the type of the tail of the list.
             type Tail: $name;
 
             /// Push a new element onto the head of the heterogeneous list.
             fn push<E>(self, element: E) -> Element<E, Self>
             where
-                E: $bound $(+ $others)* + TypeName + Serialize + for<'de> Deserialize<'de>,
+                E: $bound $(+ $others)* + Serialize + for<'de> Deserialize<'de>,
             {
                 Element::new(element, self)
             }
@@ -51,7 +50,7 @@ macro_rules! impl_registry {
 
         impl<H, T> $name for Element<H, T>
         where
-            H: $bound $(+ $others)* + TypeName + Serialize + for<'de> Deserialize<'de>,
+            H: $bound $(+ $others)* + Serialize + for<'de> Deserialize<'de>,
             T: $name,
         {
             type Head = H;
@@ -93,14 +92,13 @@ mod tests {
     use super::*;
     use proptest::prelude::*;
     use serde_test::{assert_tokens, Token};
-    use typename::TypeName;
 
-    #[derive(Default, Debug, PartialEq, Serialize, Deserialize, TypeName)]
+    #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
     struct TestElementA(usize);
 
     impl Resource for TestElementA {}
 
-    #[derive(Default, Debug, PartialEq, Serialize, Deserialize, TypeName)]
+    #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
     struct TestElementB(String);
 
     impl Resource for TestElementB {}

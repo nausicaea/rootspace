@@ -10,7 +10,6 @@ use anyhow::Result;
 #[cfg(any(test, debug_assertions))]
 use log::{debug, trace};
 use std::{borrow::Cow, convert::TryInto};
-use typename::TypeName;
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;
@@ -111,7 +110,7 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
     }
 }
 
-#[derive(Debug, Clone, Default, TypeName)]
+#[derive(Debug, Clone, Default)]
 pub struct HeadlessBackend {
     dimensions: (u32, u32),
 }

@@ -24,7 +24,6 @@ use std::{
     fmt,
     rc::Rc,
 };
-use typename::TypeName;
 
 #[derive(Debug)]
 pub struct GliumEvent(pub GlutinEvent);
@@ -434,7 +433,6 @@ impl fmt::Debug for GliumFrame {
     }
 }
 
-#[derive(TypeName)]
 pub struct GliumBackend {
     pub display: Display,
     pub events_loop: EventsLoop,

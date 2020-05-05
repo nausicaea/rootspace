@@ -2,9 +2,8 @@ use ecs::{Component, Entity, Resource, Storage};
 use hierarchy::{Hierarchy, RawNodes};
 use serde::{Deserialize, Serialize};
 use std::{fmt, ops::Mul};
-use typename::TypeName;
 
-#[derive(Default, Clone, PartialEq, TypeName, Serialize, Deserialize)]
+#[derive(Default, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct SceneGraph<T>(Hierarchy<Entity, T>)
 where

@@ -24,7 +24,6 @@ use std::{
     path::{Path, PathBuf},
     time::{Duration, Instant},
 };
-use typename::TypeName;
 
 pub type JoinedRegistry<RR> = RegAdd![
     <Info as Component>::Storage,
@@ -201,13 +200,13 @@ where
 
     pub fn insert<R, S>(&mut self, res: R, settings: S)
     where
-        R: Resource + TypeName,
+        R: Resource,
         S: Into<Option<Settings>>,
     {
         self.world.insert::<R, S>(res, settings)
     }
 
-    pub fn get_mut<R: Resource + TypeName>(&mut self) -> &mut R {
+    pub fn get_mut<R: Resource>(&mut self) -> &mut R {
         self.world.get_mut::<R>()
     }
 
@@ -217,8 +216,7 @@ where
 
     pub fn insert_component<C>(&mut self, entity: Entity, component: C)
     where
-        C: Component + TypeName,
-        C::Storage: TypeName,
+        C: Component,
     {
         self.world.insert_component::<C>(entity, component)
     }

@@ -6,10 +6,9 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use std::{fmt, num::ParseIntError, str::FromStr};
-use typename::TypeName;
 
 /// The `Entities` resource keeps track of all entities.
-#[derive(Default, Debug, TypeName, Serialize, Deserialize)]
+#[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Entities {
     /// Stores the highest assigned `Entity` index plus one.
     max_idx: Index,

@@ -2,7 +2,6 @@ use ecs::{Component, VecStorage};
 use nalgebra::{zero, Affine3, Isometry3, Matrix4, Point2, Vector2, Vector3};
 use serde::{Deserialize, Serialize};
 use std::ops::Mul;
-use typename::TypeName;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct UiModelSerDe {
@@ -27,7 +26,7 @@ impl From<UiModelSerDe> for UiModel {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "UiModelSerDe", from = "UiModelSerDe")]
 pub struct UiModel {
     model: Affine3<f32>,

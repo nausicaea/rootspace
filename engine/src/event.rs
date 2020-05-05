@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
-use typename::TypeName;
 
-#[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum EngineEvent {
     Startup,
     Shutdown,
@@ -9,7 +8,7 @@ pub enum EngineEvent {
     Command(Vec<String>),
     Resize((u32, u32)),
     ChangeDpi(f64),
-    KeyboardInput { 
+    KeyboardInput {
         scan_code: u32,
         state: KeyState,
         virtual_keycode: Option<VirtualKeyCode>,

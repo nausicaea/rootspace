@@ -4,7 +4,6 @@ use ecs::{Component, VecStorage};
 use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
 use serde::{Deserialize, Serialize};
 use std::f32;
-use typename::TypeName;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Projection {
@@ -54,7 +53,7 @@ impl From<CameraSerDe> for Camera {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, TypeName, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "CameraSerDe", from = "CameraSerDe")]
 pub struct Camera {
     projection: Projection,

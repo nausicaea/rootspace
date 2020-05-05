@@ -21,7 +21,6 @@ num-traits = "^0.2.6"
 rusttype = { version = "^0.8.0", features = ["gpu_cache"] }
 unicode-normalization = "^0.1.5"
 snowflake = "^1.2.0"
-typename = "^0.1.0"
 serde = { version = "^1.0.0", features = ["derive"] }
 affine-transform = { path = "../affine-transform", features = ["serde_support"] }
 hierarchy = { path = "../hierarchy", features = ["serde_support"] }

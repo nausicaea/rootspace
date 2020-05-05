@@ -14,7 +14,6 @@ use std::{
     fmt,
     marker::PhantomData,
 };
-use typename::TypeName;
 
 /// Determines how persistent a particular resource should be. This allows selectively deleting and
 /// retaining resources upon multiple re-initialisations of the world.
@@ -87,7 +86,7 @@ impl Resources {
     /// Insert a new resource.
     pub fn insert<R, S>(&mut self, res: R, settings: S)
     where
-        R: Resource + TypeName,
+        R: Resource,
         S: Into<Option<Settings>>,
     {
         self.insert_internal(res, settings.into().unwrap_or_default())
@@ -96,7 +95,7 @@ impl Resources {
     /// Removes the resource of the specified type.
     pub fn remove<R>(&mut self)
     where
-        R: Resource + TypeName,
+        R: Resource,
     {
         self.resources.remove(&TypeId::of::<R>());
         self.settings.remove(&TypeId::of::<R>());
@@ -113,17 +112,17 @@ impl Resources {
     /// Returns the persistence of the specified resource type.
     pub fn settings_of<R>(&self) -> &Settings
     where
-        R: Resource + TypeName,
+        R: Resource,
     {
         self.settings
             .get(&TypeId::of::<R>())
-            .expect(&format!("Could not find any resource of type {}", R::type_name()))
+            .expect(&format!("Could not find any resource of type {}", std::any::type_name::<R>()))
     }
 
     /// Borrows the requested resource.
     pub fn borrow<R>(&self) -> Ref<R>
     where
-        R: Resource + TypeName,
+        R: Resource,
     {
         self.resources
             .get(&TypeId::of::<R>())
@@ -131,17 +130,17 @@ impl Resources {
                 Ref::map(r.borrow(), |i| {
                     i.downcast_ref::<R>().expect(&format!(
                         "Could not downcast the requested resource to type {}",
-                        R::type_name()
+                        std::any::type_name::<R>()
                     ))
                 })
             })
-            .expect(&format!("Could not find any resource of type {}", R::type_name()))
+            .expect(&format!("Could not find any resource of type {}", std::any::type_name::<R>()))
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
     pub fn borrow_mut<R>(&self) -> RefMut<R>
     where
-        R: Resource + TypeName,
+        R: Resource,
     {
         self.resources
             .get(&TypeId::of::<R>())
@@ -149,34 +148,33 @@ impl Resources {
                 RefMut::map(r.borrow_mut(), |i| {
                     i.downcast_mut::<R>().expect(&format!(
                         "Could not downcast the requested resource to type {}",
-                        R::type_name()
+                        std::any::type_name::<R>()
                     ))
                 })
             })
-            .expect(&format!("Could not find any resource of type {}", R::type_name()))
+            .expect(&format!("Could not find any resource of type {}", std::any::type_name::<R>()))
     }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
     pub fn get_mut<R>(&mut self) -> &mut R
     where
-        R: Resource + TypeName,
+        R: Resource,
     {
         self.resources
             .get_mut(&TypeId::of::<R>())
             .map(|r| {
                 r.get_mut().downcast_mut::<R>().expect(&format!(
                     "Could not downcast the requested resource to type {}",
-                    R::type_name()
+                    std::any::type_name::<R>()
                 ))
             })
-            .expect(&format!("Could not find any resource of type {}", R::type_name()))
+            .expect(&format!("Could not find any resource of type {}", std::any::type_name::<R>()))
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
     pub fn borrow_component<C>(&self) -> Ref<C::Storage>
     where
-        C: Component + TypeName,
-        C::Storage: TypeName,
+        C: Component,
     {
         self.borrow::<C::Storage>()
     }
@@ -185,15 +183,14 @@ impl Resources {
     /// `borrow_mut`).
     pub fn borrow_component_mut<C>(&self) -> RefMut<C::Storage>
     where
-        C: Component + TypeName,
-        C::Storage: TypeName,
+        C: Component,
     {
         self.borrow_mut::<C::Storage>()
     }
 
     fn insert_internal<R>(&mut self, res: R, settings: Settings)
     where
-        R: Resource + TypeName,
+        R: Resource,
     {
         self.resources.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
         self.settings.insert(TypeId::of::<R>(), settings);
@@ -242,20 +239,20 @@ impl Resources {
         fn serialize_entry<SM, R>(res: &Resources, state: &mut SM, _: &R) -> Result<(), SM::Error>
         where
             SM: SerializeMap,
-            R: Resource + TypeName + Serialize,
+            R: Resource + Serialize,
         {
             if res.contains::<R>() {
                 #[cfg(any(test, debug_assertions))]
-                debug!("Serializing the resource {}", &R::type_name());
+                debug!("Serializing the resource {}", &std::any::type_name::<R>());
                 state.serialize_entry(
-                    &R::type_name(),
+                    &std::any::type_name::<R>(),
                     &SerContainer::new(res.settings_of::<R>(), &*res.borrow::<R>()),
                 )?;
             } else {
                 #[cfg(any(test, debug_assertions))]
                 debug!(
                     "Not serializing the resource {} because it was not present in Resources",
-                    &R::type_name()
+                    &std::any::type_name::<R>()
                 );
             }
             Ok(())
@@ -315,9 +312,9 @@ impl Resources {
             where
                 A: MapAccess<'de>,
                 RR: ResourceRegistry,
-                R: Resource + TypeName + Deserialize<'de>,
+                R: Resource + Deserialize<'de>,
             {
-                if key == R::type_name() {
+                if key == std::any::type_name::<R>() {
                     let c = access.next_value::<DeContainer<R>>()?;
                     res.insert(c.resource, c.settings);
                     Ok(())
@@ -425,17 +422,17 @@ mod tests {
     use serde::{Deserialize, Serialize};
     use serde_json;
 
-    #[derive(Debug, Default, TypeName, Serialize, Deserialize, PartialEq)]
+    #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceA(usize);
 
     impl Resource for TestResourceA {}
 
-    #[derive(Debug, Default, TypeName, Serialize, Deserialize, PartialEq)]
+    #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceB(f32);
 
     impl Resource for TestResourceB {}
 
-    #[derive(Debug, Default, TypeName, Serialize, Deserialize, PartialEq)]
+    #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceC(String);
 
     impl Resource for TestResourceC {}
