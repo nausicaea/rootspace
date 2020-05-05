@@ -11,3 +11,4 @@ pub mod systems;
 pub mod text_manipulation;
 
 pub use self::graphics::{headless::HeadlessBackend, glium::GliumBackend};
+pub use self::event::EngineEvent;

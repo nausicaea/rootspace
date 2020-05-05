@@ -2,13 +2,12 @@ use super::{BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait,
 use crate::{
     assets::{Image, Vertex},
     components::Renderable,
-    event::EngineEvent,
+    event::{EngineEvent, KeyState, KeyModifiers, VirtualKeyCode},
     geometry::rect::Rect,
     resources::BackendResource,
 };
 use anyhow::Result;
-#[cfg(target_os = "macos")]
-use glium::glutin::{KeyboardInput, ModifiersState, VirtualKeyCode};
+use glium::glutin::{KeyboardInput, ModifiersState, VirtualKeyCode as GliumVkc, ElementState};
 use glium::{
     backend::glutin::DisplayCreationError,
     draw_parameters::DepthTest,
@@ -47,11 +46,20 @@ impl TryInto<EngineEvent> for GliumEvent {
                 WindowEvent::CloseRequested => Ok(EngineEvent::Shutdown),
                 WindowEvent::Resized(l) => Ok(EngineEvent::Resize(l.into())),
                 WindowEvent::HiDpiFactorChanged(f) => Ok(EngineEvent::ChangeDpi(f)),
+                WindowEvent::KeyboardInput {
+                    input: KeyboardInput {
+                        scancode: sc,
+                        state: st,
+                        virtual_keycode: vkc,
+                        modifiers: mods,
+                    },
+                    ..
+                } => Ok(EngineEvent::KeyboardInput { scan_code: sc, state: st.into(), virtual_keycode: vkc.map(|v| v.into()), modifiers: mods.into() }),
                 #[cfg(target_os = "macos")]
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Q),
+                            virtual_keycode: Some(GliumVkc::Q),
                             modifiers: ModifiersState { logo: true, .. },
                             ..
                         },
@@ -61,6 +69,195 @@ impl TryInto<EngineEvent> for GliumEvent {
             }
         } else {
             Err(())
+        }
+    }
+}
+
+impl From<ElementState> for KeyState {
+    fn from(value: ElementState) -> Self {
+        match value {
+            ElementState::Pressed => KeyState::Pressed,
+            ElementState::Released => KeyState::Released,
+        }
+    }
+}
+
+impl From<ModifiersState> for KeyModifiers {
+    fn from(value: ModifiersState) -> Self {
+        KeyModifiers {
+            shift: value.shift,
+            ctrl: value.ctrl,
+            alt: value.alt,
+            logo: value.logo,
+        }
+    }
+}
+
+impl From<GliumVkc> for VirtualKeyCode {
+    fn from(value: GliumVkc) -> Self {
+        use crate::event::VirtualKeyCode::*;
+        match value {
+            GliumVkc::Key1 => Key1,
+            GliumVkc::Key2 => Key2,
+            GliumVkc::Key3 => Key3,
+            GliumVkc::Key4 => Key4,
+            GliumVkc::Key5 => Key5,
+            GliumVkc::Key6 => Key6,
+            GliumVkc::Key7 => Key7,
+            GliumVkc::Key8 => Key8,
+            GliumVkc::Key9 => Key9,
+            GliumVkc::Key0 => Key0,
+            GliumVkc::A => A,
+            GliumVkc::B => B,
+            GliumVkc::C => C,
+            GliumVkc::D => D,
+            GliumVkc::E => E,
+            GliumVkc::F => F,
+            GliumVkc::G => G,
+            GliumVkc::H => H,
+            GliumVkc::I => I,
+            GliumVkc::J => J,
+            GliumVkc::K => K,
+            GliumVkc::L => L,
+            GliumVkc::M => M,
+            GliumVkc::N => N,
+            GliumVkc::O => O,
+            GliumVkc::P => P,
+            GliumVkc::Q => Q,
+            GliumVkc::R => R,
+            GliumVkc::S => S,
+            GliumVkc::T => T,
+            GliumVkc::U => U,
+            GliumVkc::V => V,
+            GliumVkc::W => W,
+            GliumVkc::X => X,
+            GliumVkc::Y => Y,
+            GliumVkc::Z => Z,
+            GliumVkc::Escape => Escape,
+            GliumVkc::F1 => F1,
+            GliumVkc::F2 => F2,
+            GliumVkc::F3 => F3,
+            GliumVkc::F4 => F4,
+            GliumVkc::F5 => F5,
+            GliumVkc::F6 => F6,
+            GliumVkc::F7 => F7,
+            GliumVkc::F8 => F8,
+            GliumVkc::F9 => F9,
+            GliumVkc::F10 => F10,
+            GliumVkc::F11 => F11,
+            GliumVkc::F12 => F12,
+            GliumVkc::F13 => F13,
+            GliumVkc::F14 => F14,
+            GliumVkc::F15 => F15,
+            GliumVkc::F16 => F16,
+            GliumVkc::F17 => F17,
+            GliumVkc::F18 => F18,
+            GliumVkc::F19 => F19,
+            GliumVkc::F20 => F20,
+            GliumVkc::F21 => F21,
+            GliumVkc::F22 => F22,
+            GliumVkc::F23 => F23,
+            GliumVkc::F24 => F24,
+            GliumVkc::Snapshot => PrintScreen,
+            GliumVkc::Scroll => ScrollLock,
+            GliumVkc::Pause => Pause,
+            GliumVkc::Insert => Insert,
+            GliumVkc::Home => Home,
+            GliumVkc::Delete => Delete,
+            GliumVkc::End => End,
+            GliumVkc::PageDown => PageDown,
+            GliumVkc::PageUp => PageUp,
+            GliumVkc::Left => Left,
+            GliumVkc::Up => Up,
+            GliumVkc::Right => Right,
+            GliumVkc::Down => Down,
+            GliumVkc::Back => Backspace,
+            GliumVkc::Return => Return,
+            GliumVkc::Space => Space,
+            GliumVkc::Compose => Compose,
+            GliumVkc::Caret => Caret,
+            GliumVkc::Numlock => NumLock,
+            GliumVkc::Numpad0 => Numpad0,
+            GliumVkc::Numpad1 => Numpad1,
+            GliumVkc::Numpad2 => Numpad2,
+            GliumVkc::Numpad3 => Numpad3,
+            GliumVkc::Numpad4 => Numpad4,
+            GliumVkc::Numpad5 => Numpad5,
+            GliumVkc::Numpad6 => Numpad6,
+            GliumVkc::Numpad7 => Numpad7,
+            GliumVkc::Numpad8 => Numpad8,
+            GliumVkc::Numpad9 => Numpad9,
+            GliumVkc::AbntC1 => AbntC1,
+            GliumVkc::AbntC2 => AbntC2,
+            GliumVkc::Add => Add,
+            GliumVkc::Apostrophe => Apostrophe,
+            GliumVkc::Apps => Apps,
+            GliumVkc::At => At,
+            GliumVkc::Ax => Ax,
+            GliumVkc::Backslash => Backslash,
+            GliumVkc::Calculator => Calculator,
+            GliumVkc::Capital => Capital,
+            GliumVkc::Colon => Colon,
+            GliumVkc::Comma => Comma,
+            GliumVkc::Convert => Convert,
+            GliumVkc::Decimal => Decimal,
+            GliumVkc::Divide => Divide,
+            GliumVkc::Equals => Equals,
+            GliumVkc::Grave => Grave,
+            GliumVkc::Kana => Kana,
+            GliumVkc::Kanji => Kanji,
+            GliumVkc::LAlt => LeftAlt,
+            GliumVkc::LBracket => LeftBracket,
+            GliumVkc::LControl => LeftControl,
+            GliumVkc::LShift => LeftShift,
+            GliumVkc::LWin => LeftLogo,
+            GliumVkc::Mail => Mail,
+            GliumVkc::MediaSelect => MediaSelect,
+            GliumVkc::MediaStop => MediaStop,
+            GliumVkc::Minus => Minus,
+            GliumVkc::Multiply => Multiply,
+            GliumVkc::Mute => Mute,
+            GliumVkc::MyComputer => MyComputer,
+            GliumVkc::NavigateForward => NavigateForward,
+            GliumVkc::NavigateBackward => NavigateBackward,
+            GliumVkc::NextTrack => NextTrack,
+            GliumVkc::NoConvert => NoConvert,
+            GliumVkc::NumpadComma => NumpadComma,
+            GliumVkc::NumpadEnter => NumpadEnter,
+            GliumVkc::NumpadEquals => NumpadEquals,
+            GliumVkc::OEM102 => OEM102,
+            GliumVkc::Period => Period,
+            GliumVkc::PlayPause => PlayPause,
+            GliumVkc::Power => Power,
+            GliumVkc::PrevTrack => PrevTrack,
+            GliumVkc::RAlt => RightAlt,
+            GliumVkc::RBracket => RightBracket,
+            GliumVkc::RControl => RightControl,
+            GliumVkc::RShift => RightShift,
+            GliumVkc::RWin => RightLogo,
+            GliumVkc::Semicolon => Semicolon,
+            GliumVkc::Slash => Slash,
+            GliumVkc::Sleep => Sleep,
+            GliumVkc::Stop => Stop,
+            GliumVkc::Subtract => Subtract,
+            GliumVkc::Sysrq => SysRq,
+            GliumVkc::Tab => Tab,
+            GliumVkc::Underline => Underline,
+            GliumVkc::Unlabeled => Unlabeled,
+            GliumVkc::VolumeDown => VolumeDown,
+            GliumVkc::VolumeUp => VolumeUp,
+            GliumVkc::Wake => Wake,
+            GliumVkc::WebBack => WebBack,
+            GliumVkc::WebFavorites => WebFavorites,
+            GliumVkc::WebForward => WebForward,
+            GliumVkc::WebHome => WebHome,
+            GliumVkc::WebRefresh => WebRefresh,
+            GliumVkc::WebSearch => WebSearch,
+            GliumVkc::WebStop => WebStop,
+            GliumVkc::Yen => Yen,
+            GliumVkc::Copy => Copy,
+            GliumVkc::Paste => Paste,
+            GliumVkc::Cut => Cut,
         }
     }
 }
@@ -116,11 +313,11 @@ impl TextureTrait<GliumBackend> for GliumTexture {
         (self.0.width(), self.0.height())
     }
 
-    fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, data: Cow<'a, [u8]>) {
+    fn write<R: Into<Rect<u32>>>(&self, rect: R, data: Cow<[u8]>) {
         let rect = rect.into();
         let dims = rect.dimensions();
         let img = RawImage2d {
-            data: data,
+            data,
             width: dims[0],
             height: dims[1],
             format: ClientFormat::U8,
@@ -182,7 +379,7 @@ impl FrameTrait<GliumBackend> for GliumFrame {
         let physical_dimensions = self.0.get_dimensions();
 
         let u = GliumUniforms {
-            transform: transform,
+            transform,
             physical_dimensions,
             diffuse_texture: &factory.borrow_texture(data.diffuse_texture()).0,
             normal_texture: data.normal_texture().map(|id| factory.borrow_texture(id).0.borrow()),
@@ -246,10 +443,10 @@ pub struct GliumBackend {
 impl BackendTrait for GliumBackend {
     type Event = GliumEvent;
     type Frame = GliumFrame;
-    type IndexBuffer = GliumIndexBuffer;
-    type Shader = GliumShader;
     type Texture = GliumTexture;
+    type Shader = GliumShader;
     type VertexBuffer = GliumVertexBuffer;
+    type IndexBuffer = GliumIndexBuffer;
 
     fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self> {
         let window = WindowBuilder::new()

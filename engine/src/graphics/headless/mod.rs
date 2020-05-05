@@ -52,7 +52,7 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
     }
 
     #[cfg_attr(not(test), allow(unused_variables))]
-    fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, _data: Cow<'a, [u8]>) {
+    fn write<R: Into<Rect<u32>>>(&self, rect: R, _data: Cow<[u8]>) {
         #[cfg(any(test, debug_assertions))]
         {
             let rect = rect.into();
@@ -119,10 +119,10 @@ pub struct HeadlessBackend {
 impl BackendTrait for HeadlessBackend {
     type Event = HeadlessEvent;
     type Frame = HeadlessFrame;
-    type IndexBuffer = HeadlessIndexBuffer;
-    type Shader = HeadlessShader;
     type Texture = HeadlessTexture;
+    type Shader = HeadlessShader;
     type VertexBuffer = HeadlessVertexBuffer;
+    type IndexBuffer = HeadlessIndexBuffer;
 
     #[allow(unused_variables)]
     fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), _vsync: bool, _msaa: u16) -> Result<Self> {

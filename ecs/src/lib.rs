@@ -19,7 +19,7 @@ pub mod systems;
 pub mod world;
 
 pub use crate::{
-    components::{Component, Storage, VecStorage},
+    components::{Component, Storage, VecStorage, ZstStorage},
     entities::{Entities, Entity},
     event_queue::{EventQueue, ReceiverId},
     events::EventTrait,

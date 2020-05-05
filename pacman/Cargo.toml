@@ -5,6 +5,7 @@ authors = ["Eleanore Young"]
 edition = "2018"
 
 [dependencies]
+log = "^0.4.1"
 anyhow = "^1.0.0"
 nalgebra = { version = "^0.18.0", features = ["serde-serialize"] }
 ecs = {path = "../ecs"}

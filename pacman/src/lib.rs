@@ -1,13 +1,15 @@
 mod player_character;
 
 use anyhow::Result;
-use ecs::Reg;
+use ecs::{EventQueue, Reg, LoopStage};
 use engine::{
     components::{Camera, Info, Status, camera::Projection, Model, Renderable, renderable::RenderableType},
     resources::{SceneGraph, BackendResource},
     orchestrator::Orchestrator,
     graphics::BackendTrait,
+    EngineEvent
 };
+use crate::player_character::{PlayerCharacter, PlayerCharacterMarker};
 use std::path::Path;
 use std::time::Duration;
 use nalgebra::{Vector3, Point3};
@@ -65,6 +67,12 @@ where
             .with_type(RenderableType::Mesh)
             .build(factory)?;
         self.orch.insert_component(pacman, renderable);
+        self.orch.insert_component(pacman, PlayerCharacterMarker);
+
+        // Add the systems
+        let queue = self.orch.get_mut::<EventQueue<EngineEvent>>();
+        let pc = PlayerCharacter::new(queue);
+        self.orch.add_system(LoopStage::Update, pc);
 
         Ok(())
     }
