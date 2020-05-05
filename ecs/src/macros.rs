@@ -6,17 +6,17 @@
 /// use serde::{Deserialize, Serialize};
 /// use ecs::{Reg, Resource};
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
 ///
 /// impl Resource for A {}
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct B(f32);
 ///
 /// impl Resource for B {}
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct C(u8);
 ///
 /// impl Resource for C {}
@@ -46,17 +46,17 @@ macro_rules! Reg {
 /// use serde::{Deserialize, Serialize};
 /// use ecs::{RegAdd, Element, End, Resource};
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
 ///
 /// impl Resource for A {}
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct B(f32);
 ///
 /// impl Resource for B {}
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct C(u8);
 ///
 /// impl Resource for C {}
@@ -84,17 +84,17 @@ macro_rules! RegAdd {
 /// use serde::{Deserialize, Serialize};
 /// use ecs::{reg, Resource};
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
 ///
 /// impl Resource for A {}
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct B(f32);
 ///
 /// impl Resource for B {}
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct C(u8);
 ///
 /// impl Resource for C {}
@@ -125,17 +125,17 @@ macro_rules! reg {
 /// use serde::{Deserialize, Serialize};
 /// use ecs::{reg_add, Element, End, Resource};
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
 ///
 /// impl Resource for A {}
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct B(f32);
 ///
 /// impl Resource for B {}
 ///
-/// #[derive(Debug, Default, Clone, Copy, PartialEq, TypeName, Serialize, Deserialize)]
+/// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct C(u8);
 ///
 /// impl Resource for C {}

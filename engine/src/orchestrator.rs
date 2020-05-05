@@ -11,8 +11,8 @@ use crate::{
     },
 };
 use ecs::{
-    Component, Entity, EventQueue, LoopStage, Persistence, ReceiverId, RegAdd, ResourceRegistry, Resource, ResourcesTrait,
-    Settings, System, World, WorldEvent, WorldTrait,
+    Component, Entity, EventQueue, LoopStage, ReceiverId, RegAdd, ResourceRegistry, Resource, ResourcesTrait,
+    System, World, WorldEvent, WorldTrait,
 };
 #[cfg(any(test, debug_assertions))]
 use log::debug;
@@ -69,17 +69,17 @@ where
         let mut world = World::default();
 
         // Insert basic resources
-        world.insert(EventQueue::<EngineEvent>::default(), Persistence::Runtime);
-        world.insert(backend.settings().clone(), Persistence::Runtime);
-        world.insert(backend, Persistence::Runtime);
-        world.insert(SceneGraph::<Model>::default(), Persistence::Runtime);
-        world.insert(SceneGraph::<UiModel>::default(), Persistence::Runtime);
-        world.insert(<Info as Component>::Storage::default(), Persistence::Runtime);
-        world.insert(<Status as Component>::Storage::default(), Persistence::Runtime);
-        world.insert(<Camera as Component>::Storage::default(), Persistence::Runtime);
-        world.insert(<Renderable as Component>::Storage::default(), Persistence::Runtime);
-        world.insert(<UiModel as Component>::Storage::default(), Persistence::Runtime);
-        world.insert(<Model as Component>::Storage::default(), Persistence::Runtime);
+        world.insert(EventQueue::<EngineEvent>::default());
+        world.insert(backend.settings().clone());
+        world.insert(backend);
+        world.insert(SceneGraph::<Model>::default());
+        world.insert(SceneGraph::<UiModel>::default());
+        world.insert(<Info as Component>::Storage::default());
+        world.insert(<Status as Component>::Storage::default());
+        world.insert(<Camera as Component>::Storage::default());
+        world.insert(<Renderable as Component>::Storage::default());
+        world.insert(<UiModel as Component>::Storage::default());
+        world.insert(<Model as Component>::Storage::default());
 
         // Insert basic systems
         world.add_system(LoopStage::Update, ForceShutdown::default());
@@ -175,7 +175,7 @@ where
                     .borrow_mut::<BackendSettings>()
                     .build::<B>()
                     .expect("Unable to reload the backend");
-                self.world.insert(backend, Persistence::Runtime);
+                self.world.insert(backend);
                 #[cfg(any(test, debug_assertions))]
                 debug!("Completed reloading the backend after {:?}", reload_mark.elapsed());
             }
@@ -198,12 +198,11 @@ where
         self.world.deserialize::<D>(deserializer)
     }
 
-    pub fn insert<R, S>(&mut self, res: R, settings: S)
+    pub fn insert<R>(&mut self, res: R)
     where
         R: Resource,
-        S: Into<Option<Settings>>,
     {
-        self.world.insert::<R, S>(res, settings)
+        self.world.insert::<R>(res)
     }
 
     pub fn get_mut<R: Resource>(&mut self) -> &mut R {

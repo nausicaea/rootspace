@@ -7,7 +7,7 @@ use crate::{
     loop_stage::LoopStage,
     registry::ResourceRegistry,
     resource::Resource,
-    resources::{Persistence, Resources, Settings},
+    resources::Resources,
     system::System,
     systems::Systems,
     RegAdd,
@@ -35,10 +35,9 @@ where
     fn clear(&mut self);
 
     /// Insert a new resource.
-    fn insert<R, S>(&mut self, res: R, settings: S)
+    fn insert<R>(&mut self, res: R)
     where
-        R: Resource,
-        S: Into<Option<Settings>>;
+        R: Resource;
 
     /// Removes the resource of the specified type.
     fn remove<R>(&mut self)
@@ -153,8 +152,8 @@ impl<RR> Default for World<RR> {
         let receiver = events.subscribe();
 
         let mut resources = Resources::default();
-        resources.insert(Entities::default(), Persistence::Runtime);
-        resources.insert(events, Persistence::Runtime);
+        resources.insert(Entities::default());
+        resources.insert(events);
 
         World {
             resources,
@@ -180,12 +179,11 @@ where
         self.render_systems.clear();
     }
 
-    fn insert<R, S>(&mut self, res: R, settings: S)
+    fn insert<R>(&mut self, res: R)
     where
         R: Resource,
-        S: Into<Option<Settings>>,
     {
-        self.resources.insert(res, settings)
+        self.resources.insert(res)
     }
 
     fn remove<R>(&mut self)
@@ -238,13 +236,6 @@ where
     where
         S: Serializer,
     {
-        // let mut state = ser.serialize_struct("World", 5)?;
-        // state.serialize_field("resources", self.resources.as_serializable::<RR>())?;
-        // state.serialize_field("fixed_update_systems", self.fixed_update_systems.as_serializable::<SR>())?;
-        // state.serialize_field("update_systems", self.update_systems.as_serializable::<SR>())?;
-        // state.serialize_field("render_systems", self.render_systems.as_serializable::<SR>())?;
-        // state.serialize_field("receiver", &self.receiver)?;
-        // state.end()
         self.resources.serialize::<Self::ResourceRegistry, S>(ser)
     }
 

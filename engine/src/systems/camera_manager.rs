@@ -11,6 +11,7 @@ pub struct CameraManager {
 impl CameraManager {
     pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
         trace!("CameraManager subscribing to EventQueue<EngineEvent>");
+
         CameraManager {
             receiver: queue.subscribe(),
         }
