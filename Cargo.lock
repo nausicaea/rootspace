@@ -315,7 +315,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "ecs"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "downcast-rs 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -340,7 +340,7 @@ dependencies = [
  "approx 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ctrlc 3.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "ecs 0.5.0",
+ "ecs 0.6.0",
  "glium 0.25.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hierarchy 0.2.2",
  "image 0.22.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -830,7 +830,7 @@ name = "pacman"
 version = "0.1.0"
 dependencies = [
  "anyhow 1.0.28 (registry+https://github.com/rust-lang/crates.io-index)",
- "ecs 0.5.0",
+ "ecs 0.6.0",
  "engine 0.1.0",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1184,7 +1184,7 @@ dependencies = [
  "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "daggy 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ecs 0.5.0",
+ "ecs 0.6.0",
  "engine 0.1.0",
  "glium 0.25.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1650,7 +1650,7 @@ dependencies = [
  "affine-transform 0.4.0",
  "anyhow 1.0.28 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ecs 0.5.0",
+ "ecs 0.6.0",
  "engine 0.1.0",
  "fern 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "hierarchy 0.2.2",

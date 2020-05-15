@@ -342,6 +342,7 @@ impl<'a, T> std::iter::FusedIterator for VecStorageIter<'a, T> {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::component::Component;
     use crate::entities::Entities;
     use serde_test::{assert_tokens, Token};
 
@@ -488,7 +489,7 @@ mod tests {
         let c = Entity::new(2, 1);
         let _ = s.insert(c, 103);
 
-        let data: Vec<u32> = s.iter().cloned().collect();
+        let data: Vec<u32> = s.iter().map(|(_, i)| *i).collect();
         assert_eq!(data, vec![101, 102, 103]);
     }
 
