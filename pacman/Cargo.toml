@@ -8,5 +8,6 @@ edition = "2018"
 log = "^0.4.1"
 anyhow = "^1.0.0"
 nalgebra = { version = "^0.18.0", features = ["serde-serialize"] }
+serde = { version = "^1.0.0", features = ["derive"] }
 ecs = {path = "../ecs"}
 engine = {path = "../engine"}

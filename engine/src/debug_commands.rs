@@ -166,9 +166,9 @@ impl CommandTrait for CameraCommand {
             .get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
-            let cameras = res.borrow_component::<Camera>();
+            let cameras = res.borrow_components::<Camera>();
 
-            for (i, cam) in cameras.iter().enumerate() {
+            for (i, (_, cam)) in cameras.iter().enumerate() {
                 println!("Camera {}:", i);
 
                 if info_matches.is_present("position") {
@@ -246,7 +246,7 @@ impl EntityCommand {
         }
 
         if args.is_present("ndc-positions") {
-            for (i, camera) in cameras.iter().enumerate() {
+            for (i, (_, camera)) in cameras.iter().enumerate() {
                 if let Some(m) = world_graph.get(entity) {
                     let pos = camera.world_point_to_ndc(&m.position());
                     output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", i, pos.x, pos.y, pos.z));
@@ -357,9 +357,9 @@ impl CommandTrait for EntityCommand {
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
             let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
-            let cameras = res.borrow_component::<Camera>();
-            let infos = res.borrow_component::<Info>();
-            let statuses = res.borrow_component::<Status>();
+            let cameras = res.borrow_components::<Camera>();
+            let infos = res.borrow_components::<Info>();
+            let statuses = res.borrow_components::<Status>();
             let world_graph = res.borrow::<SceneGraph<Model>>();
             let ui_graph = res.borrow::<SceneGraph<UiModel>>();
 
@@ -398,7 +398,7 @@ impl CommandTrait for EntityCommand {
 
         if let Some(status_matches) = matches.subcommand_matches("status") {
             let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
-            let mut statuses = res.borrow_component_mut::<Status>();
+            let mut statuses = res.borrow_components_mut::<Status>();
 
             if let Some(index) = matches.value_of("index") {
                 let index: usize = index.parse()?;

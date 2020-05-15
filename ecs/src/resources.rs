@@ -120,7 +120,7 @@ impl Resources {
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
-    pub fn borrow_component<C>(&self) -> Ref<C::Storage>
+    pub fn borrow_components<C>(&self) -> Ref<C::Storage>
     where
         C: Component,
     {
@@ -129,7 +129,7 @@ impl Resources {
 
     /// Mutably borrows the requested component storage (this is a convenience method to
     /// `borrow_mut`).
-    pub fn borrow_component_mut<C>(&self) -> RefMut<C::Storage>
+    pub fn borrow_components_mut<C>(&self) -> RefMut<C::Storage>
     where
         C: Component,
     {

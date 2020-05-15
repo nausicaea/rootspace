@@ -74,7 +74,19 @@ impl<T> ZstStorage<T> {
     }
 }
 
-impl<T> Storage<T> for ZstStorage<T> {
+impl<T> ZstStorage<T>
+where
+    T: Default
+{
+    pub fn iter(&self) -> ZstStorageIter<T> {
+        self.into_iter()
+    }
+}
+
+impl<T> Storage<T> for ZstStorage<T>
+where
+    T: Default,
+{
     fn is_empty(&self) -> bool {
         self.index.is_empty()
     }
@@ -121,6 +133,18 @@ impl<T> Default for ZstStorage<T> {
     }
 }
 
+impl<'a, T> IntoIterator for &'a ZstStorage<T>
+where
+    T: Default,
+{
+    type Item = Index;
+    type IntoIter = ZstStorageIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        ZstStorageIter::new(self)
+    }
+}
+
 impl<T> PartialEq<ZstStorage<T>> for ZstStorage<T> {
     fn eq(&self, rhs: &Self) -> bool {
         self.index.eq(&rhs.index)
@@ -129,7 +153,7 @@ impl<T> PartialEq<ZstStorage<T>> for ZstStorage<T> {
 
 impl<T> fmt::Debug for ZstStorage<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ZstStorage(#len: {})", self.len())
+        write!(f, "ZstStorage(#len: {})", self.index.len())
     }
 }
 
@@ -138,7 +162,7 @@ impl<T> Serialize for ZstStorage<T> {
     where
         S: Serializer,
     {
-        let mut state = ser.serialize_seq(Some(self.len()))?;
+        let mut state = ser.serialize_seq(Some(self.index.len()))?;
         for idx in &self.index {
             state.serialize_element(idx)?;
         }
@@ -184,6 +208,50 @@ impl<'de, T> Deserialize<'de> for ZstStorage<T> {
     }
 }
 
+pub struct ZstStorageIter<T> {
+    indices: Vec<Index>,
+    cursor: usize,
+    _t: PhantomData<T>,
+}
+
+impl<T> ZstStorageIter<T> {
+    fn new(source: &ZstStorage<T>) -> Self {
+        ZstStorageIter {
+            indices: source.index.iter().copied().collect(),
+            cursor: 0,
+            _t: PhantomData::default(),
+        }
+    }
+}
+
+impl<T> Iterator for ZstStorageIter<T> {
+    type Item = Index;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.cursor >= self.indices.len() {
+            return None;
+        }
+
+        let idx = self.indices[self.cursor];
+        self.cursor += 1;
+
+        Some(idx)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining_len = self.indices.len()
+            .checked_sub(self.cursor)
+            .unwrap_or(0);
+
+        (remaining_len, Some(remaining_len))
+    }
+}
+
+impl<T> ExactSizeIterator for ZstStorageIter<T> {}
+
+impl<T> std::iter::FusedIterator for ZstStorageIter<T> {}
+
+
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
     /// The index into the data vector.
@@ -194,23 +262,13 @@ pub struct VecStorage<T> {
 
 impl<T> VecStorage<T> {
     /// Return an iterator over all occupied entries.
-    pub fn iter(&self) -> impl Iterator<Item = &T> + '_ {
-        let index = &self.index;
-        self.data
-            .iter()
-            .enumerate()
-            .filter(move |(idx, _)| index.contains(&idx.into()))
-            .map(|(_, d)| d)
+    pub fn iter(&self) -> VecStorageIter<T> {
+        self.into_iter()
     }
 
     /// Return a mutable iterator over all occupied entries.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> + '_ {
-        let index = &self.index;
-        self.data
-            .iter_mut()
-            .enumerate()
-            .filter(move |(idx, _)| index.contains(&idx.into()))
-            .map(|(_, d)| d)
+    pub fn iter_mut(&mut self) -> VecStorageIterMut<T> {
+        self.into_iter()
     }
 
     fn insert_internal(&mut self, idx: Index, datum: T) -> Option<T> {
@@ -318,6 +376,24 @@ impl<T> Drop for VecStorage<T> {
     }
 }
 
+impl<'a, T> IntoIterator for &'a VecStorage<T> {
+    type Item = (Index, &'a T);
+    type IntoIter = VecStorageIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        VecStorageIter::new(self)
+    }
+}
+
+impl<'a, T> IntoIterator for &'a mut VecStorage<T> {
+    type Item = (Index, &'a mut T);
+    type IntoIter = VecStorageIterMut<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        VecStorageIterMut::new(self)
+    }
+}
+
 impl<T> Default for VecStorage<T> {
     fn default() -> Self {
         VecStorage {
@@ -408,6 +484,105 @@ where
         de.deserialize_map(VecStorageVisitor::<T>::default())
     }
 }
+
+pub struct VecStorageIterMut<'a, T>
+where
+    T: 'a,
+{
+    data: &'a mut [T],
+    indices: Vec<Index>,
+    cursor: usize,
+}
+
+impl<'a, T> VecStorageIterMut<'a, T> {
+    fn new(source: &'a mut VecStorage<T>) -> Self {
+        VecStorageIterMut {
+            data: &mut source.data,
+            indices: source.index.iter().copied().collect(),
+            cursor: 0,
+        }
+    }
+}
+
+impl<'a, T> Iterator for VecStorageIterMut<'a, T> {
+    type Item = (Index, &'a mut T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.cursor >= self.indices.len() {
+            return None;
+        }
+
+        let idx = self.indices[self.cursor];
+        self.cursor += 1;
+
+        unsafe {
+            let elem = self.data.get_unchecked_mut(Into::<usize>::into(idx));
+            Some((idx, &mut *(elem as *mut _)))
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining_len = self.indices
+            .len()
+            .checked_sub(self.cursor)
+            .unwrap_or(0);
+
+        (remaining_len, Some(remaining_len))
+    }
+}
+
+impl<'a, T> ExactSizeIterator for VecStorageIterMut<'a, T> {}
+
+impl<'a, T> std::iter::FusedIterator for VecStorageIterMut<'a, T> {}
+
+pub struct VecStorageIter<'a, T>
+where
+    T: 'a,
+{
+    data: &'a [T],
+    indices: Vec<Index>,
+    cursor: usize,
+}
+
+impl<'a, T> VecStorageIter<'a, T> {
+    fn new(source: &'a VecStorage<T>) -> Self {
+        VecStorageIter {
+            data: &source.data,
+            indices: source.index.iter().copied().collect(),
+            cursor: 0,
+        }
+    }
+}
+
+impl<'a, T> Iterator for VecStorageIter<'a, T> {
+    type Item = (Index, &'a T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.cursor >= self.indices.len() {
+            return None;
+        }
+
+        let idx = self.indices[self.cursor];
+        self.cursor += 1;
+
+        unsafe {
+            Some((idx, self.data.get_unchecked(Into::<usize>::into(idx))))
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining_len = self.indices
+            .len()
+            .checked_sub(self.cursor)
+            .unwrap_or(0);
+
+        (remaining_len, Some(remaining_len))
+    }
+}
+
+impl<'a, T> ExactSizeIterator for VecStorageIter<'a, T> {}
+
+impl<'a, T> std::iter::FusedIterator for VecStorageIter<'a, T> {}
 
 #[cfg(test)]
 mod tests {

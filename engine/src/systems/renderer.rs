@@ -54,7 +54,7 @@ where
         let reload_mark = Instant::now();
         let mut backend = res.borrow_mut::<BackendResource<B>>();
         backend
-            .reload_assets(&mut res.borrow_component_mut::<Renderable>())
+            .reload_assets(&mut res.borrow_components_mut::<Renderable>())
             .expect("Could not reload all renderable assets");
         #[cfg(any(test, debug_assertions))]
         debug!("Completed reloading all renderables after {:?}", reload_mark.elapsed());
@@ -119,12 +119,12 @@ where
 
         // Update the scene graphs.
         res.borrow_mut::<SceneGraph<Model>>()
-            .update(&res.borrow_component::<Model>());
+            .update(&res.borrow_components::<Model>());
         res.borrow_mut::<SceneGraph<UiModel>>()
-            .update(&res.borrow_component::<UiModel>());
+            .update(&res.borrow_components::<UiModel>());
 
         // Obtain a reference to the camera.
-        let cameras = res.borrow_component::<Camera>();
+        let cameras = res.borrow_components::<Camera>();
 
         // Create a new frame.
         let mut target = res.borrow::<BackendResource<B>>().create_frame();
@@ -133,10 +133,10 @@ where
         let world_graph = res.borrow::<SceneGraph<Model>>();
         let ui_graph = res.borrow::<SceneGraph<UiModel>>();
         let factory = res.borrow::<BackendResource<B>>();
-        let statuses = res.borrow_component::<Status>();
-        let renderables = res.borrow_component::<Renderable>();
+        let statuses = res.borrow_components::<Status>();
+        let renderables = res.borrow_components::<Renderable>();
 
-        for cam in cameras.iter() {
+        for (_, cam) in cameras.iter() {
             // Render the world scene.
             for (entity, model) in world_graph.iter() {
                 if statuses.get(entity).map(|s| s.enabled()) == Some(true) {

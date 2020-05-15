@@ -1,6 +1,6 @@
 use crate::geometry::ray::Ray;
 use approx::ulps_eq;
-use ecs::{Component, VecStorage};
+use ecs::{Component, VecStorage, ZstStorage};
 use nalgebra::{Isometry3, Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
 use serde::{Deserialize, Serialize};
 use std::f32;
@@ -51,6 +51,13 @@ impl From<CameraSerDe> for Camera {
             value.dpi_factor,
         )
     }
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+pub struct MainCameraMarker;
+
+impl Component for MainCameraMarker {
+    type Storage = ZstStorage<Self>;
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

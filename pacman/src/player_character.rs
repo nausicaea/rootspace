@@ -1,9 +1,10 @@
 use ecs::{System, Resources, EventQueue, ReceiverId, Component, ZstStorage};
 use engine::{EngineEvent, event::{VirtualKeyCode, KeyState}};
 use std::time::Duration;
+use serde::{Serialize, Deserialize};
 use log::trace;
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct PlayerCharacterMarker;
 
 impl Component for PlayerCharacterMarker {

@@ -107,7 +107,7 @@ where
         self.shaders.clear();
         self.vertex_buffers.clear();
         self.index_buffers.clear();
-        for r in renderables.iter_mut() {
+        for (_, r) in renderables.iter_mut() {
             r.reload(self)?;
         }
 
