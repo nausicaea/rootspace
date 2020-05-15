@@ -1,7 +1,8 @@
 //! Provides the `WorldTrait` and the `World` which manages resources and systems.
 
 use crate::{
-    components::{Component, Storage},
+    component::Component,
+    storage::Storage,
     entities::{Entities, Entity},
     event_queue::{EventQueue, ReceiverId},
     loop_stage::LoopStage,

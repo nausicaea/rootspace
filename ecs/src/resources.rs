@@ -1,6 +1,6 @@
 //! Provides the resource manager.
 
-use crate::{components::Component, registry::ResourceRegistry, resource::Resource};
+use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
 use log::debug;
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},

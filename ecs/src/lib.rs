@@ -3,7 +3,8 @@
 //! relationship with Entities, and finally, Systems encode (mostly) behaviour. The World manages
 //! all three type categories and provides access to each.
 
-pub mod components;
+pub mod component;
+pub mod storage;
 pub mod entities;
 pub mod event_queue;
 pub mod events;
@@ -19,7 +20,7 @@ pub mod systems;
 pub mod world;
 
 pub use crate::{
-    components::{Component, Storage, VecStorage, ZstStorage},
+    component::Component,
     entities::{Entities, Entity},
     event_queue::{EventQueue, ReceiverId},
     events::EventTrait,
@@ -27,6 +28,7 @@ pub use crate::{
     registry::{Element, End, ResourceRegistry},
     resource::Resource,
     resources::Resources,
+    storage::{Storage, vec_storage::VecStorage, zst_storage::ZstStorage},
     system::System,
     systems::Systems,
     world::{ResourcesTrait, World, WorldEvent, WorldTrait},
