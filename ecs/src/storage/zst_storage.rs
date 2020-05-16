@@ -1,43 +1,35 @@
 use super::Storage;
-use crate::{entities::Entity, indexing::index::Index, resource::Resource};
+use crate::{entity::entity::Entity, entity::index::Index, resource::Resource};
 use serde::{
     de::{Deserializer, SeqAccess, Visitor},
     ser::{SerializeSeq, Serializer},
     Deserialize, Serialize,
 };
-use std::{collections::HashSet, fmt, marker::PhantomData};
+use std::{collections::HashSet, marker::PhantomData};
 
 /// Implements component storage for zero-sized types.
 pub struct ZstStorage<T> {
     index: HashSet<Index>,
-    _data: PhantomData<T>,
+    data: T,
 }
 
 impl<T> ZstStorage<T> {
     fn insert_internal(&mut self, idx: Index) {
         self.index.insert(idx);
     }
-}
 
-impl<T> ZstStorage<T>
-where
-    T: Default
-{
     pub fn iter(&self) -> ZstStorageIter<T> {
         self.into_iter()
     }
 }
 
-impl<T> Storage<T> for ZstStorage<T>
-where
-    T: Default,
-{
-    fn is_empty(&self) -> bool {
-        self.index.is_empty()
-    }
-
+impl<T> Storage<T> for ZstStorage<T> {
     fn len(&self) -> usize {
         self.index.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.index.is_empty()
     }
 
     fn insert(&mut self, entity: Entity, _datum: T) -> Option<T> {
@@ -73,18 +65,21 @@ where
 
 impl<T> Resource for ZstStorage<T> where T: 'static {}
 
-impl<T> Default for ZstStorage<T> {
+impl<T> Default for ZstStorage<T>
+where
+    T: Default,
+{
     fn default() -> Self {
         ZstStorage {
             index: HashSet::default(),
-            _data: PhantomData::default(),
+            data: T::default(),
         }
     }
 }
 
 impl<'a, T> IntoIterator for &'a ZstStorage<T> {
-    type Item = Index;
-    type IntoIter = ZstStorageIter<T>;
+    type Item = (Index, &'a T);
+    type IntoIter = ZstStorageIter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         ZstStorageIter::new(self)
@@ -97,8 +92,8 @@ impl<T> PartialEq<ZstStorage<T>> for ZstStorage<T> {
     }
 }
 
-impl<T> fmt::Debug for ZstStorage<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl<T> std::fmt::Debug for ZstStorage<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "ZstStorage(#len: {})", self.index.len())
     }
 }
@@ -116,29 +111,35 @@ impl<T> Serialize for ZstStorage<T> {
     }
 }
 
-impl<'de, T> Deserialize<'de> for ZstStorage<T> {
+impl<'de, T> Deserialize<'de> for ZstStorage<T>
+where
+    T: Default,
+{
     fn deserialize<D>(de: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         struct ZstStorageVisitor<T>(PhantomData<T>);
 
-        impl<T> Default for ZstStorageVisitor<T> {
+        impl<U> Default for ZstStorageVisitor<U> {
             fn default() -> Self {
                 ZstStorageVisitor(PhantomData::default())
             }
         }
 
-        impl<'de, T> Visitor<'de> for ZstStorageVisitor<T> {
-            type Value = ZstStorage<T>;
+        impl<'ef, U> Visitor<'ef> for ZstStorageVisitor<U>
+        where
+            U: Default,
+        {
+            type Value = ZstStorage<U>;
 
-            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
                 write!(f, "a sequence of indices")
             }
 
             fn visit_seq<A>(self, mut access: A) -> Result<Self::Value, A::Error>
             where
-                A: SeqAccess<'de>,
+                A: SeqAccess<'ef>,
             {
                 let mut storage = ZstStorage::default();
 
@@ -154,24 +155,24 @@ impl<'de, T> Deserialize<'de> for ZstStorage<T> {
     }
 }
 
-pub struct ZstStorageIter<T> {
+pub struct ZstStorageIter<'a, T> {
     indices: Vec<Index>,
     cursor: usize,
-    _t: PhantomData<T>,
+    data: &'a T,
 }
 
-impl<T> ZstStorageIter<T> {
-    fn new(source: &ZstStorage<T>) -> Self {
+impl<'a, T> ZstStorageIter<'a, T> {
+    fn new(source: &'a ZstStorage<T>) -> Self {
         ZstStorageIter {
             indices: source.index.iter().copied().collect(),
             cursor: 0,
-            _t: PhantomData::default(),
+            data: &source.data,
         }
     }
 }
 
-impl<T> Iterator for ZstStorageIter<T> {
-    type Item = Index;
+impl<'a, T> Iterator for ZstStorageIter<'a, T> {
+    type Item = (Index, &'a T);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.cursor >= self.indices.len() {
@@ -181,7 +182,7 @@ impl<T> Iterator for ZstStorageIter<T> {
         let idx = self.indices[self.cursor];
         self.cursor += 1;
 
-        Some(idx)
+        Some((idx, self.data))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -193,6 +194,6 @@ impl<T> Iterator for ZstStorageIter<T> {
     }
 }
 
-impl<T> ExactSizeIterator for ZstStorageIter<T> {}
+impl<'a, T> ExactSizeIterator for ZstStorageIter<'a, T> {}
 
-impl<T> std::iter::FusedIterator for ZstStorageIter<T> {}
+impl<'a, T> std::iter::FusedIterator for ZstStorageIter<'a, T> {}

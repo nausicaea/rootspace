@@ -57,7 +57,7 @@ where
 {
     /// Holds the index of the root node.
     root_idx: NodeIndex,
-    /// Provides an indexing relationship between keys and `NodeIndex` instances that in turn index
+    /// Provides an entity relationship between keys and `NodeIndex` instances that in turn index
     /// into the directed acyclic graph (`Dag`).
     index: HashMap<K, NodeIndex>,
     /// Holds the directed acyclic graph of `HierNode`s.

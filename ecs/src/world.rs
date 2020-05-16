@@ -3,7 +3,8 @@
 use crate::{
     component::Component,
     storage::Storage,
-    entities::{Entities, Entity},
+    entity::entity::Entity,
+    entities::Entities,
     event_queue::{EventQueue, ReceiverId},
     loop_stage::LoopStage,
     registry::ResourceRegistry,

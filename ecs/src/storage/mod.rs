@@ -2,8 +2,8 @@ pub mod vec_storage;
 pub mod zst_storage;
 
 use std::collections::HashSet;
-use crate::entities::Entity;
-use crate::indexing::index::Index;
+use crate::entity::entity::Entity;
+use crate::entity::index::Index;
 
 /// A component storage resource must provide the following methods.
 pub trait Storage<T> {

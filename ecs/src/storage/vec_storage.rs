@@ -1,11 +1,11 @@
 use super::Storage;
-use crate::{entities::Entity, indexing::index::Index, resource::Resource};
+use crate::{entity::entity::Entity, entity::index::Index, resource::Resource};
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, Serializer},
     Deserialize, Serialize,
 };
-use std::{collections::HashSet, fmt, marker::PhantomData, ptr};
+use std::{collections::HashSet, marker::PhantomData, ptr};
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
@@ -54,12 +54,12 @@ impl<T> VecStorage<T> {
 }
 
 impl<T> Storage<T> for VecStorage<T> {
-    fn is_empty(&self) -> bool {
-        self.index.is_empty()
-    }
-
     fn len(&self) -> usize {
         self.index.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.index.is_empty()
     }
 
     fn insert(&mut self, entity: Entity, datum: T) -> Option<T> {
@@ -178,8 +178,8 @@ where
     }
 }
 
-impl<T> fmt::Debug for VecStorage<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl<T> std::fmt::Debug for VecStorage<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "VecStorage(#len: {})", self.len())
     }
 }
@@ -222,7 +222,7 @@ where
         {
             type Value = VecStorage<T>;
 
-            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
                 write!(f, "a map of indices to components")
             }
 
@@ -376,13 +376,13 @@ mod tests {
     fn vec_storage_insert() {
         let mut s: VecStorage<u32> = Default::default();
 
-        let a = Entity::new(0, 1);
+        let a = Entity::new(0u32, 1u32);
         assert!(s.insert(a, 101).is_none());
 
-        let b = Entity::new(1, 1);
+        let b = Entity::new(1u32, 1u32);
         assert!(s.insert(b, 102).is_none());
 
-        let c = Entity::new(0, 3);
+        let c = Entity::new(0u32, 3u32);
         assert_eq!(s.insert(c, 103), Some(101));
     }
 
@@ -390,10 +390,10 @@ mod tests {
     fn vec_storage_remove() {
         let mut s: VecStorage<u32> = Default::default();
 
-        let a = Entity::new(0, 1);
+        let a = Entity::new(0u32, 1u32);
         assert!(s.remove(&a).is_none());
 
-        let b = Entity::new(1, 1);
+        let b = Entity::new(1u32, 1u32);
         let _ = s.insert(b, 102);
         assert_eq!(s.remove(&b), Some(102));
     }
@@ -402,7 +402,7 @@ mod tests {
     fn vec_storage_has() {
         let mut s: VecStorage<u32> = Default::default();
 
-        let a = Entity::new(0, 1);
+        let a = Entity::new(0u32, 1u32);
         assert!(!s.has(&a));
         let _ = s.insert(a, 101);
         assert!(s.has(&a));
@@ -412,13 +412,13 @@ mod tests {
     fn vec_storage_clear() {
         let mut s: VecStorage<u32> = Default::default();
 
-        let a = Entity::new(0, 1);
+        let a = Entity::new(0u32, 1u32);
         let _ = s.insert(a, 101);
 
-        let b = Entity::new(1, 1);
+        let b = Entity::new(1u32, 1u32);
         let _ = s.insert(b, 102);
 
-        let c = Entity::new(2, 1);
+        let c = Entity::new(2u32, 1u32);
         let _ = s.insert(c, 103);
 
         assert!(s.has(&a));
@@ -436,11 +436,11 @@ mod tests {
     fn vec_storage_get() {
         let mut s: VecStorage<u32> = Default::default();
 
-        let a = Entity::new(0, 1);
+        let a = Entity::new(0u32, 1u32);
         let _ = s.insert(a, 101);
         assert_eq!(s.get(&a), Some(&101));
 
-        let b = Entity::new(1, 1);
+        let b = Entity::new(1u32, 1u32);
         assert!(s.get(&b).is_none());
     }
 
@@ -448,11 +448,11 @@ mod tests {
     fn vec_storage_get_mut() {
         let mut s: VecStorage<u32> = Default::default();
 
-        let a = Entity::new(0, 1);
+        let a = Entity::new(0u32, 1u32);
         let _ = s.insert(a, 101);
         assert_eq!(s.get_mut(&a), Some(&mut 101));
 
-        let b = Entity::new(1, 1);
+        let b = Entity::new(1u32, 1u32);
         assert!(s.get_mut(&b).is_none());
     }
 
@@ -465,13 +465,13 @@ mod tests {
             let mut s: VecStorage<DropCounter> = Default::default();
 
             {
-                let a = Entity::new(0, 1);
+                let a = Entity::new(0u32, 1u32);
                 let _ = s.insert(a, DropCounter { count: &mut a_count });
                 let _ = s.remove(&a);
             }
 
             {
-                let b = Entity::new(1, 1);
+                let b = Entity::new(1u32, 1u32);
                 let _ = s.insert(b, DropCounter { count: &mut b_count });
             }
         }
@@ -484,13 +484,13 @@ mod tests {
     fn vec_storage_iter() {
         let mut s: VecStorage<u32> = Default::default();
 
-        let a = Entity::new(0, 1);
+        let a = Entity::new(0u32, 1u32);
         let _ = s.insert(a, 101);
 
-        let b = Entity::new(1, 1);
+        let b = Entity::new(1u32, 1u32);
         let _ = s.insert(b, 102);
 
-        let c = Entity::new(2, 1);
+        let c = Entity::new(2u32, 1u32);
         let _ = s.insert(c, 103);
 
         let data: Vec<u32> = s.iter().map(|(_, i)| *i).collect();

@@ -8,7 +8,7 @@ pub mod storage;
 pub mod entities;
 pub mod event_queue;
 pub mod events;
-mod indexing;
+mod entity;
 pub mod loop_stage;
 pub mod macros;
 pub mod registry;
@@ -20,7 +20,8 @@ pub mod world;
 
 pub use crate::{
     component::Component,
-    entities::{Entities, Entity},
+    entity::entity::Entity,
+    entities::Entities,
     event_queue::{EventQueue, ReceiverId},
     events::EventTrait,
     loop_stage::LoopStage,

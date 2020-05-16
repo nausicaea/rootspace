@@ -1,11 +1,10 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
-use crate::{
-    indexing::{generation::Generation, index::Index},
-    resource::Resource,
-};
+use crate::entity::entity::Entity;
+use crate::entity::index::Index;
+use crate::entity::generation::Generation;
 use serde::{Deserialize, Serialize};
-use std::{fmt, num::ParseIntError, str::FromStr};
+use crate::resource::Resource;
 
 /// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -33,7 +32,7 @@ impl Entities {
 
         let gen = self.generations[idx.idx() as usize].activate();
 
-        Entity { idx, gen }
+        Entity::new(idx, gen)
     }
 
     /// Destroy the specified `Entity`.
@@ -78,10 +77,7 @@ impl<'a> Iterator for EntitiesIter<'a> {
         if self.idx < self.gens.len() {
             while self.idx < self.gens.len() {
                 if self.gens[self.idx].is_active() {
-                    let tmp = Entity {
-                        idx: Index::new(self.idx as u32),
-                        gen: self.gens[self.idx],
-                    };
+                    let tmp = Entity::new(self.idx, self.gens[self.idx]);
                     self.idx += 1;
                     return Some(tmp);
                 } else {
@@ -91,69 +87,6 @@ impl<'a> Iterator for EntitiesIter<'a> {
         }
 
         None
-    }
-}
-
-/// An entity serves as an identifier to an object within the world.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(from = "(Index, Generation)", into = "(Index, Generation)")]
-pub struct Entity {
-    /// Holds the entity index.
-    idx: Index,
-    /// Holds the entity generation.
-    gen: Generation,
-}
-
-impl Entity {
-    /// Create a new entity by specifying index and generation directly.
-    #[cfg(test)]
-    pub fn new(idx: u32, gen: u32) -> Entity {
-        Entity {
-            idx: Index::new(idx),
-            gen: Generation::new(gen),
-        }
-    }
-
-    /// Return the integer index of the entity, which can be used to index into data structures.
-    pub fn idx(&self) -> Index {
-        self.idx
-    }
-}
-
-impl fmt::Display for Entity {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({}, {})", self.idx, self.gen)
-    }
-}
-
-impl FromStr for Entity {
-    type Err = ParseIntError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<&str> = s
-            .trim_matches(|p| p == '(' || p == ')' || p == ' ')
-            .split(',')
-            .collect();
-
-        let idx = parts[0].parse::<Index>()?;
-        let gen = parts[1].parse::<Generation>()?;
-
-        Ok(Entity { idx, gen })
-    }
-}
-
-impl From<Entity> for (Index, Generation) {
-    fn from(value: Entity) -> Self {
-        (value.idx, value.gen)
-    }
-}
-
-impl From<(Index, Generation)> for Entity {
-    fn from(value: (Index, Generation)) -> Entity {
-        Entity {
-            idx: value.0,
-            gen: value.1,
-        }
     }
 }
 
@@ -217,16 +150,16 @@ mod tests {
         let mut r = Entities::default();
 
         let a = r.create();
-        assert_eq!(a.idx, Index::new(0));
-        assert_eq!(a.gen, Generation::new(1));
+        assert_eq!(a.idx(), Index::new(0));
+        assert_eq!(a.gen(), Generation::new(1));
 
         let b = r.create();
-        assert_eq!(b.idx, Index::new(1));
-        assert_eq!(b.gen, Generation::new(1));
+        assert_eq!(b.idx(), Index::new(1));
+        assert_eq!(b.gen(), Generation::new(1));
 
         r.destroy(a);
         let c = r.create();
-        assert_eq!(c.idx, Index::new(0));
-        assert_eq!(c.gen, Generation::new(3));
+        assert_eq!(c.idx(), Index::new(0));
+        assert_eq!(c.gen(), Generation::new(3));
     }
 }
