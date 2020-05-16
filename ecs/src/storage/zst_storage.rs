@@ -7,7 +7,6 @@ use serde::{
 };
 use std::{collections::HashSet, fmt, marker::PhantomData};
 
-
 /// Implements component storage for zero-sized types.
 pub struct ZstStorage<T> {
     index: HashSet<Index>,
@@ -27,12 +26,6 @@ where
     pub fn iter(&self) -> ZstStorageIter<T> {
         self.into_iter()
     }
-
-    // pub fn join<S>(&self, other: &S)
-    // where
-    //     S: IntoIterator,
-    // {
-    // }
 }
 
 impl<T> Storage<T> for ZstStorage<T>
@@ -72,6 +65,10 @@ where
     fn get_mut(&mut self, _entity: &Entity) -> Option<&mut T> {
         None
     }
+
+    fn index(&self) -> &HashSet<Index> {
+        &self.index
+    }
 }
 
 impl<T> Resource for ZstStorage<T> where T: 'static {}
@@ -85,10 +82,7 @@ impl<T> Default for ZstStorage<T> {
     }
 }
 
-impl<'a, T> IntoIterator for &'a ZstStorage<T>
-where
-    T: Default,
-{
+impl<'a, T> IntoIterator for &'a ZstStorage<T> {
     type Item = Index;
     type IntoIter = ZstStorageIter<T>;
 

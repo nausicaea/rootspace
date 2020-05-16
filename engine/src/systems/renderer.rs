@@ -139,7 +139,7 @@ where
         for (_, cam) in cameras.iter() {
             // Render the world scene.
             for (entity, model) in world_graph.iter() {
-                if statuses.get(entity).map(|s| s.enabled()) == Some(true) {
+                if statuses.get(entity).map_or(false, |s| s.enabled()) {
                     if let Some(data) = renderables.get(entity) {
                         #[cfg(any(test, debug_assertions))]
                         {
@@ -154,7 +154,7 @@ where
 
             // Render the ui scene.
             for (entity, model) in ui_graph.iter() {
-                if statuses.get(entity).map(|s| s.enabled()) == Some(true) {
+                if statuses.get(entity).map_or(false, |s| s.enabled()) {
                     if let Some(data) = renderables.get(entity) {
                         #[cfg(any(test, debug_assertions))]
                         {

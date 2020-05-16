@@ -121,6 +121,10 @@ impl<T> Storage<T> for VecStorage<T> {
             None
         }
     }
+
+    fn index(&self) -> &HashSet<Index> {
+        &self.index
+    }
 }
 
 impl<T> Resource for VecStorage<T> where T: 'static {}
