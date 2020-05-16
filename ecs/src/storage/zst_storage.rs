@@ -1,5 +1,5 @@
 use super::Storage;
-use crate::{entities::Entity, indexing::Index, resource::Resource};
+use crate::{entities::Entity, indexing::index::Index, resource::Resource};
 use serde::{
     de::{Deserializer, SeqAccess, Visitor},
     ser::{SerializeSeq, Serializer},

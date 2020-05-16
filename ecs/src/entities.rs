@@ -1,7 +1,7 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
 use crate::{
-    indexing::{Generation, Index},
+    indexing::{generation::Generation, index::Index},
     resource::Resource,
 };
 use serde::{Deserialize, Serialize};

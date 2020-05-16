@@ -8,7 +8,6 @@ pub mod storage;
 pub mod entities;
 pub mod event_queue;
 pub mod events;
-//mod hibitset;
 mod indexing;
 pub mod loop_stage;
 pub mod macros;
