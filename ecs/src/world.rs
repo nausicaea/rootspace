@@ -137,6 +137,12 @@ pub enum WorldEvent {
     Abort,
 }
 
+type JoinedRegistry<RR> = RegAdd![
+    Entities,
+    EventQueue<WorldEvent>,
+    RR
+];
+
 /// This is the default implementation of the `WorldTrait` provided by this library.
 pub struct World<RR> {
     resources: Resources,
@@ -147,13 +153,16 @@ pub struct World<RR> {
     _rr: PhantomData<RR>,
 }
 
-impl<RR> Default for World<RR> {
+impl<RR> Default for World<RR>
+where
+    RR: ResourceRegistry,
+{
     fn default() -> Self {
         let mut events: EventQueue<WorldEvent> = EventQueue::default();
         trace!("World<RR> subscribing to EventQueue<WorldEvent>");
         let receiver = events.subscribe();
 
-        let mut resources = Resources::default();
+        let mut resources = Resources::with_capacity(<Self as ResourcesTrait<RR>>::ResourceRegistry::LEN);
         resources.insert(Entities::default());
         resources.insert(events);
 
@@ -172,7 +181,7 @@ impl<RR> ResourcesTrait<RR> for World<RR>
 where
     RR: ResourceRegistry,
 {
-    type ResourceRegistry = RegAdd![Entities, EventQueue<WorldEvent>, RR];
+    type ResourceRegistry = JoinedRegistry<RR>;
 
     fn clear(&mut self) {
         self.resources.clear();
