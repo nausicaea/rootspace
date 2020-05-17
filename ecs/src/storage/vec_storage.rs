@@ -1,5 +1,5 @@
 use super::Storage;
-use crate::{entity::entity::Entity, entity::index::Index, resource::Resource};
+use crate::{entity::index::Index, resource::Resource};
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, Serializer},
@@ -53,7 +53,9 @@ impl<T> VecStorage<T> {
     }
 }
 
-impl<T> Storage<T> for VecStorage<T> {
+impl<T> Storage for VecStorage<T> {
+    type Item = T;
+
     fn len(&self) -> usize {
         self.index.len()
     }
@@ -62,13 +64,12 @@ impl<T> Storage<T> for VecStorage<T> {
         self.index.is_empty()
     }
 
-    fn insert(&mut self, entity: Entity, datum: T) -> Option<T> {
-        let idx = entity.idx();
-        self.insert_internal(idx, datum)
+    fn insert<I: Into<Index>>(&mut self, index: I, datum: T) -> Option<T> {
+        self.insert_internal(index.into(), datum)
     }
 
-    fn remove(&mut self, entity: &Entity) -> Option<T> {
-        let idx = entity.idx();
+    fn remove<I: Into<Index>>(&mut self, index: I) -> Option<T> {
+        let idx: Index = index.into();
 
         // If the index was previously occupied, return the old piece of data.
         if self.index.remove(&idx) {
@@ -82,8 +83,8 @@ impl<T> Storage<T> for VecStorage<T> {
         }
     }
 
-    fn has(&self, entity: &Entity) -> bool {
-        self.index.contains(&entity.idx())
+    fn has<I: Into<Index>>(&self, index: I) -> bool {
+        self.index.contains(&index.into())
     }
 
     fn clear(&mut self) {
@@ -100,8 +101,8 @@ impl<T> Storage<T> for VecStorage<T> {
         }
     }
 
-    fn get(&self, entity: &Entity) -> Option<&T> {
-        let idx = entity.idx();
+    fn get<I: Into<Index>>(&self, index: I) -> Option<&T> {
+        let idx: Index = index.into();
 
         if self.index.contains(&idx) {
             let idx_usize: usize = idx.into();
@@ -111,8 +112,8 @@ impl<T> Storage<T> for VecStorage<T> {
         }
     }
 
-    fn get_mut(&mut self, entity: &Entity) -> Option<&mut T> {
-        let idx = entity.idx();
+    fn get_mut<I: Into<Index>>(&mut self, index: I) -> Option<&mut T> {
+        let idx: Index = index.into();
 
         if self.index.contains(&idx) {
             let idx_usize: usize = idx.into();
@@ -125,6 +126,18 @@ impl<T> Storage<T> for VecStorage<T> {
     fn index(&self) -> &HashSet<Index> {
         &self.index
     }
+
+    unsafe fn get_unchecked<I: Into<Index>>(&self, index: I) -> &T {
+        let idx: Index = index.into();
+        let idx_usize: usize = idx.into();
+        self.data.get_unchecked(idx_usize)
+    }
+
+    unsafe fn get_unchecked_mut<I: Into<Index>>(&mut self, index: I) -> &mut T {
+        let idx: Index = index.into();
+        let idx_usize: usize = idx.into();
+        self.data.get_unchecked_mut(idx_usize)
+    }
 }
 
 impl<T> Resource for VecStorage<T> where T: 'static {}
@@ -136,7 +149,7 @@ impl<T> Drop for VecStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a VecStorage<T> {
-    type Item = (Index, &'a T);
+    type Item = &'a T;
     type IntoIter = VecStorageIter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -145,7 +158,7 @@ impl<'a, T> IntoIterator for &'a VecStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a mut VecStorage<T> {
-    type Item = (Index, &'a mut T);
+    type Item = &'a mut T;
     type IntoIter = VecStorageIterMut<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -264,7 +277,7 @@ impl<'a, T> VecStorageIterMut<'a, T> {
 }
 
 impl<'a, T> Iterator for VecStorageIterMut<'a, T> {
-    type Item = (Index, &'a mut T);
+    type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.cursor >= self.indices.len() {
@@ -272,11 +285,12 @@ impl<'a, T> Iterator for VecStorageIterMut<'a, T> {
         }
 
         let idx = self.indices[self.cursor];
+        let idx_usize: usize = idx.into();
         self.cursor += 1;
 
         unsafe {
-            let elem = self.data.get_unchecked_mut(Into::<usize>::into(idx));
-            Some((idx, &mut *(elem as *mut _)))
+            let elem = self.data.get_unchecked_mut(idx_usize);
+            Some(&mut *(elem as *mut _))
         }
     }
 
@@ -314,7 +328,7 @@ impl<'a, T> VecStorageIter<'a, T> {
 }
 
 impl<'a, T> Iterator for VecStorageIter<'a, T> {
-    type Item = (Index, &'a T);
+    type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.cursor >= self.indices.len() {
@@ -322,10 +336,11 @@ impl<'a, T> Iterator for VecStorageIter<'a, T> {
         }
 
         let idx = self.indices[self.cursor];
+        let idx_usize: usize = idx.into();
         self.cursor += 1;
 
         unsafe {
-            Some((idx, self.data.get_unchecked(Into::<usize>::into(idx))))
+            Some(self.data.get_unchecked(idx_usize))
         }
     }
 
@@ -493,7 +508,7 @@ mod tests {
         let c = Entity::new(2u32, 1u32);
         let _ = s.insert(c, 103);
 
-        let data: Vec<u32> = s.iter().map(|(_, i)| *i).collect();
+        let data: Vec<u32> = s.iter().map(|i| *i).collect();
         assert_eq!(data, vec![101, 102, 103]);
     }
 

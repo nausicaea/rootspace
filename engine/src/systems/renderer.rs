@@ -136,7 +136,7 @@ where
         let statuses = res.borrow_components::<Status>();
         let renderables = res.borrow_components::<Renderable>();
 
-        for (_, cam) in cameras.iter() {
+        for cam in cameras.iter() {
             // Render the world scene.
             for (entity, model) in world_graph.iter() {
                 if statuses.get(entity).map_or(false, |s| s.enabled()) {

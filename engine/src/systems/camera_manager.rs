@@ -23,7 +23,7 @@ impl CameraManager {
 
         res.borrow_components_mut::<Camera>()
             .iter_mut()
-            .for_each(|(_, c)| c.set_dimensions(dims));
+            .for_each(|c| c.set_dimensions(dims));
     }
 
     fn on_change_dpi(&self, res: &Resources, factor: f64) {
@@ -32,7 +32,7 @@ impl CameraManager {
 
         res.borrow_components_mut::<Camera>()
             .iter_mut()
-            .for_each(|(_, c)| c.set_dpi_factor(factor));
+            .for_each(|c| c.set_dpi_factor(factor));
     }
 }
 

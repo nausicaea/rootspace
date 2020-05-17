@@ -7,7 +7,7 @@ use crate::storage::vec_storage::VecStorage;
 pub trait Component: Sized {
     /// Components are stored in a `Resource` and the implementor of a component may choose the
     /// type of storage used.
-    type Storage: Storage<Self> + Resource + Default;
+    type Storage: Storage<Item = Self> + Resource + Default;
 }
 
 macro_rules! impl_component {

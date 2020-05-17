@@ -73,12 +73,24 @@ impl From<(Index, Generation)> for Entity {
 
 impl From<Entity> for Index {
     fn from(value: Entity) -> Self {
+        From::from(&value)
+    }
+}
+
+impl From<&Entity> for Index {
+    fn from(value: &Entity) -> Self {
         value.idx
     }
 }
 
 impl From<Entity> for Generation {
     fn from(value: Entity) -> Self {
+        From::from(&value)
+    }
+}
+
+impl From<&Entity> for Generation {
+    fn from(value: &Entity) -> Self {
         value.gen
     }
 }

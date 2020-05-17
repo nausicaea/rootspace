@@ -1,5 +1,5 @@
 use super::Storage;
-use crate::{entity::entity::Entity, entity::index::Index, resource::Resource};
+use crate::{entity::index::Index, resource::Resource};
 use serde::{
     de::{Deserializer, SeqAccess, Visitor},
     ser::{SerializeSeq, Serializer},
@@ -23,7 +23,9 @@ impl<T> ZstStorage<T> {
     }
 }
 
-impl<T> Storage<T> for ZstStorage<T> {
+impl<T> Storage for ZstStorage<T> {
+    type Item = T;
+
     fn len(&self) -> usize {
         self.index.len()
     }
@@ -32,34 +34,42 @@ impl<T> Storage<T> for ZstStorage<T> {
         self.index.is_empty()
     }
 
-    fn insert(&mut self, entity: Entity, _datum: T) -> Option<T> {
-        self.insert_internal(entity.idx());
+    fn insert<I: Into<Index>>(&mut self, index: I, _datum: T) -> Option<T> {
+        self.insert_internal(index.into());
         None
     }
 
-    fn remove(&mut self, entity: &Entity) -> Option<T> {
-        self.index.remove(&entity.idx());
+    fn remove<I: Into<Index>>(&mut self, index: I) -> Option<T> {
+        self.index.remove(&index.into());
         None
     }
 
-    fn has(&self, entity: &Entity) -> bool {
-        self.index.contains(&entity.idx())
+    fn has<I: Into<Index>>(&self, index: I) -> bool {
+        self.index.contains(&index.into())
     }
 
     fn clear(&mut self) {
         self.index.clear()
     }
 
-    fn get(&self, _entity: &Entity) -> Option<&T> {
-        None
+    fn get<I: Into<Index>>(&self, _index: I) -> Option<&T> {
+        Some(&self.data)
     }
 
-    fn get_mut(&mut self, _entity: &Entity) -> Option<&mut T> {
-        None
+    fn get_mut<I: Into<Index>>(&mut self, _index: I) -> Option<&mut T> {
+        Some(&mut self.data)
     }
 
     fn index(&self) -> &HashSet<Index> {
         &self.index
+    }
+
+    unsafe fn get_unchecked<I: Into<Index>>(&self, _index: I) -> &T {
+        &self.data
+    }
+
+    unsafe fn get_unchecked_mut<I: Into<Index>>(&mut self, _index: I) -> &mut T {
+        &mut self.data
     }
 }
 
@@ -78,7 +88,7 @@ where
 }
 
 impl<'a, T> IntoIterator for &'a ZstStorage<T> {
-    type Item = (Index, &'a T);
+    type Item = &'a T;
     type IntoIter = ZstStorageIter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -156,7 +166,7 @@ where
 }
 
 pub struct ZstStorageIter<'a, T> {
-    indices: Vec<Index>,
+    indices_len: usize,
     cursor: usize,
     data: &'a T,
 }
@@ -164,7 +174,7 @@ pub struct ZstStorageIter<'a, T> {
 impl<'a, T> ZstStorageIter<'a, T> {
     fn new(source: &'a ZstStorage<T>) -> Self {
         ZstStorageIter {
-            indices: source.index.iter().copied().collect(),
+            indices_len: source.index.len(),
             cursor: 0,
             data: &source.data,
         }
@@ -172,21 +182,20 @@ impl<'a, T> ZstStorageIter<'a, T> {
 }
 
 impl<'a, T> Iterator for ZstStorageIter<'a, T> {
-    type Item = (Index, &'a T);
+    type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.cursor >= self.indices.len() {
+        if self.cursor >= self.indices_len {
             return None;
         }
 
-        let idx = self.indices[self.cursor];
         self.cursor += 1;
 
-        Some((idx, self.data))
+        Some(self.data)
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining_len = self.indices.len()
+        let remaining_len = self.indices_len
             .checked_sub(self.cursor)
             .unwrap_or(0);
 

@@ -168,7 +168,7 @@ impl CommandTrait for CameraCommand {
         if let Some(info_matches) = matches.subcommand_matches("info") {
             let cameras = res.borrow_components::<Camera>();
 
-            for (i, (_, cam)) in cameras.iter().enumerate() {
+            for (i, cam) in cameras.iter().enumerate() {
                 println!("Camera {}:", i);
 
                 if info_matches.is_present("position") {
@@ -246,7 +246,7 @@ impl EntityCommand {
         }
 
         if args.is_present("ndc-positions") {
-            for (i, (_, camera)) in cameras.iter().enumerate() {
+            for (i, camera) in cameras.iter().enumerate() {
                 if let Some(m) = world_graph.get(entity) {
                     let pos = camera.world_point_to_ndc(&m.position());
                     output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", i, pos.x, pos.y, pos.z));
