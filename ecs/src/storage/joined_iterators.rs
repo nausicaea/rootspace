@@ -64,6 +64,26 @@ macro_rules! impl_joined_iter {
             }
         }
 
+        impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> ExactSizeIterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
+        where
+            $(
+                $ty: $crate::storage::Storage,
+            )*
+            $(
+                $tym: $crate::storage::Storage,
+            )*
+        {}
+
+        impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> std::iter::FusedIterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
+        where
+            $(
+                $ty: $crate::storage::Storage,
+            )*
+            $(
+                $tym: $crate::storage::Storage,
+            )*
+        {}
+
         impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> Iterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
         where
             $(
@@ -93,6 +113,15 @@ macro_rules! impl_joined_iter {
 
                     Some(($($ty,)* $(&mut *($tym as *mut _),)*))
                 }
+            }
+
+            fn size_hint(&self) -> (usize, Option<usize>) {
+                let remaining_len = self.indices
+                    .len()
+                    .checked_sub(self.cursor)
+                    .unwrap_or(0);
+
+                (remaining_len, Some(remaining_len))
             }
         }
     };

@@ -5,6 +5,8 @@ use ecs::{EventQueue, Resources, System};
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 #[cfg(not(test))]
+use log::info;
+#[cfg(not(test))]
 use log::error;
 #[cfg(not(test))]
 use std::process;
@@ -25,15 +27,17 @@ impl Default for ForceShutdown {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
         #[cfg(not(test))]
         {
-            let r = ctrlc_triggered.clone();
-            ctrlc::set_handler(move || {
-                let previous = r.fetch_add(1, Ordering::SeqCst);
+            let trigger = ctrlc_triggered.clone();
+            let result = ctrlc::set_handler(move || {
+                let previous = trigger.fetch_add(1, Ordering::SeqCst);
                 if previous > 0 {
-                    error!("Force-quitting the application");
+                    info!("Force-quitting the application");
                     process::exit(1);
                 }
-            })
-            .expect("Unable to set a termination handler");
+            });
+            if let Err(e) = result {
+                error!("Unable to set a Ctrl-C handler: {}", e);
+            }
         }
 
         ForceShutdown { ctrlc_triggered }
