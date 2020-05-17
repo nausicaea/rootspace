@@ -363,6 +363,7 @@ mod tests {
     use super::*;
     use crate::component::Component;
     use crate::entities::Entities;
+    use crate::entity::entity::Entity;
     use serde_test::{assert_tokens, Token};
 
     struct DropCounter<'a> {
