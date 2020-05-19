@@ -1,4 +1,5 @@
 use super::Storage;
+use super::iterators::{RIter, WIter};
 use crate::{entity::index::Index, resource::Resource};
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
@@ -16,13 +17,11 @@ pub struct VecStorage<T> {
 }
 
 impl<T> VecStorage<T> {
-    /// Return an iterator over all occupied entries.
-    pub fn iter(&self) -> VecStorageIter<T> {
+    pub fn iter(&self) -> RIter<Self> {
         self.into_iter()
     }
 
-    /// Return a mutable iterator over all occupied entries.
-    pub fn iter_mut(&mut self) -> VecStorageIterMut<T> {
+    pub fn iter_mut(&mut self) -> WIter<Self> {
         self.into_iter()
     }
 
@@ -149,20 +148,20 @@ impl<T> Drop for VecStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a VecStorage<T> {
-    type Item = &'a T;
-    type IntoIter = VecStorageIter<'a, T>;
+    type Item = <RIter<'a, VecStorage<T>> as Iterator>::Item;
+    type IntoIter = RIter<'a, VecStorage<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        VecStorageIter::new(self)
+        RIter::new(self)
     }
 }
 
 impl<'a, T> IntoIterator for &'a mut VecStorage<T> {
-    type Item = &'a mut T;
-    type IntoIter = VecStorageIterMut<'a, T>;
+    type Item = <WIter<'a, VecStorage<T>> as Iterator>::Item;
+    type IntoIter = WIter<'a, VecStorage<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        VecStorageIterMut::new(self)
+        WIter::new(self)
     }
 }
 
@@ -256,107 +255,6 @@ where
         de.deserialize_map(VecStorageVisitor::<T>::default())
     }
 }
-
-pub struct VecStorageIterMut<'a, T>
-where
-    T: 'a,
-{
-    data: &'a mut [T],
-    indices: Vec<Index>,
-    cursor: usize,
-}
-
-impl<'a, T> VecStorageIterMut<'a, T> {
-    fn new(source: &'a mut VecStorage<T>) -> Self {
-        VecStorageIterMut {
-            data: &mut source.data,
-            indices: source.index.iter().copied().collect(),
-            cursor: 0,
-        }
-    }
-}
-
-impl<'a, T> Iterator for VecStorageIterMut<'a, T> {
-    type Item = &'a mut T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.cursor >= self.indices.len() {
-            return None;
-        }
-
-        let idx = self.indices[self.cursor];
-        let idx_usize: usize = idx.into();
-        self.cursor += 1;
-
-        unsafe {
-            let elem = self.data.get_unchecked_mut(idx_usize);
-            Some(&mut *(elem as *mut _))
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining_len = self.indices
-            .len()
-            .checked_sub(self.cursor)
-            .unwrap_or(0);
-
-        (remaining_len, Some(remaining_len))
-    }
-}
-
-impl<'a, T> ExactSizeIterator for VecStorageIterMut<'a, T> {}
-
-impl<'a, T> std::iter::FusedIterator for VecStorageIterMut<'a, T> {}
-
-pub struct VecStorageIter<'a, T>
-where
-    T: 'a,
-{
-    data: &'a [T],
-    indices: Vec<Index>,
-    cursor: usize,
-}
-
-impl<'a, T> VecStorageIter<'a, T> {
-    fn new(source: &'a VecStorage<T>) -> Self {
-        VecStorageIter {
-            data: &source.data,
-            indices: source.index.iter().copied().collect(),
-            cursor: 0,
-        }
-    }
-}
-
-impl<'a, T> Iterator for VecStorageIter<'a, T> {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.cursor >= self.indices.len() {
-            return None;
-        }
-
-        let idx = self.indices[self.cursor];
-        let idx_usize: usize = idx.into();
-        self.cursor += 1;
-
-        unsafe {
-            Some(self.data.get_unchecked(idx_usize))
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining_len = self.indices
-            .len()
-            .checked_sub(self.cursor)
-            .unwrap_or(0);
-
-        (remaining_len, Some(remaining_len))
-    }
-}
-
-impl<'a, T> ExactSizeIterator for VecStorageIter<'a, T> {}
-
-impl<'a, T> std::iter::FusedIterator for VecStorageIter<'a, T> {}
 
 #[cfg(test)]
 mod tests {
@@ -494,23 +392,6 @@ mod tests {
 
         assert_eq!(a_count, 1);
         assert_eq!(b_count, 1);
-    }
-
-    #[test]
-    fn vec_storage_iter() {
-        let mut s: VecStorage<u32> = Default::default();
-
-        let a = Entity::new(0u32, 1u32);
-        let _ = s.insert(a, 101);
-
-        let b = Entity::new(1u32, 1u32);
-        let _ = s.insert(b, 102);
-
-        let c = Entity::new(2u32, 1u32);
-        let _ = s.insert(c, 103);
-
-        let data: Vec<u32> = s.iter().map(|i| *i).collect();
-        assert_eq!(data, vec![101, 102, 103]);
     }
 
     #[test]

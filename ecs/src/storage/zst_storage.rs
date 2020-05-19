@@ -1,4 +1,5 @@
 use super::Storage;
+use super::iterators::{RIter, WIter};
 use crate::{entity::index::Index, resource::Resource};
 use serde::{
     de::{Deserializer, SeqAccess, Visitor},
@@ -18,7 +19,11 @@ impl<T> ZstStorage<T> {
         self.index.insert(idx);
     }
 
-    pub fn iter(&self) -> ZstStorageIter<T> {
+    pub fn iter(&self) -> RIter<Self> {
+        self.into_iter()
+    }
+
+    pub fn iter_mut(&mut self) -> WIter<Self> {
         self.into_iter()
     }
 }
@@ -88,11 +93,20 @@ where
 }
 
 impl<'a, T> IntoIterator for &'a ZstStorage<T> {
-    type Item = &'a T;
-    type IntoIter = ZstStorageIter<'a, T>;
+    type Item = <RIter<'a, ZstStorage<T>> as Iterator>::Item;
+    type IntoIter = RIter<'a, ZstStorage<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        ZstStorageIter::new(self)
+        RIter::new(self)
+    }
+}
+
+impl<'a, T> IntoIterator for &'a mut ZstStorage<T> {
+    type Item = <WIter<'a, ZstStorage<T>> as Iterator>::Item;
+    type IntoIter = WIter<'a, ZstStorage<T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        WIter::new(self)
     }
 }
 
@@ -164,45 +178,3 @@ where
         de.deserialize_seq(ZstStorageVisitor::<T>::default())
     }
 }
-
-pub struct ZstStorageIter<'a, T> {
-    indices_len: usize,
-    cursor: usize,
-    data: &'a T,
-}
-
-impl<'a, T> ZstStorageIter<'a, T> {
-    fn new(source: &'a ZstStorage<T>) -> Self {
-        ZstStorageIter {
-            indices_len: source.index.len(),
-            cursor: 0,
-            data: &source.data,
-        }
-    }
-}
-
-impl<'a, T> Iterator for ZstStorageIter<'a, T> {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.cursor >= self.indices_len {
-            return None;
-        }
-
-        self.cursor += 1;
-
-        Some(self.data)
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining_len = self.indices_len
-            .checked_sub(self.cursor)
-            .unwrap_or(0);
-
-        (remaining_len, Some(remaining_len))
-    }
-}
-
-impl<'a, T> ExactSizeIterator for ZstStorageIter<'a, T> {}
-
-impl<'a, T> std::iter::FusedIterator for ZstStorageIter<'a, T> {}

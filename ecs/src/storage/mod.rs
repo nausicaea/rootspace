@@ -1,4 +1,4 @@
-pub mod joined_iterators;
+pub mod iterators;
 pub mod vec_storage;
 pub mod zst_storage;
 

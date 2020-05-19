@@ -136,12 +136,14 @@ impl Resources {
         self.borrow_mut::<C::Storage>()
     }
 
-    pub fn iter_components<C>(&self) -> impl Iterator
-    where
-        C: Component,
-    {
-        self.borrow_mut::<C::Storage>().iter()
-    }
+    // pub fn iter_r<C>(&self) -> crate::storage::iterators::RIter<C::Storage>
+    // where
+    //     C: Component,
+    // {
+    //     let storage = self.borrow::<C::Storage>();
+
+    //     crate::storage::iterators::RIter::new(&storage)
+    // }
 
     /// Serialize the types supplied in the registry from `Resources`.
     pub fn serialize<RR, S>(&self, serializer: S) -> Result<(), S::Error>
