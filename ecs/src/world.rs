@@ -9,7 +9,7 @@ use crate::{
     loop_stage::LoopStage,
     registry::ResourceRegistry,
     resource::Resource,
-    resources::Resources,
+    resources::{Resources, ConflictResolution},
     system::System,
     systems::Systems,
     RegAdd,
@@ -75,6 +75,10 @@ where
     fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
     where
         D: Deserializer<'de>;
+
+    fn deserialize_additive<'de, D>(&mut self, deserializer: D, method: ConflictResolution) -> Result<(), D::Error>
+    where
+        D: Deserializer<'de>;
 }
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
@@ -130,6 +134,9 @@ pub enum WorldEvent {
     /// Causes the WorldTrait::maintain() method to deserialize the entire world state from the
     /// given file.
     Deserialize(PathBuf),
+    /// Causes the WorldTrait::maintain() method to deserialize a world state additively from a
+    /// file into the currently loaded state.
+    DeserializeAdditive(PathBuf, ConflictResolution),
     /// Signals the completion of deserialization.
     DeserializationComplete,
     /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game
@@ -257,6 +264,14 @@ where
         self.resources = Resources::deserialize::<Self::ResourceRegistry, D>(deserializer)?;
         Ok(())
     }
+
+    fn deserialize_additive<'de, D>(&mut self, deserializer: D, method: ConflictResolution) -> Result<(), D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        self.resources.deserialize_additive::<Self::ResourceRegistry, D>(deserializer, method)?;
+        Ok(())
+    }
 }
 
 impl<RR> WorldTrait for World<RR>
@@ -313,7 +328,7 @@ where
             match e {
                 WorldEvent::Abort => {
                     return false;
-                }
+                },
                 WorldEvent::Serialize(p) => {
                     let mut file = File::create(&p).expect(&format!("Could not create the file {}: ", p.display()));
                     let mut s = serde_json::Serializer::pretty(&mut file);
@@ -323,7 +338,7 @@ where
                     self.resources
                         .get_mut::<EventQueue<WorldEvent>>()
                         .send(WorldEvent::SerializationComplete);
-                }
+                },
                 WorldEvent::Deserialize(p) => {
                     let mut file = File::open(&p).expect(&format!("Could not open the file {}: ", p.display()));
                     let mut d = serde_json::Deserializer::from_reader(&mut file);
@@ -333,7 +348,17 @@ where
                     self.resources
                         .get_mut::<EventQueue<WorldEvent>>()
                         .send(WorldEvent::DeserializationComplete);
-                }
+                },
+                WorldEvent::DeserializeAdditive(p, m) => {
+                    let mut file = File::open(&p).expect(&format!("Could not open the file {}: ", p.display()));
+                    let mut d = serde_json::Deserializer::from_reader(&mut file);
+                    // let mut d = rmp_serde::Deserializer::new(&mut file);
+                    self.deserialize_additive(&mut d, m)
+                        .expect(&format!("Could not deserialize additively from the file {}: ", p.display()));
+                    self.resources
+                        .get_mut::<EventQueue<WorldEvent>>()
+                        .send(WorldEvent::DeserializationComplete);
+                },
                 _ => (),
             }
         }

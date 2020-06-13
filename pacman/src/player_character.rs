@@ -11,7 +11,7 @@ impl Component for PlayerCharacterMarker {
     type Storage = ZstStorage<Self>;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MoveDirection {
     Up,
     Down,

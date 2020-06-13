@@ -49,6 +49,13 @@ macro_rules! impl_iter_ref {
     };
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum ConflictResolution {
+    KeepOriginal,
+    Overwrite,
+    Fail,
+}
+
 /// A container that manages resources. Allows mutable borrows of multiple different resources at
 /// the same time.
 #[derive(Default, Debug)]
@@ -348,7 +355,7 @@ impl Resources {
 
     /// Deserialize `Resources` with the provided type registry, by adding the deserialized
     /// resources to existing ones in `Resources`.
-    pub fn deserialize_additive<'de, RR, D>(&mut self, deserializer: D, overwrite: bool) -> Result<(), D::Error>
+    pub fn deserialize_additive<'de, RR, D>(&mut self, deserializer: D, method: ConflictResolution) -> Result<(), D::Error>
     where
         RR: ResourceRegistry,
         D: Deserializer<'de>,
@@ -356,21 +363,18 @@ impl Resources {
         debug!("Beginning the additive deserialization of Resources");
         let other = Resources::deserialize::<RR, D>(deserializer)?;
         for (k, v) in other.resources {
-            if !self.resources.contains_key(&k) || overwrite {
-                #[cfg(not(any(test, debug_assertions)))]
-                self.resources.insert(k, v);
+            if self.resources.contains_key(&k) {
                 #[cfg(any(test, debug_assertions))]
-                {
-                    if let Some(old_v) = self.resources.insert(k, v) {
-                        debug!("Overwriting the resource {:?}", old_v);
-                    }
+                debug!("The new resource {:?} conflicts with a previous one", v);
+                match method {
+                    ConflictResolution::KeepOriginal => (),
+                    ConflictResolution::Overwrite => { self.resources.insert(k, v); },
+                    ConflictResolution::Fail => return Err(de::Error::custom(format!("Cannot deserialize the resource {:?} because of conflicts", v))),
                 }
             } else {
                 #[cfg(any(test, debug_assertions))]
-                debug!(
-                    "Not adding the resource {:?}, because the same type is already present",
-                    v
-                );
+                debug!("Deserializing the resource {:?}", v);
+                self.resources.insert(k, v);
             }
         }
         debug!("Completed the additive deserialization of Resources");
@@ -460,7 +464,7 @@ mod tests {
             b"{\"ecs::resources::tests::TestResourceA\":100,\"ecs::resources::tests::TestResourceB\":10.01,\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
         );
         resources
-            .deserialize_additive::<TestRegistry, _>(&mut d, false)
+            .deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::KeepOriginal)
             .unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
@@ -478,7 +482,7 @@ mod tests {
         let mut d = serde_json::Deserializer::from_slice(
             b"{\"ecs::resources::tests::TestResourceA\":100,\"ecs::resources::tests::TestResourceB\":10.01,\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
         );
-        resources.deserialize_additive::<TestRegistry, _>(&mut d, true).unwrap();
+        resources.deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::Overwrite).unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(100));
         assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(10.01));
@@ -497,7 +501,7 @@ mod tests {
             b"{\"ecs::resources::tests::TestResourceB\":10.01,\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
         );
         resources
-            .deserialize_additive::<TestRegistry, _>(&mut d, false)
+            .deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::KeepOriginal)
             .unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));

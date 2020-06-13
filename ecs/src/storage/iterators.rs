@@ -498,10 +498,6 @@ macro_rules! impl_joined_iter_ref {
 impl_joined_iter!(RIter, #reads: &'a A);
 impl_joined_iter!(WIter, #writes: &'a mut A);
 
-impl_joined_iter!(RRIter, #reads: &'a A, &'b B);
-impl_joined_iter!(RWIter, #reads: &'a A, #writes: &'b mut B);
-impl_joined_iter!(WWIter, #writes: &'a mut A, &'b mut B);
-
 impl_joined_iter_ref!(RIterRef, #reads: &'a A);
 impl_joined_iter_ref!(WIterRef, #writes: &'a mut A);
 
@@ -540,54 +536,6 @@ mod tests {
 
         for ca in WIter::new(&mut a) {
             eprintln!("ca: {}", ca);
-        }
-    }
-
-    #[test]
-    fn rr_iter() {
-        let mut a: VecStorage<usize> = VecStorage::default();
-        a.insert(0usize, 100usize);
-        a.insert(1usize, 101usize);
-        a.insert(2usize, 102usize);
-
-        let mut b: VecStorage<String> = VecStorage::default();
-        b.insert(0usize, "0".into());
-        b.insert(2usize, "2".into());
-
-        for (ca, cb) in RRIter::new(&a, &b) {
-            eprintln!("ca: {}, cb: {}", ca, cb);
-        }
-    }
-
-    #[test]
-    fn rw_iter() {
-        let mut a: VecStorage<usize> = VecStorage::default();
-        a.insert(0usize, 100usize);
-        a.insert(1usize, 101usize);
-        a.insert(2usize, 102usize);
-
-        let mut b: VecStorage<String> = VecStorage::default();
-        b.insert(0usize, "0".into());
-        b.insert(2usize, "2".into());
-
-        for (ca, cb) in RWIter::new(&a, &mut b) {
-            eprintln!("ca: {}, cb: {}", ca, cb);
-        }
-    }
-
-    #[test]
-    fn ww_iter() {
-        let mut a: VecStorage<usize> = VecStorage::default();
-        a.insert(0usize, 100usize);
-        a.insert(1usize, 101usize);
-        a.insert(2usize, 102usize);
-
-        let mut b: VecStorage<String> = VecStorage::default();
-        b.insert(0usize, "0".into());
-        b.insert(2usize, "2".into());
-
-        for (ca, cb) in WWIter::new(&mut a, &mut b) {
-            eprintln!("ca: {}, cb: {}", ca, cb);
         }
     }
 }
