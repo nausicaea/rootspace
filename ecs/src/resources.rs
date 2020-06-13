@@ -1,7 +1,7 @@
 //! Provides the resource manager.
 #![allow(non_snake_case)]
 
-use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
+use crate::{component::Component, registry::ResourceRegistry, resource::Resource, maybe_default::MaybeDefault};
 use log::debug;
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
@@ -189,6 +189,51 @@ impl Resources {
     impl_iter_ref!(iter_rww, RWWIterRef, #reads: C, #writes: D, E);
     impl_iter_ref!(iter_www, WWWIterRef, #writes: C, D, E);
 
+    /// In a similar fashion to Resources::serialize, the following section uses the types stored
+    /// in the registry to initialize those resources that have a default, parameterless
+    /// constructor.
+    pub fn initialize<RR>(&mut self)
+    where
+        RR: ResourceRegistry,
+    {
+        fn initialize_recursive<RR>(res: &mut Resources, reg: &RR)
+        where
+            RR: ResourceRegistry,
+        {
+            fn maybe_default<R>(
+                res: &mut Resources,
+                _: &R,
+            )
+            where
+                R: Resource + MaybeDefault,
+            {
+                if let Some(default_value) = R::maybe_default() {
+                    #[cfg(any(test, debug_assertions))]
+                    debug!("Initializing the resource {}", &std::any::type_name::<R>());
+                    res.insert(default_value)
+                } else {
+                    #[cfg(any(test, debug_assertions))]
+                    debug!("Not initializing the resource {} because it lacks a default constructor", &std::any::type_name::<R>());
+                }
+            }
+
+            if RR::LEN > 0 {
+                maybe_default(res, reg.head());
+                initialize_recursive(res, reg.tail());
+            }
+        }
+
+        debug!("Beginning the initialization of Resources");
+
+        // The following lines look super scary but since initialize_recursive() only accesses the
+        // type of reg, this should be alright.
+        let reg = unsafe { std::mem::MaybeUninit::<RR>::zeroed().assume_init() };
+        initialize_recursive(self, &reg);
+        std::mem::forget(reg);
+
+        debug!("Completed the initialization of Resources");
+    }
+
     /// Serialize the types supplied in the registry from `Resources`.
     pub fn serialize<RR, S>(&self, serializer: S) -> Result<(), S::Error>
     where
@@ -237,14 +282,14 @@ impl Resources {
             Ok(())
         }
 
-        fn recurse<SM, RR>(res: &Resources, state: &mut SM, reg: &RR) -> Result<(), SM::Error>
+        fn serialize_recursive<SM, RR>(res: &Resources, state: &mut SM, reg: &RR) -> Result<(), SM::Error>
         where
             SM: SerializeMap,
             RR: ResourceRegistry,
         {
             if RR::LEN > 0 {
                 serialize_entry(res, state, reg.head())?;
-                recurse(res, state, reg.tail())
+                serialize_recursive(res, state, reg.tail())
             } else {
                 Ok(())
             }
@@ -253,10 +298,10 @@ impl Resources {
         debug!("Beginning the serialization of Resources");
         let mut state = serializer.serialize_map(Some(RR::LEN))?;
 
-        // The following lines look super scary but since recurse() only accesses the type of reg,
-        // this should be alright.
+        // The following lines look super scary but since serialize_recursive() only accesses the
+        // type of reg, this should be alright.
         let reg = unsafe { std::mem::MaybeUninit::<RR>::zeroed().assume_init() };
-        recurse(self, &mut state, &reg)?;
+        serialize_recursive(self, &mut state, &reg)?;
         std::mem::forget(reg);
 
         state.end()?;
@@ -273,12 +318,12 @@ impl Resources {
         #[derive(Deserialize)]
         struct DeContainer<R>(R);
 
-        fn recurse<'de, A, RR>(res: &mut Resources, access: &mut A, key: &str, reg: &RR) -> Result<(), A::Error>
+        fn deserialize_recursive<'de, A, RR>(res: &mut Resources, access: &mut A, key: &str, reg: &RR) -> Result<(), A::Error>
         where
             A: MapAccess<'de>,
             RR: ResourceRegistry,
         {
-            fn sub<'de, A, RR, R>(
+            fn deserialize_entry<'de, A, RR, R>(
                 res: &mut Resources,
                 access: &mut A,
                 key: &str,
@@ -295,12 +340,12 @@ impl Resources {
                     res.insert(c.0);
                     Ok(())
                 } else {
-                    recurse(res, access, key, reg.tail())
+                    deserialize_recursive(res, access, key, reg.tail())
                 }
             }
 
             if RR::LEN > 0 {
-                sub(res, access, key, reg, reg.head())
+                deserialize_entry(res, access, key, reg, reg.head())
             } else {
                 Err(de::Error::unknown_field(key, &[]))
             }
@@ -333,13 +378,13 @@ impl Resources {
             {
                 let mut resources = Resources::with_capacity(access.size_hint().unwrap_or(RR::LEN));
 
-                // The following lines look super scary but since recurse() only accesses the type of reg,
-                // this should be alright.
+                // The following lines look super scary but since deserialize_recursive() only
+                // accesses the type of reg, this should be alright.
                 let reg = unsafe { std::mem::MaybeUninit::<RR>::zeroed().assume_init() };
                 while let Some(key) = access.next_key::<String>()? {
                     #[cfg(any(test, debug_assertions))]
                     debug!("Deserializing the resource {}", &key);
-                    recurse(&mut resources, &mut access, &key, &reg)?;
+                    deserialize_recursive(&mut resources, &mut access, &key, &reg)?;
                 }
                 std::mem::forget(reg);
 

@@ -69,17 +69,8 @@ where
         let mut world = World::default();
 
         // Insert basic resources
-        world.insert(EventQueue::<EngineEvent>::default());
         world.insert(backend.settings().clone());
         world.insert(backend);
-        world.insert(SceneGraph::<Model>::default());
-        world.insert(SceneGraph::<UiModel>::default());
-        world.insert(<Info as Component>::Storage::default());
-        world.insert(<Status as Component>::Storage::default());
-        world.insert(<Camera as Component>::Storage::default());
-        world.insert(<Renderable as Component>::Storage::default());
-        world.insert(<UiModel as Component>::Storage::default());
-        world.insert(<Model as Component>::Storage::default());
 
         // Insert basic systems
         world.add_system(LoopStage::Update, ForceShutdown::default());

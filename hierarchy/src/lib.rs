@@ -436,12 +436,19 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index < self.data.len() {
+            // Skip those nodes that don't have any data associated with them
             while self.index < self.data.len() && self.data[self.index].weight.0.is_none() {
                 self.index += 1;
             }
-            let idx = self.index;
+
+            // If none of the nodes contain data, return
+            if self.index >= self.data.len() {
+                return None;
+            }
+
+            // Retrieve the current node's data
+            let w = &self.data[self.index].weight;
             self.index += 1;
-            let w = &self.data[idx].weight;
             w.0.as_ref().map(|&(ref k, ref v)| (k, v))
         } else {
             None

@@ -3,7 +3,7 @@ use crate::{
     components::Renderable,
     graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait},
 };
-use ecs::{Component, Resource};
+use ecs::{Component, Resource, MaybeDefault};
 use anyhow::{Error, Result};
 use serde::{Deserialize, Serialize};
 use snowflake::ProcessUniqueId;
@@ -52,6 +52,8 @@ impl BackendSettings {
 }
 
 impl Resource for BackendSettings {}
+
+impl MaybeDefault for BackendSettings {}
 
 impl<B> From<BackendResource<B>> for BackendSettings
 where

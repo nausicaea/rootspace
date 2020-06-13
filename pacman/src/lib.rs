@@ -1,7 +1,7 @@
 mod player_character;
 
 use anyhow::Result;
-use ecs::{EventQueue, Reg, LoopStage};
+use ecs::{EventQueue, Reg, LoopStage, Component};
 use engine::{
     components::{Camera, Info, Status, camera::Projection, Model, Renderable, renderable::RenderableType},
     resources::{SceneGraph, BackendResource},
@@ -15,6 +15,7 @@ use std::time::Duration;
 use nalgebra::{Vector3, Point3};
 
 type ResourceRegistry = Reg![
+    <PlayerCharacterMarker as Component>::Storage,
 ];
 
 pub struct Pacman<B>

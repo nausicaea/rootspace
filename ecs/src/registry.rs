@@ -1,5 +1,6 @@
 use crate::resource::Resource;
 use crate::system::System;
+use crate::maybe_default::MaybeDefault;
 use serde::{Deserialize, Serialize};
 
 /// An element within the heterogeneous list.
@@ -84,7 +85,7 @@ macro_rules! impl_registry {
     };
 }
 
-impl_registry!(ResourceRegistry, where Head: Resource);
+impl_registry!(ResourceRegistry, where Head: Resource + MaybeDefault);
 impl_registry!(SystemRegistry, where Head: System);
 
 #[cfg(test)]

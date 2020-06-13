@@ -17,7 +17,7 @@ use crate::{
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use serde_json;
 // use rmp_serde;
-use log::trace;
+use log::debug;
 use std::{
     cell::{Ref, RefMut},
     fs::File,
@@ -27,10 +27,7 @@ use std::{
 };
 
 /// Exposes resource management methods.
-pub trait ResourcesTrait<RR>
-where
-    RR: ResourceRegistry,
-{
+pub trait ResourcesTrait {
     type ResourceRegistry: ResourceRegistry;
 
     /// Clears the state of the resource manager.
@@ -165,13 +162,11 @@ where
     RR: ResourceRegistry,
 {
     fn default() -> Self {
-        let mut events: EventQueue<WorldEvent> = EventQueue::default();
-        trace!("World<RR> subscribing to EventQueue<WorldEvent>");
-        let receiver = events.subscribe();
+        let mut resources = Resources::with_capacity(<Self as ResourcesTrait>::ResourceRegistry::LEN);
+        resources.initialize::<<Self as ResourcesTrait>::ResourceRegistry>();
 
-        let mut resources = Resources::with_capacity(<Self as ResourcesTrait<RR>>::ResourceRegistry::LEN);
-        resources.insert(Entities::default());
-        resources.insert(events);
+        debug!("World<RR> subscribing to EventQueue<WorldEvent>");
+        let receiver = resources.borrow_mut::<EventQueue<WorldEvent>>().subscribe();
 
         World {
             resources,
@@ -184,7 +179,7 @@ where
     }
 }
 
-impl<RR> ResourcesTrait<RR> for World<RR>
+impl<RR> ResourcesTrait for World<RR>
 where
     RR: ResourceRegistry,
 {

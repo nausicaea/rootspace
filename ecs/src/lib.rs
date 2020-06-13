@@ -11,6 +11,7 @@ pub mod events;
 mod entity;
 pub mod loop_stage;
 pub mod macros;
+pub mod maybe_default;
 pub mod registry;
 pub mod resource;
 pub mod resources;
@@ -25,6 +26,7 @@ pub use crate::{
     event_queue::{EventQueue, ReceiverId},
     events::EventTrait,
     loop_stage::LoopStage,
+    maybe_default::MaybeDefault,
     registry::{Element, End, ResourceRegistry},
     resource::Resource,
     resources::Resources,
