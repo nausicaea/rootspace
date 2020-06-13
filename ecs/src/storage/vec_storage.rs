@@ -148,7 +148,7 @@ impl<T> Drop for VecStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a VecStorage<T> {
-    type Item = <RIter<'a, VecStorage<T>> as Iterator>::Item;
+    type Item = &'a T;
     type IntoIter = RIter<'a, VecStorage<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -157,7 +157,7 @@ impl<'a, T> IntoIterator for &'a VecStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a mut VecStorage<T> {
-    type Item = <WIter<'a, VecStorage<T>> as Iterator>::Item;
+    type Item = &'a mut T;
     type IntoIter = WIter<'a, VecStorage<T>>;
 
     fn into_iter(self) -> Self::IntoIter {

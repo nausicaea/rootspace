@@ -93,7 +93,7 @@ where
 }
 
 impl<'a, T> IntoIterator for &'a ZstStorage<T> {
-    type Item = <RIter<'a, ZstStorage<T>> as Iterator>::Item;
+    type Item = &'a T;
     type IntoIter = RIter<'a, ZstStorage<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -102,7 +102,7 @@ impl<'a, T> IntoIterator for &'a ZstStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a mut ZstStorage<T> {
-    type Item = <WIter<'a, ZstStorage<T>> as Iterator>::Item;
+    type Item = &'a mut T;
     type IntoIter = WIter<'a, ZstStorage<T>>;
 
     fn into_iter(self) -> Self::IntoIter {

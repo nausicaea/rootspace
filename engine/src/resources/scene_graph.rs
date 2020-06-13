@@ -1,5 +1,5 @@
 use ecs::{Component, Entity, Resource, Storage};
-use hierarchy::{Hierarchy, RawNodes};
+use hierarchy::Hierarchy;
 use serde::{Deserialize, Serialize};
 use std::{fmt, ops::Mul};
 
@@ -27,12 +27,24 @@ where
         self.0.iter().filter(|&(k, _)| k == entity).map(|(_, v)| v).last()
     }
 
-    pub fn iter(&self) -> RawNodes<Entity, T> {
-        self.0.iter()
+    pub fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
+        self.into_iter()
     }
 }
 
 impl<T> Resource for SceneGraph<T> where T: Clone + Default + 'static {}
+
+impl<'a, T> IntoIterator for &'a SceneGraph<T>
+where
+    T: 'a + Clone + Default,
+{
+    type Item = <&'a Hierarchy<Entity, T> as IntoIterator>::Item;
+    type IntoIter = <&'a Hierarchy<Entity, T> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        (&self.0).into_iter()
+    }
+}
 
 impl<T> fmt::Debug for SceneGraph<T>
 where

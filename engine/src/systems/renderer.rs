@@ -136,9 +136,9 @@ where
         let statuses = res.borrow_components::<Status>();
         let renderables = res.borrow_components::<Renderable>();
 
-        for cam in cameras.iter() {
+        for cam in &*cameras {
             // Render the world scene.
-            for (entity, model) in world_graph.iter() {
+            for (entity, model) in &*world_graph {
                 if statuses.get(entity).map_or(false, |s| s.enabled()) {
                     if let Some(data) = renderables.get(entity) {
                         #[cfg(any(test, debug_assertions))]
@@ -153,7 +153,7 @@ where
             }
 
             // Render the ui scene.
-            for (entity, model) in ui_graph.iter() {
+            for (entity, model) in &*ui_graph {
                 if statuses.get(entity).map_or(false, |s| s.enabled()) {
                     if let Some(data) = renderables.get(entity) {
                         #[cfg(any(test, debug_assertions))]
