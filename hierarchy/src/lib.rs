@@ -179,7 +179,7 @@ where
     /// Returns an iterator over all pairs of identifier and data irrespective of hierarchical
     /// order.
     pub fn iter(&self) -> RawNodes<K, V> {
-        RawNodes::new(self)
+        self.into_iter()
     }
 
     /// Rebuilds the `Key`-`HierNode` index from the underlying `Graph`.
@@ -206,10 +206,22 @@ where
     }
 }
 
+impl<'a, K, V> IntoIterator for &'a Hierarchy<K, V>
+where
+    K: 'a + Eq + Hash,
+    V: 'a,
+{
+    type Item = <RawNodes<'a, K, V> as Iterator>::Item;
+    type IntoIter = RawNodes<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        RawNodes::new(self)
+    }
+}
+
 impl<K, V> Default for Hierarchy<K, V>
 where
-    K: Clone + Eq + Hash,
-    V: Clone,
+    K: Eq + Hash,
 {
     /// Creates a default `Hierarchy` with just a root node.
     fn default() -> Self {
@@ -368,10 +380,7 @@ where
 #[derive(Clone, PartialEq, Eq)]
 struct HierNode<K, V>(Option<(K, V)>);
 
-impl<K, V> HierNode<K, V>
-where
-    V: Clone,
-{
+impl<K, V> HierNode<K, V> {
     /// Creates a new `HierNode`.
     fn new(key: K, data: V) -> Self {
         HierNode(Some((key, data)))
@@ -420,8 +429,8 @@ where
 
 impl<'a, K, V> Iterator for RawNodes<'a, K, V>
 where
-    K: 'a + Clone + Eq + Hash,
-    V: 'a + Clone + Default,
+    K: 'a + Eq + Hash,
+    V: 'a,
 {
     type Item = (&'a K, &'a V);
 

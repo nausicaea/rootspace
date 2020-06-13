@@ -1,6 +1,6 @@
 [package]
 name = "hierarchy"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Eleanore Young"]
 description = "Provides a datastructure that allows to describe hierarchical relationships between identifiers and associated data."
 repository = "https://gitlab.com/nausicaea/hierarchy.git"
