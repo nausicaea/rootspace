@@ -18,7 +18,7 @@ where
 }
 
 macro_rules! impl_joined_iter {
-    ($name:ident, reads: &$tlt:lifetime $ty:ident) => {
+    ($name:ident, #reads: &$tlt:lifetime $ty:ident $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
@@ -81,7 +81,7 @@ macro_rules! impl_joined_iter {
         }
     };
 
-    ($name:ident, writes: &$tltm:lifetime mut $tym:ident) => {
+    ($name:ident, #writes: &$tltm:lifetime mut $tym:ident $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
@@ -146,15 +146,15 @@ macro_rules! impl_joined_iter {
         }
     };
 
-    ($name:ident, reads: $(&$tlt:lifetime $ty:ident),*) => {
-        impl_joined_iter!($name, reads: $(&$tlt $ty),*, writes: );
+    ($name:ident, #reads: $(&$tlt:lifetime $ty:ident),* $(,)?) => {
+        impl_joined_iter!($name, #reads: $(&$tlt $ty),*, #writes: );
     };
 
-    ($name:ident, writes: $(&$tltm:lifetime mut $tym:ident),*) => {
-        impl_joined_iter!($name, reads: , writes: $(&$tltm mut $tym),*);
+    ($name:ident, #writes: $(&$tltm:lifetime mut $tym:ident),* $(,)?) => {
+        impl_joined_iter!($name, #reads: , #writes: $(&$tltm mut $tym),*);
     };
 
-    ($name:ident, reads: $(&$tlt:lifetime $ty:ident),*, writes: $(&$tltm:lifetime mut $tym:ident),*) => {
+    ($name:ident, #reads: $(&$tlt:lifetime $ty:ident),*, #writes: $(&$tltm:lifetime mut $tym:ident),* $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
@@ -256,7 +256,7 @@ macro_rules! impl_joined_iter {
 }
 
 macro_rules! impl_joined_iter_ref {
-    ($name:ident, reads: &$tlt:lifetime $ty:ident) => {
+    ($name:ident, #reads: &$tlt:lifetime $ty:ident $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
@@ -304,7 +304,9 @@ macro_rules! impl_joined_iter_ref {
                 self.cursor += 1;
 
                 unsafe {
-                    Some(self.$ty.get_unchecked(idx))
+                    let $ty = self.$ty.get_unchecked(idx);
+
+                    Some(& *($ty as *const _))
                 }
             }
 
@@ -319,7 +321,7 @@ macro_rules! impl_joined_iter_ref {
         }
     };
 
-    ($name:ident, writes: &$tltm:lifetime mut $tym:ident) => {
+    ($name:ident, #writes: &$tltm:lifetime mut $tym:ident $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
@@ -384,15 +386,15 @@ macro_rules! impl_joined_iter_ref {
         }
     };
 
-    ($name:ident, reads: $(&$tlt:lifetime $ty:ident),*) => {
-        impl_joined_iter!($name, reads: $(&$tlt $ty),*, writes: );
+    ($name:ident, #reads: $(&$tlt:lifetime $ty:ident),* $(,)?) => {
+        impl_joined_iter_ref!($name, #reads: $(&$tlt $ty),*, #writes: );
     };
 
-    ($name:ident, writes: $(&$tltm:lifetime mut $tym:ident),*) => {
-        impl_joined_iter!($name, reads: , writes: $(&$tltm mut $tym),*);
+    ($name:ident, #writes: $(&$tltm:lifetime mut $tym:ident),* $(,)?) => {
+        impl_joined_iter_ref!($name, #reads: , #writes: $(&$tltm mut $tym),*);
     };
 
-    ($name:ident, reads: $(&$tlt:lifetime $ty:ident),*, writes: $(&$tltm:lifetime mut $tym:ident),*) => {
+    ($name:ident, #reads: $(&$tlt:lifetime $ty:ident),*, #writes: $(&$tltm:lifetime mut $tym:ident),* $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
@@ -477,7 +479,7 @@ macro_rules! impl_joined_iter_ref {
                         let $tym = self.$tym.get_unchecked_mut(idx);
                     )*
 
-                    Some(($($ty,)* $(&mut *($tym as *mut _),)*))
+                    Some(($(& *($ty as *const _),)* $(&mut *($tym as *mut _),)*))
                 }
             }
 
@@ -493,16 +495,24 @@ macro_rules! impl_joined_iter_ref {
     };
 }
 
-impl_joined_iter!(RIter, reads: &'a I);
-impl_joined_iter!(WIter, writes: &'a mut I);
-impl_joined_iter!(RRIter, reads: &'a I, &'b J);
-impl_joined_iter!(RWIter, reads: &'a I, writes: &'b mut J);
-impl_joined_iter!(WWIter, writes: &'a mut I, &'b mut J);
-// impl_joined_iter_ref!(RIterRef, reads: &'a I);
-// impl_joined_iter_ref!(WIterRef, writes: &'a mut I);
-// impl_joined_iter_ref!(RRIterRef, reads: &'a I, &'b J);
-// impl_joined_iter_ref!(RWIterRef, reads: &'a I, writes: &'b mut J);
-// impl_joined_iter_ref!(WWIterRef, writes: &'a mut I, &'b mut J);
+impl_joined_iter!(RIter, #reads: &'a A);
+impl_joined_iter!(WIter, #writes: &'a mut A);
+
+impl_joined_iter!(RRIter, #reads: &'a A, &'b B);
+impl_joined_iter!(RWIter, #reads: &'a A, #writes: &'b mut B);
+impl_joined_iter!(WWIter, #writes: &'a mut A, &'b mut B);
+
+impl_joined_iter_ref!(RIterRef, #reads: &'a A);
+impl_joined_iter_ref!(WIterRef, #writes: &'a mut A);
+
+impl_joined_iter_ref!(RRIterRef, #reads: &'a A, &'b B);
+impl_joined_iter_ref!(RWIterRef, #reads: &'a A, #writes: &'b mut B);
+impl_joined_iter_ref!(WWIterRef, #writes: &'a mut A, &'b mut B);
+
+impl_joined_iter_ref!(RRRIterRef, #reads: &'a A, &'b B, &'c C);
+impl_joined_iter_ref!(RRWIterRef, #reads: &'a A, &'b B, #writes: &'c mut C);
+impl_joined_iter_ref!(RWWIterRef, #reads: &'a A, #writes: &'b mut B, &'c mut C);
+impl_joined_iter_ref!(WWWIterRef, #writes: &'a mut A, &'b mut B, &'c mut C);
 
 #[cfg(test)]
 mod tests {

@@ -72,7 +72,7 @@ where
         // Add the systems
         let queue = self.orch.get_mut::<EventQueue<EngineEvent>>();
         let pc = PlayerCharacter::new(queue);
-        self.orch.add_system(LoopStage::Update, pc);
+        self.orch.add_system(LoopStage::FixedUpdate, pc);
 
         Ok(())
     }

@@ -1,4 +1,5 @@
 //! Provides the resource manager.
+#![allow(non_snake_case)]
 
 use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
 use log::debug;
@@ -14,6 +15,39 @@ use std::{
     fmt,
     marker::PhantomData,
 };
+
+macro_rules! impl_iter_ref {
+    ($name:ident, $iter:ident, #reads: $($type:ident),+ $(,)?) => {
+        impl_iter_ref!($name, $iter, #reads: $($type),+, #writes: );
+    };
+
+    ($name:ident, $iter:ident, #writes: $($typemut:ident),+ $(,)?) => {
+        impl_iter_ref!($name, $iter, #reads: , #writes: $($typemut),+);
+    };
+
+    ($name:ident, $iter:ident, #reads: $($type:ident),*, #writes: $($typemut:ident),* $(,)?) => {
+        /// Creates a joined iterator over the specified group of components. In other words, only
+        /// entities that have all the specified components will be iterated over.
+        pub fn $name<$($type,)* $($typemut,)*>(&self) -> $crate::storage::iterators::$iter<$($type::Storage,)* $($typemut::Storage,)*>
+        where
+            $(
+                $type: Component,
+            )*
+            $(
+                $typemut: Component,
+            )*
+        {
+            $(
+                let $type = self.borrow::<$type::Storage>();
+            )*
+            $(
+                let $typemut = self.borrow_mut::<$typemut::Storage>();
+            )*
+
+            $crate::storage::iterators::$iter::new($($type,)* $($typemut,)*)
+        }
+    };
+}
 
 /// A container that manages resources. Allows mutable borrows of multiple different resources at
 /// the same time.
@@ -136,14 +170,17 @@ impl Resources {
         self.borrow_mut::<C::Storage>()
     }
 
-    // pub fn iter_r<C>(&self) -> crate::storage::iterators::RIter<C::Storage>
-    // where
-    //     C: Component,
-    // {
-    //     let storage = self.borrow::<C::Storage>();
+    impl_iter_ref!(iter_r, RIterRef, #reads: C);
+    impl_iter_ref!(iter_w, WIterRef, #writes: C);
 
-    //     crate::storage::iterators::RIter::new(&storage)
-    // }
+    impl_iter_ref!(iter_rr, RRIterRef, #reads: C, D);
+    impl_iter_ref!(iter_rw, RWIterRef, #reads: C, #writes: D);
+    impl_iter_ref!(iter_ww, WWIterRef, #writes: C, D);
+
+    impl_iter_ref!(iter_rrr, RRRIterRef, #reads: C, D, E);
+    impl_iter_ref!(iter_rrw, RRWIterRef, #reads: C, D, #writes: E);
+    impl_iter_ref!(iter_rww, RWWIterRef, #reads: C, #writes: D, E);
+    impl_iter_ref!(iter_www, WWWIterRef, #writes: C, D, E);
 
     /// Serialize the types supplied in the registry from `Resources`.
     pub fn serialize<RR, S>(&self, serializer: S) -> Result<(), S::Error>
