@@ -99,6 +99,7 @@ fn main() -> Result<()> {
         0 => LevelFilter::Error,
         1 => LevelFilter::Warn,
         2 => LevelFilter::Info,
+        3 => LevelFilter::Debug,
         _ => LevelFilter::Trace,
     };
 

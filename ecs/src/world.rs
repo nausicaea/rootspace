@@ -17,7 +17,7 @@ use crate::{
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use serde_json;
 // use rmp_serde;
-use log::debug;
+use log::trace;
 use std::{
     cell::{Ref, RefMut},
     fs::File,
@@ -25,100 +25,6 @@ use std::{
     path::PathBuf,
     time::Duration,
 };
-
-/// Exposes resource management methods.
-pub trait ResourcesTrait {
-    type ResourceRegistry: ResourceRegistry;
-
-    /// Clears the state of the resource manager.
-    fn clear(&mut self);
-
-    /// Insert a new resource.
-    fn insert<R>(&mut self, res: R)
-    where
-        R: Resource;
-
-    /// Removes the resource of the specified type.
-    fn remove<R>(&mut self)
-    where
-        R: Resource;
-
-    /// Returns `true` if a resource of the specified type is present.
-    fn contains<R>(&self) -> bool
-    where
-        R: Resource;
-
-    /// Retrieves a mutable reference to a resource in the world
-    fn get_mut<R: Resource>(&mut self) -> &mut R;
-
-    /// Borrows the requested resource.
-    fn borrow<R: Resource>(&self) -> Ref<R>;
-
-    /// Mutably borrows the requested resource (with a runtime borrow check).
-    fn borrow_mut<R: Resource>(&self) -> RefMut<R>;
-
-    /// Create a new `Entity`.
-    fn create_entity(&mut self) -> Entity;
-
-    /// Add a component to the specified `Entity`.
-    fn insert_component<C>(&mut self, entity: Entity, component: C)
-    where
-        C: Component;
-
-    fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
-    where
-        S: Serializer;
-
-    fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
-    where
-        D: Deserializer<'de>;
-
-    fn deserialize_additive<'de, D>(&mut self, deserializer: D, method: ConflictResolution) -> Result<(), D::Error>
-    where
-        D: Deserializer<'de>;
-}
-
-/// A World must perform actions for four types of calls that each allow a subset of the registered
-/// systems to operate on the stored resources, components and entities.
-pub trait WorldTrait {
-    /// Add the specified system to the specified loop stage.
-    fn add_system<S>(&mut self, stage: LoopStage, system: S)
-    where
-        S: System;
-
-    /// Try to retrieve the specified system type.
-    fn find_system<S>(&self, stage: LoopStage) -> Option<&S>
-    where
-        S: System;
-    /// The fixed update method is supposed to be called from the main loop at fixed time
-    /// intervals.
-    ///
-    /// # Arguments
-    ///
-    /// * `time` - Interpreted as the current game time.
-    /// * `delta_time` - Interpreted as the time interval between calls to `fixed_update`.
-    fn fixed_update(&mut self, time: &Duration, delta_time: &Duration);
-    /// The dynamic update method is supposed to be called from the main loop just before the
-    /// render call.
-    ///
-    /// # Arguments
-    ///
-    /// * `time` - Interpreted as the current game time.
-    /// * `delta_time` - Interpreted as the time interval between calls to `update`.
-    fn update(&mut self, time: &Duration, delta_time: &Duration);
-    /// The render method is supposed to be called when a re-draw of the graphical representation
-    /// is desired.
-    ///
-    /// # Arguments
-    ///
-    /// * `time` - Interpreted as the current game time.
-    /// * `delta_time` - Interpreted as the time interval between calls to `render`.
-    fn render(&mut self, time: &Duration, delta_time: &Duration);
-    /// This method is supposed to be called when pending events or messages should be
-    /// handled by the world. If this method returns `true`, the execution of the
-    /// main loop shall continue, otherwise it shall abort.
-    fn maintain(&mut self) -> bool;
-}
 
 /// Events defined and processed by the world itself.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -147,7 +53,8 @@ type JoinedRegistry<RR> = RegAdd![
     RR
 ];
 
-/// This is the default implementation of the `WorldTrait` provided by this library.
+/// A World must perform actions for four types of calls that each allow a subset of the registered
+/// systems to operate on the stored resources, components and entities.
 pub struct World<RR> {
     resources: Resources,
     fixed_update_systems: Systems,
@@ -157,123 +64,104 @@ pub struct World<RR> {
     _rr: PhantomData<RR>,
 }
 
-impl<RR> Default for World<RR>
+impl<RR> World<RR>
 where
     RR: ResourceRegistry,
 {
-    fn default() -> Self {
-        let mut resources = Resources::with_capacity(<Self as ResourcesTrait>::ResourceRegistry::LEN);
-        resources.initialize::<<Self as ResourcesTrait>::ResourceRegistry>();
-
-        debug!("World<RR> subscribing to EventQueue<WorldEvent>");
-        let receiver = resources.borrow_mut::<EventQueue<WorldEvent>>().subscribe();
-
-        World {
-            resources,
-            fixed_update_systems: Systems::default(),
-            update_systems: Systems::default(),
-            render_systems: Systems::default(),
-            receiver,
-            _rr: PhantomData::default(),
-        }
-    }
-}
-
-impl<RR> ResourcesTrait for World<RR>
-where
-    RR: ResourceRegistry,
-{
-    type ResourceRegistry = JoinedRegistry<RR>;
-
-    fn clear(&mut self) {
+    /// Clears the state of the resource manager.
+    pub fn clear(&mut self) {
         self.resources.clear();
         self.fixed_update_systems.clear();
         self.update_systems.clear();
         self.render_systems.clear();
     }
 
-    fn insert<R>(&mut self, res: R)
+    /// Insert a new resource.
+    pub fn insert<R>(&mut self, res: R)
     where
         R: Resource,
     {
         self.resources.insert(res)
     }
 
-    fn remove<R>(&mut self)
+    /// Removes the resource of the specified type.
+    pub fn remove<R>(&mut self)
     where
         R: Resource,
     {
         self.resources.remove::<R>()
     }
 
-    fn contains<R>(&self) -> bool
+    /// Returns `true` if a resource of the specified type is present.
+    pub fn contains<R>(&self) -> bool
     where
         R: Resource,
     {
         self.resources.contains::<R>()
     }
 
-    fn get_mut<R>(&mut self) -> &mut R
+    /// Retrieves a mutable reference to a resource in the world
+    pub fn get_mut<R>(&mut self) -> &mut R
     where
         R: Resource,
     {
         self.resources.get_mut::<R>()
     }
 
-    fn borrow<R>(&self) -> Ref<R>
+    /// Borrows the requested resource.
+    pub fn borrow<R>(&self) -> Ref<R>
     where
         R: Resource,
     {
         self.resources.borrow::<R>()
     }
 
-    fn borrow_mut<R>(&self) -> RefMut<R>
+    /// Mutably borrows the requested resource (with a runtime borrow check).
+    pub fn borrow_mut<R>(&self) -> RefMut<R>
     where
         R: Resource,
     {
         self.resources.borrow_mut::<R>()
     }
 
-    fn create_entity(&mut self) -> Entity {
+    /// Create a new `Entity`.
+    pub fn create_entity(&mut self) -> Entity {
         self.resources.get_mut::<Entities>().create()
     }
 
-    fn insert_component<C>(&mut self, entity: Entity, component: C)
+    /// Add a component to the specified `Entity`.
+    pub fn insert_component<C>(&mut self, entity: Entity, component: C)
     where
         C: Component,
     {
         self.resources.get_mut::<C::Storage>().insert(entity, component);
     }
 
-    fn serialize<S>(&self, ser: S) -> Result<(), S::Error>
+    pub fn serialize<S>(&self, ser: S) -> Result<(), S::Error>
     where
         S: Serializer,
     {
-        self.resources.serialize::<Self::ResourceRegistry, S>(ser)
+        self.resources.serialize::<JoinedRegistry<RR>, S>(ser)
     }
 
-    fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
+    pub fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
     where
         D: Deserializer<'de>,
     {
-        self.resources = Resources::deserialize::<Self::ResourceRegistry, D>(deserializer)?;
+        self.resources = Resources::deserialize::<JoinedRegistry<RR>, D>(deserializer)?;
         Ok(())
     }
 
-    fn deserialize_additive<'de, D>(&mut self, deserializer: D, method: ConflictResolution) -> Result<(), D::Error>
+    pub fn deserialize_additive<'de, D>(&mut self, deserializer: D, method: ConflictResolution) -> Result<(), D::Error>
     where
         D: Deserializer<'de>,
     {
-        self.resources.deserialize_additive::<Self::ResourceRegistry, D>(deserializer, method)?;
+        self.resources.deserialize_additive::<JoinedRegistry<RR>, D>(deserializer, method)?;
         Ok(())
     }
-}
 
-impl<RR> WorldTrait for World<RR>
-where
-    RR: ResourceRegistry,
-{
-    fn add_system<S>(&mut self, stage: LoopStage, system: S)
+    /// Add the specified system to the specified loop stage.
+    pub fn add_system<S>(&mut self, stage: LoopStage, system: S)
     where
         S: System,
     {
@@ -284,7 +172,8 @@ where
         }
     }
 
-    fn find_system<S>(&self, stage: LoopStage) -> Option<&S>
+    /// Try to retrieve the specified system type.
+    pub fn find_system<S>(&self, stage: LoopStage) -> Option<&S>
     where
         S: System,
     {
@@ -295,25 +184,49 @@ where
         }
     }
 
-    fn fixed_update(&mut self, t: &Duration, dt: &Duration) {
+    /// The fixed update method is supposed to be called from the main loop at fixed time
+    /// intervals.
+    ///
+    /// # Arguments
+    ///
+    /// * `time` - Interpreted as the current game time.
+    /// * `delta_time` - Interpreted as the time interval between calls to `fixed_update`.
+    pub fn fixed_update(&mut self, t: &Duration, dt: &Duration) {
         for system in self.fixed_update_systems.iter_mut() {
             system.run(&self.resources, t, dt);
         }
     }
 
-    fn update(&mut self, t: &Duration, dt: &Duration) {
+    /// The dynamic update method is supposed to be called from the main loop just before the
+    /// render call.
+    ///
+    /// # Arguments
+    ///
+    /// * `time` - Interpreted as the current game time.
+    /// * `delta_time` - Interpreted as the time interval between calls to `update`.
+    pub fn update(&mut self, t: &Duration, dt: &Duration) {
         for system in self.update_systems.iter_mut() {
             system.run(&self.resources, t, dt);
         }
     }
 
-    fn render(&mut self, t: &Duration, dt: &Duration) {
+    /// The render method is supposed to be called when a re-draw of the graphical representation
+    /// is desired.
+    ///
+    /// # Arguments
+    ///
+    /// * `time` - Interpreted as the current game time.
+    /// * `delta_time` - Interpreted as the time interval between calls to `render`.
+    pub fn render(&mut self, t: &Duration, dt: &Duration) {
         for system in self.render_systems.iter_mut() {
             system.run(&self.resources, t, dt);
         }
     }
 
-    fn maintain(&mut self) -> bool {
+    /// This method is supposed to be called when pending events or messages should be
+    /// handled by the world. If this method returns `true`, the execution of the
+    /// main loop shall continue, otherwise it shall abort.
+    pub fn maintain(&mut self) -> bool {
         let events = self
             .resources
             .get_mut::<EventQueue<WorldEvent>>()
@@ -359,6 +272,28 @@ where
         }
 
         true
+    }
+}
+
+impl<RR> Default for World<RR>
+where
+    RR: ResourceRegistry,
+{
+    fn default() -> Self {
+        let mut resources = Resources::with_capacity(JoinedRegistry::<RR>::LEN);
+        resources.initialize::<JoinedRegistry<RR>>();
+
+        trace!("World<RR> subscribing to EventQueue<WorldEvent>");
+        let receiver = resources.borrow_mut::<EventQueue<WorldEvent>>().subscribe();
+
+        World {
+            resources,
+            fixed_update_systems: Systems::default(),
+            update_systems: Systems::default(),
+            render_systems: Systems::default(),
+            receiver,
+            _rr: PhantomData::default(),
+        }
     }
 }
 

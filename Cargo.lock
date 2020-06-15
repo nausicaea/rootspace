@@ -333,7 +333,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "engine"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "affine-transform 0.4.0",
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -841,7 +841,7 @@ version = "0.1.1"
 dependencies = [
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "ecs 0.7.0",
- "engine 0.1.1",
+ "engine 0.1.2",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.110 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1195,7 +1195,7 @@ dependencies = [
  "chrono 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "daggy 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ecs 0.7.0",
- "engine 0.1.1",
+ "engine 0.1.2",
  "glium 0.25.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1661,7 +1661,7 @@ dependencies = [
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ecs 0.7.0",
- "engine 0.1.1",
+ "engine 0.1.2",
  "fern 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "hierarchy 0.2.4",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",

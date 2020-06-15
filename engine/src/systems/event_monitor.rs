@@ -1,5 +1,5 @@
 use ecs::{EventQueue, ReceiverId, Resources, System};
-use log::{debug, trace};
+use log::trace;
 use std::{fmt, time::Duration};
 
 pub struct EventMonitor<E> {
@@ -29,7 +29,7 @@ where
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let events = res.borrow_mut::<EventQueue<E>>().receive(&self.receiver);
         for event in events {
-            debug!("Received {:?}", event);
+            trace!("Received {:?}", event);
         }
     }
 }

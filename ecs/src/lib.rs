@@ -33,5 +33,5 @@ pub use crate::{
     storage::{Storage, vec_storage::VecStorage, zst_storage::ZstStorage},
     system::System,
     systems::Systems,
-    world::{ResourcesTrait, World, WorldEvent, WorldTrait},
+    world::{World, WorldEvent},
 };

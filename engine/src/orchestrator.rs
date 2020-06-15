@@ -11,8 +11,8 @@ use crate::{
     },
 };
 use ecs::{
-    Component, Entity, EventQueue, LoopStage, ReceiverId, RegAdd, ResourceRegistry, Resource, ResourcesTrait,
-    System, World, WorldEvent, WorldTrait,
+    Component, Entity, EventQueue, LoopStage, ReceiverId, RegAdd, ResourceRegistry, Resource,
+    System, World, WorldEvent,
 };
 #[cfg(any(test, debug_assertions))]
 use log::debug;
