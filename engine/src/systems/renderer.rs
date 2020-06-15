@@ -20,7 +20,7 @@ pub struct Renderer<B> {
     clear_color: [f32; 4],
     receiver: ReceiverId<WorldEvent>,
     initialised: bool,
-    draw_calls: VecDeque<usize>,
+    draw_calls: VecDeque<(usize, usize)>,
     frame_times: VecDeque<Duration>,
     _b: PhantomData<B>,
 }
@@ -61,8 +61,13 @@ where
     }
 
     #[cfg(any(test, debug_assertions))]
-    pub fn average_draw_calls(&self) -> f32 {
-        self.draw_calls.iter().sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
+    pub fn average_world_draw_calls(&self) -> f32 {
+        self.draw_calls.iter().map(|(wdc, _)| wdc).sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
+    }
+
+    #[cfg(any(test, debug_assertions))]
+    pub fn average_ui_draw_calls(&self) -> f32 {
+        self.draw_calls.iter().map(|(_, udc)| udc).sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
     }
 
     #[cfg(any(test, debug_assertions))]
@@ -71,8 +76,8 @@ where
     }
 
     #[cfg(any(test, debug_assertions))]
-    fn update_draw_calls(&mut self, draw_calls: usize) {
-        self.draw_calls.push_front(draw_calls);
+    fn update_draw_calls(&mut self, world_draw_calls: usize, ui_draw_calls: usize) {
+        self.draw_calls.push_front((world_draw_calls, ui_draw_calls));
         if self.draw_calls.len() > DRAW_CALL_WINDOW {
             self.draw_calls.truncate(DRAW_CALL_WINDOW);
         }
@@ -100,7 +105,10 @@ where
         let start_mark = Instant::now();
 
         #[cfg(any(test, debug_assertions))]
-        let mut draw_calls: usize = 0;
+        let mut world_draw_calls: usize = 0;
+
+        #[cfg(any(test, debug_assertions))]
+        let mut ui_draw_calls: usize = 0;
 
         // The following is just a workaround for the DPI factor not being set properly by the
         // backend at initialisation.
@@ -138,41 +146,39 @@ where
 
         for cam in &*cameras {
             // Render the world scene.
-            for (entity, model) in &*world_graph {
-                if statuses.get(entity).map_or(false, |s| s.enabled()) {
-                    if let Some(data) = renderables.get(entity) {
-                        #[cfg(any(test, debug_assertions))]
-                        {
-                            draw_calls += 1;
-                        }
-                        target
-                            .render(&(cam.world_matrix() * model.matrix()), &factory, data)
-                            .expect("Unable to render the world");
+            world_graph.iter()
+                .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
+                .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
+                .for_each(|(model, renderable)| {
+                    #[cfg(any(test, debug_assertions))]
+                    {
+                        world_draw_calls += 1;
                     }
-                }
-            }
+                    target
+                        .render(&(cam.world_matrix() * model.matrix()), &factory, renderable)
+                        .expect("Unable to render the world");
+                });
 
             // Render the ui scene.
-            for (entity, model) in &*ui_graph {
-                if statuses.get(entity).map_or(false, |s| s.enabled()) {
-                    if let Some(data) = renderables.get(entity) {
-                        #[cfg(any(test, debug_assertions))]
-                        {
-                            draw_calls += 1;
-                        }
-                        target
-                            .render(&(cam.ui_matrix() * model.matrix()), &factory, data)
-                            .expect("Unable to render the UI");
+            ui_graph.iter()
+                .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
+                .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
+                .for_each(|(model, renderable)| {
+                    #[cfg(any(test, debug_assertions))]
+                    {
+                        ui_draw_calls += 1;
                     }
-                }
-            }
+                    target
+                        .render(&(cam.ui_matrix() * model.matrix()), &factory, renderable)
+                        .expect("Unable to render the UI");
+                });
         }
 
         // Finalize the frame and thus swap the display buffers.
         target.finalize().expect("Unable to finalize the frame");
 
         #[cfg(any(test, debug_assertions))]
-        self.update_draw_calls(draw_calls);
+        self.update_draw_calls(world_draw_calls, ui_draw_calls);
 
         #[cfg(any(test, debug_assertions))]
         self.update_frame_time(start_mark.elapsed());
