@@ -23,8 +23,12 @@ where
         self.0.insert(entity, Default::default())
     }
 
-    pub fn get(&self, entity: &Entity) -> Option<&T> {
-        self.0.iter().filter(|&(k, _)| k == entity).map(|(_, v)| v).last()
+    pub fn contains(&self, entity: &Entity) -> bool {
+        self.0.iter().any(|(k, _)| k == entity)
+    }
+
+    pub fn get(&self, entity: &Entity) -> &T {
+        self.0.iter().filter(|&(k, _)| k == entity).map(|(_, v)| v).last().expect("Could not find the entity")
     }
 
     pub fn iter(&self) -> <&Self as IntoIterator>::IntoIter {

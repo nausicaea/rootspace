@@ -25,11 +25,31 @@ impl Model {
         }
     }
 
+    pub fn look_at(eye: Point3<f32>, target: Point3<f32>, up: Vector3<f32>, scale: Vector3<f32>) -> Self {
+        let isometry = Isometry3::look_at_rh(&eye, &target, &up);
+        let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(
+            scale.x, 0.0, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 0.0, scale.z, 0.0, 0.0, 0.0, 0.0, 1.0,
+        ));
+
+        Model {
+            model: isometry * scale_matrix,
+            decomposed: AffineTransform::from_parts(isometry.translation, isometry.rotation, scale),
+        }
+    }
+
     pub fn identity() -> Self {
         Model {
             model: Affine3::identity(),
             decomposed: AffineTransform::identity(),
         }
+    }
+
+    pub fn transform_point(&self, point: &Point3<f32>) -> Point3<f32> {
+        self.model.transform_point(point)
+    }
+
+    pub fn inverse_transform_point(&self, point: &Point3<f32>) -> Point3<f32> {
+        self.model.inverse_transform_point(point)
     }
 
     pub fn set_position(&mut self, value: Point3<f32>) {

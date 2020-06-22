@@ -510,6 +510,64 @@ impl_joined_iter_ref!(RRWIterRef, #reads: &'a A, &'b B, #writes: &'c mut C);
 impl_joined_iter_ref!(RWWIterRef, #reads: &'a A, #writes: &'b mut B, &'c mut C);
 impl_joined_iter_ref!(WWWIterRef, #writes: &'a mut A, &'b mut B, &'c mut C);
 
+pub struct EnumRIter<'a, T> {
+    indices: Vec<crate::entity::index::Index>,
+    cursor: usize,
+    data: &'a T,
+}
+
+impl<'a, T> EnumRIter<'a, T>
+where
+    T: crate::storage::Storage,
+{
+    pub(crate) fn new(data: &'a T) -> Self {
+        EnumRIter {
+            indices: data.index().iter().cloned().collect(),
+            cursor: 0,
+            data,
+        }
+    }
+}
+
+impl<'a, T> ExactSizeIterator for EnumRIter<'a, T>
+where
+    T: crate::storage::Storage,
+{}
+
+impl<'a, T> std::iter::FusedIterator for EnumRIter<'a, T>
+where
+    T: crate::storage::Storage,
+{}
+
+impl<'a, T> Iterator for EnumRIter<'a, T>
+where
+    T: crate::storage::Storage,
+{
+    type Item = (crate::entity::index::Index, &'a T::Item);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.cursor >= self.indices.len() {
+            return None;
+        }
+
+        let idx = self.indices[self.cursor];
+        self.cursor += 1;
+
+        unsafe {
+            Some((idx, self.data.get_unchecked(idx)))
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining_len = self.indices
+            .len()
+            .checked_sub(self.cursor)
+            .unwrap_or(0);
+
+        (remaining_len, Some(remaining_len))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

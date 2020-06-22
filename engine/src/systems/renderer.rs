@@ -4,7 +4,7 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     resources::{BackendResource, SceneGraph},
 };
-use ecs::{EventQueue, ReceiverId, Resources, Storage, System, WorldEvent};
+use ecs::{EventQueue, ReceiverId, Resources, Storage, System, WorldEvent, Entities};
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 use log::trace;
@@ -134,17 +134,29 @@ where
         // Obtain a reference to the camera.
         let cameras = res.borrow_components::<Camera>();
 
-        // Create a new frame.
-        let mut target = res.borrow::<BackendResource<B>>().create_frame();
-        target.initialize(self.clear_color, 1.0);
-
+        // Grab the necessary resources
+        let entities = res.borrow::<Entities>();
         let world_graph = res.borrow::<SceneGraph<Model>>();
         let ui_graph = res.borrow::<SceneGraph<UiModel>>();
         let factory = res.borrow::<BackendResource<B>>();
         let statuses = res.borrow_components::<Status>();
         let renderables = res.borrow_components::<Renderable>();
 
-        for cam in &*cameras {
+        // Create a new frame.
+        let mut target = factory.create_frame();
+        target.initialize(self.clear_color, 1.0);
+
+        for (cam_idx, cam) in cameras.iter_enum() {
+            // Skip any inactive cameras
+            if statuses.get(cam_idx).map_or(true, |s| !s.enabled()) {
+                continue;
+            }
+
+            // Obtain the model component of the camera
+            let cam_entity = entities.get(cam_idx);
+            let cam_model = world_graph.get(&cam_entity);
+            let cam_matrix = cam.world_matrix() * cam_model.matrix();
+
             // Render the world scene.
             world_graph.iter()
                 .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
@@ -155,7 +167,7 @@ where
                         world_draw_calls += 1;
                     }
                     target
-                        .render(&(cam.world_matrix() * model.matrix()), &factory, renderable)
+                        .render(&(cam_matrix * model.matrix()), &factory, renderable)
                         .expect("Unable to render the world");
                 });
 

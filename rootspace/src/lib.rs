@@ -9,7 +9,7 @@ use engine::{
     resources::{BackendResource, SceneGraph},
 };
 use anyhow::Result;
-use nalgebra::{Vector2, Vector3};
+use nalgebra::{Vector2, Vector3, Point3};
 use std::{f32, path::Path, time::Duration};
 
 type ResourceRegistry = Reg![
@@ -38,10 +38,14 @@ where
 
     pub fn load(&mut self) -> Result<()> {
         let camera = self.orch.create_entity();
+        self.orch.get_mut::<SceneGraph<Model>>().insert(camera);
         self.orch.insert_component(camera, Status::default());
         self.orch.insert_component(camera, Camera::default());
         self.orch
             .insert_component(camera, Info::new("Camera", "The main camera"));
+        self.orch.insert_component(camera, Model::look_at(Point3::new(0.0, 0.0, 1.0),
+            Point3::new(0.0, 0.0, -1.0),
+            Vector3::y(), Vector3::new(1.0, 1.0, 1.0)));
 
         let ea = self.orch.create_entity();
         self.orch.get_mut::<SceneGraph<Model>>().insert(ea);

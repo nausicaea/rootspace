@@ -51,16 +51,39 @@ impl Entities {
         self.generations.iter().filter(|g| g.is_active()).count()
     }
 
+    // Given an index, retrieve the currently used entity
+    pub fn get<I: Into<Index>>(&self, index: I) -> Entity {
+        let idx = index.into();
+        let idx_usize: usize = idx.into();
+        Entity::new(idx, self.generations[idx_usize])
+    }
+
+    pub fn try_get<I: Into<Index>>(&self, index: I) -> Option<Entity> {
+        let idx = index.into();
+        let idx_usize: usize = idx.into();
+        self.generations.get(idx_usize)
+            .map(|gen| Entity::new(idx, *gen))
+    }
+
     /// Create an iterator over all active entities.
     pub fn iter(&self) -> EntitiesIter {
+        self.into_iter()
+    }
+}
+
+impl Resource for Entities {}
+
+impl<'a> IntoIterator for &'a Entities {
+    type Item = Entity;
+    type IntoIter = EntitiesIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
         EntitiesIter {
             idx: 0,
             gens: &self.generations,
         }
     }
 }
-
-impl Resource for Entities {}
 
 /// An iterator over all active entities.
 pub struct EntitiesIter<'a> {

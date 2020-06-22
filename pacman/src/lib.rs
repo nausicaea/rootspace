@@ -42,16 +42,17 @@ where
     pub fn load(&mut self) -> Result<()> {
         // Create the camera
         let camera = self.orch.create_entity();
+        self.orch.get_mut::<SceneGraph<Model>>().insert(camera);
         self.orch.insert_component(camera, Status::default());
         self.orch
             .insert_component(camera, Info::new("Camera", "The main camera"));
         self.orch.insert_component(camera, Camera::new(Projection::Orthographic, (800, 600),
             std::f32::consts::PI / 4.0,
             (0.1, 1000.0),
-            Point3::new(0.0, 0.0, 1.0),
-            Point3::new(0.0, 0.0, -1.0),
-            Vector3::y(),
             1.0));
+        self.orch.insert_component(camera, Model::look_at(Point3::new(0.0, 0.0, 1.0),
+            Point3::new(0.0, 0.0, -1.0),
+            Vector3::y(), Vector3::new(1.0, 1.0, 1.0)));
 
         // Create the player character
         let pacman = self.orch.create_entity();

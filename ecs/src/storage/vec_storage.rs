@@ -1,5 +1,5 @@
 use super::Storage;
-use super::iterators::{RIter, WIter};
+use super::iterators::{RIter, WIter, EnumRIter};
 use crate::{entity::index::Index, resource::Resource};
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
@@ -23,6 +23,10 @@ impl<T> VecStorage<T> {
 
     pub fn iter_mut(&mut self) -> WIter<Self> {
         self.into_iter()
+    }
+
+    pub fn iter_enum(&self) -> EnumRIter<Self> {
+        EnumRIter::new(self)
     }
 
     fn insert_internal(&mut self, idx: Index, datum: T) -> Option<T> {

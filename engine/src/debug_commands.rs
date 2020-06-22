@@ -151,12 +151,6 @@ impl CommandTrait for CameraCommand {
                     .setting(AppSettings::DisableVersion)
                     .setting(AppSettings::ArgRequiredElseHelp)
                     .arg(
-                        Arg::with_name("position")
-                            .short("p")
-                            .long("position")
-                            .help("Displays the position of the camera"),
-                    )
-                    .arg(
                         Arg::with_name("dimensions")
                             .short("d")
                             .long("dimensions")
@@ -170,11 +164,6 @@ impl CommandTrait for CameraCommand {
 
             for (i, cam) in cameras.iter().enumerate() {
                 println!("Camera {}:", i);
-
-                if info_matches.is_present("position") {
-                    let pos = cam.position();
-                    println!("Position: [{}, {}, {}]", pos.x, pos.y, pos.z);
-                }
 
                 if info_matches.is_present("dimensions") {
                     let dims = cam.dimensions();
@@ -199,6 +188,7 @@ impl EntityCommand {
     fn list_entity(
         &self,
         args: &ArgMatches,
+        entities: &Entities,
         cameras: &<Camera as Component>::Storage,
         infos: &<Info as Component>::Storage,
         statuses: &<Status as Component>::Storage,
@@ -234,11 +224,11 @@ impl EntityCommand {
         }
 
         if args.is_present("positions") {
-            if let Some(m) = world_graph.get(entity) {
-                let pos = m.position();
+            if world_graph.contains(entity) {
+                let pos = world_graph.get(entity).position();
                 output.push_str(&format!(" world-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
-            } else if let Some(m) = ui_graph.get(entity) {
-                let pos = m.position();
+            } else if ui_graph.contains(entity) {
+                let pos = ui_graph.get(entity).position();
                 output.push_str(&format!(" ui-pos=[{}, {}]", pos.x, pos.y));
             } else {
                 output.push_str(" (no position)");
@@ -246,20 +236,25 @@ impl EntityCommand {
         }
 
         if args.is_present("ndc-positions") {
-            for (i, camera) in cameras.iter().enumerate() {
-                if let Some(m) = world_graph.get(entity) {
-                    let pos = camera.world_point_to_ndc(&m.position());
-                    output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", i, pos.x, pos.y, pos.z));
-                } else if let Some(m) = ui_graph.get(entity) {
+            for (cam_idx, camera) in cameras.iter_enum() {
+                let cam_entity = entities.get(cam_idx);
+                let cam_model = world_graph.get(&cam_entity);
+
+                if world_graph.contains(entity) {
+                    let m = world_graph.get(entity);
+                    let pos = camera.world_point_to_ndc(cam_model, &m.position());
+                    output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", cam_idx, pos.x, pos.y, pos.z));
+                } else if ui_graph.contains(entity) {
+                    let m = ui_graph.get(entity);
                     let pos = camera.ui_point_to_ndc(&m.position(), m.depth());
-                    output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", i, pos.x, pos.y, pos.z));
+                    output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", cam_idx, pos.x, pos.y, pos.z));
                 } else {
                     output.push_str(" (no ndc position)");
                 }
             }
         }
 
-        println!("{}{}", entity, output);
+        println!("{}{}", entity.idx(), output);
     }
 }
 
@@ -356,7 +351,7 @@ impl CommandTrait for EntityCommand {
             .get_matches_from_safe(args)?;
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
-            let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
+            let entities = res.borrow::<Entities>();
             let cameras = res.borrow_components::<Camera>();
             let infos = res.borrow_components::<Info>();
             let statuses = res.borrow_components::<Status>();
@@ -369,28 +364,32 @@ impl CommandTrait for EntityCommand {
 
             if let Some(index) = matches.value_of("index") {
                 let index: usize = index.parse()?;
+
                 let entity = entities
-                    .get(index)
+                    .try_get(index)
                     .ok_or(Error::EntityNotFound(index))?;
+
                 self.list_entity(
                     list_matches,
+                    &entities,
                     &cameras,
                     &infos,
                     &statuses,
                     &world_graph,
                     &ui_graph,
-                    entity,
+                    &entity,
                 );
             } else {
-                for entity in &entities {
+                for entity in &*entities {
                     self.list_entity(
                         list_matches,
+                        &entities,
                         &cameras,
                         &infos,
                         &statuses,
                         &world_graph,
                         &ui_graph,
-                        entity,
+                        &entity,
                     );
                 }
             }
