@@ -59,7 +59,7 @@ where
         self.orch.get_mut::<SceneGraph<Model>>().insert(pacman);
         self.orch.insert_component(pacman, Status::default());
         self.orch.insert_component(pacman, Info::new("Pacman", "The player character"));
-        self.orch.insert_component(pacman, Model::new(Vector3::new(0.0, 0.0, -10.0), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0)));
+        self.orch.insert_component(pacman, Model::new(Vector3::new(0.0, 0.0, -1.0), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0)));
         let factory = self.orch.get_mut::<BackendResource<B>>();
         let renderable = Renderable::builder()
             .with_mesh("meshes/quad.ply")
