@@ -11,14 +11,16 @@ use std::{collections::HashMap, time::Duration};
 pub struct DebugShell {
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
     receiver: ReceiverId<EngineEvent>,
+    terminator: String,
 }
 
 impl DebugShell {
-    pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
+    pub fn new(queue: &mut EventQueue<EngineEvent>, terminator: Option<char>) -> Self {
         trace!("DebugShell subscribing to EventQueue<EngineEvent>");
         let mut sys = DebugShell {
             commands: HashMap::new(),
             receiver: queue.subscribe(),
+            terminator: terminator.map_or(String::from(";"), |t| t.to_string()),
         };
 
         sys.add_command(ExitCommand);
@@ -33,20 +35,25 @@ impl DebugShell {
         self.commands.insert(command.name(), Box::new(command));
     }
 
-    fn interpret(&self, res: &Resources, args: &[String]) -> Result<()> {
-        if !args.is_empty() {
-            let command_name = args[0].as_str();
+    fn interpret(&self, res: &Resources, tokens: &[String]) -> Result<()> {
+        // Iterate over all commands
+        for token_group in tokens.split(|t| t == &self.terminator) {
+
+            // Determine the current command name
+            let command_name = token_group[0].as_str();
+
+            // Find and execute the appropriate matching command
             if command_name == "help" {
-                self.command_help()
+                self.command_help()?;
             } else {
                 self.commands
                     .get(command_name)
                     .ok_or(DebugShellError::CommandNotFound(command_name.to_string()).into())
-                    .and_then(|c| c.run(res, args))
+                    .and_then(|c| c.run(res, token_group))?;
             }
-        } else {
-            Ok(())
         }
+
+        Ok(())
     }
 
     fn command_help(&self) -> Result<()> {
@@ -72,7 +79,7 @@ impl System for DebugShell {
         let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
         for event in events {
             match event {
-                EngineEvent::Command(ref args) => self.interpret(res, args).unwrap_or_else(|e| eprintln!("{}", e)),
+                EngineEvent::Command(ref tokens) => self.interpret(res, tokens).unwrap_or_else(|e| eprintln!("{}", e)),
                 _ => (),
             }
         }

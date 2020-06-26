@@ -33,9 +33,10 @@ where
         resource_path: P,
         delta_time: Duration,
         max_frame_time: Duration,
+        command: Option<&str>,
     ) -> Result<Self> {
         Ok(Pacman {
-            orch: Orchestrator::new(resource_path, delta_time, max_frame_time)?,
+            orch: Orchestrator::new(resource_path, delta_time, max_frame_time, command)?,
         })
     }
 
@@ -46,7 +47,7 @@ where
         self.orch.insert_component(camera, Status::default());
         self.orch
             .insert_component(camera, Info::new("Camera", "The main camera"));
-        self.orch.insert_component(camera, Camera::new(Projection::Orthographic, (800, 600),
+        self.orch.insert_component(camera, Camera::new(Projection::Perspective, (800, 600),
             std::f32::consts::PI / 4.0,
             (0.1, 1000.0),
             1.0));

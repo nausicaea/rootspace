@@ -2,13 +2,14 @@
 #![cfg_attr(test, allow(unused_mut))]
 #![cfg_attr(test, allow(dead_code))]
 
-use crate::{event::EngineEvent, text_manipulation::split_arguments};
+use crate::{event::EngineEvent, text_manipulation::tokenize};
 use ecs::{EventQueue, Resources, System};
 use thiserror::Error;
 use log::{error, warn};
 #[cfg(not(test))]
 use std::thread::spawn;
 use std::{
+    collections::HashSet,
     io::{self, Read},
     string,
     sync::mpsc::{self, channel, Receiver},
@@ -18,11 +19,12 @@ use std::{
 pub struct DebugConsole {
     escape_char: char,
     quote_char: char,
+    separator_chars: HashSet<char>,
     worker_rx: Receiver<Result<String, DebugConsoleError>>,
 }
 
 impl DebugConsole {
-    pub fn new<S>(mut input_stream: S, escape_char: Option<char>, quote_char: Option<char>) -> Self
+    pub fn new<S>(mut input_stream: S, escape_char: Option<char>, quote_char: Option<char>, separator_chars: &[char]) -> Self
     where
         S: Read + Send + 'static,
     {
@@ -58,6 +60,7 @@ impl DebugConsole {
         DebugConsole {
             escape_char: escape_char.unwrap_or('\\'),
             quote_char: quote_char.unwrap_or('"'),
+            separator_chars: separator_chars.iter().cloned().collect(),
             worker_rx: rx,
         }
     }
@@ -75,7 +78,7 @@ impl DebugConsole {
 
 impl Default for DebugConsole {
     fn default() -> Self {
-        DebugConsole::new(io::stdin(), Some('\\'), Some('"'))
+        DebugConsole::new(io::stdin(), Some('\\'), Some('"'), &[';'])
     }
 }
 
@@ -86,10 +89,10 @@ impl System for DebugConsole {
 
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
         self.try_read_line()
-            .map(|l| split_arguments(l, self.escape_char, self.quote_char))
-            .map(|a| {
+            .map(|l| tokenize(l, self.escape_char, self.quote_char, &self.separator_chars))
+            .map(|t| {
                 res.borrow_mut::<EventQueue<EngineEvent>>()
-                    .send(EngineEvent::Command(a))
+                    .send(EngineEvent::Command(t))
             });
     }
 }

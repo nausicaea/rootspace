@@ -98,12 +98,6 @@ impl Component for Model {
     type Storage = VecStorage<Self>;
 }
 
-// impl DepthOrderingTrait for Model {
-//     fn depth_index(&self) -> i32 {
-//         (self.decomposed.translation.vector.z / f32::EPSILON).round() as i32
-//     }
-// }
-
 impl Mul<Model> for Model {
     type Output = Model;
 
@@ -150,6 +144,12 @@ mod tests {
     }
 
     #[test]
+    fn default() {
+        let _: Model = Default::default();
+        assert_eq!(Model::default(), Model::identity());
+    }
+
+    #[test]
     fn identity() {
         let ident = Model::identity();
         let ident_mat: &Matrix4<f32> = ident.matrix();
@@ -189,37 +189,6 @@ mod tests {
         ident.set_scale(Vector3::new(0.9, 0.4, 1.0));
         assert_eq!(ident.scale(), &Vector3::new(0.9, 0.4, 1.0));
     }
-
-    #[test]
-    fn default() {
-        assert_eq!(Model::default(), Model::identity());
-    }
-
-    // #[test]
-    // fn depth_ordering() {
-    //     let a = Model::new(
-    //         Vector3::new(-1.0, 0.0, -10.35),
-    //         Vector3::new(0.0, 0.0, 0.0),
-    //         Vector3::new(1.0, 1.0, 1.0),
-    //     );
-    //     let b = Model::new(
-    //         Vector3::new(-1.0, 0.0, 0.0),
-    //         Vector3::new(0.0, 0.0, 0.0),
-    //         Vector3::new(1.0, 1.0, 1.0),
-    //     );
-    //     let c = Model::new(
-    //         Vector3::new(-1.0, 0.0, 12.35),
-    //         Vector3::new(0.0, 0.0, 0.0),
-    //         Vector3::new(1.0, 1.0, 1.0),
-    //     );
-
-    //     let a_idx = a.depth_index();
-    //     let b_idx = b.depth_index();
-    //     let c_idx = c.depth_index();
-
-    //     assert!(a_idx < b_idx);
-    //     assert!(b_idx < c_idx);
-    // }
 
     #[test]
     fn multiply() {

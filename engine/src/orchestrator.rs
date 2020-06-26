@@ -2,13 +2,14 @@ use anyhow::{Context, Result};
 use crate::{
     components::{Camera, Info, Status, Renderable, Model, UiModel},
     event::EngineEvent,
-    file_manipulation::{FileError, VerifyPath},
+    file_manipulation::VerifyPath,
     graphics::BackendTrait,
     resources::{BackendResource, BackendSettings, SceneGraph},
     systems::{
         CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor, ForceShutdown,
         Renderer,
     },
+    text_manipulation::tokenize,
 };
 use ecs::{
     Component, Entity, EventQueue, LoopStage, ReceiverId, RegAdd, ResourceRegistry, Resource,
@@ -21,7 +22,7 @@ use serde::{de::Deserializer, ser::Serializer};
 use std::{
     cmp,
     marker::PhantomData,
-    path::{Path, PathBuf},
+    path::Path,
     time::{Duration, Instant},
 };
 
@@ -41,7 +42,6 @@ pub type JoinedRegistry<RR> = RegAdd![
 
 pub struct Orchestrator<B, RR> {
     pub world: World<JoinedRegistry<RR>>,
-    resource_path: PathBuf,
     delta_time: Duration,
     max_frame_time: Duration,
     world_receiver: ReceiverId<WorldEvent>,
@@ -57,6 +57,7 @@ where
         resource_path: P,
         delta_time: Duration,
         max_frame_time: Duration,
+        command: Option<&str>,
     ) -> Result<Self> {
         resource_path.ensure_extant_directory()?;
 
@@ -74,33 +75,38 @@ where
 
         // Insert basic systems
         world.add_system(LoopStage::Update, ForceShutdown::default());
-        world.add_system(LoopStage::Update, DebugConsole::default());
+        world.add_system(LoopStage::Update, DebugConsole::new(std::io::stdin(), Some('\\'), Some('"'), &[';']));
         world.add_system(LoopStage::Update, EventInterface::<B>::default());
-        let queue = world.get_mut::<EventQueue<WorldEvent>>();
-        let event_monitor = EventMonitor::<WorldEvent>::new(queue);
+
+        let event_monitor = EventMonitor::<WorldEvent>::new(world.get_mut::<EventQueue<WorldEvent>>());
         world.add_system(LoopStage::Update, event_monitor);
-        let queue = world.get_mut::<EventQueue<WorldEvent>>();
-        let renderer = Renderer::<B>::new([0.69, 0.93, 0.93, 1.0], queue);
+
+        let renderer = Renderer::<B>::new([0.69, 0.93, 0.93, 1.0], world.get_mut::<EventQueue<WorldEvent>>());
         world.add_system(LoopStage::Render, renderer);
-        let queue = world.get_mut::<EventQueue<EngineEvent>>();
-        let event_monitor = EventMonitor::<EngineEvent>::new(queue);
+
+        let event_monitor = EventMonitor::<EngineEvent>::new(world.get_mut::<EventQueue<EngineEvent>>());
         world.add_system(LoopStage::Update, event_monitor);
-        let queue = world.get_mut::<EventQueue<EngineEvent>>();
-        let camera_manager = CameraManager::new(queue);
+
+        let camera_manager = CameraManager::new(world.get_mut::<EventQueue<EngineEvent>>());
         world.add_system(LoopStage::Update, camera_manager);
-        let queue = world.get_mut::<EventQueue<EngineEvent>>();
-        let debug_shell = DebugShell::new(queue);
+
+        let debug_shell = DebugShell::new(world.get_mut::<EventQueue<EngineEvent>>(), Some(';'));
         world.add_system(LoopStage::Update, debug_shell);
-        let queue = world.get_mut::<EventQueue<EngineEvent>>();
-        let event_coordinator = EventCoordinator::new(queue);
+
+        let event_coordinator = EventCoordinator::new(world.get_mut::<EventQueue<EngineEvent>>());
         world.add_system(LoopStage::Update, event_coordinator);
 
         trace!("Orchestrator<B, RR> subscribing to EventQueue<WorldEvent>");
         let world_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe();
 
+        // Send the requested debug command
+        if let Some(cmd) = command {
+            world.get_mut::<EventQueue<EngineEvent>>()
+                .send(EngineEvent::Command(tokenize(cmd, '\\', '"', &[';'])));
+        }
+
         Ok(Orchestrator {
             world,
-            resource_path: resource_path.as_ref().to_path_buf(),
             delta_time,
             max_frame_time,
             world_receiver,
@@ -216,11 +222,5 @@ where
         S: System,
     {
         self.world.add_system::<S>(stage, system)
-    }
-
-    pub fn file(&self, folder: &str, file: &str) -> Result<PathBuf, FileError> {
-        let path = self.resource_path.join(folder).join(file);
-        path.ensure_extant_file()?;
-        Ok(path)
     }
 }
