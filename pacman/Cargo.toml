@@ -5,8 +5,11 @@ authors = ["Eleanore Young"]
 edition = "2018"
 
 [dependencies]
+clap = { version = "^2.0.0", default-features = false }
+fern = "^0.5.5"
 log = "^0.4.1"
 anyhow = "^1.0.0"
+thiserror = "^1.0.0"
 nalgebra = { version = "^0.18.0", features = ["serde-serialize"] }
 serde = { version = "^1.0.0", features = ["derive"] }
 ecs = {path = "../ecs"}
