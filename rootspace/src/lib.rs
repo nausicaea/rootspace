@@ -10,7 +10,7 @@ use engine::{
 };
 use anyhow::Result;
 use nalgebra::{Vector2, Vector3, Point3};
-use std::{f32, path::Path, time::Duration};
+use std::{f32, path::Path};
 
 type ResourceRegistry = Reg![
 ];
@@ -124,7 +124,7 @@ where
         Ok(())
     }
 
-    pub fn run(&mut self, iterations: Option<usize>) {
-        self.orch.run(iterations)
+    pub fn run(&mut self) {
+        self.orch.run()
     }
 }

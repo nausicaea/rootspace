@@ -112,7 +112,7 @@ where
         })
     }
 
-    pub fn run(&mut self, iterations: Option<usize>) {
+    pub fn run(&mut self) {
         // Send the startup event
         self.world
             .get_mut::<EventQueue<EngineEvent>>()
@@ -125,9 +125,7 @@ where
         let mut fixed_game_time = Duration::default();
 
         // Run the main game loop
-        let mut i = 0;
-        let mut running = true;
-        while running && iterations.map(|max_iter| i < max_iter).unwrap_or(true) {
+        loop {
             // Assess the duration of the last frame
             let frame_time = cmp::min(loop_time.elapsed(), self.max_frame_time);
             loop_time = Instant::now();
@@ -146,10 +144,9 @@ where
             self.world.render(&dynamic_game_time, &frame_time);
 
             // Perform maintenance tasks (both Orchestrator and World listen for events themselves)
-            running = self.maintain();
-
-            // Increment the iteration counter
-            i += 1;
+            if !self.maintain() {
+                break;
+            }
         }
     }
 
@@ -165,12 +162,14 @@ where
                 debug!("Reloading the backend");
                 #[cfg(any(test, debug_assertions))]
                 let reload_mark = Instant::now();
+
                 let backend = self
                     .world
                     .borrow_mut::<BackendSettings>()
                     .build::<B>()
                     .expect("Unable to reload the backend");
                 self.world.insert(backend);
+
                 #[cfg(any(test, debug_assertions))]
                 debug!("Completed reloading the backend after {:?}", reload_mark.elapsed());
             }

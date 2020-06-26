@@ -11,7 +11,6 @@ use engine::{
 };
 use crate::player_character::{PlayerCharacter, PlayerCharacterMarker};
 use std::path::Path;
-use std::time::Duration;
 use nalgebra::{Vector3, Point3};
 
 type ResourceRegistry = Reg![
@@ -78,7 +77,7 @@ where
         Ok(())
     }
 
-    pub fn run(&mut self, iterations: Option<usize>) {
-        self.orch.run(iterations)
+    pub fn run(&mut self) {
+        self.orch.run()
     }
 }

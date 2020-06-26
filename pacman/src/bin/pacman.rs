@@ -2,7 +2,7 @@ use clap::{App, Arg};
 use fern::Dispatch;
 use pacman::Pacman;
 use log::{error, LevelFilter};
-use std::{env, io, path::PathBuf, time::Duration};
+use std::{env, io, path::PathBuf};
 use anyhow::{Result, Context};
 use thiserror::Error;
 use engine::{HeadlessBackend, GliumBackend};
@@ -31,13 +31,6 @@ fn main() -> Result<()> {
                 .help("Increases the output of the program"),
         )
         .arg(
-            Arg::with_name("iterations")
-                .short("i")
-                .long("iterations")
-                .takes_value(true)
-                .help("Specifies the number of iterations to run"),
-        )
-        .arg(
             Arg::with_name("command")
                 .short("c")
                 .long("command")
@@ -48,10 +41,6 @@ fn main() -> Result<()> {
 
     let headless = matches.is_present("headless");
     let verbosity = matches.occurrences_of("verbosity");
-    let iterations = matches
-        .value_of("iterations")
-        .map(|i: &str| i.parse::<usize>())
-        .transpose()?;
     let command = matches.value_of("command");
 
     let log_level = match verbosity {
@@ -82,14 +71,14 @@ fn main() -> Result<()> {
 
         g.load().context("Cannot load the game")?;
 
-        g.run(iterations);
+        g.run();
     } else {
         let mut g: Pacman<GliumBackend> = Pacman::new(resource_dir, command)
             .context("Cannot initialise the game")?;
 
         g.load().context("Cannot load the game")?;
 
-        g.run(iterations);
+        g.run();
     }
 
     Ok(())
