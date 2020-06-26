@@ -6,18 +6,18 @@ edition = "2018"
 
 [dependencies]
 clap = { version = "^2.0.0", default-features = false }
-fern = "^0.5.5"
+fern = "^0.6.0"
 log = "^0.4.1"
 bitflags = "^1.0.0"
 anyhow = "^1.0.0"
-daggy = "^0.6.0"
+daggy = "^0.7.0"
 chrono = "^0.4.0"
 glium = "^0.25.0"
-nalgebra = "^0.18.0"
+nalgebra = "^0.21.0"
 thiserror = "^1.0.0"
 serde = { version = "^1.0.0", features = ["derive"] }
 ecs = {path = "../ecs"}
 engine = {path = "../engine"}
 
 [dev-dependencies]
-proptest = "^0.9.0"
+proptest = "^0.10.0"
