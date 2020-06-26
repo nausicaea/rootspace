@@ -55,8 +55,6 @@ where
 {
     pub fn new<P: AsRef<Path>>(
         resource_path: P,
-        delta_time: Duration,
-        max_frame_time: Duration,
         command: Option<&str>,
     ) -> Result<Self> {
         resource_path.ensure_extant_directory()?;
@@ -107,8 +105,8 @@ where
 
         Ok(Orchestrator {
             world,
-            delta_time,
-            max_frame_time,
+            delta_time: Duration::from_millis(50),
+            max_frame_time: Duration::from_millis(250),
             world_receiver,
             _b: PhantomData::default(),
         })

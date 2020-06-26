@@ -28,12 +28,10 @@ where
 {
     pub fn new<P: AsRef<Path>>(
         resource_path: P,
-        delta_time: Duration,
-        max_frame_time: Duration,
         command: Option<&str>,
     ) -> Result<Self> {
         Ok(Rootspace {
-            orch: Orchestrator::new(resource_path, delta_time, max_frame_time, command)?,
+            orch: Orchestrator::new(resource_path, command)?,
         })
     }
 

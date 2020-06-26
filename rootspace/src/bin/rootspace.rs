@@ -77,14 +77,14 @@ fn main() -> Result<()> {
     };
 
     if headless {
-        let mut g: Rootspace<HeadlessBackend> = Rootspace::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250), command)
+        let mut g: Rootspace<HeadlessBackend> = Rootspace::new(resource_dir, command)
             .context("Cannot initialise the game")?;
 
         g.load().context("Cannot load the game")?;
 
         g.run(iterations);
     } else {
-        let mut g: Rootspace<GliumBackend> = Rootspace::new(resource_dir, Duration::from_millis(50), Duration::from_millis(250), command)
+        let mut g: Rootspace<GliumBackend> = Rootspace::new(resource_dir, command)
             .context("Cannot initialise the game")?;
 
         g.load().context("Cannot load the game")?;
