@@ -150,34 +150,6 @@ where
         }
     }
 
-    fn maintain(&mut self) -> bool {
-        let running = self.world.maintain();
-
-        let recv = &self.world_receiver;
-        let events = self.world.get_mut::<EventQueue<WorldEvent>>().receive(recv);
-        if events.into_iter().any(|e| e == WorldEvent::DeserializationComplete) {
-            // Reload the backend
-            if !self.world.contains::<BackendResource<B>>() {
-                #[cfg(any(test, debug_assertions))]
-                debug!("Reloading the backend");
-                #[cfg(any(test, debug_assertions))]
-                let reload_mark = Instant::now();
-
-                let backend = self
-                    .world
-                    .borrow_mut::<BackendSettings>()
-                    .build::<B>()
-                    .expect("Unable to reload the backend");
-                self.world.insert(backend);
-
-                #[cfg(any(test, debug_assertions))]
-                debug!("Completed reloading the backend after {:?}", reload_mark.elapsed());
-            }
-        }
-
-        running
-    }
-
     pub fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
     where
         S: Serializer,
@@ -219,5 +191,33 @@ where
         S: System,
     {
         self.world.add_system::<S>(stage, system)
+    }
+
+    fn maintain(&mut self) -> bool {
+        let running = self.world.maintain();
+
+        let recv = &self.world_receiver;
+        let events = self.world.get_mut::<EventQueue<WorldEvent>>().receive(recv);
+        if events.into_iter().any(|e| e == WorldEvent::DeserializationComplete) {
+            // Reload the backend
+            if !self.world.contains::<BackendResource<B>>() {
+                #[cfg(any(test, debug_assertions))]
+                debug!("Reloading the backend");
+                #[cfg(any(test, debug_assertions))]
+                let reload_mark = Instant::now();
+
+                let backend = self
+                    .world
+                    .borrow_mut::<BackendSettings>()
+                    .build::<B>()
+                    .expect("Unable to reload the backend");
+                self.world.insert(backend);
+
+                #[cfg(any(test, debug_assertions))]
+                debug!("Completed reloading the backend after {:?}", reload_mark.elapsed());
+            }
+        }
+
+        running
     }
 }

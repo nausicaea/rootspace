@@ -48,16 +48,22 @@ where
             std::f32::consts::PI / 4.0,
             (0.1, 1000.0),
             1.0));
-        self.orch.insert_component(camera, Model::look_at(Point3::new(0.0, 0.0, 1.0),
+        self.orch.insert_component(camera, Model::look_at(
+            Point3::new(0.0, 0.0, 1.0),
             Point3::new(0.0, 0.0, -1.0),
-            Vector3::y(), Vector3::new(1.0, 1.0, 1.0)));
+            Vector3::y(), Vector3::new(1.0, 1.0, 1.0),
+        ));
 
         // Create the player character
         let pacman = self.orch.create_entity();
         self.orch.get_mut::<SceneGraph<Model>>().insert(pacman);
         self.orch.insert_component(pacman, Status::default());
         self.orch.insert_component(pacman, Info::new("Pacman", "The player character"));
-        self.orch.insert_component(pacman, Model::new(Vector3::new(0.0, 0.0, -1.0), Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0)));
+        self.orch.insert_component(pacman, Model::new(
+            Vector3::new(0.0, 0.0, -1.0),
+            Vector3::new(0.0, 0.0, 0.0),
+            Vector3::new(1.0, 1.0, 1.0)
+        ));
         let factory = self.orch.get_mut::<BackendResource<B>>();
         let renderable = Renderable::builder()
             .with_mesh("meshes/quad.ply")

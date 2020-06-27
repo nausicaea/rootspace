@@ -16,7 +16,6 @@ use crate::{
 };
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use serde_json;
-// use rmp_serde;
 use log::trace;
 use std::{
     cell::{Ref, RefMut},
@@ -240,7 +239,6 @@ where
                 WorldEvent::Serialize(p) => {
                     let mut file = File::create(&p).expect(&format!("Could not create the file {}: ", p.display()));
                     let mut s = serde_json::Serializer::pretty(&mut file);
-                    // let mut s = rmp_serde::Serializer::new(&mut file);
                     self.serialize(&mut s)
                         .expect(&format!("Could not serialize to the file {}: ", p.display()));
                     self.resources
@@ -250,7 +248,6 @@ where
                 WorldEvent::Deserialize(p) => {
                     let mut file = File::open(&p).expect(&format!("Could not open the file {}: ", p.display()));
                     let mut d = serde_json::Deserializer::from_reader(&mut file);
-                    // let mut d = rmp_serde::Deserializer::new(&mut file);
                     self.deserialize(&mut d)
                         .expect(&format!("Could not deserialize from the file {}: ", p.display()));
                     self.resources
@@ -260,7 +257,6 @@ where
                 WorldEvent::DeserializeAdditive(p, m) => {
                     let mut file = File::open(&p).expect(&format!("Could not open the file {}: ", p.display()));
                     let mut d = serde_json::Deserializer::from_reader(&mut file);
-                    // let mut d = rmp_serde::Deserializer::new(&mut file);
                     self.deserialize_additive(&mut d, m)
                         .expect(&format!("Could not deserialize additively from the file {}: ", p.display()));
                     self.resources
