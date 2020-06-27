@@ -131,6 +131,27 @@ impl CommandTrait for StateCommand {
 #[derive(Debug, Clone, Copy)]
 pub struct CameraCommand;
 
+impl CameraCommand {
+    fn list_camera(&self, args: &ArgMatches, cam: &Camera, entity: &Entity) {
+        let mut output = String::new();
+
+        if args.is_present("dimensions") {
+            output.push(':');
+        }
+
+        if args.is_present("dimensions") {
+            let dims = cam.dimensions();
+            let pdims = cam.physical_dimensions();
+            let dpi = cam.dpi_factor();
+            output.push_str(&format!(" dimensions={}x{} physical={}x{} DPI-factor={}", dims.0, dims.1, pdims.0, pdims.1, dpi));
+        } else {
+            output.push_str(" (no dimensions)");
+        }
+
+        println!("{}{}", entity.idx(), output);
+    }
+}
+
 impl CommandTrait for CameraCommand {
     fn name(&self) -> &'static str {
         "camera"
@@ -145,6 +166,13 @@ impl CommandTrait for CameraCommand {
             .about("Provides access to the camera")
             .setting(AppSettings::DisableVersion)
             .setting(AppSettings::SubcommandRequiredElseHelp)
+            .arg(
+                Arg::with_name("index")
+                    .short("i")
+                    .long("index")
+                    .takes_value(true)
+                    .help("Specify the index of the desired camera"),
+            )
             .subcommand(
                 SubCommand::with_name("info")
                     .about("Prints camera settings")
@@ -160,18 +188,33 @@ impl CommandTrait for CameraCommand {
             .get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
+            let entities = res.borrow::<Entities>();
             let cameras = res.borrow_components::<Camera>();
 
-            for (i, cam) in cameras.iter().enumerate() {
-                println!("Camera {}:", i);
+            if info_matches.is_present("count") {
+                println!("Loaded cameras: {}", cameras.len());
+            }
 
-                if info_matches.is_present("dimensions") {
-                    let dims = cam.dimensions();
-                    let pdims = cam.physical_dimensions();
-                    let dpi = cam.dpi_factor();
-                    println!(
-                        "Dimensions: {}x{} (physical={}x{}, DPI-factor={})",
-                        dims.0, dims.1, pdims.0, pdims.1, dpi
+            if let Some(index) = matches.value_of("index") {
+                let index: usize = index.parse()?;
+
+                let entity = entities
+                    .try_get(index)
+                    .ok_or(Error::EntityNotFound(index))?;
+                let cam = cameras.get(index)
+                    .ok_or(Error::EntityNotFound(index))?;
+
+                self.list_camera(
+                    info_matches,
+                    &cam,
+                    &entity,
+                );
+            } else {
+                for (idx, cam) in cameras.iter_enum() {
+                    self.list_camera(
+                        info_matches,
+                        &cam,
+                        &entities.get(idx),
                     );
                 }
             }
@@ -198,7 +241,7 @@ impl EntityCommand {
     ) {
         let mut output = String::new();
 
-        if args.is_present("names") || args.is_present("statuses") || args.is_present("positions") {
+        if args.is_present("names") || args.is_present("statuses") || args.is_present("positions") || args.is_present("ndc-positions") {
             output.push(':');
         }
 
@@ -396,13 +439,13 @@ impl CommandTrait for EntityCommand {
         }
 
         if let Some(status_matches) = matches.subcommand_matches("status") {
-            let entities = res.borrow::<Entities>().iter().collect::<Vec<_>>();
+            let entities = res.borrow::<Entities>();
             let mut statuses = res.borrow_components_mut::<Status>();
 
             if let Some(index) = matches.value_of("index") {
                 let index: usize = index.parse()?;
                 let entity = entities
-                    .get(index)
+                    .try_get(index)
                     .ok_or(Error::EntityNotFound(index))?;
 
                 if status_matches.is_present("enable") {
