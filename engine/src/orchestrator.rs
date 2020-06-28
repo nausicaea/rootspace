@@ -18,7 +18,6 @@ use ecs::{
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 use log::trace;
-use serde::{de::Deserializer, ser::Serializer};
 use std::{
     cmp,
     marker::PhantomData,
@@ -148,20 +147,6 @@ where
                 break;
             }
         }
-    }
-
-    pub fn serialize<S>(&self, serializer: S) -> Result<(), S::Error>
-    where
-        S: Serializer,
-    {
-        self.world.serialize::<S>(serializer)
-    }
-
-    pub fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        self.world.deserialize::<D>(deserializer)
     }
 
     pub fn insert<R>(&mut self, res: R)

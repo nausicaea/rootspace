@@ -14,14 +14,14 @@ use crate::{
     systems::Systems,
     RegAdd,
 };
-use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use serde_json;
 use log::trace;
 use std::{
     cell::{Ref, RefMut},
     fs::File,
     marker::PhantomData,
-    path::PathBuf,
+    path::{Path, PathBuf},
     time::Duration,
 };
 
@@ -60,6 +60,7 @@ pub struct World<RR> {
     update_systems: Systems,
     render_systems: Systems,
     receiver: ReceiverId<WorldEvent>,
+    loaded_states: Vec<PathBuf>,
     _rr: PhantomData<RR>,
 }
 
@@ -67,14 +68,6 @@ impl<RR> World<RR>
 where
     RR: ResourceRegistry,
 {
-    /// Clears the state of the resource manager.
-    pub fn clear(&mut self) {
-        self.resources.clear();
-        self.fixed_update_systems.clear();
-        self.update_systems.clear();
-        self.render_systems.clear();
-    }
-
     /// Insert a new resource.
     pub fn insert<R>(&mut self, res: R)
     where
@@ -134,29 +127,6 @@ where
         C: Component,
     {
         self.resources.get_mut::<C::Storage>().insert(entity, component);
-    }
-
-    pub fn serialize<S>(&self, ser: S) -> Result<(), S::Error>
-    where
-        S: Serializer,
-    {
-        self.resources.serialize::<JoinedRegistry<RR>, S>(ser)
-    }
-
-    pub fn deserialize<'de, D>(&mut self, deserializer: D) -> Result<(), D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        self.resources = Resources::deserialize::<JoinedRegistry<RR>, D>(deserializer)?;
-        Ok(())
-    }
-
-    pub fn deserialize_additive<'de, D>(&mut self, deserializer: D, method: ConflictResolution) -> Result<(), D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        self.resources.deserialize_additive::<JoinedRegistry<RR>, D>(deserializer, method)?;
-        Ok(())
     }
 
     /// Add the specified system to the specified loop stage.
@@ -236,38 +206,57 @@ where
                 WorldEvent::Abort => {
                     return false;
                 },
-                WorldEvent::Serialize(p) => {
-                    let mut file = File::create(&p).expect(&format!("Could not create the file {}: ", p.display()));
-                    let mut s = serde_json::Serializer::pretty(&mut file);
-                    self.serialize(&mut s)
-                        .expect(&format!("Could not serialize to the file {}: ", p.display()));
-                    self.resources
-                        .get_mut::<EventQueue<WorldEvent>>()
-                        .send(WorldEvent::SerializationComplete);
-                },
-                WorldEvent::Deserialize(p) => {
-                    let mut file = File::open(&p).expect(&format!("Could not open the file {}: ", p.display()));
-                    let mut d = serde_json::Deserializer::from_reader(&mut file);
-                    self.deserialize(&mut d)
-                        .expect(&format!("Could not deserialize from the file {}: ", p.display()));
-                    self.resources
-                        .get_mut::<EventQueue<WorldEvent>>()
-                        .send(WorldEvent::DeserializationComplete);
-                },
-                WorldEvent::DeserializeAdditive(p, m) => {
-                    let mut file = File::open(&p).expect(&format!("Could not open the file {}: ", p.display()));
-                    let mut d = serde_json::Deserializer::from_reader(&mut file);
-                    self.deserialize_additive(&mut d, m)
-                        .expect(&format!("Could not deserialize additively from the file {}: ", p.display()));
-                    self.resources
-                        .get_mut::<EventQueue<WorldEvent>>()
-                        .send(WorldEvent::DeserializationComplete);
-                },
+                WorldEvent::Serialize(p) => self.on_serialize(&p),
+                WorldEvent::Deserialize(p) => self.on_deserialize(p),
+                WorldEvent::DeserializeAdditive(p, m) => self.on_deserialize_additive(p, m),
                 _ => (),
             }
         }
 
         true
+    }
+
+    fn on_serialize(&mut self, path: &Path) {
+        let mut file = File::create(path).expect(&format!("Could not create the file {}: ", path.display()));
+        let mut s = serde_json::Serializer::pretty(&mut file);
+
+        self.resources
+            .serialize::<JoinedRegistry<RR>, _>(&mut s)
+            .expect(&format!("Could not serialize to the file {}: ", path.display()));
+
+        self.resources
+            .get_mut::<EventQueue<WorldEvent>>()
+            .send(WorldEvent::SerializationComplete);
+    }
+
+    fn on_deserialize(&mut self, path: PathBuf) {
+        let mut file = File::open(&path).expect(&format!("Could not open the file {}: ", path.display()));
+        let mut d = serde_json::Deserializer::from_reader(&mut file);
+
+        self.resources = Resources::deserialize::<JoinedRegistry<RR>, _>(&mut d)
+            .expect(&format!("Could not deserialize from the file {}: ", path.display()));
+
+        self.loaded_states.clear();
+        self.loaded_states.push(path);
+
+        self.resources
+            .get_mut::<EventQueue<WorldEvent>>()
+            .send(WorldEvent::DeserializationComplete);
+    }
+
+    fn on_deserialize_additive(&mut self, path: PathBuf, mode: ConflictResolution) {
+        let mut file = File::open(&path).expect(&format!("Could not open the file {}: ", path.display()));
+        let mut d = serde_json::Deserializer::from_reader(&mut file);
+
+        self.resources
+            .deserialize_additive::<JoinedRegistry<RR>, _>(&mut d, mode)
+            .expect(&format!("Could not deserialize additively from the file {}: ", path.display()));
+
+        self.loaded_states.push(path);
+
+        self.resources
+            .get_mut::<EventQueue<WorldEvent>>()
+            .send(WorldEvent::DeserializationComplete);
     }
 }
 
@@ -280,7 +269,7 @@ where
         resources.initialize::<JoinedRegistry<RR>>();
 
         trace!("World<RR> subscribing to EventQueue<WorldEvent>");
-        let receiver = resources.borrow_mut::<EventQueue<WorldEvent>>().subscribe();
+        let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe();
 
         World {
             resources,
@@ -288,6 +277,7 @@ where
             update_systems: Systems::default(),
             render_systems: Systems::default(),
             receiver,
+            loaded_states: Vec::default(),
             _rr: PhantomData::default(),
         }
     }
