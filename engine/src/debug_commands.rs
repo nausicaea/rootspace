@@ -235,6 +235,8 @@ impl EntityCommand {
         cameras: &<Camera as Component>::Storage,
         infos: &<Info as Component>::Storage,
         statuses: &<Status as Component>::Storage,
+        models: &<Model as Component>::Storage,
+        ui_models: &<UiModel as Component>::Storage,
         world_graph: &SceneGraph<Model>,
         ui_graph: &SceneGraph<UiModel>,
         entity: &Entity,
@@ -268,11 +270,13 @@ impl EntityCommand {
 
         if args.is_present("positions") {
             if world_graph.contains(entity) {
+                let loc = models.get(entity).expect(&format!("Cannot find the entity {} in the Model components", entity)).position();
                 let pos = world_graph.get(entity).position();
-                output.push_str(&format!(" world-pos=[{}, {}, {}]", pos.x, pos.y, pos.z));
+                output.push_str(&format!(" local-pos=[{}, {}, {}] world-pos=[{}, {}, {}]", loc.x, loc.y, loc.z, pos.x, pos.y, pos.z));
             } else if ui_graph.contains(entity) {
+                let loc = ui_models.get(entity).expect(&format!("Cannot find the entity {} in the UiModel components", entity)).position();
                 let pos = ui_graph.get(entity).position();
-                output.push_str(&format!(" ui-pos=[{}, {}]", pos.x, pos.y));
+                output.push_str(&format!(" local-pos=[{}, {}] ui-pos=[{}, {}]", loc.x, loc.y, pos.x, pos.y));
             } else {
                 output.push_str(" (no position)");
             }
@@ -282,6 +286,10 @@ impl EntityCommand {
             for (cam_idx, camera) in cameras.iter_enum() {
                 let cam_entity = entities.get(cam_idx);
                 let cam_model = world_graph.get(&cam_entity);
+
+                if entity == &cam_entity {
+                    continue;
+                }
 
                 if world_graph.contains(entity) {
                     let m = world_graph.get(entity);
@@ -398,6 +406,8 @@ impl CommandTrait for EntityCommand {
             let cameras = res.borrow_components::<Camera>();
             let infos = res.borrow_components::<Info>();
             let statuses = res.borrow_components::<Status>();
+            let models = res.borrow_components::<Model>();
+            let ui_models = res.borrow_components::<UiModel>();
             let world_graph = res.borrow::<SceneGraph<Model>>();
             let ui_graph = res.borrow::<SceneGraph<UiModel>>();
 
@@ -418,6 +428,8 @@ impl CommandTrait for EntityCommand {
                     &cameras,
                     &infos,
                     &statuses,
+                    &models,
+                    &ui_models,
                     &world_graph,
                     &ui_graph,
                     &entity,
@@ -430,6 +442,8 @@ impl CommandTrait for EntityCommand {
                         &cameras,
                         &infos,
                         &statuses,
+                        &models,
+                        &ui_models,
                         &world_graph,
                         &ui_graph,
                         &entity,

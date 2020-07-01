@@ -129,6 +129,13 @@ where
         self.resources.get_mut::<C::Storage>().insert(entity, component);
     }
 
+    pub fn borrow_components<C>(&self) -> Ref<C::Storage>
+    where
+        C: Component,
+    {
+        self.resources.borrow_components::<C>()
+    }
+
     /// Add the specified system to the specified loop stage.
     pub fn add_system<S>(&mut self, stage: LoopStage, system: S)
     where

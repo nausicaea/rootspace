@@ -3,7 +3,7 @@ mod player_character;
 use anyhow::Result;
 use ecs::{EventQueue, Reg, LoopStage, Component};
 use engine::{
-    components::{Camera, Info, Status, camera::Projection, Model, Renderable, renderable::RenderableType},
+    components::{Camera, Info, Status, Projection, Model, Renderable, RenderableType},
     resources::{SceneGraph, BackendResource},
     orchestrator::Orchestrator,
     graphics::BackendTrait,
@@ -11,7 +11,7 @@ use engine::{
 };
 use crate::player_character::{PlayerCharacter, PlayerCharacterMarker};
 use std::path::Path;
-use nalgebra::{Vector3, Point3};
+use nalgebra::Vector3;
 
 type ResourceRegistry = Reg![
     <PlayerCharacterMarker as Component>::Storage,
@@ -44,15 +44,14 @@ where
         self.orch.insert_component(camera, Status::default());
         self.orch
             .insert_component(camera, Info::new("Camera", "The main camera"));
-        self.orch.insert_component(camera, Camera::new(Projection::Perspective, (800, 600),
+        self.orch.insert_component(camera, Camera::new(
+            Projection::Orthographic,
+            (800, 600),
             std::f32::consts::PI / 4.0,
             (0.1, 1000.0),
-            1.0));
-        self.orch.insert_component(camera, Model::look_at(
-            Point3::new(0.0, 0.0, 1.0),
-            Point3::new(0.0, 0.0, -1.0),
-            Vector3::y(), Vector3::new(1.0, 1.0, 1.0),
+            1.0,
         ));
+        self.orch.insert_component(camera, Model::identity());
 
         // Create the player character
         let pacman = self.orch.create_entity();

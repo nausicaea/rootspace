@@ -3,7 +3,7 @@
 
 use ecs::Reg;
 use engine::{
-    components::{Camera, Info, Model, Renderable, Status, UiModel, renderable::RenderableType},
+    components::{Camera, Info, Status, Model, UiModel, Renderable, RenderableType},
     graphics::BackendTrait,
     orchestrator::Orchestrator,
     resources::{BackendResource, SceneGraph},

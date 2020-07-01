@@ -56,17 +56,15 @@ where
         resource_path: P,
         command: Option<&str>,
     ) -> Result<Self> {
-        resource_path.ensure_extant_directory()?;
+        // Create the world
+        let mut world = World::default();
 
         // Create the backend
+        resource_path.ensure_extant_directory()?;
         let backend = BackendSettings::new("Title", (800, 600), true, 4, resource_path.as_ref())
             .build::<B>()
             .context("Failed to initialise the backend")?;
 
-        // Create the world
-        let mut world = World::default();
-
-        // Insert basic resources
         world.insert(backend.settings().clone());
         world.insert(backend);
 
@@ -112,10 +110,9 @@ where
     }
 
     pub fn run(&mut self) {
-        // Send the startup event
-        self.world
-            .get_mut::<EventQueue<EngineEvent>>()
-            .send(EngineEvent::Startup);
+        // Update the scene graphs for the first time
+        self.world.borrow_mut::<SceneGraph<Model>>().update(&self.world.borrow_components::<Model>());
+        self.world.borrow_mut::<SceneGraph<UiModel>>().update(&self.world.borrow_components::<UiModel>());
 
         // Initialize the timers
         let mut loop_time = Instant::now();

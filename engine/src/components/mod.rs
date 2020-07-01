@@ -5,4 +5,11 @@ pub mod renderable;
 pub mod status;
 pub mod ui_model;
 
-pub use self::{camera::Camera, info::Info, model::Model, renderable::Renderable, status::Status, ui_model::UiModel};
+pub use self::{
+    camera::{Projection, Camera},
+    info::Info,
+    model::Model,
+    renderable::{RenderableType, Renderable},
+    status::Status,
+    ui_model::UiModel,
+};

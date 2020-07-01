@@ -99,6 +99,7 @@ where
 
     /// Receive all unread events from the queue.
     pub fn receive(&mut self, id: &ReceiverId<E>) -> Vec<E> {
+        // Obtain all unread events for the current receiver
         let events = &self.events;
         let evs: Vec<E> = self
             .receivers
@@ -112,6 +113,7 @@ where
             })
             .unwrap_or_default();
 
+        // Delete all events that have been read by all receivers
         let max_unread = self
             .receivers
             .values()
@@ -120,6 +122,8 @@ where
             .unwrap_or_default();
         self.events.truncate(max_unread);
 
+        // If the event queue is empty, or all events have been read by all receivers, reset the
+        // counters for each receiver
         if self.events.is_empty() {
             self.receivers.values_mut().for_each(|s| s.reset());
         }
@@ -151,17 +155,6 @@ impl<E> Default for EventQueue<E> {
     }
 }
 
-// impl<E> fmt::Debug for EventQueue<E> {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         write!(
-//             f,
-//             "EventQueue {{ #events: {}, #receivers: {} }}",
-//             self.events.len(),
-//             self.receivers.len()
-//         )
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -185,6 +178,7 @@ mod tests {
     #[test]
     fn subscribe() {
         let mut q: EventQueue<MockEvent> = EventQueue::default();
+        assert_eq!(q.subscribers(), 0);
         let s: ReceiverId<MockEvent> = q.subscribe();
         assert_eq!(q.subscribers(), 1);
         q.unsubscribe(s);
@@ -194,7 +188,6 @@ mod tests {
     #[test]
     fn send_one_receiver() {
         let mut q: EventQueue<MockEvent> = EventQueue::default();
-        assert_eq!(q.subscribers(), 0);
 
         let s = q.subscribe();
 
