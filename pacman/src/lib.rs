@@ -47,7 +47,7 @@ where
         self.orch.insert_component(camera, Camera::new(
             Projection::Orthographic,
             (800, 600),
-            std::f32::consts::PI / 4.0,
+            std::f32::consts::PI / 2.0,
             (0.1, 1000.0),
             1.0,
         ));

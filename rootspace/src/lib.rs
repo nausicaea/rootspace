@@ -42,11 +42,7 @@ where
         self.orch.insert_component(camera, Camera::default());
         self.orch
             .insert_component(camera, Info::new("Camera", "The main camera"));
-        self.orch.insert_component(camera, Model::look_at(
-            Point3::new(0.0, 0.0, 1.0),
-            Point3::new(0.0, 0.0, -1.0),
-            Vector3::y(), Vector3::new(1.0, 1.0, 1.0)
-        ));
+        self.orch.insert_component(camera, Model::identity());
 
         let ea = self.orch.create_entity();
         self.orch.get_mut::<SceneGraph<Model>>().insert(ea);
