@@ -1,5 +1,4 @@
-// mod assets;
-// mod resources;
+mod assets;
 
 use ecs::Reg;
 use engine::{
@@ -9,11 +8,10 @@ use engine::{
     resources::{BackendResource, SceneGraph},
 };
 use anyhow::Result;
-use nalgebra::{Vector2, Vector3, Point3};
+use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path};
 
-type ResourceRegistry = Reg![
-];
+type ResourceRegistry = Reg![];
 
 pub struct Rootspace<B>
 where

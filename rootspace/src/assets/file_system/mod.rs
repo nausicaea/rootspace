@@ -4,11 +4,13 @@ mod node;
 mod user_id;
 
 use self::{group_id::GroupId, mode::Mode, node::Node, user_id::UserId};
+use bitflags::bitflags;
 use daggy::{Dag, NodeIndex, Walker};
 use std::collections::HashMap;
 use thiserror::Error;
 use std::ffi::OsStr;
 use std::path::{Path, Component};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -22,6 +24,30 @@ pub enum Error {
     NotADirectory,
 }
 
+bitflags!{
+    pub struct AccessMode: u8 {
+        const READ_OK = 0x2;
+        const WRITE_OK = 0x4;
+        const EXECUTE_OK = 0x8;
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ProcessData {
+    uid: UserId,
+    gids: Vec<GroupId>,
+}
+
+impl ProcessData {
+    fn new(uid: UserId, gids: &[GroupId]) -> Self {
+        ProcessData {
+            uid,
+            gids: gids.iter().copied().collect(),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
 pub struct FileSystem {
     graph: Dag<Node, ()>,
     root_idx: NodeIndex,
@@ -46,29 +72,60 @@ impl FileSystem {
         self.data.len()
     }
 
-    pub fn stat(&self, path: &Path, uid: &UserId, gids: &[GroupId]) -> Result<&Node, Error> {
+    pub fn access(&self, path: &Path, how: AccessMode, process_data: &ProcessData) -> Result<(), Error> {
+        self.for_node(path, process_data, |_, node| {
+            let fail_access = (how.intersects(AccessMode::READ_OK) && !node.may_read(process_data))
+                || (how.intersects(AccessMode::WRITE_OK) && !node.may_write(process_data))
+                || (how.intersects(AccessMode::EXECUTE_OK) && !node.may_execute(process_data));
+
+            if fail_access {
+                Err(Error::NoPermission)
+            } else {
+                Ok(())
+            }
+        })
+    }
+
+    pub fn stat(&self, path: &Path, process_data: &ProcessData) -> Result<&Node, Error> {
+        self.for_node(path, process_data, |_, node| Ok(node))
+    }
+
+    pub fn read(&self, path: &Path, process_data: &ProcessData) -> Result<&[u8], Error> {
+        self.for_node(path, process_data, |idx, _| Ok(self.data[&idx]))
+    }
+
+    fn for_node<'a, T, F>(&'a self, path: &Path, process_data: &ProcessData, op: F) -> Result<T, Error>
+    where
+        F: Fn(NodeIndex, &'a Node) -> Result<T, Error>,
+    {
         let components: Vec<_> = path.components().collect();
         let num_segments = components.len();
+
         let mut parent_node = self.root_idx;
+
         for (i, component) in components.iter().enumerate() {
             if let Component::Normal(node_name) = component {
-                let child_node = self.find_child(parent_node, node_name, uid, gids)?;
+                let child_node = self.find_child(parent_node, node_name, process_data)?;
 
                 if i == num_segments - 1 {
-                    return self.graph.node_weight(child_node).ok_or(Error::NodeNotFound);
+                    let node = self.graph.node_weight(child_node).ok_or(Error::NodeNotFound)?;
+
+                    return op(child_node, node);
                 }
 
                 parent_node = child_node;
+            } else {
+                return Err(Error::NotADirectory);
             }
         }
 
         Err(Error::NodeNotFound)
     }
 
-    fn find_child(&self, parent: NodeIndex, child_name: &OsStr, uid: &UserId, gids: &[GroupId]) -> Result<NodeIndex, Error> {
+    fn find_child(&self, parent: NodeIndex, child_name: &OsStr, process_data: &ProcessData) -> Result<NodeIndex, Error> {
         let parent_node = self.graph.node_weight(parent).ok_or(Error::NodeNotFound)?;
 
-        if !parent_node.may_execute(uid, gids) {
+        if !parent_node.may_execute(process_data) {
             return Err(Error::NoPermission);
         }
 
@@ -167,7 +224,9 @@ mod tests {
 
     #[test]
     fn builder() {
-        let _: FileSystemBuilder = FileSystem::builder();
+        let _: FileSystem = FileSystem::builder()
+            .with_mode_mask(Mode::from(0o012))
+            .build();
     }
 
     #[test]
