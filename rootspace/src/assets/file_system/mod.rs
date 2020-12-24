@@ -91,7 +91,7 @@ impl FileSystem {
     }
 
     pub fn read(&self, path: &Path, process_data: &ProcessData) -> Result<&[u8], Error> {
-        self.for_node(path, process_data, |idx, _| Ok(self.data[&idx]))
+        self.for_node(path, process_data, |idx, _| Ok(self.data[&idx].as_slice()))
     }
 
     fn for_node<'a, T, F>(&'a self, path: &Path, process_data: &ProcessData, op: F) -> Result<T, Error>
