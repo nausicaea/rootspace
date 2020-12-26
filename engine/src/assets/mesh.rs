@@ -1,9 +1,11 @@
-use super::{vertex::Vertex, AssetTrait};
-use crate::file_manipulation::VerifyPath;
+use super::AssetTrait;
+use crate::file_manipulation::FilePathBuf;
+use crate::graphics::vertex::Vertex;
 use anyhow::Result;
 use thiserror::Error;
 use ply;
 use std::{convert::TryInto, path::Path};
+use std::convert::TryFrom;
 
 #[derive(Debug)]
 pub struct Mesh {
@@ -78,8 +80,8 @@ impl Mesh {
 
 impl AssetTrait for Mesh {
     fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
-        path.ensure_extant_file()?;
-        let data = ply::Ply::from_path(path)?;
+        let fp = FilePathBuf::try_from(path.as_ref())?;
+        let data = ply::Ply::from_path(fp)?;
         let mesh = Mesh::from_ply(&data)?;
 
         Ok(mesh)

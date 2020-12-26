@@ -1,9 +1,10 @@
 use super::AssetTrait;
-use crate::file_manipulation::VerifyPath;
 use anyhow::Result;
+use crate::file_manipulation::FilePathBuf;
 use glium::texture::RawImage2d;
 use image::{self, GenericImageView};
 use std::{fmt, path::Path};
+use std::convert::TryFrom;
 
 pub struct Image(image::DynamicImage);
 
@@ -19,8 +20,8 @@ impl Image {
 
 impl AssetTrait for Image {
     fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
-        path.ensure_extant_file()?;
-        let data = image::open(path)?;
+        let fp = FilePathBuf::try_from(path.as_ref())?;
+        let data = image::open(fp)?;
 
         Ok(Image(data))
     }
@@ -34,7 +35,7 @@ impl From<image::DynamicImage> for Image {
 
 impl<'a> From<Image> for RawImage2d<'a, u8> {
     fn from(value: Image) -> Self {
-        let rgba_img = value.0.to_rgba();
+        let rgba_img = value.0.to_rgba8();
         let dimensions = rgba_img.dimensions();
 
         RawImage2d::from_raw_rgba_reversed(&rgba_img.into_raw(), dimensions)

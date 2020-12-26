@@ -1,7 +1,7 @@
 use crate::{
-    assets::{AssetError, Vertex},
+    assets::AssetError,
     components::Renderable,
-    graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait},
+    graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait, Vertex},
 };
 use ecs::{Component, Resource, MaybeDefault};
 use anyhow::{Error, Result};
@@ -14,6 +14,7 @@ use std::{
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
 };
+use crate::file_manipulation::{FileError, FilePathBuf};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BackendSettings {
@@ -84,24 +85,14 @@ where
         &self.settings
     }
 
-    pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<PathBuf, AssetError> {
-        let abs_path = self.settings.asset_tree.join(path);
+    pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {
+        let asset_path = FilePathBuf::try_from(self.settings.asset_tree.join(path))?;
 
-        let abs_path = abs_path
-            .canonicalize()
-            .map_err(move |e| AssetError::Generic(abs_path, e))?;
-
-        if !abs_path.starts_with(&self.settings.asset_tree) {
-            return Err(AssetError::OutOfTree(abs_path));
-        }
-        if !abs_path.exists() {
-            return Err(AssetError::DoesNotExist(abs_path));
-        }
-        if !abs_path.is_file() {
-            return Err(AssetError::NotAFile(abs_path));
+        if !asset_path.path().starts_with(&self.settings.asset_tree) {
+            return Err(AssetError::OutOfTree(asset_path.into()));
         }
 
-        Ok(abs_path)
+        Ok(asset_path)
     }
 
     pub fn reload_assets(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<()> {

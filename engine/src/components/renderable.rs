@@ -1,6 +1,6 @@
 use crate::{
-    assets::{AssetTrait, Mesh, Text},
-    graphics::BackendTrait,
+    assets::{AssetTrait, Mesh},
+    graphics::{BackendTrait, text::Text},
     resources::{BackendResource, IndexBufferId, ShaderId, TextureId, VertexBufferId},
 };
 use ecs::{Component, VecStorage};

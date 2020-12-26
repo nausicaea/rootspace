@@ -9,6 +9,7 @@ wsl = []
 
 [dependencies]
 approx = "^0.3.2"
+dirs = "^3.0"
 clap = { version = "^2.0.0", default-features = false }
 ctrlc = { version = "^3.0.0", features = ["termination"] }
 anyhow = "^1.0.0"

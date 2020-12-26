@@ -11,16 +11,16 @@ use std::{collections::HashMap, time::Duration};
 pub struct DebugShell {
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
     receiver: ReceiverId<EngineEvent>,
-    terminator: String,
+    terminator: &'static str,
 }
 
 impl DebugShell {
-    pub fn new(queue: &mut EventQueue<EngineEvent>, terminator: Option<char>) -> Self {
+    pub fn new(queue: &mut EventQueue<EngineEvent>, terminator: Option<&'static str>) -> Self {
         trace!("DebugShell subscribing to EventQueue<EngineEvent>");
         let mut sys = DebugShell {
             commands: HashMap::new(),
             receiver: queue.subscribe(),
-            terminator: terminator.map_or(String::from(";"), |t| t.to_string()),
+            terminator: terminator.unwrap_or(";"),
         };
 
         sys.add_command(ExitCommand);
@@ -37,7 +37,7 @@ impl DebugShell {
 
     fn interpret(&self, res: &Resources, tokens: &[String]) -> Result<()> {
         // Iterate over all commands
-        for token_group in tokens.split(|t| t == &self.terminator) {
+        for token_group in tokens.split(|t| t == self.terminator) {
 
             // Determine the current command name
             let command_name = token_group[0].as_str();

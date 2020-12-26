@@ -1,15 +1,18 @@
 mod assets;
+mod debug_commands;
 
-use ecs::Reg;
+use ecs::{Reg, LoopStage};
 use engine::{
     components::{Camera, Info, Status, Model, UiModel, Renderable, RenderableType},
     graphics::BackendTrait,
     orchestrator::Orchestrator,
     resources::{BackendResource, SceneGraph},
 };
-use anyhow::Result;
+use anyhow::{Result, Context};
 use nalgebra::{Vector2, Vector3};
 use std::{f32, path::Path};
+use engine::systems::DebugShell;
+use crate::debug_commands::FileSystemCommand;
 
 type ResourceRegistry = Reg![];
 
@@ -114,6 +117,11 @@ where
                 .build(factory)?
         };
         self.orch.insert_component(ec, renderable);
+
+        // Add an additional command
+        let debug_shell = self.orch.world.find_system_mut::<DebugShell>(LoopStage::Update)
+            .context("Could not find the system DebugShell")?;
+        debug_shell.add_command(FileSystemCommand);
 
         Ok(())
     }

@@ -1,16 +1,22 @@
 pub mod glium;
 pub mod headless;
+pub mod vertex;
+pub mod text;
+
+pub use self::vertex::Vertex;
+pub use self::text::Text;
 
 use crate::{
-    assets::{AssetTrait, Image, Vertex},
+    assets::{AssetTrait, Image},
     components::Renderable,
     event::EngineEvent,
-    file_manipulation::ReadPath,
+    file_manipulation::FilePathBuf,
     geometry::rect::Rect,
     resources::BackendResource,
 };
 use anyhow::Result;
 use std::{borrow::Cow, convert::TryInto, path::Path};
+use std::convert::TryFrom;
 
 pub trait BackendTrait: Sized + 'static {
     type Event: EventTrait;
@@ -55,7 +61,10 @@ pub trait TextureTrait<B: BackendTrait>: Sized {
 pub trait ShaderTrait<B: BackendTrait>: Sized {
     fn from_source<S: AsRef<str>>(backend: &B, vs: S, fs: S) -> Result<Self>;
     fn from_paths<P: AsRef<Path>>(backend: &B, vs: P, fs: P) -> Result<Self> {
+        let vs = FilePathBuf::try_from(vs.as_ref())?;
         let v = vs.read_to_string()?;
+
+        let fs = FilePathBuf::try_from(fs.as_ref())?;
         let f = fs.read_to_string()?;
 
         Self::from_source(backend, v, f)

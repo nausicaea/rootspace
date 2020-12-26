@@ -2,85 +2,281 @@ use thiserror::Error;
 use std::{
     fs::File,
     io::{self, Read},
-    path::Path,
+    path::{Path, PathBuf},
 };
+use std::convert::TryFrom;
+use std::ffi::{OsStr, OsString};
+use dirs;
 
-pub trait VerifyPath {
-    /// Verifies that `self` refers to an existing file in the file system.
-    fn ensure_extant_file(&self) -> Result<(), FileError>;
-    /// Verifies that `self` refers to an existing directory in the file system.
-    fn ensure_extant_directory(&self) -> Result<(), FileError>;
+fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError> {
+    let p = path_user_input.as_ref();
+    if !p.starts_with("~") {
+        return Ok(p.to_path_buf());
+    }
+    if p == Path::new("~") {
+        return dirs::home_dir().ok_or(FileError::NoHomeDirectoryFound);
+    }
+    dirs::home_dir()
+        .map(|mut h| {
+            if h == Path::new("/") {
+                // Corner case: `h` root directory;
+                // don't prepend extra `/`, just drop the tilde.
+                p.strip_prefix("~").unwrap().to_path_buf()
+            } else {
+                h.push(p.strip_prefix("~/").unwrap());
+                h
+            }
+        })
+        .ok_or(FileError::NoHomeDirectoryFound)
 }
 
-impl<T: AsRef<Path>> VerifyPath for T {
-    fn ensure_extant_file(&self) -> Result<(), FileError> {
-        let path = self.as_ref();
-        if path.exists() {
-            if path.is_file() {
-                Ok(())
-            } else {
-                Err(FileError::NotAFile(format!("{}", path.display())))
-            }
+#[derive(Clone, Debug, PartialEq)]
+pub struct NewOrExFilePathBuf(PathBuf);
+
+impl NewOrExFilePathBuf {
+    pub fn path(&self) -> &Path {
+        AsRef::<Path>::as_ref(self)
+    }
+}
+
+impl AsRef<PathBuf> for NewOrExFilePathBuf {
+    fn as_ref(&self) -> &PathBuf {
+        &self.0
+    }
+}
+
+impl AsRef<Path> for NewOrExFilePathBuf {
+    fn as_ref(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl From<NewOrExFilePathBuf> for PathBuf {
+    fn from(path: NewOrExFilePathBuf) -> Self {
+        path.0
+    }
+}
+
+impl TryFrom<PathBuf> for NewOrExFilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: PathBuf) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(&path)
+    }
+}
+
+impl TryFrom<OsString> for NewOrExFilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: OsString) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(path.as_ref())
+    }
+}
+
+impl TryFrom<&OsStr> for NewOrExFilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &OsStr) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(path.as_ref())
+    }
+}
+
+impl TryFrom<&Path> for NewOrExFilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &Path) -> Result<Self, Self::Error> {
+        let path = expand_tilde(path)?;
+
+        if !path.exists() {
+            let parent = path.parent()
+                .filter(|p| p.is_dir())
+                .ok_or(FileError::ParentDirectoryNotFound(path.to_path_buf()))
+                .and_then(|p| p.canonicalize().map_err(|e| FileError::IoError(path.to_path_buf(), e)))?;
+
+            let file_name = path.file_name()
+                .ok_or(FileError::NoBaseNameFound(path.to_path_buf()))?;
+
+            Ok(NewOrExFilePathBuf(parent.join(file_name)))
+        } else if path.is_file() {
+            let path = path.canonicalize()
+                .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
+            Ok(NewOrExFilePathBuf(path))
         } else {
-            Err(FileError::FileOrDirectoryNotFound(format!("{}", path.display())))
+            Err(FileError::NotAFile(path.to_path_buf()))
         }
     }
+}
 
-    fn ensure_extant_directory(&self) -> Result<(), FileError> {
-        let path = self.as_ref();
-        if path.exists() {
-            if path.is_dir() {
-                Ok(())
-            } else {
-                Err(FileError::NotADirectory(format!("{}", path.display())))
-            }
-        } else {
-            Err(FileError::FileOrDirectoryNotFound(format!("{}", path.display())))
-        }
+#[derive(Clone, Debug, PartialEq)]
+pub struct FilePathBuf(PathBuf);
+
+impl FilePathBuf {
+    pub fn path(&self) -> &Path {
+        AsRef::<Path>::as_ref(self)
     }
-}
 
-pub trait ReadPath {
-    /// Reads `self` as a string of UTF-8 characters.
-    fn read_to_string(&self) -> Result<String, FileError>;
-    /// Reads `self` as a vector of bytes.
-    fn read_to_bytes(&self) -> Result<Vec<u8>, FileError>;
-}
-
-impl<T: AsRef<Path>> ReadPath for T {
-    fn read_to_string(&self) -> Result<String, FileError> {
-        let path = self.as_ref();
-        path.ensure_extant_file()?;
-        let mut f = File::open(path).map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
+    pub fn read_to_string(&self) -> Result<String, FileError> {
+        let mut f = File::open(&self.0)
+            .map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = String::new();
         f.read_to_string(&mut buf)
-            .map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
+            .map_err(|e| FileError::IoError(self.0.clone(), e))?;
 
         Ok(buf)
     }
 
-    fn read_to_bytes(&self) -> Result<Vec<u8>, FileError> {
-        let path = self.as_ref();
-        path.ensure_extant_file()?;
-        let mut f = File::open(path).map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
+    pub fn read_to_bytes(&self) -> Result<Vec<u8>, FileError> {
+        let mut f = File::open(&self.0)
+            .map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = Vec::new();
         f.read_to_end(&mut buf)
-            .map_err(|e| FileError::IoError(format!("{}", path.display()), e))?;
+            .map_err(|e| FileError::IoError(self.0.clone(), e))?;
 
         Ok(buf)
+    }
+}
+
+impl AsRef<PathBuf> for FilePathBuf {
+    fn as_ref(&self) -> &PathBuf {
+        &self.0
+    }
+}
+
+impl AsRef<Path> for FilePathBuf {
+    fn as_ref(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl From<FilePathBuf> for PathBuf {
+    fn from(path: FilePathBuf) -> Self {
+        path.0
+    }
+}
+
+impl TryFrom<PathBuf> for FilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: PathBuf) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(&path)
+    }
+}
+
+impl TryFrom<OsString> for FilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: OsString) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(path.as_ref())
+    }
+}
+
+impl TryFrom<&OsStr> for FilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &OsStr) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(path.as_ref())
+    }
+}
+
+impl<'a> TryFrom<&Path> for FilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &Path) -> Result<Self, Self::Error> {
+        let path = expand_tilde(path)?;
+
+        if path.is_file() {
+            let path = path.canonicalize()
+                .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
+            Ok(FilePathBuf(path))
+        } else {
+            Err(FileError::NotAFile(path.to_path_buf()))
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct DirPathBuf(PathBuf);
+
+impl DirPathBuf {
+    pub fn path(&self) -> &Path {
+        AsRef::<Path>::as_ref(self)
+    }
+}
+
+impl AsRef<PathBuf> for DirPathBuf {
+    fn as_ref(&self) -> &PathBuf {
+        &self.0
+    }
+}
+
+impl AsRef<Path> for DirPathBuf {
+    fn as_ref(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl From<DirPathBuf> for PathBuf {
+    fn from(path: DirPathBuf) -> Self {
+        path.0
+    }
+}
+
+impl TryFrom<PathBuf> for DirPathBuf {
+    type Error = FileError;
+
+    fn try_from(path: PathBuf) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(&path)
+    }
+}
+
+impl TryFrom<OsString> for DirPathBuf {
+    type Error = FileError;
+
+    fn try_from(path: OsString) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(path.as_ref())
+    }
+}
+
+impl TryFrom<&OsStr> for DirPathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &OsStr) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(path.as_ref())
+    }
+}
+
+impl<'a> TryFrom<&Path> for DirPathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &Path) -> Result<Self, Self::Error> {
+        let path = expand_tilde(path)?;
+
+        if path.is_dir() {
+            let path = path.canonicalize()
+                .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
+            Ok(DirPathBuf(path))
+        } else {
+            Err(FileError::NotADirectory(path.to_path_buf()))
+        }
     }
 }
 
 #[derive(Debug, Error)]
 pub enum FileError {
-    #[error("No such file or directory: {0}")]
-    FileOrDirectoryNotFound(String),
-    #[error("Not a file: {0}")]
-    NotAFile(String),
-    #[error("Not a directory: {0}")]
-    NotADirectory(String),
-    #[error("{1}: {0}")]
-    IoError(String, #[source] io::Error),
+    #[error("No such file or directory: {}", .0.display())]
+    FileOrDirectoryNotFound(PathBuf),
+    #[error("Not a file: {}", .0.display())]
+    NotAFile(PathBuf),
+    #[error("Not a directory: {}", .0.display())]
+    NotADirectory(PathBuf),
+    #[error("Parent directory not found: {}", .0.display())]
+    ParentDirectoryNotFound(PathBuf),
+    #[error("{}: {}", .1, .0.display())]
+    IoError(PathBuf, #[source] io::Error),
+    #[error("Path does not contain a basename: {}", .0.display())]
+    NoBaseNameFound(PathBuf),
+    #[error("Could not find the user home directory")]
+    NoHomeDirectoryFound,
 }
 
 #[cfg(test)]
@@ -90,57 +286,110 @@ mod tests {
     use tempfile::{tempdir, NamedTempFile};
 
     #[test]
-    fn ensure_extant_file() {
-        let tf = NamedTempFile::new().unwrap();
-        let base_dir = tempdir().unwrap();
-
-        let r = tf.path().ensure_extant_file();
-        assert!(r.is_ok());
-
-        let bad_file = base_dir.path().join("blabla.ext");
-        let r = bad_file.ensure_extant_file();
-        assert!(r.is_err());
-
-        let bad_dir = base_dir.path();
-        let r = bad_dir.ensure_extant_file();
-        assert!(r.is_err());
+    #[cfg_attr(not(target_family = "unix"), ignore)]
+    fn test_expand_tilde() {
+        // Should work on your linux box during tests, would fail in stranger
+        // environments!
+        let home = std::env::var("HOME").unwrap();
+        let projects = PathBuf::from(format!("{}/Projects", home));
+        assert_eq!(expand_tilde("~/Projects").unwrap(), projects);
+        assert_eq!(expand_tilde("/foo/bar").unwrap(), Path::new("/foo/bar"));
+        assert_eq!(
+            expand_tilde("~alice/projects").unwrap(),
+            Path::new("~alice/projects")
+        );
     }
 
     #[test]
-    fn ensure_extant_directory() {
+    fn new_or_ex_file_path() {
         let tf = NamedTempFile::new().unwrap();
         let base_dir = tempdir().unwrap();
 
-        let r = tf.path().ensure_extant_directory();
+        // The operation must succeed for an existing file
+        let r = NewOrExFilePathBuf::try_from(tf.path());
+        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
+
+        // The operation must succeed for a path whose basename does not exist
+        let new_file = base_dir.path().join("newfile.txt");
+        let r = NewOrExFilePathBuf::try_from(new_file);
+        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
+
+        // The operation must fail for a path whose parent does not exist
+        let bad_new_file = base_dir.path().join("/i/do/not/exist.tmp");
+        let r = NewOrExFilePathBuf::try_from(bad_new_file);
         assert!(r.is_err());
 
-        let bad_dir = base_dir.path().join("blabla");
-        let r = bad_dir.ensure_extant_directory();
-        assert!(r.is_err());
-
-        let good_dir = base_dir.path();
-        let r = good_dir.ensure_extant_directory();
-        assert!(r.is_ok());
+        // The operation must fail for a directory
+        let r = NewOrExFilePathBuf::try_from(base_dir.path());
+        assert!(r.is_err())
     }
 
     #[test]
-    fn read_to_string() {
+    fn file_path() {
+        let tf = NamedTempFile::new().unwrap();
+        let base_dir = tempdir().unwrap();
+
+        // The operation must succeed for an existing file
+        let r = FilePathBuf::try_from(tf.path());
+        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
+
+        // The operation must fail for a path that does not exist
+        let new_file = base_dir.path().join("newfile.txt");
+        let r = FilePathBuf::try_from(new_file);
+        assert!(r.is_err());
+
+        // The operation must fail for a path whose parent does not exist
+        let bad_new_file = base_dir.path().join("/i/do/not/exist.tmp");
+        let r = FilePathBuf::try_from(bad_new_file);
+        assert!(r.is_err());
+
+        // The operation must fail for a directory
+        let r = FilePathBuf::try_from(base_dir.path());
+        assert!(r.is_err())
+    }
+
+    #[test]
+    fn directory_path() {
+        let tf = NamedTempFile::new().unwrap();
+        let base_dir = tempdir().unwrap();
+
+        // The operation must fail for an existing file
+        let r = DirPathBuf::try_from(tf.path());
+        assert!(r.is_err());
+
+        // The operation must fail for a path that does not exist
+        let new_file = base_dir.path().join("newdir");
+        let r = DirPathBuf::try_from(new_file);
+        assert!(r.is_err());
+
+        // The operation must fail for a path whose parent does not exist
+        let bad_new_file = base_dir.path().join("/i/do/not/exist");
+        let r = DirPathBuf::try_from(bad_new_file);
+        assert!(r.is_err());
+
+        // The operation must succeed for a directory
+        let r = DirPathBuf::try_from(base_dir.path());
+        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()))
+    }
+
+    #[test]
+    fn file_path_read_to_string() {
         let mut tf = NamedTempFile::new().unwrap();
 
         write!(tf, "Hello, World!").unwrap();
 
-        let r = tf.path().read_to_string();
+        let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_string();
         assert!(r.is_ok());
         assert_eq!(r.unwrap(), "Hello, World!");
     }
 
     #[test]
-    fn read_to_bytes() {
+    fn file_path_read_to_bytes() {
         let mut tf = NamedTempFile::new().unwrap();
 
         tf.write(&[0x00, 0xff, 0x14, 0xf6]).unwrap();
 
-        let r = tf.path().read_to_bytes();
+        let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_bytes();
         assert!(r.is_ok());
         assert_eq!(r.unwrap(), vec![0x00, 0xff, 0x14, 0xf6]);
     }

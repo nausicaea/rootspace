@@ -67,14 +67,14 @@ fn main() -> Result<()> {
 
     if headless {
         let mut g: Pacman<HeadlessBackend> = Pacman::new(resource_dir, command)
-            .context("Cannot initialise the game")?;
+            .context("Cannot create the game")?;
 
         g.load().context("Cannot load the game")?;
 
         g.run();
     } else {
         let mut g: Pacman<GliumBackend> = Pacman::new(resource_dir, command)
-            .context("Cannot initialise the game")?;
+            .context("Cannot create the game")?;
 
         g.load().context("Cannot load the game")?;
 

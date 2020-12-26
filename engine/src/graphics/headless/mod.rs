@@ -1,6 +1,6 @@
-use super::{BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait};
+use super::{BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait, Vertex};
 use crate::{
-    assets::{Image, Vertex},
+    assets::Image,
     components::Renderable,
     event::EngineEvent,
     geometry::rect::Rect,

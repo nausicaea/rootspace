@@ -2,6 +2,7 @@ use crate::{
     components::{Camera, Info, Model, Status, UiModel},
     event::EngineEvent,
     resources::SceneGraph,
+    file_manipulation::{NewOrExFilePathBuf, FilePathBuf},
 };
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use ecs::{Component, Entities, Entity, EventQueue, Resources, Storage, WorldEvent};
@@ -11,6 +12,7 @@ use std::{
     ffi::OsString,
     path::{Path, PathBuf},
 };
+use std::convert::TryFrom;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -78,11 +80,9 @@ impl CommandTrait for StateCommand {
                             .required(true)
                             .takes_value(true)
                             .validator_os(|s| {
-                                Path::new(s)
-                                    .parent()
-                                    .filter(|p| p.is_dir())
+                                NewOrExFilePathBuf::try_from(s)
                                     .map(|_| ())
-                                    .ok_or(OsString::from("expected a path to a new or existing writable file"))
+                                    .map_err(|e| OsString::from(format!("{}", e)))
                             })
                             .help("Sets the path of the file to write to"),
                     ),
@@ -97,11 +97,9 @@ impl CommandTrait for StateCommand {
                             .required(true)
                             .takes_value(true)
                             .validator_os(|s| {
-                                if Path::new(s).is_file() {
-                                    Ok(())
-                                } else {
-                                    Err(OsString::from("expected a path to an existing readable file"))
-                                }
+                                FilePathBuf::try_from(s)
+                                    .map(|_| ())
+                                    .map_err(|e| OsString::from(format!("{}", e)))
                             })
                             .help("Sets the path of the file to read from"),
                     ),

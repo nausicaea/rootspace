@@ -1,5 +1,5 @@
 use super::{group_id::GroupId, mode::Mode, user_id::UserId, ProcessData};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, NaiveDateTime, NaiveDate};
 use std::ffi::{OsStr, OsString};
 use serde::{Deserialize, Serialize};
 
@@ -21,16 +21,16 @@ impl Node {
         gid: G,
         mode: M,
     ) -> Self {
-        let now = Utc::now();
+        let unix_epoch = DateTime::from(std::time::UNIX_EPOCH);
 
         Node {
             name: name.map(|n| n.to_owned()),
             uid: uid.into(),
             gid: gid.into(),
             mode: mode.into(),
-            accessed: now,
-            modified: now,
-            changed: now,
+            accessed: unix_epoch,
+            modified: unix_epoch,
+            changed: unix_epoch,
         }
     }
 

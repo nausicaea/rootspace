@@ -160,6 +160,18 @@ where
         }
     }
 
+    /// Try to retrieve the specified system type as a mutable reference.
+    pub fn find_system_mut<S>(&mut self, stage: LoopStage) -> Option<&mut S>
+        where
+            S: System,
+    {
+        match stage {
+            LoopStage::FixedUpdate => self.fixed_update_systems.find_mut::<S>(),
+            LoopStage::Update => self.update_systems.find_mut::<S>(),
+            LoopStage::Render => self.render_systems.find_mut::<S>(),
+        }
+    }
+
     /// The fixed update method is supposed to be called from the main loop at fixed time
     /// intervals.
     ///

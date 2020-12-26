@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use crate::{
     components::{Camera, Info, Status, Renderable, Model, UiModel},
     event::EngineEvent,
-    file_manipulation::VerifyPath,
+    file_manipulation::DirPathBuf,
     graphics::BackendTrait,
     resources::{BackendResource, BackendSettings, SceneGraph},
     systems::{
@@ -24,6 +24,7 @@ use std::{
     path::Path,
     time::{Duration, Instant},
 };
+use std::convert::TryFrom;
 
 pub type JoinedRegistry<RR> = RegAdd![
     <Info as Component>::Storage,
@@ -60,8 +61,8 @@ where
         let mut world = World::default();
 
         // Create the backend
-        resource_path.ensure_extant_directory()?;
-        let backend = BackendSettings::new("Title", (800, 600), true, 4, resource_path.as_ref())
+        let resource_path = DirPathBuf::try_from(resource_path.as_ref())?;
+        let backend = BackendSettings::new("Title", (800, 600), true, 4, resource_path)
             .build::<B>()
             .context("Failed to initialise the backend")?;
 
@@ -85,7 +86,7 @@ where
         let camera_manager = CameraManager::new(world.get_mut::<EventQueue<EngineEvent>>());
         world.add_system(LoopStage::Update, camera_manager);
 
-        let debug_shell = DebugShell::new(world.get_mut::<EventQueue<EngineEvent>>(), Some(';'));
+        let debug_shell = DebugShell::new(world.get_mut::<EventQueue<EngineEvent>>(), Some(";"));
         world.add_system(LoopStage::Update, debug_shell);
 
         let event_coordinator = EventCoordinator::new(world.get_mut::<EventQueue<EngineEvent>>());

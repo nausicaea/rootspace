@@ -1,9 +1,10 @@
 use crate::{
-    assets::{Mesh, Vertex},
-    file_manipulation::ReadPath,
+    assets::Mesh,
+    file_manipulation::FilePathBuf,
     graphics::{BackendTrait, TextureTrait},
     resources::{BackendResource, TextureId},
 };
+use super::vertex::Vertex;
 use anyhow::Result;
 use thiserror::Error;
 #[cfg(any(test, debug_assertions))]
@@ -15,6 +16,9 @@ use std::{
     path::{Path, PathBuf},
 };
 use unicode_normalization::UnicodeNormalization;
+use std::convert::TryFrom;
+use crate::assets::AssetError;
+use crate::file_manipulation::FileError;
 
 pub struct Text<'a> {
     text: String,
@@ -91,7 +95,7 @@ impl Default for TextBuilder {
 
 impl TextBuilder {
     pub fn font<P: AsRef<Path>>(mut self, path: P) -> Self {
-        self.font_path = Some(path.as_ref().into());
+        self.font_path = Some(path.as_ref().to_path_buf());
         self
     }
 
@@ -114,8 +118,9 @@ impl TextBuilder {
         let font_data = self
             .font_path
             .as_ref()
-            .ok_or(TextRenderError::MissingFont)?
-            .read_to_bytes()?;
+            .ok_or(TextRenderError::MissingFont)
+            .and_then(|fp| factory.find_asset(fp).map_err(|e| e.into()))
+            .and_then(|fp| fp.read_to_bytes().map_err(|e| e.into()))?;
 
         let cache_gpu_id = self.cache_gpu.ok_or(TextRenderError::MissingCache)?;
         let cache_gpu = factory.borrow_texture(&cache_gpu_id);
@@ -168,6 +173,10 @@ pub enum TextRenderError {
         "Not all of the requested glyphs can fit into the cache, even if the cache is completely cleared before the attempt"
     )]
     NoRoomForWholeQueue,
+    #[error(transparent)]
+    AssetError(#[from] AssetError),
+    #[error(transparent)]
+    FileError(#[from] FileError),
 }
 
 impl From<rusttype::Error> for TextRenderError {

@@ -3,7 +3,11 @@ mod mode;
 mod node;
 mod user_id;
 
+use serde_json;
+use anyhow::Result;
+use engine::file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use self::{group_id::GroupId, mode::Mode, node::Node, user_id::UserId};
+use engine::{AssetTrait, AssetMutTrait};
 use bitflags::bitflags;
 use daggy::{Dag, NodeIndex, Walker};
 use std::collections::HashMap;
@@ -11,6 +15,8 @@ use thiserror::Error;
 use std::ffi::OsStr;
 use std::path::{Path, Component};
 use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::convert::TryFrom;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -142,6 +148,26 @@ impl FileSystem {
     }
 }
 
+impl AssetTrait for FileSystem {
+    fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let fp = FilePathBuf::try_from(path.as_ref())?;
+        let mut file = File::open(fp)?;
+        let mut de = serde_json::Deserializer::from_reader(&mut file);
+        let fs = FileSystem::deserialize(&mut de)?;
+        Ok(fs)
+    }
+}
+
+impl AssetMutTrait for FileSystem {
+    fn to_path<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let nfp = NewOrExFilePathBuf::try_from(path.as_ref())?;
+        let mut file = File::create(nfp)?;
+        let mut ser = serde_json::Serializer::pretty(&mut file);
+        self.serialize(&mut ser)?;
+        Ok(())
+    }
+}
+
 impl From<FileSystemBuilder> for FileSystem {
     fn from(value: FileSystemBuilder) -> Self {
         let mut graph = Dag::default();
@@ -230,7 +256,7 @@ mod tests {
     }
 
     #[test]
-    fn num_nodes() {
+    fn num_nodes_empty_fs() {
         let fs = FileSystem::default();
         assert_eq!(fs.num_nodes(), 1);
     }

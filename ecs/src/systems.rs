@@ -24,6 +24,16 @@ impl Systems {
             .last()
     }
 
+    pub fn find_mut<S>(&mut self) -> Option<&mut S>
+    where
+        S: System,
+    {
+        self.0
+            .iter_mut()
+            .filter_map(|s| s.downcast_mut::<S>())
+            .last()
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = &Box<dyn System>> {
         self.0.iter()
     }

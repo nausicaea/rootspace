@@ -12,3 +12,6 @@ pub mod text_manipulation;
 
 pub use self::graphics::{headless::HeadlessBackend, glium::GliumBackend};
 pub use self::event::EngineEvent;
+pub use self::assets::{AssetTrait, AssetMutTrait};
+pub use self::debug_commands::CommandTrait;
+pub use self::file_manipulation::{NewOrExFilePathBuf, FilePathBuf, DirPathBuf, FileError};
