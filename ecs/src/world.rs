@@ -1,19 +1,7 @@
 //! Provides the `WorldTrait` and the `World` which manages resources and systems.
 
-use crate::{
-    component::Component,
-    storage::Storage,
-    entity::entity::Entity,
-    entities::Entities,
-    event_queue::{EventQueue, ReceiverId},
-    loop_stage::LoopStage,
-    registry::ResourceRegistry,
-    resource::Resource,
-    resources::{Resources, ConflictResolution},
-    system::System,
-    systems::Systems,
-    RegAdd,
-};
+use thiserror::Error;
+use crate::{component::Component, storage::Storage, entity::entity::Entity, entities::Entities, event_queue::{EventQueue, ReceiverId}, loop_stage::LoopStage, registry::ResourceRegistry, resource::Resource, resources::{Resources, ConflictResolution}, system::System, systems::Systems, RegAdd, LoopControl};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use log::trace;
@@ -24,6 +12,8 @@ use std::{
     path::{Path, PathBuf},
     time::Duration,
 };
+use file_manipulation::{NewOrExFilePathBuf, FilePathBuf, FileError};
+use std::convert::TryFrom;
 
 /// Events defined and processed by the world itself.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -44,6 +34,16 @@ pub enum WorldEvent {
     /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game
     /// engine to abort.
     Abort,
+}
+
+#[derive(Debug, Error)]
+pub enum WorldError {
+    #[error(transparent)]
+    FileError(#[from] FileError),
+    #[error("{}: {}", .1, .0.display())]
+    IoError(PathBuf, #[source] std::io::Error),
+    #[error("{}: {}", .1, .0.display())]
+    JsonError(PathBuf, #[source] serde_json::Error),
 }
 
 type JoinedRegistry<RR> = RegAdd![
@@ -211,10 +211,26 @@ where
         }
     }
 
+    pub fn save<P: AsRef<Path>>(&mut self, path: P) -> Result<(), WorldError> {
+        self.on_serialize(path.as_ref())
+    }
+
+    pub fn load<P: AsRef<Path>>(&mut self, path: P) -> Result<(), WorldError> {
+        self.on_deserialize(path.as_ref())?;
+        self.maintain();
+        Ok(())
+    }
+
+    pub fn load_additive<P: AsRef<Path>>(&mut self, path: P, strategy: ConflictResolution) -> Result<(), WorldError> {
+        self.on_deserialize_additive(path.as_ref(), strategy)?;
+        self.maintain();
+        Ok(())
+    }
+
     /// This method is supposed to be called when pending events or messages should be
-    /// handled by the world. If this method returns `true`, the execution of the
+    /// handled by the world. If this method returns `LoopControl::Continue`, the execution of the
     /// main loop shall continue, otherwise it shall abort.
-    pub fn maintain(&mut self) -> bool {
+    pub fn maintain(&mut self) -> LoopControl {
         let events = self
             .resources
             .get_mut::<EventQueue<WorldEvent>>()
@@ -223,59 +239,67 @@ where
         for e in events {
             match e {
                 WorldEvent::Abort => {
-                    return false;
+                    return LoopControl::Abort;
                 },
-                WorldEvent::Serialize(p) => self.on_serialize(&p),
-                WorldEvent::Deserialize(p) => self.on_deserialize(p),
-                WorldEvent::DeserializeAdditive(p, m) => self.on_deserialize_additive(p, m),
+                WorldEvent::Serialize(p) => self.on_serialize(&p).unwrap(),
+                WorldEvent::Deserialize(p) => self.on_deserialize(&p).unwrap(),
+                WorldEvent::DeserializeAdditive(p, m) => self.on_deserialize_additive(&p, m).unwrap(),
                 _ => (),
             }
         }
 
-        true
+        LoopControl::Continue
     }
 
-    fn on_serialize(&mut self, path: &Path) {
-        let mut file = File::create(path).expect(&format!("Could not create the file {}: ", path.display()));
+    fn on_serialize(&mut self, path: &Path) -> Result<(), WorldError> {
+        let file_path = NewOrExFilePathBuf::try_from(path)?;
+        let mut file = File::create(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut s = serde_json::Serializer::pretty(&mut file);
 
-        self.resources
-            .serialize::<JoinedRegistry<RR>, _>(&mut s)
-            .expect(&format!("Could not serialize to the file {}: ", path.display()));
+        self.resources.serialize::<JoinedRegistry<RR>, _>(&mut s)
+            .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
         self.resources
             .get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::SerializationComplete);
+
+        Ok(())
     }
 
-    fn on_deserialize(&mut self, path: PathBuf) {
-        let mut file = File::open(&path).expect(&format!("Could not open the file {}: ", path.display()));
+    fn on_deserialize(&mut self, path: &Path) -> Result<(), WorldError> {
+        let file_path = FilePathBuf::try_from(path)?;
+        let mut file = File::open(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut d = serde_json::Deserializer::from_reader(&mut file);
 
         self.resources = Resources::deserialize::<JoinedRegistry<RR>, _>(&mut d)
-            .expect(&format!("Could not deserialize from the file {}: ", path.display()));
+            .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
         self.loaded_states.clear();
-        self.loaded_states.push(path);
+        self.loaded_states.push(path.into());
 
         self.resources
             .get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::DeserializationComplete);
+
+        Ok(())
     }
 
-    fn on_deserialize_additive(&mut self, path: PathBuf, mode: ConflictResolution) {
-        let mut file = File::open(&path).expect(&format!("Could not open the file {}: ", path.display()));
+    fn on_deserialize_additive(&mut self, path: &Path, strategy: ConflictResolution) -> Result<(), WorldError> {
+        let file_path = FilePathBuf::try_from(path)?;
+        let mut file = File::open(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut d = serde_json::Deserializer::from_reader(&mut file);
 
         self.resources
-            .deserialize_additive::<JoinedRegistry<RR>, _>(&mut d, mode)
-            .expect(&format!("Could not deserialize additively from the file {}: ", path.display()));
+            .deserialize_additive::<JoinedRegistry<RR>, _>(&mut d, strategy)
+            .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
-        self.loaded_states.push(path);
+        self.loaded_states.push(path.into());
 
         self.resources
             .get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::DeserializationComplete);
+
+        Ok(())
     }
 }
 

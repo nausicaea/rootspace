@@ -18,6 +18,7 @@ pub mod resources;
 pub mod system;
 pub mod systems;
 pub mod world;
+mod loop_control;
 
 pub use crate::{
     component::Component,
@@ -26,6 +27,7 @@ pub use crate::{
     event_queue::{EventQueue, ReceiverId},
     events::EventTrait,
     loop_stage::LoopStage,
+    loop_control::LoopControl,
     maybe_default::MaybeDefault,
     registry::{Element, End, ResourceRegistry},
     resource::Resource,

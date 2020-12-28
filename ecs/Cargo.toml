@@ -6,11 +6,13 @@ description = "The ecs library provides facilities to build an Entity-Component-
 edition = "2018"
 
 [dependencies]
+thiserror = "^1.0.0"
 downcast-rs = "^1.0.0"
 log = "^0.4.1"
 serde = { version = "^1.0.0", features = ["derive"] }
 serde_json = "^1.0.0"
 rmp-serde = "^0.14.0"
+file-manipulation = { path = "../file-manipulation" }
 
 [dev-dependencies]
 serde_test = { version = "^1.0.0" }

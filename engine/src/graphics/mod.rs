@@ -10,10 +10,10 @@ use crate::{
     assets::{AssetTrait, Image},
     components::Renderable,
     event::EngineEvent,
-    file_manipulation::FilePathBuf,
     geometry::rect::Rect,
     resources::BackendResource,
 };
+use file_manipulation::FilePathBuf;
 use anyhow::Result;
 use std::{borrow::Cow, convert::TryInto, path::Path};
 use std::convert::TryFrom;

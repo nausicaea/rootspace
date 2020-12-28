@@ -1,5 +1,5 @@
 use super::AssetTrait;
-use crate::file_manipulation::FilePathBuf;
+use file_manipulation::FilePathBuf;
 use crate::graphics::vertex::Vertex;
 use anyhow::Result;
 use thiserror::Error;

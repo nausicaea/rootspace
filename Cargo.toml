@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "file-manipulation",
     "affine-transform",
     "ply",
     "hierarchy",

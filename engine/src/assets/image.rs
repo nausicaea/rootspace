@@ -1,6 +1,6 @@
 use super::AssetTrait;
 use anyhow::Result;
-use crate::file_manipulation::FilePathBuf;
+use file_manipulation::FilePathBuf;
 use glium::texture::RawImage2d;
 use image::{self, GenericImageView};
 use std::{fmt, path::Path};

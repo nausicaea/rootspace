@@ -2,8 +2,8 @@ use crate::{
     components::{Camera, Info, Model, Status, UiModel},
     event::EngineEvent,
     resources::SceneGraph,
-    file_manipulation::{NewOrExFilePathBuf, FilePathBuf},
 };
+use file_manipulation::{NewOrExFilePathBuf, FilePathBuf};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use ecs::{Component, Entities, Entity, EventQueue, Resources, Storage, WorldEvent};
 use anyhow::Result;

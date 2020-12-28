@@ -1,4 +1,5 @@
-use engine::{CommandTrait, AssetMutTrait, NewOrExFilePathBuf};
+use engine::{CommandTrait, AssetMutTrait};
+use file_manipulation::NewOrExFilePathBuf;
 use anyhow::Result;
 use ecs::Resources;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};

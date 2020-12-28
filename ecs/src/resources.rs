@@ -240,6 +240,7 @@ impl Resources {
         RR: ResourceRegistry,
         S: Serializer,
     {
+        #[derive(Debug)]
         struct SerContainer<'a, R>(&'a R);
 
         impl<'a, R> SerContainer<'a, R> {
@@ -315,7 +316,7 @@ impl Resources {
         RR: ResourceRegistry,
         D: Deserializer<'de>,
     {
-        #[derive(Deserialize)]
+        #[derive(Debug, Deserialize)]
         struct DeContainer<R>(R);
 
         fn deserialize_recursive<'de, A, RR>(res: &mut Resources, access: &mut A, key: &str, reg: &RR) -> Result<(), A::Error>
@@ -347,7 +348,7 @@ impl Resources {
             if RR::LEN > 0 {
                 deserialize_entry(res, access, key, reg, reg.head())
             } else {
-                Err(de::Error::unknown_field(key, &[]))
+                Err(de::Error::custom(format!("Not a registered type: {}", key)))
             }
         }
 
@@ -430,7 +431,7 @@ impl Resources {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Reg;
+    use crate::{Reg, Entities, EventQueue, WorldEvent};
     use serde::{Deserialize, Serialize};
     use serde_json;
 
@@ -440,7 +441,7 @@ mod tests {
     impl Resource for TestResourceA {}
 
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
-    struct TestResourceB(f32);
+    struct TestResourceB(Vec<usize>);
 
     impl Resource for TestResourceB {}
 
@@ -474,7 +475,7 @@ mod tests {
     fn serialize() {
         let mut resources = Resources::default();
         resources.insert(TestResourceA(25));
-        resources.insert(TestResourceB(0.141));
+        resources.insert(TestResourceB(Vec::new()));
         resources.insert(TestResourceC(String::from("Bye")));
 
         let mut writer: Vec<u8> = Vec::with_capacity(128);
@@ -482,19 +483,19 @@ mod tests {
         assert!(resources.serialize::<TestRegistry, _>(&mut s).is_ok());
         assert_eq!(
             unsafe { String::from_utf8_unchecked(writer) },
-            "{\"ecs::resources::tests::TestResourceA\":25,\"ecs::resources::tests::TestResourceB\":0.141,\"ecs::resources::tests::TestResourceC\":\"Bye\"}"
+            "{\"ecs::resources::tests::TestResourceA\":25,\"ecs::resources::tests::TestResourceB\":[],\"ecs::resources::tests::TestResourceC\":\"Bye\"}"
         );
     }
 
     #[test]
     fn deserialize() {
         let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceA\":25,\"ecs::resources::tests::TestResourceB\":0.141,\"ecs::resources::tests::TestResourceC\":\"Bye\"}",
+            b"{\"ecs::resources::tests::TestResourceA\":25,\"ecs::resources::tests::TestResourceB\":[0,1],\"ecs::resources::tests::TestResourceC\":\"Bye\"}",
         );
         let resources = Resources::deserialize::<TestRegistry, _>(&mut d).unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
-        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(0.141));
+        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(vec![0, 1]));
         assert_eq!(*resources.borrow::<TestResourceC>(), TestResourceC(String::from("Bye")));
     }
 
@@ -502,18 +503,18 @@ mod tests {
     fn deserialize_additive_no_overwrite() {
         let mut resources = Resources::default();
         resources.insert(TestResourceA(25));
-        resources.insert(TestResourceB(0.141));
+        resources.insert(TestResourceB(Vec::new()));
         resources.insert(TestResourceC(String::from("Bye")));
 
         let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceA\":100,\"ecs::resources::tests::TestResourceB\":10.01,\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
+            b"{\"ecs::resources::tests::TestResourceA\":100,\"ecs::resources::tests::TestResourceB\":[0,1,2],\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
         );
         resources
             .deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::KeepOriginal)
             .unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
-        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(0.141));
+        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(Vec::new()));
         assert_eq!(*resources.borrow::<TestResourceC>(), TestResourceC(String::from("Bye")));
     }
 
@@ -521,16 +522,16 @@ mod tests {
     fn deserialize_additive_overwrite() {
         let mut resources = Resources::default();
         resources.insert(TestResourceA(25));
-        resources.insert(TestResourceB(0.141));
+        resources.insert(TestResourceB(Vec::new()));
         resources.insert(TestResourceC(String::from("Bye")));
 
         let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceA\":100,\"ecs::resources::tests::TestResourceB\":10.01,\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
+            b"{\"ecs::resources::tests::TestResourceA\":100,\"ecs::resources::tests::TestResourceB\":[0,1,2],\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
         );
         resources.deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::Overwrite).unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(100));
-        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(10.01));
+        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(vec![0, 1, 2]));
         assert_eq!(
             *resources.borrow::<TestResourceC>(),
             TestResourceC(String::from("Hello, World!"))
@@ -543,17 +544,40 @@ mod tests {
         resources.insert(TestResourceA(25));
 
         let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceB\":10.01,\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
+            b"{\"ecs::resources::tests::TestResourceB\":[0,1,2],\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
         );
         resources
             .deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::KeepOriginal)
             .unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
-        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(10.01));
+        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(vec![0, 1, 2]));
         assert_eq!(
             *resources.borrow::<TestResourceC>(),
             TestResourceC(String::from("Hello, World!"))
         );
+    }
+
+    #[test]
+    fn deserialize_complex() {
+        let mut d = serde_json::Deserializer::from_str(
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/ok.json"))
+        );
+        let r = Resources::deserialize::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
+        let dr = d.end();
+        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
+        assert!(dr.is_ok(), format!("{:?}", dr.unwrap_err()));
+    }
+
+    #[test]
+    #[should_panic]
+    fn deserialize_complex_extraneous_types() {
+        let mut d = serde_json::Deserializer::from_str(
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/extraneous-types.json"))
+        );
+        let r = Resources::deserialize::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
+        let dr = d.end();
+        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
+        assert!(dr.is_ok(), format!("{:?}", dr.unwrap_err()));
     }
 }

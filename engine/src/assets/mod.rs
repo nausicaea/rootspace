@@ -8,7 +8,7 @@ use std::{
 };
 pub use self::image::Image;
 pub use self::mesh::Mesh;
-use crate::file_manipulation::FileError;
+use file_manipulation::FileError;
 
 pub trait AssetTrait: Sized {
     fn from_path<P: AsRef<Path>>(path: P) -> Result<Self>;

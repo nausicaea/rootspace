@@ -13,6 +13,9 @@
       <sourceFolder url="file://$MODULE_DIR$/pacman/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ecs/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/file-manipulation/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rootspace/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

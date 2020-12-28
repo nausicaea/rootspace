@@ -1,0 +1,366 @@
+{
+  "ecs::entities::Entities": {
+    "max_idx": 4,
+    "free_idx": [],
+    "generations": [
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "ecs::event_queue::EventQueue<ecs::world::WorldEvent>": {
+    "events": [
+      {
+        "Serialize": "~/Downloads/rootspace.json"
+      }
+    ],
+    "receivers": {
+      "0": {
+        "read": 1,
+        "received": 1
+      },
+      "1": {
+        "read": 0,
+        "received": 1
+      },
+      "3": {
+        "read": 0,
+        "received": 1
+      },
+      "2": {
+        "read": 1,
+        "received": 1
+      }
+    },
+    "max_id": 4,
+    "free_ids": []
+  },
+  "ecs::storage::vec_storage::VecStorage<engine::components::info::Info>": {
+    "2": {
+      "name": "Entity B",
+      "description": "Text example"
+    },
+    "3": {
+      "name": "Entity C",
+      "description": "UI Text example"
+    },
+    "1": {
+      "name": "Entity A",
+      "description": "Rotated cube example"
+    },
+    "0": {
+      "name": "Camera",
+      "description": "The main camera"
+    }
+  },
+  "ecs::storage::vec_storage::VecStorage<engine::components::status::Status>": {
+    "3": {
+      "enabled": true,
+      "visible": true
+    },
+    "2": {
+      "enabled": true,
+      "visible": true
+    },
+    "0": {
+      "enabled": true,
+      "visible": true
+    },
+    "1": {
+      "enabled": true,
+      "visible": true
+    }
+  },
+  "ecs::storage::vec_storage::VecStorage<engine::components::camera::Camera>": {
+    "0": {
+      "projection": "Perspective",
+      "dimensions": [
+        800,
+        600
+      ],
+      "fov_y": 0.7853982,
+      "frustum_z": [
+        0.1,
+        1000.0
+      ],
+      "dpi_factor": 1.0
+    }
+  },
+  "ecs::storage::vec_storage::VecStorage<engine::components::renderable::Renderable>": {
+    "1": {
+      "source": {
+        "Text": {
+          "text": "Hello, World!",
+          "font": "fonts/SourceSansPro-Regular.ttf",
+          "text_scale": 16.0,
+          "text_width": 2.0,
+          "virtual_pixel_text_width": 200,
+          "cache_size": [
+            512,
+            512
+          ],
+          "vertex_shader": "shaders/text-vertex.glsl",
+          "fragment_shader": "shaders/text-fragment.glsl"
+        }
+      }
+    },
+    "2": {
+      "source": {
+        "Mesh": {
+          "file": "meshes/cube.ply",
+          "vertex_shader": "shaders/base-vertex.glsl",
+          "fragment_shader": "shaders/base-fragment.glsl",
+          "diffuse_texture": "textures/tv-test-image.png",
+          "normal_texture": null
+        }
+      }
+    },
+    "3": {
+      "source": {
+        "Mesh": {
+          "file": "meshes/quad.ply",
+          "vertex_shader": "shaders/base-vertex.glsl",
+          "fragment_shader": "shaders/base-fragment.glsl",
+          "diffuse_texture": "textures/tv-test-image.png",
+          "normal_texture": null
+        }
+      }
+    }
+  },
+  "ecs::storage::vec_storage::VecStorage<engine::components::ui_model::UiModel>": {
+    "3": {
+      "translation": [
+        0.0,
+        0.0
+      ],
+      "scale": [
+        800.0,
+        600.0
+      ],
+      "depth": -1.0
+    }
+  },
+  "ecs::storage::vec_storage::VecStorage<engine::components::model::Model>": {
+    "0": {
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "1": {
+      "translation": [
+        0.0,
+        0.0,
+        -10.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "2": {
+      "translation": [
+        -2.0,
+        1.0,
+        -7.0
+      ],
+      "rotation": [
+        0.0,
+        0.38268346,
+        0.0,
+        0.9238795
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "engine::resources::scene_graph::SceneGraph<engine::components::ui_model::UiModel>": {
+    "root_idx": 0,
+    "graph": {
+      "nodes": [
+        null,
+        [
+          [
+            3,
+            1
+          ],
+          {
+            "translation": [
+              0.0,
+              0.0
+            ],
+            "scale": [
+              800.0,
+              600.0
+            ],
+            "depth": -1.0
+          }
+        ]
+      ],
+      "node_holes": [],
+      "edge_property": "directed",
+      "edges": [
+        [
+          0,
+          1,
+          null
+        ]
+      ]
+    }
+  },
+  "engine::resources::scene_graph::SceneGraph<engine::components::model::Model>": {
+    "root_idx": 0,
+    "graph": {
+      "nodes": [
+        null,
+        [
+          [
+            0,
+            1
+          ],
+          {
+            "translation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        ],
+        [
+          [
+            1,
+            1
+          ],
+          {
+            "translation": [
+              0.0,
+              0.0,
+              -10.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        ],
+        [
+          [
+            2,
+            1
+          ],
+          {
+            "translation": [
+              -2.0,
+              1.0,
+              -7.0
+            ],
+            "rotation": [
+              0.0,
+              0.38268346,
+              0.0,
+              0.9238795
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        ]
+      ],
+      "node_holes": [],
+      "edge_property": "directed",
+      "edges": [
+        [
+          0,
+          1,
+          null
+        ],
+        [
+          0,
+          2,
+          null
+        ],
+        [
+          0,
+          3,
+          null
+        ]
+      ]
+    }
+  },
+  "ecs::event_queue::EventQueue<engine::event::EngineEvent>": {
+    "events": [],
+    "receivers": {
+      "1": {
+        "read": 0,
+        "received": 0
+      },
+      "0": {
+        "read": 0,
+        "received": 0
+      },
+      "2": {
+        "read": 0,
+        "received": 0
+      },
+      "3": {
+        "read": 0,
+        "received": 0
+      }
+    },
+    "max_id": 4,
+    "free_ids": []
+  },
+  "engine::resources::backend_resource::BackendSettings": {
+    "title": "Title",
+    "dimensions": [
+      800,
+      600
+    ],
+    "vsync": true,
+    "msaa": 4,
+    "asset_tree": "/Users/eleanore/Development/rootspace/assets/rootspace"
+  }
+}

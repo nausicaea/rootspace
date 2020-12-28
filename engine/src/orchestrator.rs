@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
+use file_manipulation::DirPathBuf;
 use crate::{
     components::{Camera, Info, Status, Renderable, Model, UiModel},
     event::EngineEvent,
-    file_manipulation::DirPathBuf,
     graphics::BackendTrait,
     resources::{BackendResource, BackendSettings, SceneGraph},
     systems::{
@@ -11,10 +11,7 @@ use crate::{
     },
     text_manipulation::tokenize,
 };
-use ecs::{
-    Component, Entity, EventQueue, LoopStage, ReceiverId, RegAdd, ResourceRegistry, Resource,
-    System, World, WorldEvent,
-};
+use ecs::{Component, Entity, EventQueue, LoopStage, ReceiverId, RegAdd, ResourceRegistry, Resource, System, World, WorldEvent, LoopControl};
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 use log::trace;
@@ -25,6 +22,7 @@ use std::{
     time::{Duration, Instant},
 };
 use std::convert::TryFrom;
+use ecs::resources::ConflictResolution;
 
 pub type JoinedRegistry<RR> = RegAdd![
     <Info as Component>::Storage,
@@ -141,7 +139,7 @@ where
             self.world.render(&dynamic_game_time, &frame_time);
 
             // Perform maintenance tasks (both Orchestrator and World listen for events themselves)
-            if !self.maintain() {
+            if self.maintain() == LoopControl::Abort {
                 break;
             }
         }
@@ -176,7 +174,21 @@ where
         self.world.add_system::<S>(stage, system)
     }
 
-    fn maintain(&mut self) -> bool {
+    pub fn save<P: AsRef<Path>>(&mut self, path: P) {
+        self.world.save(path).unwrap();
+    }
+
+    pub fn load<P: AsRef<Path>>(&mut self, path: P) {
+        self.world.load(path).unwrap();
+        self.maintain();
+    }
+
+    pub fn load_additive<P: AsRef<Path>>(&mut self, path: P, strategy: ConflictResolution) {
+        self.world.load_additive(path, strategy).unwrap();
+        self.maintain();
+    }
+
+    fn maintain(&mut self) -> LoopControl {
         let running = self.world.maintain();
 
         let recv = &self.world_receiver;

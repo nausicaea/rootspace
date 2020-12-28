@@ -1,9 +1,9 @@
 use crate::{
     assets::Mesh,
-    file_manipulation::FilePathBuf,
     graphics::{BackendTrait, TextureTrait},
     resources::{BackendResource, TextureId},
 };
+use file_manipulation::FilePathBuf;
 use super::vertex::Vertex;
 use anyhow::Result;
 use thiserror::Error;
@@ -18,7 +18,7 @@ use std::{
 use unicode_normalization::UnicodeNormalization;
 use std::convert::TryFrom;
 use crate::assets::AssetError;
-use crate::file_manipulation::FileError;
+use file_manipulation::FileError;
 
 pub struct Text<'a> {
     text: String,

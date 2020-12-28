@@ -5,7 +5,7 @@ mod user_id;
 
 use serde_json;
 use anyhow::Result;
-use engine::file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
+use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use self::{group_id::GroupId, mode::Mode, node::Node, user_id::UserId};
 use engine::{AssetTrait, AssetMutTrait};
 use bitflags::bitflags;
