@@ -2,9 +2,9 @@ use engine::{CommandTrait, AssetMutTrait};
 use file_manipulation::NewOrExFilePathBuf;
 use anyhow::Result;
 use ecs::Resources;
-use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use clap::{App, AppSettings, Arg, SubCommand};
 use crate::assets::FileSystem;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::ffi::OsString;
 use std::convert::TryFrom;
 

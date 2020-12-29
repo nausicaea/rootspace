@@ -3,7 +3,6 @@ use crate::{
     graphics::{BackendTrait, TextureTrait},
     resources::{BackendResource, TextureId},
 };
-use file_manipulation::FilePathBuf;
 use super::vertex::Vertex;
 use anyhow::Result;
 use thiserror::Error;
@@ -16,7 +15,6 @@ use std::{
     path::{Path, PathBuf},
 };
 use unicode_normalization::UnicodeNormalization;
-use std::convert::TryFrom;
 use crate::assets::AssetError;
 use file_manipulation::FileError;
 

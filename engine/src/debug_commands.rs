@@ -10,7 +10,7 @@ use anyhow::Result;
 use thiserror::Error;
 use std::{
     ffi::OsString,
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 use std::convert::TryFrom;
 

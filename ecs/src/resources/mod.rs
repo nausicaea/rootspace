@@ -1,10 +1,14 @@
 //! Provides the resource manager.
 #![allow(non_snake_case)]
 
-use crate::{component::Component, registry::ResourceRegistry, resource::Resource, maybe_default::MaybeDefault};
+mod init_magic;
+mod ser_magic;
+mod de_magic;
+
+use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
 use log::debug;
 use serde::{
-    de::{self, Deserializer, MapAccess, Visitor},
+    de::{self, Deserializer},
     ser::{SerializeMap, Serializer},
     Deserialize, Serialize,
 };
@@ -12,8 +16,6 @@ use std::{
     any::TypeId,
     cell::{Ref, RefCell, RefMut},
     collections::HashMap,
-    fmt,
-    marker::PhantomData,
 };
 
 macro_rules! impl_iter_ref {
@@ -196,41 +198,8 @@ impl Resources {
     where
         RR: ResourceRegistry,
     {
-        fn initialize_recursive<RR>(res: &mut Resources, reg: &RR)
-        where
-            RR: ResourceRegistry,
-        {
-            fn maybe_default<R>(
-                res: &mut Resources,
-                _: &R,
-            )
-            where
-                R: Resource + MaybeDefault,
-            {
-                if let Some(default_value) = R::maybe_default() {
-                    #[cfg(any(test, debug_assertions))]
-                    debug!("Initializing the resource {}", &std::any::type_name::<R>());
-                    res.insert(default_value)
-                } else {
-                    #[cfg(any(test, debug_assertions))]
-                    debug!("Not initializing the resource {} because it lacks a default constructor", &std::any::type_name::<R>());
-                }
-            }
-
-            if RR::LEN > 0 {
-                maybe_default(res, reg.head());
-                initialize_recursive(res, reg.tail());
-            }
-        }
-
         debug!("Beginning the initialization of Resources");
-
-        // The following lines look super scary but since initialize_recursive() only accesses the
-        // type of reg, this should be alright.
-        let reg = unsafe { std::mem::MaybeUninit::<RR>::zeroed().assume_init() };
-        initialize_recursive(self, &reg);
-        std::mem::forget(reg);
-
+        init_magic::initialize_resources::<RR>(self);
         debug!("Completed the initialization of Resources");
     }
 
@@ -240,71 +209,9 @@ impl Resources {
         RR: ResourceRegistry,
         S: Serializer,
     {
-        #[derive(Debug)]
-        struct SerContainer<'a, R>(&'a R);
-
-        impl<'a, R> SerContainer<'a, R> {
-            fn new(r: &'a R) -> Self {
-                SerContainer(r)
-            }
-        }
-
-        impl<'a, R> Serialize for SerContainer<'a, R>
-        where
-            R: Resource + Serialize,
-        {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
-            {
-                serializer.serialize_newtype_struct("SerContainer", self.0)
-            }
-        }
-
-        fn serialize_entry<SM, R>(res: &Resources, state: &mut SM, _: &R) -> Result<(), SM::Error>
-        where
-            SM: SerializeMap,
-            R: Resource + Serialize,
-        {
-            if res.contains::<R>() {
-                #[cfg(any(test, debug_assertions))]
-                debug!("Serializing the resource {}", &std::any::type_name::<R>());
-                state.serialize_entry(
-                    &std::any::type_name::<R>(),
-                    &SerContainer::new(&*res.borrow::<R>()),
-                )?;
-            } else {
-                #[cfg(any(test, debug_assertions))]
-                debug!(
-                    "Not serializing the resource {} because it was not present in Resources",
-                    &std::any::type_name::<R>()
-                );
-            }
-            Ok(())
-        }
-
-        fn serialize_recursive<SM, RR>(res: &Resources, state: &mut SM, reg: &RR) -> Result<(), SM::Error>
-        where
-            SM: SerializeMap,
-            RR: ResourceRegistry,
-        {
-            if RR::LEN > 0 {
-                serialize_entry(res, state, reg.head())?;
-                serialize_recursive(res, state, reg.tail())
-            } else {
-                Ok(())
-            }
-        }
-
         debug!("Beginning the serialization of Resources");
         let mut state = serializer.serialize_map(Some(RR::LEN))?;
-
-        // The following lines look super scary but since serialize_recursive() only accesses the
-        // type of reg, this should be alright.
-        let reg = unsafe { std::mem::MaybeUninit::<RR>::zeroed().assume_init() };
-        serialize_recursive(self, &mut state, &reg)?;
-        std::mem::forget(reg);
-
+        ser_magic::serialize_resources::<<S as Serializer>::SerializeMap, RR>(self, &mut state)?;
         state.end()?;
         debug!("Completed the serialization of Resources");
         Ok(())
@@ -316,85 +223,8 @@ impl Resources {
         RR: ResourceRegistry,
         D: Deserializer<'de>,
     {
-        #[derive(Debug, Deserialize)]
-        struct DeContainer<R>(R);
-
-        fn deserialize_recursive<'de, A, RR>(res: &mut Resources, access: &mut A, key: &str, reg: &RR) -> Result<(), A::Error>
-        where
-            A: MapAccess<'de>,
-            RR: ResourceRegistry,
-        {
-            fn deserialize_entry<'de, A, RR, R>(
-                res: &mut Resources,
-                access: &mut A,
-                key: &str,
-                reg: &RR,
-                _: &R,
-            ) -> Result<(), A::Error>
-            where
-                A: MapAccess<'de>,
-                RR: ResourceRegistry,
-                R: Resource + Deserialize<'de>,
-            {
-                if key == std::any::type_name::<R>() {
-                    let c = access.next_value::<DeContainer<R>>()?;
-                    res.insert(c.0);
-                    Ok(())
-                } else {
-                    deserialize_recursive(res, access, key, reg.tail())
-                }
-            }
-
-            if RR::LEN > 0 {
-                deserialize_entry(res, access, key, reg, reg.head())
-            } else {
-                Err(de::Error::custom(format!("Not a registered type: {}", key)))
-            }
-        }
-
-        struct ResourcesVisitor<RR>(PhantomData<RR>);
-
-        impl<RR> Default for ResourcesVisitor<RR> {
-            fn default() -> Self {
-                ResourcesVisitor(PhantomData::default())
-            }
-        }
-
-        impl<'de, RR> Visitor<'de> for ResourcesVisitor<RR>
-        where
-            RR: ResourceRegistry,
-        {
-            type Value = Resources;
-
-            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(
-                    f,
-                    "a map of type names to their serialized data"
-                )
-            }
-
-            fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
-            where
-                A: MapAccess<'de>,
-            {
-                let mut resources = Resources::with_capacity(access.size_hint().unwrap_or(RR::LEN));
-
-                // The following lines look super scary but since deserialize_recursive() only
-                // accesses the type of reg, this should be alright.
-                let reg = unsafe { std::mem::MaybeUninit::<RR>::zeroed().assume_init() };
-                while let Some(key) = access.next_key::<String>()? {
-                    #[cfg(any(test, debug_assertions))]
-                    debug!("Deserializing the resource {}", &key);
-                    deserialize_recursive(&mut resources, &mut access, &key, &reg)?;
-                }
-                std::mem::forget(reg);
-
-                Ok(resources)
-            }
-        }
-
         debug!("Beginning the deserialization of Resources");
-        let resources = deserializer.deserialize_map(ResourcesVisitor::<RR>::default())?;
+        let resources = deserializer.deserialize_map(de_magic::ResourcesVisitor::<RR>::default())?;
         debug!("Completed the deserialization of Resources");
         Ok(resources)
     }

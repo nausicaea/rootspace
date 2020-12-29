@@ -3,14 +3,12 @@ mod debug_commands;
 
 use ecs::{Reg, LoopStage};
 use engine::{
-    components::{Camera, Info, Status, Model, UiModel, Renderable, RenderableType},
     graphics::BackendTrait,
     orchestrator::Orchestrator,
-    resources::{BackendResource, SceneGraph},
+    resources::BackendResource,
 };
 use anyhow::{Result, Context};
-use nalgebra::{Vector2, Vector3};
-use std::{f32, path::Path};
+use std::path::Path;
 use engine::systems::DebugShell;
 use crate::debug_commands::FileSystemCommand;
 use file_manipulation::FilePathBuf;

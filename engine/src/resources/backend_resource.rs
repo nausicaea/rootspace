@@ -14,7 +14,7 @@ use std::{
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
 };
-use file_manipulation::{FileError, FilePathBuf};
+use file_manipulation::FilePathBuf;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BackendSettings {
