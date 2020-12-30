@@ -93,6 +93,21 @@ where
         self.free_ids.push(id.id);
     }
 
+    /// Renew an existing subscription to this event queue
+    pub fn renew(&mut self, id: Option<ReceiverId<E>>) -> ReceiverId<E> {
+        if let Some(recv) = id {
+            self.unsubscribe(recv);
+        }
+
+        self.subscribe()
+    }
+
+    /// Return `true` if the receiver is subscribed to this
+    /// [`EventQueue<T>`](crate::event_queue::EventQueue), `false` otherwise.
+    pub fn is_subscribed(&self, id: &ReceiverId<E>) -> bool {
+        self.receivers.contains_key(id)
+    }
+
     /// Send an event into the queue.
     pub fn send(&mut self, event: E) {
         if !self.receivers.is_empty() {

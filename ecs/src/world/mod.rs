@@ -42,8 +42,8 @@ pub struct World<RR> {
     fixed_update_systems: Systems,
     update_systems: Systems,
     render_systems: Systems,
-    receiver: ReceiverId<WorldEvent>,
-    loaded_states: Vec<PathBuf>,
+    receiver: Option<ReceiverId<WorldEvent>>,
+    loaded_states: Vec<FilePathBuf>,
     _rr: PhantomData<RR>,
 }
 
@@ -227,9 +227,14 @@ where
     /// main loop shall continue, otherwise it shall abort.
     pub fn maintain(&mut self) -> LoopControl {
         let events = self
-            .resources
-            .get_mut::<EventQueue<WorldEvent>>()
-            .receive(&self.receiver);
+            .receiver
+            .as_ref()
+            .map(|recv| {
+                self.resources
+                    .get_mut::<EventQueue<WorldEvent>>()
+                    .receive(recv)
+            })
+            .unwrap_or(Vec::default());
 
         for e in events {
             match e {
@@ -249,14 +254,19 @@ where
     }
 
     fn on_serialize(&mut self, path: &Path) -> Result<(), WorldError> {
+        // Create the serializer
         let file_path = NewOrExFilePathBuf::try_from(path)?;
         let mut file = File::create(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut s = serde_json::Serializer::pretty(&mut file);
 
+        // Serialize the resources
         self.resources
             .serialize::<JoinedRegistry<RR>, _>(&mut s)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
+        // TODO: serialize all systems
+
+        // Notify the world of the serialization event
         self.resources
             .get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::SerializationComplete);
@@ -265,16 +275,33 @@ where
     }
 
     fn on_deserialize(&mut self, path: &Path) -> Result<(), WorldError> {
+        // Create the deserializer
         let file_path = FilePathBuf::try_from(path)?;
-        let mut file = File::open(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
+        let mut file = File::open(&file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut d = serde_json::Deserializer::from_reader(&mut file);
 
-        self.resources = Resources::deserialize::<JoinedRegistry<RR>, _>(&mut d)
+        // Deserialize the resources
+        let resources = Resources::deserialize::<JoinedRegistry<RR>, _>(&mut d)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
+        // Push the newly loaded state onto the stack
+        // TODO: Unload all previously loaded states
         self.loaded_states.clear();
-        self.loaded_states.push(path.into());
+        self.loaded_states.push(file_path);
 
+        // Assign the new resources
+        self.resources = resources;
+
+        // Renew the subscription to EventQueue<WorldEvent>.
+        #[cfg(any(test, debug_assertions))]
+        trace!("World<RR> renewing subscription to EventQueue<WorldEvent>");
+        self.receiver = Some(
+            self.resources
+                .get_mut::<EventQueue<WorldEvent>>()
+                .renew(self.receiver.clone()),
+        );
+
+        // Notify the world of the deserialization event
         self.resources
             .get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::DeserializationComplete);
@@ -287,16 +314,29 @@ where
         path: &Path,
         strategy: ConflictResolution,
     ) -> Result<(), WorldError> {
+        // Create the deserializer
         let file_path = FilePathBuf::try_from(path)?;
         let mut file = File::open(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut d = serde_json::Deserializer::from_reader(&mut file);
 
+        // Deserialize the resources additively
         self.resources
             .deserialize_additive::<JoinedRegistry<RR>, _>(&mut d, strategy)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
+        // Push the newly loaded state onto the stack
         self.loaded_states.push(path.into());
 
+        // Renew the subscription to EventQueue<WorldEvent>.
+        #[cfg(any(test, debug_assertions))]
+        trace!("World<RR> renewing subscription to EventQueue<WorldEvent>");
+        self.receiver = Some(
+            self.resources
+                .get_mut::<EventQueue<WorldEvent>>()
+                .renew(self.receiver.clone()),
+        );
+
+        // Notify the world of the deserialization event
         self.resources
             .get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::DeserializationComplete);
@@ -313,6 +353,7 @@ where
         let mut resources = Resources::with_capacity(JoinedRegistry::<RR>::LEN);
         resources.initialize::<JoinedRegistry<RR>>();
 
+        #[cfg(any(test, debug_assertions))]
         trace!("World<RR> subscribing to EventQueue<WorldEvent>");
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe();
 
@@ -321,7 +362,7 @@ where
             fixed_update_systems: Systems::default(),
             update_systems: Systems::default(),
             render_systems: Systems::default(),
-            receiver,
+            receiver: Some(receiver),
             loaded_states: Vec::default(),
             _rr: PhantomData::default(),
         }

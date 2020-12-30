@@ -216,8 +216,10 @@ impl Resources {
     where
         RR: ResourceRegistry,
     {
+        #[cfg(any(test, debug_assertions))]
         debug!("Beginning the initialization of Resources");
         initialization::initialize_resources::<RR>(self);
+        #[cfg(any(test, debug_assertions))]
         debug!("Completed the initialization of Resources");
     }
 
@@ -227,10 +229,12 @@ impl Resources {
         RR: ResourceRegistry,
         S: Serializer,
     {
+        #[cfg(any(test, debug_assertions))]
         debug!("Beginning the serialization of Resources");
         let mut state = serializer.serialize_map(Some(RR::LEN))?;
         serialization::serialize_resources::<S::SerializeMap, RR>(self, &mut state)?;
         state.end()?;
+        #[cfg(any(test, debug_assertions))]
         debug!("Completed the serialization of Resources");
         Ok(())
     }
@@ -241,9 +245,11 @@ impl Resources {
         RR: ResourceRegistry,
         D: Deserializer<'de>,
     {
+        #[cfg(any(test, debug_assertions))]
         debug!("Beginning the deserialization of Resources");
         let resources =
             deserializer.deserialize_map(deserialization::ResourcesVisitor::<RR>::default())?;
+        #[cfg(any(test, debug_assertions))]
         debug!("Completed the deserialization of Resources");
         Ok(resources)
     }
@@ -259,6 +265,7 @@ impl Resources {
         RR: ResourceRegistry,
         D: Deserializer<'de>,
     {
+        #[cfg(any(test, debug_assertions))]
         debug!("Beginning the additive deserialization of Resources");
         let other = Resources::deserialize::<RR, D>(deserializer)?;
         for (k, v) in other.resources {
