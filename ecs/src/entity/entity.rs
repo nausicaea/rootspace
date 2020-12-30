@@ -1,5 +1,4 @@
-use super::generation::Generation;
-use super::index::Index;
+use super::{generation::Generation, index::Index};
 use serde::{Deserialize, Serialize};
 
 /// An entity serves as an identifier to an object within the world.
@@ -31,7 +30,9 @@ impl Entity {
     }
 
     /// Returns the integer generation of the entity, which indicates how often an entity has been reused.
-    pub fn gen(&self) -> Generation { self. gen }
+    pub fn gen(&self) -> Generation {
+        self.gen
+    }
 }
 
 impl std::fmt::Display for Entity {
@@ -94,4 +95,3 @@ impl From<&Entity> for Generation {
         value.gen
     }
 }
-

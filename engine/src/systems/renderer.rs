@@ -1,16 +1,19 @@
+#[cfg(any(test, debug_assertions))]
+use std::time::Instant;
+use std::{collections::VecDeque, marker::PhantomData, time::Duration};
+
+#[cfg(any(test, debug_assertions))]
+use log::debug;
+use log::trace;
+
+use ecs::{world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System};
+
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
     event::EngineEvent,
     graphics::{BackendTrait, FrameTrait},
     resources::{BackendResource, SceneGraph},
 };
-use ecs::{EventQueue, ReceiverId, Resources, Storage, System, WorldEvent, Entities};
-#[cfg(any(test, debug_assertions))]
-use log::debug;
-use log::trace;
-#[cfg(any(test, debug_assertions))]
-use std::time::Instant;
-use std::{collections::VecDeque, marker::PhantomData, time::Duration};
 
 static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;
@@ -57,7 +60,10 @@ where
             .reload_assets(&mut res.borrow_components_mut::<Renderable>())
             .expect("Could not reload all renderable assets");
         #[cfg(any(test, debug_assertions))]
-        debug!("Completed reloading all renderables after {:?}", reload_mark.elapsed());
+        debug!(
+            "Completed reloading all renderables after {:?}",
+            reload_mark.elapsed()
+        );
     }
 
     #[cfg(any(test, debug_assertions))]
@@ -77,7 +83,8 @@ where
 
     #[cfg(any(test, debug_assertions))]
     fn update_draw_calls(&mut self, world_draw_calls: usize, ui_draw_calls: usize) {
-        self.draw_calls.push_front((world_draw_calls, ui_draw_calls));
+        self.draw_calls
+            .push_front((world_draw_calls, ui_draw_calls));
         if self.draw_calls.len() > DRAW_CALL_WINDOW {
             self.draw_calls.truncate(DRAW_CALL_WINDOW);
         }
@@ -120,8 +127,13 @@ where
         }
 
         // Reload all renderables.
-        let events = res.borrow_mut::<EventQueue<WorldEvent>>().receive(&self.receiver);
-        if events.into_iter().any(|e| e == WorldEvent::DeserializationComplete) {
+        let events = res
+            .borrow_mut::<EventQueue<WorldEvent>>()
+            .receive(&self.receiver);
+        if events
+            .into_iter()
+            .any(|e| e == WorldEvent::DeserializationComplete)
+        {
             self.reload_renderables(res);
         }
 
@@ -158,9 +170,18 @@ where
             let cam_matrix = cam.world_matrix() * cam_model.matrix();
 
             // Render the world scene.
-            world_graph.iter()
-                .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
-                .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
+            world_graph
+                .iter()
+                .filter(|&(entity, _)| {
+                    statuses
+                        .get(entity)
+                        .map_or(false, |s| s.enabled() && s.visible())
+                })
+                .filter_map(|(entity, model)| {
+                    renderables
+                        .get(entity)
+                        .map(|renderable| (model, renderable))
+                })
                 .for_each(|(model, renderable)| {
                     #[cfg(any(test, debug_assertions))]
                     {
@@ -172,9 +193,18 @@ where
                 });
 
             // Render the ui scene.
-            ui_graph.iter()
-                .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
-                .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
+            ui_graph
+                .iter()
+                .filter(|&(entity, _)| {
+                    statuses
+                        .get(entity)
+                        .map_or(false, |s| s.enabled() && s.visible())
+                })
+                .filter_map(|(entity, model)| {
+                    renderables
+                        .get(entity)
+                        .map(|renderable| (model, renderable))
+                })
                 .for_each(|(model, renderable)| {
                     #[cfg(any(test, debug_assertions))]
                     {

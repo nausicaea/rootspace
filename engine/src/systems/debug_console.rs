@@ -4,7 +4,6 @@
 
 use crate::{event::EngineEvent, text_manipulation::tokenize};
 use ecs::{EventQueue, Resources, System};
-use thiserror::Error;
 use log::{error, warn};
 #[cfg(not(test))]
 use std::thread::spawn;
@@ -15,6 +14,7 @@ use std::{
     sync::mpsc::{self, channel, Receiver},
     time::Duration,
 };
+use thiserror::Error;
 
 pub struct DebugConsole {
     escape_char: char,
@@ -24,7 +24,12 @@ pub struct DebugConsole {
 }
 
 impl DebugConsole {
-    pub fn new<S>(mut input_stream: S, escape_char: Option<char>, quote_char: Option<char>, separator_chars: &[char]) -> Self
+    pub fn new<S>(
+        mut input_stream: S,
+        escape_char: Option<char>,
+        quote_char: Option<char>,
+        separator_chars: &[char],
+    ) -> Self
     where
         S: Read + Send + 'static,
     {

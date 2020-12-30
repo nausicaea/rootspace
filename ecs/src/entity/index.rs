@@ -86,4 +86,3 @@ impl From<&Index> for usize {
         value.0 as usize
     }
 }
-

@@ -1,10 +1,10 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
-use crate::entity::entity::Entity;
-use crate::entity::index::Index;
-use crate::entity::generation::Generation;
+use crate::{
+    entity::{entity::Entity, generation::Generation, index::Index},
+    resource::Resource,
+};
 use serde::{Deserialize, Serialize};
-use crate::resource::Resource;
 
 /// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -27,7 +27,8 @@ impl Entities {
         };
 
         if idx.idx() as usize >= self.generations.len() {
-            self.generations.resize(idx.idx() as usize + 1, Generation::default());
+            self.generations
+                .resize(idx.idx() as usize + 1, Generation::default());
         }
 
         let gen = self.generations[idx.idx() as usize].activate();
@@ -61,7 +62,8 @@ impl Entities {
     pub fn try_get<I: Into<Index>>(&self, index: I) -> Option<Entity> {
         let idx = index.into();
         let idx_usize: usize = idx.into();
-        self.generations.get(idx_usize)
+        self.generations
+            .get(idx_usize)
             .map(|gen| Entity::new(idx, *gen))
     }
 
@@ -74,8 +76,8 @@ impl Entities {
 impl Resource for Entities {}
 
 impl<'a> IntoIterator for &'a Entities {
-    type Item = Entity;
     type IntoIter = EntitiesIter<'a>;
+    type Item = Entity;
 
     fn into_iter(self) -> Self::IntoIter {
         EntitiesIter {

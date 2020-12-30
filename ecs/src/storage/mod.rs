@@ -2,8 +2,8 @@ pub mod iterators;
 pub mod vec_storage;
 pub mod zst_storage;
 
-use std::collections::HashSet;
 use crate::entity::index::Index;
+use std::collections::HashSet;
 
 /// A component storage resource must provide the following methods.
 pub trait Storage {
@@ -42,4 +42,3 @@ pub trait Storage {
     /// Mutably borrows the component of type `Item` for the specified `Entity` without checking for existence.
     unsafe fn get_unchecked_mut<I: Into<Index>>(&mut self, index: I) -> &mut Self::Item;
 }
-

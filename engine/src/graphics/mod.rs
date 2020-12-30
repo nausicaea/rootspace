@@ -1,10 +1,9 @@
 pub mod glium;
 pub mod headless;
-pub mod vertex;
 pub mod text;
+pub mod vertex;
 
-pub use self::vertex::Vertex;
-pub use self::text::Text;
+pub use self::{text::Text, vertex::Vertex};
 
 use crate::{
     assets::{AssetTrait, Image},
@@ -13,10 +12,13 @@ use crate::{
     geometry::rect::Rect,
     resources::BackendResource,
 };
-use file_manipulation::FilePathBuf;
 use anyhow::Result;
-use std::{borrow::Cow, convert::TryInto, path::Path};
-use std::convert::TryFrom;
+use file_manipulation::FilePathBuf;
+use std::{
+    borrow::Cow,
+    convert::{TryFrom, TryInto},
+    path::Path,
+};
 
 pub trait BackendTrait: Sized + 'static {
     type Event: EventTrait;
@@ -26,7 +28,8 @@ pub trait BackendTrait: Sized + 'static {
     type VertexBuffer: VertexBufferTrait<Self>;
     type IndexBuffer: IndexBufferTrait<Self>;
 
-    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self>;
+    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16)
+        -> Result<Self>;
     fn poll_events<F: FnMut(Self::Event)>(&mut self, f: F);
     fn create_frame(&self) -> Self::Frame;
     fn dpi_factor(&self) -> f64;

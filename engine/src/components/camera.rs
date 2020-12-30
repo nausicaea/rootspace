@@ -1,5 +1,4 @@
-use crate::geometry::ray::Ray;
-use crate::components::model::Model;
+use crate::{components::model::Model, geometry::ray::Ray};
 use approx::ulps_eq;
 use ecs::{Component, VecStorage};
 use nalgebra::{Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
@@ -161,8 +160,12 @@ impl Camera {
     /// Transforms a point in world-space to normalized device coordinates.
     pub fn world_point_to_ndc(&self, model: &Model, point: &Point3<f32>) -> Point3<f32> {
         match self.projection {
-            Projection::Perspective => self.perspective.project_point(&model.transform_point(point)),
-            Projection::Orthographic => self.orthographic.project_point(&model.transform_point(point)),
+            Projection::Perspective => self
+                .perspective
+                .project_point(&model.transform_point(point)),
+            Projection::Orthographic => self
+                .orthographic
+                .project_point(&model.transform_point(point)),
         }
     }
 
@@ -178,7 +181,8 @@ impl Camera {
 
     /// Transforms a point in ui-space to normalized device coordinates.
     pub fn ui_point_to_ndc(&self, point: &Point2<f32>, depth: f32) -> Point3<f32> {
-        self.orthographic.project_point(&Point3::new(point.x, point.y, depth))
+        self.orthographic
+            .project_point(&Point3::new(point.x, point.y, depth))
     }
 
     /// Transforms a point in normalized device coordinates to ui-space.
@@ -193,7 +197,11 @@ impl Camera {
     }
 
     /// Transforms a screen point to world-space as a ray originating from the camera.
-    pub fn screen_point_to_world_ray(&self, model: &Model, point: &Point2<u32>) -> Option<Ray<f32>> {
+    pub fn screen_point_to_world_ray(
+        &self,
+        model: &Model,
+        point: &Point2<u32>,
+    ) -> Option<Ray<f32>> {
         let origin = -model.position();
         let target = self.screen_point_to_world(model, point).coords;
         Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
@@ -230,7 +238,11 @@ impl Camera {
         let w = self.dimensions.0 as f32;
         let h = self.dimensions.1 as f32;
 
-        Point3::new((2.0 * point.x as f32) / w - 1.0, 1.0 - (2.0 * point.y as f32) / h, 1.0)
+        Point3::new(
+            (2.0 * point.x as f32) / w - 1.0,
+            1.0 - (2.0 * point.y as f32) / h,
+            1.0,
+        )
     }
 
     /// Transforms a point in screen space to world space.
@@ -310,7 +322,8 @@ mod tests {
         let m = Model::look_at(
             Point3::new(0.0, 0.0, 1.0),
             Point3::new(0.0, 0.0, -1.0),
-            Vector3::y(), Vector3::new(1.0, 1.0, 1.0)
+            Vector3::y(),
+            Vector3::new(1.0, 1.0, 1.0),
         );
         let p = Point3::new(1.0, 0.0, -5.0);
         let q = c.perspective.project_point(&m.transform_point(&p));
@@ -337,7 +350,8 @@ mod tests {
         let m = Model::look_at(
             Point3::new(0.0, 0.0, 1.0),
             Point3::new(0.0, 0.0, -1.0),
-            Vector3::y(), Vector3::new(1.0, 1.0, 1.0)
+            Vector3::y(),
+            Vector3::new(1.0, 1.0, 1.0),
         );
         let p = Point3::new(1.0, 0.0, -5.0);
         let q = {
@@ -352,7 +366,11 @@ mod tests {
         let r = {
             let w = c.dimensions.0 as f32;
             let h = c.dimensions.1 as f32;
-            let tmp = Point3::new((2.0 * q.x as f32) / w - 1.0, 1.0 - (2.0 * q.y as f32) / h, 1.0);
+            let tmp = Point3::new(
+                (2.0 * q.x as f32) / w - 1.0,
+                1.0 - (2.0 * q.y as f32) / h,
+                1.0,
+            );
             let origin = -m.position();
             let target = c.ndc_point_to_world(&m, &tmp).coords;
 
@@ -379,7 +397,11 @@ mod tests {
         let r = {
             let w = c.dimensions.0 as f32;
             let h = c.dimensions.1 as f32;
-            let tmp = Point3::new((2.0 * q.x as f32) / w - 1.0, 1.0 - (2.0 * q.y as f32) / h, 1.0);
+            let tmp = Point3::new(
+                (2.0 * q.x as f32) / w - 1.0,
+                1.0 - (2.0 * q.y as f32) / h,
+                1.0,
+            );
             let origin = Point3::new(0.0, 0.0, 0.0);
             let target = {
                 let (t, d) = c.ndc_point_to_ui(&tmp);

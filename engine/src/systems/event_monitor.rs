@@ -11,7 +11,11 @@ where
     E: 'static + Clone,
 {
     pub fn new(queue: &mut EventQueue<E>) -> Self {
-        trace!("{} subscribing to {}", std::any::type_name::<Self>(), std::any::type_name::<EventQueue<E>>());
+        trace!(
+            "{} subscribing to {}",
+            std::any::type_name::<Self>(),
+            std::any::type_name::<EventQueue<E>>()
+        );
         EventMonitor {
             receiver: queue.subscribe(),
         }

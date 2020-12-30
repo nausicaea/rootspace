@@ -42,7 +42,9 @@ impl System for CameraManager {
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
-        let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
+        let events = res
+            .borrow_mut::<EventQueue<EngineEvent>>()
+            .receive(&self.receiver);
         for event in events {
             match event {
                 EngineEvent::Resize(dims) => self.on_resize(res, dims),

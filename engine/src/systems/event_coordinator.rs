@@ -1,7 +1,10 @@
-use crate::event::EngineEvent;
-use ecs::{EventQueue, ReceiverId, Resources, System, WorldEvent};
-use log::trace;
 use std::time::Duration;
+
+use log::trace;
+
+use ecs::{world::event::WorldEvent, EventQueue, ReceiverId, Resources, System};
+
+use crate::event::EngineEvent;
 
 pub struct EventCoordinator {
     receiver: ReceiverId<EngineEvent>,

@@ -1,9 +1,9 @@
-use super::{BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait, Vertex};
+use super::{
+    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex,
+    VertexBufferTrait,
+};
 use crate::{
-    assets::Image,
-    components::Renderable,
-    event::EngineEvent,
-    geometry::rect::Rect,
+    assets::Image, components::Renderable, event::EngineEvent, geometry::rect::Rect,
     resources::BackendResource,
 };
 use anyhow::Result;
@@ -39,7 +39,10 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
 
     fn from_image(_backend: &HeadlessBackend, image: Image) -> Result<Self> {
         #[cfg(any(test, debug_assertions))]
-        debug!("Created a texture from an image (dims={:?})", image.dimensions());
+        debug!(
+            "Created a texture from an image (dims={:?})",
+            image.dimensions()
+        );
 
         Ok(HeadlessTexture {
             dimensions: image.dimensions(),
@@ -118,13 +121,18 @@ pub struct HeadlessBackend {
 impl BackendTrait for HeadlessBackend {
     type Event = HeadlessEvent;
     type Frame = HeadlessFrame;
-    type Texture = HeadlessTexture;
-    type Shader = HeadlessShader;
-    type VertexBuffer = HeadlessVertexBuffer;
     type IndexBuffer = HeadlessIndexBuffer;
+    type Shader = HeadlessShader;
+    type Texture = HeadlessTexture;
+    type VertexBuffer = HeadlessVertexBuffer;
 
     #[allow(unused_variables)]
-    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), _vsync: bool, _msaa: u16) -> Result<Self> {
+    fn new<S: AsRef<str>>(
+        title: S,
+        dimensions: (u32, u32),
+        _vsync: bool,
+        _msaa: u16,
+    ) -> Result<Self> {
         #[cfg(any(test, debug_assertions))]
         debug!(
             "Created a headless backend (title='{}', dims={:?})",
@@ -231,7 +239,9 @@ mod tests {
 
         let mut frame: HeadlessFrame = f.create_frame();
         frame.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
-        assert!(frame.render(&MockLocation::default(), &mut f, &data).is_ok());
+        assert!(frame
+            .render(&MockLocation::default(), &mut f, &data)
+            .is_ok());
         let r = frame.finalize();
         assert!(r.is_ok());
     }

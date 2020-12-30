@@ -1,7 +1,7 @@
-use crate::resource::Resource;
-use crate::storage::Storage;
-use crate::storage::zst_storage::ZstStorage;
-use crate::storage::vec_storage::VecStorage;
+use crate::{
+    resource::Resource,
+    storage::{vec_storage::VecStorage, zst_storage::ZstStorage, Storage},
+};
 
 /// A component is a data type that is associated with a particular `Entity`.
 pub trait Component: Sized {

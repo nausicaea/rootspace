@@ -12,7 +12,6 @@ use daggy::{
     },
     Dag, NodeIndex,
 };
-use thiserror::Error;
 #[cfg(any(test, feature = "serde_support"))]
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
@@ -20,6 +19,7 @@ use serde::{
     Deserialize, Serialize,
 };
 use std::{collections::HashMap, fmt, hash::Hash, marker::PhantomData};
+use thiserror::Error;
 
 /// Given a set of identifying keys and corresponding data, `Hierarchy` allows users to establish
 /// hierarchical relationships between individual instances of the data type.
@@ -186,7 +186,10 @@ where
     pub fn rebuild_index(&mut self) {
         self.index.clear();
         for idx in self.graph.graph().node_indices() {
-            let node = self.graph.node_weight(idx).unwrap_or_else(|| unreachable!());
+            let node = self
+                .graph
+                .node_weight(idx)
+                .unwrap_or_else(|| unreachable!());
             if let Some((ref key, _)) = node.0 {
                 self.index.insert(key.clone(), idx);
             }
@@ -202,7 +205,10 @@ where
 
     /// Returns the `NodeIndex` for a particular key.
     fn get_index(&self, key: &K) -> Result<NodeIndex, HierarchyError> {
-        self.index.get(key).cloned().ok_or(HierarchyError::KeyNotFound)
+        self.index
+            .get(key)
+            .cloned()
+            .ok_or(HierarchyError::KeyNotFound)
     }
 }
 
@@ -211,8 +217,8 @@ where
     K: 'a + Eq + Hash,
     V: 'a,
 {
-    type Item = <RawNodes<'a, K, V> as Iterator>::Item;
     type IntoIter = RawNodes<'a, K, V>;
+    type Item = <RawNodes<'a, K, V> as Iterator>::Item;
 
     fn into_iter(self) -> Self::IntoIter {
         RawNodes::new(self)
@@ -242,16 +248,20 @@ where
     V: PartialEq,
 {
     fn eq(&self, rhs: &Self) -> bool {
-        if !self.index.keys().all(|lhsv| rhs.index.keys().any(|rhsv| lhsv == rhsv)) {
+        if !self
+            .index
+            .keys()
+            .all(|lhsv| rhs.index.keys().any(|rhsv| lhsv == rhsv))
+        {
             return false;
         }
 
         let lhs_bfs = Bfs::new(self.graph.graph(), self.root_idx).iter(self.graph.graph());
         let rhs_bfs = Bfs::new(rhs.graph.graph(), rhs.root_idx).iter(rhs.graph.graph());
 
-        lhs_bfs
-            .zip(rhs_bfs)
-            .all(|(lhs_nidx, rhs_nidx)| self.graph.node_weight(lhs_nidx) == rhs.graph.node_weight(rhs_nidx))
+        lhs_bfs.zip(rhs_bfs).all(|(lhs_nidx, rhs_nidx)| {
+            self.graph.node_weight(lhs_nidx) == rhs.graph.node_weight(rhs_nidx)
+        })
     }
 }
 
@@ -605,7 +615,10 @@ mod tests {
                 Token::Str("root_idx"),
                 Token::U32(0),
                 Token::Str("graph"),
-                Token::Struct { name: "Graph", len: 4 },
+                Token::Struct {
+                    name: "Graph",
+                    len: 4,
+                },
                 Token::Str("nodes"),
                 Token::Seq { len: Some(3) },
                 Token::NewtypeStruct { name: "HierNode" },

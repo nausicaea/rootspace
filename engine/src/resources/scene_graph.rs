@@ -15,8 +15,10 @@ where
     for<'r> &'r T: Mul<&'r T, Output = T>,
 {
     pub fn update(&mut self, data: &<T as Component>::Storage) {
-        self.0
-            .update(&|entity, _, parent_datum| data.get(entity).map(|current_datum| parent_datum * current_datum))
+        self.0.update(&|entity, _, parent_datum| {
+            data.get(entity)
+                .map(|current_datum| parent_datum * current_datum)
+        })
     }
 
     pub fn insert(&mut self, entity: Entity) {
@@ -28,7 +30,12 @@ where
     }
 
     pub fn get(&self, entity: &Entity) -> &T {
-        self.0.iter().filter(|&(k, _)| k == entity).map(|(_, v)| v).last().expect("Could not find the entity")
+        self.0
+            .iter()
+            .filter(|&(k, _)| k == entity)
+            .map(|(_, v)| v)
+            .last()
+            .expect("Could not find the entity")
     }
 
     pub fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
@@ -42,8 +49,8 @@ impl<'a, T> IntoIterator for &'a SceneGraph<T>
 where
     T: 'a + Clone + Default,
 {
-    type Item = <&'a Hierarchy<Entity, T> as IntoIterator>::Item;
     type IntoIter = <&'a Hierarchy<Entity, T> as IntoIterator>::IntoIter;
+    type Item = <&'a Hierarchy<Entity, T> as IntoIterator>::Item;
 
     fn into_iter(self) -> Self::IntoIter {
         (&self.0).into_iter()
@@ -105,7 +112,10 @@ mod tests {
                 Token::Str("root_idx"),
                 Token::U32(0),
                 Token::Str("graph"),
-                Token::Struct { name: "Graph", len: 4 },
+                Token::Struct {
+                    name: "Graph",
+                    len: 4,
+                },
                 Token::Str("nodes"),
                 Token::Seq { len: Some(2) },
                 Token::NewtypeStruct { name: "HierNode" },
@@ -117,7 +127,9 @@ mod tests {
                 Token::U32(0),
                 Token::U32(1),
                 Token::TupleEnd,
-                Token::NewtypeStruct { name: "TestComponent" },
+                Token::NewtypeStruct {
+                    name: "TestComponent",
+                },
                 Token::U64(0),
                 Token::TupleEnd,
                 Token::SeqEnd,

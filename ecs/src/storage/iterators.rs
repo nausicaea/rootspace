@@ -5,9 +5,7 @@ where
     T: std::hash::Hash + Eq + Clone,
     C: std::iter::FromIterator<T>,
 {
-    let shortest_set = sets
-        .iter()
-        .min_by(|&&a, &&b| a.len().cmp(&b.len()));
+    let shortest_set = sets.iter().min_by(|&&a, &&b| a.len().cmp(&b.len()));
 
     shortest_set
         .iter()
@@ -529,15 +527,9 @@ where
     }
 }
 
-impl<'a, T> ExactSizeIterator for EnumRIter<'a, T>
-where
-    T: crate::storage::Storage,
-{}
+impl<'a, T> ExactSizeIterator for EnumRIter<'a, T> where T: crate::storage::Storage {}
 
-impl<'a, T> std::iter::FusedIterator for EnumRIter<'a, T>
-where
-    T: crate::storage::Storage,
-{}
+impl<'a, T> std::iter::FusedIterator for EnumRIter<'a, T> where T: crate::storage::Storage {}
 
 impl<'a, T> Iterator for EnumRIter<'a, T>
 where
@@ -553,16 +545,11 @@ where
         let idx = self.indices[self.cursor];
         self.cursor += 1;
 
-        unsafe {
-            Some((idx, self.data.get_unchecked(idx)))
-        }
+        unsafe { Some((idx, self.data.get_unchecked(idx))) }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining_len = self.indices
-            .len()
-            .checked_sub(self.cursor)
-            .unwrap_or(0);
+        let remaining_len = self.indices.len().checked_sub(self.cursor).unwrap_or(0);
 
         (remaining_len, Some(remaining_len))
     }
@@ -571,7 +558,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::storage::{Storage, vec_storage::VecStorage};
+    use crate::storage::{vec_storage::VecStorage, Storage};
 
     #[test]
     fn r_iter() {

@@ -38,7 +38,8 @@ where
     I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
-    lex(ascii_unsigned_integral::<I, usize>()).expected("an ascii unsigned integral interpreted as vector length")
+    lex(ascii_unsigned_integral::<I, usize>())
+        .expected("an ascii unsigned integral interpreted as vector length")
 }
 
 fn ascii_scalar<'a, I>(data_type: DataType) -> impl Parser<Input = I, Output = PropertyData> + 'a
@@ -47,15 +48,17 @@ where
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
     opaque(
-        move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| match data_type {
-            DataType::Int8 => f(&mut no_partial(pai8().expected("an ascii i8 scalar"))),
-            DataType::Uint8 => f(&mut no_partial(pau8().expected("an ascii u8 scalar"))),
-            DataType::Int16 => f(&mut no_partial(pai16().expected("an ascii i16 scalar"))),
-            DataType::Uint16 => f(&mut no_partial(pau16().expected("an ascii u16 scalar"))),
-            DataType::Int32 => f(&mut no_partial(pai32().expected("an ascii i32 scalar"))),
-            DataType::Uint32 => f(&mut no_partial(pau32().expected("an ascii u32 scalar"))),
-            DataType::Float32 => f(&mut no_partial(paf32().expected("an ascii f32 scalar"))),
-            DataType::Float64 => f(&mut no_partial(paf64().expected("an ascii f64 scalar"))),
+        move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| {
+            match data_type {
+                DataType::Int8 => f(&mut no_partial(pai8().expected("an ascii i8 scalar"))),
+                DataType::Uint8 => f(&mut no_partial(pau8().expected("an ascii u8 scalar"))),
+                DataType::Int16 => f(&mut no_partial(pai16().expected("an ascii i16 scalar"))),
+                DataType::Uint16 => f(&mut no_partial(pau16().expected("an ascii u16 scalar"))),
+                DataType::Int32 => f(&mut no_partial(pai32().expected("an ascii i32 scalar"))),
+                DataType::Uint32 => f(&mut no_partial(pau32().expected("an ascii u32 scalar"))),
+                DataType::Float32 => f(&mut no_partial(paf32().expected("an ascii f32 scalar"))),
+                DataType::Float64 => f(&mut no_partial(paf64().expected("an ascii f64 scalar"))),
+            }
         },
     )
 }
@@ -67,15 +70,33 @@ where
 {
     ascii_count().then(move |c| {
         opaque(
-            move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| match data_type {
-                DataType::Int8 => f(&mut no_partial(pavi8(c).expected("an ascii vector of i8"))),
-                DataType::Uint8 => f(&mut no_partial(pavu8(c).expected("an ascii vector of u8"))),
-                DataType::Int16 => f(&mut no_partial(pavi16(c).expected("an ascii vector of i16"))),
-                DataType::Uint16 => f(&mut no_partial(pavu16(c).expected("an ascii vector of u16"))),
-                DataType::Int32 => f(&mut no_partial(pavi32(c).expected("an ascii vector of i32"))),
-                DataType::Uint32 => f(&mut no_partial(pavu32(c).expected("an ascii vector of u32"))),
-                DataType::Float32 => f(&mut no_partial(pavf32(c).expected("an ascii vector of f32"))),
-                DataType::Float64 => f(&mut no_partial(pavf64(c).expected("an ascii vector of f64"))),
+            move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| {
+                match data_type {
+                    DataType::Int8 => {
+                        f(&mut no_partial(pavi8(c).expected("an ascii vector of i8")))
+                    }
+                    DataType::Uint8 => {
+                        f(&mut no_partial(pavu8(c).expected("an ascii vector of u8")))
+                    }
+                    DataType::Int16 => f(&mut no_partial(
+                        pavi16(c).expected("an ascii vector of i16"),
+                    )),
+                    DataType::Uint16 => f(&mut no_partial(
+                        pavu16(c).expected("an ascii vector of u16"),
+                    )),
+                    DataType::Int32 => f(&mut no_partial(
+                        pavi32(c).expected("an ascii vector of i32"),
+                    )),
+                    DataType::Uint32 => f(&mut no_partial(
+                        pavu32(c).expected("an ascii vector of u32"),
+                    )),
+                    DataType::Float32 => f(&mut no_partial(
+                        pavf32(c).expected("an ascii vector of f32"),
+                    )),
+                    DataType::Float64 => f(&mut no_partial(
+                        pavf64(c).expected("an ascii vector of f64"),
+                    )),
+                }
             },
         )
     })
@@ -160,70 +181,80 @@ where
     T: ByteOrder,
 {
     opaque(
-        move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| match count_type {
-            CountType::Uint8 => f(&mut no_partial(
-                any().map(|b: u8| b as usize).expected("a vector length of u8"),
-            )),
-            CountType::Uint16 => f(&mut no_partial(
-                num::u16::<T, _>()
-                    .map(|n| n as usize)
-                    .expected("a vector length of u16"),
-            )),
-            CountType::Uint32 => f(&mut no_partial(
-                num::u32::<T, _>()
-                    .map(|n| n as usize)
-                    .expected("a vector length of u32"),
-            )),
+        move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| {
+            match count_type {
+                CountType::Uint8 => f(&mut no_partial(
+                    any()
+                        .map(|b: u8| b as usize)
+                        .expected("a vector length of u8"),
+                )),
+                CountType::Uint16 => f(&mut no_partial(
+                    num::u16::<T, _>()
+                        .map(|n| n as usize)
+                        .expected("a vector length of u16"),
+                )),
+                CountType::Uint32 => f(&mut no_partial(
+                    num::u32::<T, _>()
+                        .map(|n| n as usize)
+                        .expected("a vector length of u32"),
+                )),
+            }
         },
     )
 }
 
-fn binary_scalar<'a, I, T>(data_type: DataType) -> impl Parser<Input = I, Output = PropertyData> + 'a
+fn binary_scalar<'a, I, T>(
+    data_type: DataType,
+) -> impl Parser<Input = I, Output = PropertyData> + 'a
 where
     I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
     T: ByteOrder + 'a,
 {
     opaque(
-        move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| match data_type {
-            DataType::Int8 => f(&mut no_partial(
-                any()
-                    .map(|b: u8| PropertyData::Int8(b as i8))
-                    .expected("a binary i8 scalar"),
-            )),
-            DataType::Uint8 => f(&mut no_partial(
-                any().map(|b: u8| PropertyData::Uint8(b)).expected("a binary u8 scalar"),
-            )),
-            DataType::Int16 => f(&mut no_partial(
-                num::i16::<T, _>()
-                    .map(PropertyData::Int16)
-                    .expected("a binary i16 scalar"),
-            )),
-            DataType::Uint16 => f(&mut no_partial(
-                num::u16::<T, _>()
-                    .map(|n| PropertyData::Uint16(n))
-                    .expected("a binary u16 scalar"),
-            )),
-            DataType::Int32 => f(&mut no_partial(
-                num::i32::<T, _>()
-                    .map(|n| PropertyData::Int32(n))
-                    .expected("a binary i32 scalar"),
-            )),
-            DataType::Uint32 => f(&mut no_partial(
-                num::u32::<T, _>()
-                    .map(|n| PropertyData::Uint32(n))
-                    .expected("a binary u32 scalar"),
-            )),
-            DataType::Float32 => f(&mut no_partial(
-                num::f32::<T, _>()
-                    .map(|n| PropertyData::Float32(n))
-                    .expected("a binary f32 scalar"),
-            )),
-            DataType::Float64 => f(&mut no_partial(
-                num::f64::<T, _>()
-                    .map(|n| PropertyData::Float64(n))
-                    .expected("a binary f64 scalar"),
-            )),
+        move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| {
+            match data_type {
+                DataType::Int8 => f(&mut no_partial(
+                    any()
+                        .map(|b: u8| PropertyData::Int8(b as i8))
+                        .expected("a binary i8 scalar"),
+                )),
+                DataType::Uint8 => f(&mut no_partial(
+                    any()
+                        .map(|b: u8| PropertyData::Uint8(b))
+                        .expected("a binary u8 scalar"),
+                )),
+                DataType::Int16 => f(&mut no_partial(
+                    num::i16::<T, _>()
+                        .map(PropertyData::Int16)
+                        .expected("a binary i16 scalar"),
+                )),
+                DataType::Uint16 => f(&mut no_partial(
+                    num::u16::<T, _>()
+                        .map(|n| PropertyData::Uint16(n))
+                        .expected("a binary u16 scalar"),
+                )),
+                DataType::Int32 => f(&mut no_partial(
+                    num::i32::<T, _>()
+                        .map(|n| PropertyData::Int32(n))
+                        .expected("a binary i32 scalar"),
+                )),
+                DataType::Uint32 => f(&mut no_partial(
+                    num::u32::<T, _>()
+                        .map(|n| PropertyData::Uint32(n))
+                        .expected("a binary u32 scalar"),
+                )),
+                DataType::Float32 => f(&mut no_partial(
+                    num::f32::<T, _>()
+                        .map(|n| PropertyData::Float32(n))
+                        .expected("a binary f32 scalar"),
+                )),
+                DataType::Float64 => f(&mut no_partial(
+                    num::f64::<T, _>()
+                        .map(|n| PropertyData::Float64(n))
+                        .expected("a binary f64 scalar"),
+                )),
+            }
         },
     )
 }
@@ -239,15 +270,33 @@ where
 {
     binary_count::<I, T>(count_type).then(move |c| {
         opaque(
-            move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| match data_type {
-                DataType::Int8 => f(&mut no_partial(pbvi8::<I, T>(c).expected("a binary vector of i8"))),
-                DataType::Uint8 => f(&mut no_partial(pbvu8::<I, T>(c).expected("a binary vector of u8"))),
-                DataType::Int16 => f(&mut no_partial(pbvi16::<I, T>(c).expected("a binary vector of i16"))),
-                DataType::Uint16 => f(&mut no_partial(pbvu16::<I, T>(c).expected("a binary vector of u16"))),
-                DataType::Int32 => f(&mut no_partial(pbvi32::<I, T>(c).expected("a binary vector of i32"))),
-                DataType::Uint32 => f(&mut no_partial(pbvu32::<I, T>(c).expected("a binary vector of u32"))),
-                DataType::Float32 => f(&mut no_partial(pbvf32::<I, T>(c).expected("a binary vector of f32"))),
-                DataType::Float64 => f(&mut no_partial(pbvf64::<I, T>(c).expected("a binary vector of f64"))),
+            move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| {
+                match data_type {
+                    DataType::Int8 => f(&mut no_partial(
+                        pbvi8::<I, T>(c).expected("a binary vector of i8"),
+                    )),
+                    DataType::Uint8 => f(&mut no_partial(
+                        pbvu8::<I, T>(c).expected("a binary vector of u8"),
+                    )),
+                    DataType::Int16 => f(&mut no_partial(
+                        pbvi16::<I, T>(c).expected("a binary vector of i16"),
+                    )),
+                    DataType::Uint16 => f(&mut no_partial(
+                        pbvu16::<I, T>(c).expected("a binary vector of u16"),
+                    )),
+                    DataType::Int32 => f(&mut no_partial(
+                        pbvi32::<I, T>(c).expected("a binary vector of i32"),
+                    )),
+                    DataType::Uint32 => f(&mut no_partial(
+                        pbvu32::<I, T>(c).expected("a binary vector of u32"),
+                    )),
+                    DataType::Float32 => f(&mut no_partial(
+                        pbvf32::<I, T>(c).expected("a binary vector of f32"),
+                    )),
+                    DataType::Float64 => f(&mut no_partial(
+                        pbvf64::<I, T>(c).expected("a binary vector of f64"),
+                    )),
+                }
             },
         )
     })
@@ -263,33 +312,38 @@ where
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
     opaque(
-        move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| match format {
-            FormatType::Ascii => {
-                if count_data_type.is_some() {
-                    f(&mut no_partial(ascii_vector(data_type)))
-                } else {
-                    f(&mut no_partial(ascii_scalar(data_type)))
+        move |f: &mut dyn FnMut(&mut dyn Parser<Input = _, Output = _, PartialState = _>)| {
+            match format {
+                FormatType::Ascii => {
+                    if count_data_type.is_some() {
+                        f(&mut no_partial(ascii_vector(data_type)))
+                    } else {
+                        f(&mut no_partial(ascii_scalar(data_type)))
+                    }
                 }
-            }
-            FormatType::BinaryBigEndian => {
-                if let Some(ct) = count_data_type {
-                    f(&mut no_partial(binary_vector::<_, BE>(ct, data_type)))
-                } else {
-                    f(&mut no_partial(binary_scalar::<_, BE>(data_type)))
+                FormatType::BinaryBigEndian => {
+                    if let Some(ct) = count_data_type {
+                        f(&mut no_partial(binary_vector::<_, BE>(ct, data_type)))
+                    } else {
+                        f(&mut no_partial(binary_scalar::<_, BE>(data_type)))
+                    }
                 }
-            }
-            FormatType::BinaryLittleEndian => {
-                if let Some(ct) = count_data_type {
-                    f(&mut no_partial(binary_vector::<_, LE>(ct, data_type)))
-                } else {
-                    f(&mut no_partial(binary_scalar::<_, LE>(data_type)))
+                FormatType::BinaryLittleEndian => {
+                    if let Some(ct) = count_data_type {
+                        f(&mut no_partial(binary_vector::<_, LE>(ct, data_type)))
+                    } else {
+                        f(&mut no_partial(binary_scalar::<_, LE>(data_type)))
+                    }
                 }
             }
         },
     )
 }
 
-fn inner_element_data<'a, I>(format: FormatType, element: Element) -> impl Parser<Input = I, Output = ElementData> + 'a
+fn inner_element_data<'a, I>(
+    format: FormatType,
+    element: Element,
+) -> impl Parser<Input = I, Output = ElementData> + 'a
 where
     I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
@@ -300,14 +354,21 @@ where
         .into_iter()
         .map(move |p| property_data(format, p.data_type, p.count_data_type));
 
-    let dynamic_parser = factory(move || parsers.next().expect("Premature end of the property parsers iterator"));
+    let dynamic_parser = factory(move || {
+        parsers
+            .next()
+            .expect("Premature end of the property parsers iterator")
+    });
 
     count_min_max(property_count, property_count, dynamic_parser)
         .map(|properties| ElementData { properties })
         .expected("data for a single occurrence of an element")
 }
 
-fn element_data<'a, I>(format: FormatType, element: Element) -> impl Parser<Input = I, Output = Vec<ElementData>> + 'a
+fn element_data<'a, I>(
+    format: FormatType,
+    element: Element,
+) -> impl Parser<Input = I, Output = Vec<ElementData>> + 'a
 where
     I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
@@ -315,7 +376,8 @@ where
     let element_count = element.count;
     let dynamic_parser = factory(move || inner_element_data(format, element.clone()));
 
-    count_min_max(element_count, element_count, dynamic_parser).expected("data for all occurrences of an element")
+    count_min_max(element_count, element_count, dynamic_parser)
+        .expected("data for all occurrences of an element")
 }
 
 pub fn body<'a, I>(header: Header) -> impl Parser<Input = I, Output = Body> + 'a
@@ -325,7 +387,10 @@ where
 {
     let count = header.elements.len();
     let format = header.format.format;
-    let mut parsers = header.elements.into_iter().map(move |e| element_data(format, e));
+    let mut parsers = header
+        .elements
+        .into_iter()
+        .map(move |e| element_data(format, e));
 
     count_min_max(count, count, factory(move || parsers.next().unwrap()))
         .map(|elements| Body { elements })
@@ -343,12 +408,42 @@ mod tests {
         let expected = vec![
             (&b"-10 "[..], None, DataType::Int8, PropertyData::Int8(-10)),
             (&b"10 "[..], None, DataType::Uint8, PropertyData::Uint8(10)),
-            (&b"-300 "[..], None, DataType::Int16, PropertyData::Int16(-300)),
-            (&b"300 "[..], None, DataType::Uint16, PropertyData::Uint16(300)),
-            (&b"-70000"[..], None, DataType::Int32, PropertyData::Int32(-70000)),
-            (&b"70000"[..], None, DataType::Uint32, PropertyData::Uint32(70000)),
-            (&b"-7.12"[..], None, DataType::Float32, PropertyData::Float32(-7.12)),
-            (&b"-7.12"[..], None, DataType::Float64, PropertyData::Float64(-7.12)),
+            (
+                &b"-300 "[..],
+                None,
+                DataType::Int16,
+                PropertyData::Int16(-300),
+            ),
+            (
+                &b"300 "[..],
+                None,
+                DataType::Uint16,
+                PropertyData::Uint16(300),
+            ),
+            (
+                &b"-70000"[..],
+                None,
+                DataType::Int32,
+                PropertyData::Int32(-70000),
+            ),
+            (
+                &b"70000"[..],
+                None,
+                DataType::Uint32,
+                PropertyData::Uint32(70000),
+            ),
+            (
+                &b"-7.12"[..],
+                None,
+                DataType::Float32,
+                PropertyData::Float32(-7.12),
+            ),
+            (
+                &b"-7.12"[..],
+                None,
+                DataType::Float64,
+                PropertyData::Float64(-7.12),
+            ),
             (
                 &b"3 -55 1 100 "[..],
                 Some(CountType::Uint8),
@@ -415,8 +510,18 @@ mod tests {
         let expected = vec![
             (&[0xf6][..], None, DataType::Int8, PropertyData::Int8(-10)),
             (&[0x0a][..], None, DataType::Uint8, PropertyData::Uint8(10)),
-            (&[0xfe, 0xd4][..], None, DataType::Int16, PropertyData::Int16(-300)),
-            (&[0x01, 0x2c][..], None, DataType::Uint16, PropertyData::Uint16(300)),
+            (
+                &[0xfe, 0xd4][..],
+                None,
+                DataType::Int16,
+                PropertyData::Int16(-300),
+            ),
+            (
+                &[0x01, 0x2c][..],
+                None,
+                DataType::Uint16,
+                PropertyData::Uint16(300),
+            ),
             (
                 &[0xff, 0xfe, 0xee, 0x90][..],
                 None,
@@ -471,8 +576,18 @@ mod tests {
         let expected = vec![
             (&[0xf6][..], None, DataType::Int8, PropertyData::Int8(-10)),
             (&[0x0a][..], None, DataType::Uint8, PropertyData::Uint8(10)),
-            (&[0xd4, 0xfe][..], None, DataType::Int16, PropertyData::Int16(-300)),
-            (&[0x2c, 0x01][..], None, DataType::Uint16, PropertyData::Uint16(300)),
+            (
+                &[0xd4, 0xfe][..],
+                None,
+                DataType::Int16,
+                PropertyData::Int16(-300),
+            ),
+            (
+                &[0x2c, 0x01][..],
+                None,
+                DataType::Uint16,
+                PropertyData::Uint16(300),
+            ),
             (
                 &[0x90, 0xee, 0xfe, 0xff][..],
                 None,
@@ -557,7 +672,9 @@ mod tests {
         ];
 
         let stream = BufferedStream::new(
-            State::new(ReadStream::new(&b"100.1 3 1.0 2.2 3.0\n50.0 3 0.0 -1.0 50.0"[..])),
+            State::new(ReadStream::new(
+                &b"100.1 3 1.0 2.2 3.0\n50.0 3 0.0 -1.0 50.0"[..],
+            )),
             32,
         );
         let mut parser = element_data(FormatType::Ascii, element);

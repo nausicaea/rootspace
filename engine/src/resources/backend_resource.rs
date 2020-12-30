@@ -1,10 +1,13 @@
 use crate::{
     assets::AssetError,
     components::Renderable,
-    graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait, Vertex},
+    graphics::{
+        BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
+    },
 };
-use ecs::{Component, Resource, MaybeDefault};
 use anyhow::{Error, Result};
+use ecs::{Component, MaybeDefault, Resource};
+use file_manipulation::FilePathBuf;
 use serde::{Deserialize, Serialize};
 use snowflake::ProcessUniqueId;
 use std::{
@@ -14,7 +17,6 @@ use std::{
     ops::{Deref, DerefMut},
     path::{Path, PathBuf},
 };
-use file_manipulation::FilePathBuf;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BackendSettings {
@@ -95,7 +97,10 @@ where
         Ok(asset_path)
     }
 
-    pub fn reload_assets(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<()> {
+    pub fn reload_assets(
+        &mut self,
+        renderables: &mut <Renderable as Component>::Storage,
+    ) -> Result<()> {
         self.textures.clear();
         self.shaders.clear();
         self.vertex_buffers.clear();
@@ -153,11 +158,15 @@ where
     }
 
     pub fn borrow_texture(&self, id: &TextureId) -> &B::Texture {
-        self.textures.get(id).expect("Could not find the requested texture")
+        self.textures
+            .get(id)
+            .expect("Could not find the requested texture")
     }
 
     pub fn borrow_shader(&self, id: &ShaderId) -> &B::Shader {
-        self.shaders.get(id).expect("Could not find the requested shader")
+        self.shaders
+            .get(id)
+            .expect("Could not find the requested shader")
     }
 
     pub fn borrow_vertex_buffer(&self, id: &VertexBufferId) -> &B::VertexBuffer {

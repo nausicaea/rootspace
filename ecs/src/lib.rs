@@ -3,37 +3,37 @@
 //! relationship with Entities, and finally, Systems encode (mostly) behaviour. The World manages
 //! all three type categories and provides access to each.
 
+pub use crate::{
+    component::Component,
+    entities::Entities,
+    entity::entity::Entity,
+    event_queue::{EventQueue, ReceiverId},
+    events::EventTrait,
+    loop_control::LoopControl,
+    loop_stage::LoopStage,
+    maybe_default::MaybeDefault,
+    registry::{Element, End, ResourceRegistry},
+    resource::Resource,
+    resources::Resources,
+    storage::{vec_storage::VecStorage, zst_storage::ZstStorage, Storage},
+    system::System,
+    systems::Systems,
+    world::{error::WorldError, event::WorldEvent, World},
+};
+
 pub mod component;
-pub mod storage;
 pub mod entities;
+mod entity;
 pub mod event_queue;
 pub mod events;
-mod entity;
+mod loop_control;
 pub mod loop_stage;
 pub mod macros;
 pub mod maybe_default;
 pub mod registry;
 pub mod resource;
 pub mod resources;
+pub mod storage;
 pub mod system;
 pub mod systems;
 pub mod world;
-mod loop_control;
-
-pub use crate::{
-    component::Component,
-    entity::entity::Entity,
-    entities::Entities,
-    event_queue::{EventQueue, ReceiverId},
-    events::EventTrait,
-    loop_stage::LoopStage,
-    loop_control::LoopControl,
-    maybe_default::MaybeDefault,
-    registry::{Element, End, ResourceRegistry},
-    resource::Resource,
-    resources::Resources,
-    storage::{Storage, vec_storage::VecStorage, zst_storage::ZstStorage},
-    system::System,
-    systems::Systems,
-    world::{World, WorldEvent},
-};

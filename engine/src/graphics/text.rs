@@ -1,11 +1,11 @@
+use super::vertex::Vertex;
 use crate::{
-    assets::Mesh,
+    assets::{AssetError, Mesh},
     graphics::{BackendTrait, TextureTrait},
     resources::{BackendResource, TextureId},
 };
-use super::vertex::Vertex;
 use anyhow::Result;
-use thiserror::Error;
+use file_manipulation::FileError;
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
@@ -14,9 +14,8 @@ use std::{
     fmt,
     path::{Path, PathBuf},
 };
+use thiserror::Error;
 use unicode_normalization::UnicodeNormalization;
-use crate::assets::AssetError;
-use file_manipulation::FileError;
 
 pub struct Text<'a> {
     text: String,
@@ -48,8 +47,13 @@ impl<'a> Text<'a> {
         generate_mesh(&self.cache_cpu, &self.glyphs, self.dimensions, scale)
     }
 
-    pub fn text<B: BackendTrait>(&mut self, factory: &BackendResource<B>, text: &str) -> Result<()> {
-        let (glyphs, text_height) = layout_paragraph(&self.font, self.scale, self.dimensions.0, text);
+    pub fn text<B: BackendTrait>(
+        &mut self,
+        factory: &BackendResource<B>,
+        text: &str,
+    ) -> Result<()> {
+        let (glyphs, text_height) =
+            layout_paragraph(&self.font, self.scale, self.dimensions.0, text);
 
         let cache_gpu = factory.borrow_texture(&self.cache_gpu);
 
@@ -112,7 +116,11 @@ impl TextBuilder {
         self
     }
 
-    pub fn layout<'a, B: BackendTrait>(self, factory: &BackendResource<B>, text: &str) -> Result<Text<'a>> {
+    pub fn layout<'a, B: BackendTrait>(
+        self,
+        factory: &BackendResource<B>,
+        text: &str,
+    ) -> Result<Text<'a>> {
         let font_data = self
             .font_path
             .as_ref()
@@ -153,7 +161,9 @@ pub enum TextRenderError {
     MissingCache,
     #[error("Font data presented to rusttype is not in a format that the library recognizes")]
     UnrecognizedFormat,
-    #[error("Font data presented to rusttype was ill-formed (lacking necessary tables, for example)")]
+    #[error(
+        "Font data presented to rusttype was ill-formed (lacking necessary tables, for example)"
+    )]
     IllFormed,
     #[error(
         "The caller tried to access the i'th font from a FontCollection, but the collection doesn't contain that many fonts"
@@ -203,7 +213,12 @@ impl From<rusttype::gpu_cache::CacheWriteErr> for TextRenderError {
 
 /// Layouts text into a rectangle of the specified width in pixels, whith each glyph scaled by the
 /// specified factor in pixels.
-fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> (Vec<PositionedGlyph<'a>>, u32) {
+fn layout_paragraph<'a>(
+    font: &Font<'a>,
+    scale: f32,
+    width: u32,
+    text: &str,
+) -> (Vec<PositionedGlyph<'a>>, u32) {
     let mut glyphs = Vec::new();
     let scale = Scale::uniform(scale);
     let v_metrics = font.v_metrics(scale);
@@ -255,7 +270,10 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
     }
 }
 
-fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(cpu: &mut Cache, gpu: &C) -> Result<()> {
+fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(
+    cpu: &mut Cache,
+    gpu: &C,
+) -> Result<()> {
     cpu.cache_queued(|rect, data| {
         gpu.borrow().write(rect, Cow::Borrowed(data));
     })?;
@@ -263,7 +281,12 @@ fn update_cache<B: BackendTrait, T: TextureTrait<B>, C: Borrow<T>>(cpu: &mut Cac
     Ok(())
 }
 
-fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dims: (u32, u32), scale: f32) -> Mesh {
+fn generate_mesh<'a>(
+    cache: &Cache<'a>,
+    glyphs: &[PositionedGlyph<'a>],
+    text_dims: (u32, u32),
+    scale: f32,
+) -> Mesh {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 

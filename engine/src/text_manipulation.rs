@@ -2,7 +2,12 @@ use std::collections::HashSet;
 
 /// Splits a command line (String) into a vector of arguments. Based on a solution posted to
 /// [Stack Overflow](https://stackoverflow.com/a/23961658).
-pub fn tokenize<'a, S: AsRef<str>, H: IntoIterator<Item = &'a char>>(arg_string: S, escape_char: char, quote_char: char, separator_chars: H) -> Vec<String> {
+pub fn tokenize<'a, S: AsRef<str>, H: IntoIterator<Item = &'a char>>(
+    arg_string: S,
+    escape_char: char,
+    quote_char: char,
+    separator_chars: H,
+) -> Vec<String> {
     let mut args = Vec::new();
     let separator_chars: HashSet<char> = separator_chars.into_iter().cloned().collect();
 
@@ -88,32 +93,79 @@ mod test {
 
     #[test]
     fn simple_argument_list() {
-        let args = tokenize("command -f flagvalue  positional_argument 100 ", '\\', '"', &[]);
+        let args = tokenize(
+            "command -f flagvalue  positional_argument 100 ",
+            '\\',
+            '"',
+            &[],
+        );
 
-        assert_eq!(args, vec!["command", "-f", "flagvalue", "positional_argument", "100"]);
+        assert_eq!(
+            args,
+            vec!["command", "-f", "flagvalue", "positional_argument", "100"]
+        );
     }
 
     #[test]
     fn quoted_argument_list() {
-        let args = tokenize("command -f \"flag value\"  \"positional argument\" 100 ", '\\', '"', &[]);
+        let args = tokenize(
+            "command -f \"flag value\"  \"positional argument\" 100 ",
+            '\\',
+            '"',
+            &[],
+        );
 
-        assert_eq!(args, vec!["command", "-f", "flag value", "positional argument", "100"]);
+        assert_eq!(
+            args,
+            vec!["command", "-f", "flag value", "positional argument", "100"]
+        );
     }
 
     #[test]
     fn escaped_argument_list() {
-        let args = tokenize(r"command -f flag\\ value  positional argument 100 ", '\\', '"', &[]);
+        let args = tokenize(
+            r"command -f flag\\ value  positional argument 100 ",
+            '\\',
+            '"',
+            &[],
+        );
 
         assert_eq!(
             args,
-            vec!["command", "-f", "flag\\", "value", "positional", "argument", "100"]
+            vec![
+                "command",
+                "-f",
+                "flag\\",
+                "value",
+                "positional",
+                "argument",
+                "100"
+            ]
         );
     }
 
     #[test]
     fn special_separators() {
-        let args = tokenize("command -f flagvalue  positional_argument 100; othercommand -p flagvalue", '\\', '"', &[';']);
+        let args = tokenize(
+            "command -f flagvalue  positional_argument 100; othercommand -p flagvalue",
+            '\\',
+            '"',
+            &[';'],
+        );
 
-        assert_eq!(args, vec!["command", "-f", "flagvalue", "positional_argument", "100", ";", "othercommand", "-p", "flagvalue"]);
+        assert_eq!(
+            args,
+            vec![
+                "command",
+                "-f",
+                "flagvalue",
+                "positional_argument",
+                "100",
+                ";",
+                "othercommand",
+                "-p",
+                "flagvalue"
+            ]
+        );
     }
 }

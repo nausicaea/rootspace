@@ -3,20 +3,22 @@ mod mode;
 mod node;
 mod user_id;
 
-use serde_json;
-use anyhow::Result;
-use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use self::{group_id::GroupId, mode::Mode, node::Node, user_id::UserId};
-use engine::{AssetTrait, AssetMutTrait};
+use anyhow::Result;
 use bitflags::bitflags;
 use daggy::{Dag, NodeIndex, Walker};
-use std::collections::HashMap;
-use thiserror::Error;
-use std::ffi::OsStr;
-use std::path::{Path, Component};
+use engine::{AssetMutTrait, AssetTrait};
+use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use serde::{Deserialize, Serialize};
-use std::fs::File;
-use std::convert::TryFrom;
+use serde_json;
+use std::{
+    collections::HashMap,
+    convert::TryFrom,
+    ffi::OsStr,
+    fs::File,
+    path::{Component, Path},
+};
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -30,7 +32,7 @@ pub enum Error {
     NotADirectory,
 }
 
-bitflags!{
+bitflags! {
     pub struct AccessMode: u8 {
         const READ_OK = 0x2;
         const WRITE_OK = 0x4;
@@ -78,7 +80,12 @@ impl FileSystem {
         self.data.len()
     }
 
-    pub fn access(&self, path: &Path, how: AccessMode, process_data: &ProcessData) -> Result<(), Error> {
+    pub fn access(
+        &self,
+        path: &Path,
+        how: AccessMode,
+        process_data: &ProcessData,
+    ) -> Result<(), Error> {
         self.for_node(path, process_data, |_, node| {
             let fail_access = (how.intersects(AccessMode::READ_OK) && !node.may_read(process_data))
                 || (how.intersects(AccessMode::WRITE_OK) && !node.may_write(process_data))
@@ -100,7 +107,12 @@ impl FileSystem {
         self.for_node(path, process_data, |idx, _| Ok(self.data[&idx].as_slice()))
     }
 
-    fn for_node<'a, T, F>(&'a self, path: &Path, process_data: &ProcessData, op: F) -> Result<T, Error>
+    fn for_node<'a, T, F>(
+        &'a self,
+        path: &Path,
+        process_data: &ProcessData,
+        op: F,
+    ) -> Result<T, Error>
     where
         F: Fn(NodeIndex, &'a Node) -> Result<T, Error>,
     {
@@ -114,7 +126,10 @@ impl FileSystem {
                 let child_node = self.find_child(parent_node, node_name, process_data)?;
 
                 if i == num_segments - 1 {
-                    let node = self.graph.node_weight(child_node).ok_or(Error::NodeNotFound)?;
+                    let node = self
+                        .graph
+                        .node_weight(child_node)
+                        .ok_or(Error::NodeNotFound)?;
 
                     return op(child_node, node);
                 }
@@ -128,7 +143,12 @@ impl FileSystem {
         Err(Error::NodeNotFound)
     }
 
-    fn find_child(&self, parent: NodeIndex, child_name: &OsStr, process_data: &ProcessData) -> Result<NodeIndex, Error> {
+    fn find_child(
+        &self,
+        parent: NodeIndex,
+        child_name: &OsStr,
+        process_data: &ProcessData,
+    ) -> Result<NodeIndex, Error> {
         let parent_node = self.graph.node_weight(parent).ok_or(Error::NodeNotFound)?;
 
         if !parent_node.may_execute(process_data) {
@@ -196,7 +216,13 @@ impl Default for FileSystem {
 
 impl std::fmt::Debug for FileSystem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "FileSystem(mode_mask: {:?}, #nodes: {}, #data: {})", self.mode_mask, self.num_nodes(), self.data_len())
+        write!(
+            f,
+            "FileSystem(mode_mask: {:?}, #nodes: {}, #data: {})",
+            self.mode_mask,
+            self.num_nodes(),
+            self.data_len()
+        )
     }
 }
 

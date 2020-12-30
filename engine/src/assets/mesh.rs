@@ -1,11 +1,13 @@
 use super::AssetTrait;
-use file_manipulation::FilePathBuf;
 use crate::graphics::vertex::Vertex;
 use anyhow::Result;
-use thiserror::Error;
+use file_manipulation::FilePathBuf;
 use ply;
-use std::{convert::TryInto, path::Path};
-use std::convert::TryFrom;
+use std::{
+    convert::{TryFrom, TryInto},
+    path::Path,
+};
+use thiserror::Error;
 
 #[derive(Debug)]
 pub struct Mesh {

@@ -1,9 +1,11 @@
-use crate::{Resources, ResourceRegistry, Resource};
-use serde::de::{MapAccess, Visitor};
-use serde::{Deserialize, de};
-use std::marker::PhantomData;
-use std::fmt;
+use crate::{Resource, ResourceRegistry, Resources};
 use log::debug;
+use serde::{
+    de,
+    de::{MapAccess, Visitor},
+    Deserialize,
+};
+use std::{fmt, marker::PhantomData};
 
 fn deserialize_entry<'de, A, RR, R>(
     resources: &mut Resources,
@@ -12,10 +14,10 @@ fn deserialize_entry<'de, A, RR, R>(
     _: PhantomData<RR>,
     _: PhantomData<R>,
 ) -> Result<(), A::Error>
-    where
-        A: MapAccess<'de>,
-        RR: ResourceRegistry,
-        R: Resource + Deserialize<'de>,
+where
+    A: MapAccess<'de>,
+    RR: ResourceRegistry,
+    R: Resource + Deserialize<'de>,
 {
     if type_name == std::any::type_name::<R>() {
         let c = map_access.next_value::<R>()?;
@@ -37,11 +39,10 @@ fn deserialize_recursive<'de, A, RR>(
     type_name: &str,
     _: PhantomData<RR>,
 ) -> Result<(), A::Error>
-    where
-        A: MapAccess<'de>,
-        RR: ResourceRegistry,
+where
+    A: MapAccess<'de>,
+    RR: ResourceRegistry,
 {
-
     if RR::LEN > 0 {
         deserialize_entry::<A, RR, RR::Head>(
             resources,
@@ -51,7 +52,10 @@ fn deserialize_recursive<'de, A, RR>(
             PhantomData::default(),
         )
     } else {
-        Err(de::Error::custom(format!("Not a registered type: {}", type_name)))
+        Err(de::Error::custom(format!(
+            "Not a registered type: {}",
+            type_name
+        )))
     }
 }
 
@@ -65,26 +69,27 @@ impl<RR> Default for ResourcesVisitor<RR> {
 
 impl<RR> std::fmt::Debug for ResourcesVisitor<RR> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "ResourcesVisitor<{0}>(PhantomData<{0}>)", std::any::type_name::<RR>())
+        write!(
+            f,
+            "ResourcesVisitor<{0}>(PhantomData<{0}>)",
+            std::any::type_name::<RR>()
+        )
     }
 }
 
 impl<'de, RR> Visitor<'de> for ResourcesVisitor<RR>
-    where
-        RR: ResourceRegistry,
+where
+    RR: ResourceRegistry,
 {
     type Value = Resources;
 
     fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "a map of type names to their serialized data"
-        )
+        write!(f, "a map of type names to their serialized data")
     }
 
     fn visit_map<A>(self, mut map_access: A) -> Result<Self::Value, A::Error>
-        where
-            A: MapAccess<'de>,
+    where
+        A: MapAccess<'de>,
     {
         let capacity = map_access.size_hint().unwrap_or(RR::LEN);
         let mut resources = Resources::with_capacity(capacity);
@@ -100,7 +105,6 @@ impl<'de, RR> Visitor<'de> for ResourcesVisitor<RR>
             )?;
         }
 
-        // FIXME: Null-pointer deref when dropping a VecStorage<T> (appears in vec_storage.rs:96 in `self.index.iter()`)
         Ok(resources)
     }
 }
@@ -108,16 +112,15 @@ impl<'de, RR> Visitor<'de> for ResourcesVisitor<RR>
 #[cfg(test)]
 mod tests {
     use super::ResourcesVisitor;
-    use crate::Reg;
+    use crate::{Entities, Reg, VecStorage};
     use serde::de::Deserializer;
-    use crate::{VecStorage, Entities};
 
     #[test]
-    #[should_panic(expected = "called `Result::unwrap()` on an `Err` value: Error(\"Not a registered type: BogusType\", line: 1, column: 12)")]
+    #[should_panic(
+        expected = "called `Result::unwrap()` on an `Err` value: Error(\"Not a registered type: BogusType\", line: 1, column: 12)"
+    )]
     fn test_de_with_entities() {
-        pub type TestRegistry = Reg![
-            Entities,
-        ];
+        pub type TestRegistry = Reg![Entities,];
 
         let visitor = ResourcesVisitor::<TestRegistry>::default();
         let mut d = serde_json::Deserializer::from_str("{\"BogusType\":null}");
@@ -125,11 +128,11 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "called `Result::unwrap()` on an `Err` value: Error(\"Not a registered type: BogusType\", line: 1, column: 12)")]
+    #[should_panic(
+        expected = "called `Result::unwrap()` on an `Err` value: Error(\"Not a registered type: BogusType\", line: 1, column: 12)"
+    )]
     fn test_de_with_vec_storage() {
-        pub type TestRegistry = Reg![
-            VecStorage<usize>,
-        ];
+        pub type TestRegistry = Reg![VecStorage<usize>,];
 
         let visitor = ResourcesVisitor::<TestRegistry>::default();
         let mut d = serde_json::Deserializer::from_str("{\"BogusType\":null}");

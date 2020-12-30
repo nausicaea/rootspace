@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use bitflags::bitflags;
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use thiserror::Error;
 
@@ -41,7 +41,8 @@ impl Mode {
     }
 
     pub fn file_type(&self) -> FileType {
-        TryFrom::<u16>::try_from(self.0 & FILE_TYPE_MASK).expect("The mode contains an invalid file type value")
+        TryFrom::<u16>::try_from(self.0 & FILE_TYPE_MASK)
+            .expect("The mode contains an invalid file type value")
     }
 
     pub fn set_uid(&self) -> bool {
@@ -199,7 +200,7 @@ impl TryFrom<u16> for FileType {
     }
 }
 
-bitflags!{
+bitflags! {
     pub struct Permission: u8 {
         const NONE = 0;
         const READ = 4;

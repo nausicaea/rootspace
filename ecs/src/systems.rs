@@ -18,10 +18,7 @@ impl Systems {
     where
         S: System,
     {
-        self.0
-            .iter()
-            .filter_map(|s| s.downcast_ref::<S>())
-            .last()
+        self.0.iter().filter_map(|s| s.downcast_ref::<S>()).last()
     }
 
     pub fn find_mut<S>(&mut self) -> Option<&mut S>

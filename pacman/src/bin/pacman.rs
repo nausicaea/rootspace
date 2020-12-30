@@ -1,11 +1,11 @@
+use anyhow::{Context, Result};
 use clap::{App, Arg};
+use engine::{GliumBackend, HeadlessBackend};
 use fern::Dispatch;
-use pacman::Pacman;
 use log::{error, LevelFilter};
+use pacman::Pacman;
 use std::{env, io, path::PathBuf};
-use anyhow::{Result, Context};
 use thiserror::Error;
-use engine::{HeadlessBackend, GliumBackend};
 
 #[derive(Debug, Error)]
 enum Error {
@@ -52,7 +52,14 @@ fn main() -> Result<()> {
     };
 
     Dispatch::new()
-        .format(|out, message, record| out.finish(format_args!("{} @{}: {}", record.level(), record.target(), message)))
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{} @{}: {}",
+                record.level(),
+                record.target(),
+                message
+            ))
+        })
         .level(log_level)
         .chain(io::stdout())
         .apply()
@@ -62,19 +69,23 @@ fn main() -> Result<()> {
         let manifest_dir = env::var("CARGO_MANIFEST_DIR")
             .context("Cannot find the `CARGO_MANIFEST_DIR` environment variable")?;
 
-        PathBuf::from(manifest_dir).parent().unwrap().join("assets").join("pacman")
+        PathBuf::from(manifest_dir)
+            .parent()
+            .unwrap()
+            .join("assets")
+            .join("pacman")
     };
 
     if headless {
-        let mut g: Pacman<HeadlessBackend> = Pacman::new(resource_dir, command)
-            .context("Cannot create the game")?;
+        let mut g: Pacman<HeadlessBackend> =
+            Pacman::new(resource_dir, command).context("Cannot create the game")?;
 
         g.load().context("Cannot load the game")?;
 
         g.run();
     } else {
-        let mut g: Pacman<GliumBackend> = Pacman::new(resource_dir, command)
-            .context("Cannot create the game")?;
+        let mut g: Pacman<GliumBackend> =
+            Pacman::new(resource_dir, command).context("Cannot create the game")?;
 
         g.load().context("Cannot load the game")?;
 

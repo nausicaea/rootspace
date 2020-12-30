@@ -1,5 +1,7 @@
-use super::Storage;
-use super::iterators::{RIter, WIter, EnumRIter};
+use super::{
+    iterators::{EnumRIter, RIter, WIter},
+    Storage,
+};
 use crate::{entity::index::Index, resource::Resource};
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
@@ -152,8 +154,8 @@ impl<T> Drop for VecStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a VecStorage<T> {
-    type Item = &'a T;
     type IntoIter = RIter<'a, VecStorage<T>>;
+    type Item = &'a T;
 
     fn into_iter(self) -> Self::IntoIter {
         RIter::new(self)
@@ -161,8 +163,8 @@ impl<'a, T> IntoIterator for &'a VecStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a mut VecStorage<T> {
-    type Item = &'a mut T;
     type IntoIter = WIter<'a, VecStorage<T>>;
+    type Item = &'a mut T;
 
     fn into_iter(self) -> Self::IntoIter {
         WIter::new(self)
@@ -263,9 +265,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::component::Component;
-    use crate::entities::Entities;
-    use crate::entity::entity::Entity;
+    use crate::{component::Component, entities::Entities, entity::entity::Entity};
     use serde_test::{assert_tokens, Token};
 
     struct DropCounter<'a> {
@@ -384,13 +384,23 @@ mod tests {
 
             {
                 let a = Entity::new(0u32, 1u32);
-                let _ = s.insert(a, DropCounter { count: &mut a_count });
+                let _ = s.insert(
+                    a,
+                    DropCounter {
+                        count: &mut a_count,
+                    },
+                );
                 let _ = s.remove(&a);
             }
 
             {
                 let b = Entity::new(1u32, 1u32);
-                let _ = s.insert(b, DropCounter { count: &mut b_count });
+                let _ = s.insert(
+                    b,
+                    DropCounter {
+                        count: &mut b_count,
+                    },
+                );
             }
         }
 
@@ -414,7 +424,9 @@ mod tests {
             &[
                 Token::Map { len: Some(1) },
                 Token::U32(2),
-                Token::NewtypeStruct { name: "TestComponent" },
+                Token::NewtypeStruct {
+                    name: "TestComponent",
+                },
                 Token::U64(100),
                 Token::MapEnd,
             ],

@@ -7,7 +7,7 @@ pub trait MaybeDefault: Sized {
 
 impl<T> MaybeDefault for T
 where
-    T: Default
+    T: Default,
 {
     fn maybe_default() -> Option<Self> {
         Some(Default::default())

@@ -1,28 +1,33 @@
-use anyhow::{Context, Result};
-use file_manipulation::DirPathBuf;
-use crate::{
-    components::{Camera, Info, Status, Renderable, Model, UiModel},
-    event::EngineEvent,
-    graphics::BackendTrait,
-    resources::{BackendResource, BackendSettings, SceneGraph},
-    systems::{
-        CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor, ForceShutdown,
-        Renderer,
-    },
-    text_manipulation::tokenize,
-};
-use ecs::{Component, Entity, EventQueue, LoopStage, ReceiverId, RegAdd, ResourceRegistry, Resource, System, World, WorldEvent, LoopControl};
-#[cfg(any(test, debug_assertions))]
-use log::debug;
-use log::trace;
 use std::{
     cmp,
+    convert::TryFrom,
     marker::PhantomData,
     path::Path,
     time::{Duration, Instant},
 };
-use std::convert::TryFrom;
-use ecs::resources::ConflictResolution;
+
+use anyhow::{Context, Result};
+#[cfg(any(test, debug_assertions))]
+use log::debug;
+use log::trace;
+
+use ecs::{
+    resources::ConflictResolution, world::event::WorldEvent, Component, Entity, EventQueue,
+    LoopControl, LoopStage, ReceiverId, RegAdd, Resource, ResourceRegistry, System, World,
+};
+use file_manipulation::DirPathBuf;
+
+use crate::{
+    components::{Camera, Info, Model, Renderable, Status, UiModel},
+    event::EngineEvent,
+    graphics::BackendTrait,
+    resources::{BackendResource, BackendSettings, SceneGraph},
+    systems::{
+        CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor,
+        ForceShutdown, Renderer,
+    },
+    text_manipulation::tokenize,
+};
 
 pub type JoinedRegistry<RR> = RegAdd![
     <Info as Component>::Storage,
@@ -51,10 +56,7 @@ where
     B: BackendTrait,
     RR: ResourceRegistry,
 {
-    pub fn new<P: AsRef<Path>>(
-        resource_path: P,
-        command: Option<&str>,
-    ) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(resource_path: P, command: Option<&str>) -> Result<Self> {
         // Create the world
         let mut world = World::default();
 
@@ -69,16 +71,24 @@ where
 
         // Insert basic systems
         world.add_system(LoopStage::Update, ForceShutdown::default());
-        world.add_system(LoopStage::Update, DebugConsole::new(std::io::stdin(), Some('\\'), Some('"'), &[';']));
+        world.add_system(
+            LoopStage::Update,
+            DebugConsole::new(std::io::stdin(), Some('\\'), Some('"'), &[';']),
+        );
         world.add_system(LoopStage::Update, EventInterface::<B>::default());
 
-        let event_monitor = EventMonitor::<WorldEvent>::new(world.get_mut::<EventQueue<WorldEvent>>());
+        let event_monitor =
+            EventMonitor::<WorldEvent>::new(world.get_mut::<EventQueue<WorldEvent>>());
         world.add_system(LoopStage::Update, event_monitor);
 
-        let renderer = Renderer::<B>::new([0.69, 0.93, 0.93, 1.0], world.get_mut::<EventQueue<WorldEvent>>());
+        let renderer = Renderer::<B>::new(
+            [0.69, 0.93, 0.93, 1.0],
+            world.get_mut::<EventQueue<WorldEvent>>(),
+        );
         world.add_system(LoopStage::Render, renderer);
 
-        let event_monitor = EventMonitor::<EngineEvent>::new(world.get_mut::<EventQueue<EngineEvent>>());
+        let event_monitor =
+            EventMonitor::<EngineEvent>::new(world.get_mut::<EventQueue<EngineEvent>>());
         world.add_system(LoopStage::Update, event_monitor);
 
         let camera_manager = CameraManager::new(world.get_mut::<EventQueue<EngineEvent>>());
@@ -95,7 +105,8 @@ where
 
         // Send the requested debug command
         if let Some(cmd) = command {
-            world.get_mut::<EventQueue<EngineEvent>>()
+            world
+                .get_mut::<EventQueue<EngineEvent>>()
                 .send(EngineEvent::Command(tokenize(cmd, '\\', '"', &[';'])));
         }
 
@@ -108,10 +119,28 @@ where
         })
     }
 
+    pub fn save<P: AsRef<Path>>(&mut self, path: P) {
+        self.world.save(path).unwrap();
+    }
+
+    pub fn load<P: AsRef<Path>>(&mut self, path: P) {
+        self.world.load(path).unwrap();
+        self.maintain();
+    }
+
+    pub fn load_additive<P: AsRef<Path>>(&mut self, path: P, strategy: ConflictResolution) {
+        self.world.load_additive(path, strategy).unwrap();
+        self.maintain();
+    }
+
     pub fn run(&mut self) {
         // Update the scene graphs for the first time
-        self.world.borrow_mut::<SceneGraph<Model>>().update(&self.world.borrow_components::<Model>());
-        self.world.borrow_mut::<SceneGraph<UiModel>>().update(&self.world.borrow_components::<UiModel>());
+        self.world
+            .borrow_mut::<SceneGraph<Model>>()
+            .update(&self.world.borrow_components::<Model>());
+        self.world
+            .borrow_mut::<SceneGraph<UiModel>>()
+            .update(&self.world.borrow_components::<UiModel>());
 
         // Initialize the timers
         let mut loop_time = Instant::now();
@@ -174,26 +203,15 @@ where
         self.world.add_system::<S>(stage, system)
     }
 
-    pub fn save<P: AsRef<Path>>(&mut self, path: P) {
-        self.world.save(path).unwrap();
-    }
-
-    pub fn load<P: AsRef<Path>>(&mut self, path: P) {
-        self.world.load(path).unwrap();
-        self.maintain();
-    }
-
-    pub fn load_additive<P: AsRef<Path>>(&mut self, path: P, strategy: ConflictResolution) {
-        self.world.load_additive(path, strategy).unwrap();
-        self.maintain();
-    }
-
     fn maintain(&mut self) -> LoopControl {
         let running = self.world.maintain();
 
         let recv = &self.world_receiver;
         let events = self.world.get_mut::<EventQueue<WorldEvent>>().receive(recv);
-        if events.into_iter().any(|e| e == WorldEvent::DeserializationComplete) {
+        if events
+            .into_iter()
+            .any(|e| e == WorldEvent::DeserializationComplete)
+        {
             // Reload the backend
             if !self.world.contains::<BackendResource<B>>() {
                 #[cfg(any(test, debug_assertions))]
@@ -209,7 +227,10 @@ where
                 self.world.insert(backend);
 
                 #[cfg(any(test, debug_assertions))]
-                debug!("Completed reloading the backend after {:?}", reload_mark.elapsed());
+                debug!(
+                    "Completed reloading the backend after {:?}",
+                    reload_mark.elapsed()
+                );
             }
         }
 

@@ -1,12 +1,12 @@
-use thiserror::Error;
+use dirs;
 use std::{
+    convert::TryFrom,
+    ffi::{OsStr, OsString},
     fs::File,
     io::{self, Read},
     path::{Path, PathBuf},
 };
-use std::convert::TryFrom;
-use std::ffi::{OsStr, OsString};
-use dirs;
+use thiserror::Error;
 
 fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError> {
     let p = path_user_input.as_ref();
@@ -88,17 +88,23 @@ impl TryFrom<&Path> for NewOrExFilePathBuf {
         let path = expand_tilde(path)?;
 
         if !path.exists() {
-            let parent = path.parent()
+            let parent = path
+                .parent()
                 .filter(|p| p.is_dir())
                 .ok_or(FileError::ParentDirectoryNotFound(path.to_path_buf()))
-                .and_then(|p| p.canonicalize().map_err(|e| FileError::IoError(path.to_path_buf(), e)))?;
+                .and_then(|p| {
+                    p.canonicalize()
+                        .map_err(|e| FileError::IoError(path.to_path_buf(), e))
+                })?;
 
-            let file_name = path.file_name()
+            let file_name = path
+                .file_name()
                 .ok_or(FileError::NoBaseNameFound(path.to_path_buf()))?;
 
             Ok(NewOrExFilePathBuf(parent.join(file_name)))
         } else if path.is_file() {
-            let path = path.canonicalize()
+            let path = path
+                .canonicalize()
                 .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
             Ok(NewOrExFilePathBuf(path))
         } else {
@@ -116,8 +122,7 @@ impl FilePathBuf {
     }
 
     pub fn read_to_string(&self) -> Result<String, FileError> {
-        let mut f = File::open(&self.0)
-            .map_err(|e| FileError::IoError(self.0.clone(), e))?;
+        let mut f = File::open(&self.0).map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = String::new();
         f.read_to_string(&mut buf)
             .map_err(|e| FileError::IoError(self.0.clone(), e))?;
@@ -126,8 +131,7 @@ impl FilePathBuf {
     }
 
     pub fn read_to_bytes(&self) -> Result<Vec<u8>, FileError> {
-        let mut f = File::open(&self.0)
-            .map_err(|e| FileError::IoError(self.0.clone(), e))?;
+        let mut f = File::open(&self.0).map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = Vec::new();
         f.read_to_end(&mut buf)
             .map_err(|e| FileError::IoError(self.0.clone(), e))?;
@@ -185,7 +189,8 @@ impl<'a> TryFrom<&Path> for FilePathBuf {
         let path = expand_tilde(path)?;
 
         if path.is_file() {
-            let path = path.canonicalize()
+            let path = path
+                .canonicalize()
                 .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
             Ok(FilePathBuf(path))
         } else {
@@ -252,7 +257,8 @@ impl<'a> TryFrom<&Path> for DirPathBuf {
         let path = expand_tilde(path)?;
 
         if path.is_dir() {
-            let path = path.canonicalize()
+            let path = path
+                .canonicalize()
                 .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
             Ok(DirPathBuf(path))
         } else {

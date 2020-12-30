@@ -1,22 +1,27 @@
-use super::{BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, VertexBufferTrait, Vertex};
+use super::{
+    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex,
+    VertexBufferTrait,
+};
 use crate::{
     assets::Image,
     components::Renderable,
-    event::{EngineEvent, KeyState, KeyModifiers, VirtualKeyCode},
+    event::{EngineEvent, KeyModifiers, KeyState, VirtualKeyCode},
     geometry::rect::Rect,
     resources::BackendResource,
 };
 use anyhow::Result;
-use glium::glutin::{KeyboardInput, ModifiersState, VirtualKeyCode as GliumVkc, ElementState};
 use glium::{
     backend::glutin::DisplayCreationError,
     draw_parameters::DepthTest,
-    glutin::{Api, ContextBuilder, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, WindowBuilder, WindowEvent},
+    glutin::{
+        Api, ContextBuilder, ElementState, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest,
+        KeyboardInput, ModifiersState, VirtualKeyCode as GliumVkc, WindowBuilder, WindowEvent,
+    },
     index::PrimitiveType,
     texture::{ClientFormat, RawImage2d, Texture2d},
     uniforms::{UniformValue, Uniforms},
-    Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
-    Surface, VertexBuffer,
+    Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer,
+    LinearBlendingFactor, Program, Surface, VertexBuffer,
 };
 use std::{
     borrow::{Borrow, Cow},
@@ -46,14 +51,20 @@ impl TryInto<EngineEvent> for GliumEvent {
                 WindowEvent::Resized(l) => Ok(EngineEvent::Resize(l.into())),
                 WindowEvent::HiDpiFactorChanged(f) => Ok(EngineEvent::ChangeDpi(f)),
                 WindowEvent::KeyboardInput {
-                    input: KeyboardInput {
-                        scancode: sc,
-                        state: st,
-                        virtual_keycode: vkc,
-                        modifiers: mods,
-                    },
+                    input:
+                        KeyboardInput {
+                            scancode: sc,
+                            state: st,
+                            virtual_keycode: vkc,
+                            modifiers: mods,
+                        },
                     ..
-                } => Ok(EngineEvent::KeyboardInput { scan_code: sc, state: st.into(), virtual_keycode: vkc.map(|v| v.into()), modifiers: mods.into() }),
+                } => Ok(EngineEvent::KeyboardInput {
+                    scan_code: sc,
+                    state: st.into(),
+                    virtual_keycode: vkc.map(|v| v.into()),
+                    modifiers: mods.into(),
+                }),
                 #[cfg(target_os = "macos")]
                 WindowEvent::KeyboardInput {
                     input:
@@ -282,9 +293,15 @@ where
         f("transform", UniformValue::Mat4(*self.transform.as_ref()));
         f(
             "physical_dimensions",
-            UniformValue::Vec2([self.physical_dimensions.0 as f32, self.physical_dimensions.1 as f32]),
+            UniformValue::Vec2([
+                self.physical_dimensions.0 as f32,
+                self.physical_dimensions.1 as f32,
+            ]),
         );
-        f("diffuse_texture", UniformValue::Texture2d(self.diffuse_texture, None));
+        f(
+            "diffuse_texture",
+            UniformValue::Texture2d(self.diffuse_texture, None),
+        );
         if let Some(nt) = self.normal_texture {
             f("normal_texture", UniformValue::Texture2d(nt, None));
         }
@@ -381,7 +398,9 @@ impl FrameTrait<GliumBackend> for GliumFrame {
             transform,
             physical_dimensions,
             diffuse_texture: &factory.borrow_texture(data.diffuse_texture()).0,
-            normal_texture: data.normal_texture().map(|id| factory.borrow_texture(id).0.borrow()),
+            normal_texture: data
+                .normal_texture()
+                .map(|id| factory.borrow_texture(id).0.borrow()),
         };
 
         let dp = DrawParameters {
@@ -441,12 +460,17 @@ pub struct GliumBackend {
 impl BackendTrait for GliumBackend {
     type Event = GliumEvent;
     type Frame = GliumFrame;
-    type Texture = GliumTexture;
-    type Shader = GliumShader;
-    type VertexBuffer = GliumVertexBuffer;
     type IndexBuffer = GliumIndexBuffer;
+    type Shader = GliumShader;
+    type Texture = GliumTexture;
+    type VertexBuffer = GliumVertexBuffer;
 
-    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self> {
+    fn new<S: AsRef<str>>(
+        title: S,
+        dimensions: (u32, u32),
+        vsync: bool,
+        msaa: u16,
+    ) -> Result<Self> {
         let window = WindowBuilder::new()
             .with_title(title.as_ref())
             .with_dimensions(dimensions.into())
@@ -461,7 +485,10 @@ impl BackendTrait for GliumBackend {
         let events_loop = EventsLoop::new();
 
         match Display::new(window, context, &events_loop) {
-            Ok(display) => Ok(GliumBackend { display, events_loop }),
+            Ok(display) => Ok(GliumBackend {
+                display,
+                events_loop,
+            }),
             Err(DisplayCreationError::GlutinCreationError(e)) => Err(e.into()),
             Err(DisplayCreationError::IncompatibleOpenGl(e)) => Err(e.into()),
         }
@@ -580,7 +607,9 @@ mod tests {
 
         let mut frame: GliumFrame = f.create_frame();
         frame.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
-        assert!(frame.render(&MockLocation::default(), &mut f, &data).is_ok());
+        assert!(frame
+            .render(&MockLocation::default(), &mut f, &data)
+            .is_ok());
         let r = frame.finalize();
         assert!(r.is_ok());
     }

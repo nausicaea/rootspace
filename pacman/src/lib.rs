@@ -1,21 +1,19 @@
 mod player_character;
 
-use anyhow::Result;
-use ecs::{EventQueue, Reg, LoopStage, Component};
-use engine::{
-    components::{Camera, Info, Status, Projection, Model, Renderable, RenderableType},
-    resources::{SceneGraph, BackendResource},
-    orchestrator::Orchestrator,
-    graphics::BackendTrait,
-    EngineEvent
-};
 use crate::player_character::{PlayerCharacter, PlayerCharacterMarker};
-use std::path::Path;
+use anyhow::Result;
+use ecs::{Component, EventQueue, LoopStage, Reg};
+use engine::{
+    components::{Camera, Info, Model, Projection, Renderable, RenderableType, Status},
+    graphics::BackendTrait,
+    orchestrator::Orchestrator,
+    resources::{BackendResource, SceneGraph},
+    EngineEvent,
+};
 use nalgebra::Vector3;
+use std::path::Path;
 
-type ResourceRegistry = Reg![
-    <PlayerCharacterMarker as Component>::Storage,
-];
+type ResourceRegistry = Reg![<PlayerCharacterMarker as Component>::Storage,];
 
 pub struct Pacman<B>
 where
@@ -28,10 +26,7 @@ impl<B> Pacman<B>
 where
     B: BackendTrait,
 {
-    pub fn new<P: AsRef<Path>>(
-        resource_path: P,
-        command: Option<&str>,
-    ) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(resource_path: P, command: Option<&str>) -> Result<Self> {
         Ok(Pacman {
             orch: Orchestrator::new(resource_path, command)?,
         })
@@ -44,25 +39,32 @@ where
         self.orch.insert_component(camera, Status::default());
         self.orch
             .insert_component(camera, Info::new("Camera", "The main camera"));
-        self.orch.insert_component(camera, Camera::new(
-            Projection::Orthographic,
-            (800, 600),
-            std::f32::consts::PI / 2.0,
-            (0.1, 1000.0),
-            1.0,
-        ));
+        self.orch.insert_component(
+            camera,
+            Camera::new(
+                Projection::Orthographic,
+                (800, 600),
+                std::f32::consts::PI / 2.0,
+                (0.1, 1000.0),
+                1.0,
+            ),
+        );
         self.orch.insert_component(camera, Model::identity());
 
         // Create the player character
         let pacman = self.orch.create_entity();
         self.orch.get_mut::<SceneGraph<Model>>().insert(pacman);
         self.orch.insert_component(pacman, Status::default());
-        self.orch.insert_component(pacman, Info::new("Pacman", "The player character"));
-        self.orch.insert_component(pacman, Model::new(
-            Vector3::new(0.0, 0.0, -1.0),
-            Vector3::new(0.0, 0.0, 0.0),
-            Vector3::new(1.0, 1.0, 1.0)
-        ));
+        self.orch
+            .insert_component(pacman, Info::new("Pacman", "The player character"));
+        self.orch.insert_component(
+            pacman,
+            Model::new(
+                Vector3::new(0.0, 0.0, -1.0),
+                Vector3::new(0.0, 0.0, 0.0),
+                Vector3::new(1.0, 1.0, 1.0),
+            ),
+        );
         let factory = self.orch.get_mut::<BackendResource<B>>();
         let renderable = Renderable::builder()
             .with_mesh("meshes/quad.ply")

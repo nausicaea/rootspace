@@ -2,11 +2,11 @@ use crate::{
     debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand, StateCommand},
     event::EngineEvent,
 };
-use ecs::{EventQueue, ReceiverId, Resources, System};
 use anyhow::Result;
-use thiserror::Error;
+use ecs::{EventQueue, ReceiverId, Resources, System};
 use log::trace;
 use std::{collections::HashMap, time::Duration};
+use thiserror::Error;
 
 pub struct DebugShell {
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
@@ -38,7 +38,6 @@ impl DebugShell {
     fn interpret(&self, res: &Resources, tokens: &[String]) -> Result<()> {
         // Iterate over all commands
         for token_group in tokens.split(|t| t == self.terminator) {
-
             // Determine the current command name
             let command_name = token_group[0].as_str();
 
@@ -57,7 +56,8 @@ impl DebugShell {
     }
 
     fn command_help(&self) -> Result<()> {
-        let mut output = String::from("For more information on a specific command, type COMMAND -h\n");
+        let mut output =
+            String::from("For more information on a specific command, type COMMAND -h\n");
         for (k, v) in &self.commands {
             output.push_str(k);
             output.push_str(": ");
@@ -76,10 +76,14 @@ impl System for DebugShell {
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
-        let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
+        let events = res
+            .borrow_mut::<EventQueue<EngineEvent>>()
+            .receive(&self.receiver);
         for event in events {
             match event {
-                EngineEvent::Command(ref tokens) => self.interpret(res, tokens).unwrap_or_else(|e| eprintln!("{}", e)),
+                EngineEvent::Command(ref tokens) => self
+                    .interpret(res, tokens)
+                    .unwrap_or_else(|e| eprintln!("{}", e)),
                 _ => (),
             }
         }

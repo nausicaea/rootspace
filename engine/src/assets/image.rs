@@ -3,8 +3,7 @@ use anyhow::Result;
 use file_manipulation::FilePathBuf;
 use glium::texture::RawImage2d;
 use image::{self, GenericImageView};
-use std::{fmt, path::Path};
-use std::convert::TryFrom;
+use std::{convert::TryFrom, fmt, path::Path};
 
 pub struct Image(image::DynamicImage);
 

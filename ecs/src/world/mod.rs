@@ -1,56 +1,39 @@
-//! Provides the `WorldTrait` and the `World` which manages resources and systems.
-
-use thiserror::Error;
-use crate::{component::Component, storage::Storage, entity::entity::Entity, entities::Entities, event_queue::{EventQueue, ReceiverId}, loop_stage::LoopStage, registry::ResourceRegistry, resource::Resource, resources::{Resources, ConflictResolution}, system::System, systems::Systems, RegAdd, LoopControl};
-use serde::{Deserialize, Serialize};
-use serde_json;
-use log::trace;
 use std::{
     cell::{Ref, RefMut},
+    convert::TryFrom,
     fs::File,
     marker::PhantomData,
     path::{Path, PathBuf},
     time::Duration,
 };
-use file_manipulation::{NewOrExFilePathBuf, FilePathBuf, FileError};
-use std::convert::TryFrom;
 
-/// Events defined and processed by the world itself.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum WorldEvent {
-    /// Causes the WorldTrait::maintain() method to serialize the entire world state to the given
-    /// file.
-    Serialize(PathBuf),
-    /// Signals the completion of serialization.
-    SerializationComplete,
-    /// Causes the WorldTrait::maintain() method to deserialize the entire world state from the
-    /// given file.
-    Deserialize(PathBuf),
-    /// Causes the WorldTrait::maintain() method to deserialize a world state additively from a
-    /// file into the currently loaded state.
-    DeserializeAdditive(PathBuf, ConflictResolution),
-    /// Signals the completion of deserialization.
-    DeserializationComplete,
-    /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game
-    /// engine to abort.
-    Abort,
-}
+use log::trace;
+use serde::{Deserialize, Serialize};
+use serde_json;
+use thiserror::Error;
 
-#[derive(Debug, Error)]
-pub enum WorldError {
-    #[error(transparent)]
-    FileError(#[from] FileError),
-    #[error("{}: {}", .1, .0.display())]
-    IoError(PathBuf, #[source] std::io::Error),
-    #[error("{}: {}", .1, .0.display())]
-    JsonError(PathBuf, #[source] serde_json::Error),
-}
+use file_manipulation::{FileError, FilePathBuf, NewOrExFilePathBuf};
 
-type JoinedRegistry<RR> = RegAdd![
-    Entities,
-    EventQueue<WorldEvent>,
-    RR
-];
+use crate::{
+    component::Component,
+    entities::Entities,
+    entity::entity::Entity,
+    event_queue::{EventQueue, ReceiverId},
+    loop_stage::LoopStage,
+    registry::ResourceRegistry,
+    resource::Resource,
+    resources::{ConflictResolution, Resources},
+    storage::Storage,
+    system::System,
+    systems::Systems,
+    LoopControl, RegAdd,
+};
+
+use self::{error::WorldError, event::WorldEvent, joined_registry::JoinedRegistry};
+
+pub mod error;
+pub mod event;
+mod joined_registry;
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
 /// systems to operate on the stored resources, components and entities.
@@ -68,6 +51,31 @@ impl<RR> World<RR>
 where
     RR: ResourceRegistry,
 {
+    /// Save the current [`World`](crate::world::World) state to a file
+    pub fn save<P: AsRef<Path>>(&mut self, path: P) -> Result<(), WorldError> {
+        self.on_serialize(path.as_ref())
+    }
+
+    /// Load a [`World`](crate::world::World) state from a file, replacing the existing state
+    pub fn load<P: AsRef<Path>>(&mut self, path: P) -> Result<(), WorldError> {
+        self.on_deserialize(path.as_ref())?;
+        self.maintain();
+        Ok(())
+    }
+
+    /// Load a [`World`](crate::world::World) state additively from a file, merging it with the
+    /// existing state in dependence on the
+    /// [`ConflictResolution`](crate::resources::ConflictResolution) strategy.
+    pub fn load_additive<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+        strategy: ConflictResolution,
+    ) -> Result<(), WorldError> {
+        self.on_deserialize_additive(path.as_ref(), strategy)?;
+        self.maintain();
+        Ok(())
+    }
+
     /// Insert a new resource.
     pub fn insert<R>(&mut self, res: R)
     where
@@ -126,7 +134,9 @@ where
     where
         C: Component,
     {
-        self.resources.get_mut::<C::Storage>().insert(entity, component);
+        self.resources
+            .get_mut::<C::Storage>()
+            .insert(entity, component);
     }
 
     pub fn borrow_components<C>(&self) -> Ref<C::Storage>
@@ -162,8 +172,8 @@ where
 
     /// Try to retrieve the specified system type as a mutable reference.
     pub fn find_system_mut<S>(&mut self, stage: LoopStage) -> Option<&mut S>
-        where
-            S: System,
+    where
+        S: System,
     {
         match stage {
             LoopStage::FixedUpdate => self.fixed_update_systems.find_mut::<S>(),
@@ -177,8 +187,8 @@ where
     ///
     /// # Arguments
     ///
-    /// * `time` - Interpreted as the current game time.
-    /// * `delta_time` - Interpreted as the time interval between calls to `fixed_update`.
+    /// * `t` - Interpreted as the current game time.
+    /// * `dt` - Interpreted as the time interval between calls to `fixed_update`.
     pub fn fixed_update(&mut self, t: &Duration, dt: &Duration) {
         for system in self.fixed_update_systems.iter_mut() {
             system.run(&self.resources, t, dt);
@@ -190,8 +200,8 @@ where
     ///
     /// # Arguments
     ///
-    /// * `time` - Interpreted as the current game time.
-    /// * `delta_time` - Interpreted as the time interval between calls to `update`.
+    /// * `t` - Interpreted as the current game time.
+    /// * `dt` - Interpreted as the time interval between calls to `update`.
     pub fn update(&mut self, t: &Duration, dt: &Duration) {
         for system in self.update_systems.iter_mut() {
             system.run(&self.resources, t, dt);
@@ -203,32 +213,17 @@ where
     ///
     /// # Arguments
     ///
-    /// * `time` - Interpreted as the current game time.
-    /// * `delta_time` - Interpreted as the time interval between calls to `render`.
+    /// * `t` - Interpreted as the current game time.
+    /// * `dt` - Interpreted as the time interval between calls to `render`.
     pub fn render(&mut self, t: &Duration, dt: &Duration) {
         for system in self.render_systems.iter_mut() {
             system.run(&self.resources, t, dt);
         }
     }
 
-    pub fn save<P: AsRef<Path>>(&mut self, path: P) -> Result<(), WorldError> {
-        self.on_serialize(path.as_ref())
-    }
-
-    pub fn load<P: AsRef<Path>>(&mut self, path: P) -> Result<(), WorldError> {
-        self.on_deserialize(path.as_ref())?;
-        self.maintain();
-        Ok(())
-    }
-
-    pub fn load_additive<P: AsRef<Path>>(&mut self, path: P, strategy: ConflictResolution) -> Result<(), WorldError> {
-        self.on_deserialize_additive(path.as_ref(), strategy)?;
-        self.maintain();
-        Ok(())
-    }
-
     /// This method is supposed to be called when pending events or messages should be
-    /// handled by the world. If this method returns `LoopControl::Continue`, the execution of the
+    /// handled by the world. If this method returns
+    /// [`LoopControl::Continue`](crate::loop_control::LoopControl), the execution of the
     /// main loop shall continue, otherwise it shall abort.
     pub fn maintain(&mut self) -> LoopControl {
         let events = self
@@ -240,10 +235,12 @@ where
             match e {
                 WorldEvent::Abort => {
                     return LoopControl::Abort;
-                },
+                }
                 WorldEvent::Serialize(p) => self.on_serialize(&p).unwrap(),
                 WorldEvent::Deserialize(p) => self.on_deserialize(&p).unwrap(),
-                WorldEvent::DeserializeAdditive(p, m) => self.on_deserialize_additive(&p, m).unwrap(),
+                WorldEvent::DeserializeAdditive(p, m) => {
+                    self.on_deserialize_additive(&p, m).unwrap()
+                }
                 _ => (),
             }
         }
@@ -256,7 +253,8 @@ where
         let mut file = File::create(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut s = serde_json::Serializer::pretty(&mut file);
 
-        self.resources.serialize::<JoinedRegistry<RR>, _>(&mut s)
+        self.resources
+            .serialize::<JoinedRegistry<RR>, _>(&mut s)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
         self.resources
@@ -284,7 +282,11 @@ where
         Ok(())
     }
 
-    fn on_deserialize_additive(&mut self, path: &Path, strategy: ConflictResolution) -> Result<(), WorldError> {
+    fn on_deserialize_additive(
+        &mut self,
+        path: &Path,
+        strategy: ConflictResolution,
+    ) -> Result<(), WorldError> {
         let file_path = FilePathBuf::try_from(path)?;
         let mut file = File::open(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut d = serde_json::Deserializer::from_reader(&mut file);
@@ -328,11 +330,30 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::{Reg, Resources, VecStorage};
+
     use super::*;
-    use crate::Reg;
+
+    pub type TestRegistry = Reg![VecStorage<usize>,];
 
     #[test]
     fn default() {
         let _: World<Reg![]> = Default::default();
+    }
+
+    /// The following test is used to examine a memory access bug in the scene loading
+    /// functionality of World, using a type with a VecStorage storage type.
+    ///
+    /// # Expected Behavior
+    ///
+    /// This test should _not_ throw a segmentation fault, but should instead panic.
+    #[test]
+    #[should_panic(
+        expected = "called `Result::unwrap()` on an `Err` value: Error(\"Not a registered type: BogusType\", line: 1, column: 12)"
+    )]
+    fn test_no_segfault() {
+        let mut d = serde_json::Deserializer::from_str("{\"BogusType\":null}");
+
+        Resources::deserialize::<TestRegistry, _>(&mut d).unwrap();
     }
 }

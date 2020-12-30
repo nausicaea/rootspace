@@ -1,22 +1,24 @@
 //! Provides the resource manager.
 #![allow(non_snake_case)]
 
-mod init_magic;
-mod ser_magic;
-mod de_magic;
+use std::{
+    any::TypeId,
+    cell::{Ref, RefCell, RefMut},
+    collections::HashMap,
+};
 
-use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
 use log::debug;
 use serde::{
     de::{self, Deserializer},
     ser::{SerializeMap, Serializer},
     Deserialize, Serialize,
 };
-use std::{
-    any::TypeId,
-    cell::{Ref, RefCell, RefMut},
-    collections::HashMap,
-};
+
+use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
+
+mod deserialization;
+mod initialization;
+mod serialization;
 
 macro_rules! impl_iter_ref {
     ($name:ident, $iter:ident, #reads: $($type:ident),+ $(,)?) => {
@@ -66,6 +68,24 @@ pub struct Resources {
 }
 
 impl Resources {
+    impl_iter_ref!(iter_r, RIterRef, #reads: C);
+
+    impl_iter_ref!(iter_w, WIterRef, #writes: C);
+
+    impl_iter_ref!(iter_rr, RRIterRef, #reads: C, D);
+
+    impl_iter_ref!(iter_rw, RWIterRef, #reads: C, #writes: D);
+
+    impl_iter_ref!(iter_ww, WWIterRef, #writes: C, D);
+
+    impl_iter_ref!(iter_rrr, RRRIterRef, #reads: C, D, E);
+
+    impl_iter_ref!(iter_rrw, RRWIterRef, #reads: C, D, #writes: E);
+
+    impl_iter_ref!(iter_rww, RWWIterRef, #reads: C, #writes: D, E);
+
+    impl_iter_ref!(iter_www, WWWIterRef, #writes: C, D, E);
+
     /// Create a new resources container with the specified capacity.
     pub fn with_capacity(cap: usize) -> Self {
         Resources {
@@ -91,7 +111,8 @@ impl Resources {
     where
         R: Resource,
     {
-        self.resources.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
+        self.resources
+            .insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
     }
 
     /// Removes the resource of the specified type.
@@ -125,7 +146,10 @@ impl Resources {
                     ))
                 })
             })
-            .expect(&format!("Could not find any resource of type {}", std::any::type_name::<R>()))
+            .expect(&format!(
+                "Could not find any resource of type {}",
+                std::any::type_name::<R>()
+            ))
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
@@ -143,7 +167,10 @@ impl Resources {
                     ))
                 })
             })
-            .expect(&format!("Could not find any resource of type {}", std::any::type_name::<R>()))
+            .expect(&format!(
+                "Could not find any resource of type {}",
+                std::any::type_name::<R>()
+            ))
     }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
@@ -159,7 +186,10 @@ impl Resources {
                     std::any::type_name::<R>()
                 ))
             })
-            .expect(&format!("Could not find any resource of type {}", std::any::type_name::<R>()))
+            .expect(&format!(
+                "Could not find any resource of type {}",
+                std::any::type_name::<R>()
+            ))
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
@@ -179,18 +209,6 @@ impl Resources {
         self.borrow_mut::<C::Storage>()
     }
 
-    impl_iter_ref!(iter_r, RIterRef, #reads: C);
-    impl_iter_ref!(iter_w, WIterRef, #writes: C);
-
-    impl_iter_ref!(iter_rr, RRIterRef, #reads: C, D);
-    impl_iter_ref!(iter_rw, RWIterRef, #reads: C, #writes: D);
-    impl_iter_ref!(iter_ww, WWIterRef, #writes: C, D);
-
-    impl_iter_ref!(iter_rrr, RRRIterRef, #reads: C, D, E);
-    impl_iter_ref!(iter_rrw, RRWIterRef, #reads: C, D, #writes: E);
-    impl_iter_ref!(iter_rww, RWWIterRef, #reads: C, #writes: D, E);
-    impl_iter_ref!(iter_www, WWWIterRef, #writes: C, D, E);
-
     /// In a similar fashion to Resources::serialize, the following section uses the types stored
     /// in the registry to initialize those resources that have a default, parameterless
     /// constructor.
@@ -199,7 +217,7 @@ impl Resources {
         RR: ResourceRegistry,
     {
         debug!("Beginning the initialization of Resources");
-        init_magic::initialize_resources::<RR>(self);
+        initialization::initialize_resources::<RR>(self);
         debug!("Completed the initialization of Resources");
     }
 
@@ -211,7 +229,7 @@ impl Resources {
     {
         debug!("Beginning the serialization of Resources");
         let mut state = serializer.serialize_map(Some(RR::LEN))?;
-        ser_magic::serialize_resources::<<S as Serializer>::SerializeMap, RR>(self, &mut state)?;
+        serialization::serialize_resources::<S::SerializeMap, RR>(self, &mut state)?;
         state.end()?;
         debug!("Completed the serialization of Resources");
         Ok(())
@@ -224,14 +242,19 @@ impl Resources {
         D: Deserializer<'de>,
     {
         debug!("Beginning the deserialization of Resources");
-        let resources = deserializer.deserialize_map(de_magic::ResourcesVisitor::<RR>::default())?;
+        let resources =
+            deserializer.deserialize_map(deserialization::ResourcesVisitor::<RR>::default())?;
         debug!("Completed the deserialization of Resources");
         Ok(resources)
     }
 
     /// Deserialize `Resources` with the provided type registry, by adding the deserialized
     /// resources to existing ones in `Resources`.
-    pub fn deserialize_additive<'de, RR, D>(&mut self, deserializer: D, method: ConflictResolution) -> Result<(), D::Error>
+    pub fn deserialize_additive<'de, RR, D>(
+        &mut self,
+        deserializer: D,
+        method: ConflictResolution,
+    ) -> Result<(), D::Error>
     where
         RR: ResourceRegistry,
         D: Deserializer<'de>,
@@ -244,8 +267,15 @@ impl Resources {
                 debug!("The new resource {:?} conflicts with a previous one", v);
                 match method {
                     ConflictResolution::KeepOriginal => (),
-                    ConflictResolution::Overwrite => { self.resources.insert(k, v); },
-                    ConflictResolution::Fail => return Err(de::Error::custom(format!("Cannot deserialize the resource {:?} because of conflicts", v))),
+                    ConflictResolution::Overwrite => {
+                        self.resources.insert(k, v);
+                    }
+                    ConflictResolution::Fail => {
+                        return Err(de::Error::custom(format!(
+                            "Cannot deserialize the resource {:?} because of conflicts",
+                            v
+                        )))
+                    }
                 }
             } else {
                 #[cfg(any(test, debug_assertions))]
@@ -260,10 +290,12 @@ impl Resources {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{Reg, Entities, EventQueue, WorldEvent};
     use serde::{Deserialize, Serialize};
     use serde_json;
+
+    use crate::{world::event::WorldEvent, Entities, EventQueue, Reg};
+
+    use super::*;
 
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceA(usize);
@@ -325,8 +357,14 @@ mod tests {
         let resources = Resources::deserialize::<TestRegistry, _>(&mut d).unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
-        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(vec![0, 1]));
-        assert_eq!(*resources.borrow::<TestResourceC>(), TestResourceC(String::from("Bye")));
+        assert_eq!(
+            *resources.borrow::<TestResourceB>(),
+            TestResourceB(vec![0, 1])
+        );
+        assert_eq!(
+            *resources.borrow::<TestResourceC>(),
+            TestResourceC(String::from("Bye"))
+        );
     }
 
     #[test]
@@ -344,8 +382,14 @@ mod tests {
             .unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
-        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(Vec::new()));
-        assert_eq!(*resources.borrow::<TestResourceC>(), TestResourceC(String::from("Bye")));
+        assert_eq!(
+            *resources.borrow::<TestResourceB>(),
+            TestResourceB(Vec::new())
+        );
+        assert_eq!(
+            *resources.borrow::<TestResourceC>(),
+            TestResourceC(String::from("Bye"))
+        );
     }
 
     #[test]
@@ -358,10 +402,15 @@ mod tests {
         let mut d = serde_json::Deserializer::from_slice(
             b"{\"ecs::resources::tests::TestResourceA\":100,\"ecs::resources::tests::TestResourceB\":[0,1,2],\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
         );
-        resources.deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::Overwrite).unwrap();
+        resources
+            .deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::Overwrite)
+            .unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(100));
-        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(vec![0, 1, 2]));
+        assert_eq!(
+            *resources.borrow::<TestResourceB>(),
+            TestResourceB(vec![0, 1, 2])
+        );
         assert_eq!(
             *resources.borrow::<TestResourceC>(),
             TestResourceC(String::from("Hello, World!"))
@@ -381,7 +430,10 @@ mod tests {
             .unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
-        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(vec![0, 1, 2]));
+        assert_eq!(
+            *resources.borrow::<TestResourceB>(),
+            TestResourceB(vec![0, 1, 2])
+        );
         assert_eq!(
             *resources.borrow::<TestResourceC>(),
             TestResourceC(String::from("Hello, World!"))
@@ -390,9 +442,10 @@ mod tests {
 
     #[test]
     fn deserialize_complex() {
-        let mut d = serde_json::Deserializer::from_str(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/ok.json"))
-        );
+        let mut d = serde_json::Deserializer::from_str(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/ok.json"
+        )));
         let r = Resources::deserialize::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
         let dr = d.end();
         assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
@@ -402,9 +455,10 @@ mod tests {
     #[test]
     #[should_panic]
     fn deserialize_complex_extraneous_types() {
-        let mut d = serde_json::Deserializer::from_str(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/extraneous-types.json"))
-        );
+        let mut d = serde_json::Deserializer::from_str(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/extraneous-types.json"
+        )));
         let r = Resources::deserialize::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
         let dr = d.end();
         assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));

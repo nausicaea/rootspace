@@ -51,7 +51,9 @@ where
     I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
-    crlf().or(newline()).expected("a line termination byte sequence")
+    crlf()
+        .or(newline())
+        .expected("a line termination byte sequence")
 }
 
 /// Skips any whitespace after the supplied parser.
@@ -59,8 +61,11 @@ pub fn lex<'a, P>(parser: P) -> impl Parser<Input = P::Input, Output = P::Output
 where
     P: Parser,
     P::Input: Stream<Item = u8, Range = u8> + 'a,
-    <P::Input as StreamOnce>::Error:
-        ParseError<<P::Input as StreamOnce>::Item, <P::Input as StreamOnce>::Range, <P::Input as StreamOnce>::Position>,
+    <P::Input as StreamOnce>::Error: ParseError<
+        <P::Input as StreamOnce>::Item,
+        <P::Input as StreamOnce>::Range,
+        <P::Input as StreamOnce>::Position,
+    >,
 {
     parser.skip(spaces())
 }
@@ -89,7 +94,8 @@ where
         .map(|v| {
             let mut n: O = O::zero();
             for byte in v {
-                n = n * cast::<_, O>(10).unwrap() + (cast::<_, O>(byte).unwrap() - cast::<_, O>(b'0').unwrap());
+                n = n * cast::<_, O>(10).unwrap()
+                    + (cast::<_, O>(byte).unwrap() - cast::<_, O>(b'0').unwrap());
             }
             n
         })
@@ -107,7 +113,8 @@ where
         .map(|(s, v)| {
             let mut n: O = O::zero();
             for byte in v {
-                n = n * cast::<_, O>(10).unwrap() + (cast::<_, O>(byte).unwrap() - cast::<_, O>(b'0').unwrap());
+                n = n * cast::<_, O>(10).unwrap()
+                    + (cast::<_, O>(byte).unwrap() - cast::<_, O>(b'0').unwrap());
             }
 
             if let Some(b'-') = s {

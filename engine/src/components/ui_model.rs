@@ -91,12 +91,27 @@ impl UiModel {
     }
 
     fn recalculate_matrix(&mut self) {
-        let isometry = Isometry3::new(Vector3::new(self.translation.x, self.translation.y, self.depth), zero());
+        let isometry = Isometry3::new(
+            Vector3::new(self.translation.x, self.translation.y, self.depth),
+            zero(),
+        );
         let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(
-            self.scale.x, 0.0, 0.0, 0.0,
-            0.0, self.scale.y, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0,
+            self.scale.x,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            self.scale.y,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
         ));
 
         self.model = isometry * scale_matrix;

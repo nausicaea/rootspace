@@ -100,7 +100,10 @@ impl Element {
     /// ```
     pub fn has_duplicate_properties(&self) -> bool {
         let mut unique = HashSet::new();
-        !self.properties.iter().all(|p| unique.insert(p.name.clone()))
+        !self
+            .properties
+            .iter()
+            .all(|p| unique.insert(p.name.clone()))
     }
 
     /// Returns the last scalar property that matches any of the specified names. Also returns the
@@ -405,7 +408,10 @@ impl Body {
     where
         F: Fn(&[PropertyData]) -> T,
     {
-        self.elements[element].iter().map(|i| mapper(&i.properties)).collect()
+        self.elements[element]
+            .iter()
+            .map(|i| mapper(&i.properties))
+            .collect()
     }
 }
 

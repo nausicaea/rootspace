@@ -2,7 +2,8 @@
 #![deny(missing_docs)]
 
 use nalgebra::{
-    one, zero, Affine3, Matrix4, Point3, RealField, Rotation3, Scalar, Translation3, UnitQuaternion, Vector3, U1, U3,
+    one, zero, Affine3, Matrix4, Point3, RealField, Rotation3, Scalar, Translation3,
+    UnitQuaternion, Vector3, U1, U3,
 };
 #[cfg(any(test, feature = "serde_support"))]
 use serde::{Deserialize, Serialize};
@@ -52,7 +53,11 @@ where
     }
 
     /// Creates a new instance of `AffineTransform` from its parts.
-    pub fn from_parts(translation: Translation3<N>, rotation: UnitQuaternion<N>, scale: Vector3<N>) -> Self {
+    pub fn from_parts(
+        translation: Translation3<N>,
+        rotation: UnitQuaternion<N>,
+        scale: Vector3<N>,
+    ) -> Self {
         AffineTransform {
             translation,
             rotation,

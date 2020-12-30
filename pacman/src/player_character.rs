@@ -1,8 +1,12 @@
-use ecs::{System, Resources, EventQueue, ReceiverId, Component, ZstStorage};
-use engine::{EngineEvent, event::{VirtualKeyCode, KeyState}, components::Model};
-use std::time::Duration;
-use serde::{Serialize, Deserialize};
+use ecs::{Component, EventQueue, ReceiverId, Resources, System, ZstStorage};
+use engine::{
+    components::Model,
+    event::{KeyState, VirtualKeyCode},
+    EngineEvent,
+};
 use log::trace;
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct PlayerCharacterMarker;
@@ -52,18 +56,22 @@ impl System for PlayerCharacter {
     }
 
     fn run(&mut self, res: &Resources, _t: &Duration, dt: &Duration) {
-        let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
+        let events = res
+            .borrow_mut::<EventQueue<EngineEvent>>()
+            .receive(&self.receiver);
 
         for event in events {
             match event {
-                EngineEvent::KeyboardInput { state: KeyState::Pressed, virtual_keycode: Some(vkc), .. } => {
-                    match vkc {
-                        VirtualKeyCode::Up => self.move_char(res, dt, MoveDirection::Up),
-                        VirtualKeyCode::Down => self.move_char(res, dt, MoveDirection::Down),
-                        VirtualKeyCode::Left => self.move_char(res, dt, MoveDirection::Left),
-                        VirtualKeyCode::Right => self.move_char(res, dt, MoveDirection::Right),
-                        _ => (),
-                    }
+                EngineEvent::KeyboardInput {
+                    state: KeyState::Pressed,
+                    virtual_keycode: Some(vkc),
+                    ..
+                } => match vkc {
+                    VirtualKeyCode::Up => self.move_char(res, dt, MoveDirection::Up),
+                    VirtualKeyCode::Down => self.move_char(res, dt, MoveDirection::Down),
+                    VirtualKeyCode::Left => self.move_char(res, dt, MoveDirection::Left),
+                    VirtualKeyCode::Right => self.move_char(res, dt, MoveDirection::Right),
+                    _ => (),
                 },
                 _ => (),
             }

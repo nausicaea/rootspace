@@ -2,7 +2,7 @@
 
 use crate::resource::Resource;
 #[cfg(any(test, debug_assertions))]
-use log::trace;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, VecDeque},
@@ -79,7 +79,11 @@ where
         self.receivers.insert(id, ReceiverState::default());
 
         #[cfg(any(test, debug_assertions))]
-        trace!("Adding a subscriber with id {} for queue {}", id, std::any::type_name::<Self>());
+        debug!(
+            "Adding a subscriber with id {} for queue {}",
+            id,
+            std::any::type_name::<Self>()
+        );
         ReceiverId::new(id)
     }
 
@@ -109,7 +113,13 @@ where
                 let total = events.len();
                 let unread = s.received - s.read;
                 s.read += unread;
-                events.iter().rev().skip(total - unread).take(unread).cloned().collect()
+                events
+                    .iter()
+                    .rev()
+                    .skip(total - unread)
+                    .take(unread)
+                    .cloned()
+                    .collect()
             })
             .unwrap_or_default();
 

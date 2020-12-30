@@ -1,12 +1,10 @@
-use engine::{CommandTrait, AssetMutTrait};
-use file_manipulation::NewOrExFilePathBuf;
-use anyhow::Result;
-use ecs::Resources;
-use clap::{App, AppSettings, Arg, SubCommand};
 use crate::assets::FileSystem;
-use std::path::PathBuf;
-use std::ffi::OsString;
-use std::convert::TryFrom;
+use anyhow::Result;
+use clap::{App, AppSettings, Arg, SubCommand};
+use ecs::Resources;
+use engine::{AssetMutTrait, CommandTrait};
+use file_manipulation::NewOrExFilePathBuf;
+use std::{convert::TryFrom, ffi::OsString, path::PathBuf};
 
 #[derive(Debug, Clone, Copy)]
 pub struct FileSystemCommand;
@@ -39,7 +37,7 @@ impl CommandTrait for FileSystemCommand {
                                     .map_err(|e| OsString::from(format!("{}", e)))
                             })
                             .help("Sets the path of the file to write to"),
-                    )
+                    ),
             )
             .get_matches_from_safe(args)?;
 

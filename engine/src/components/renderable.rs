@@ -1,13 +1,13 @@
 use crate::{
     assets::{AssetTrait, Mesh},
-    graphics::{BackendTrait, text::Text},
+    graphics::{text::Text, BackendTrait},
     resources::{BackendResource, IndexBufferId, ShaderId, TextureId, VertexBufferId},
 };
-use ecs::{Component, VecStorage};
 use anyhow::Result;
-use thiserror::Error;
+use ecs::{Component, VecStorage};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
+use thiserror::Error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RenderableType {
@@ -57,7 +57,13 @@ impl Renderable {
     }
 
     #[cfg(test)]
-    pub fn new(v: VertexBufferId, i: IndexBufferId, s: ShaderId, dt: TextureId, nt: Option<TextureId>) -> Self {
+    pub fn new(
+        v: VertexBufferId,
+        i: IndexBufferId,
+        s: ShaderId,
+        dt: TextureId,
+        nt: Option<TextureId>,
+    ) -> Self {
         Renderable {
             source: None,
             vertices: v,
@@ -248,9 +254,18 @@ impl RenderableBuilder {
         match self.ty {
             RenderableType::Mesh => {
                 let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
-                let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
-                let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
-                let dt_path = self.dt.as_ref().ok_or(RenderableError::MissingDiffuseTexture)?;
+                let vs_path = self
+                    .vs
+                    .as_ref()
+                    .ok_or(RenderableError::MissingVertexShader)?;
+                let fs_path = self
+                    .fs
+                    .as_ref()
+                    .ok_or(RenderableError::MissingFragmentShader)?;
+                let dt_path = self
+                    .dt
+                    .as_ref()
+                    .ok_or(RenderableError::MissingDiffuseTexture)?;
 
                 let mut renderable = Renderable {
                     source: Some(SourceData::Mesh {
@@ -266,12 +281,18 @@ impl RenderableBuilder {
                 renderable.reload(factory)?;
 
                 Ok(renderable)
-            },
+            }
             RenderableType::Text => {
                 let text = self.text.as_ref().ok_or(RenderableError::MissingText)?;
                 let font_path = self.font.as_ref().ok_or(RenderableError::MissingFont)?;
-                let vs_path = self.vs.as_ref().ok_or(RenderableError::MissingVertexShader)?;
-                let fs_path = self.fs.as_ref().ok_or(RenderableError::MissingFragmentShader)?;
+                let vs_path = self
+                    .vs
+                    .as_ref()
+                    .ok_or(RenderableError::MissingVertexShader)?;
+                let fs_path = self
+                    .fs
+                    .as_ref()
+                    .ok_or(RenderableError::MissingFragmentShader)?;
 
                 let mut renderable = Renderable {
                     source: Some(SourceData::Text {
@@ -290,7 +311,7 @@ impl RenderableBuilder {
                 renderable.reload(factory)?;
 
                 Ok(renderable)
-            },
+            }
         }
     }
 }

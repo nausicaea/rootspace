@@ -36,7 +36,10 @@ where
     /// matrix.
     pub fn transform(&self, transform: &AffineTransform<N>) -> Option<Self> {
         let new_origin = transform.transform_point(&self.origin);
-        let new_direction = Unit::try_new(transform.transform_vector(&self.direction), N::default_epsilon())?;
+        let new_direction = Unit::try_new(
+            transform.transform_vector(&self.direction),
+            N::default_epsilon(),
+        )?;
 
         Some(Ray {
             origin: new_origin,

@@ -1,6 +1,4 @@
-use crate::resource::Resource;
-use crate::system::System;
-use crate::maybe_default::MaybeDefault;
+use crate::{maybe_default::MaybeDefault, resource::Resource, system::System};
 use serde::{Deserialize, Serialize};
 
 /// An element within the heterogeneous list.
@@ -121,14 +119,20 @@ mod tests {
             ResourceRegistry::push(End, TestElementA::default()).push(TestElementB::default());
         assert_eq!(
             l,
-            Element::new(TestElementB::default(), Element::new(TestElementA::default(), End))
+            Element::new(
+                TestElementB::default(),
+                Element::new(TestElementA::default(), End)
+            )
         );
 
         let l: Element<TestElementA, Element<TestElementB, End>> =
             ResourceRegistry::push(End, TestElementB::default()).push(TestElementA::default());
         assert_eq!(
             l,
-            Element::new(TestElementA::default(), Element::new(TestElementB::default(), End))
+            Element::new(
+                TestElementA::default(),
+                Element::new(TestElementB::default(), End)
+            )
         );
     }
 
@@ -185,7 +189,9 @@ mod tests {
                     name: "Element",
                     len: 2,
                 },
-                Token::NewtypeStruct { name: "TestElementA" },
+                Token::NewtypeStruct {
+                    name: "TestElementA",
+                },
                 Token::U64(0),
                 Token::UnitStruct { name: "End" },
                 Token::TupleStructEnd,
@@ -204,13 +210,17 @@ mod tests {
                     name: "Element",
                     len: 2,
                 },
-                Token::NewtypeStruct { name: "TestElementB" },
+                Token::NewtypeStruct {
+                    name: "TestElementB",
+                },
                 Token::Str(""),
                 Token::TupleStruct {
                     name: "Element",
                     len: 2,
                 },
-                Token::NewtypeStruct { name: "TestElementA" },
+                Token::NewtypeStruct {
+                    name: "TestElementA",
+                },
                 Token::U64(0),
                 Token::UnitStruct { name: "End" },
                 Token::TupleStructEnd,

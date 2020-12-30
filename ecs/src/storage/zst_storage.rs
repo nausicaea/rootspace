@@ -1,5 +1,7 @@
-use super::Storage;
-use super::iterators::{RIter, WIter, EnumRIter};
+use super::{
+    iterators::{EnumRIter, RIter, WIter},
+    Storage,
+};
 use crate::{entity::index::Index, resource::Resource};
 use serde::{
     de::{Deserializer, SeqAccess, Visitor},
@@ -97,8 +99,8 @@ where
 }
 
 impl<'a, T> IntoIterator for &'a ZstStorage<T> {
-    type Item = &'a T;
     type IntoIter = RIter<'a, ZstStorage<T>>;
+    type Item = &'a T;
 
     fn into_iter(self) -> Self::IntoIter {
         RIter::new(self)
@@ -106,8 +108,8 @@ impl<'a, T> IntoIterator for &'a ZstStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a mut ZstStorage<T> {
-    type Item = &'a mut T;
     type IntoIter = WIter<'a, ZstStorage<T>>;
+    type Item = &'a mut T;
 
     fn into_iter(self) -> Self::IntoIter {
         WIter::new(self)

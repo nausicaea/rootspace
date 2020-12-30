@@ -5,9 +5,9 @@ use ecs::{EventQueue, Resources, System};
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 #[cfg(not(test))]
-use log::info;
-#[cfg(not(test))]
 use log::error;
+#[cfg(not(test))]
+use log::info;
 #[cfg(not(test))]
 use std::process;
 use std::{
@@ -53,7 +53,8 @@ impl System for ForceShutdown {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             #[cfg(any(test, debug_assertions))]
             debug!("Recently caught a termination signal");
-            res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::Shutdown);
+            res.borrow_mut::<EventQueue<EngineEvent>>()
+                .send(EngineEvent::Shutdown);
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
     }
