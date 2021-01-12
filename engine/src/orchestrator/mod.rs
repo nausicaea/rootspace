@@ -10,10 +10,16 @@ use anyhow::{Context, Result};
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 use log::trace;
+use serde::{
+    de::{self, Deserializer, MapAccess, Visitor},
+    Deserialize,
+    ser::{Serializer, SerializeStruct}, Serialize,
+};
 
+use deserialization::{ORCHESTRATOR_FIELDS, OrchestratorVisitor};
 use ecs::{
-    resources::ConflictResolution, world::event::WorldEvent, Component, Entity, EventQueue,
-    LoopControl, LoopStage, ReceiverId, RegAdd, Resource, ResourceRegistry, System, World,
+    Component, Entity, EventQueue, LoopControl,
+    LoopStage, ReceiverId, RegAdd, Resource, ResourceRegistry, System, World, WorldEvent,
 };
 use file_manipulation::DirPathBuf;
 
@@ -29,22 +35,13 @@ use crate::{
     text_manipulation::tokenize,
 };
 
-pub type JoinedRegistry<RR> = RegAdd![
-    <Info as Component>::Storage,
-    <Status as Component>::Storage,
-    <Camera as Component>::Storage,
-    <Renderable as Component>::Storage,
-    <UiModel as Component>::Storage,
-    <Model as Component>::Storage,
-    SceneGraph<UiModel>,
-    SceneGraph<Model>,
-    EventQueue<EngineEvent>,
-    BackendSettings,
-    RR
-];
+use self::type_registry::TypeRegistry;
+
+mod deserialization;
+mod type_registry;
 
 pub struct Orchestrator<B, RR> {
-    pub world: World<JoinedRegistry<RR>>,
+    pub world: World<TypeRegistry<RR>>,
     delta_time: Duration,
     max_frame_time: Duration,
     world_receiver: ReceiverId<WorldEvent>,
@@ -117,20 +114,6 @@ where
             world_receiver,
             _b: PhantomData::default(),
         })
-    }
-
-    pub fn save<P: AsRef<Path>>(&mut self, path: P) {
-        self.world.save(path).unwrap();
-    }
-
-    pub fn load<P: AsRef<Path>>(&mut self, path: P) {
-        self.world.load(path).unwrap();
-        self.maintain();
-    }
-
-    pub fn load_additive<P: AsRef<Path>>(&mut self, path: P, strategy: ConflictResolution) {
-        self.world.load_additive(path, strategy).unwrap();
-        self.maintain();
     }
 
     pub fn run(&mut self) {
@@ -235,5 +218,40 @@ where
         }
 
         running
+    }
+}
+
+impl<B, RR> Serialize for Orchestrator<B, RR>
+    where
+        B: BackendTrait,
+        RR: ResourceRegistry,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Orchestrator", 4)?;
+        state.serialize_field("world", &self.world)?;
+        state.serialize_field("delta_time", &self.delta_time)?;
+        state.serialize_field("max_frame_time", &self.max_frame_time)?;
+        state.serialize_field("world_receiver", &self.world_receiver)?;
+        state.end()
+    }
+}
+
+impl<'de, B, RR> Deserialize<'de> for Orchestrator<B, RR>
+    where
+        B: BackendTrait,
+        RR: ResourceRegistry,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_struct(
+            "Orchestrator",
+            ORCHESTRATOR_FIELDS,
+            OrchestratorVisitor::default(),
+        )
     }
 }

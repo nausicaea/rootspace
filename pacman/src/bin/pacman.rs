@@ -61,7 +61,7 @@ fn main() -> Result<()> {
             ))
         })
         .level(log_level)
-        .chain(io::stdout())
+        .chain(io::stderr())
         .apply()
         .context("Unable to configure the logger")?;
 

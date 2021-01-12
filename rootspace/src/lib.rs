@@ -45,7 +45,8 @@ where
     }
 
     pub fn load(&mut self) -> Result<()> {
-        self.orch.load(&self.main_scene);
+        // FIXME: Replace with a proper deserialization of Orchestrator
+        // self.orch.load(&self.main_scene);
 
         // Add an additional command
         let debug_shell = self

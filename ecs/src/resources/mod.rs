@@ -9,63 +9,58 @@ use std::{
 
 use log::debug;
 use serde::{
-    de::{self, Deserializer},
-    ser::{SerializeMap, Serializer},
-    Deserialize, Serialize,
+    de::{Deserializer},
+    ser::{Serializer},
+    Serialize, Deserialize
 };
 
 use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
+use self::deserialization::DeResources;
+use self::initialization::InitResources;
+use self::serialization::SerResources;
+use crate::short_type_name::short_type_name;
 
-mod deserialization;
-mod initialization;
-mod serialization;
+pub(crate) mod deserialization;
+pub(crate) mod initialization;
+pub(crate) mod serialization;
 
 macro_rules! impl_iter_ref {
     ($name:ident, $iter:ident, #reads: $($type:ident),+ $(,)?) => {
         impl_iter_ref!($name, $iter, #reads: $($type),+, #writes: );
     };
 
-    ($name:ident, $iter:ident, #writes: $($typemut:ident),+ $(,)?) => {
-        impl_iter_ref!($name, $iter, #reads: , #writes: $($typemut),+);
+    ($name:ident, $iter:ident, #writes: $($type_mut:ident),+ $(,)?) => {
+        impl_iter_ref!($name, $iter, #reads: , #writes: $($type_mut),+);
     };
 
-    ($name:ident, $iter:ident, #reads: $($type:ident),*, #writes: $($typemut:ident),* $(,)?) => {
+    ($name:ident, $iter:ident, #reads: $($type:ident),*, #writes: $($type_mut:ident),* $(,)?) => {
         /// Creates a joined iterator over the specified group of components. In other words, only
         /// entities that have all the specified components will be iterated over.
-        pub fn $name<$($type,)* $($typemut,)*>(&self) -> $crate::storage::iterators::$iter<$($type::Storage,)* $($typemut::Storage,)*>
+        pub fn $name<$($type,)* $($type_mut,)*>(&self) -> $crate::storage::iterators::$iter<$($type::Storage,)* $($type_mut::Storage,)*>
         where
             $(
                 $type: Component,
             )*
             $(
-                $typemut: Component,
+                $type_mut: Component,
             )*
         {
             $(
                 let $type = self.borrow::<$type::Storage>();
             )*
             $(
-                let $typemut = self.borrow_mut::<$typemut::Storage>();
+                let $type_mut = self.borrow_mut::<$type_mut::Storage>();
             )*
 
-            $crate::storage::iterators::$iter::new($($type,)* $($typemut,)*)
+            $crate::storage::iterators::$iter::new($($type,)* $($type_mut,)*)
         }
     };
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum ConflictResolution {
-    KeepOriginal,
-    Overwrite,
-    Fail,
 }
 
 /// A container that manages resources. Allows mutable borrows of multiple different resources at
 /// the same time.
 #[derive(Default, Debug)]
-pub struct Resources {
-    resources: HashMap<TypeId, RefCell<Box<dyn Resource>>>,
-}
+pub struct Resources(HashMap<TypeId, RefCell<Box<dyn Resource>>>);
 
 impl Resources {
     impl_iter_ref!(iter_r, RIterRef, #reads: C);
@@ -88,22 +83,69 @@ impl Resources {
 
     /// Create a new resources container with the specified capacity.
     pub fn with_capacity(cap: usize) -> Self {
-        Resources {
-            resources: HashMap::with_capacity(cap),
-        }
+        Resources(HashMap::with_capacity(cap))
+    }
+
+    /// In a similar fashion to Resources::deserialize, the following method uses the types stored
+    /// in the registry to initialize those resources that have a default, parameterless
+    /// constructor.
+    pub fn with_registry<RR>() -> Self
+        where
+            RR: ResourceRegistry,
+    {
+        #[cfg(any(test, debug_assertions))]
+        debug!("Beginning the initialization of Resources");
+        let helper = InitResources::<RR>::new();
+        #[cfg(any(test, debug_assertions))]
+        debug!("Completed the initialization of Resources");
+
+        Resources::from(helper)
+    }
+
+    /// Deserialize [`Resources`](Self) with the supplied
+    /// [`ResourceRegistry`](crate::registry::ResourceRegistry). Here, the registry determines the types that are
+    pub fn deserialize_with<'de, RR, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            RR: ResourceRegistry,
+            D: Deserializer<'de>,
+    {
+        #[cfg(any(test, debug_assertions))]
+        debug!("Beginning the deserialization of Resources");
+        let helper = DeResources::<RR>::deserialize(deserializer)?;
+        #[cfg(any(test, debug_assertions))]
+        debug!("Completed the deserialization of Resources");
+
+        Ok(Resources::from(helper))
+    }
+
+    /// Serialize [`Resources`](Self) with the supplied
+    /// [`ResourceRegistry`](crate::registry::ResourceRegistry).
+    pub fn serialize_with<RR, S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            RR: ResourceRegistry,
+            S: Serializer,
+    {
+        #[cfg(any(test, debug_assertions))]
+        debug!("Beginning the serialization of Resources");
+        let status = SerResources::<RR>::from(self)
+            .serialize(serializer)?;
+        #[cfg(any(test, debug_assertions))]
+        debug!("Completed the serialization of Resources");
+
+        Ok(status)
     }
 
     /// Clears the resources container.
     pub fn clear(&mut self) {
-        self.resources.clear();
+        self.0.clear();
     }
 
     pub fn len(&self) -> usize {
-        self.resources.len()
+        self.0.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.resources.is_empty()
+        self.0.is_empty()
     }
 
     /// Insert a new resource.
@@ -111,8 +153,7 @@ impl Resources {
     where
         R: Resource,
     {
-        self.resources
-            .insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
+        self.0.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
     }
 
     /// Removes the resource of the specified type.
@@ -120,7 +161,7 @@ impl Resources {
     where
         R: Resource,
     {
-        self.resources.remove(&TypeId::of::<R>());
+        self.0.remove(&TypeId::of::<R>());
     }
 
     /// Returns `true` if a resource of the specified type is present.
@@ -128,7 +169,7 @@ impl Resources {
     where
         R: Resource,
     {
-        self.resources.contains_key(&TypeId::of::<R>())
+        self.0.contains_key(&TypeId::of::<R>())
     }
 
     /// Borrows the requested resource.
@@ -136,19 +177,19 @@ impl Resources {
     where
         R: Resource,
     {
-        self.resources
+        self.0
             .get(&TypeId::of::<R>())
             .map(|r| {
                 Ref::map(r.borrow(), |i| {
                     i.downcast_ref::<R>().expect(&format!(
                         "Could not downcast the requested resource to type {}",
-                        std::any::type_name::<R>()
+                        short_type_name::<R>()
                     ))
                 })
             })
             .expect(&format!(
                 "Could not find any resource of type {}",
-                std::any::type_name::<R>()
+                short_type_name::<R>()
             ))
     }
 
@@ -157,19 +198,19 @@ impl Resources {
     where
         R: Resource,
     {
-        self.resources
+        self.0
             .get(&TypeId::of::<R>())
             .map(|r| {
                 RefMut::map(r.borrow_mut(), |i| {
                     i.downcast_mut::<R>().expect(&format!(
                         "Could not downcast the requested resource to type {}",
-                        std::any::type_name::<R>()
+                        short_type_name::<R>()
                     ))
                 })
             })
             .expect(&format!(
                 "Could not find any resource of type {}",
-                std::any::type_name::<R>()
+                short_type_name::<R>()
             ))
     }
 
@@ -178,17 +219,17 @@ impl Resources {
     where
         R: Resource,
     {
-        self.resources
+        self.0
             .get_mut(&TypeId::of::<R>())
             .map(|r| {
                 r.get_mut().downcast_mut::<R>().expect(&format!(
                     "Could not downcast the requested resource to type {}",
-                    std::any::type_name::<R>()
+                    short_type_name::<R>()
                 ))
             })
             .expect(&format!(
                 "Could not find any resource of type {}",
-                std::any::type_name::<R>()
+                short_type_name::<R>()
             ))
     }
 
@@ -209,90 +250,6 @@ impl Resources {
         self.borrow_mut::<C::Storage>()
     }
 
-    /// In a similar fashion to Resources::serialize, the following section uses the types stored
-    /// in the registry to initialize those resources that have a default, parameterless
-    /// constructor.
-    pub fn initialize<RR>(&mut self)
-    where
-        RR: ResourceRegistry,
-    {
-        #[cfg(any(test, debug_assertions))]
-        debug!("Beginning the initialization of Resources");
-        initialization::initialize_resources::<RR>(self);
-        #[cfg(any(test, debug_assertions))]
-        debug!("Completed the initialization of Resources");
-    }
-
-    /// Serialize the types supplied in the registry from `Resources`.
-    pub fn serialize<RR, S>(&self, serializer: S) -> Result<(), S::Error>
-    where
-        RR: ResourceRegistry,
-        S: Serializer,
-    {
-        #[cfg(any(test, debug_assertions))]
-        debug!("Beginning the serialization of Resources");
-        let mut state = serializer.serialize_map(Some(RR::LEN))?;
-        serialization::serialize_resources::<S::SerializeMap, RR>(self, &mut state)?;
-        state.end()?;
-        #[cfg(any(test, debug_assertions))]
-        debug!("Completed the serialization of Resources");
-        Ok(())
-    }
-
-    /// Deserialize `Resources` with the provided type registry.
-    pub fn deserialize<'de, RR, D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        RR: ResourceRegistry,
-        D: Deserializer<'de>,
-    {
-        #[cfg(any(test, debug_assertions))]
-        debug!("Beginning the deserialization of Resources");
-        let resources =
-            deserializer.deserialize_map(deserialization::ResourcesVisitor::<RR>::default())?;
-        #[cfg(any(test, debug_assertions))]
-        debug!("Completed the deserialization of Resources");
-        Ok(resources)
-    }
-
-    /// Deserialize `Resources` with the provided type registry, by adding the deserialized
-    /// resources to existing ones in `Resources`.
-    pub fn deserialize_additive<'de, RR, D>(
-        &mut self,
-        deserializer: D,
-        method: ConflictResolution,
-    ) -> Result<(), D::Error>
-    where
-        RR: ResourceRegistry,
-        D: Deserializer<'de>,
-    {
-        #[cfg(any(test, debug_assertions))]
-        debug!("Beginning the additive deserialization of Resources");
-        let other = Resources::deserialize::<RR, D>(deserializer)?;
-        for (k, v) in other.resources {
-            if self.resources.contains_key(&k) {
-                #[cfg(any(test, debug_assertions))]
-                debug!("The new resource {:?} conflicts with a previous one", v);
-                match method {
-                    ConflictResolution::KeepOriginal => (),
-                    ConflictResolution::Overwrite => {
-                        self.resources.insert(k, v);
-                    }
-                    ConflictResolution::Fail => {
-                        return Err(de::Error::custom(format!(
-                            "Cannot deserialize the resource {:?} because of conflicts",
-                            v
-                        )))
-                    }
-                }
-            } else {
-                #[cfg(any(test, debug_assertions))]
-                debug!("Deserializing the resource {:?}", v);
-                self.resources.insert(k, v);
-            }
-        }
-        debug!("Completed the additive deserialization of Resources");
-        Ok(())
-    }
 }
 
 #[cfg(test)]
@@ -341,7 +298,7 @@ mod tests {
     }
 
     #[test]
-    fn serialize() {
+    fn serialize_with() {
         let mut resources = Resources::default();
         resources.insert(TestResourceA(25));
         resources.insert(TestResourceB(Vec::new()));
@@ -349,19 +306,19 @@ mod tests {
 
         let mut writer: Vec<u8> = Vec::with_capacity(128);
         let mut s = serde_json::Serializer::new(&mut writer);
-        assert!(resources.serialize::<TestRegistry, _>(&mut s).is_ok());
+        assert!(resources.serialize_with::<TestRegistry, _>(&mut s).is_ok());
         assert_eq!(
             unsafe { String::from_utf8_unchecked(writer) },
-            "{\"ecs::resources::tests::TestResourceA\":25,\"ecs::resources::tests::TestResourceB\":[],\"ecs::resources::tests::TestResourceC\":\"Bye\"}"
+            "{\"TestResourceA\":25,\"TestResourceB\":[],\"TestResourceC\":\"Bye\"}"
         );
     }
 
     #[test]
-    fn deserialize() {
+    fn deserialize_with() {
         let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceA\":25,\"ecs::resources::tests::TestResourceB\":[0,1],\"ecs::resources::tests::TestResourceC\":\"Bye\"}",
+            b"{\"TestResourceA\":25,\"TestResourceB\":[0,1],\"TestResourceC\":\"Bye\"}",
         );
-        let resources = Resources::deserialize::<TestRegistry, _>(&mut d).unwrap();
+        let resources = Resources::deserialize_with::<TestRegistry, _>(&mut d).unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
         assert_eq!(
@@ -375,98 +332,24 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_additive_no_overwrite() {
-        let mut resources = Resources::default();
-        resources.insert(TestResourceA(25));
-        resources.insert(TestResourceB(Vec::new()));
-        resources.insert(TestResourceC(String::from("Bye")));
-
-        let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceA\":100,\"ecs::resources::tests::TestResourceB\":[0,1,2],\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
-        );
-        resources
-            .deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::KeepOriginal)
-            .unwrap();
-        assert!(d.end().is_ok());
-        assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
-        assert_eq!(
-            *resources.borrow::<TestResourceB>(),
-            TestResourceB(Vec::new())
-        );
-        assert_eq!(
-            *resources.borrow::<TestResourceC>(),
-            TestResourceC(String::from("Bye"))
-        );
-    }
-
-    #[test]
-    fn deserialize_additive_overwrite() {
-        let mut resources = Resources::default();
-        resources.insert(TestResourceA(25));
-        resources.insert(TestResourceB(Vec::new()));
-        resources.insert(TestResourceC(String::from("Bye")));
-
-        let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceA\":100,\"ecs::resources::tests::TestResourceB\":[0,1,2],\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
-        );
-        resources
-            .deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::Overwrite)
-            .unwrap();
-        assert!(d.end().is_ok());
-        assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(100));
-        assert_eq!(
-            *resources.borrow::<TestResourceB>(),
-            TestResourceB(vec![0, 1, 2])
-        );
-        assert_eq!(
-            *resources.borrow::<TestResourceC>(),
-            TestResourceC(String::from("Hello, World!"))
-        );
-    }
-
-    #[test]
-    fn deserialize_additive_partial() {
-        let mut resources = Resources::default();
-        resources.insert(TestResourceA(25));
-
-        let mut d = serde_json::Deserializer::from_slice(
-            b"{\"ecs::resources::tests::TestResourceB\":[0,1,2],\"ecs::resources::tests::TestResourceC\":\"Hello, World!\"}",
-        );
-        resources
-            .deserialize_additive::<TestRegistry, _>(&mut d, ConflictResolution::KeepOriginal)
-            .unwrap();
-        assert!(d.end().is_ok());
-        assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
-        assert_eq!(
-            *resources.borrow::<TestResourceB>(),
-            TestResourceB(vec![0, 1, 2])
-        );
-        assert_eq!(
-            *resources.borrow::<TestResourceC>(),
-            TestResourceC(String::from("Hello, World!"))
-        );
-    }
-
-    #[test]
-    fn deserialize_complex() {
+    fn deserialize_with_complex() {
         let mut d = serde_json::Deserializer::from_str(include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/tests/ok.json"
         )));
-        let r = Resources::deserialize::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
+        let r = Resources::deserialize_with::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
         let dr = d.end();
         assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
         assert!(dr.is_ok(), format!("{:?}", dr.unwrap_err()));
     }
 
     #[test]
-    #[should_panic]
-    fn deserialize_complex_extraneous_types() {
+    fn deserialize_with_extraneous_types() {
         let mut d = serde_json::Deserializer::from_str(include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/tests/extraneous-types.json"
         )));
-        let r = Resources::deserialize::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
+        let r = Resources::deserialize_with::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
         let dr = d.end();
         assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
         assert!(dr.is_ok(), format!("{:?}", dr.unwrap_err()));

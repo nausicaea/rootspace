@@ -1,5 +1,6 @@
 use crate::{maybe_default::MaybeDefault, resource::Resource, system::System};
 use serde::{Deserialize, Serialize};
+use std::any::TypeId;
 
 /// An element within the heterogeneous list.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -26,6 +27,8 @@ macro_rules! impl_registry {
             type Head: $bound $(+ $others)* + Serialize + for<'de> Deserialize<'de>;
             /// Refers to the type of the tail of the list.
             type Tail: $name;
+
+            fn contains<E: 'static>(element: &E) -> bool;
 
             /// Push a new element onto the head of the heterogeneous list.
             fn push<E>(self, element: E) -> Element<E, Self>
@@ -57,11 +60,19 @@ macro_rules! impl_registry {
 
             const LEN: usize = 1 + <T as $name>::LEN;
 
-            fn head(&self) -> &H {
+            fn contains<E: 'static>(element: &E) -> bool {
+                if TypeId::of::<Self::Head>() == TypeId::of::<E>() {
+                    return true;
+                }
+
+                Self::Tail::contains(element)
+            }
+
+            fn head(&self) -> &Self::Head {
                 &self.0
             }
 
-            fn tail(&self) -> &T {
+            fn tail(&self) -> &Self::Tail {
                 &self.1
             }
         }
@@ -72,11 +83,15 @@ macro_rules! impl_registry {
 
             const LEN: usize = 0;
 
-            fn head(&self) -> &() {
+            fn contains<E: 'static>(_element: &E) -> bool {
+                false
+            }
+
+            fn head(&self) -> &Self::Head {
                 &()
             }
 
-            fn tail(&self) -> &End {
+            fn tail(&self) -> &Self::Tail {
                 &End
             }
         }

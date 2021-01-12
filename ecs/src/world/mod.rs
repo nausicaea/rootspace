@@ -3,16 +3,19 @@ use std::{
     convert::TryFrom,
     fs::File,
     marker::PhantomData,
-    path::{Path, PathBuf},
+    path::Path,
     time::Duration,
 };
 
-use log::trace;
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+    de,
+    ser::{self, SerializeStruct},
+};
 use serde_json;
-use thiserror::Error;
 
-use file_manipulation::{FileError, FilePathBuf, NewOrExFilePathBuf};
+use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 
 use crate::{
     component::Component,
@@ -22,18 +25,21 @@ use crate::{
     loop_stage::LoopStage,
     registry::ResourceRegistry,
     resource::Resource,
-    resources::{ConflictResolution, Resources},
+    resources::Resources,
     storage::Storage,
     system::System,
     systems::Systems,
-    LoopControl, RegAdd,
+    loop_control::LoopControl,
 };
 
-use self::{error::WorldError, event::WorldEvent, joined_registry::JoinedRegistry};
+use self::{error::WorldError, event::WorldEvent, type_registry::TypeRegistry};
+use self::deserialization::{WORLD_FIELDS, WorldVisitor};
+use crate::resources::serialization::SerResources;
 
 pub mod error;
 pub mod event;
-mod joined_registry;
+mod type_registry;
+mod deserialization;
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
 /// systems to operate on the stored resources, components and entities.
@@ -42,8 +48,7 @@ pub struct World<RR> {
     fixed_update_systems: Systems,
     update_systems: Systems,
     render_systems: Systems,
-    receiver: Option<ReceiverId<WorldEvent>>,
-    loaded_states: Vec<FilePathBuf>,
+    receiver: ReceiverId<WorldEvent>,
     _rr: PhantomData<RR>,
 }
 
@@ -51,31 +56,6 @@ impl<RR> World<RR>
 where
     RR: ResourceRegistry,
 {
-    /// Save the current [`World`](crate::world::World) state to a file
-    pub fn save<P: AsRef<Path>>(&mut self, path: P) -> Result<(), WorldError> {
-        self.on_serialize(path.as_ref())
-    }
-
-    /// Load a [`World`](crate::world::World) state from a file, replacing the existing state
-    pub fn load<P: AsRef<Path>>(&mut self, path: P) -> Result<(), WorldError> {
-        self.on_deserialize(path.as_ref())?;
-        self.maintain();
-        Ok(())
-    }
-
-    /// Load a [`World`](crate::world::World) state additively from a file, merging it with the
-    /// existing state in dependence on the
-    /// [`ConflictResolution`](crate::resources::ConflictResolution) strategy.
-    pub fn load_additive<P: AsRef<Path>>(
-        &mut self,
-        path: P,
-        strategy: ConflictResolution,
-    ) -> Result<(), WorldError> {
-        self.on_deserialize_additive(path.as_ref(), strategy)?;
-        self.maintain();
-        Ok(())
-    }
-
     /// Insert a new resource.
     pub fn insert<R>(&mut self, res: R)
     where
@@ -226,16 +206,11 @@ where
     /// [`LoopControl::Continue`](crate::loop_control::LoopControl), the execution of the
     /// main loop shall continue, otherwise it shall abort.
     pub fn maintain(&mut self) -> LoopControl {
-        let events = self
-            .receiver
-            .as_ref()
-            .map(|recv| {
-                self.resources
-                    .get_mut::<EventQueue<WorldEvent>>()
-                    .receive(recv)
-            })
-            .unwrap_or(Vec::default());
+        // Receive all pending events
+        let events = self.resources.get_mut::<EventQueue<WorldEvent>>()
+            .receive(&self.receiver);
 
+        // Process all pending events
         for e in events {
             match e {
                 WorldEvent::Abort => {
@@ -243,9 +218,6 @@ where
                 }
                 WorldEvent::Serialize(p) => self.on_serialize(&p).unwrap(),
                 WorldEvent::Deserialize(p) => self.on_deserialize(&p).unwrap(),
-                WorldEvent::DeserializeAdditive(p, m) => {
-                    self.on_deserialize_additive(&p, m).unwrap()
-                }
                 _ => (),
             }
         }
@@ -255,16 +227,14 @@ where
 
     fn on_serialize(&mut self, path: &Path) -> Result<(), WorldError> {
         // Create the serializer
+        // FIXME: Find a solution not to hard-code the Serializer type
         let file_path = NewOrExFilePathBuf::try_from(path)?;
         let mut file = File::create(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut s = serde_json::Serializer::pretty(&mut file);
 
-        // Serialize the resources
-        self.resources
-            .serialize::<JoinedRegistry<RR>, _>(&mut s)
+        // Serialize the entire World
+        let _status = self.serialize(&mut s)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
-
-        // TODO: serialize all systems
 
         // Notify the world of the serialization event
         self.resources
@@ -276,65 +246,21 @@ where
 
     fn on_deserialize(&mut self, path: &Path) -> Result<(), WorldError> {
         // Create the deserializer
+        // FIXME: Find a solution not to hard-code the Deserializer type
         let file_path = FilePathBuf::try_from(path)?;
         let mut file = File::open(&file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut d = serde_json::Deserializer::from_reader(&mut file);
 
-        // Deserialize the resources
-        let resources = Resources::deserialize::<JoinedRegistry<RR>, _>(&mut d)
+        // Deserialize the entire world
+        let world = World::<RR>::deserialize(&mut d)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
-        // Push the newly loaded state onto the stack
-        // TODO: Unload all previously loaded states
-        self.loaded_states.clear();
-        self.loaded_states.push(file_path);
-
-        // Assign the new resources
-        self.resources = resources;
-
-        // Renew the subscription to EventQueue<WorldEvent>.
-        #[cfg(any(test, debug_assertions))]
-        trace!("World<RR> renewing subscription to EventQueue<WorldEvent>");
-        self.receiver = Some(
-            self.resources
-                .get_mut::<EventQueue<WorldEvent>>()
-                .renew(self.receiver.clone()),
-        );
-
-        // Notify the world of the deserialization event
-        self.resources
-            .get_mut::<EventQueue<WorldEvent>>()
-            .send(WorldEvent::DeserializationComplete);
-
-        Ok(())
-    }
-
-    fn on_deserialize_additive(
-        &mut self,
-        path: &Path,
-        strategy: ConflictResolution,
-    ) -> Result<(), WorldError> {
-        // Create the deserializer
-        let file_path = FilePathBuf::try_from(path)?;
-        let mut file = File::open(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
-        let mut d = serde_json::Deserializer::from_reader(&mut file);
-
-        // Deserialize the resources additively
-        self.resources
-            .deserialize_additive::<JoinedRegistry<RR>, _>(&mut d, strategy)
-            .map_err(|e| WorldError::JsonError(path.into(), e))?;
-
-        // Push the newly loaded state onto the stack
-        self.loaded_states.push(path.into());
-
-        // Renew the subscription to EventQueue<WorldEvent>.
-        #[cfg(any(test, debug_assertions))]
-        trace!("World<RR> renewing subscription to EventQueue<WorldEvent>");
-        self.receiver = Some(
-            self.resources
-                .get_mut::<EventQueue<WorldEvent>>()
-                .renew(self.receiver.clone()),
-        );
+        // Assign its parts to the current instance
+        self.resources = world.resources;
+        self.fixed_update_systems = world.fixed_update_systems;
+        self.update_systems = world.update_systems;
+        self.render_systems = world.render_systems;
+        self.receiver = world.receiver;
 
         // Notify the world of the deserialization event
         self.resources
@@ -350,28 +276,56 @@ where
     RR: ResourceRegistry,
 {
     fn default() -> Self {
-        let mut resources = Resources::with_capacity(JoinedRegistry::<RR>::LEN);
-        resources.initialize::<JoinedRegistry<RR>>();
-
-        #[cfg(any(test, debug_assertions))]
-        trace!("World<RR> subscribing to EventQueue<WorldEvent>");
-        let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe();
+        let mut resources = Resources::with_registry::<TypeRegistry<RR>>();
+        let receiver = resources.get_mut::<EventQueue<WorldEvent>>()
+            .subscribe();
 
         World {
             resources,
             fixed_update_systems: Systems::default(),
             update_systems: Systems::default(),
             render_systems: Systems::default(),
-            receiver: Some(receiver),
-            loaded_states: Vec::default(),
+            receiver,
             _rr: PhantomData::default(),
         }
     }
 }
 
+impl<RR> Serialize for World<RR>
+where
+    RR: ResourceRegistry,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        let mut state = serializer.serialize_struct("World", WORLD_FIELDS.len())?;
+        state.serialize_field("resources", &SerResources::<TypeRegistry<RR>>::from(&self.resources))?;
+        state.skip_field("fixed_update_systems")?;
+        state.skip_field("update_systems")?;
+        state.skip_field("render_systems")?;
+        state.serialize_field("receiver", &self.receiver)?;
+        state.skip_field("_rr")?;
+        state.end()
+    }
+}
+
+impl<'de, RR> Deserialize<'de> for World<RR>
+where
+    RR: ResourceRegistry,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        deserializer.deserialize_struct("World", WORLD_FIELDS, WorldVisitor::<RR>::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{Reg, Resources, VecStorage};
+    use crate::{Reg, VecStorage};
+    use serde_test::{assert_ser_tokens, Token};
 
     use super::*;
 
@@ -382,19 +336,66 @@ mod tests {
         let _: World<Reg![]> = Default::default();
     }
 
-    /// The following test is used to examine a memory access bug in the scene loading
-    /// functionality of World, using a type with a VecStorage storage type.
-    ///
-    /// # Expected Behavior
-    ///
-    /// This test should _not_ throw a segmentation fault, but should instead panic.
     #[test]
-    #[should_panic(
-        expected = "called `Result::unwrap()` on an `Err` value: Error(\"Not a registered type: BogusType\", line: 1, column: 12)"
-    )]
-    fn test_no_segfault() {
-        let mut d = serde_json::Deserializer::from_str("{\"BogusType\":null}");
+    fn serde() {
+        let world = World::<TestRegistry>::default();
 
-        Resources::deserialize::<TestRegistry, _>(&mut d).unwrap();
+        assert_ser_tokens(
+            &world,
+            &[
+                Token::Struct {
+                    name: "World",
+                    len: 2,
+                },
+                Token::Str("resources"),
+                Token::Map {
+                    len: Some(3),
+                },
+                Token::Str("Entities"),
+                Token::Struct { name: "Entities", len: 3},
+                Token::Str("max_idx"),
+                Token::U32(0),
+                Token::Str("free_idx"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::Str("generations"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::StructEnd,
+                Token::Str("EventQueue<WorldEvent>"),
+                Token::Struct { name: "EventQueue", len: 4 },
+                Token::Str("events"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::Str("receivers"),
+                Token::Map { len: Some(1) },
+                Token::U64(0),
+                Token::Struct { name: "ReceiverState", len: 2 },
+                Token::Str("read"),
+                Token::U64(0),
+                Token::Str("received"),
+                Token::U64(0),
+                Token::StructEnd,
+                Token::MapEnd,
+                Token::Str("max_id"),
+                Token::U64(1),
+                Token::Str("free_ids"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::StructEnd,
+                Token::Str("VecStorage<usize>"),
+                Token::Map {
+                    len: Some(0),
+                },
+                Token::MapEnd,
+                Token::MapEnd,
+                Token::Str("receiver"),
+                Token::Struct { name: "ReceiverId", len: 1 },
+                Token::Str("id"),
+                Token::U64(0),
+                Token::StructEnd,
+                Token::StructEnd,
+            ],
+        );
     }
 }

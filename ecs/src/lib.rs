@@ -19,6 +19,7 @@ pub use crate::{
     system::System,
     systems::Systems,
     world::{error::WorldError, event::WorldEvent, World},
+    short_type_name::short_type_name,
 };
 
 pub mod component;
@@ -37,3 +38,4 @@ pub mod storage;
 pub mod system;
 pub mod systems;
 pub mod world;
+pub mod short_type_name;

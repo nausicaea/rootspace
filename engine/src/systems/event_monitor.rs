@@ -1,4 +1,4 @@
-use ecs::{EventQueue, ReceiverId, Resources, System};
+use ecs::{EventQueue, ReceiverId, Resources, System, short_type_name};
 use log::trace;
 use std::{fmt, time::Duration};
 
@@ -13,8 +13,8 @@ where
     pub fn new(queue: &mut EventQueue<E>) -> Self {
         trace!(
             "{} subscribing to {}",
-            std::any::type_name::<Self>(),
-            std::any::type_name::<EventQueue<E>>()
+            short_type_name::<Self>(),
+            short_type_name::<EventQueue<E>>()
         );
         EventMonitor {
             receiver: queue.subscribe(),

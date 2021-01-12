@@ -9,6 +9,7 @@ use std::{
     fmt,
     marker::PhantomData,
 };
+use crate::short_type_name::short_type_name;
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -82,7 +83,7 @@ where
         debug!(
             "Adding a subscriber with id {} for queue {}",
             id,
-            std::any::type_name::<Self>()
+            short_type_name::<Self>()
         );
         ReceiverId::new(id)
     }
@@ -105,7 +106,7 @@ where
     /// Return `true` if the receiver is subscribed to this
     /// [`EventQueue<T>`](crate::event_queue::EventQueue), `false` otherwise.
     pub fn is_subscribed(&self, id: &ReceiverId<E>) -> bool {
-        self.receivers.contains_key(id)
+        self.receivers.contains_key(&id.id)
     }
 
     /// Send an event into the queue.

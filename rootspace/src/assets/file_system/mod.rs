@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod group_id;
 mod mode;
 mod node;

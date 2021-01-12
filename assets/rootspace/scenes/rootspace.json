@@ -1,5 +1,5 @@
 {
-  "ecs::entities::Entities": {
+  "Entities": {
     "max_idx": 4,
     "free_idx": [],
     "generations": [
@@ -9,7 +9,7 @@
       1
     ]
   },
-  "ecs::event_queue::EventQueue<ecs::world::WorldEvent>": {
+  "EventQueue<WorldEvent>": {
     "events": [
       {
         "Serialize": "~/Downloads/rootspace.json"
@@ -36,7 +36,7 @@
     "max_id": 4,
     "free_ids": []
   },
-  "ecs::storage::vec_storage::VecStorage<engine::components::info::Info>": {
+  "VecStorage<Info>": {
     "2": {
       "name": "Entity B",
       "description": "Text example"
@@ -54,7 +54,7 @@
       "description": "The main camera"
     }
   },
-  "ecs::storage::vec_storage::VecStorage<engine::components::status::Status>": {
+  "VecStorage<Status>": {
     "3": {
       "enabled": true,
       "visible": true
@@ -72,7 +72,7 @@
       "visible": true
     }
   },
-  "ecs::storage::vec_storage::VecStorage<engine::components::camera::Camera>": {
+  "VecStorage<Camera>": {
     "0": {
       "projection": "Perspective",
       "dimensions": [
@@ -87,7 +87,7 @@
       "dpi_factor": 1.0
     }
   },
-  "ecs::storage::vec_storage::VecStorage<engine::components::renderable::Renderable>": {
+  "VecStorage<Renderable>": {
     "1": {
       "source": {
         "Text": {
@@ -128,7 +128,7 @@
       }
     }
   },
-  "ecs::storage::vec_storage::VecStorage<engine::components::ui_model::UiModel>": {
+  "VecStorage<UiModel>": {
     "3": {
       "translation": [
         0.0,
@@ -141,7 +141,7 @@
       "depth": -1.0
     }
   },
-  "ecs::storage::vec_storage::VecStorage<engine::components::model::Model>": {
+  "VecStorage<Model>": {
     "0": {
       "translation": [
         0.0,
@@ -197,7 +197,7 @@
       ]
     }
   },
-  "engine::resources::scene_graph::SceneGraph<engine::components::ui_model::UiModel>": {
+  "SceneGraph<UiModel>": {
     "root_idx": 0,
     "graph": {
       "nodes": [
@@ -231,7 +231,7 @@
       ]
     }
   },
-  "engine::resources::scene_graph::SceneGraph<engine::components::model::Model>": {
+  "SceneGraph<Model>": {
     "root_idx": 0,
     "graph": {
       "nodes": [
@@ -330,7 +330,7 @@
       ]
     }
   },
-  "ecs::event_queue::EventQueue<engine::event::EngineEvent>": {
+  "EventQueue<EngineEvent>": {
     "events": [],
     "receivers": {
       "1": {
@@ -353,7 +353,7 @@
     "max_id": 4,
     "free_ids": []
   },
-  "engine::resources::backend_resource::BackendSettings": {
+  "BackendSettings": {
     "title": "Title",
     "dimensions": [
       800,
