@@ -162,6 +162,8 @@ impl BackendTrait for HeadlessBackend {
 mod tests {
     use super::*;
     use crate::resources::BackendSettings;
+    use file_manipulation::DirPathBuf;
+    use std::convert::TryFrom;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);
@@ -186,7 +188,7 @@ mod tests {
 
     #[test]
     fn frame() {
-        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();

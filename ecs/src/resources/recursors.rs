@@ -1,0 +1,127 @@
+use super::Resources;
+use std::marker::PhantomData;
+use crate::registry::ResourceRegistry;
+use crate::MaybeDefault;
+use std::any::type_name;
+use serde::ser::SerializeMap;
+use serde::{ser, de};
+use serde::de::MapAccess;
+use log::debug;
+use crate::short_type_name::short_type_name;
+
+pub fn initialize_recursive<RR>(resources: &mut Resources, _: PhantomData<RR>)
+    where
+        RR: ResourceRegistry,
+{
+    if RR::LEN == 0 {
+        return;
+    }
+
+    if let Some(default_value) = RR::Head::maybe_default() {
+        #[cfg(any(test, debug_assertions))]
+        debug!("Initializing the resource {}", type_name::<RR::Head>());
+        resources.insert(default_value)
+    } else {
+        #[cfg(any(test, debug_assertions))]
+        debug!(
+            "Not initializing the resource {} because it lacks a default constructor",
+            type_name::<RR::Head>()
+        );
+    }
+
+    initialize_recursive::<RR::Tail>(resources, PhantomData::default());
+}
+
+pub fn serialize_recursive<RR, SM>(
+    resources: &Resources,
+    serialize_map: &mut SM,
+    _: PhantomData<RR>,
+) -> Result<(), SM::Error>
+    where
+        SM: SerializeMap,
+        RR: ResourceRegistry,
+{
+    if RR::LEN == 0 {
+        return Ok(())
+    }
+
+    let stn = short_type_name::<RR::Head>();
+
+    if !resources.contains::<RR::Head>() {
+        return Err(ser::Error::custom(format!(
+            "the resource {} was not found",
+            stn,
+        )))
+    }
+
+    #[cfg(any(test, debug_assertions))]
+    debug!("Serializing the resource {}", &stn);
+    serialize_map.serialize_entry(
+        &stn,
+        &*resources.borrow::<RR::Head>(),
+    )?;
+
+    serialize_recursive::<RR::Tail, SM>(resources, serialize_map, PhantomData::default())
+}
+
+pub fn deserialize_recursive<'de, A, RR>(
+    resources: &mut Resources,
+    map_access: &mut A,
+    ser_type_name: &str,
+    expected_type_names: &'static [&'static str],
+    _: PhantomData<RR>,
+) -> Result<(), A::Error>
+    where
+        A: MapAccess<'de>,
+        RR: ResourceRegistry,
+{
+    if RR::LEN == 0 {
+        return Err(de::Error::custom(format!("Unknown field {}", ser_type_name)));
+    }
+
+    let stn = short_type_name::<RR::Head>();
+
+    if ser_type_name == stn {
+        if resources.contains::<RR::Head>() {
+            return Err(de::Error::custom(format!("Duplicate field {}", stn)));
+        }
+
+        #[cfg(any(test, debug_assertions))]
+        debug!("Deserializing the resource {}", stn);
+        let c = map_access.next_value::<RR::Head>()?;
+        resources.insert(c);
+        return Ok(());
+    }
+
+    deserialize_recursive::<A, RR::Tail>(
+        resources,
+        map_access,
+        ser_type_name,
+        expected_type_names,
+        PhantomData::default(),
+    )
+}
+
+pub fn validate_recursive<'de, A, RR>(
+    resources: &Resources,
+    _: PhantomData<A>,
+    _: PhantomData<RR>,
+) -> Result<(), A::Error>
+    where
+        A: MapAccess<'de>,
+        RR: ResourceRegistry,
+{
+    if RR::LEN == 0 {
+        return Ok(());
+    }
+
+    if !resources.contains::<RR::Head>() {
+        return Err(de::Error::custom(format!("Missing field {}", short_type_name::<RR::Head>())));
+    }
+
+    validate_recursive::<A, RR::Tail>(
+        resources,
+        PhantomData::default(),
+        PhantomData::default()
+    )
+}

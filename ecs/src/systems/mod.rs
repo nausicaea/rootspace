@@ -1,14 +1,78 @@
-pub(crate) mod serialization;
-pub(crate) mod deserialization;
+pub(crate) mod typed_systems;
+mod typed_system;
+mod recursors;
 
 use crate::system::System;
+use crate::registry::SystemRegistry;
 use std::slice::{Iter, IterMut};
+use log::debug;
+use self::typed_systems::TypedSystems;
 
+use serde::{Serialize, Deserialize, de::Deserializer, ser::Serializer};
+
+#[derive(Default)]
 pub struct Systems(Vec<Box<dyn System>>);
 
+impl std::fmt::Debug for Systems {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "System(#{})", self.0.len())
+    }
+}
+
 impl Systems {
+    pub fn with_capacity(cap: usize) -> Self {
+        Systems(Vec::with_capacity(cap))
+    }
+
+    pub fn with_registry<SR>() -> Self
+        where
+            SR: SystemRegistry,
+    {
+        #[cfg(any(test, debug_assertions))]
+        debug!("Beginning the initialization of Systems");
+        let helper = TypedSystems::<SR>::default();
+        #[cfg(any(test, debug_assertions))]
+        debug!("Completed the initialization of Systems");
+
+        Systems::from(helper)
+    }
+
+    pub fn deserialize_with<'de, SR, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            SR: SystemRegistry,
+            D: Deserializer<'de>,
+    {
+        #[cfg(any(test, debug_assertions))]
+        debug!("Beginning the deserialization of Systems");
+        let helper = TypedSystems::<SR>::deserialize(deserializer)?;
+        #[cfg(any(test, debug_assertions))]
+        debug!("Completed the deserialization of Systems");
+
+        Ok(Systems::from(helper))
+    }
+
+    pub fn serialize_with<SR, S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            SR: SystemRegistry,
+            S: Serializer,
+    {
+        #[cfg(any(test, debug_assertions))]
+        debug!("Beginning the serialization of Systems");
+        let status = TypedSystems::<SR>::from(self)
+            .serialize(serializer)?;
+        #[cfg(any(test, debug_assertions))]
+        debug!("Completed the serialization of Systems");
+
+        Ok(status)
+    }
+
+
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 
     pub fn contains<S>(&self) -> bool
@@ -28,6 +92,16 @@ impl Systems {
         S: System,
     {
         self.0.push(Box::new(sys))
+    }
+
+    pub fn find_with_position<S>(&self) -> Option<(usize, &S)>
+    where
+        S: System,
+    {
+        self.0.iter()
+            .enumerate()
+            .filter_map(|(i, s)| s.downcast_ref::<S>().map(|sdc| (i, sdc)))
+            .nth(0)
     }
 
     pub fn find<S>(&self) -> Option<&S>
@@ -56,12 +130,6 @@ impl Systems {
     }
 }
 
-impl Default for Systems {
-    fn default() -> Self {
-        Systems(Vec::default())
-    }
-}
-
 impl<'a> IntoIterator for &'a Systems {
     type Item = &'a Box<dyn System>;
     type IntoIter = Iter<'a, Box<dyn System>>;
@@ -77,5 +145,17 @@ impl<'a> IntoIterator for &'a mut Systems {
 
     fn into_iter(self) -> Self::IntoIter {
         (&mut self.0).into_iter()
+    }
+}
+
+impl PartialEq for Systems {
+    fn eq(&self, rhs: &Self) -> bool {
+        if self.len() != rhs.len() {
+            return false;
+        }
+
+        self.0.iter()
+            .zip(rhs)
+            .all(|(lhs, rhs)| lhs.name() == rhs.name())
     }
 }

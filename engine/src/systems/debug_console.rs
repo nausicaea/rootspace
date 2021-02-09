@@ -16,6 +16,7 @@ use std::{
 };
 use thiserror::Error;
 
+#[derive(Debug)]
 pub struct DebugConsole {
     escape_char: char,
     quote_char: char,

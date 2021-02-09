@@ -12,11 +12,17 @@ use std::{
 use crate::short_type_name::short_type_name;
 
 /// A handle that allows a receiver to receive events from the related event queue.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ReceiverId<E> {
     id: usize,
     #[serde(skip, default = "PhantomData::default")]
     _e: PhantomData<E>,
+}
+
+impl<E> std::fmt::Debug for ReceiverId<E> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "ReceiverId<{}> {{ id: {:?} }}", std::any::type_name::<E>(), self.id)
+    }
 }
 
 impl<E> ReceiverId<E> {
@@ -28,7 +34,7 @@ impl<E> ReceiverId<E> {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 struct ReceiverState<E> {
     read: usize,
     received: usize,
@@ -40,6 +46,12 @@ impl<E> ReceiverState<E> {
     fn reset(&mut self) {
         self.read = 0;
         self.received = 0;
+    }
+}
+
+impl<E> std::fmt::Debug for ReceiverState<E> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "ReceiverState<{}> {{ read: {:?}, received: {:?} }}", std::any::type_name::<E>(), self.read, self.received)
     }
 }
 
@@ -55,12 +67,21 @@ impl<E> Default for ReceiverState<E> {
 
 /// An `EventQueue` contains a queue of events and provides rudimentary facilities of retrieving
 /// those events.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct EventQueue<E> {
     events: VecDeque<E>,
     receivers: HashMap<usize, ReceiverState<E>>,
     max_id: usize,
     free_ids: Vec<usize>,
+}
+
+impl<E> std::fmt::Debug for EventQueue<E>
+where
+    E: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "EventQueue<{}> {{ events: {:?}, receivers: {:?}, max_id: {:?}, free_ids: {:?} }}", std::any::type_name::<E>(), self.events, self.receivers, self.max_id, self.free_ids)
+    }
 }
 
 impl<E> EventQueue<E>

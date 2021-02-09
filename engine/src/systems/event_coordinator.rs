@@ -2,10 +2,12 @@ use std::time::Duration;
 
 use log::trace;
 
-use ecs::{world::event::WorldEvent, EventQueue, ReceiverId, Resources, System};
+use ecs::{world::event::WorldEvent, EventQueue, ReceiverId, Resources, System, MaybeDefault};
 
 use crate::event::EngineEvent;
+use serde::{Serialize, Deserialize};
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EventCoordinator {
     receiver: ReceiverId<EngineEvent>,
 }
@@ -18,6 +20,8 @@ impl EventCoordinator {
         }
     }
 }
+
+impl MaybeDefault for EventCoordinator {}
 
 impl System for EventCoordinator {
     fn name(&self) -> &'static str {

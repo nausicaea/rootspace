@@ -17,8 +17,11 @@ use std::{
     },
     time::Duration,
 };
+use serde::{Serialize, Deserialize};
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ForceShutdown {
+    #[serde(skip)]
     ctrlc_triggered: Arc<AtomicUsize>,
 }
 

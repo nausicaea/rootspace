@@ -1,12 +1,15 @@
 use dirs;
 use std::{
     convert::TryFrom,
+    ops::Deref,
     ffi::{OsStr, OsString},
     fs::File,
     io::{self, Read},
     path::{Path, PathBuf},
 };
 use thiserror::Error;
+#[cfg(any(test, feature = "serde_support"))]
+use serde::{Serialize, Deserialize};
 
 fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError> {
     let p = path_user_input.as_ref();
@@ -30,12 +33,22 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError
         .ok_or(FileError::NoHomeDirectoryFound)
 }
 
+#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
 #[derive(Clone, Debug, PartialEq)]
 pub struct NewOrExFilePathBuf(PathBuf);
 
 impl NewOrExFilePathBuf {
     pub fn path(&self) -> &Path {
         AsRef::<Path>::as_ref(self)
+    }
+}
+
+impl Deref for NewOrExFilePathBuf {
+    type Target = PathBuf;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -54,6 +67,14 @@ impl AsRef<Path> for NewOrExFilePathBuf {
 impl From<NewOrExFilePathBuf> for PathBuf {
     fn from(path: NewOrExFilePathBuf) -> Self {
         path.0
+    }
+}
+
+impl<'a> TryFrom<&'a str> for NewOrExFilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &'a str) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(&Path::new(path))
     }
 }
 
@@ -113,6 +134,8 @@ impl TryFrom<&Path> for NewOrExFilePathBuf {
     }
 }
 
+#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
 #[derive(Clone, Debug, PartialEq)]
 pub struct FilePathBuf(PathBuf);
 
@@ -140,6 +163,14 @@ impl FilePathBuf {
     }
 }
 
+impl Deref for FilePathBuf {
+    type Target = PathBuf;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl AsRef<PathBuf> for FilePathBuf {
     fn as_ref(&self) -> &PathBuf {
         &self.0
@@ -155,6 +186,14 @@ impl AsRef<Path> for FilePathBuf {
 impl From<FilePathBuf> for PathBuf {
     fn from(path: FilePathBuf) -> Self {
         path.0
+    }
+}
+
+impl<'a> TryFrom<&'a str> for FilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &'a str) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(&Path::new(path))
     }
 }
 
@@ -199,12 +238,22 @@ impl<'a> TryFrom<&Path> for FilePathBuf {
     }
 }
 
+#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
 #[derive(Clone, Debug, PartialEq)]
 pub struct DirPathBuf(PathBuf);
 
 impl DirPathBuf {
     pub fn path(&self) -> &Path {
         AsRef::<Path>::as_ref(self)
+    }
+}
+
+impl Deref for DirPathBuf {
+    type Target = PathBuf;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -223,6 +272,14 @@ impl AsRef<Path> for DirPathBuf {
 impl From<DirPathBuf> for PathBuf {
     fn from(path: DirPathBuf) -> Self {
         path.0
+    }
+}
+
+impl<'a> TryFrom<&'a str> for DirPathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &'a str) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(&Path::new(path))
     }
 }
 
@@ -290,6 +347,7 @@ mod tests {
     use super::*;
     use std::io::Write;
     use tempfile::{tempdir, NamedTempFile};
+    use serde_test::{assert_tokens, Token};
 
     #[test]
     #[cfg_attr(not(target_family = "unix"), ignore)]
@@ -398,5 +456,54 @@ mod tests {
         let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_bytes();
         assert!(r.is_ok());
         assert_eq!(r.unwrap(), vec![0x00, 0xff, 0x14, 0xf6]);
+    }
+
+    #[test]
+    fn new_file_path_serde() {
+        let fstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/nonex-file");
+        let nfp = NewOrExFilePathBuf::try_from(fstr).unwrap();
+
+        assert_tokens(
+            &nfp,
+            &[
+                Token::Str(fstr),
+            ],
+        );
+
+        let fstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/empty-file");
+        let nfp = NewOrExFilePathBuf::try_from(fstr).unwrap();
+
+        assert_tokens(
+            &nfp,
+            &[
+                Token::Str(fstr),
+            ],
+        );
+    }
+
+    #[test]
+    fn file_path_serde() {
+        let fstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/empty-file");
+        let fp = FilePathBuf::try_from(fstr).unwrap();
+
+        assert_tokens(
+            &fp,
+            &[
+                Token::Str(fstr),
+            ],
+        );
+    }
+
+    #[test]
+    fn dir_path_serde() {
+        let dstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests");
+        let dp = DirPathBuf::try_from(dstr).unwrap();
+
+        assert_tokens(
+            &dp,
+            &[
+                Token::Str(dstr),
+            ],
+        );
     }
 }

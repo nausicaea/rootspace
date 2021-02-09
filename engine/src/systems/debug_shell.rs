@@ -14,6 +14,12 @@ pub struct DebugShell {
     terminator: &'static str,
 }
 
+impl std::fmt::Debug for DebugShell {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "DebugShell {{ commands: {:?}, receiver: {:?}, terminator: {:?}}}", self.commands.keys(), self.receiver, self.terminator)
+    }
+}
+
 impl DebugShell {
     pub fn new(queue: &mut EventQueue<EngineEvent>, terminator: Option<&'static str>) -> Self {
         trace!("DebugShell subscribing to EventQueue<EngineEvent>");

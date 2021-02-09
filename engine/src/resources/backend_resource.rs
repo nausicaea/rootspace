@@ -7,7 +7,7 @@ use crate::{
 };
 use anyhow::{Error, Result};
 use ecs::{Component, MaybeDefault, Resource};
-use file_manipulation::FilePathBuf;
+use file_manipulation::{FilePathBuf, DirPathBuf};
 use serde::{Deserialize, Serialize};
 use snowflake::ProcessUniqueId;
 use std::{
@@ -15,7 +15,7 @@ use std::{
     convert::TryFrom,
     fmt,
     ops::{Deref, DerefMut},
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -24,22 +24,17 @@ pub struct BackendSettings {
     dimensions: (u32, u32),
     vsync: bool,
     msaa: u16,
-    asset_tree: PathBuf,
+    asset_tree: DirPathBuf,
 }
 
 impl BackendSettings {
-    pub fn new<S: AsRef<str>, P: AsRef<Path>>(
+    pub fn new<S: AsRef<str>>(
         title: S,
         dimensions: (u32, u32),
         vsync: bool,
         msaa: u16,
-        asset_tree: P,
+        asset_tree: DirPathBuf,
     ) -> Self {
-        let asset_tree = asset_tree.as_ref().canonicalize().expect(&format!(
-            "Could not canonicalize the path {}",
-            asset_tree.as_ref().display()
-        ));
-
         BackendSettings {
             title: title.as_ref().to_string(),
             dimensions,
@@ -321,16 +316,19 @@ mod tests {
     use super::*;
     use crate::graphics::headless::HeadlessBackend;
     use serde_test::{assert_tokens, Token};
+    use file_manipulation::DirPathBuf;
+    use std::convert::TryFrom;
 
     #[test]
     fn backend_settings_new() {
-        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
         let _: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
     }
 
     #[test]
     fn backend_settings_serde() {
-        let resource_path = env!("CARGO_MANIFEST_DIR");
+        let rpstr = env!("CARGO_MANIFEST_DIR");
+        let resource_path = DirPathBuf::try_from(rpstr).unwrap();
         let b: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
 
         assert_tokens(
@@ -352,7 +350,7 @@ mod tests {
                 Token::Str("msaa"),
                 Token::U16(0),
                 Token::Str("asset_tree"),
-                Token::Str(resource_path),
+                Token::Str(rpstr),
                 Token::StructEnd,
             ],
         );
@@ -360,7 +358,7 @@ mod tests {
 
     #[test]
     fn backend_resource_headless() {
-        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
         let b: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
         let _: BackendResource<HeadlessBackend> = BackendResource::try_from(b).unwrap();
     }

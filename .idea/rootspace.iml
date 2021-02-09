@@ -16,7 +16,13 @@
       <sourceFolder url="file://$MODULE_DIR$/ecs/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/file-manipulation/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/rootspace/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/file-manipulation/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/affine-transform/target" />
+      <excludeFolder url="file://$MODULE_DIR$/engine/target" />
+      <excludeFolder url="file://$MODULE_DIR$/ecs/target" />
+      <excludeFolder url="file://$MODULE_DIR$/file-manipulation/target" />
+      <excludeFolder url="file://$MODULE_DIR$/pacman/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -32,29 +32,37 @@ use crate::{
     loop_control::LoopControl,
 };
 
-use self::{error::WorldError, event::WorldEvent, type_registry::TypeRegistry};
-use self::deserialization::{WORLD_FIELDS, WorldVisitor};
-use crate::resources::serialization::SerResources;
+use crate::resources::typed_resources::TypedResources;
+
+use self::{error::WorldError, event::WorldEvent, type_registry::ResourceTypes};
+use crate::systems::typed_systems::TypedSystems;
+use crate::registry::SystemRegistry;
+use serde::de::{Visitor, MapAccess};
 
 pub mod error;
 pub mod event;
-mod type_registry;
-mod deserialization;
+pub(crate) mod type_registry;
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
 /// systems to operate on the stored resources, components and entities.
-pub struct World<RR> {
+pub struct World<RR, SR1, SR2, SR3> {
     resources: Resources,
     fixed_update_systems: Systems,
     update_systems: Systems,
     render_systems: Systems,
     receiver: ReceiverId<WorldEvent>,
     _rr: PhantomData<RR>,
+    _sr1: PhantomData<SR1>,
+    _sr2: PhantomData<SR2>,
+    _sr3: PhantomData<SR3>,
 }
 
-impl<RR> World<RR>
+impl<RR, SR1, SR2, SR3> World<RR, SR1, SR2, SR3>
 where
     RR: ResourceRegistry,
+    SR1: SystemRegistry,
+    SR2: SystemRegistry,
+    SR3: SystemRegistry,
 {
     /// Insert a new resource.
     pub fn insert<R>(&mut self, res: R)
@@ -252,7 +260,7 @@ where
         let mut d = serde_json::Deserializer::from_reader(&mut file);
 
         // Deserialize the entire world
-        let world = World::<RR>::deserialize(&mut d)
+        let world: World<RR, SR1, SR2, SR3> = World::deserialize(&mut d)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
         // Assign its parts to the current instance
@@ -271,54 +279,191 @@ where
     }
 }
 
-impl<RR> Default for World<RR>
+impl<RR, SR1, SR2, SR3> std::fmt::Debug for World<RR, SR1, SR2, SR3> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "World {{ resources: {:?}, fixed_update_systems: {:?}, update_systems: {:?}, render_systems: {:?}, receiver: {:?} }}",
+            self.resources,
+            self.fixed_update_systems,
+            self.update_systems,
+            self.render_systems,
+            self.receiver,
+        )
+    }
+}
+
+
+impl<RR, SR1, SR2, SR3> Default for World<RR, SR1, SR2, SR3>
 where
     RR: ResourceRegistry,
+    SR1: SystemRegistry,
+    SR2: SystemRegistry,
+    SR3: SystemRegistry,
 {
     fn default() -> Self {
-        let mut resources = Resources::with_registry::<TypeRegistry<RR>>();
+        let mut resources = Resources::with_registry::<ResourceTypes<RR>>();
+        let fixed_update_systems = Systems::with_registry::<SR1>();
+        let update_systems = Systems::with_registry::<SR2>();
+        let render_systems = Systems::with_registry::<SR3>();
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>()
             .subscribe();
 
         World {
             resources,
-            fixed_update_systems: Systems::default(),
-            update_systems: Systems::default(),
-            render_systems: Systems::default(),
+            fixed_update_systems,
+            update_systems,
+            render_systems,
             receiver,
             _rr: PhantomData::default(),
+            _sr1: PhantomData::default(),
+            _sr2: PhantomData::default(),
+            _sr3: PhantomData::default(),
         }
     }
 }
 
-impl<RR> Serialize for World<RR>
+impl<RR, SR1, SR2, SR3> Serialize for World<RR, SR1, SR2, SR3>
 where
     RR: ResourceRegistry,
+    SR1: SystemRegistry,
+    SR2: SystemRegistry,
+    SR3: SystemRegistry,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: ser::Serializer,
     {
         let mut state = serializer.serialize_struct("World", WORLD_FIELDS.len())?;
-        state.serialize_field("resources", &SerResources::<TypeRegistry<RR>>::from(&self.resources))?;
-        state.skip_field("fixed_update_systems")?;
-        state.skip_field("update_systems")?;
-        state.skip_field("render_systems")?;
+        state.serialize_field("resources", &TypedResources::<ResourceTypes<RR>>::from(&self.resources))?;
+        state.serialize_field("fixed_update_systems", &TypedSystems::<SR1>::from(&self.fixed_update_systems))?;
+        state.serialize_field("update_systems", &TypedSystems::<SR2>::from(&self.update_systems))?;
+        state.serialize_field("render_systems", &TypedSystems::<SR3>::from(&self.render_systems))?;
         state.serialize_field("receiver", &self.receiver)?;
         state.skip_field("_rr")?;
+        state.skip_field("_sr1")?;
+        state.skip_field("_sr2")?;
+        state.skip_field("_sr3")?;
         state.end()
     }
 }
 
-impl<'de, RR> Deserialize<'de> for World<RR>
+impl<'de, RR, SR1, SR2, SR3> Deserialize<'de> for World<RR, SR1, SR2, SR3>
 where
     RR: ResourceRegistry,
+    SR1: SystemRegistry,
+    SR2: SystemRegistry,
+    SR3: SystemRegistry,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: de::Deserializer<'de>,
     {
-        deserializer.deserialize_struct("World", WORLD_FIELDS, WorldVisitor::<RR>::default())
+        deserializer.deserialize_struct("World", WORLD_FIELDS, WorldVisitor::<RR, SR1, SR2, SR3>::default())
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(field_identifier, rename_all = "snake_case")]
+enum WorldField {
+    Resources,
+    FixedUpdateSystems,
+    UpdateSystems,
+    RenderSystems,
+    Receiver,
+}
+
+const WORLD_FIELDS: &'static [&'static str] = &[
+    "resources",
+    "fixed_update_systems",
+    "update_systems",
+    "render_systems",
+    "receiver",
+];
+
+struct WorldVisitor<RR, SR1, SR2, SR3>(PhantomData<RR>, PhantomData<SR1>, PhantomData<SR2>, PhantomData<SR3>);
+
+impl<RR, SR1, SR2, SR3> Default for WorldVisitor<RR, SR1, SR2, SR3> {
+    fn default() -> Self {
+        WorldVisitor(PhantomData::default(), PhantomData::default(), PhantomData::default(), PhantomData::default())
+    }
+}
+
+impl<'de, RR, SR1, SR2, SR3> Visitor<'de> for WorldVisitor<RR, SR1, SR2, SR3>
+where
+    RR: ResourceRegistry,
+    SR1: SystemRegistry,
+    SR2: SystemRegistry,
+    SR3: SystemRegistry,
+{
+    type Value = World<RR, SR1, SR2, SR3>;
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "a serialized World struct")
+    }
+
+    fn visit_map<A>(self, mut map_access: A) -> Result<Self::Value, A::Error>
+        where
+            A: MapAccess<'de>,
+    {
+        let mut resources: Option<TypedResources<ResourceTypes<RR>>> = None;
+        let mut fixed_update_systems: Option<TypedSystems<SR1>> = None;
+        let mut update_systems: Option<TypedSystems<SR2>> = None;
+        let mut render_systems: Option<TypedSystems<SR3>> = None;
+        let mut receiver: Option<ReceiverId<WorldEvent>> = None;
+
+        while let Some(field_name) = map_access.next_key()? {
+            match field_name {
+                WorldField::Resources => {
+                    if resources.is_some() {
+                        return Err(de::Error::duplicate_field("resources"));
+                    }
+                    resources = Some(map_access.next_value()?);
+                },
+                WorldField::FixedUpdateSystems => {
+                    if fixed_update_systems.is_some() {
+                        return Err(de::Error::duplicate_field("fixed_update_systems"));
+                    }
+                    fixed_update_systems = Some(map_access.next_value()?);
+                },
+                WorldField::UpdateSystems => {
+                    if update_systems.is_some() {
+                        return Err(de::Error::duplicate_field("update_systems"));
+                    }
+                    update_systems = Some(map_access.next_value()?);
+                },
+                WorldField::RenderSystems => {
+                    if render_systems.is_some() {
+                        return Err(de::Error::duplicate_field("render_systems"));
+                    }
+                    render_systems = Some(map_access.next_value()?);
+                },
+                WorldField::Receiver => {
+                    if receiver.is_some() {
+                        return Err(de::Error::duplicate_field("receiver"));
+                    }
+                    receiver = Some(map_access.next_value()?);
+                },
+            }
+        }
+
+        let resources = resources.ok_or_else(|| de::Error::missing_field("resources"))?;
+        let fixed_update_systems = fixed_update_systems.ok_or_else(|| de::Error::missing_field("fixed_update_systems"))?;
+        let update_systems = update_systems.ok_or_else(|| de::Error::missing_field("update_systems"))?;
+        let render_systems = render_systems.ok_or_else(|| de::Error::missing_field("render_systems"))?;
+        let receiver = receiver.ok_or_else(|| de::Error::missing_field("receiver"))?;
+
+        Ok(World {
+            resources: resources.into(),
+            fixed_update_systems: fixed_update_systems.into(),
+            update_systems: update_systems.into(),
+            render_systems: render_systems.into(),
+            receiver,
+            _rr: PhantomData::default(),
+            _sr1: PhantomData::default(),
+            _sr2: PhantomData::default(),
+            _sr3: PhantomData::default(),
+        })
     }
 }
 
@@ -329,23 +474,23 @@ mod tests {
 
     use super::*;
 
-    pub type TestRegistry = Reg![VecStorage<usize>,];
+    pub type Trreg = Reg![VecStorage<usize>,];
 
     #[test]
     fn default() {
-        let _: World<Reg![]> = Default::default();
+        let _: World<Reg![], Reg![], Reg![], Reg![]> = Default::default();
     }
 
     #[test]
     fn serde() {
-        let world = World::<TestRegistry>::default();
+        let world = World::<Trreg, Reg![], Reg![], Reg![]>::default();
 
         assert_ser_tokens(
             &world,
             &[
                 Token::Struct {
                     name: "World",
-                    len: 2,
+                    len: 5,
                 },
                 Token::Str("resources"),
                 Token::Map {
@@ -388,6 +533,21 @@ mod tests {
                     len: Some(0),
                 },
                 Token::MapEnd,
+                Token::MapEnd,
+                Token::Str("fixed_update_systems"),
+                Token::Map {
+                    len: Some(0),
+                },
+                Token::MapEnd,
+                Token::Str("update_systems"),
+                Token::Map {
+                    len: Some(0),
+                },
+                Token::MapEnd,
+                Token::Str("render_systems"),
+                Token::Map {
+                    len: Some(0),
+                },
                 Token::MapEnd,
                 Token::Str("receiver"),
                 Token::Struct { name: "ReceiverId", len: 1 },

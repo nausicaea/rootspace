@@ -1,7 +1,9 @@
-use ecs::{EventQueue, ReceiverId, Resources, System, short_type_name};
+use ecs::{EventQueue, ReceiverId, Resources, System, short_type_name, MaybeDefault};
 use log::trace;
 use std::{fmt, time::Duration};
+use serde::{Serialize, Deserialize};
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EventMonitor<E> {
     receiver: ReceiverId<E>,
 }
@@ -21,6 +23,8 @@ where
         }
     }
 }
+
+impl<E> MaybeDefault for EventMonitor<E> {}
 
 impl<E> System for EventMonitor<E>
 where

@@ -338,10 +338,12 @@ pub enum RenderableError {
 mod tests {
     use super::*;
     use crate::{graphics::headless::HeadlessBackend, resources::BackendSettings};
+    use file_manipulation::DirPathBuf;
+    use std::convert::TryFrom;
 
     #[test]
     fn headless_builder_mesh() {
-        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();
@@ -358,7 +360,7 @@ mod tests {
 
     #[test]
     fn headless_builder_text() {
-        let resource_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace");
+        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
             .build::<HeadlessBackend>()
             .unwrap();

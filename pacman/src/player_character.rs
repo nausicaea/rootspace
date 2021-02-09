@@ -23,6 +23,7 @@ pub enum MoveDirection {
     Right,
 }
 
+#[derive(Debug)]
 pub struct PlayerCharacter {
     receiver: ReceiverId<EngineEvent>,
 }

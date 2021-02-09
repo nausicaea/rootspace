@@ -2,24 +2,26 @@ use crate::{event::EngineEvent, graphics::BackendTrait, resources::BackendResour
 use ecs::{EventQueue, Resources, System};
 use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
-pub struct EventInterface<B: BackendTrait> {
-    _b: PhantomData<B>,
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+pub struct EventInterface<B>(PhantomData<B>);
+
+impl<B> Default for EventInterface<B> {
+    fn default() -> Self {
+        EventInterface(PhantomData::default())
+    }
 }
 
-impl<B> Default for EventInterface<B>
-where
-    B: BackendTrait,
-{
-    fn default() -> Self {
-        EventInterface {
-            _b: PhantomData::default(),
-        }
+impl<B> std::fmt::Debug for EventInterface<B> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "EventInterface<{}>(PhantomData)", std::any::type_name::<B>())
     }
 }
 
 impl<B> System for EventInterface<B>
 where
-    B: BackendTrait,
+    B: BackendTrait
 {
     fn name(&self) -> &'static str {
         stringify!(EventInterface)

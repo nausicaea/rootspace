@@ -15,14 +15,12 @@ use serde::{
 };
 
 use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
-use self::deserialization::DeResources;
-use self::initialization::InitResources;
-use self::serialization::SerResources;
 use crate::short_type_name::short_type_name;
+use self::typed_resources::TypedResources;
+use std::collections::HashSet;
 
-pub(crate) mod deserialization;
-pub(crate) mod initialization;
-pub(crate) mod serialization;
+mod recursors;
+pub(crate) mod typed_resources;
 
 macro_rules! impl_iter_ref {
     ($name:ident, $iter:ident, #reads: $($type:ident),+ $(,)?) => {
@@ -59,8 +57,14 @@ macro_rules! impl_iter_ref {
 
 /// A container that manages resources. Allows mutable borrows of multiple different resources at
 /// the same time.
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct Resources(HashMap<TypeId, RefCell<Box<dyn Resource>>>);
+
+impl std::fmt::Debug for Resources {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Resoources(#{})", self.0.len())
+    }
+}
 
 impl Resources {
     impl_iter_ref!(iter_r, RIterRef, #reads: C);
@@ -95,7 +99,7 @@ impl Resources {
     {
         #[cfg(any(test, debug_assertions))]
         debug!("Beginning the initialization of Resources");
-        let helper = InitResources::<RR>::new();
+        let helper = TypedResources::<RR>::default();
         #[cfg(any(test, debug_assertions))]
         debug!("Completed the initialization of Resources");
 
@@ -111,7 +115,7 @@ impl Resources {
     {
         #[cfg(any(test, debug_assertions))]
         debug!("Beginning the deserialization of Resources");
-        let helper = DeResources::<RR>::deserialize(deserializer)?;
+        let helper = TypedResources::<RR>::deserialize(deserializer)?;
         #[cfg(any(test, debug_assertions))]
         debug!("Completed the deserialization of Resources");
 
@@ -127,7 +131,7 @@ impl Resources {
     {
         #[cfg(any(test, debug_assertions))]
         debug!("Beginning the serialization of Resources");
-        let status = SerResources::<RR>::from(self)
+        let status = TypedResources::<RR>::from(self)
             .serialize(serializer)?;
         #[cfg(any(test, debug_assertions))]
         debug!("Completed the serialization of Resources");
@@ -252,6 +256,19 @@ impl Resources {
 
 }
 
+impl PartialEq for Resources {
+    fn eq(&self, rhs: &Resources) -> bool {
+        if self.len() != rhs.len() {
+            return false;
+        }
+
+        let lhs_k: HashSet<_> = self.0.keys().cloned().collect();
+        let rhs_k: HashSet<_> = rhs.0.keys().cloned().collect();
+
+        lhs_k == rhs_k
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use serde::{Deserialize, Serialize};
@@ -344,6 +361,7 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "Error(\"Unknown field SceneGraph<Model>\", line: 1, column: 322)")]
     fn deserialize_with_extraneous_types() {
         let mut d = serde_json::Deserializer::from_str(include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),

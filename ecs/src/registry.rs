@@ -1,6 +1,7 @@
 use crate::{maybe_default::MaybeDefault, resource::Resource, system::System};
 use serde::{Deserialize, Serialize};
 use std::any::TypeId;
+use std::fmt::Debug;
 
 /// An element within the heterogeneous list.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -27,6 +28,10 @@ macro_rules! impl_registry {
             type Head: $bound $(+ $others)* + Serialize + for<'de> Deserialize<'de>;
             /// Refers to the type of the tail of the list.
             type Tail: $name;
+
+            fn is_empty() -> bool {
+                Self::LEN == 0
+            }
 
             fn contains<E: 'static>(element: &E) -> bool;
 
@@ -98,8 +103,8 @@ macro_rules! impl_registry {
     };
 }
 
-impl_registry!(ResourceRegistry, where Head: Resource + MaybeDefault);
-impl_registry!(SystemRegistry, where Head: System);
+impl_registry!(ResourceRegistry, where Head: Resource + MaybeDefault + Debug);
+impl_registry!(SystemRegistry, where Head: System + MaybeDefault + Debug);
 
 #[cfg(test)]
 mod tests {

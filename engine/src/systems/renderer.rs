@@ -1,12 +1,13 @@
 #[cfg(any(test, debug_assertions))]
 use std::time::Instant;
 use std::{collections::VecDeque, marker::PhantomData, time::Duration};
+use serde::{Serialize, Deserialize};
 
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 use log::trace;
 
-use ecs::{world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System};
+use ecs::{world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System, MaybeDefault};
 
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
@@ -18,7 +19,7 @@ use crate::{
 static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct Renderer<B> {
     clear_color: [f32; 4],
     receiver: ReceiverId<WorldEvent>,
@@ -27,6 +28,24 @@ pub struct Renderer<B> {
     frame_times: VecDeque<Duration>,
     _b: PhantomData<B>,
 }
+
+impl<B> MaybeDefault for Renderer<B> {}
+
+impl<B> std::fmt::Debug for Renderer<B> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "Renderer<{}> {{ clear_color: {:?}, receiver: {:?}, initialised: {:?}, draw_calls: {:?}, frame_times: {:?} }}",
+            std::any::type_name::<B>(),
+            self.clear_color,
+            self.receiver,
+            self.initialised,
+            self.draw_calls,
+            self.frame_times,
+        )
+    }
+}
+
 
 impl<B> Renderer<B>
 where

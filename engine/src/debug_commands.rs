@@ -12,6 +12,7 @@ use crate::{
     event::EngineEvent,
     resources::SceneGraph,
 };
+use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -35,7 +36,7 @@ pub trait CommandTrait: 'static {
     fn run(&self, res: &Resources, args: &[String]) -> Result<()>;
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ExitCommand;
 
 impl CommandTrait for ExitCommand {
@@ -54,7 +55,7 @@ impl CommandTrait for ExitCommand {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct StateCommand;
 
 impl CommandTrait for StateCommand {
@@ -126,7 +127,7 @@ impl CommandTrait for StateCommand {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CameraCommand;
 
 impl CameraCommand {
@@ -216,7 +217,7 @@ impl CommandTrait for CameraCommand {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EntityCommand;
 
 impl EntityCommand {

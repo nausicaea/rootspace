@@ -1,7 +1,6 @@
 use std::{
     cmp,
     convert::TryFrom,
-    marker::PhantomData,
     path::Path,
     time::{Duration, Instant},
 };
@@ -10,21 +9,16 @@ use anyhow::{Context, Result};
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 use log::trace;
-use serde::{
-    de::{self, Deserializer, MapAccess, Visitor},
-    Deserialize,
-    ser::{Serializer, SerializeStruct}, Serialize,
-};
+use serde::{Deserialize, Serialize, Serializer, Deserializer, de};
 
-use deserialization::{ORCHESTRATOR_FIELDS, OrchestratorVisitor};
 use ecs::{
     Component, Entity, EventQueue, LoopControl,
-    LoopStage, ReceiverId, RegAdd, Resource, ResourceRegistry, System, World, WorldEvent,
+    LoopStage, ReceiverId, Resource, ResourceRegistry, System, World, WorldEvent, SystemRegistry,
 };
 use file_manipulation::DirPathBuf;
 
 use crate::{
-    components::{Camera, Info, Model, Renderable, Status, UiModel},
+    components::{Model, UiModel},
     event::EngineEvent,
     graphics::BackendTrait,
     resources::{BackendResource, BackendSettings, SceneGraph},
@@ -35,23 +29,40 @@ use crate::{
     text_manipulation::tokenize,
 };
 
-use self::type_registry::TypeRegistry;
+use self::type_registry::{ResourceTypes, UpdateSystemTypes, RenderSystemTypes};
+use serde::ser::SerializeStruct;
+use std::marker::PhantomData;
+use serde::de::{Visitor, MapAccess};
 
-mod deserialization;
 mod type_registry;
 
-pub struct Orchestrator<B, RR> {
-    pub world: World<TypeRegistry<RR>>,
+pub struct Orchestrator<B, RR, SR1, SR2, SR3> {
+    pub world: World<ResourceTypes<RR>, SR1, UpdateSystemTypes<B, SR2>, RenderSystemTypes<B, SR3>>,
     delta_time: Duration,
     max_frame_time: Duration,
-    world_receiver: ReceiverId<WorldEvent>,
-    _b: PhantomData<B>,
+    receiver: ReceiverId<WorldEvent>,
 }
 
-impl<B, RR> Orchestrator<B, RR>
+impl<B, RR, SR1, SR2, SR3> std::fmt::Debug for Orchestrator<B, RR, SR1, SR2, SR3> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "Orchestrator {{ world: {:?}, delta_time: {:?}, max_frame_time: {:?}, receiver: {:?} }}",
+            self.world,
+            self.delta_time,
+            self.max_frame_time,
+            self.receiver,
+        )
+    }
+}
+
+impl<B, RR, SR1, SR2, SR3> Orchestrator<B, RR, SR1, SR2, SR3>
 where
     B: BackendTrait,
     RR: ResourceRegistry,
+    SR1: SystemRegistry,
+    SR2: SystemRegistry,
+    SR3: SystemRegistry,
 {
     pub fn new<P: AsRef<Path>>(resource_path: P, command: Option<&str>) -> Result<Self> {
         // Create the world
@@ -98,7 +109,7 @@ where
         world.add_system(LoopStage::Update, event_coordinator);
 
         trace!("Orchestrator<B, RR> subscribing to EventQueue<WorldEvent>");
-        let world_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe();
+        let receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe();
 
         // Send the requested debug command
         if let Some(cmd) = command {
@@ -111,8 +122,7 @@ where
             world,
             delta_time: Duration::from_millis(50),
             max_frame_time: Duration::from_millis(250),
-            world_receiver,
-            _b: PhantomData::default(),
+            receiver,
         })
     }
 
@@ -189,7 +199,7 @@ where
     fn maintain(&mut self) -> LoopControl {
         let running = self.world.maintain();
 
-        let recv = &self.world_receiver;
+        let recv = &self.receiver;
         let events = self.world.get_mut::<EventQueue<WorldEvent>>().receive(recv);
         if events
             .into_iter()
@@ -221,10 +231,13 @@ where
     }
 }
 
-impl<B, RR> Serialize for Orchestrator<B, RR>
+impl<B, RR, SR1, SR2, SR3> Serialize for Orchestrator<B, RR, SR1, SR2, SR3>
     where
         B: BackendTrait,
         RR: ResourceRegistry,
+        SR1: SystemRegistry,
+        SR2: SystemRegistry,
+        SR3: SystemRegistry,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -234,15 +247,18 @@ impl<B, RR> Serialize for Orchestrator<B, RR>
         state.serialize_field("world", &self.world)?;
         state.serialize_field("delta_time", &self.delta_time)?;
         state.serialize_field("max_frame_time", &self.max_frame_time)?;
-        state.serialize_field("world_receiver", &self.world_receiver)?;
+        state.serialize_field("receiver", &self.receiver)?;
         state.end()
     }
 }
 
-impl<'de, B, RR> Deserialize<'de> for Orchestrator<B, RR>
+impl<'de, B, RR, SR1, SR2, SR3> Deserialize<'de> for Orchestrator<B, RR, SR1, SR2, SR3>
     where
         B: BackendTrait,
         RR: ResourceRegistry,
+        SR1: SystemRegistry,
+        SR2: SystemRegistry,
+        SR3: SystemRegistry,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -253,5 +269,107 @@ impl<'de, B, RR> Deserialize<'de> for Orchestrator<B, RR>
             ORCHESTRATOR_FIELDS,
             OrchestratorVisitor::default(),
         )
+    }
+}
+
+const ORCHESTRATOR_FIELDS: &'static [&'static str] = &[
+    "world",
+    "delta_time",
+    "max_frame_time",
+    "receiver",
+];
+
+#[derive(Deserialize)]
+#[serde(field_identifier, rename_all = "snake_case")]
+enum OrchestratorField {
+    World,
+    DeltaTime,
+    MaxFrameTime,
+    Receiver,
+}
+
+struct OrchestratorVisitor<B, RR, SR1, SR2, SR3>(
+    PhantomData<B>,
+    PhantomData<RR>,
+    PhantomData<SR1>,
+    PhantomData<SR2>,
+    PhantomData<SR3>,
+);
+
+impl<B, RR, SR1, SR2, SR3> Default for OrchestratorVisitor<B, RR, SR1, SR2, SR3> {
+    fn default() -> Self {
+        OrchestratorVisitor(
+            PhantomData::default(),
+            PhantomData::default(),
+            PhantomData::default(),
+            PhantomData::default(),
+            PhantomData::default(),
+        )
+    }
+}
+
+impl<'de, B, RR, SR1, SR2, SR3> Visitor<'de> for OrchestratorVisitor<B, RR, SR1, SR2, SR3>
+    where
+        B: BackendTrait,
+        RR: ResourceRegistry,
+        SR1: SystemRegistry,
+        SR2: SystemRegistry,
+        SR3: SystemRegistry,
+{
+    type Value = Orchestrator<B, RR, SR1, SR2, SR3>;
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "a serialized Orchestrator struct")
+    }
+
+    fn visit_map<A>(self, mut map_access: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        let mut world: Option<World<ResourceTypes<RR>, SR1, UpdateSystemTypes<B, SR2>, RenderSystemTypes<B, SR3>>> = None;
+        let mut delta_time: Option<Duration> = None;
+        let mut max_frame_time: Option<Duration> = None;
+        let mut receiver: Option<ReceiverId<WorldEvent>> = None;
+
+        while let Some(field_name) = map_access.next_key()? {
+            match field_name {
+                OrchestratorField::World => {
+                    if world.is_some() {
+                        return Err(de::Error::duplicate_field("world"));
+                    }
+                    world = Some(map_access.next_value()?);
+                },
+                OrchestratorField::DeltaTime => {
+                    if delta_time.is_some() {
+                        return Err(de::Error::duplicate_field("delta_time"));
+                    }
+                    delta_time = Some(map_access.next_value()?);
+                },
+                OrchestratorField::MaxFrameTime => {
+                    if max_frame_time.is_some() {
+                        return Err(de::Error::duplicate_field("max_frame_time"));
+                    }
+                    max_frame_time = Some(map_access.next_value()?);
+                },
+                OrchestratorField::Receiver => {
+                    if receiver.is_some() {
+                        return Err(de::Error::duplicate_field("receiver"));
+                    }
+                    receiver = Some(map_access.next_value()?);
+                },
+            }
+        }
+
+        let world = world.ok_or_else(|| de::Error::missing_field("world"))?;
+        let delta_time = delta_time.ok_or_else(|| de::Error::missing_field("delta_time"))?;
+        let max_frame_time = max_frame_time.ok_or_else(|| de::Error::missing_field("max_frame_time"))?;
+        let receiver = receiver.ok_or_else(|| de::Error::missing_field("receiver"))?;
+
+        Ok(Orchestrator {
+            world,
+            delta_time,
+            max_frame_time,
+            receiver,
+        })
     }
 }

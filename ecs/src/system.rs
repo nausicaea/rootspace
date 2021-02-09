@@ -7,7 +7,10 @@ use std::time::Duration;
 /// Encodes a system or behaviour.
 pub trait System: Downcast {
     /// Return the system's name.
-    fn name(&self) -> &'static str;
+    fn name(&self) -> &'static str {
+        std::any::type_name::<Self>()
+    }
+
     /// Run the behaviour.
     fn run(&mut self, res: &Resources, t: &Duration, dt: &Duration);
 }
@@ -15,9 +18,5 @@ pub trait System: Downcast {
 impl_downcast!(System);
 
 impl System for () {
-    fn name(&self) -> &'static str {
-        stringify!(())
-    }
-
     fn run(&mut self, _: &Resources, _: &Duration, _: &Duration) {}
 }

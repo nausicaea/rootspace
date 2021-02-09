@@ -12,7 +12,7 @@ pub use crate::{
     loop_control::LoopControl,
     loop_stage::LoopStage,
     maybe_default::MaybeDefault,
-    registry::{Element, End, ResourceRegistry},
+    registry::{Element, End, ResourceRegistry, SystemRegistry},
     resource::Resource,
     resources::Resources,
     storage::{vec_storage::VecStorage, zst_storage::ZstStorage, Storage},
@@ -39,3 +39,4 @@ pub mod system;
 pub mod systems;
 pub mod world;
 pub mod short_type_name;
+pub mod with_resources;

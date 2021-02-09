@@ -1,9 +1,11 @@
 use crate::{components::camera::Camera, event::EngineEvent};
-use ecs::{EventQueue, ReceiverId, Resources, System};
+use ecs::{EventQueue, ReceiverId, Resources, System, MaybeDefault};
 #[cfg(any(test, debug_assertions))]
 use log::{debug, trace};
 use std::time::Duration;
+use serde::{Serialize, Deserialize};
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CameraManager {
     receiver: ReceiverId<EngineEvent>,
 }
@@ -33,6 +35,12 @@ impl CameraManager {
         res.borrow_components_mut::<Camera>()
             .iter_mut()
             .for_each(|c| c.set_dpi_factor(factor));
+    }
+}
+
+impl MaybeDefault for CameraManager {
+    fn maybe_default() -> Option<Self> {
+        None
     }
 }
 
