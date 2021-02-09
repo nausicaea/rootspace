@@ -166,7 +166,7 @@ mod tests {
     #[test]
     fn serialization_and_deserialization() {
         let res = Resources::with_registry::<TypeRegistry>();
-        let tres = TypedResources::<TypeRegistry>::from(&res);
+        let tres: TypedResources<'_, TypeRegistry> = (&res).into();
         assert_tokens(
             &tres,
             &[

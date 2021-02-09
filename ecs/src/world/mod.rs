@@ -334,11 +334,16 @@ where
     where
         S: ser::Serializer,
     {
+        let tr: TypedResources<'_, ResourceTypes<RR>> = (&self.resources).into();
+        let ts1: TypedSystems<'_, SR1> = (&self.fixed_update_systems).into();
+        let ts2: TypedSystems<'_, SR2> = (&self.update_systems).into();
+        let ts3: TypedSystems<'_, SR3> = (&self.render_systems).into();
+
         let mut state = serializer.serialize_struct("World", WORLD_FIELDS.len())?;
-        state.serialize_field("resources", &TypedResources::<ResourceTypes<RR>>::from(&self.resources))?;
-        state.serialize_field("fixed_update_systems", &TypedSystems::<SR1>::from(&self.fixed_update_systems))?;
-        state.serialize_field("update_systems", &TypedSystems::<SR2>::from(&self.update_systems))?;
-        state.serialize_field("render_systems", &TypedSystems::<SR3>::from(&self.render_systems))?;
+        state.serialize_field("resources", &tr)?;
+        state.serialize_field("fixed_update_systems", &ts1)?;
+        state.serialize_field("update_systems", &ts2)?;
+        state.serialize_field("render_systems", &ts3)?;
         state.serialize_field("receiver", &self.receiver)?;
         state.skip_field("_rr")?;
         state.skip_field("_sr1")?;
