@@ -10,7 +10,7 @@ use crate::{
     components::Renderable,
     event::EngineEvent,
     geometry::rect::Rect,
-    resources::BackendResource,
+    resources::GraphicsBackend,
 };
 use anyhow::Result;
 use file_manipulation::FilePathBuf;
@@ -43,7 +43,7 @@ pub trait FrameTrait<B: BackendTrait> {
     fn render<T: AsRef<[[f32; 4]; 4]>>(
         &mut self,
         transform: &T,
-        factory: &BackendResource<B>,
+        factory: &GraphicsBackend<B>,
         data: &Renderable,
     ) -> Result<()>;
     fn finalize(self) -> Result<()>;

@@ -1,4 +1,4 @@
-use crate::{event::EngineEvent, graphics::BackendTrait, resources::BackendResource};
+use crate::{event::EngineEvent, graphics::BackendTrait, resources::GraphicsBackend};
 use ecs::{EventQueue, Resources, System, WithResources};
 use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
@@ -30,7 +30,7 @@ where
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let mut events: Vec<EngineEvent> = Vec::default();
 
-        res.borrow_mut::<BackendResource<B>>()
+        res.borrow_mut::<GraphicsBackend<B>>()
             .poll_events(|input_event: B::Event| {
                 if let Ok(event) = input_event.try_into() {
                     events.push(event);

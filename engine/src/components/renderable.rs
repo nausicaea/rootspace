@@ -9,12 +9,12 @@ use ecs::{Component, VecStorage};
 use crate::{
     assets::{AssetTrait, Mesh},
     graphics::{BackendTrait, text::Text},
-    resources::BackendResource,
+    resources::GraphicsBackend,
 };
-use crate::resources::backend_resource::index_buffer_id::IndexBufferId;
-use crate::resources::backend_resource::shader_id::ShaderId;
-use crate::resources::backend_resource::texture_id::TextureId;
-use crate::resources::backend_resource::vertex_buffer_id::VertexBufferId;
+use crate::resources::graphics_backend::index_buffer_id::IndexBufferId;
+use crate::resources::graphics_backend::shader_id::ShaderId;
+use crate::resources::graphics_backend::texture_id::TextureId;
+use crate::resources::graphics_backend::vertex_buffer_id::VertexBufferId;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RenderableType {
@@ -81,7 +81,7 @@ impl Renderable {
         }
     }
 
-    pub fn reload<B: BackendTrait>(&mut self, factory: &mut BackendResource<B>) -> Result<()> {
+    pub fn reload<B: BackendTrait>(&mut self, factory: &mut GraphicsBackend<B>) -> Result<()> {
         match self.source {
             Some(SourceData::Mesh {
                 ref file,
@@ -257,7 +257,7 @@ impl RenderableBuilder {
         self
     }
 
-    pub fn build<B: BackendTrait>(&self, factory: &mut BackendResource<B>) -> Result<Renderable> {
+    pub fn build<B: BackendTrait>(&self, factory: &mut GraphicsBackend<B>) -> Result<Renderable> {
         match self.ty {
             RenderableType::Mesh => {
                 let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;

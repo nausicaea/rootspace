@@ -4,7 +4,7 @@ use ecs::{MaybeDefault, Resource};
 use file_manipulation::DirPathBuf;
 
 use crate::graphics::BackendTrait;
-use crate::resources::BackendResource;
+use crate::resources::GraphicsBackend;
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -25,7 +25,7 @@ impl Settings {
         SettingsBuilder::new(asset_tree)
     }
 
-    pub fn build_backend<B: BackendTrait>(&self) -> anyhow::Result<BackendResource<B>> {
+    pub fn build_backend<B: BackendTrait>(&self) -> anyhow::Result<GraphicsBackend<B>> {
         TryFrom::try_from(self)
     }
 }

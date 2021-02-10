@@ -5,7 +5,7 @@ use crate::debug_commands::FileSystemCommand;
 use anyhow::{Context, Result};
 use ecs::{LoopStage, Reg};
 use engine::{
-    graphics::BackendTrait, orchestrator::Orchestrator, resources::BackendResource,
+    graphics::BackendTrait, orchestrator::Orchestrator, resources::GraphicsBackend,
     systems::DebugShell,
 };
 use file_manipulation::FilePathBuf;
@@ -32,7 +32,7 @@ where
         let mut orch = Orchestrator::new(resource_path, command)?;
 
         let main_scene = orch
-            .get_mut::<BackendResource<B>>()
+            .get_mut::<GraphicsBackend<B>>()
             .find_asset("scenes/rootspace.json")
             .context("Could not find the main scene asset")?;
 

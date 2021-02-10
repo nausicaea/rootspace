@@ -16,9 +16,9 @@ use file_manipulation::FileError;
 use crate::{
     assets::{AssetError, Mesh},
     graphics::{BackendTrait, TextureTrait},
-    resources::BackendResource,
+    resources::GraphicsBackend,
 };
-use crate::resources::backend_resource::texture_id::TextureId;
+use crate::resources::graphics_backend::texture_id::TextureId;
 
 use super::vertex::Vertex;
 
@@ -54,7 +54,7 @@ impl<'a> Text<'a> {
 
     pub fn text<B: BackendTrait>(
         &mut self,
-        factory: &BackendResource<B>,
+        factory: &GraphicsBackend<B>,
         text: &str,
     ) -> Result<()> {
         let (glyphs, text_height) =
@@ -123,7 +123,7 @@ impl TextBuilder {
 
     pub fn layout<'a, B: BackendTrait>(
         self,
-        factory: &BackendResource<B>,
+        factory: &GraphicsBackend<B>,
         text: &str,
     ) -> Result<Text<'a>> {
         let font_data = self

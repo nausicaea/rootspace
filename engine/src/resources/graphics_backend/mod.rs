@@ -29,7 +29,7 @@ pub mod shader_id;
 pub mod vertex_buffer_id;
 pub mod index_buffer_id;
 
-pub struct BackendResource<B>
+pub struct GraphicsBackend<B>
 where
     B: BackendTrait,
 {
@@ -41,7 +41,7 @@ where
     inner: B,
 }
 
-impl<B> BackendResource<B>
+impl<B> GraphicsBackend<B>
 where
     B: BackendTrait,
 {
@@ -140,25 +140,25 @@ where
     }
 }
 
-impl<B> Resource for BackendResource<B> where B: BackendTrait + 'static {}
+impl<B> Resource for GraphicsBackend<B> where B: BackendTrait + 'static {}
 
-impl<B> From<BackendResource<B>> for Settings
+impl<B> From<GraphicsBackend<B>> for Settings
     where
         B: BackendTrait,
 {
-    fn from(value: BackendResource<B>) -> Self {
+    fn from(value: GraphicsBackend<B>) -> Self {
         value.settings.clone()
     }
 }
 
-impl<B> TryFrom<Settings> for BackendResource<B>
+impl<B> TryFrom<Settings> for GraphicsBackend<B>
 where
     B: BackendTrait,
 {
     type Error = Error;
 
     fn try_from(value: Settings) -> Result<Self> {
-        Ok(BackendResource {
+        Ok(GraphicsBackend {
             settings: value.clone(),
             textures: HashMap::default(),
             shaders: HashMap::default(),
@@ -169,14 +169,14 @@ where
     }
 }
 
-impl<B> TryFrom<&Settings> for BackendResource<B>
+impl<B> TryFrom<&Settings> for GraphicsBackend<B>
 where
     B: BackendTrait,
 {
     type Error = Error;
 
     fn try_from(value: &Settings) -> Result<Self> {
-        Ok(BackendResource {
+        Ok(GraphicsBackend {
             settings: value.clone(),
             textures: HashMap::default(),
             shaders: HashMap::default(),
@@ -187,7 +187,7 @@ where
     }
 }
 
-impl<B> fmt::Debug for BackendResource<B>
+impl<B> fmt::Debug for GraphicsBackend<B>
 where
     B: BackendTrait,
 {
@@ -203,7 +203,7 @@ where
     }
 }
 
-impl<B> Deref for BackendResource<B>
+impl<B> Deref for GraphicsBackend<B>
 where
     B: BackendTrait,
 {
@@ -214,7 +214,7 @@ where
     }
 }
 
-impl<B> DerefMut for BackendResource<B>
+impl<B> DerefMut for GraphicsBackend<B>
 where
     B: BackendTrait,
 {
@@ -276,7 +276,7 @@ mod tests {
     fn backend_resource_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
         let b: Settings = Settings::new("Title", (800, 600), false, 0, resource_path);
-        let _: BackendResource<HeadlessBackend> = BackendResource::try_from(b).unwrap();
+        let _: GraphicsBackend<HeadlessBackend> = GraphicsBackend::try_from(b).unwrap();
     }
 
     #[test]

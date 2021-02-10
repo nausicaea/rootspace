@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     assets::Image, components::Renderable, event::EngineEvent, geometry::rect::Rect,
-    resources::BackendResource,
+    resources::GraphicsBackend,
 };
 use anyhow::Result;
 #[cfg(any(test, debug_assertions))]
@@ -102,7 +102,7 @@ impl FrameTrait<HeadlessBackend> for HeadlessFrame {
     fn render<T: AsRef<[[f32; 4]; 4]>>(
         &mut self,
         _transform: &T,
-        _factory: &BackendResource<HeadlessBackend>,
+        _factory: &GraphicsBackend<HeadlessBackend>,
         _data: &Renderable,
     ) -> Result<()> {
         Ok(())
@@ -135,7 +135,7 @@ impl BackendTrait for HeadlessBackend {
     ) -> Result<Self> {
         #[cfg(any(test, debug_assertions))]
         debug!(
-            "Created a headless backend (title='{}', dims={:?})",
+            "Created a headless graphics_backend (title='{}', dims={:?})",
             title.as_ref(),
             dimensions
         );

@@ -7,7 +7,7 @@ use engine::{
     components::{Camera, Info, Model, Projection, Renderable, RenderableType, Status},
     graphics::BackendTrait,
     orchestrator::Orchestrator,
-    resources::{BackendResource, SceneGraph},
+    resources::{GraphicsBackend, SceneGraph},
     EngineEvent,
 };
 use nalgebra::Vector3;
@@ -68,7 +68,7 @@ where
                 Vector3::new(1.0, 1.0, 1.0),
             ),
         );
-        let factory = self.orch.get_mut::<BackendResource<B>>();
+        let factory = self.orch.get_mut::<GraphicsBackend<B>>();
         let renderable = Renderable::builder()
             .with_mesh("meshes/quad.ply")
             .with_vertex_shader("shaders/base-vertex.glsl")

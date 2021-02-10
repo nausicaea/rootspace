@@ -21,7 +21,7 @@ use crate::{
     components::{Model, UiModel},
     event::EngineEvent,
     graphics::BackendTrait,
-    resources::{BackendResource, SceneGraph},
+    resources::{GraphicsBackend, SceneGraph},
     systems::{
         CameraManager, DebugConsole, DebugShell, EventCoordinator, EventMonitor,
         Renderer,
@@ -65,13 +65,13 @@ where
         // Create the world
         let mut world = World::default();
 
-        // Create the backend
+        // Create the graphics_backend
         let resource_path = DirPathBuf::try_from(resource_path.as_ref())?;
         let settings = Settings::builder(resource_path)
             .build();
         let backend = settings
             .build_backend::<B>()
-            .context("Failed to initialise the backend")?;
+            .context("Failed to initialise the graphics_backend")?;
         world.insert(settings);
         world.insert(backend);
 
@@ -171,10 +171,10 @@ where
             .into_iter()
             .any(|e| e == WorldEvent::DeserializationComplete)
         {
-            // Reload the backend
-            if !self.world.contains::<BackendResource<B>>() {
+            // Reload the graphics_backend
+            if !self.world.contains::<GraphicsBackend<B>>() {
                 #[cfg(any(test, debug_assertions))]
-                debug!("Reloading the backend");
+                debug!("Reloading the graphics_backend");
                 #[cfg(any(test, debug_assertions))]
                 let reload_mark = Instant::now();
 
@@ -182,12 +182,12 @@ where
                     .world
                     .borrow_mut::<Settings>()
                     .build_backend::<B>()
-                    .expect("Unable to reload the backend");
+                    .expect("Unable to reload the graphics_backend");
                 self.world.insert(backend);
 
                 #[cfg(any(test, debug_assertions))]
                 debug!(
-                    "Completed reloading the backend after {:?}",
+                    "Completed reloading the graphics_backend after {:?}",
                     reload_mark.elapsed()
                 );
             }

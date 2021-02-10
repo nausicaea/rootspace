@@ -7,7 +7,7 @@ use crate::{
     components::Renderable,
     event::{EngineEvent, KeyModifiers, KeyState, VirtualKeyCode},
     geometry::rect::Rect,
-    resources::BackendResource,
+    resources::GraphicsBackend,
 };
 use anyhow::Result;
 use glium::{
@@ -386,7 +386,7 @@ impl FrameTrait<GliumBackend> for GliumFrame {
     fn render<T>(
         &mut self,
         transform: &T,
-        factory: &BackendResource<GliumBackend>,
+        factory: &GraphicsBackend<GliumBackend>,
         data: &Renderable,
     ) -> Result<()>
     where

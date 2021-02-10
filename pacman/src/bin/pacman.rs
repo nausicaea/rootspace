@@ -21,7 +21,7 @@ fn main() -> Result<()> {
         .arg(
             Arg::with_name("headless")
                 .long("headless")
-                .help("Disables the graphical backend"),
+                .help("Disables the graphical graphics_backend"),
         )
         .arg(
             Arg::with_name("verbosity")

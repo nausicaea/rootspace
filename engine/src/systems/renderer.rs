@@ -13,7 +13,7 @@ use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
     event::EngineEvent,
     graphics::{BackendTrait, FrameTrait},
-    resources::{BackendResource, SceneGraph},
+    resources::{GraphicsBackend, SceneGraph},
 };
 use crate::resources::Settings;
 
@@ -73,7 +73,7 @@ where
     B: BackendTrait,
 {
     fn set_dpi_factor(&self, res: &Resources) {
-        let dpi_factor = res.borrow::<BackendResource<B>>().dpi_factor();
+        let dpi_factor = res.borrow::<GraphicsBackend<B>>().dpi_factor();
         res.borrow_mut::<EventQueue<EngineEvent>>()
             .send(EngineEvent::ChangeDpi(dpi_factor));
     }
@@ -83,7 +83,7 @@ where
         debug!("Reloading all renderables");
         #[cfg(any(test, debug_assertions))]
         let reload_mark = Instant::now();
-        let mut backend = res.borrow_mut::<BackendResource<B>>();
+        let mut backend = res.borrow_mut::<GraphicsBackend<B>>();
         backend
             .reload_assets(&mut res.borrow_components_mut::<Renderable>())
             .expect("Could not reload all renderable assets");
@@ -146,7 +146,7 @@ where
         let mut ui_draw_calls: usize = 0;
 
         // The following is just a workaround for the DPI factor not being set properly by the
-        // backend at initialisation.
+        // graphics_backend at initialisation.
         if !self.initialised {
             #[cfg(any(test, debug_assertions))]
             debug!("Initialising the renderer");
@@ -178,7 +178,7 @@ where
         let entities = res.borrow::<Entities>();
         let world_graph = res.borrow::<SceneGraph<Model>>();
         let ui_graph = res.borrow::<SceneGraph<UiModel>>();
-        let factory = res.borrow::<BackendResource<B>>();
+        let factory = res.borrow::<GraphicsBackend<B>>();
         let statuses = res.borrow_components::<Status>();
         let renderables = res.borrow_components::<Renderable>();
 
