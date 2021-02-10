@@ -8,7 +8,7 @@ use crate::resources::BackendResource;
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct BackendSettings {
+pub struct Settings {
     pub asset_tree: DirPathBuf,
     pub title: String,
     pub dimensions: (u32, u32),
@@ -20,9 +20,9 @@ pub struct BackendSettings {
     pub command_punctuation: char,
 }
 
-impl BackendSettings {
-    pub fn builder(asset_tree: DirPathBuf) -> BackendSettingsBuilder {
-        BackendSettingsBuilder::new(asset_tree)
+impl Settings {
+    pub fn builder(asset_tree: DirPathBuf) -> SettingsBuilder {
+        SettingsBuilder::new(asset_tree)
     }
 
     pub fn build_backend<B: BackendTrait>(&self) -> anyhow::Result<BackendResource<B>> {
@@ -30,22 +30,13 @@ impl BackendSettings {
     }
 }
 
-impl Resource for BackendSettings {}
+impl Resource for Settings {}
 
-impl MaybeDefault for BackendSettings {}
+impl MaybeDefault for Settings {}
 
-impl<B> From<BackendResource<B>> for BackendSettings
-where
-    B: BackendTrait,
-{
-    fn from(value: BackendResource<B>) -> Self {
-        value.settings.clone()
-    }
-}
-
-impl From<BackendSettingsBuilder> for BackendSettings {
-    fn from(value: BackendSettingsBuilder) -> Self {
-        BackendSettings {
+impl From<SettingsBuilder> for Settings {
+    fn from(value: SettingsBuilder) -> Self {
+        Settings {
             asset_tree: value.asset_tree,
             title: value.title,
             dimensions: value.dimensions,
@@ -59,7 +50,7 @@ impl From<BackendSettingsBuilder> for BackendSettings {
     }
 }
 
-pub struct BackendSettingsBuilder {
+pub struct SettingsBuilder {
     asset_tree: DirPathBuf,
     title: String,
     dimensions: (u32, u32),
@@ -71,9 +62,9 @@ pub struct BackendSettingsBuilder {
     command_punctuation: char,
 }
 
-impl BackendSettingsBuilder {
+impl SettingsBuilder {
     pub fn new(asset_tree: DirPathBuf) -> Self {
-        BackendSettingsBuilder {
+        SettingsBuilder {
             asset_tree,
             title: String::new(),
             dimensions: (800, 600),
@@ -126,7 +117,7 @@ impl BackendSettingsBuilder {
         self
     }
 
-    pub fn build(self) -> BackendSettings {
-        BackendSettings::from(self)
+    pub fn build(self) -> Settings {
+        Settings::from(self)
     }
 }

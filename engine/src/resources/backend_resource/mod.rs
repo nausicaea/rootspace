@@ -8,7 +8,6 @@ use std::{
 
 use anyhow::{Error, Result};
 
-use backend_settings::BackendSettings;
 use ecs::{Component, Resource};
 use file_manipulation::FilePathBuf;
 use index_buffer_id::IndexBufferId;
@@ -23,8 +22,8 @@ use crate::{
         BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
     },
 };
+use crate::resources::settings::Settings;
 
-pub mod backend_settings;
 pub mod texture_id;
 pub mod shader_id;
 pub mod vertex_buffer_id;
@@ -34,7 +33,7 @@ pub struct BackendResource<B>
 where
     B: BackendTrait,
 {
-    settings: BackendSettings,
+    settings: Settings,
     textures: HashMap<TextureId, B::Texture>,
     shaders: HashMap<ShaderId, B::Shader>,
     vertex_buffers: HashMap<VertexBufferId, B::VertexBuffer>,
@@ -143,13 +142,22 @@ where
 
 impl<B> Resource for BackendResource<B> where B: BackendTrait + 'static {}
 
-impl<B> TryFrom<BackendSettings> for BackendResource<B>
+impl<B> From<BackendResource<B>> for Settings
+    where
+        B: BackendTrait,
+{
+    fn from(value: BackendResource<B>) -> Self {
+        value.settings.clone()
+    }
+}
+
+impl<B> TryFrom<Settings> for BackendResource<B>
 where
     B: BackendTrait,
 {
     type Error = Error;
 
-    fn try_from(value: BackendSettings) -> Result<Self> {
+    fn try_from(value: Settings) -> Result<Self> {
         Ok(BackendResource {
             settings: value.clone(),
             textures: HashMap::default(),
@@ -161,13 +169,13 @@ where
     }
 }
 
-impl<B> TryFrom<&BackendSettings> for BackendResource<B>
+impl<B> TryFrom<&Settings> for BackendResource<B>
 where
     B: BackendTrait,
 {
     type Error = Error;
 
-    fn try_from(value: &BackendSettings) -> Result<Self> {
+    fn try_from(value: &Settings) -> Result<Self> {
         Ok(BackendResource {
             settings: value.clone(),
             textures: HashMap::default(),
@@ -230,14 +238,14 @@ mod tests {
     #[test]
     fn backend_settings_new() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let _: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
+        let _: Settings = Settings::new("Title", (800, 600), false, 0, resource_path);
     }
 
     #[test]
     fn backend_settings_serde() {
         let rpstr = env!("CARGO_MANIFEST_DIR");
         let resource_path = DirPathBuf::try_from(rpstr).unwrap();
-        let b: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
+        let b: Settings = Settings::new("Title", (800, 600), false, 0, resource_path);
 
         assert_tokens(
             &b,
@@ -267,7 +275,7 @@ mod tests {
     #[test]
     fn backend_resource_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let b: BackendSettings = BackendSettings::new("Title", (800, 600), false, 0, resource_path);
+        let b: Settings = Settings::new("Title", (800, 600), false, 0, resource_path);
         let _: BackendResource<HeadlessBackend> = BackendResource::try_from(b).unwrap();
     }
 

@@ -520,7 +520,7 @@ impl fmt::Debug for GliumBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resources::backend_resource::backend_settings::BackendSettings;
+    use crate::resources::settings::Settings;
     use approx::assert_ulps_ne;
     use std::f64;
     use file_manipulation::DirPathBuf;
@@ -557,7 +557,7 @@ mod tests {
     #[cfg_attr(target_os = "macos", ignore)]
     fn frame() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
+        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
             .build_backend::<GliumBackend>()
             .unwrap();
 

@@ -5,7 +5,7 @@ use ecs::WorldEvent;
 
 use crate::components::{Camera, Info, Model, Renderable, Status, UiModel};
 use crate::event::EngineEvent;
-use crate::resources::backend_resource::backend_settings::BackendSettings;
+use crate::resources::settings::Settings;
 use crate::resources::SceneGraph;
 use crate::systems::{
     camera_manager::CameraManager,
@@ -28,7 +28,7 @@ pub type ResourceTypes<RR> = RegAdd![
     SceneGraph<UiModel>,
     SceneGraph<Model>,
     EventQueue<EngineEvent>,
-    BackendSettings,
+    Settings,
     RR
 ];
 

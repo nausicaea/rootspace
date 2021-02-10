@@ -27,7 +27,7 @@ use crate::{
         Renderer,
     },
 };
-use crate::resources::backend_resource::backend_settings::BackendSettings;
+use crate::resources::settings::Settings;
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
 
@@ -67,7 +67,7 @@ where
 
         // Create the backend
         let resource_path = DirPathBuf::try_from(resource_path.as_ref())?;
-        let settings = BackendSettings::builder(resource_path)
+        let settings = Settings::builder(resource_path)
             .build();
         let backend = settings
             .build_backend::<B>()
@@ -180,7 +180,7 @@ where
 
                 let backend = self
                     .world
-                    .borrow_mut::<BackendSettings>()
+                    .borrow_mut::<Settings>()
                     .build_backend::<B>()
                     .expect("Unable to reload the backend");
                 self.world.insert(backend);

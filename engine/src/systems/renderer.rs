@@ -15,7 +15,7 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     resources::{BackendResource, SceneGraph},
 };
-use crate::resources::BackendSettings;
+use crate::resources::Settings;
 
 static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;
@@ -52,7 +52,7 @@ where
     B: BackendTrait,
 {
     fn with_resources(res: &Resources) -> Self {
-        let clear_color = res.borrow::<BackendSettings>().clear_color;
+        let clear_color = res.borrow::<Settings>().clear_color;
         let receiver = res.borrow_mut::<EventQueue<WorldEvent>>()
             .subscribe::<Self>();
 

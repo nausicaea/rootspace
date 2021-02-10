@@ -7,7 +7,7 @@ use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use log::trace;
 use std::{collections::HashMap, time::Duration};
 use thiserror::Error;
-use crate::resources::BackendSettings;
+use crate::resources::Settings;
 
 pub struct DebugShell {
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
@@ -23,7 +23,7 @@ impl std::fmt::Debug for DebugShell {
 
 impl WithResources for DebugShell {
     fn with_resources(res: &Resources) -> Self {
-        let terminator = res.borrow::<BackendSettings>().command_punctuation;
+        let terminator = res.borrow::<Settings>().command_punctuation;
         let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
             .subscribe::<Self>();
 

@@ -348,14 +348,14 @@ mod tests {
     use file_manipulation::DirPathBuf;
 
     use crate::{graphics::headless::HeadlessBackend};
-    use crate::resources::backend_resource::backend_settings::BackendSettings;
+    use crate::resources::settings::Settings;
 
     use super::*;
 
     #[test]
     fn headless_builder_mesh() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
+        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
             .build_backend::<HeadlessBackend>()
             .unwrap();
         let r: Result<Renderable> = Renderable::builder()
@@ -372,7 +372,7 @@ mod tests {
     #[test]
     fn headless_builder_text() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
+        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
             .build_backend::<HeadlessBackend>()
             .unwrap();
         let r: Result<Renderable> = Renderable::builder()

@@ -350,14 +350,14 @@ mod tests {
     use file_manipulation::DirPathBuf;
 
     use crate::{graphics::headless::HeadlessBackend};
-    use crate::resources::backend_resource::backend_settings::BackendSettings;
+    use crate::resources::settings::Settings;
 
     use super::*;
 
     #[test]
     fn text_builder_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
+        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
             .build_backend::<HeadlessBackend>()
             .unwrap();
 
@@ -376,7 +376,7 @@ mod tests {
     #[test]
     fn text_mesh_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
+        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
             .build_backend::<HeadlessBackend>()
             .unwrap();
 
@@ -406,7 +406,7 @@ mod tests {
     #[test]
     fn text_scale_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
+        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
             .build_backend::<HeadlessBackend>()
             .unwrap();
 
@@ -427,7 +427,7 @@ mod tests {
     #[test]
     fn text_width_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
+        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
             .build_backend::<HeadlessBackend>()
             .unwrap();
 
@@ -448,7 +448,7 @@ mod tests {
     #[test]
     fn text_update_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
+        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
             .build_backend::<HeadlessBackend>()
             .unwrap();
 
