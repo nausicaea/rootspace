@@ -35,12 +35,18 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct NewOrExFilePathBuf(PathBuf);
 
 impl NewOrExFilePathBuf {
     pub fn path(&self) -> &Path {
         AsRef::<Path>::as_ref(self)
+    }
+}
+
+impl std::fmt::Debug for NewOrExFilePathBuf {
+    fn fmt(&self, f: &std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self.0)
     }
 }
 
@@ -136,7 +142,7 @@ impl TryFrom<&Path> for NewOrExFilePathBuf {
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct FilePathBuf(PathBuf);
 
 impl FilePathBuf {
@@ -160,6 +166,12 @@ impl FilePathBuf {
             .map_err(|e| FileError::IoError(self.0.clone(), e))?;
 
         Ok(buf)
+    }
+}
+
+impl std::fmt::Debug for FilePathBuf {
+    fn fmt(&self, f: &std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self.0)
     }
 }
 
@@ -240,12 +252,18 @@ impl<'a> TryFrom<&Path> for FilePathBuf {
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct DirPathBuf(PathBuf);
 
 impl DirPathBuf {
     pub fn path(&self) -> &Path {
         AsRef::<Path>::as_ref(self)
+    }
+}
+
+impl std::fmt::Debug for DirPathBuf {
+    fn fmt(&self, f: &std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self.0)
     }
 }
 
