@@ -64,6 +64,10 @@ where
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
+    pub fn resources(&self) -> &Resources {
+        &self.resources
+    }
+
     /// Insert a new resource.
     pub fn insert<R>(&mut self, res: R)
     where
@@ -143,6 +147,17 @@ where
             LoopStage::FixedUpdate => self.fixed_update_systems.insert(system),
             LoopStage::Update => self.update_systems.insert(system),
             LoopStage::Render => self.render_systems.insert(system),
+        }
+    }
+
+    pub fn borrow_system<S>(&self, stage: LoopStage) -> &S
+    where
+        S: System,
+    {
+        match stage {
+            LoopStage::FixedUpdate => self.fixed_update_systems.borrow::<S>(),
+            LoopStage::Update => self.update_systems.borrow::<S>(),
+            LoopStage::Render => self.render_systems.borrow::<S>(),
         }
     }
 
@@ -303,11 +318,11 @@ where
 {
     fn default() -> Self {
         let mut resources = Resources::with_registry::<ResourceTypes<RR>>();
-        let fixed_update_systems = Systems::with_registry::<FUSR>();
-        let update_systems = Systems::with_registry::<USR>();
-        let render_systems = Systems::with_registry::<RSR>();
+        let fixed_update_systems = Systems::with_registry::<FUSR>(&resources);
+        let update_systems = Systems::with_registry::<USR>(&resources);
+        let render_systems = Systems::with_registry::<RSR>(&resources);
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>()
-            .subscribe();
+            .subscribe::<Self>();
 
         World {
             resources,

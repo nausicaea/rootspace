@@ -9,7 +9,7 @@ use std::{
     fmt,
     marker::PhantomData,
 };
-use crate::short_type_name::short_type_name;
+use std::any::type_name;
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Clone, Serialize, Deserialize)]
@@ -89,7 +89,9 @@ where
     E: Clone,
 {
     /// Subscribe to this event queue.
-    pub fn subscribe(&mut self) -> ReceiverId<E> {
+    pub fn subscribe<T>(&mut self) -> ReceiverId<E> {
+        let _t: PhantomData<T> = PhantomData::default();
+
         let id = if let Some(id) = self.free_ids.pop() {
             id
         } else {
@@ -102,9 +104,9 @@ where
 
         #[cfg(any(test, debug_assertions))]
         debug!(
-            "Adding a subscriber with id {} for queue {}",
-            id,
-            short_type_name::<Self>()
+            "Adding subscriber {} to queue {}",
+            type_name::<T>(),
+            type_name::<Self>()
         );
         ReceiverId::new(id)
     }
@@ -121,7 +123,7 @@ where
             self.unsubscribe(recv);
         }
 
-        self.subscribe()
+        self.subscribe::<Self>()
     }
 
     /// Return `true` if the receiver is subscribed to this

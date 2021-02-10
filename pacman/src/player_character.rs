@@ -1,4 +1,4 @@
-use ecs::{Component, EventQueue, ReceiverId, Resources, System, ZstStorage, MaybeDefault};
+use ecs::{Component, EventQueue, ReceiverId, Resources, System, ZstStorage, MaybeDefault, WithResources};
 use engine::{
     components::Model,
     event::{KeyState, VirtualKeyCode},
@@ -28,17 +28,18 @@ pub struct PlayerCharacter {
     receiver: ReceiverId<EngineEvent>,
 }
 
-impl MaybeDefault for PlayerCharacter {}
-
-impl PlayerCharacter {
-    pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
-        trace!("PlayerCharacter subscribing to EventQueue<EngineEvent>");
+impl WithResources for PlayerCharacter {
+    fn with_resources(res: &Resources) -> Self {
+        let receiver = res.borrow::<EventQueue<EngineEvent>>()
+            .subscribe::<Self>();
 
         PlayerCharacter {
-            receiver: queue.subscribe(),
+            receiver,
         }
     }
+}
 
+impl PlayerCharacter {
     fn move_char(&self, res: &Resources, dt: &Duration, dir: MoveDirection) {
         let delta = match dir {
             MoveDirection::Up => nalgebra::Vector3::new(0.0, 1.0, 0.0),

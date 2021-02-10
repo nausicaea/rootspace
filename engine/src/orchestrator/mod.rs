@@ -14,10 +14,7 @@ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 
-use ecs::{
-    Component, Entity, EventQueue, LoopControl,
-    LoopStage, ReceiverId, Resource, ResourceRegistry, System, SystemRegistry, World, WorldEvent,
-};
+use ecs::{Component, Entity, EventQueue, LoopControl, LoopStage, ReceiverId, Resource, ResourceRegistry, System, SystemRegistry, World, WorldEvent, WithResources};
 use file_manipulation::DirPathBuf;
 
 use crate::{
@@ -26,10 +23,9 @@ use crate::{
     graphics::BackendTrait,
     resources::{BackendResource, SceneGraph},
     systems::{
-        CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor,
-        ForceShutdown, Renderer,
+        CameraManager, DebugConsole, DebugShell, EventCoordinator, EventMonitor,
+        Renderer,
     },
-    text_manipulation::tokenize,
 };
 use crate::resources::backend_resource::backend_settings::BackendSettings;
 
@@ -71,54 +67,21 @@ where
 
         // Create the backend
         let resource_path = DirPathBuf::try_from(resource_path.as_ref())?;
-        let backend_settings = BackendSettings::builder(resource_path)
+        let settings = BackendSettings::builder(resource_path)
             .build();
-        world.insert(backend_settings.clone());
-
-        let backend = backend_settings
+        let backend = settings
             .build_backend::<B>()
             .context("Failed to initialise the backend")?;
+        world.insert(settings);
         world.insert(backend);
 
-        // Insert basic systems
-        world.add_system(LoopStage::Update, ForceShutdown::default());
-        world.add_system(
-            LoopStage::Update,
-            DebugConsole::new(std::io::stdin(), Some('\\'), Some('"'), &[';']),
-        );
-        world.add_system(LoopStage::Update, EventInterface::<B>::default());
-
-        let event_monitor =
-            EventMonitor::<WorldEvent>::new(world.get_mut::<EventQueue<WorldEvent>>());
-        world.add_system(LoopStage::Update, event_monitor);
-
-        let renderer = Renderer::<B>::new(
-            [0.69, 0.93, 0.93, 1.0],
-            world.get_mut::<EventQueue<WorldEvent>>(),
-        );
-        world.add_system(LoopStage::Render, renderer);
-
-        let event_monitor =
-            EventMonitor::<EngineEvent>::new(world.get_mut::<EventQueue<EngineEvent>>());
-        world.add_system(LoopStage::Update, event_monitor);
-
-        let camera_manager = CameraManager::new(world.get_mut::<EventQueue<EngineEvent>>());
-        world.add_system(LoopStage::Update, camera_manager);
-
-        let debug_shell = DebugShell::new(world.get_mut::<EventQueue<EngineEvent>>(), Some(";"));
-        world.add_system(LoopStage::Update, debug_shell);
-
-        let event_coordinator = EventCoordinator::new(world.get_mut::<EventQueue<EngineEvent>>());
-        world.add_system(LoopStage::Update, event_coordinator);
-
         trace!("Orchestrator<B, RR> subscribing to EventQueue<WorldEvent>");
-        let receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe();
+        let receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
         // Send the requested debug command
         if let Some(cmd) = command {
-            world
-                .get_mut::<EventQueue<EngineEvent>>()
-                .send(EngineEvent::Command(tokenize(cmd, '\\', '"', &[';'])));
+            world.borrow_system::<DebugConsole>(LoopStage::Update)
+                .send_command(cmd, world.resources());
         }
 
         Ok(Orchestrator {

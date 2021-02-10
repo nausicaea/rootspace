@@ -1,5 +1,11 @@
 use crate::resources::Resources;
 
-pub trait FromResources: Sized {
-    fn from_resources(res: &Resources) -> Self;
+pub trait WithResources: Sized {
+    fn with_resources(res: &Resources) -> Self;
+}
+
+impl WithResources for () {
+    fn with_resources(_: &Resources) -> () {
+        ()
+    }
 }

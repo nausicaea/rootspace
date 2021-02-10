@@ -12,6 +12,7 @@ pub use crate::{
     loop_control::LoopControl,
     loop_stage::LoopStage,
     maybe_default::MaybeDefault,
+    with_resources::WithResources,
     registry::{Element, End, ResourceRegistry, SystemRegistry},
     resource::Resource,
     resources::Resources,

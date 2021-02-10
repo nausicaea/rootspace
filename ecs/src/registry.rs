@@ -1,4 +1,4 @@
-use crate::{maybe_default::MaybeDefault, resource::Resource, system::System};
+use crate::{maybe_default::MaybeDefault, resource::Resource, system::System, with_resources::WithResources};
 use serde::{Deserialize, Serialize};
 use std::any::TypeId;
 use std::fmt::Debug;
@@ -104,7 +104,7 @@ macro_rules! impl_registry {
 }
 
 impl_registry!(ResourceRegistry, where Head: Resource + MaybeDefault + Debug);
-impl_registry!(SystemRegistry, where Head: System + MaybeDefault + Debug);
+impl_registry!(SystemRegistry, where Head: System + WithResources + Debug);
 
 #[cfg(test)]
 mod tests {

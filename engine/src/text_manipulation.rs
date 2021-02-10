@@ -1,15 +1,12 @@
-use std::collections::HashSet;
-
 /// Splits a command line (String) into a vector of arguments. Based on a solution posted to
 /// [Stack Overflow](https://stackoverflow.com/a/23961658).
-pub fn tokenize<'a, S: AsRef<str>, H: IntoIterator<Item = &'a char>>(
+pub fn tokenize<'a, S: AsRef<str>>(
     arg_string: S,
     escape_char: char,
     quote_char: char,
-    separator_chars: H,
+    punctuation_char: char,
 ) -> Vec<String> {
     let mut args = Vec::new();
-    let separator_chars: HashSet<char> = separator_chars.into_iter().cloned().collect();
 
     let mut escape = false;
     let mut in_quote = false;
@@ -49,7 +46,7 @@ pub fn tokenize<'a, S: AsRef<str>, H: IntoIterator<Item = &'a char>>(
             // Reset the current argument
             current_arg.clear();
             had_quote = false;
-        } else if separator_chars.iter().any(|sc| &c == sc) && !in_quote {
+        } else if c == punctuation_char && !in_quote {
             // Add the pending escape character.
             if escape {
                 current_arg.push(escape_char);
@@ -97,7 +94,7 @@ mod test {
             "command -f flagvalue  positional_argument 100 ",
             '\\',
             '"',
-            &[],
+            ';',
         );
 
         assert_eq!(
@@ -112,7 +109,7 @@ mod test {
             "command -f \"flag value\"  \"positional argument\" 100 ",
             '\\',
             '"',
-            &[],
+            ';',
         );
 
         assert_eq!(
@@ -127,7 +124,7 @@ mod test {
             r"command -f flag\\ value  positional argument 100 ",
             '\\',
             '"',
-            &[],
+            ';',
         );
 
         assert_eq!(
@@ -150,7 +147,7 @@ mod test {
             "command -f flagvalue  positional_argument 100; othercommand -p flagvalue",
             '\\',
             '"',
-            &[';'],
+            ';',
         );
 
         assert_eq!(

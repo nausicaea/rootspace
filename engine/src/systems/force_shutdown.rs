@@ -1,7 +1,7 @@
 use crate::event::EngineEvent;
 #[cfg(not(test))]
 use ctrlc;
-use ecs::{EventQueue, Resources, System};
+use ecs::{EventQueue, Resources, System, WithResources};
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 #[cfg(not(test))]
@@ -25,8 +25,8 @@ pub struct ForceShutdown {
     ctrlc_triggered: Arc<AtomicUsize>,
 }
 
-impl Default for ForceShutdown {
-    fn default() -> Self {
+impl WithResources for ForceShutdown {
+    fn with_resources(_: &Resources) -> Self {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
         #[cfg(not(test))]
         {

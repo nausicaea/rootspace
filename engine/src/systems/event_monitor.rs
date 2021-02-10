@@ -1,4 +1,4 @@
-use ecs::{EventQueue, ReceiverId, Resources, System, short_type_name, MaybeDefault};
+use ecs::{EventQueue, ReceiverId, Resources, System, MaybeDefault, WithResources};
 use log::trace;
 use std::{fmt, time::Duration};
 use serde::{Serialize, Deserialize};
@@ -8,18 +8,16 @@ pub struct EventMonitor<E> {
     receiver: ReceiverId<E>,
 }
 
-impl<E> EventMonitor<E>
+impl<E> WithResources for EventMonitor<E>
 where
-    E: 'static + Clone,
+    E: 'static + Clone + std::fmt::Debug,
 {
-    pub fn new(queue: &mut EventQueue<E>) -> Self {
-        trace!(
-            "{} subscribing to {}",
-            short_type_name::<Self>(),
-            short_type_name::<EventQueue<E>>()
-        );
+    fn with_resources(res: &Resources) -> Self {
+        let receiver = res.borrow_mut::<EventQueue<E>>()
+            .subscribe::<Self>();
+
         EventMonitor {
-            receiver: queue.subscribe(),
+            receiver,
         }
     }
 }

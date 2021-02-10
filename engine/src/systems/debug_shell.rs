@@ -3,15 +3,16 @@ use crate::{
     event::EngineEvent,
 };
 use anyhow::Result;
-use ecs::{EventQueue, ReceiverId, Resources, System};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use log::trace;
 use std::{collections::HashMap, time::Duration};
 use thiserror::Error;
+use crate::resources::BackendSettings;
 
 pub struct DebugShell {
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
     receiver: ReceiverId<EngineEvent>,
-    terminator: &'static str,
+    terminator: char,
 }
 
 impl std::fmt::Debug for DebugShell {
@@ -20,13 +21,16 @@ impl std::fmt::Debug for DebugShell {
     }
 }
 
-impl DebugShell {
-    pub fn new(queue: &mut EventQueue<EngineEvent>, terminator: Option<&'static str>) -> Self {
-        trace!("DebugShell subscribing to EventQueue<EngineEvent>");
+impl WithResources for DebugShell {
+    fn with_resources(res: &Resources) -> Self {
+        let terminator = res.borrow::<BackendSettings>().command_punctuation;
+        let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
+            .subscribe::<Self>();
+
         let mut sys = DebugShell {
             commands: HashMap::new(),
-            receiver: queue.subscribe(),
-            terminator: terminator.unwrap_or(";"),
+            receiver,
+            terminator,
         };
 
         sys.add_command(ExitCommand);
@@ -36,14 +40,16 @@ impl DebugShell {
 
         sys
     }
+}
 
+impl DebugShell {
     pub fn add_command<C: CommandTrait>(&mut self, command: C) {
         self.commands.insert(command.name(), Box::new(command));
     }
 
     fn interpret(&self, res: &Resources, tokens: &[String]) -> Result<()> {
         // Iterate over all commands
-        for token_group in tokens.split(|t| t == self.terminator) {
+        for token_group in tokens.split(|t| t.len() == 1 && t.contains(self.terminator)) {
             // Determine the current command name
             let command_name = token_group[0].as_str();
 

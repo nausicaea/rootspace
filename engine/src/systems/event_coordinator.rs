@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use log::trace;
 
-use ecs::{world::event::WorldEvent, EventQueue, ReceiverId, Resources, System, MaybeDefault};
+use ecs::{world::event::WorldEvent, EventQueue, ReceiverId, Resources, System, MaybeDefault, WithResources};
 
 use crate::event::EngineEvent;
 use serde::{Serialize, Deserialize};
@@ -12,11 +12,13 @@ pub struct EventCoordinator {
     receiver: ReceiverId<EngineEvent>,
 }
 
-impl EventCoordinator {
-    pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
-        trace!("EventCoordinator subscribing to EventQueue<EngineEvent>");
+impl WithResources for EventCoordinator {
+    fn with_resources(res: &Resources) -> Self {
+        let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
+            .subscribe::<Self>();
+
         EventCoordinator {
-            receiver: queue.subscribe(),
+            receiver,
         }
     }
 }

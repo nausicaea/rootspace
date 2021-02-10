@@ -14,18 +14,20 @@ use crate::system::System;
 
 use super::recursors;
 use super::Systems;
+use crate::resources::Resources;
+use crate::with_resources::WithResources;
 
 #[derive(Debug)]
 pub struct TypedSystems<'a, SR>(Either<&'a Systems, Systems>, PhantomData<SR>);
 
-impl<'a, SR> Default for TypedSystems<'a, SR>
+impl<'a, SR> WithResources for TypedSystems<'a, SR>
 where
     SR: SystemRegistry,
 {
-    fn default() -> Self {
+    fn with_resources(res: &Resources) -> Self {
         let mut systems = Systems::with_capacity(SR::LEN);
 
-        recursors::initialize_recursive::<SR>(&mut systems, PhantomData::default());
+        recursors::initialize_recursive::<SR>(res, &mut systems, PhantomData::default());
 
         TypedSystems(Right(systems), PhantomData::default())
     }

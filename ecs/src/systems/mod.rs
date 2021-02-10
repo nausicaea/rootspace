@@ -9,6 +9,7 @@ use log::{debug, trace};
 use self::typed_systems::TypedSystems;
 
 use serde::{Serialize, Deserialize, de::Deserializer, ser::Serializer};
+use crate::{with_resources::WithResources, resources::Resources};
 
 #[derive(Default)]
 pub struct Systems(Vec<Box<dyn System>>);
@@ -24,13 +25,13 @@ impl Systems {
         Systems(Vec::with_capacity(cap))
     }
 
-    pub fn with_registry<SR>() -> Self
+    pub fn with_registry<SR>(res: &Resources) -> Self
         where
             SR: SystemRegistry,
     {
         #[cfg(any(test, debug_assertions))]
         trace!("Beginning the initialization of Systems");
-        let helper = TypedSystems::<SR>::default();
+        let helper = TypedSystems::<SR>::with_resources(res);
         #[cfg(any(test, debug_assertions))]
         trace!("Completed the initialization of Systems");
 
@@ -92,6 +93,14 @@ impl Systems {
         S: System,
     {
         self.0.push(Box::new(sys))
+    }
+
+    pub fn borrow<S>(&self) -> &S
+    where
+        S: System,
+    {
+        self.find::<S>()
+            .expect(&format!("Could not find the system {}", std::any::type_name::<S>()))
     }
 
     pub fn find_with_position<S>(&self) -> Option<(usize, &S)>

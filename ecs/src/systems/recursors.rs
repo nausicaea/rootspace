@@ -9,13 +9,14 @@ use serde::ser::SerializeMap;
 use crate::system::System;
 use crate::registry::SystemRegistry;
 use crate::short_type_name::short_type_name;
-use crate::maybe_default::MaybeDefault;
+use crate::resources::Resources;
+use crate::with_resources::WithResources;
 use log::{debug, trace};
 
 use super::Systems;
 use super::typed_system::TypedSystem;
 
-pub fn initialize_recursive<SR>(systems: &mut Systems, _: PhantomData<SR>)
+pub fn initialize_recursive<SR>(resources: &Resources, systems: &mut Systems, _: PhantomData<SR>)
     where
         SR: SystemRegistry,
 {
@@ -23,19 +24,12 @@ pub fn initialize_recursive<SR>(systems: &mut Systems, _: PhantomData<SR>)
         return;
     }
 
-    if let Some(default_value) = SR::Head::maybe_default() {
-        #[cfg(any(test, debug_assertions))]
-        trace!("Initializing the system {}", type_name::<SR::Head>());
-        systems.insert(default_value)
-    } else {
-        #[cfg(any(test, debug_assertions))]
-        debug!(
-            "Not initializing the system {} because it lacks a default constructor",
-            type_name::<SR::Head>()
-        );
-    }
+    #[cfg(any(test, debug_assertions))]
+    trace!("Initializing the system {}", type_name::<SR::Head>());
+    let default_value = SR::Head::with_resources(resources);
+    systems.insert(default_value);
 
-    initialize_recursive::<SR::Tail>(systems, PhantomData::default());
+    initialize_recursive::<SR::Tail>(resources, systems, PhantomData::default());
 }
 
 pub fn serialize_recursive<SR, SM>(

@@ -7,7 +7,7 @@ use serde::{Serialize, Deserialize};
 use log::debug;
 use log::trace;
 
-use ecs::{world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System, MaybeDefault};
+use ecs::{world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System, MaybeDefault, WithResources};
 
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
@@ -15,6 +15,7 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     resources::{BackendResource, SceneGraph},
 };
+use crate::resources::BackendSettings;
 
 static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;
@@ -46,23 +47,31 @@ impl<B> std::fmt::Debug for Renderer<B> {
     }
 }
 
-
-impl<B> Renderer<B>
+impl<B> WithResources for Renderer<B>
 where
     B: BackendTrait,
 {
-    pub fn new(clear_color: [f32; 4], queue: &mut EventQueue<WorldEvent>) -> Self {
-        trace!("Renderer<B> subscribing to EventQueue<WorldEvent>");
+    fn with_resources(res: &Resources) -> Self {
+        let clear_color = res.borrow::<BackendSettings>().clear_color;
+        let receiver = res.borrow_mut::<EventQueue<WorldEvent>>()
+            .subscribe::<Self>();
+
         Renderer {
             clear_color,
-            receiver: queue.subscribe(),
+            receiver,
             initialised: false,
             draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
             frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
             _b: PhantomData::default(),
         }
     }
+}
 
+
+impl<B> Renderer<B>
+where
+    B: BackendTrait,
+{
     fn set_dpi_factor(&self, res: &Resources) {
         let dpi_factor = res.borrow::<BackendResource<B>>().dpi_factor();
         res.borrow_mut::<EventQueue<EngineEvent>>()

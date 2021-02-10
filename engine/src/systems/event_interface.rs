@@ -1,5 +1,5 @@
 use crate::{event::EngineEvent, graphics::BackendTrait, resources::BackendResource};
-use ecs::{EventQueue, Resources, System};
+use ecs::{EventQueue, Resources, System, WithResources};
 use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
 use serde::{Serialize, Deserialize};
@@ -7,8 +7,8 @@ use serde::{Serialize, Deserialize};
 #[derive(Serialize, Deserialize)]
 pub struct EventInterface<B>(PhantomData<B>);
 
-impl<B> Default for EventInterface<B> {
-    fn default() -> Self {
+impl<B> WithResources for EventInterface<B> {
+    fn with_resources(_: &Resources) -> Self {
         EventInterface(PhantomData::default())
     }
 }

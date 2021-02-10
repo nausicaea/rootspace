@@ -1,5 +1,5 @@
 use crate::{components::camera::Camera, event::EngineEvent};
-use ecs::{EventQueue, ReceiverId, Resources, System, MaybeDefault};
+use ecs::{EventQueue, ReceiverId, Resources, System, MaybeDefault, WithResources};
 #[cfg(any(test, debug_assertions))]
 use log::{debug, trace};
 use std::time::Duration;
@@ -10,15 +10,18 @@ pub struct CameraManager {
     receiver: ReceiverId<EngineEvent>,
 }
 
-impl CameraManager {
-    pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {
-        trace!("CameraManager subscribing to EventQueue<EngineEvent>");
+impl WithResources for CameraManager {
+    fn with_resources(res: &Resources) -> Self {
+        let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
+            .subscribe::<Self>();
 
         CameraManager {
-            receiver: queue.subscribe(),
+            receiver,
         }
     }
+}
 
+impl CameraManager {
     fn on_resize(&self, res: &Resources, dims: (u32, u32)) {
         #[cfg(any(test, debug_assertions))]
         debug!("Updating the camera dimensions (dims={:?})", dims);

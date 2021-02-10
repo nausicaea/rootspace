@@ -15,6 +15,9 @@ pub struct BackendSettings {
     pub clear_color: [f32; 4],
     pub vsync: bool,
     pub msaa: u16,
+    pub command_escape: char,
+    pub command_quote: char,
+    pub command_punctuation: char,
 }
 
 impl BackendSettings {
@@ -49,6 +52,9 @@ impl From<BackendSettingsBuilder> for BackendSettings {
             clear_color: value.clear_color,
             vsync: value.vsync,
             msaa: value.msaa,
+            command_escape: value.command_escape,
+            command_quote: value.command_quote,
+            command_punctuation: value.command_punctuation,
         }
     }
 }
@@ -60,6 +66,9 @@ pub struct BackendSettingsBuilder {
     clear_color: [f32; 4],
     vsync: bool,
     msaa: u16,
+    command_escape: char,
+    command_quote: char,
+    command_punctuation: char,
 }
 
 impl BackendSettingsBuilder {
@@ -71,6 +80,9 @@ impl BackendSettingsBuilder {
             clear_color: [0.69, 0.93, 0.93, 1.0],
             vsync: true,
             msaa: 4,
+            command_escape: '\\',
+            command_quote: '"',
+            command_punctuation: ';',
         }
     }
 
@@ -96,6 +108,21 @@ impl BackendSettingsBuilder {
 
     pub fn with_msaa(mut self, msaa: u16) -> Self {
         self.msaa = msaa;
+        self
+    }
+
+    pub fn with_command_escape(mut self, escape: char) -> Self {
+        self.command_escape = escape;
+        self
+    }
+
+    pub fn with_command_quote(mut self, quote: char) -> Self {
+        self.command_quote = quote;
+        self
+    }
+
+    pub fn with_command_punctuation(mut self, punct: char) -> Self {
+        self.command_punctuation = punct;
         self
     }
 
