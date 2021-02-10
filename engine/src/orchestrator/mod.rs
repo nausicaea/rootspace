@@ -62,13 +62,16 @@ where
     RSR: SystemRegistry,
 {
     pub fn new<P: AsRef<Path>>(resource_path: P, command: Option<&str>) -> Result<Self> {
-        // Create the world
-        let mut world = World::default();
-
-        // Create the graphics_backend
+        // Load the application settings
         let resource_path = DirPathBuf::try_from(resource_path.as_ref())?;
         let settings = Settings::builder(resource_path)
             .build();
+
+        // Create the world
+        // FIXME: The following call already requires a valid settings resource
+        let mut world = World::default();
+
+        // Create the graphics_backend
         let backend = settings
             .build_backend::<B>()
             .context("Failed to initialise the graphics_backend")?;
