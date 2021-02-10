@@ -4,16 +4,19 @@ use std::{
     path::Path,
     time::{Duration, Instant},
 };
+use std::marker::PhantomData;
 
 use anyhow::{Context, Result};
 #[cfg(any(test, debug_assertions))]
 use log::debug;
 use log::trace;
-use serde::{Deserialize, Serialize, Serializer, Deserializer, de};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+use serde::de::{MapAccess, Visitor};
+use serde::ser::SerializeStruct;
 
 use ecs::{
     Component, Entity, EventQueue, LoopControl,
-    LoopStage, ReceiverId, Resource, ResourceRegistry, System, World, WorldEvent, SystemRegistry,
+    LoopStage, ReceiverId, Resource, ResourceRegistry, System, SystemRegistry, World, WorldEvent,
 };
 use file_manipulation::DirPathBuf;
 
@@ -21,29 +24,27 @@ use crate::{
     components::{Model, UiModel},
     event::EngineEvent,
     graphics::BackendTrait,
-    resources::{BackendResource, BackendSettings, SceneGraph},
+    resources::{BackendResource, SceneGraph},
     systems::{
         CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor,
         ForceShutdown, Renderer,
     },
     text_manipulation::tokenize,
 };
+use crate::resources::backend_resource::backend_settings::BackendSettings;
 
-use self::type_registry::{ResourceTypes, UpdateSystemTypes, RenderSystemTypes};
-use serde::ser::SerializeStruct;
-use std::marker::PhantomData;
-use serde::de::{Visitor, MapAccess};
+use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
 
 mod type_registry;
 
-pub struct Orchestrator<B, RR, SR1, SR2, SR3> {
-    pub world: World<ResourceTypes<RR>, SR1, UpdateSystemTypes<B, SR2>, RenderSystemTypes<B, SR3>>,
+pub struct Orchestrator<B, RR, FUSR, USR, RSR> {
+    pub world: World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>,
     delta_time: Duration,
     max_frame_time: Duration,
     receiver: ReceiverId<WorldEvent>,
 }
 
-impl<B, RR, SR1, SR2, SR3> std::fmt::Debug for Orchestrator<B, RR, SR1, SR2, SR3> {
+impl<B, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR, FUSR, USR, RSR> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -56,13 +57,13 @@ impl<B, RR, SR1, SR2, SR3> std::fmt::Debug for Orchestrator<B, RR, SR1, SR2, SR3
     }
 }
 
-impl<B, RR, SR1, SR2, SR3> Orchestrator<B, RR, SR1, SR2, SR3>
+impl<B, RR, FUSR, USR, RSR> Orchestrator<B, RR, FUSR, USR, RSR>
 where
     B: BackendTrait,
     RR: ResourceRegistry,
-    SR1: SystemRegistry,
-    SR2: SystemRegistry,
-    SR3: SystemRegistry,
+    FUSR: SystemRegistry,
+    USR: SystemRegistry,
+    RSR: SystemRegistry,
 {
     pub fn new<P: AsRef<Path>>(resource_path: P, command: Option<&str>) -> Result<Self> {
         // Create the world
@@ -70,11 +71,13 @@ where
 
         // Create the backend
         let resource_path = DirPathBuf::try_from(resource_path.as_ref())?;
-        let backend = BackendSettings::new("Title", (800, 600), true, 4, resource_path)
-            .build::<B>()
-            .context("Failed to initialise the backend")?;
+        let backend_settings = BackendSettings::builder(resource_path)
+            .build();
+        world.insert(backend_settings.clone());
 
-        world.insert(backend.settings().clone());
+        let backend = backend_settings
+            .build_backend::<B>()
+            .context("Failed to initialise the backend")?;
         world.insert(backend);
 
         // Insert basic systems
@@ -215,7 +218,7 @@ where
                 let backend = self
                     .world
                     .borrow_mut::<BackendSettings>()
-                    .build::<B>()
+                    .build_backend::<B>()
                     .expect("Unable to reload the backend");
                 self.world.insert(backend);
 
@@ -231,13 +234,13 @@ where
     }
 }
 
-impl<B, RR, SR1, SR2, SR3> Serialize for Orchestrator<B, RR, SR1, SR2, SR3>
+impl<B, RR, FUSR, USR, RSR> Serialize for Orchestrator<B, RR, FUSR, USR, RSR>
     where
         B: BackendTrait,
         RR: ResourceRegistry,
-        SR1: SystemRegistry,
-        SR2: SystemRegistry,
-        SR3: SystemRegistry,
+        FUSR: SystemRegistry,
+        USR: SystemRegistry,
+        RSR: SystemRegistry,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -252,13 +255,13 @@ impl<B, RR, SR1, SR2, SR3> Serialize for Orchestrator<B, RR, SR1, SR2, SR3>
     }
 }
 
-impl<'de, B, RR, SR1, SR2, SR3> Deserialize<'de> for Orchestrator<B, RR, SR1, SR2, SR3>
+impl<'de, B, RR, FUSR, USR, RSR> Deserialize<'de> for Orchestrator<B, RR, FUSR, USR, RSR>
     where
         B: BackendTrait,
         RR: ResourceRegistry,
-        SR1: SystemRegistry,
-        SR2: SystemRegistry,
-        SR3: SystemRegistry,
+        FUSR: SystemRegistry,
+        USR: SystemRegistry,
+        RSR: SystemRegistry,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -288,15 +291,15 @@ enum OrchestratorField {
     Receiver,
 }
 
-struct OrchestratorVisitor<B, RR, SR1, SR2, SR3>(
+struct OrchestratorVisitor<B, RR, FUSR, USR, RSR>(
     PhantomData<B>,
     PhantomData<RR>,
-    PhantomData<SR1>,
-    PhantomData<SR2>,
-    PhantomData<SR3>,
+    PhantomData<FUSR>,
+    PhantomData<USR>,
+    PhantomData<RSR>,
 );
 
-impl<B, RR, SR1, SR2, SR3> Default for OrchestratorVisitor<B, RR, SR1, SR2, SR3> {
+impl<B, RR, FUSR, USR, RSR> Default for OrchestratorVisitor<B, RR, FUSR, USR, RSR> {
     fn default() -> Self {
         OrchestratorVisitor(
             PhantomData::default(),
@@ -308,15 +311,15 @@ impl<B, RR, SR1, SR2, SR3> Default for OrchestratorVisitor<B, RR, SR1, SR2, SR3>
     }
 }
 
-impl<'de, B, RR, SR1, SR2, SR3> Visitor<'de> for OrchestratorVisitor<B, RR, SR1, SR2, SR3>
+impl<'de, B, RR, FUSR, USR, RSR> Visitor<'de> for OrchestratorVisitor<B, RR, FUSR, USR, RSR>
     where
         B: BackendTrait,
         RR: ResourceRegistry,
-        SR1: SystemRegistry,
-        SR2: SystemRegistry,
-        SR3: SystemRegistry,
+        FUSR: SystemRegistry,
+        USR: SystemRegistry,
+        RSR: SystemRegistry,
 {
-    type Value = Orchestrator<B, RR, SR1, SR2, SR3>;
+    type Value = Orchestrator<B, RR, FUSR, USR, RSR>;
 
     fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "a serialized Orchestrator struct")
@@ -326,7 +329,7 @@ impl<'de, B, RR, SR1, SR2, SR3> Visitor<'de> for OrchestratorVisitor<B, RR, SR1,
     where
         A: MapAccess<'de>,
     {
-        let mut world: Option<World<ResourceTypes<RR>, SR1, UpdateSystemTypes<B, SR2>, RenderSystemTypes<B, SR3>>> = None;
+        let mut world: Option<World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>> = None;
         let mut delta_time: Option<Duration> = None;
         let mut max_frame_time: Option<Duration> = None;
         let mut receiver: Option<ReceiverId<WorldEvent>> = None;

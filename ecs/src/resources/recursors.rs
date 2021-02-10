@@ -6,7 +6,7 @@ use std::any::type_name;
 use serde::ser::SerializeMap;
 use serde::{ser, de};
 use serde::de::MapAccess;
-use log::debug;
+use log::{debug, trace};
 use crate::short_type_name::short_type_name;
 
 pub fn initialize_recursive<RR>(resources: &mut Resources, _: PhantomData<RR>)
@@ -19,7 +19,7 @@ pub fn initialize_recursive<RR>(resources: &mut Resources, _: PhantomData<RR>)
 
     if let Some(default_value) = RR::Head::maybe_default() {
         #[cfg(any(test, debug_assertions))]
-        debug!("Initializing the resource {}", type_name::<RR::Head>());
+        trace!("Initializing the resource {}", type_name::<RR::Head>());
         resources.insert(default_value)
     } else {
         #[cfg(any(test, debug_assertions))]
@@ -55,7 +55,7 @@ pub fn serialize_recursive<RR, SM>(
     }
 
     #[cfg(any(test, debug_assertions))]
-    debug!("Serializing the resource {}", &stn);
+    trace!("Serializing the resource {}", &stn);
     serialize_map.serialize_entry(
         &stn,
         &*resources.borrow::<RR::Head>(),
@@ -87,7 +87,7 @@ pub fn deserialize_recursive<'de, A, RR>(
         }
 
         #[cfg(any(test, debug_assertions))]
-        debug!("Deserializing the resource {}", stn);
+        trace!("Deserializing the resource {}", stn);
         let c = map_access.next_value::<RR::Head>()?;
         resources.insert(c);
         return Ok(());

@@ -1,15 +1,3 @@
-use crate::{
-    assets::AssetError,
-    components::Renderable,
-    graphics::{
-        BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
-    },
-};
-use anyhow::{Error, Result};
-use ecs::{Component, MaybeDefault, Resource};
-use file_manipulation::{FilePathBuf, DirPathBuf};
-use serde::{Deserialize, Serialize};
-use snowflake::ProcessUniqueId;
 use std::{
     collections::HashMap,
     convert::TryFrom,
@@ -18,49 +6,29 @@ use std::{
     path::Path,
 };
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct BackendSettings {
-    title: String,
-    dimensions: (u32, u32),
-    vsync: bool,
-    msaa: u16,
-    asset_tree: DirPathBuf,
-}
+use anyhow::{Error, Result};
 
-impl BackendSettings {
-    pub fn new<S: AsRef<str>>(
-        title: S,
-        dimensions: (u32, u32),
-        vsync: bool,
-        msaa: u16,
-        asset_tree: DirPathBuf,
-    ) -> Self {
-        BackendSettings {
-            title: title.as_ref().to_string(),
-            dimensions,
-            vsync,
-            msaa,
-            asset_tree,
-        }
-    }
+use backend_settings::BackendSettings;
+use ecs::{Component, Resource};
+use file_manipulation::FilePathBuf;
+use index_buffer_id::IndexBufferId;
+use shader_id::ShaderId;
+use texture_id::TextureId;
+use vertex_buffer_id::VertexBufferId;
 
-    pub fn build<B: BackendTrait>(&self) -> Result<BackendResource<B>> {
-        TryFrom::try_from(self)
-    }
-}
+use crate::{
+    assets::AssetError,
+    components::Renderable,
+    graphics::{
+        BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
+    },
+};
 
-impl Resource for BackendSettings {}
-
-impl MaybeDefault for BackendSettings {}
-
-impl<B> From<BackendResource<B>> for BackendSettings
-where
-    B: BackendTrait,
-{
-    fn from(value: BackendResource<B>) -> Self {
-        value.settings.clone()
-    }
-}
+pub mod backend_settings;
+pub mod texture_id;
+pub mod shader_id;
+pub mod vertex_buffer_id;
+pub mod index_buffer_id;
 
 pub struct BackendResource<B>
 where
@@ -78,10 +46,6 @@ impl<B> BackendResource<B>
 where
     B: BackendTrait,
 {
-    pub fn settings(&self) -> &BackendSettings {
-        &self.settings
-    }
-
     pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {
         let asset_path = FilePathBuf::try_from(self.settings.asset_tree.join(path))?;
 
@@ -251,73 +215,17 @@ where
     }
 }
 
-#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct TextureId(Option<ProcessUniqueId>);
-
-impl TextureId {
-    fn generate() -> Self {
-        TextureId(Some(ProcessUniqueId::new()))
-    }
-}
-
-impl Default for TextureId {
-    fn default() -> Self {
-        TextureId(None)
-    }
-}
-
-#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ShaderId(Option<ProcessUniqueId>);
-
-impl ShaderId {
-    fn generate() -> Self {
-        ShaderId(Some(ProcessUniqueId::new()))
-    }
-}
-
-impl Default for ShaderId {
-    fn default() -> Self {
-        ShaderId(None)
-    }
-}
-
-#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct VertexBufferId(Option<ProcessUniqueId>);
-
-impl VertexBufferId {
-    fn generate() -> Self {
-        VertexBufferId(Some(ProcessUniqueId::new()))
-    }
-}
-
-impl Default for VertexBufferId {
-    fn default() -> Self {
-        VertexBufferId(None)
-    }
-}
-
-#[derive(Copy, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct IndexBufferId(Option<ProcessUniqueId>);
-
-impl IndexBufferId {
-    fn generate() -> Self {
-        IndexBufferId(Some(ProcessUniqueId::new()))
-    }
-}
-
-impl Default for IndexBufferId {
-    fn default() -> Self {
-        IndexBufferId(None)
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::graphics::headless::HeadlessBackend;
-    use serde_test::{assert_tokens, Token};
-    use file_manipulation::DirPathBuf;
     use std::convert::TryFrom;
+
+    use serde_test::{assert_tokens, Token};
+
+    use file_manipulation::DirPathBuf;
+
+    use crate::graphics::headless::HeadlessBackend;
+
+    use super::*;
 
     #[test]
     fn backend_settings_new() {

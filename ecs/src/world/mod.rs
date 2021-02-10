@@ -45,24 +45,24 @@ pub(crate) mod type_registry;
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
 /// systems to operate on the stored resources, components and entities.
-pub struct World<RR, SR1, SR2, SR3> {
+pub struct World<RR, FUSR, USR, RSR> {
     resources: Resources,
     fixed_update_systems: Systems,
     update_systems: Systems,
     render_systems: Systems,
     receiver: ReceiverId<WorldEvent>,
     _rr: PhantomData<RR>,
-    _sr1: PhantomData<SR1>,
-    _sr2: PhantomData<SR2>,
-    _sr3: PhantomData<SR3>,
+    _sr1: PhantomData<FUSR>,
+    _sr2: PhantomData<USR>,
+    _sr3: PhantomData<RSR>,
 }
 
-impl<RR, SR1, SR2, SR3> World<RR, SR1, SR2, SR3>
+impl<RR, FUSR, USR, RSR> World<RR, FUSR, USR, RSR>
 where
     RR: ResourceRegistry,
-    SR1: SystemRegistry,
-    SR2: SystemRegistry,
-    SR3: SystemRegistry,
+    FUSR: SystemRegistry,
+    USR: SystemRegistry,
+    RSR: SystemRegistry,
 {
     /// Insert a new resource.
     pub fn insert<R>(&mut self, res: R)
@@ -260,7 +260,7 @@ where
         let mut d = serde_json::Deserializer::from_reader(&mut file);
 
         // Deserialize the entire world
-        let world: World<RR, SR1, SR2, SR3> = World::deserialize(&mut d)
+        let world: World<RR, FUSR, USR, RSR> = World::deserialize(&mut d)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
         // Assign its parts to the current instance
@@ -279,7 +279,7 @@ where
     }
 }
 
-impl<RR, SR1, SR2, SR3> std::fmt::Debug for World<RR, SR1, SR2, SR3> {
+impl<RR, FUSR, USR, RSR> std::fmt::Debug for World<RR, FUSR, USR, RSR> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -294,18 +294,18 @@ impl<RR, SR1, SR2, SR3> std::fmt::Debug for World<RR, SR1, SR2, SR3> {
 }
 
 
-impl<RR, SR1, SR2, SR3> Default for World<RR, SR1, SR2, SR3>
+impl<RR, FUSR, USR, RSR> Default for World<RR, FUSR, USR, RSR>
 where
     RR: ResourceRegistry,
-    SR1: SystemRegistry,
-    SR2: SystemRegistry,
-    SR3: SystemRegistry,
+    FUSR: SystemRegistry,
+    USR: SystemRegistry,
+    RSR: SystemRegistry,
 {
     fn default() -> Self {
         let mut resources = Resources::with_registry::<ResourceTypes<RR>>();
-        let fixed_update_systems = Systems::with_registry::<SR1>();
-        let update_systems = Systems::with_registry::<SR2>();
-        let render_systems = Systems::with_registry::<SR3>();
+        let fixed_update_systems = Systems::with_registry::<FUSR>();
+        let update_systems = Systems::with_registry::<USR>();
+        let render_systems = Systems::with_registry::<RSR>();
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>()
             .subscribe();
 
@@ -323,21 +323,21 @@ where
     }
 }
 
-impl<RR, SR1, SR2, SR3> Serialize for World<RR, SR1, SR2, SR3>
+impl<RR, FUSR, USR, RSR> Serialize for World<RR, FUSR, USR, RSR>
 where
     RR: ResourceRegistry,
-    SR1: SystemRegistry,
-    SR2: SystemRegistry,
-    SR3: SystemRegistry,
+    FUSR: SystemRegistry,
+    USR: SystemRegistry,
+    RSR: SystemRegistry,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: ser::Serializer,
     {
         let tr: TypedResources<'_, ResourceTypes<RR>> = (&self.resources).into();
-        let ts1: TypedSystems<'_, SR1> = (&self.fixed_update_systems).into();
-        let ts2: TypedSystems<'_, SR2> = (&self.update_systems).into();
-        let ts3: TypedSystems<'_, SR3> = (&self.render_systems).into();
+        let ts1: TypedSystems<'_, FUSR> = (&self.fixed_update_systems).into();
+        let ts2: TypedSystems<'_, USR> = (&self.update_systems).into();
+        let ts3: TypedSystems<'_, RSR> = (&self.render_systems).into();
 
         let mut state = serializer.serialize_struct("World", WORLD_FIELDS.len())?;
         state.serialize_field("resources", &tr)?;
@@ -353,18 +353,18 @@ where
     }
 }
 
-impl<'de, RR, SR1, SR2, SR3> Deserialize<'de> for World<RR, SR1, SR2, SR3>
+impl<'de, RR, FUSR, USR, RSR> Deserialize<'de> for World<RR, FUSR, USR, RSR>
 where
     RR: ResourceRegistry,
-    SR1: SystemRegistry,
-    SR2: SystemRegistry,
-    SR3: SystemRegistry,
+    FUSR: SystemRegistry,
+    USR: SystemRegistry,
+    RSR: SystemRegistry,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: de::Deserializer<'de>,
     {
-        deserializer.deserialize_struct("World", WORLD_FIELDS, WorldVisitor::<RR, SR1, SR2, SR3>::default())
+        deserializer.deserialize_struct("World", WORLD_FIELDS, WorldVisitor::<RR, FUSR, USR, RSR>::default())
     }
 }
 
@@ -386,22 +386,22 @@ const WORLD_FIELDS: &'static [&'static str] = &[
     "receiver",
 ];
 
-struct WorldVisitor<RR, SR1, SR2, SR3>(PhantomData<RR>, PhantomData<SR1>, PhantomData<SR2>, PhantomData<SR3>);
+struct WorldVisitor<RR, FUSR, USR, RSR>(PhantomData<RR>, PhantomData<FUSR>, PhantomData<USR>, PhantomData<RSR>);
 
-impl<RR, SR1, SR2, SR3> Default for WorldVisitor<RR, SR1, SR2, SR3> {
+impl<RR, FUSR, USR, RSR> Default for WorldVisitor<RR, FUSR, USR, RSR> {
     fn default() -> Self {
         WorldVisitor(PhantomData::default(), PhantomData::default(), PhantomData::default(), PhantomData::default())
     }
 }
 
-impl<'de, RR, SR1, SR2, SR3> Visitor<'de> for WorldVisitor<RR, SR1, SR2, SR3>
+impl<'de, RR, FUSR, USR, RSR> Visitor<'de> for WorldVisitor<RR, FUSR, USR, RSR>
 where
     RR: ResourceRegistry,
-    SR1: SystemRegistry,
-    SR2: SystemRegistry,
-    SR3: SystemRegistry,
+    FUSR: SystemRegistry,
+    USR: SystemRegistry,
+    RSR: SystemRegistry,
 {
-    type Value = World<RR, SR1, SR2, SR3>;
+    type Value = World<RR, FUSR, USR, RSR>;
 
     fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "a serialized World struct")
@@ -412,9 +412,9 @@ where
             A: MapAccess<'de>,
     {
         let mut resources: Option<TypedResources<ResourceTypes<RR>>> = None;
-        let mut fixed_update_systems: Option<TypedSystems<SR1>> = None;
-        let mut update_systems: Option<TypedSystems<SR2>> = None;
-        let mut render_systems: Option<TypedSystems<SR3>> = None;
+        let mut fixed_update_systems: Option<TypedSystems<FUSR>> = None;
+        let mut update_systems: Option<TypedSystems<USR>> = None;
+        let mut render_systems: Option<TypedSystems<RSR>> = None;
         let mut receiver: Option<ReceiverId<WorldEvent>> = None;
 
         while let Some(field_name) = map_access.next_key()? {

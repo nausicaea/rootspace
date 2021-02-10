@@ -7,7 +7,7 @@ use std::{
     collections::HashMap,
 };
 
-use log::debug;
+use log::{debug, trace};
 use serde::{
     de::{Deserializer},
     ser::{Serializer},
@@ -98,10 +98,10 @@ impl Resources {
             RR: ResourceRegistry,
     {
         #[cfg(any(test, debug_assertions))]
-        debug!("Beginning the initialization of Resources");
+        trace!("Beginning the initialization of Resources");
         let helper = TypedResources::<RR>::default();
         #[cfg(any(test, debug_assertions))]
-        debug!("Completed the initialization of Resources");
+        trace!("Completed the initialization of Resources");
 
         Resources::from(helper)
     }
@@ -114,10 +114,10 @@ impl Resources {
             D: Deserializer<'de>,
     {
         #[cfg(any(test, debug_assertions))]
-        debug!("Beginning the deserialization of Resources");
+        trace!("Beginning the deserialization of Resources");
         let helper = TypedResources::<RR>::deserialize(deserializer)?;
         #[cfg(any(test, debug_assertions))]
-        debug!("Completed the deserialization of Resources");
+        trace!("Completed the deserialization of Resources");
 
         Ok(Resources::from(helper))
     }
@@ -130,11 +130,11 @@ impl Resources {
             S: Serializer,
     {
         #[cfg(any(test, debug_assertions))]
-        debug!("Beginning the serialization of Resources");
+        trace!("Beginning the serialization of Resources");
         let status = TypedResources::<RR>::from(self)
             .serialize(serializer)?;
         #[cfg(any(test, debug_assertions))]
-        debug!("Completed the serialization of Resources");
+        trace!("Completed the serialization of Resources");
 
         Ok(status)
     }

@@ -45,7 +45,7 @@ impl NewOrExFilePathBuf {
 }
 
 impl std::fmt::Debug for NewOrExFilePathBuf {
-    fn fmt(&self, f: &std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }
@@ -170,7 +170,7 @@ impl FilePathBuf {
 }
 
 impl std::fmt::Debug for FilePathBuf {
-    fn fmt(&self, f: &std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }
@@ -262,7 +262,7 @@ impl DirPathBuf {
 }
 
 impl std::fmt::Debug for DirPathBuf {
-    fn fmt(&self, f: &std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{:?}", self.0)
     }
 }

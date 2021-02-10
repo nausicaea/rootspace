@@ -1,4 +1,4 @@
-use ecs::{Component, EventQueue, ReceiverId, Resources, System, ZstStorage};
+use ecs::{Component, EventQueue, ReceiverId, Resources, System, ZstStorage, MaybeDefault};
 use engine::{
     components::Model,
     event::{KeyState, VirtualKeyCode},
@@ -23,10 +23,12 @@ pub enum MoveDirection {
     Right,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PlayerCharacter {
     receiver: ReceiverId<EngineEvent>,
 }
+
+impl MaybeDefault for PlayerCharacter {}
 
 impl PlayerCharacter {
     pub fn new(queue: &mut EventQueue<EngineEvent>) -> Self {

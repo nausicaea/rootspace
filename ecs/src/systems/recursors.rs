@@ -10,7 +10,7 @@ use crate::system::System;
 use crate::registry::SystemRegistry;
 use crate::short_type_name::short_type_name;
 use crate::maybe_default::MaybeDefault;
-use log::debug;
+use log::{debug, trace};
 
 use super::Systems;
 use super::typed_system::TypedSystem;
@@ -25,7 +25,7 @@ pub fn initialize_recursive<SR>(systems: &mut Systems, _: PhantomData<SR>)
 
     if let Some(default_value) = SR::Head::maybe_default() {
         #[cfg(any(test, debug_assertions))]
-        debug!("Initializing the system {}", type_name::<SR::Head>());
+        trace!("Initializing the system {}", type_name::<SR::Head>());
         systems.insert(default_value)
     } else {
         #[cfg(any(test, debug_assertions))]
@@ -54,7 +54,7 @@ where
     let stn = short_type_name::<SR::Head>();
 
     #[cfg(any(test, debug_assertions))]
-    debug!("Serializing the system {}", &stn);
+    trace!("Serializing the system {}", &stn);
     if let Some((order, system)) = systems.find_with_position::<SR::Head>() {
         serialize_map.serialize_entry(
             &stn,
@@ -95,7 +95,7 @@ where
         }
 
         #[cfg(any(test, debug_assertions))]
-        debug!("Deserializing the system {}", stn);
+        trace!("Deserializing the system {}", stn);
         let c = map_access.next_value::<TypedSystem<SR::Head>>()?;
         systems.insert(c.order, Box::new(c.system.unwrap_right()));
         type_tracker.insert(tid);

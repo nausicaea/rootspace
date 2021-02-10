@@ -1,18 +1,20 @@
-use ecs::RegAdd;
 use ecs::Component;
 use ecs::EventQueue;
+use ecs::RegAdd;
 use ecs::WorldEvent;
+
 use crate::components::{Camera, Info, Model, Renderable, Status, UiModel};
-use crate::resources::{BackendSettings, SceneGraph};
 use crate::event::EngineEvent;
+use crate::resources::backend_resource::backend_settings::BackendSettings;
+use crate::resources::SceneGraph;
 use crate::systems::{
-    force_shutdown::ForceShutdown,
+    camera_manager::CameraManager,
     // debug_console::DebugConsole,
     // debug_shell::DebugShell,
-    event_monitor::EventMonitor,
-    event_interface::EventInterface,
     event_coordinator::EventCoordinator,
-    camera_manager::CameraManager,
+    event_interface::EventInterface,
+    event_monitor::EventMonitor,
+    force_shutdown::ForceShutdown,
     renderer::Renderer,
 };
 

@@ -12,12 +12,15 @@ use file_manipulation::FilePathBuf;
 use std::{convert::TryFrom, path::Path};
 
 type ResourceRegistry = Reg![];
+type FixedUpdateSystemRegistry = Reg![];
+type UpdateSystemRegistry = Reg![];
+type RenderSystemRegistry = Reg![];
 
 pub struct Rootspace<B>
 where
     B: BackendTrait,
 {
-    orch: Orchestrator<B, ResourceRegistry>,
+    orch: Orchestrator<B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
     main_scene: FilePathBuf,
 }
 

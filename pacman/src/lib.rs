@@ -14,12 +14,15 @@ use nalgebra::Vector3;
 use std::path::Path;
 
 type ResourceRegistry = Reg![<PlayerCharacterMarker as Component>::Storage,];
+type FixedUpdateSystemRegistry = Reg![];
+type UpdateSystemRegistry = Reg![PlayerCharacter];
+type RenderSystemRegistry = Reg![];
 
 pub struct Pacman<B>
 where
     B: BackendTrait,
 {
-    orch: Orchestrator<B, ResourceRegistry>,
+    orch: Orchestrator<B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
 }
 
 impl<B> Pacman<B>

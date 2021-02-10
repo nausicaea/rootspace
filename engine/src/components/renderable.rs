@@ -1,13 +1,20 @@
+use std::path::{Path, PathBuf};
+
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+
+use ecs::{Component, VecStorage};
+
 use crate::{
     assets::{AssetTrait, Mesh},
-    graphics::{text::Text, BackendTrait},
-    resources::{BackendResource, IndexBufferId, ShaderId, TextureId, VertexBufferId},
+    graphics::{BackendTrait, text::Text},
+    resources::BackendResource,
 };
-use anyhow::Result;
-use ecs::{Component, VecStorage};
-use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
-use thiserror::Error;
+use crate::resources::backend_resource::index_buffer_id::IndexBufferId;
+use crate::resources::backend_resource::shader_id::ShaderId;
+use crate::resources::backend_resource::texture_id::TextureId;
+use crate::resources::backend_resource::vertex_buffer_id::VertexBufferId;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RenderableType {
@@ -336,16 +343,20 @@ pub enum RenderableError {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{graphics::headless::HeadlessBackend, resources::BackendSettings};
-    use file_manipulation::DirPathBuf;
     use std::convert::TryFrom;
+
+    use file_manipulation::DirPathBuf;
+
+    use crate::{graphics::headless::HeadlessBackend};
+    use crate::resources::backend_resource::backend_settings::BackendSettings;
+
+    use super::*;
 
     #[test]
     fn headless_builder_mesh() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
-            .build::<HeadlessBackend>()
+            .build_backend::<HeadlessBackend>()
             .unwrap();
         let r: Result<Renderable> = Renderable::builder()
             .with_mesh("meshes/cube.ply")
@@ -362,7 +373,7 @@ mod tests {
     fn headless_builder_text() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
         let mut f = BackendSettings::new("Title", (800, 600), false, 0, resource_path)
-            .build::<HeadlessBackend>()
+            .build_backend::<HeadlessBackend>()
             .unwrap();
         let r: Result<Renderable> = Renderable::builder()
             .with_font("fonts/SourceSansPro-Regular.ttf")
