@@ -64,6 +64,31 @@ where
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
+    pub fn with_settings<R: Resource, T: Resource>(settings: R, backend: T) -> Self {
+        let mut resources = Resources::with_registry::<ResourceTypes<RR>>();
+        resources.insert(settings);
+        resources.insert(backend);
+
+        let fixed_update_systems = Systems::with_registry::<FUSR>(&resources);
+        let update_systems = Systems::with_registry::<USR>(&resources);
+        let render_systems = Systems::with_registry::<RSR>(&resources);
+
+        let receiver = resources.get_mut::<EventQueue<WorldEvent>>()
+            .subscribe::<Self>();
+
+        World {
+            resources,
+            fixed_update_systems,
+            update_systems,
+            render_systems,
+            receiver,
+            _rr: PhantomData::default(),
+            _sr1: PhantomData::default(),
+            _sr2: PhantomData::default(),
+            _sr3: PhantomData::default(),
+        }
+    }
+
     pub fn resources(&self) -> &Resources {
         &self.resources
     }
@@ -308,35 +333,6 @@ impl<RR, FUSR, USR, RSR> std::fmt::Debug for World<RR, FUSR, USR, RSR> {
     }
 }
 
-
-impl<RR, FUSR, USR, RSR> Default for World<RR, FUSR, USR, RSR>
-where
-    RR: ResourceRegistry,
-    FUSR: SystemRegistry,
-    USR: SystemRegistry,
-    RSR: SystemRegistry,
-{
-    fn default() -> Self {
-        let mut resources = Resources::with_registry::<ResourceTypes<RR>>();
-        let fixed_update_systems = Systems::with_registry::<FUSR>(&resources);
-        let update_systems = Systems::with_registry::<USR>(&resources);
-        let render_systems = Systems::with_registry::<RSR>(&resources);
-        let receiver = resources.get_mut::<EventQueue<WorldEvent>>()
-            .subscribe::<Self>();
-
-        World {
-            resources,
-            fixed_update_systems,
-            update_systems,
-            render_systems,
-            receiver,
-            _rr: PhantomData::default(),
-            _sr1: PhantomData::default(),
-            _sr2: PhantomData::default(),
-            _sr3: PhantomData::default(),
-        }
-    }
-}
 
 impl<RR, FUSR, USR, RSR> Serialize for World<RR, FUSR, USR, RSR>
 where

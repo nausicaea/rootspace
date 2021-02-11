@@ -48,10 +48,6 @@ impl MaybeDefault for CameraManager {
 }
 
 impl System for CameraManager {
-    fn name(&self) -> &'static str {
-        stringify!(CameraManager)
-    }
-
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let events = res
             .borrow_mut::<EventQueue<EngineEvent>>()

@@ -23,10 +23,6 @@ impl<B> System for EventInterface<B>
 where
     B: BackendTrait
 {
-    fn name(&self) -> &'static str {
-        stringify!(EventInterface)
-    }
-
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let mut events: Vec<EngineEvent> = Vec::default();
 

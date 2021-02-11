@@ -9,8 +9,8 @@ use crate::resources::settings::Settings;
 use crate::resources::SceneGraph;
 use crate::systems::{
     camera_manager::CameraManager,
-    // debug_console::DebugConsole,
-    // debug_shell::DebugShell,
+    debug_console::DebugConsole,
+    debug_shell::DebugShell,
     event_coordinator::EventCoordinator,
     event_interface::EventInterface,
     event_monitor::EventMonitor,
@@ -33,8 +33,8 @@ pub type ResourceTypes<RR> = RegAdd![
 ];
 
 pub type UpdateSystemTypes<B, SR> = RegAdd![
-    // DebugConsole,
-    // DebugShell,
+    DebugConsole,
+    DebugShell,
     ForceShutdown,
     EventMonitor<WorldEvent>,
     EventMonitor<EngineEvent>,

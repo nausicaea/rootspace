@@ -28,10 +28,6 @@ impl<E> System for EventMonitor<E>
 where
     E: 'static + Clone + fmt::Debug,
 {
-    fn name(&self) -> &'static str {
-        stringify!(EventMonitor)
-    }
-
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let events = res.borrow_mut::<EventQueue<E>>().receive(&self.receiver);
         for event in events {

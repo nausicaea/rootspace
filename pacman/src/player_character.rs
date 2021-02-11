@@ -55,10 +55,6 @@ impl PlayerCharacter {
 }
 
 impl System for PlayerCharacter {
-    fn name(&self) -> &'static str {
-        stringify!(PlayerCharacter)
-    }
-
     fn run(&mut self, res: &Resources, _t: &Duration, dt: &Duration) {
         let events = res
             .borrow_mut::<EventQueue<EngineEvent>>()

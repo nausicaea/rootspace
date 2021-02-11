@@ -14,12 +14,12 @@ use std::{
     time::Duration,
 };
 use thiserror::Error;
+use crate::resources::Settings;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DebugConsole {
-    escape_char: char,
-    quote_char: char,
-    punctuation_char: char,
+    #[serde(skip, default = "default_worker_rx")]
     worker_rx: Receiver<Result<String, DebugConsoleError>>,
 }
 
@@ -29,11 +29,13 @@ impl DebugConsole {
     }
 
     pub fn send_command(&self, cmd_line: &str, res: &Resources) {
+        let settings = res.borrow::<Settings>();
+
         let tokens = tokenize(
             cmd_line,
-            self.escape_char,
-            self.quote_char,
-            self.punctuation_char
+            settings.command_escape,
+            settings.command_quote,
+            settings.command_punctuation
         );
 
         res.borrow_mut::<EventQueue<EngineEvent>>()
@@ -57,56 +59,57 @@ impl Default for DebugConsole {
     }
 }
 
+fn default_worker_rx() -> Receiver<Result<String, DebugConsoleError>> {
+    spawn_worker(std::io::stdin())
+}
+
+fn spawn_worker<S: Read + Send + 'static>(mut input_stream: S) -> Receiver<Result<String, DebugConsoleError>> {
+    let (tx, rx) = channel();
+
+    #[cfg(not(test))]
+    spawn(move || {
+        let mut buf = Vec::new();
+        let mut byte = [0u8];
+
+        loop {
+            match input_stream.read(&mut byte) {
+                Ok(0) => (),
+                Ok(_) => {
+                    if byte[0] == 0x0A {
+                        tx.send(match String::from_utf8(buf.clone()) {
+                            Ok(l) => Ok(l),
+                            Err(e) => Err(DebugConsoleError::Utf8Error(e)),
+                        })
+                            .expect("Unable to send input from stdin via mpsc channel");
+                        buf.clear()
+                    } else {
+                        buf.push(byte[0])
+                    }
+                }
+                Err(e) => tx
+                    .send(Err(DebugConsoleError::IoError(e)))
+                    .expect("Unable to send error information via mpsc channel"),
+            }
+        }
+    });
+
+    rx
+}
+
 impl<S> From<DebugConsoleBuilder<S>> for DebugConsole
 where
     S: Read + Send + 'static,
 {
     fn from(value: DebugConsoleBuilder<S>) -> Self {
-        let (tx, rx) = channel();
-
         let mut input_stream = value.input_stream;
 
-        #[cfg(not(test))]
-        spawn(move || {
-            let mut buf = Vec::new();
-            let mut byte = [0u8];
-
-            loop {
-                match input_stream.read(&mut byte) {
-                    Ok(0) => (),
-                    Ok(_) => {
-                        if byte[0] == 0x0A {
-                            tx.send(match String::from_utf8(buf.clone()) {
-                                Ok(l) => Ok(l),
-                                Err(e) => Err(DebugConsoleError::Utf8Error(e)),
-                            })
-                            .expect("Unable to send input from stdin via mpsc channel");
-                            buf.clear()
-                        } else {
-                            buf.push(byte[0])
-                        }
-                    }
-                    Err(e) => tx
-                        .send(Err(DebugConsoleError::IoError(e)))
-                        .expect("Unable to send error information via mpsc channel"),
-                }
-            }
-        });
-
         DebugConsole {
-            escape_char: value.escape_char,
-            quote_char: value.quote_char,
-            punctuation_char: value.punctuation_char,
-            worker_rx: rx,
+            worker_rx: spawn_worker(input_stream),
         }
     }
 }
 
 impl System for DebugConsole {
-    fn name(&self) -> &'static str {
-        stringify!(DebugConsole)
-    }
-
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
         if let Some(line) = self.try_read_line() {
             self.send_command(&line, res);
@@ -116,9 +119,6 @@ impl System for DebugConsole {
 
 pub struct DebugConsoleBuilder<S> {
     input_stream: S,
-    escape_char: char,
-    quote_char: char,
-    punctuation_char: char,
 }
 
 impl<S> DebugConsoleBuilder<S> {
@@ -128,9 +128,6 @@ impl<S> DebugConsoleBuilder<S> {
     {
         DebugConsoleBuilder {
             input_stream: stream,
-            escape_char: self.escape_char,
-            quote_char: self.quote_char,
-            punctuation_char: self.punctuation_char,
         }
     }
 }
@@ -139,22 +136,6 @@ impl<S> DebugConsoleBuilder<S>
 where
     S: Read + Send + 'static,
 {
-
-    pub fn with_escape_char(mut self, chr: char) -> Self {
-        self.escape_char = chr;
-        self
-    }
-
-    pub fn with_quote_char(mut self, chr: char) -> Self {
-        self.quote_char = chr;
-        self
-    }
-
-    pub fn with_punctuation_char(mut self, chr: char) -> Self {
-        self.punctuation_char = chr;
-        self
-    }
-
     pub fn build(self) -> DebugConsole {
         DebugConsole::from(self)
     }
@@ -164,9 +145,6 @@ impl Default for DebugConsoleBuilder<std::io::Stdin> {
     fn default() -> Self {
         DebugConsoleBuilder {
             input_stream: std::io::stdin(),
-            escape_char: '\\',
-            quote_char: '"',
-            punctuation_char: ';',
         }
     }
 }

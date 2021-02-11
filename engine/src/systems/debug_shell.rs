@@ -8,37 +8,48 @@ use log::trace;
 use std::{collections::HashMap, time::Duration};
 use thiserror::Error;
 use crate::resources::Settings;
+use serde::{Serialize, Deserialize};
 
+fn box_command<C: CommandTrait>(command: C) -> Box<dyn CommandTrait + 'static> {
+    Box::new(command)
+}
+
+fn default_commands() -> HashMap<&'static str, Box<dyn CommandTrait>> {
+    let mut commands = HashMap::with_capacity(4);
+    commands.insert(ExitCommand.name(), box_command(ExitCommand));
+    commands.insert(CameraCommand.name(), box_command(CameraCommand));
+    commands.insert(EntityCommand.name(), box_command(EntityCommand));
+    commands.insert(StateCommand.name(), box_command(StateCommand));
+    commands
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct DebugShell {
+    #[serde(skip, default = "default_commands")]
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
     receiver: ReceiverId<EngineEvent>,
-    terminator: char,
 }
 
 impl std::fmt::Debug for DebugShell {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "DebugShell {{ commands: {:?}, receiver: {:?}, terminator: {:?}}}", self.commands.keys(), self.receiver, self.terminator)
+        write!(
+            f,
+            "DebugShell {{ commands: {:?}, receiver: {:?} }}",
+            self.commands.keys(),
+            self.receiver,
+        )
     }
 }
 
 impl WithResources for DebugShell {
     fn with_resources(res: &Resources) -> Self {
-        let terminator = res.borrow::<Settings>().command_punctuation;
         let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
             .subscribe::<Self>();
 
-        let mut sys = DebugShell {
-            commands: HashMap::new(),
+        DebugShell {
+            commands: default_commands(),
             receiver,
-            terminator,
-        };
-
-        sys.add_command(ExitCommand);
-        sys.add_command(CameraCommand);
-        sys.add_command(EntityCommand);
-        sys.add_command(StateCommand);
-
-        sys
+        }
     }
 }
 
@@ -48,8 +59,10 @@ impl DebugShell {
     }
 
     fn interpret(&self, res: &Resources, tokens: &[String]) -> Result<()> {
+        let terminator = res.borrow::<Settings>().command_punctuation;
+
         // Iterate over all commands
-        for token_group in tokens.split(|t| t.len() == 1 && t.contains(self.terminator)) {
+        for token_group in tokens.split(|t| t.len() == 1 && t.contains(terminator)) {
             // Determine the current command name
             let command_name = token_group[0].as_str();
 
@@ -83,10 +96,6 @@ impl DebugShell {
 }
 
 impl System for DebugShell {
-    fn name(&self) -> &'static str {
-        stringify!(DebugShell)
-    }
-
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let events = res
             .borrow_mut::<EventQueue<EngineEvent>>()

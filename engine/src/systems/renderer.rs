@@ -22,7 +22,6 @@ static FRAME_TIME_WINDOW: usize = 10;
 
 #[derive(Serialize, Deserialize)]
 pub struct Renderer<B> {
-    clear_color: [f32; 4],
     receiver: ReceiverId<WorldEvent>,
     initialised: bool,
     draw_calls: VecDeque<(usize, usize)>,
@@ -36,9 +35,7 @@ impl<B> std::fmt::Debug for Renderer<B> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Renderer<{}> {{ clear_color: {:?}, receiver: {:?}, initialised: {:?}, draw_calls: {:?}, frame_times: {:?} }}",
-            std::any::type_name::<B>(),
-            self.clear_color,
+            "Renderer {{ receiver: {:?}, initialised: {:?}, draw_calls: {:?}, frame_times: {:?} }}",
             self.receiver,
             self.initialised,
             self.draw_calls,
@@ -52,12 +49,10 @@ where
     B: BackendTrait,
 {
     fn with_resources(res: &Resources) -> Self {
-        let clear_color = res.borrow::<Settings>().clear_color;
         let receiver = res.borrow_mut::<EventQueue<WorldEvent>>()
             .subscribe::<Self>();
 
         Renderer {
-            clear_color,
             receiver,
             initialised: false,
             draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
@@ -131,10 +126,6 @@ impl<B> System for Renderer<B>
 where
     B: BackendTrait,
 {
-    fn name(&self) -> &'static str {
-        stringify!(Renderer)
-    }
-
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         #[cfg(any(test, debug_assertions))]
         let start_mark = Instant::now();
@@ -175,6 +166,7 @@ where
         let cameras = res.borrow_components::<Camera>();
 
         // Grab the necessary resources
+        let settings = res.borrow::<Settings>();
         let entities = res.borrow::<Entities>();
         let world_graph = res.borrow::<SceneGraph<Model>>();
         let ui_graph = res.borrow::<SceneGraph<UiModel>>();
@@ -184,7 +176,7 @@ where
 
         // Create a new frame.
         let mut target = factory.create_frame();
-        target.initialize(self.clear_color, 1.0);
+        target.initialize(settings.clear_color, 1.0);
 
         for (cam_idx, cam) in cameras.iter_enum() {
             // Skip any inactive cameras

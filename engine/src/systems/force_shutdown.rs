@@ -48,10 +48,6 @@ impl WithResources for ForceShutdown {
 }
 
 impl System for ForceShutdown {
-    fn name(&self) -> &'static str {
-        stringify!(ForceShutdown)
-    }
-
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             #[cfg(any(test, debug_assertions))]

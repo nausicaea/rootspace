@@ -26,10 +26,6 @@ impl WithResources for EventCoordinator {
 impl MaybeDefault for EventCoordinator {}
 
 impl System for EventCoordinator {
-    fn name(&self) -> &'static str {
-        stringify!(EventCoordinator)
-    }
-
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let mut queue = res.borrow_mut::<EventQueue<EngineEvent>>();
         let events = queue.receive(&self.receiver);

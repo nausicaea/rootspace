@@ -67,18 +67,15 @@ where
         let settings = Settings::builder(resource_path)
             .build();
 
-        // Create the world
-        // FIXME: The following call already requires a valid settings resource
-        let mut world = World::default();
-
         // Create the graphics_backend
         let backend = settings
             .build_backend::<B>()
             .context("Failed to initialise the graphics_backend")?;
-        world.insert(settings);
-        world.insert(backend);
 
-        trace!("Orchestrator<B, RR> subscribing to EventQueue<WorldEvent>");
+        // Create the world
+        // FIXME: The following call already requires a valid settings resource
+        let mut world = World::with_settings(settings, backend);
+
         let receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
         // Send the requested debug command
