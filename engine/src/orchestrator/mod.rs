@@ -73,7 +73,7 @@ where
             .context("Failed to initialise the graphics_backend")?;
 
         // Create the world
-        // FIXME: The following call already requires a valid settings resource
+        // FIXME: Replace World::with_settings() with something more portable.
         let mut world = World::with_settings(settings, backend);
 
         let receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
