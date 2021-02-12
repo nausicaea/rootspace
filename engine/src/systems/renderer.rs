@@ -23,9 +23,13 @@ static FRAME_TIME_WINDOW: usize = 10;
 #[derive(Serialize, Deserialize)]
 pub struct Renderer<B> {
     receiver: ReceiverId<WorldEvent>,
+    #[serde(skip)]
     initialised: bool,
+    #[serde(skip)]
     draw_calls: VecDeque<(usize, usize)>,
+    #[serde(skip)]
     frame_times: VecDeque<Duration>,
+    #[serde(skip)]
     _b: PhantomData<B>,
 }
 

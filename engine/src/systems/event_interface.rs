@@ -5,11 +5,14 @@ use std::{convert::TryInto, marker::PhantomData, time::Duration};
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct EventInterface<B>(PhantomData<B>);
+pub struct EventInterface<B> {
+    #[serde(skip)]
+    _b: PhantomData<B>,
+}
 
 impl<B> WithResources for EventInterface<B> {
     fn with_resources(_: &Resources) -> Self {
-        EventInterface(PhantomData::default())
+        EventInterface { _b: PhantomData::default() }
     }
 }
 
