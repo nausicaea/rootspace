@@ -90,8 +90,6 @@ where
 {
     /// Subscribe to this event queue.
     pub fn subscribe<T>(&mut self) -> ReceiverId<E> {
-        let _t: PhantomData<T> = PhantomData::default();
-
         let id = if let Some(id) = self.free_ids.pop() {
             id
         } else {
