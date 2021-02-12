@@ -1,8 +1,7 @@
 //! Provides facilities to define and manage events.
 
 use crate::resource::Resource;
-#[cfg(any(test, debug_assertions))]
-use log::debug;
+use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, VecDeque},
@@ -10,18 +9,19 @@ use std::{
     marker::PhantomData,
 };
 use std::any::type_name;
+use crate::short_type_name::short_type_name;
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ReceiverId<E> {
     id: usize,
-    #[serde(skip, default = "PhantomData::default")]
+    #[serde(skip)]
     _e: PhantomData<E>,
 }
 
 impl<E> std::fmt::Debug for ReceiverId<E> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "ReceiverId<{}> {{ id: {:?} }}", std::any::type_name::<E>(), self.id)
+        write!(f, "ReceiverId {{ id: {:?} }}", self.id)
     }
 }
 
@@ -38,11 +38,21 @@ impl<E> ReceiverId<E> {
 struct ReceiverState<E> {
     read: usize,
     received: usize,
-    #[serde(skip, default = "PhantomData::default")]
+    receiver_id: String,
+    #[serde(skip)]
     _e: PhantomData<E>,
 }
 
 impl<E> ReceiverState<E> {
+    pub fn new<T>() -> Self {
+        ReceiverState {
+            read: 0,
+            received: 0,
+            receiver_id: short_type_name::<T>(),
+            _e: PhantomData::default(),
+        }
+    }
+
     fn reset(&mut self) {
         self.read = 0;
         self.received = 0;
@@ -51,17 +61,7 @@ impl<E> ReceiverState<E> {
 
 impl<E> std::fmt::Debug for ReceiverState<E> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "ReceiverState<{}> {{ read: {:?}, received: {:?} }}", std::any::type_name::<E>(), self.read, self.received)
-    }
-}
-
-impl<E> Default for ReceiverState<E> {
-    fn default() -> Self {
-        ReceiverState {
-            read: 0,
-            received: 0,
-            _e: PhantomData::default(),
-        }
+        write!(f, "ReceiverState {{ read: {:?}, received: {:?} }}", self.read, self.received)
     }
 }
 
@@ -80,7 +80,14 @@ where
     E: std::fmt::Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "EventQueue<{}> {{ events: {:?}, receivers: {:?}, max_id: {:?}, free_ids: {:?} }}", std::any::type_name::<E>(), self.events, self.receivers, self.max_id, self.free_ids)
+        write!(
+            f,
+            "EventQueue {{ events: {:?}, receivers: {:?}, max_id: {:?}, free_ids: {:?} }}",
+            self.events,
+            self.receivers,
+            self.max_id,
+            self.free_ids,
+)
     }
 }
 
@@ -90,6 +97,11 @@ where
 {
     /// Subscribe to this event queue.
     pub fn subscribe<T>(&mut self) -> ReceiverId<E> {
+        let stnt = short_type_name::<T>();
+        if self.receivers.values().any(|rs| rs.receiver_id == stnt) {
+            warn!("Type {} already has a listener for {}. Is that intended?", type_name::<T>(), type_name::<Self>());
+        }
+
         let id = if let Some(id) = self.free_ids.pop() {
             id
         } else {
@@ -98,7 +110,7 @@ where
             tmp
         };
 
-        self.receivers.insert(id, ReceiverState::default());
+        self.receivers.insert(id, ReceiverState::new::<T>());
 
         #[cfg(any(test, debug_assertions))]
         debug!(
