@@ -95,13 +95,22 @@ impl Systems {
         self.0.push(Box::new(sys))
     }
 
-    pub fn borrow<S>(&self) -> &S
+    pub fn get<S>(&self) -> &S
     where
         S: System,
     {
         self.find::<S>()
             .expect(&format!("Could not find the system {}", std::any::type_name::<S>()))
     }
+
+    pub fn get_mut<S>(&mut self) -> &mut S
+        where
+            S: System,
+    {
+        self.find_mut::<S>()
+            .expect(&format!("Could not find the system {}", std::any::type_name::<S>()))
+    }
+
 
     pub fn find_with_position<S>(&self) -> Option<(usize, &S)>
     where

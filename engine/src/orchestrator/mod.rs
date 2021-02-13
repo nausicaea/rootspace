@@ -1,7 +1,5 @@
 use std::{
     cmp,
-    convert::TryFrom,
-    path::Path,
     time::{Duration, Instant},
 };
 use std::marker::PhantomData;
@@ -14,33 +12,30 @@ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 
-use ecs::{Component, Entity, EventQueue, LoopControl, LoopStage, ReceiverId, Resource, ResourceRegistry, System, SystemRegistry, World, WorldEvent, WithResources};
-use file_manipulation::DirPathBuf;
+use ecs::{EventQueue, LoopControl, LoopStage, ReceiverId, ResourceRegistry, SystemRegistry, World, WorldEvent};
 
 use crate::{
     components::{Model, UiModel},
     event::EngineEvent,
     graphics::BackendTrait,
     resources::{GraphicsBackend, SceneGraph},
-    systems::{
-        CameraManager, DebugConsole, DebugShell, EventCoordinator, EventMonitor,
-        Renderer,
-    },
+    systems::DebugConsole,
 };
-use crate::resources::settings::Settings;
+use crate::resources::settings::SettingsTrait;
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
 
 mod type_registry;
 
-pub struct Orchestrator<B, RR, FUSR, USR, RSR> {
-    pub world: World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>,
+pub struct Orchestrator<S, B, RR, FUSR, USR, RSR> {
+    pub world: World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<S, B, USR>, RenderSystemTypes<S, B, RSR>>,
     delta_time: Duration,
     max_frame_time: Duration,
     receiver: ReceiverId<WorldEvent>,
+    _s: PhantomData<S>,
 }
 
-impl<B, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR, FUSR, USR, RSR> {
+impl<S, B, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<S, B, RR, FUSR, USR, RSR> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -53,34 +48,32 @@ impl<B, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR, FUSR, USR, R
     }
 }
 
-impl<B, RR, FUSR, USR, RSR> Orchestrator<B, RR, FUSR, USR, RSR>
+impl<S, B, RR, FUSR, USR, RSR> Orchestrator<S, B, RR, FUSR, USR, RSR>
 where
+    S: SettingsTrait,
     B: BackendTrait,
     RR: ResourceRegistry,
     FUSR: SystemRegistry,
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
-    pub fn new<P: AsRef<Path>>(resource_path: P, command: Option<&str>) -> Result<Self> {
-        // Load the application settings
-        let resource_path = DirPathBuf::try_from(resource_path.as_ref())?;
-        let settings = Settings::builder(resource_path)
-            .build();
-
+    pub fn new(settings: S, command: Option<&str>) -> Result<Self> {
         // Create the graphics_backend
-        let backend = settings
-            .build_backend::<B>()
+        let backend = GraphicsBackend::<B>::new(&settings)
             .context("Failed to initialise the graphics_backend")?;
 
         // Create the world
-        // FIXME: Replace World::with_settings() with something more portable.
-        let mut world = World::with_settings(settings, backend);
+        let mut world = World::with_settings(settings);
 
+        // Insert the backend as a resource
+        world.insert(backend);
+
+        // Subscribe to the WorldEvent queue
         let receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
         // Send the requested debug command
         if let Some(cmd) = command {
-            world.borrow_system::<DebugConsole>(LoopStage::Update)
+            world.get_system::<DebugConsole<S>>(LoopStage::Update)
                 .send_command(cmd, world.resources());
         }
 
@@ -89,6 +82,7 @@ where
             delta_time: Duration::from_millis(50),
             max_frame_time: Duration::from_millis(250),
             receiver,
+            _s: PhantomData::default(),
         })
     }
 
@@ -133,35 +127,6 @@ where
         }
     }
 
-    pub fn insert<R>(&mut self, res: R)
-    where
-        R: Resource,
-    {
-        self.world.insert::<R>(res)
-    }
-
-    pub fn get_mut<R: Resource>(&mut self) -> &mut R {
-        self.world.get_mut::<R>()
-    }
-
-    pub fn create_entity(&mut self) -> Entity {
-        self.world.create_entity()
-    }
-
-    pub fn insert_component<C>(&mut self, entity: Entity, component: C)
-    where
-        C: Component,
-    {
-        self.world.insert_component::<C>(entity, component)
-    }
-
-    pub fn add_system<S>(&mut self, stage: LoopStage, system: S)
-    where
-        S: System,
-    {
-        self.world.add_system::<S>(stage, system)
-    }
-
     fn maintain(&mut self) -> LoopControl {
         let running = self.world.maintain();
 
@@ -178,10 +143,7 @@ where
                 #[cfg(any(test, debug_assertions))]
                 let reload_mark = Instant::now();
 
-                let backend = self
-                    .world
-                    .borrow_mut::<Settings>()
-                    .build_backend::<B>()
+                let backend = GraphicsBackend::<B>::new(&*self.world.borrow::<S>())
                     .expect("Unable to reload the graphics_backend");
                 self.world.insert(backend);
 
@@ -197,29 +159,32 @@ where
     }
 }
 
-impl<B, RR, FUSR, USR, RSR> Serialize for Orchestrator<B, RR, FUSR, USR, RSR>
+impl<S, B, RR, FUSR, USR, RSR> Serialize for Orchestrator<S, B, RR, FUSR, USR, RSR>
     where
+        S: SettingsTrait,
         B: BackendTrait,
         RR: ResourceRegistry,
         FUSR: SystemRegistry,
         USR: SystemRegistry,
         RSR: SystemRegistry,
 {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<Ser>(&self, serializer: Ser) -> Result<Ser::Ok, Ser::Error>
     where
-        S: Serializer,
+        Ser: Serializer,
     {
         let mut state = serializer.serialize_struct("Orchestrator", 4)?;
         state.serialize_field("world", &self.world)?;
         state.serialize_field("delta_time", &self.delta_time)?;
         state.serialize_field("max_frame_time", &self.max_frame_time)?;
         state.serialize_field("receiver", &self.receiver)?;
+        state.skip_field("_s")?;
         state.end()
     }
 }
 
-impl<'de, B, RR, FUSR, USR, RSR> Deserialize<'de> for Orchestrator<B, RR, FUSR, USR, RSR>
+impl<'de, S, B, RR, FUSR, USR, RSR> Deserialize<'de> for Orchestrator<S, B, RR, FUSR, USR, RSR>
     where
+        S: SettingsTrait,
         B: BackendTrait,
         RR: ResourceRegistry,
         FUSR: SystemRegistry,
@@ -254,7 +219,8 @@ enum OrchestratorField {
     Receiver,
 }
 
-struct OrchestratorVisitor<B, RR, FUSR, USR, RSR>(
+struct OrchestratorVisitor<S, B, RR, FUSR, USR, RSR>(
+    PhantomData<S>,
     PhantomData<B>,
     PhantomData<RR>,
     PhantomData<FUSR>,
@@ -262,9 +228,10 @@ struct OrchestratorVisitor<B, RR, FUSR, USR, RSR>(
     PhantomData<RSR>,
 );
 
-impl<B, RR, FUSR, USR, RSR> Default for OrchestratorVisitor<B, RR, FUSR, USR, RSR> {
+impl<S, B, RR, FUSR, USR, RSR> Default for OrchestratorVisitor<S, B, RR, FUSR, USR, RSR> {
     fn default() -> Self {
         OrchestratorVisitor(
+            PhantomData::default(),
             PhantomData::default(),
             PhantomData::default(),
             PhantomData::default(),
@@ -274,15 +241,16 @@ impl<B, RR, FUSR, USR, RSR> Default for OrchestratorVisitor<B, RR, FUSR, USR, RS
     }
 }
 
-impl<'de, B, RR, FUSR, USR, RSR> Visitor<'de> for OrchestratorVisitor<B, RR, FUSR, USR, RSR>
+impl<'de, S, B, RR, FUSR, USR, RSR> Visitor<'de> for OrchestratorVisitor<S, B, RR, FUSR, USR, RSR>
     where
+        S: SettingsTrait,
         B: BackendTrait,
         RR: ResourceRegistry,
         FUSR: SystemRegistry,
         USR: SystemRegistry,
         RSR: SystemRegistry,
 {
-    type Value = Orchestrator<B, RR, FUSR, USR, RSR>;
+    type Value = Orchestrator<S, B, RR, FUSR, USR, RSR>;
 
     fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "a serialized Orchestrator struct")
@@ -292,7 +260,7 @@ impl<'de, B, RR, FUSR, USR, RSR> Visitor<'de> for OrchestratorVisitor<B, RR, FUS
     where
         A: MapAccess<'de>,
     {
-        let mut world: Option<World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>> = None;
+        let mut world: Option<World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<S, B, USR>, RenderSystemTypes<S, B, RSR>>> = None;
         let mut delta_time: Option<Duration> = None;
         let mut max_frame_time: Option<Duration> = None;
         let mut receiver: Option<ReceiverId<WorldEvent>> = None;
@@ -336,6 +304,7 @@ impl<'de, B, RR, FUSR, USR, RSR> Visitor<'de> for OrchestratorVisitor<B, RR, FUS
             delta_time,
             max_frame_time,
             receiver,
+            _s: PhantomData::default(),
         })
     }
 }

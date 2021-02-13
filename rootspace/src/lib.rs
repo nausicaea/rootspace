@@ -1,5 +1,6 @@
 mod assets;
 mod debug_commands;
+mod settings;
 
 use crate::debug_commands::FileSystemCommand;
 use anyhow::{Context, Result};
@@ -8,8 +9,9 @@ use engine::{
     graphics::BackendTrait, orchestrator::Orchestrator, resources::GraphicsBackend,
     systems::DebugShell,
 };
-use file_manipulation::FilePathBuf;
+use file_manipulation::{FilePathBuf, DirPathBuf};
 use std::{convert::TryFrom, path::Path};
+use crate::settings::Settings;
 
 type ResourceRegistry = Reg![];
 type FixedUpdateSystemRegistry = Reg![];
@@ -20,7 +22,7 @@ pub struct Rootspace<B>
 where
     B: BackendTrait,
 {
-    orch: Orchestrator<B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
+    orch: Orchestrator<Settings, B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
     main_scene: FilePathBuf,
 }
 
@@ -29,10 +31,17 @@ where
     B: BackendTrait,
 {
     pub fn new<P: AsRef<Path>>(resource_path: P, command: Option<&str>) -> Result<Self> {
-        let mut orch = Orchestrator::new(resource_path, command)?;
+        let resource_path = DirPathBuf::try_from(resource_path.as_ref())?;
+        let settings = Settings::builder(resource_path).build();
+        let mut orch = Orchestrator::new(settings, command)?;
 
-        let main_scene = orch
-            .get_mut::<GraphicsBackend<B>>()
+        // Add an additional command to the debug shell
+        orch.world
+            .get_system_mut::<DebugShell<Settings>>(LoopStage::Update)
+            .add_command(FileSystemCommand);
+
+        let main_scene = orch.world
+            .borrow::<GraphicsBackend<B>>()
             .find_asset("scenes/rootspace.json")
             .context("Could not find the main scene asset")?;
 
@@ -50,14 +59,6 @@ where
     pub fn load(&mut self) -> Result<()> {
         // FIXME: Replace with a proper deserialization of Orchestrator
         // self.orch.load(&self.main_scene);
-
-        // Add an additional command
-        let debug_shell = self
-            .orch
-            .world
-            .find_system_mut::<DebugShell>(LoopStage::Update)
-            .context("Could not find the system DebugShell")?;
-        debug_shell.add_command(FileSystemCommand);
 
         Ok(())
     }

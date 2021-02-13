@@ -9,7 +9,7 @@ use std::{
 use anyhow::{Error, Result};
 
 use ecs::{Component, Resource};
-use file_manipulation::FilePathBuf;
+use file_manipulation::{FilePathBuf, DirPathBuf};
 use index_buffer_id::IndexBufferId;
 use shader_id::ShaderId;
 use texture_id::TextureId;
@@ -22,7 +22,7 @@ use crate::{
         BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
     },
 };
-use crate::resources::settings::Settings;
+use crate::resources::SettingsTrait;
 
 pub mod texture_id;
 pub mod shader_id;
@@ -33,7 +33,7 @@ pub struct GraphicsBackend<B>
 where
     B: BackendTrait,
 {
-    settings: Settings,
+    asset_tree: DirPathBuf,
     textures: HashMap<TextureId, B::Texture>,
     shaders: HashMap<ShaderId, B::Shader>,
     vertex_buffers: HashMap<VertexBufferId, B::VertexBuffer>,
@@ -45,10 +45,26 @@ impl<B> GraphicsBackend<B>
 where
     B: BackendTrait,
 {
-    pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {
-        let asset_path = FilePathBuf::try_from(self.settings.asset_tree.join(path))?;
+    pub fn new<S: SettingsTrait>(settings: &S) -> Result<Self, Error> {
+        Ok(GraphicsBackend {
+            asset_tree: settings.asset_tree().clone(),
+            textures: HashMap::default(),
+            shaders: HashMap::default(),
+            vertex_buffers: HashMap::default(),
+            index_buffers: HashMap::default(),
+            inner: B::new(
+                settings.title(),
+                settings.dimensions(),
+                settings.vsync(),
+                settings.msaa(),
+            )?,
+        })
+    }
 
-        if !asset_path.path().starts_with(&self.settings.asset_tree) {
+    pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {
+        let asset_path = FilePathBuf::try_from(self.asset_tree.join(path))?;
+
+        if !asset_path.path().starts_with(&self.asset_tree) {
             return Err(AssetError::OutOfTree(asset_path.into()));
         }
 
@@ -142,51 +158,6 @@ where
 
 impl<B> Resource for GraphicsBackend<B> where B: BackendTrait + 'static {}
 
-impl<B> From<GraphicsBackend<B>> for Settings
-    where
-        B: BackendTrait,
-{
-    fn from(value: GraphicsBackend<B>) -> Self {
-        value.settings.clone()
-    }
-}
-
-impl<B> TryFrom<Settings> for GraphicsBackend<B>
-where
-    B: BackendTrait,
-{
-    type Error = Error;
-
-    fn try_from(value: Settings) -> Result<Self> {
-        Ok(GraphicsBackend {
-            settings: value.clone(),
-            textures: HashMap::default(),
-            shaders: HashMap::default(),
-            vertex_buffers: HashMap::default(),
-            index_buffers: HashMap::default(),
-            inner: B::new(value.title, value.dimensions, value.vsync, value.msaa)?,
-        })
-    }
-}
-
-impl<B> TryFrom<&Settings> for GraphicsBackend<B>
-where
-    B: BackendTrait,
-{
-    type Error = Error;
-
-    fn try_from(value: &Settings) -> Result<Self> {
-        Ok(GraphicsBackend {
-            settings: value.clone(),
-            textures: HashMap::default(),
-            shaders: HashMap::default(),
-            vertex_buffers: HashMap::default(),
-            index_buffers: HashMap::default(),
-            inner: B::new(&value.title, value.dimensions, value.vsync, value.msaa)?,
-        })
-    }
-}
-
 impl<B> fmt::Debug for GraphicsBackend<B>
 where
     B: BackendTrait,
@@ -220,86 +191,5 @@ where
 {
     fn deref_mut(&mut self) -> &mut B {
         &mut self.inner
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::convert::TryFrom;
-
-    use serde_test::{assert_tokens, Token};
-
-    use file_manipulation::DirPathBuf;
-
-    use crate::graphics::headless::HeadlessBackend;
-
-    use super::*;
-
-    #[test]
-    fn backend_settings_new() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let _: Settings = Settings::new("Title", (800, 600), false, 0, resource_path);
-    }
-
-    #[test]
-    fn backend_settings_serde() {
-        let rpstr = env!("CARGO_MANIFEST_DIR");
-        let resource_path = DirPathBuf::try_from(rpstr).unwrap();
-        let b: Settings = Settings::new("Title", (800, 600), false, 0, resource_path);
-
-        assert_tokens(
-            &b,
-            &[
-                Token::Struct {
-                    name: "BackendSettings",
-                    len: 5,
-                },
-                Token::Str("title"),
-                Token::Str("Title"),
-                Token::Str("dimensions"),
-                Token::Tuple { len: 2 },
-                Token::U32(800),
-                Token::U32(600),
-                Token::TupleEnd,
-                Token::Str("vsync"),
-                Token::Bool(false),
-                Token::Str("msaa"),
-                Token::U16(0),
-                Token::Str("asset_tree"),
-                Token::Str(rpstr),
-                Token::StructEnd,
-            ],
-        );
-    }
-
-    #[test]
-    fn backend_resource_headless() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let b: Settings = Settings::new("Title", (800, 600), false, 0, resource_path);
-        let _: GraphicsBackend<HeadlessBackend> = GraphicsBackend::try_from(b).unwrap();
-    }
-
-    #[test]
-    fn texture_id_default() {
-        let id: TextureId = Default::default();
-        assert_eq!(id, TextureId(None));
-    }
-
-    #[test]
-    fn shader_id_default() {
-        let id: ShaderId = Default::default();
-        assert_eq!(id, ShaderId(None));
-    }
-
-    #[test]
-    fn vertex_buffer_id_default() {
-        let id: VertexBufferId = Default::default();
-        assert_eq!(id, VertexBufferId(None));
-    }
-
-    #[test]
-    fn index_buffer_id_default() {
-        let id: IndexBufferId = Default::default();
-        assert_eq!(id, IndexBufferId(None));
     }
 }

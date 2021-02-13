@@ -64,10 +64,9 @@ where
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
-    pub fn with_settings<R: Resource, T: Resource>(settings: R, backend: T) -> Self {
+    pub fn with_settings<R: Resource>(settings: R) -> Self {
         let mut resources = Resources::with_registry::<ResourceTypes<RR>>();
         resources.insert(settings);
-        resources.insert(backend);
 
         let fixed_update_systems = Systems::with_registry::<FUSR>(&resources);
         let update_systems = Systems::with_registry::<USR>(&resources);
@@ -175,14 +174,25 @@ where
         }
     }
 
-    pub fn borrow_system<S>(&self, stage: LoopStage) -> &S
+    pub fn get_system<S>(&self, stage: LoopStage) -> &S
     where
         S: System,
     {
         match stage {
-            LoopStage::FixedUpdate => self.fixed_update_systems.borrow::<S>(),
-            LoopStage::Update => self.update_systems.borrow::<S>(),
-            LoopStage::Render => self.render_systems.borrow::<S>(),
+            LoopStage::FixedUpdate => self.fixed_update_systems.get::<S>(),
+            LoopStage::Update => self.update_systems.get::<S>(),
+            LoopStage::Render => self.render_systems.get::<S>(),
+        }
+    }
+
+    pub fn get_system_mut<S>(&mut self, stage: LoopStage) -> &mut S
+        where
+            S: System,
+    {
+        match stage {
+            LoopStage::FixedUpdate => self.fixed_update_systems.get_mut::<S>(),
+            LoopStage::Update => self.update_systems.get_mut::<S>(),
+            LoopStage::Render => self.render_systems.get_mut::<S>(),
         }
     }
 

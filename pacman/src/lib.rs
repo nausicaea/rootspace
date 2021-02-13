@@ -1,4 +1,5 @@
 mod player_character;
+mod settings;
 
 use crate::player_character::{PlayerCharacter, PlayerCharacterMarker};
 use anyhow::Result;
@@ -12,6 +13,9 @@ use engine::{
 };
 use nalgebra::Vector3;
 use std::path::Path;
+use crate::settings::Settings;
+use file_manipulation::DirPathBuf;
+use std::convert::TryFrom;
 
 type ResourceRegistry = Reg![<PlayerCharacterMarker as Component>::Storage,];
 type FixedUpdateSystemRegistry = Reg![];
@@ -22,7 +26,7 @@ pub struct Pacman<B>
 where
     B: BackendTrait,
 {
-    orch: Orchestrator<B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
+    orch: Orchestrator<Settings, B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
 }
 
 impl<B> Pacman<B>
@@ -30,19 +34,24 @@ where
     B: BackendTrait,
 {
     pub fn new<P: AsRef<Path>>(resource_path: P, command: Option<&str>) -> Result<Self> {
+        let resource_path = DirPathBuf::try_from(resource_path.as_ref())?;
+        let settings = Settings::builder(resource_path).build();
+
         Ok(Pacman {
-            orch: Orchestrator::new(resource_path, command)?,
+            orch: Orchestrator::new(settings, command)?,
         })
     }
 
     pub fn load(&mut self) -> Result<()> {
+        let world = &mut self.orch.world;
+
         // Create the camera
-        let camera = self.orch.create_entity();
-        self.orch.get_mut::<SceneGraph<Model>>().insert(camera);
-        self.orch.insert_component(camera, Status::default());
-        self.orch
+        let camera = world.create_entity();
+        world.get_mut::<SceneGraph<Model>>().insert(camera);
+        world.insert_component(camera, Status::default());
+        world
             .insert_component(camera, Info::new("Camera", "The main camera"));
-        self.orch.insert_component(
+        world.insert_component(
             camera,
             Camera::new(
                 Projection::Orthographic,
@@ -52,15 +61,15 @@ where
                 1.0,
             ),
         );
-        self.orch.insert_component(camera, Model::identity());
+        world.insert_component(camera, Model::identity());
 
         // Create the player character
-        let pacman = self.orch.create_entity();
-        self.orch.get_mut::<SceneGraph<Model>>().insert(pacman);
-        self.orch.insert_component(pacman, Status::default());
-        self.orch
+        let pacman = world.create_entity();
+        world.get_mut::<SceneGraph<Model>>().insert(pacman);
+        world.insert_component(pacman, Status::default());
+        world
             .insert_component(pacman, Info::new("Pacman", "The player character"));
-        self.orch.insert_component(
+        world.insert_component(
             pacman,
             Model::new(
                 Vector3::new(0.0, 0.0, -1.0),
@@ -68,7 +77,7 @@ where
                 Vector3::new(1.0, 1.0, 1.0),
             ),
         );
-        let factory = self.orch.get_mut::<GraphicsBackend<B>>();
+        let factory = world.get_mut::<GraphicsBackend<B>>();
         let renderable = Renderable::builder()
             .with_mesh("meshes/quad.ply")
             .with_vertex_shader("shaders/base-vertex.glsl")
@@ -76,13 +85,8 @@ where
             .with_diffuse_texture("textures/sprites.png")
             .with_type(RenderableType::Mesh)
             .build(factory)?;
-        self.orch.insert_component(pacman, renderable);
-        self.orch.insert_component(pacman, PlayerCharacterMarker);
-
-        // Add the systems
-        let queue = self.orch.get_mut::<EventQueue<EngineEvent>>();
-        let pc = PlayerCharacter::new(queue);
-        self.orch.add_system(LoopStage::FixedUpdate, pc);
+        world.insert_component(pacman, renderable);
+        world.insert_component(pacman, PlayerCharacterMarker);
 
         Ok(())
     }

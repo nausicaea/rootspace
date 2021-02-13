@@ -14,3 +14,4 @@ nalgebra = { version = "^0.21.0", features = ["serde-serialize"] }
 serde = { version = "^1.0.0", features = ["derive"] }
 ecs = {path = "../ecs"}
 engine = {path = "../engine"}
+file-manipulation = {path = "../file-manipulation"}

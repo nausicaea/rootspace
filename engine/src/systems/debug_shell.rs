@@ -7,30 +7,20 @@ use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use log::trace;
 use std::{collections::HashMap, time::Duration};
 use thiserror::Error;
-use crate::resources::Settings;
 use serde::{Serialize, Deserialize};
-
-fn box_command<C: CommandTrait>(command: C) -> Box<dyn CommandTrait + 'static> {
-    Box::new(command)
-}
-
-fn default_commands() -> HashMap<&'static str, Box<dyn CommandTrait>> {
-    let mut commands = HashMap::with_capacity(4);
-    commands.insert(ExitCommand.name(), box_command(ExitCommand));
-    commands.insert(CameraCommand.name(), box_command(CameraCommand));
-    commands.insert(EntityCommand.name(), box_command(EntityCommand));
-    commands.insert(StateCommand.name(), box_command(StateCommand));
-    commands
-}
+use std::marker::PhantomData;
+use crate::resources::SettingsTrait;
 
 #[derive(Serialize, Deserialize)]
-pub struct DebugShell {
+pub struct DebugShell<S> {
     #[serde(skip, default = "default_commands")]
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
     receiver: ReceiverId<EngineEvent>,
+    #[serde(skip)]
+    _s: PhantomData<S>,
 }
 
-impl std::fmt::Debug for DebugShell {
+impl<S> std::fmt::Debug for DebugShell<S> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -41,7 +31,7 @@ impl std::fmt::Debug for DebugShell {
     }
 }
 
-impl WithResources for DebugShell {
+impl<S> WithResources for DebugShell<S> {
     fn with_resources(res: &Resources) -> Self {
         let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
             .subscribe::<Self>();
@@ -49,17 +39,21 @@ impl WithResources for DebugShell {
         DebugShell {
             commands: default_commands(),
             receiver,
+            _s: PhantomData::default(),
         }
     }
 }
 
-impl DebugShell {
+impl<S> DebugShell<S>
+where
+    S: SettingsTrait,
+{
     pub fn add_command<C: CommandTrait>(&mut self, command: C) {
         self.commands.insert(command.name(), Box::new(command));
     }
 
     fn interpret(&self, res: &Resources, tokens: &[String]) -> Result<()> {
-        let terminator = res.borrow::<Settings>().command_punctuation;
+        let terminator = res.borrow::<S>().command_punctuation();
 
         // Iterate over all commands
         for token_group in tokens.split(|t| t.len() == 1 && t.contains(terminator)) {
@@ -95,7 +89,10 @@ impl DebugShell {
     }
 }
 
-impl System for DebugShell {
+impl<S> System for DebugShell<S>
+where
+    S: SettingsTrait + 'static,
+{
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let events = res
             .borrow_mut::<EventQueue<EngineEvent>>()
@@ -115,4 +112,17 @@ impl System for DebugShell {
 enum DebugShellError {
     #[error("'{0}' is not a recognized builtin or command")]
     CommandNotFound(String),
+}
+
+fn box_command<C: CommandTrait>(command: C) -> Box<dyn CommandTrait + 'static> {
+    Box::new(command)
+}
+
+fn default_commands() -> HashMap<&'static str, Box<dyn CommandTrait>> {
+    let mut commands = HashMap::with_capacity(4);
+    commands.insert(ExitCommand.name(), box_command(ExitCommand));
+    commands.insert(CameraCommand.name(), box_command(CameraCommand));
+    commands.insert(EntityCommand.name(), box_command(EntityCommand));
+    commands.insert(StateCommand.name(), box_command(StateCommand));
+    commands
 }

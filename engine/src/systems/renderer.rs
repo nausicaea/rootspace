@@ -15,13 +15,13 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     resources::{GraphicsBackend, SceneGraph},
 };
-use crate::resources::Settings;
+use crate::resources::SettingsTrait;
 
 static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;
 
 #[derive(Serialize, Deserialize)]
-pub struct Renderer<B> {
+pub struct Renderer<S, B> {
     receiver: ReceiverId<WorldEvent>,
     #[serde(skip)]
     initialised: bool,
@@ -31,11 +31,13 @@ pub struct Renderer<B> {
     frame_times: VecDeque<Duration>,
     #[serde(skip)]
     _b: PhantomData<B>,
+    #[serde(skip)]
+    _s: PhantomData<S>,
 }
 
-impl<B> MaybeDefault for Renderer<B> {}
+impl<S, B> MaybeDefault for Renderer<S, B> {}
 
-impl<B> std::fmt::Debug for Renderer<B> {
+impl<S, B> std::fmt::Debug for Renderer<S, B> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -48,7 +50,7 @@ impl<B> std::fmt::Debug for Renderer<B> {
     }
 }
 
-impl<B> WithResources for Renderer<B>
+impl<S, B> WithResources for Renderer<S, B>
 where
     B: BackendTrait,
 {
@@ -62,12 +64,13 @@ where
             draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
             frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
             _b: PhantomData::default(),
+            _s: PhantomData::default(),
         }
     }
 }
 
 
-impl<B> Renderer<B>
+impl<S, B> Renderer<S, B>
 where
     B: BackendTrait,
 {
@@ -126,8 +129,9 @@ where
     }
 }
 
-impl<B> System for Renderer<B>
+impl<S, B> System for Renderer<S, B>
 where
+    S: SettingsTrait,
     B: BackendTrait,
 {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
@@ -170,7 +174,7 @@ where
         let cameras = res.borrow_components::<Camera>();
 
         // Grab the necessary resources
-        let settings = res.borrow::<Settings>();
+        let settings = res.borrow::<S>();
         let entities = res.borrow::<Entities>();
         let world_graph = res.borrow::<SceneGraph<Model>>();
         let ui_graph = res.borrow::<SceneGraph<UiModel>>();
@@ -180,7 +184,7 @@ where
 
         // Create a new frame.
         let mut target = factory.create_frame();
-        target.initialize(settings.clear_color, 1.0);
+        target.initialize(settings.clear_color(), 1.0);
 
         for (cam_idx, cam) in cameras.iter_enum() {
             // Skip any inactive cameras

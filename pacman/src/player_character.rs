@@ -30,7 +30,7 @@ pub struct PlayerCharacter {
 
 impl WithResources for PlayerCharacter {
     fn with_resources(res: &Resources) -> Self {
-        let receiver = res.borrow::<EventQueue<EngineEvent>>()
+        let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
             .subscribe::<Self>();
 
         PlayerCharacter {

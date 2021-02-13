@@ -1131,6 +1131,7 @@ dependencies = [
  "ecs",
  "engine",
  "fern",
+ "file-manipulation",
  "log",
  "nalgebra",
  "serde",
