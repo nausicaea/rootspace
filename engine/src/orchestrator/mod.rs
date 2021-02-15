@@ -10,7 +10,7 @@ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 
-use ecs::{EventQueue, LoopControl, LoopStage, ReceiverId, ResourceRegistry, SystemRegistry, World, WorldEvent};
+use ecs::{LoopControl, LoopStage, ResourceRegistry, SystemRegistry, World};
 
 use crate::{
     components::{Model, UiModel},
@@ -28,18 +28,16 @@ pub struct Orchestrator<B, RR, FUSR, USR, RSR> {
     pub world: World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>,
     delta_time: Duration,
     max_frame_time: Duration,
-    receiver: ReceiverId<WorldEvent>,
 }
 
 impl<B, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR, FUSR, USR, RSR> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Orchestrator {{ world: {:?}, delta_time: {:?}, max_frame_time: {:?}, receiver: {:?} }}",
+            "Orchestrator {{ world: {:?}, delta_time: {:?}, max_frame_time: {:?} }}",
             self.world,
             self.delta_time,
             self.max_frame_time,
-            self.receiver,
         )
     }
 }
@@ -64,9 +62,6 @@ where
         // Insert the backend as a resource
         world.insert(backend);
 
-        // Subscribe to the WorldEvent queue
-        let receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
-
         // Send the requested debug command
         if let Some(cmd) = command {
             world.get_system::<DebugConsole>(LoopStage::Update)
@@ -77,7 +72,6 @@ where
             world,
             delta_time: settings.delta_time,
             max_frame_time: settings.max_frame_time,
-            receiver,
         })
     }
 
@@ -125,20 +119,17 @@ where
     fn maintain(&mut self) -> LoopControl {
         let running = self.world.maintain();
 
-        let recv = &self.receiver;
-        let events = self.world.get_mut::<EventQueue<WorldEvent>>().receive(recv);
-        let deser_event = events.into_iter().any(|e| e == WorldEvent::DeserializationComplete);
-        if deser_event || !self.world.contains::<GraphicsBackend<B>>() {
+        if !self.world.contains::<GraphicsBackend<B>>() {
             // Reload the graphics_backend
-            debug!("Reloading the graphics_backend");
+            debug!("Reloading the graphics backend");
             let reload_mark = Instant::now();
 
             let backend = GraphicsBackend::<B>::new(&*self.world.borrow::<Settings>())
-                .expect("Unable to reload the graphics_backend");
+                .expect("Unable to reload the graphics backend");
             self.world.insert(backend);
 
             debug!(
-                "Completed reloading the graphics_backend after {:?}",
+                "Completed reloading the graphics backend after {:?}",
                 reload_mark.elapsed()
             );
         }
@@ -159,12 +150,10 @@ impl<B, RR, FUSR, USR, RSR> Serialize for Orchestrator<B, RR, FUSR, USR, RSR>
     where
         Ser: Serializer,
     {
-        let mut state = serializer.serialize_struct("Orchestrator", 4)?;
+        let mut state = serializer.serialize_struct("Orchestrator", 3)?;
         state.serialize_field("world", &self.world)?;
         state.serialize_field("delta_time", &self.delta_time)?;
         state.serialize_field("max_frame_time", &self.max_frame_time)?;
-        state.serialize_field("receiver", &self.receiver)?;
-        state.skip_field("_s")?;
         state.end()
     }
 }
@@ -193,7 +182,6 @@ const ORCHESTRATOR_FIELDS: &'static [&'static str] = &[
     "world",
     "delta_time",
     "max_frame_time",
-    "receiver",
 ];
 
 #[derive(Deserialize)]
@@ -202,7 +190,6 @@ enum OrchestratorField {
     World,
     DeltaTime,
     MaxFrameTime,
-    Receiver,
 }
 
 struct OrchestratorVisitor<B, RR, FUSR, USR, RSR>(
@@ -246,7 +233,6 @@ impl<'de, B, RR, FUSR, USR, RSR> Visitor<'de> for OrchestratorVisitor<B, RR, FUS
         let mut world: Option<World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>> = None;
         let mut delta_time: Option<Duration> = None;
         let mut max_frame_time: Option<Duration> = None;
-        let mut receiver: Option<ReceiverId<WorldEvent>> = None;
 
         while let Some(field_name) = map_access.next_key()? {
             match field_name {
@@ -268,25 +254,17 @@ impl<'de, B, RR, FUSR, USR, RSR> Visitor<'de> for OrchestratorVisitor<B, RR, FUS
                     }
                     max_frame_time = Some(map_access.next_value()?);
                 },
-                OrchestratorField::Receiver => {
-                    if receiver.is_some() {
-                        return Err(de::Error::duplicate_field("receiver"));
-                    }
-                    receiver = Some(map_access.next_value()?);
-                },
             }
         }
 
         let world = world.ok_or_else(|| de::Error::missing_field("world"))?;
         let delta_time = delta_time.ok_or_else(|| de::Error::missing_field("delta_time"))?;
         let max_frame_time = max_frame_time.ok_or_else(|| de::Error::missing_field("max_frame_time"))?;
-        let receiver = receiver.ok_or_else(|| de::Error::missing_field("receiver"))?;
 
         Ok(Orchestrator {
             world,
             delta_time,
             max_frame_time,
-            receiver,
         })
     }
 }
