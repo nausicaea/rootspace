@@ -126,7 +126,7 @@ where
         let mut type_tracker = HashSet::<TypeId>::with_capacity(SR::LEN);
         let mut sys_map = BTreeMap::<usize, Box<dyn System>>::new();
 
-        while let Some(ser_type_name) = map_access.next_key()? {
+        while let Some(ser_type_name) = map_access.next_key::<String>()? {
             // TODO: Provide a proper list of expected fields based on the complete resource registry
 
             debug!("Starting deser attempt for field {}", ser_type_name);
@@ -134,7 +134,7 @@ where
                 &mut type_tracker,
                 &mut sys_map,
                 &mut map_access,
-                ser_type_name,
+                &ser_type_name,
                 &[],
                 PhantomData::default(),
             )?;
@@ -197,21 +197,21 @@ mod tests {
             &tsys,
             &[
                 Token::Map { len: Some(3) },
-                Token::BorrowedStr("TestSystemA"),
+                Token::Str("TestSystemA"),
                 Token::Struct { name: "TypedSystem", len: 2 },
                 Token::Str("order"),
                 Token::U64(0),
                 Token::Str("system"),
                 Token::UnitStruct { name: "TestSystemA" },
                 Token::StructEnd,
-                Token::BorrowedStr("TestSystemB"),
+                Token::Str("TestSystemB"),
                 Token::Struct { name: "TypedSystem", len: 2 },
                 Token::Str("order"),
                 Token::U64(1),
                 Token::Str("system"),
                 Token::UnitStruct { name: "TestSystemB" },
                 Token::StructEnd,
-                Token::BorrowedStr("TestSystemC"),
+                Token::Str("TestSystemC"),
                 Token::Struct { name: "TypedSystem", len: 2 },
                 Token::Str("order"),
                 Token::U64(2),

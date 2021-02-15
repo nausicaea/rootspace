@@ -116,7 +116,7 @@ where
         // all types of the registry are found.
         let mut resources = Resources::with_capacity(RR::LEN);
 
-        while let Some(ser_type_name) = map_access.next_key::<&'de str>()? {
+        while let Some(ser_type_name) = map_access.next_key::<String>()? {
             // TODO: Provide a proper list of expected fields based on the complete resource registry
 
             debug!("Starting deser attempt for field {}", ser_type_name);
@@ -171,11 +171,11 @@ mod tests {
             &tres,
             &[
                 Token::Map { len: Some(3) },
-                Token::BorrowedStr("TestResourceA"),
+                Token::Str("TestResourceA"),
                 Token::UnitStruct { name: "TestResourceA" },
-                Token::BorrowedStr("TestResourceB"),
+                Token::Str("TestResourceB"),
                 Token::UnitStruct { name: "TestResourceB" },
-                Token::BorrowedStr("TestResourceC"),
+                Token::Str("TestResourceC"),
                 Token::UnitStruct { name: "TestResourceC" },
                 Token::MapEnd,
             ],
