@@ -5,7 +5,6 @@ use std::{
 use std::marker::PhantomData;
 
 use anyhow::{Context, Result};
-#[cfg(any(test, debug_assertions))]
 use log::debug;
 use log::trace;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -59,6 +58,7 @@ where
 {
     pub fn new(settings: S, command: Option<&str>) -> Result<Self> {
         // Create the graphics_backend
+        // FIXME: This is the only resource that cannot be created easily. Find an alternative
         let backend = GraphicsBackend::<B>::new(&settings)
             .context("Failed to initialise the graphics_backend")?;
 
@@ -132,27 +132,20 @@ where
 
         let recv = &self.receiver;
         let events = self.world.get_mut::<EventQueue<WorldEvent>>().receive(recv);
-        if events
-            .into_iter()
-            .any(|e| e == WorldEvent::DeserializationComplete)
-        {
+        let deser_event = events.into_iter().any(|e| e == WorldEvent::DeserializationComplete);
+        if deser_event || !self.world.contains::<GraphicsBackend<B>>() {
             // Reload the graphics_backend
-            if !self.world.contains::<GraphicsBackend<B>>() {
-                #[cfg(any(test, debug_assertions))]
-                debug!("Reloading the graphics_backend");
-                #[cfg(any(test, debug_assertions))]
-                let reload_mark = Instant::now();
+            debug!("Reloading the graphics_backend");
+            let reload_mark = Instant::now();
 
-                let backend = GraphicsBackend::<B>::new(&*self.world.borrow::<S>())
-                    .expect("Unable to reload the graphics_backend");
-                self.world.insert(backend);
+            let backend = GraphicsBackend::<B>::new(&*self.world.borrow::<S>())
+                .expect("Unable to reload the graphics_backend");
+            self.world.insert(backend);
 
-                #[cfg(any(test, debug_assertions))]
-                debug!(
-                    "Completed reloading the graphics_backend after {:?}",
-                    reload_mark.elapsed()
-                );
-            }
+            debug!(
+                "Completed reloading the graphics_backend after {:?}",
+                reload_mark.elapsed()
+            );
         }
 
         running

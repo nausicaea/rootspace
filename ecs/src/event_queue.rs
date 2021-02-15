@@ -98,8 +98,13 @@ where
     /// Subscribe to this event queue.
     pub fn subscribe<T>(&mut self) -> ReceiverId<E> {
         let stnt = short_type_name::<T>();
+        let stns = short_type_name::<Self>();
         if self.receivers.values().any(|rs| rs.receiver_id == stnt) {
-            warn!("Type {} already has a listener for {}. Is that intended?", type_name::<T>(), type_name::<Self>());
+            warn!(
+                "Type {} already has a listener for {}. Is that intended?",
+                stnt,
+                stns,
+            );
         }
 
         let id = if let Some(id) = self.free_ids.pop() {
@@ -112,11 +117,10 @@ where
 
         self.receivers.insert(id, ReceiverState::new::<T>());
 
-        #[cfg(any(test, debug_assertions))]
         debug!(
             "Adding subscriber {} to queue {}",
-            type_name::<T>(),
-            type_name::<Self>()
+            stnt,
+            stns,
         );
         ReceiverId::new(id)
     }

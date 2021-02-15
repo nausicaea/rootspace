@@ -23,7 +23,6 @@ where
     B: BackendTrait,
 {
     orch: Orchestrator<Settings, B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
-    main_scene: FilePathBuf,
 }
 
 impl<B> Rootspace<B>
@@ -40,20 +39,7 @@ where
             .get_system_mut::<DebugShell<Settings>>(LoopStage::Update)
             .add_command(FileSystemCommand);
 
-        let main_scene = orch.world
-            .borrow::<GraphicsBackend<B>>()
-            .find_asset("scenes/rootspace.json")
-            .context("Could not find the main scene asset")?;
-
-        Ok(Rootspace { orch, main_scene })
-    }
-
-    #[cfg(any(test, debug_assertions))]
-    pub fn set_main_scene<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
-        self.main_scene =
-            FilePathBuf::try_from(path.as_ref()).context("Could not find the main scene asset")?;
-
-        Ok(())
+        Ok(Rootspace { orch })
     }
 
     pub fn load(&mut self) -> Result<()> {
