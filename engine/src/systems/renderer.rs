@@ -15,7 +15,6 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     resources::{GraphicsBackend, SceneGraph},
 };
-use crate::resources::SettingsTrait;
 use crate::resources::settings::Settings;
 
 static DRAW_CALL_WINDOW: usize = 10;
@@ -181,7 +180,7 @@ where
 
         // Create a new frame.
         let mut target = factory.create_frame();
-        target.initialize(settings.clear_color(), 1.0);
+        target.initialize(settings.clear_color, 1.0);
 
         for (cam_idx, cam) in cameras.iter_enum() {
             // Skip any inactive cameras

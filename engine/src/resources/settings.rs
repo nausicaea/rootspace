@@ -1,73 +1,26 @@
 use ecs::{Resource, MaybeDefault};
 use file_manipulation::DirPathBuf;
 use serde::{Serialize, Deserialize};
-
-pub trait SettingsTrait: Resource {
-    fn asset_tree(&self) -> &DirPathBuf;
-    fn title(&self) -> &str;
-    fn dimensions(&self) -> (u32, u32);
-    fn clear_color(&self) -> [f32; 4];
-    fn vsync(&self) -> bool;
-    fn msaa(&self) -> u16;
-    fn command_escape(&self) -> char;
-    fn command_quote(&self) -> char;
-    fn command_punctuation(&self) -> char;
-}
+use std::time::Duration;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Settings {
-    asset_tree: DirPathBuf,
-    title: String,
-    dimensions: (u32, u32),
-    clear_color: [f32; 4],
-    vsync: bool,
-    msaa: u16,
-    command_escape: char,
-    command_quote: char,
-    command_punctuation: char,
+    pub asset_tree: DirPathBuf,
+    pub delta_time: Duration,
+    pub max_frame_time: Duration,
+    pub title: String,
+    pub dimensions: (u32, u32),
+    pub clear_color: [f32; 4],
+    pub vsync: bool,
+    pub msaa: u16,
+    pub command_escape: char,
+    pub command_quote: char,
+    pub command_punctuation: char,
 }
 
 impl Settings {
     pub fn builder(asset_tree: DirPathBuf) -> SettingsBuilder {
         SettingsBuilder::new(asset_tree)
-    }
-}
-
-impl SettingsTrait for Settings {
-    fn asset_tree(&self) -> &DirPathBuf {
-        &self.asset_tree
-    }
-
-    fn title(&self) -> &str {
-        &self.title
-    }
-
-    fn dimensions(&self) -> (u32, u32) {
-        self.dimensions
-    }
-
-    fn clear_color(&self) -> [f32; 4] {
-        self.clear_color
-    }
-
-    fn vsync(&self) -> bool {
-        self.vsync
-    }
-
-    fn msaa(&self) -> u16 {
-        self.msaa
-    }
-
-    fn command_escape(&self) -> char {
-        self.command_escape
-    }
-
-    fn command_quote(&self) -> char {
-        self.command_quote
-    }
-
-    fn command_punctuation(&self) -> char {
-        self.command_punctuation
     }
 }
 
@@ -79,6 +32,8 @@ impl From<SettingsBuilder> for Settings {
     fn from(value: SettingsBuilder) -> Self {
         Settings {
             asset_tree: value.asset_tree,
+            delta_time: value.delta_time,
+            max_frame_time: value.max_frame_time,
             title: value.title,
             dimensions: value.dimensions,
             clear_color: value.clear_color,
@@ -93,6 +48,8 @@ impl From<SettingsBuilder> for Settings {
 
 pub struct SettingsBuilder {
     asset_tree: DirPathBuf,
+    delta_time: Duration,
+    max_frame_time: Duration,
     title: String,
     dimensions: (u32, u32),
     clear_color: [f32; 4],
@@ -107,6 +64,8 @@ impl SettingsBuilder {
     pub fn new(asset_tree: DirPathBuf) -> Self {
         SettingsBuilder {
             asset_tree,
+            delta_time: Duration::from_millis(50),
+            max_frame_time: Duration::from_millis(250),
             title: String::new(),
             dimensions: (800, 600),
             clear_color: [0.69, 0.93, 0.93, 1.0],
@@ -155,6 +114,16 @@ impl SettingsBuilder {
 
     pub fn with_command_punctuation(mut self, punct: char) -> Self {
         self.command_punctuation = punct;
+        self
+    }
+
+    pub fn with_delta_time(mut self, dt: Duration) -> Self {
+        self.delta_time = dt;
+        self
+    }
+
+    pub fn with_max_frame_time(mut self, mft: Duration) -> Self {
+        self.max_frame_time = mft;
         self
     }
 

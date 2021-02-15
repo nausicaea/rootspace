@@ -22,7 +22,7 @@ use crate::{
         BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
     },
 };
-use crate::resources::SettingsTrait;
+use crate::resources::settings::Settings;
 
 pub mod texture_id;
 pub mod shader_id;
@@ -45,18 +45,18 @@ impl<B> GraphicsBackend<B>
 where
     B: BackendTrait,
 {
-    pub fn new<S: SettingsTrait>(settings: &S) -> Result<Self, Error> {
+    pub fn new(settings: &Settings) -> Result<Self, Error> {
         Ok(GraphicsBackend {
-            asset_tree: settings.asset_tree().clone(),
+            asset_tree: settings.asset_tree.clone(),
             textures: HashMap::default(),
             shaders: HashMap::default(),
             vertex_buffers: HashMap::default(),
             index_buffers: HashMap::default(),
             inner: B::new(
-                settings.title(),
-                settings.dimensions(),
-                settings.vsync(),
-                settings.msaa(),
+                &settings.title,
+                settings.dimensions,
+                settings.vsync,
+                settings.msaa,
             )?,
         })
     }

@@ -19,7 +19,6 @@ use ecs::{EventQueue, Resources, System};
 
 use crate::{event::EngineEvent, text_manipulation::tokenize};
 use std::marker::PhantomData;
-use crate::resources::SettingsTrait;
 use crate::resources::settings::Settings;
 
 #[derive(Serialize, Deserialize)]
@@ -34,9 +33,9 @@ impl DebugConsole {
 
         let tokens = tokenize(
             cmd_line,
-            settings.command_escape(),
-            settings.command_quote(),
-            settings.command_punctuation(),
+            settings.command_escape,
+            settings.command_quote,
+            settings.command_punctuation,
         );
 
         res.borrow_mut::<EventQueue<EngineEvent>>()

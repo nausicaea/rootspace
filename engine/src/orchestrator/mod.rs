@@ -20,7 +20,7 @@ use crate::{
     resources::{GraphicsBackend, SceneGraph},
     systems::DebugConsole,
 };
-use crate::resources::settings::{SettingsTrait, Settings};
+use crate::resources::settings::Settings;
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
 
@@ -61,7 +61,7 @@ where
             .context("Failed to initialise the graphics_backend")?;
 
         // Create the world
-        let mut world = World::with_settings(settings);
+        let mut world = World::with_settings(settings.clone());
 
         // Insert the backend as a resource
         world.insert(backend);
@@ -77,8 +77,8 @@ where
 
         Ok(Orchestrator {
             world,
-            delta_time: Duration::from_millis(50),
-            max_frame_time: Duration::from_millis(250),
+            delta_time: settings.delta_time,
+            max_frame_time: settings.max_frame_time,
             receiver,
         })
     }

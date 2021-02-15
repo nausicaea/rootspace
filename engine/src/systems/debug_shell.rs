@@ -9,7 +9,6 @@ use std::{collections::HashMap, time::Duration};
 use thiserror::Error;
 use serde::{Serialize, Deserialize};
 use std::marker::PhantomData;
-use crate::resources::SettingsTrait;
 use crate::resources::settings::Settings;
 
 #[derive(Serialize, Deserialize)]
@@ -48,7 +47,7 @@ impl DebugShell {
     }
 
     fn interpret(&self, res: &Resources, tokens: &[String]) -> Result<()> {
-        let terminator = res.borrow::<Settings>().command_punctuation();
+        let terminator = res.borrow::<Settings>().command_punctuation;
 
         // Iterate over all commands
         for token_group in tokens.split(|t| t.len() == 1 && t.contains(terminator)) {
