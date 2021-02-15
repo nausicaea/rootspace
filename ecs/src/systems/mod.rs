@@ -29,10 +29,10 @@ impl Systems {
         where
             SR: SystemRegistry,
     {
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Beginning the initialization of Systems");
         let helper = TypedSystems::<SR>::with_resources(res);
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Completed the initialization of Systems");
 
         Systems::from(helper)
@@ -43,10 +43,10 @@ impl Systems {
             SR: SystemRegistry,
             D: Deserializer<'de>,
     {
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Beginning the deserialization of Systems");
         let helper = TypedSystems::<SR>::deserialize(deserializer)?;
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Completed the deserialization of Systems");
 
         Ok(Systems::from(helper))
@@ -57,11 +57,11 @@ impl Systems {
             SR: SystemRegistry,
             S: Serializer,
     {
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Beginning the serialization of Systems");
         let status = TypedSystems::<SR>::from(self)
             .serialize(serializer)?;
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Completed the serialization of Systems");
 
         Ok(status)

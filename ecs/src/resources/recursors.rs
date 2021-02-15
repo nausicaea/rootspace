@@ -18,11 +18,11 @@ pub fn initialize_recursive<RR>(resources: &mut Resources, _: PhantomData<RR>)
     }
 
     if let Some(default_value) = RR::Head::maybe_default() {
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Initializing the resource {}", type_name::<RR::Head>());
         resources.insert(default_value)
     } else {
-        #[cfg(any(test, debug_assertions))]
+
         debug!(
             "Not initializing the resource {} because it lacks a default constructor",
             type_name::<RR::Head>()
@@ -54,7 +54,7 @@ pub fn serialize_recursive<RR, SM>(
         )))
     }
 
-    #[cfg(any(test, debug_assertions))]
+
     trace!("Serializing the resource {}", &stn);
     serialize_map.serialize_entry(
         &stn,
@@ -86,7 +86,7 @@ pub fn deserialize_recursive<'de, A, RR>(
             return Err(de::Error::custom(format!("Duplicate field {}", stn)));
         }
 
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Deserializing the resource {}", stn);
         let c = map_access.next_value::<RR::Head>()?;
         resources.insert(c);

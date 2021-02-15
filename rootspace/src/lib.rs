@@ -1,6 +1,5 @@
 mod assets;
 mod debug_commands;
-mod settings;
 
 use crate::debug_commands::FileSystemCommand;
 use anyhow::{Context, Result};
@@ -11,7 +10,7 @@ use engine::{
 };
 use file_manipulation::{FilePathBuf, DirPathBuf};
 use std::{convert::TryFrom, path::Path};
-use crate::settings::Settings;
+use engine::resources::settings::Settings;
 
 type ResourceRegistry = Reg![];
 type FixedUpdateSystemRegistry = Reg![];
@@ -22,7 +21,7 @@ pub struct Rootspace<B>
 where
     B: BackendTrait,
 {
-    orch: Orchestrator<Settings, B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
+    orch: Orchestrator<B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
 }
 
 impl<B> Rootspace<B>
@@ -36,7 +35,7 @@ where
 
         // Add an additional command to the debug shell
         orch.world
-            .get_system_mut::<DebugShell<Settings>>(LoopStage::Update)
+            .get_system_mut::<DebugShell>(LoopStage::Update)
             .add_command(FileSystemCommand);
 
         Ok(Rootspace { orch })

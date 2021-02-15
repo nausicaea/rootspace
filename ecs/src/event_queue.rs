@@ -8,7 +8,6 @@ use std::{
     fmt,
     marker::PhantomData,
 };
-use std::any::type_name;
 use crate::short_type_name::short_type_name;
 
 /// A handle that allows a receiver to receive events from the related event queue.

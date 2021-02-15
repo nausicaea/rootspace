@@ -97,10 +97,10 @@ impl Resources {
         where
             RR: ResourceRegistry,
     {
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Beginning the initialization of Resources");
         let helper = TypedResources::<RR>::default();
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Completed the initialization of Resources");
 
         Resources::from(helper)
@@ -113,10 +113,10 @@ impl Resources {
             RR: ResourceRegistry,
             D: Deserializer<'de>,
     {
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Beginning the deserialization of Resources");
         let helper = TypedResources::<RR>::deserialize(deserializer)?;
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Completed the deserialization of Resources");
 
         Ok(Resources::from(helper))
@@ -129,11 +129,11 @@ impl Resources {
             RR: ResourceRegistry,
             S: Serializer,
     {
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Beginning the serialization of Resources");
         let status = TypedResources::<RR>::from(self)
             .serialize(serializer)?;
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Completed the serialization of Resources");
 
         Ok(status)

@@ -2,7 +2,7 @@ use crate::event::EngineEvent;
 #[cfg(not(test))]
 use ctrlc;
 use ecs::{EventQueue, Resources, System, WithResources};
-#[cfg(any(test, debug_assertions))]
+
 use log::debug;
 #[cfg(not(test))]
 use log::error;
@@ -50,7 +50,7 @@ impl WithResources for ForceShutdown {
 impl System for ForceShutdown {
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
-            #[cfg(any(test, debug_assertions))]
+
             debug!("Recently caught a termination signal");
             res.borrow_mut::<EventQueue<EngineEvent>>()
                 .send(EngineEvent::Shutdown);

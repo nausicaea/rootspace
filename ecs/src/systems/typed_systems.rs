@@ -128,7 +128,7 @@ where
 
         while let Some(ser_type_name) = map_access.next_key()? {
             // TODO: Provide a proper list of expected fields based on the complete resource registry
-            #[cfg(any(test, debug_assertions))]
+
             debug!("Starting deser attempt for field {}", ser_type_name);
             recursors::deserialize_recursive::<A, SR>(
                 &mut type_tracker,

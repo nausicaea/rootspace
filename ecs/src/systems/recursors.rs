@@ -24,7 +24,7 @@ pub fn initialize_recursive<SR>(resources: &Resources, systems: &mut Systems, _:
         return;
     }
 
-    #[cfg(any(test, debug_assertions))]
+
     trace!("Initializing the system {}", type_name::<SR::Head>());
     let default_value = SR::Head::with_resources(resources);
     systems.insert(default_value);
@@ -47,7 +47,7 @@ where
 
     let stn = short_type_name::<SR::Head>();
 
-    #[cfg(any(test, debug_assertions))]
+
     trace!("Serializing the system {}", &stn);
     if let Some((order, system)) = systems.find_with_position::<SR::Head>() {
         serialize_map.serialize_entry(
@@ -88,7 +88,7 @@ where
             return Err(de::Error::custom(format!("Duplicate field {}", stn)));
         }
 
-        #[cfg(any(test, debug_assertions))]
+
         trace!("Deserializing the system {}", stn);
         let c = map_access.next_value::<TypedSystem<SR::Head>>()?;
         systems.insert(c.order, Box::new(c.system.unwrap_right()));

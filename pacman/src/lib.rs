@@ -1,5 +1,4 @@
 mod player_character;
-mod settings;
 
 use crate::player_character::{PlayerCharacter, PlayerCharacterMarker};
 use anyhow::Result;
@@ -13,9 +12,9 @@ use engine::{
 };
 use nalgebra::Vector3;
 use std::path::Path;
-use crate::settings::Settings;
 use file_manipulation::DirPathBuf;
 use std::convert::TryFrom;
+use engine::resources::settings::Settings;
 
 type ResourceRegistry = Reg![<PlayerCharacterMarker as Component>::Storage,];
 type FixedUpdateSystemRegistry = Reg![];
@@ -26,7 +25,7 @@ pub struct Pacman<B>
 where
     B: BackendTrait,
 {
-    orch: Orchestrator<Settings, B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
+    orch: Orchestrator<B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
 }
 
 impl<B> Pacman<B>

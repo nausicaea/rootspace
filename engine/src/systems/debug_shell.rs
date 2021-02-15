@@ -10,17 +10,16 @@ use thiserror::Error;
 use serde::{Serialize, Deserialize};
 use std::marker::PhantomData;
 use crate::resources::SettingsTrait;
+use crate::resources::settings::Settings;
 
 #[derive(Serialize, Deserialize)]
-pub struct DebugShell<S> {
+pub struct DebugShell {
     #[serde(skip, default = "default_commands")]
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
     receiver: ReceiverId<EngineEvent>,
-    #[serde(skip)]
-    _s: PhantomData<S>,
 }
 
-impl<S> std::fmt::Debug for DebugShell<S> {
+impl std::fmt::Debug for DebugShell {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -31,7 +30,7 @@ impl<S> std::fmt::Debug for DebugShell<S> {
     }
 }
 
-impl<S> WithResources for DebugShell<S> {
+impl WithResources for DebugShell {
     fn with_resources(res: &Resources) -> Self {
         let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
             .subscribe::<Self>();
@@ -39,21 +38,17 @@ impl<S> WithResources for DebugShell<S> {
         DebugShell {
             commands: default_commands(),
             receiver,
-            _s: PhantomData::default(),
         }
     }
 }
 
-impl<S> DebugShell<S>
-where
-    S: SettingsTrait,
-{
+impl DebugShell {
     pub fn add_command<C: CommandTrait>(&mut self, command: C) {
         self.commands.insert(command.name(), Box::new(command));
     }
 
     fn interpret(&self, res: &Resources, tokens: &[String]) -> Result<()> {
-        let terminator = res.borrow::<S>().command_punctuation();
+        let terminator = res.borrow::<Settings>().command_punctuation();
 
         // Iterate over all commands
         for token_group in tokens.split(|t| t.len() == 1 && t.contains(terminator)) {
@@ -89,10 +84,7 @@ where
     }
 }
 
-impl<S> System for DebugShell<S>
-where
-    S: SettingsTrait + 'static,
-{
+impl System for DebugShell {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let events = res
             .borrow_mut::<EventQueue<EngineEvent>>()

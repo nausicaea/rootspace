@@ -5,7 +5,7 @@ use std::{
 };
 
 use anyhow::Result;
-#[cfg(any(test, debug_assertions))]
+
 use log::debug;
 use rusttype::{self, Font, gpu_cache::Cache, point, PositionedGlyph, Rect as RusttypeRect, Scale};
 use thiserror::Error;
@@ -257,7 +257,7 @@ fn layout_paragraph<'a>(
 
     let height = (caret.y - caret_origin.y + advance_height).ceil() as u32;
 
-    #[cfg(any(test, debug_assertions))]
+
     debug!(
         "Layouted text ({} characters, {} glyphs, {}px wide, {}px high)",
         text.len(),

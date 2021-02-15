@@ -20,21 +20,17 @@ use ecs::{EventQueue, Resources, System};
 use crate::{event::EngineEvent, text_manipulation::tokenize};
 use std::marker::PhantomData;
 use crate::resources::SettingsTrait;
+use crate::resources::settings::Settings;
 
 #[derive(Serialize, Deserialize)]
-pub struct DebugConsole<S> {
+pub struct DebugConsole {
     #[serde(skip, default = "default_worker_rx")]
     worker_rx: Receiver<Result<String, DebugConsoleError>>,
-    #[serde(skip)]
-    _s: PhantomData<S>,
 }
 
-impl<S> DebugConsole<S>
-where
-    S: SettingsTrait,
-{
+impl DebugConsole {
     pub fn send_command(&self, cmd_line: &str, res: &Resources) {
-        let settings = res.borrow::<S>();
+        let settings = res.borrow::<Settings>();
 
         let tokens = tokenize(
             cmd_line,
@@ -48,8 +44,8 @@ where
     }
 }
 
-impl<S> DebugConsole<S> {
-    pub fn builder() -> DebugConsoleBuilder<std::io::Stdin, S> {
+impl DebugConsole {
+    pub fn builder() -> DebugConsoleBuilder<std::io::Stdin> {
         DebugConsoleBuilder::default()
     }
 
@@ -64,36 +60,32 @@ impl<S> DebugConsole<S> {
     }
 }
 
-impl<S> std::fmt::Debug for DebugConsole<S> {
+impl std::fmt::Debug for DebugConsole {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "DebugConsole({:?})", self.worker_rx)
     }
 }
 
-impl<S> Default for DebugConsole<S> {
+impl Default for DebugConsole {
     fn default() -> Self {
         DebugConsole::builder().build()
     }
 }
 
-impl<I, S> From<DebugConsoleBuilder<I, S>> for DebugConsole<S>
+impl<I> From<DebugConsoleBuilder<I>> for DebugConsole
     where
         I: Read + Send + 'static,
 {
-    fn from(value: DebugConsoleBuilder<I, S>) -> Self {
+    fn from(value: DebugConsoleBuilder<I>) -> Self {
         let mut input_stream = value.input_stream;
 
         DebugConsole {
             worker_rx: spawn_worker(input_stream),
-            _s: PhantomData::default(),
         }
     }
 }
 
-impl<S> System for DebugConsole<S>
-where
-    S: SettingsTrait + 'static,
-{
+impl System for DebugConsole {
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
         if let Some(line) = self.try_read_line() {
             self.send_command(&line, res);
@@ -101,37 +93,34 @@ where
     }
 }
 
-pub struct DebugConsoleBuilder<I, S> {
+pub struct DebugConsoleBuilder<I> {
     input_stream: I,
-    _s: PhantomData<S>,
 }
 
-impl<I, S> DebugConsoleBuilder<I, S> {
-    pub fn with_input<T>(self, stream: T) -> DebugConsoleBuilder<T, S>
+impl<I> DebugConsoleBuilder<I> {
+    pub fn with_input<T>(self, stream: T) -> DebugConsoleBuilder<T>
         where
             T: Read + Send + 'static,
     {
         DebugConsoleBuilder {
             input_stream: stream,
-            _s: PhantomData::default(),
         }
     }
 }
 
-impl<I, S> DebugConsoleBuilder<I, S>
+impl<I> DebugConsoleBuilder<I>
     where
         I: Read + Send + 'static,
 {
-    pub fn build(self) -> DebugConsole<S> {
+    pub fn build(self) -> DebugConsole {
         DebugConsole::from(self)
     }
 }
 
-impl<S> Default for DebugConsoleBuilder<std::io::Stdin, S> {
+impl Default for DebugConsoleBuilder<std::io::Stdin> {
     fn default() -> Self {
         DebugConsoleBuilder {
             input_stream: std::io::stdin(),
-            _s: PhantomData::default(),
         }
     }
 }

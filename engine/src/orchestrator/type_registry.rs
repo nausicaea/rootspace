@@ -30,9 +30,9 @@ pub type ResourceTypes<RR> = RegAdd![
     RR
 ];
 
-pub type UpdateSystemTypes<S, B, SR> = RegAdd![
-    DebugConsole<S>,
-    DebugShell<S>,
+pub type UpdateSystemTypes<B, SR> = RegAdd![
+    DebugConsole,
+    DebugShell,
     ForceShutdown,
     EventMonitor<WorldEvent>,
     EventMonitor<EngineEvent>,
@@ -42,7 +42,7 @@ pub type UpdateSystemTypes<S, B, SR> = RegAdd![
     SR
 ];
 
-pub type RenderSystemTypes<S, B, SR> = RegAdd![
-    Renderer<S, B>,
+pub type RenderSystemTypes<B, SR> = RegAdd![
+    Renderer<B>,
     SR
 ];

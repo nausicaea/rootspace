@@ -1,6 +1,6 @@
 use crate::{components::camera::Camera, event::EngineEvent};
 use ecs::{EventQueue, ReceiverId, Resources, System, MaybeDefault, WithResources};
-#[cfg(any(test, debug_assertions))]
+
 use log::{debug, trace};
 use std::time::Duration;
 use serde::{Serialize, Deserialize};
@@ -23,7 +23,7 @@ impl WithResources for CameraManager {
 
 impl CameraManager {
     fn on_resize(&self, res: &Resources, dims: (u32, u32)) {
-        #[cfg(any(test, debug_assertions))]
+
         debug!("Updating the camera dimensions (dims={:?})", dims);
 
         res.borrow_components_mut::<Camera>()
@@ -32,7 +32,7 @@ impl CameraManager {
     }
 
     fn on_change_dpi(&self, res: &Resources, factor: f64) {
-        #[cfg(any(test, debug_assertions))]
+
         debug!("Updating the camera dpi factor (factor={:?})", factor);
 
         res.borrow_components_mut::<Camera>()

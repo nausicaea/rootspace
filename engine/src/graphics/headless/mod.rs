@@ -7,7 +7,7 @@ use crate::{
     resources::GraphicsBackend,
 };
 use anyhow::Result;
-#[cfg(any(test, debug_assertions))]
+
 use log::{debug, trace};
 use std::{borrow::Cow, convert::TryInto};
 
@@ -31,14 +31,14 @@ pub struct HeadlessTexture {
 
 impl TextureTrait<HeadlessBackend> for HeadlessTexture {
     fn empty(_backend: &HeadlessBackend, dimensions: (u32, u32)) -> Result<Self> {
-        #[cfg(any(test, debug_assertions))]
+
         debug!("Created an empty texture (dims={:?})", dimensions);
 
         Ok(HeadlessTexture { dimensions })
     }
 
     fn from_image(_backend: &HeadlessBackend, image: Image) -> Result<Self> {
-        #[cfg(any(test, debug_assertions))]
+
         debug!(
             "Created a texture from an image (dims={:?})",
             image.dimensions()
@@ -55,7 +55,7 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
 
     #[cfg_attr(not(test), allow(unused_variables))]
     fn write<R: Into<Rect<u32>>>(&self, rect: R, _data: Cow<[u8]>) {
-        #[cfg(any(test, debug_assertions))]
+
         {
             let rect = rect.into();
             assert!(rect.max().x() < self.dimensions.0);
@@ -133,7 +133,7 @@ impl BackendTrait for HeadlessBackend {
         _vsync: bool,
         _msaa: u16,
     ) -> Result<Self> {
-        #[cfg(any(test, debug_assertions))]
+
         debug!(
             "Created a headless graphics_backend (title='{}', dims={:?})",
             title.as_ref(),
