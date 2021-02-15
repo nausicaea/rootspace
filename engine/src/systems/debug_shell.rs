@@ -4,11 +4,9 @@ use crate::{
 };
 use anyhow::Result;
 use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
-use log::trace;
 use std::{collections::HashMap, time::Duration};
 use thiserror::Error;
 use serde::{Serialize, Deserialize};
-use std::marker::PhantomData;
 use crate::resources::settings::Settings;
 
 #[derive(Serialize, Deserialize)]

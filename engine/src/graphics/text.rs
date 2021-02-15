@@ -357,9 +357,8 @@ mod tests {
     #[test]
     fn text_builder_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
-            .build_backend::<HeadlessBackend>()
-            .unwrap();
+        let settings = Settings::builder(resource_path).build();
+        let mut f = GraphicsBackend::<HeadlessBackend>::new(&settings).unwrap();
 
         let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
@@ -376,9 +375,8 @@ mod tests {
     #[test]
     fn text_mesh_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
-            .build_backend::<HeadlessBackend>()
-            .unwrap();
+        let settings = Settings::builder(resource_path).build();
+        let mut f = GraphicsBackend::<HeadlessBackend>::new(&settings).unwrap();
 
         let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
@@ -406,9 +404,8 @@ mod tests {
     #[test]
     fn text_scale_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
-            .build_backend::<HeadlessBackend>()
-            .unwrap();
+        let settings = Settings::builder(resource_path).build();
+        let mut f = GraphicsBackend::<HeadlessBackend>::new(&settings).unwrap();
 
         let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
@@ -427,9 +424,8 @@ mod tests {
     #[test]
     fn text_width_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
-            .build_backend::<HeadlessBackend>()
-            .unwrap();
+        let settings = Settings::builder(resource_path).build();
+        let mut f = GraphicsBackend::<HeadlessBackend>::new(&settings).unwrap();
 
         let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
@@ -448,9 +444,8 @@ mod tests {
     #[test]
     fn text_update_headless() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
-            .build_backend::<HeadlessBackend>()
-            .unwrap();
+        let settings = Settings::builder(resource_path).build();
+        let mut f = GraphicsBackend::<HeadlessBackend>::new(&settings).unwrap();
 
         let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();

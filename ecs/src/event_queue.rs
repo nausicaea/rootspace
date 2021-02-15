@@ -241,7 +241,7 @@ mod tests {
     fn subscribe() {
         let mut q: EventQueue<MockEvent> = EventQueue::default();
         assert_eq!(q.subscribers(), 0);
-        let s: ReceiverId<MockEvent> = q.subscribe();
+        let s: ReceiverId<MockEvent> = q.subscribe::<()>();
         assert_eq!(q.subscribers(), 1);
         q.unsubscribe(s);
         assert_eq!(q.subscribers(), 0);
@@ -251,7 +251,7 @@ mod tests {
     fn send_one_receiver() {
         let mut q: EventQueue<MockEvent> = EventQueue::default();
 
-        let s = q.subscribe();
+        let s = q.subscribe::<()>();
 
         q.send(MockEvent(0));
         assert_eq!(q.len(), 1);
@@ -266,8 +266,8 @@ mod tests {
         let mut q: EventQueue<MockEvent> = EventQueue::default();
 
         // Subscribe both receivers
-        let s = q.subscribe();
-        let t = q.subscribe();
+        let s = q.subscribe::<()>();
+        let t = q.subscribe::<()>();
         assert_eq!(q.subscribers(), 2);
 
         // Send first event
@@ -301,14 +301,14 @@ mod tests {
         let mut q: EventQueue<MockEvent> = EventQueue::default();
 
         // Subscribe with the first receiver
-        let s = q.subscribe();
+        let s = q.subscribe::<()>();
 
         // Send the first event
         q.send(MockEvent(0));
         assert_eq!(q.len(), 1);
 
         // Subscribe with the second receiver
-        let t = q.subscribe();
+        let t = q.subscribe::<()>();
 
         // Send the second event
         q.send(MockEvent(1));

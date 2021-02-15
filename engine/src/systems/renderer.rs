@@ -3,9 +3,7 @@ use std::time::Instant;
 use std::{collections::VecDeque, marker::PhantomData, time::Duration};
 use serde::{Serialize, Deserialize};
 
-
 use log::debug;
-use log::trace;
 
 use ecs::{world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System, MaybeDefault, WithResources};
 

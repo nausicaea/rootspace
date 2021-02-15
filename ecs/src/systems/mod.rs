@@ -5,7 +5,7 @@ mod recursors;
 use crate::system::System;
 use crate::registry::SystemRegistry;
 use std::slice::{Iter, IterMut};
-use log::{debug, trace};
+use log::trace;
 use self::typed_systems::TypedSystems;
 
 use serde::{Serialize, Deserialize, de::Deserializer, ser::Serializer};

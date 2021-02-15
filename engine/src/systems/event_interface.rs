@@ -1,5 +1,5 @@
 use crate::{event::EngineEvent, graphics::BackendTrait, resources::GraphicsBackend};
-use ecs::{EventQueue, Resources, System, WithResources};
+use ecs::{EventQueue, Resources, System};
 use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
 use serde::{Serialize, Deserialize};
@@ -10,9 +10,11 @@ pub struct EventInterface<B> {
     _b: PhantomData<B>,
 }
 
-impl<B> WithResources for EventInterface<B> {
-    fn with_resources(_: &Resources) -> Self {
-        EventInterface { _b: PhantomData::default() }
+impl<B> Default for EventInterface<B> {
+    fn default() -> Self {
+        EventInterface {
+            _b: PhantomData::default(),
+        }
     }
 }
 
@@ -47,7 +49,7 @@ mod tests {
     use crate::graphics::headless::HeadlessBackend;
 
     #[test]
-    fn new_headless() {
+    fn default_headless() {
         let _: EventInterface<HeadlessBackend> = EventInterface::default();
     }
 }

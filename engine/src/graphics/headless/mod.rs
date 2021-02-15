@@ -189,9 +189,8 @@ mod tests {
     #[test]
     fn frame() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
-            .build_backend::<HeadlessBackend>()
-            .unwrap();
+        let settings = Settings::builder(resource_path).build();
+        let mut f = GraphicsBackend::<HeadlessBackend>::new(&settings).unwrap();
 
         let vertices = f
             .create_vertex_buffer(&[

@@ -355,9 +355,8 @@ mod tests {
     #[test]
     fn headless_builder_mesh() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
-            .build_backend::<HeadlessBackend>()
-            .unwrap();
+        let settings = Settings::builder(resource_path).build();
+        let mut f = GraphicsBackend::<HeadlessBackend>::new(&settings).unwrap();
         let r: Result<Renderable> = Renderable::builder()
             .with_mesh("meshes/cube.ply")
             .with_vertex_shader("shaders/test-vertex.glsl")
@@ -372,9 +371,8 @@ mod tests {
     #[test]
     fn headless_builder_text() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = Settings::new("Title", (800, 600), false, 0, resource_path)
-            .build_backend::<HeadlessBackend>()
-            .unwrap();
+        let settings = Settings::builder(resource_path).build();
+        let mut f = GraphicsBackend::<HeadlessBackend>::new(&settings).unwrap();
         let r: Result<Renderable> = Renderable::builder()
             .with_font("fonts/SourceSansPro-Regular.ttf")
             .with_vertex_shader("shaders/test-vertex.glsl")

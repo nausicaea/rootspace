@@ -1,7 +1,5 @@
 use std::time::Duration;
 
-use log::trace;
-
 use ecs::{world::event::WorldEvent, EventQueue, ReceiverId, Resources, System, MaybeDefault, WithResources};
 
 use crate::event::EngineEvent;

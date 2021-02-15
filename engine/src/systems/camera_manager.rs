@@ -1,7 +1,7 @@
 use crate::{components::camera::Camera, event::EngineEvent};
 use ecs::{EventQueue, ReceiverId, Resources, System, MaybeDefault, WithResources};
 
-use log::{debug, trace};
+use log::debug;
 use std::time::Duration;
 use serde::{Serialize, Deserialize};
 

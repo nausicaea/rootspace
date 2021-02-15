@@ -6,7 +6,6 @@ use std::marker::PhantomData;
 
 use anyhow::{Context, Result};
 use log::debug;
-use log::trace;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
@@ -15,7 +14,6 @@ use ecs::{EventQueue, LoopControl, LoopStage, ReceiverId, ResourceRegistry, Syst
 
 use crate::{
     components::{Model, UiModel},
-    event::EngineEvent,
     graphics::BackendTrait,
     resources::{GraphicsBackend, SceneGraph},
     systems::DebugConsole,

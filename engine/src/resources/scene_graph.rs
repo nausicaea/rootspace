@@ -104,6 +104,7 @@ mod tests {
         assert_tokens(
             &sg,
             &[
+                Token::NewtypeStruct { name: "SceneGraph" },
                 Token::Struct {
                     name: "Hierarchy",
                     len: 2,

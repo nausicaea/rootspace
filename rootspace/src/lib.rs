@@ -2,13 +2,13 @@ mod assets;
 mod debug_commands;
 
 use crate::debug_commands::FileSystemCommand;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use ecs::{LoopStage, Reg};
 use engine::{
-    graphics::BackendTrait, orchestrator::Orchestrator, resources::GraphicsBackend,
+    graphics::BackendTrait, orchestrator::Orchestrator,
     systems::DebugShell,
 };
-use file_manipulation::{FilePathBuf, DirPathBuf};
+use file_manipulation::DirPathBuf;
 use std::{convert::TryFrom, path::Path};
 use engine::resources::settings::Settings;
 

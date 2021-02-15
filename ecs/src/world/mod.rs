@@ -503,13 +503,8 @@ mod tests {
     pub type Trreg = Reg![VecStorage<usize>,];
 
     #[test]
-    fn default() {
-        let _: World<Reg![], Reg![], Reg![], Reg![]> = Default::default();
-    }
-
-    #[test]
     fn serde() {
-        let world = World::<Trreg, Reg![], Reg![], Reg![]>::default();
+        let world = World::<Trreg, Reg![], Reg![], Reg![]>::with_settings(());
 
         assert_ser_tokens(
             &world,
@@ -520,7 +515,7 @@ mod tests {
                 },
                 Token::Str("resources"),
                 Token::Map {
-                    len: Some(3),
+                    len: Some(4),
                 },
                 Token::Str("Entities"),
                 Token::Struct { name: "Entities", len: 3},
@@ -541,11 +536,13 @@ mod tests {
                 Token::Str("receivers"),
                 Token::Map { len: Some(1) },
                 Token::U64(0),
-                Token::Struct { name: "ReceiverState", len: 2 },
+                Token::Struct { name: "ReceiverState", len: 3 },
                 Token::Str("read"),
                 Token::U64(0),
                 Token::Str("received"),
                 Token::U64(0),
+                Token::Str("receiver_id"),
+                Token::Str("World<Element<VecStorage<usize>, End>, End, End, End>"),
                 Token::StructEnd,
                 Token::MapEnd,
                 Token::Str("max_id"),

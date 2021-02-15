@@ -18,7 +18,6 @@ use thiserror::Error;
 use ecs::{EventQueue, Resources, System};
 
 use crate::{event::EngineEvent, text_manipulation::tokenize};
-use std::marker::PhantomData;
 use crate::resources::settings::Settings;
 
 #[derive(Serialize, Deserialize)]
@@ -76,10 +75,8 @@ impl<I> From<DebugConsoleBuilder<I>> for DebugConsole
         I: Read + Send + 'static,
 {
     fn from(value: DebugConsoleBuilder<I>) -> Self {
-        let mut input_stream = value.input_stream;
-
         DebugConsole {
-            worker_rx: spawn_worker(input_stream),
+            worker_rx: spawn_worker(value.input_stream),
         }
     }
 }

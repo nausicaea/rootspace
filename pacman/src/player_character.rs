@@ -1,10 +1,9 @@
-use ecs::{Component, EventQueue, ReceiverId, Resources, System, ZstStorage, MaybeDefault, WithResources};
+use ecs::{Component, EventQueue, ReceiverId, Resources, System, ZstStorage, WithResources};
 use engine::{
     components::Model,
     event::{KeyState, VirtualKeyCode},
     EngineEvent,
 };
-use log::trace;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 

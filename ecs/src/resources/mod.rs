@@ -7,7 +7,7 @@ use std::{
     collections::HashMap,
 };
 
-use log::{debug, trace};
+use log::trace;
 use serde::{
     de::{Deserializer},
     ser::{Serializer},
@@ -361,7 +361,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Error(\"Unknown field SceneGraph<Model>\", line: 1, column: 322)")]
+    #[should_panic(expected = "Error(\"Unknown field SceneGraph<Model>\", line: 1, column: 410)")]
     fn deserialize_with_extraneous_types() {
         let mut d = serde_json::Deserializer::from_str(include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),

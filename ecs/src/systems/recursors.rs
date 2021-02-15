@@ -11,7 +11,7 @@ use crate::registry::SystemRegistry;
 use crate::short_type_name::short_type_name;
 use crate::resources::Resources;
 use crate::with_resources::WithResources;
-use log::{debug, trace};
+use log::trace;
 
 use super::Systems;
 use super::typed_system::TypedSystem;

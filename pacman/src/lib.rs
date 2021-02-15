@@ -2,13 +2,12 @@ mod player_character;
 
 use crate::player_character::{PlayerCharacter, PlayerCharacterMarker};
 use anyhow::Result;
-use ecs::{Component, EventQueue, LoopStage, Reg};
+use ecs::{Component, Reg};
 use engine::{
     components::{Camera, Info, Model, Projection, Renderable, RenderableType, Status},
     graphics::BackendTrait,
     orchestrator::Orchestrator,
     resources::{GraphicsBackend, SceneGraph},
-    EngineEvent,
 };
 use nalgebra::Vector3;
 use std::path::Path;
