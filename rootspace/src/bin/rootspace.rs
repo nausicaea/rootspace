@@ -1,48 +1,13 @@
+use directories;
 use anyhow::{Context, Result};
-use clap::{App, Arg};
+use clap::{App, load_yaml};
 use engine::{GliumBackend, HeadlessBackend};
 use fern::Dispatch;
-use log::{error, LevelFilter};
+use log::{error, LevelFilter, SetLoggerError};
 use rootspace::Rootspace;
 use std::{env, io, path::PathBuf};
-use thiserror::Error;
 
-#[derive(Debug, Error)]
-enum Error {
-    #[error(transparent)]
-    ParseIntError(#[from] std::num::ParseIntError),
-}
-
-fn main() -> Result<()> {
-    let matches = App::new(env!("CARGO_PKG_NAME"))
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .arg(
-            Arg::with_name("headless")
-                .long("headless")
-                .help("Disables the graphical graphics_backend"),
-        )
-        .arg(
-            Arg::with_name("verbosity")
-                .short("v")
-                .long("verbose")
-                .multiple(true)
-                .help("Increases the output of the program"),
-        )
-        .arg(
-            Arg::with_name("command")
-                .short("c")
-                .long("command")
-                .takes_value(true)
-                .help("Execute a command within the game context"),
-        )
-        .get_matches();
-
-    let headless = matches.is_present("headless");
-    let verbosity = matches.occurrences_of("verbosity");
-    let command = matches.value_of("command");
-
+fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {
     let log_level = match verbosity {
         0 => LevelFilter::Error,
         1 => LevelFilter::Warn,
@@ -63,33 +28,41 @@ fn main() -> Result<()> {
         .level(log_level)
         .chain(io::stderr())
         .apply()
-        .context("Unable to configure the logger")?;
+}
 
-    let resource_dir = {
-        let manifest_dir = env::var("CARGO_MANIFEST_DIR")
-            .context("Cannot find the `CARGO_MANIFEST_DIR` environment variable")?;
+fn main() -> Result<()> {
+    // Parse the command line arguments
+    let app_yaml = load_yaml!("rootspace.yaml");
+    let matches = App::from_yaml(app_yaml).get_matches();
+    let verbosity = matches.occurrences_of("verbosity");
+    let (subcommand, maybe_subcommand_matches) = matches.subcommand();
 
-        PathBuf::from(manifest_dir)
-            .parent()
-            .unwrap()
-            .join("assets")
-            .join("rootspace")
-    };
+    // Configure the logger
+    setup_logger(verbosity)
+        .context("Could not configure the logging system")?;
 
-    if headless {
-        let mut g: Rootspace<HeadlessBackend> =
-            Rootspace::new(resource_dir, command).context("Cannot create the game")?;
+    // Configure the project-specific directories
+    let config_dir = directories::ProjectDirs::from(
+        "org",
+        "nausicaea",
+        "rootspace",
+    ).context("Could not find the project directories")?;
 
-        g.load().context("Cannot load the game")?;
+    if subcommand == "initialize" {
+        let scm = maybe_subcommand_matches
+            .context("No arguments were provided to the initialize subcommand")?;
+        let name = scm.value_of("name")
+            .context("Missing required argument 'name'")?;
 
-        g.run();
-    } else {
-        let mut g: Rootspace<GliumBackend> =
-            Rootspace::new(resource_dir, command).context("Cannot create the game")?;
+        todo!("Implement the initialize subcommand");
 
-        g.load().context("Cannot load the game")?;
-
-        g.run();
+    } else if subcommand == "run" {
+        let scm = maybe_subcommand_matches
+            .context("No arguments were provided to the run subcommand")?;
+        let headless = scm.is_present("headless");
+        let command = scm.value_of("command");
+        let name = scm.value_of("name")
+            .context("Missing required argument 'name'")?;
     }
 
     Ok(())

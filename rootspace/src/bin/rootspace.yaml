@@ -1,0 +1,41 @@
+name: rootspace
+version: 0.1.0
+author: Eleanor Young <developer@nausicaea.net
+settings:
+  - VersionlessSubcommands
+  - SubcommandRequiredElseHelp
+args:
+  - verbosity:
+      short: v
+      long: verbose
+      multiple: true
+      help: Increases the output of the program
+subcommands:
+  - initialize:
+      about: Create a new game
+      aliases:
+        - init
+        - i
+      args:
+        - name:
+            takes_value: true
+            required: true
+            help: Specify the name of the game
+  - run:
+      about: Run an existing game
+      aliases:
+        - r
+      args:
+        - headless:
+            short: H
+            long: headless
+            help: Disables the graphical backend
+        - command:
+            short: c
+            long: command
+            takes_value: true
+            help: Execute a command as soon as the game has loaded
+        - name:
+            takes_value: true
+            required: true
+            help: Specify the name of the game
