@@ -16,6 +16,7 @@ use crate::systems::{
     force_shutdown::ForceShutdown,
     renderer::Renderer,
 };
+use crate::resources::settings::Settings;
 
 pub type ResourceTypes<RR> = RegAdd![
     <Info as Component>::Storage,
@@ -27,6 +28,7 @@ pub type ResourceTypes<RR> = RegAdd![
     SceneGraph<UiModel>,
     SceneGraph<Model>,
     EventQueue<EngineEvent>,
+    Settings,
     RR
 ];
 

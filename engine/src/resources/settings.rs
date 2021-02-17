@@ -6,8 +6,6 @@ use std::time::Duration;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Settings {
     pub asset_tree: DirPathBuf,
-    pub delta_time: Duration,
-    pub max_frame_time: Duration,
     pub title: String,
     pub dimensions: (u32, u32),
     pub clear_color: [f32; 4],
@@ -32,8 +30,6 @@ impl From<SettingsBuilder> for Settings {
     fn from(value: SettingsBuilder) -> Self {
         Settings {
             asset_tree: value.asset_tree,
-            delta_time: value.delta_time,
-            max_frame_time: value.max_frame_time,
             title: value.title,
             dimensions: value.dimensions,
             clear_color: value.clear_color,
@@ -48,8 +44,6 @@ impl From<SettingsBuilder> for Settings {
 
 pub struct SettingsBuilder {
     asset_tree: DirPathBuf,
-    delta_time: Duration,
-    max_frame_time: Duration,
     title: String,
     dimensions: (u32, u32),
     clear_color: [f32; 4],
@@ -64,8 +58,6 @@ impl SettingsBuilder {
     pub fn new(asset_tree: DirPathBuf) -> Self {
         SettingsBuilder {
             asset_tree,
-            delta_time: Duration::from_millis(50),
-            max_frame_time: Duration::from_millis(250),
             title: String::new(),
             dimensions: (800, 600),
             clear_color: [0.69, 0.93, 0.93, 1.0],
@@ -114,16 +106,6 @@ impl SettingsBuilder {
 
     pub fn with_command_punctuation(mut self, punct: char) -> Self {
         self.command_punctuation = punct;
-        self
-    }
-
-    pub fn with_delta_time(mut self, dt: Duration) -> Self {
-        self.delta_time = dt;
-        self
-    }
-
-    pub fn with_max_frame_time(mut self, mft: Duration) -> Self {
-        self.max_frame_time = mft;
         self
     }
 

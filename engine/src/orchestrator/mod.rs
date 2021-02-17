@@ -2,44 +2,34 @@ use std::{
     cmp,
     time::{Duration, Instant},
 };
-use std::marker::PhantomData;
 
 use anyhow::{Context, Result};
 use log::debug;
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use serde::de::{MapAccess, Visitor};
-use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize};
+use serde_json;
 
-use ecs::{LoopControl, LoopStage, ResourceRegistry, SystemRegistry, World};
+use ecs::{LoopControl, ResourceRegistry, SystemRegistry, World};
 
 use crate::{
     components::{Model, UiModel},
     graphics::BackendTrait,
     resources::{GraphicsBackend, SceneGraph},
-    systems::DebugConsole,
 };
 use crate::resources::settings::Settings;
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
+use file_manipulation::{FilePathBuf, DirPathBuf, NewOrExFilePathBuf};
+use std::fs::File;
+use std::convert::TryFrom;
+use std::path::Path;
+use directories::ProjectDirs;
 
-mod type_registry;
+pub mod type_registry;
 
 pub struct Orchestrator<B, RR, FUSR, USR, RSR> {
-    pub world: World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>,
+    world: World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>,
     delta_time: Duration,
     max_frame_time: Duration,
-}
-
-impl<B, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR, FUSR, USR, RSR> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "Orchestrator {{ world: {:?}, delta_time: {:?}, max_frame_time: {:?} }}",
-            self.world,
-            self.delta_time,
-            self.max_frame_time,
-        )
-    }
 }
 
 impl<B, RR, FUSR, USR, RSR> Orchestrator<B, RR, FUSR, USR, RSR>
@@ -50,40 +40,77 @@ where
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
-    pub fn new(settings: Settings, command: Option<&str>) -> Result<Self> {
-        // Create the graphics_backend
-        // FIXME: This is the only resource that cannot be created easily. Find an alternative
-        let backend = GraphicsBackend::<B>::new(&settings)
-            .context("Failed to initialise the graphics_backend")?;
+    pub fn new<P: AsRef<Path>>(asset_database: &P) -> Result<Self> {
+        // Create a new settings instance
+        let asset_database = DirPathBuf::try_from(asset_database.as_ref())?;
+        let settings = Settings::builder(asset_database).build();
 
         // Create the world
-        let mut world = World::with_settings(settings.clone());
+        let mut world = World::with_settings(settings);
 
-        // Insert the backend as a resource
+        // Retrieve the settings and create the backend as a resource
+        // FIXME: Can we make it so that the GraphicsBackend is also part of the registry?
+        let backend = GraphicsBackend::<B>::new(&world.borrow::<Settings>())
+            .context("Failed to initialise the graphics backend")?;
         world.insert(backend);
 
-        // Send the requested debug command
-        if let Some(cmd) = command {
-            world.get_system::<DebugConsole>(LoopStage::Update)
-                .send_command(cmd, world.resources());
-        }
+        // // Add an additional command to the debug shell
+        // // TODO: Create a registry of debug commands and serialize those as well
+        // orch.world
+        //     .get_system_mut::<DebugShell>(LoopStage::Update)
+        //     .add_command(FileSystemCommand);
 
         Ok(Orchestrator {
             world,
-            delta_time: settings.delta_time,
-            max_frame_time: settings.max_frame_time,
+            delta_time: Duration::from_millis(50),
+            max_frame_time: Duration::from_millis(250),
         })
     }
 
-    pub fn run(&mut self) {
-        // Update the scene graphs for the first time
-        self.world
-            .borrow_mut::<SceneGraph<Model>>()
-            .update(&self.world.borrow_components::<Model>());
-        self.world
-            .borrow_mut::<SceneGraph<UiModel>>()
-            .update(&self.world.borrow_components::<UiModel>());
+    pub fn load<P: AsRef<Path>>(path: &P) -> Result<Self> {
+        // Create the deserializer
+        let file_path = FilePathBuf::try_from(path.as_ref())?;
+        let mut file = File::open(file_path)?;
+        let mut deserializer = serde_json::Deserializer::from_reader(&mut file);
 
+        // Deserialize the entire world
+        let mut world = World::deserialize(&mut deserializer)?;
+
+        // Retrieve the settings and create the backend as a resource
+        // FIXME: Can we make it so that the GraphicsBackend is serialized aswell?
+        let backend = GraphicsBackend::<B>::new(&world.borrow::<Settings>())
+            .context("Failed to initialise the graphics backend")?;
+        world.insert(backend);
+
+        // Update the scene graphs for the first time
+        // FIXME: Do we really need to update the scene graphs?
+        world
+            .borrow_mut::<SceneGraph<Model>>()
+            .update(&world.borrow_components::<Model>());
+        world
+            .borrow_mut::<SceneGraph<UiModel>>()
+            .update(&world.borrow_components::<UiModel>());
+
+        Ok(Orchestrator {
+            world,
+            delta_time: Duration::from_millis(50),
+            max_frame_time: Duration::from_millis(250),
+        })
+    }
+
+    pub fn save<P: AsRef<Path>>(&self, path: &P) -> Result<()> {
+        // Create the deserializer
+        let file_path = NewOrExFilePathBuf::try_from(path.as_ref())?;
+        let mut file = File::create(file_path)?;
+        let mut serializer = serde_json::Serializer::pretty(&mut file);
+
+        // Serialize the World
+        self.world.serialize(&mut serializer)?;
+
+        Ok(())
+    }
+
+    pub fn run(&mut self) {
         // Initialize the timers
         let mut loop_time = Instant::now();
         let mut accumulator = Duration::default();
@@ -138,133 +165,112 @@ where
     }
 }
 
-impl<B, RR, FUSR, USR, RSR> Serialize for Orchestrator<B, RR, FUSR, USR, RSR>
-    where
-        B: BackendTrait,
-        RR: ResourceRegistry,
-        FUSR: SystemRegistry,
-        USR: SystemRegistry,
-        RSR: SystemRegistry,
-{
-    fn serialize<Ser>(&self, serializer: Ser) -> Result<Ser::Ok, Ser::Error>
-    where
-        Ser: Serializer,
-    {
-        let mut state = serializer.serialize_struct("Orchestrator", 3)?;
-        state.serialize_field("world", &self.world)?;
-        state.serialize_field("delta_time", &self.delta_time)?;
-        state.serialize_field("max_frame_time", &self.max_frame_time)?;
-        state.end()
-    }
-}
-
-impl<'de, B, RR, FUSR, USR, RSR> Deserialize<'de> for Orchestrator<B, RR, FUSR, USR, RSR>
-    where
-        B: BackendTrait,
-        RR: ResourceRegistry,
-        FUSR: SystemRegistry,
-        USR: SystemRegistry,
-        RSR: SystemRegistry,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_struct(
-            "Orchestrator",
-            ORCHESTRATOR_FIELDS,
-            OrchestratorVisitor::default(),
+impl<B, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR, FUSR, USR, RSR> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "Orchestrator {{ world: {:?}, delta_time: {:?}, max_frame_time: {:?} }}",
+            self.world,
+            self.delta_time,
+            self.max_frame_time,
         )
     }
 }
 
-const ORCHESTRATOR_FIELDS: &'static [&'static str] = &[
-    "world",
-    "delta_time",
-    "max_frame_time",
-];
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[derive(Deserialize)]
-#[serde(field_identifier, rename_all = "snake_case")]
-enum OrchestratorField {
-    World,
-    DeltaTime,
-    MaxFrameTime,
-}
+    use std::path::PathBuf;
+    use ecs::Reg;
+    use crate::{HeadlessBackend, GliumBackend, Orchestrator};
+    use tempfile::NamedTempFile;
 
-struct OrchestratorVisitor<B, RR, FUSR, USR, RSR>(
-    PhantomData<B>,
-    PhantomData<RR>,
-    PhantomData<FUSR>,
-    PhantomData<USR>,
-    PhantomData<RSR>,
-);
+    type TestGame<B> = Orchestrator<
+        B,
+        Reg![],
+        Reg![],
+        Reg![],
+        Reg![],
+    >;
 
-impl<B, RR, FUSR, USR, RSR> Default for OrchestratorVisitor<B, RR, FUSR, USR, RSR> {
-    fn default() -> Self {
-        OrchestratorVisitor(
-            PhantomData::default(),
-            PhantomData::default(),
-            PhantomData::default(),
-            PhantomData::default(),
-            PhantomData::default(),
-        )
-    }
-}
+    #[test]
+    fn game_creation_headless() {
+        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
 
-impl<'de, B, RR, FUSR, USR, RSR> Visitor<'de> for OrchestratorVisitor<B, RR, FUSR, USR, RSR>
-    where
-        B: BackendTrait,
-        RR: ResourceRegistry,
-        FUSR: SystemRegistry,
-        USR: SystemRegistry,
-        RSR: SystemRegistry,
-{
-    type Value = Orchestrator<B, RR, FUSR, USR, RSR>;
-
-    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "a serialized Orchestrator struct")
+        let r: Result<TestGame<HeadlessBackend>> = TestGame::new(&asset_database);
+        assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
-    fn visit_map<A>(self, mut map_access: A) -> Result<Self::Value, A::Error>
-    where
-        A: MapAccess<'de>,
-    {
-        let mut world: Option<World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>> = None;
-        let mut delta_time: Option<Duration> = None;
-        let mut max_frame_time: Option<Duration> = None;
+    #[test]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn game_creation_glium() {
+        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
 
-        while let Some(field_name) = map_access.next_key()? {
-            match field_name {
-                OrchestratorField::World => {
-                    if world.is_some() {
-                        return Err(de::Error::duplicate_field("world"));
-                    }
-                    world = Some(map_access.next_value()?);
-                },
-                OrchestratorField::DeltaTime => {
-                    if delta_time.is_some() {
-                        return Err(de::Error::duplicate_field("delta_time"));
-                    }
-                    delta_time = Some(map_access.next_value()?);
-                },
-                OrchestratorField::MaxFrameTime => {
-                    if max_frame_time.is_some() {
-                        return Err(de::Error::duplicate_field("max_frame_time"));
-                    }
-                    max_frame_time = Some(map_access.next_value()?);
-                },
-            }
-        }
+        let r: Result<TestGame<GliumBackend>> = TestGame::new(&asset_database);
+        assert!(r.is_ok(), "{}", r.unwrap_err());
+    }
 
-        let world = world.ok_or_else(|| de::Error::missing_field("world"))?;
-        let delta_time = delta_time.ok_or_else(|| de::Error::missing_field("delta_time"))?;
-        let max_frame_time = max_frame_time.ok_or_else(|| de::Error::missing_field("max_frame_time"))?;
+    #[test]
+    fn game_loading_and_saving_headless_headless() {
+        // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
-        Ok(Orchestrator {
-            world,
-            delta_time,
-            max_frame_time,
-        })
+        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
+        let tf = NamedTempFile::new().unwrap();
+
+        let first: TestGame<HeadlessBackend> = TestGame::new(&asset_database).unwrap();
+        let r = first.save(&tf.path());
+        assert!(r.is_ok(), "{}", r.unwrap_err());
+
+        let r: Result<TestGame<HeadlessBackend>> = TestGame::load(&tf.path());
+        assert!(r.is_ok(), "{}", r.unwrap_err());
+    }
+
+    #[test]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn game_loading_and_saving_glium_glium() {
+        // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
+
+        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
+        let tf = NamedTempFile::new().unwrap();
+
+        let first: TestGame<GliumBackend> = TestGame::new(&asset_database).unwrap();
+        let r = first.save(&tf.path());
+        assert!(r.is_ok(), "{}", r.unwrap_err());
+
+        let r: Result<TestGame<GliumBackend>> = TestGame::load(&tf.path());
+        assert!(r.is_ok(), "{}", r.unwrap_err());
+    }
+
+    #[test]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn game_loading_and_saving_headless_glium() {
+        // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
+
+        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
+        let tf = NamedTempFile::new().unwrap();
+
+        let first: TestGame<HeadlessBackend> = TestGame::new(&asset_database).unwrap();
+        let r = first.save(&tf.path());
+        assert!(r.is_ok(), "{}", r.unwrap_err());
+
+        let r: Result<TestGame<GliumBackend>> = TestGame::load(&tf.path());
+        assert!(r.is_ok(), "{}", r.unwrap_err());
+    }
+
+    #[test]
+    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    fn game_loading_and_saving_glium_headless() {
+        // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
+
+        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
+        let tf = NamedTempFile::new().unwrap();
+
+        let first: TestGame<GliumBackend> = TestGame::new(&asset_database).unwrap();
+        let r = first.save(&tf.path());
+        assert!(r.is_ok(), "{}", r.unwrap_err());
+
+        let r: Result<TestGame<HeadlessBackend>> = TestGame::load(&tf.path());
+        assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 }

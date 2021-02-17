@@ -6,6 +6,8 @@ pub use graphics_backend::vertex_buffer_id::VertexBufferId;
 pub use self::{
     graphics_backend::GraphicsBackend,
     scene_graph::SceneGraph,
+    settings::Settings,
+    settings::SettingsBuilder,
 };
 
 pub mod graphics_backend;

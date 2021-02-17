@@ -14,4 +14,5 @@ pub use self::{
     debug_commands::CommandTrait,
     event::EngineEvent,
     graphics::{glium::GliumBackend, headless::HeadlessBackend},
+    orchestrator::Orchestrator,
 };

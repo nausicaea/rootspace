@@ -29,6 +29,7 @@ pub mod shader_id;
 pub mod vertex_buffer_id;
 pub mod index_buffer_id;
 
+// FIXME: The GraphicsBackend cannot be automatically initialized by World
 pub struct GraphicsBackend<B>
 where
     B: BackendTrait,

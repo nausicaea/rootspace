@@ -532,6 +532,7 @@ dependencies = [
  "approx",
  "clap",
  "ctrlc",
+ "directories",
  "ecs",
  "file-manipulation",
  "glium",

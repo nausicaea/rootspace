@@ -291,7 +291,7 @@ where
         let mut s = serde_json::Serializer::pretty(&mut file);
 
         // Serialize the entire World
-        let _status = self.serialize(&mut s)
+        self.serialize(&mut s)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
         // Notify the world of the serialization event

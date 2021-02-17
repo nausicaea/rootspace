@@ -1,11 +1,9 @@
 use directories;
 use anyhow::{Context, Result};
 use clap::{App, load_yaml};
-use engine::{GliumBackend, HeadlessBackend};
 use fern::Dispatch;
-use log::{error, LevelFilter, SetLoggerError};
-use rootspace::Rootspace;
-use std::{env, io, path::PathBuf};
+use log::{LevelFilter, SetLoggerError};
+use std::io;
 
 fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {
     let log_level = match verbosity {
@@ -63,6 +61,8 @@ fn main() -> Result<()> {
         let command = scm.value_of("command");
         let name = scm.value_of("name")
             .context("Missing required argument 'name'")?;
+
+        todo!("Implement the run subcommand");
     }
 
     Ok(())
