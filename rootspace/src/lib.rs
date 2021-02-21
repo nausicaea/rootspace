@@ -11,30 +11,10 @@ use engine::{
 use file_manipulation::DirPathBuf;
 use std::{convert::TryFrom, path::Path};
 
-type ResourceRegistry = Reg![];
-type FixedUpdateSystemRegistry = Reg![];
-type UpdateSystemRegistry = Reg![];
-type RenderSystemRegistry = Reg![];
-
-pub struct Rootspace<B>
-where
-    B: BackendTrait,
-{
-    orch: Orchestrator<B, ResourceRegistry, FixedUpdateSystemRegistry, UpdateSystemRegistry, RenderSystemRegistry>,
-}
-
-impl<B> Rootspace<B>
-where
-    B: BackendTrait,
-{
-    pub fn new<P: AsRef<Path>>(asset_database: P) -> Result<Self> {
-        let asset_database = DirPathBuf::try_from(asset_database.as_ref())?;
-        let mut orch = Orchestrator::new(&asset_database)?;
-
-        Ok(Rootspace { orch })
-    }
-
-    pub fn run(&mut self) {
-        self.orch.run()
-    }
-}
+pub type EmptyGame<B> = Orchestrator<
+    B,
+    Reg![],
+    Reg![],
+    Reg![],
+    Reg![],
+>;

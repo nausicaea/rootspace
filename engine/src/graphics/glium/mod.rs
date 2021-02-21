@@ -29,6 +29,7 @@ use std::{
     fmt,
     rc::Rc,
 };
+use std::borrow::BorrowMut;
 
 #[derive(Debug)]
 pub struct GliumEvent(pub GlutinEvent);
@@ -452,9 +453,10 @@ impl fmt::Debug for GliumFrame {
     }
 }
 
+#[derive(Clone)]
 pub struct GliumBackend {
     pub display: Display,
-    pub events_loop: EventsLoop,
+    pub events_loop: Rc<EventsLoop>,
 }
 
 impl BackendTrait for GliumBackend {
@@ -487,7 +489,7 @@ impl BackendTrait for GliumBackend {
         match Display::new(window, context, &events_loop) {
             Ok(display) => Ok(GliumBackend {
                 display,
-                events_loop,
+                events_loop: Rc::new(events_loop),
             }),
             Err(DisplayCreationError::GlutinCreationError(e)) => Err(e.into()),
             Err(DisplayCreationError::IncompatibleOpenGl(e)) => Err(e.into()),
@@ -495,7 +497,8 @@ impl BackendTrait for GliumBackend {
     }
 
     fn poll_events<F: FnMut(GliumEvent)>(&mut self, mut f: F) {
-        self.events_loop.poll_events(|e| f(e.into()))
+        Rc::get_mut(&mut self.events_loop)
+            .map(|el| el.poll_events(|e| f(e.into())));
     }
 
     fn create_frame(&self) -> GliumFrame {

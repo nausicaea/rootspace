@@ -1,10 +1,8 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
-use crate::{
-    entity::{entity::Entity, generation::Generation, index::Index},
-    resource::Resource,
-};
+use crate::{entity::{entity::Entity, generation::Generation, index::Index}, resource::Resource, SerializationProxy};
 use serde::{Deserialize, Serialize};
+use crate::serialization_proxy::EmptyProxyError;
 
 /// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -74,6 +72,8 @@ impl Entities {
 }
 
 impl Resource for Entities {}
+
+impl SerializationProxy for Entities {}
 
 impl<'a> IntoIterator for &'a Entities {
     type IntoIter = EntitiesIter<'a>;

@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{Error, Result};
 
-use ecs::{Component, Resource};
+use ecs::{Component, Resource, MaybeDefault, SerializationProxy};
 use file_manipulation::{FilePathBuf, DirPathBuf};
 use index_buffer_id::IndexBufferId;
 use shader_id::ShaderId;
@@ -23,6 +23,11 @@ use crate::{
     },
 };
 use crate::resources::settings::Settings;
+use serde::{Serialize, Deserialize, Serializer, Deserializer, de};
+use serde::ser::SerializeStruct;
+use std::marker::PhantomData;
+use serde::de::{Visitor, MapAccess};
+use std::fmt::Formatter;
 
 pub mod texture_id;
 pub mod shader_id;
@@ -35,6 +40,10 @@ where
     B: BackendTrait,
 {
     asset_tree: DirPathBuf,
+    title: String,
+    dimensions: (u32, u32),
+    vsync: bool,
+    msaa: u16,
     textures: HashMap<TextureId, B::Texture>,
     shaders: HashMap<ShaderId, B::Shader>,
     vertex_buffers: HashMap<VertexBufferId, B::VertexBuffer>,
@@ -48,18 +57,22 @@ where
 {
     pub fn new(settings: &Settings) -> Result<Self, Error> {
         Ok(GraphicsBackend {
-            asset_tree: settings.asset_tree.clone(),
-            textures: HashMap::default(),
-            shaders: HashMap::default(),
-            vertex_buffers: HashMap::default(),
-            index_buffers: HashMap::default(),
-            inner: B::new(
-                &settings.title,
-                settings.dimensions,
-                settings.vsync,
-                settings.msaa,
-            )?,
-        })
+        asset_tree: settings.asset_tree.clone(),
+        title: settings.title.clone(),
+        dimensions: settings.dimensions,
+        vsync: settings.vsync,
+        msaa: settings.msaa,
+        textures: HashMap::default(),
+        shaders: HashMap::default(),
+        vertex_buffers: HashMap::default(),
+        index_buffers: HashMap::default(),
+        inner: B::new(
+            &settings.title,
+            settings.dimensions,
+            settings.vsync,
+            settings.msaa,
+        )?,
+    })
     }
 
     pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {
@@ -159,6 +172,16 @@ where
 
 impl<B> Resource for GraphicsBackend<B> where B: BackendTrait + 'static {}
 
+impl<B> SerializationProxy for GraphicsBackend<B>
+where B: BackendTrait,
+{
+    fn name() -> String {
+        String::from("GraphicsBackend")
+    }
+}
+
+impl<B> MaybeDefault for GraphicsBackend<B> where B: BackendTrait {}
+
 impl<B> fmt::Debug for GraphicsBackend<B>
 where
     B: BackendTrait,
@@ -192,5 +215,153 @@ where
 {
     fn deref_mut(&mut self) -> &mut B {
         &mut self.inner
+    }
+}
+
+impl<B> Serialize for GraphicsBackend<B>
+where
+    B: BackendTrait,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("GraphicsBackend", 5)?;
+        state.serialize_field("asset_tree", &self.asset_tree)?;
+        state.serialize_field("title", &self.title)?;
+        state.serialize_field("dimensions", &self.dimensions)?;
+        state.serialize_field("vsync", &self.vsync)?;
+        state.serialize_field("msaa", &self.msaa)?;
+        state.skip_field("textures")?;
+        state.skip_field("shaders")?;
+        state.skip_field("vertex_buffers")?;
+        state.skip_field("index_buffers")?;
+        state.skip_field("inner")?;
+        state.end()
+    }
+}
+
+impl<'de, B> Deserialize<'de> for GraphicsBackend<B>
+where
+    B: BackendTrait,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_struct(
+            "GraphicsBackend",
+            GRAPHICS_BACKEND_FIELDS,
+            GraphicsBackendVisitor::default(),
+        )
+    }
+}
+
+const GRAPHICS_BACKEND_FIELDS: &'static [&'static str] = &[
+    "asset_tree",
+    "title",
+    "dimensions",
+    "vsync",
+    "msaa",
+];
+
+#[derive(Deserialize)]
+#[serde(field_identifier, rename_all = "snake_case")]
+enum GraphicsBackendField {
+    AssetTree,
+    Title,
+    Dimensions,
+    Vsync,
+    Msaa,
+}
+
+struct GraphicsBackendVisitor<B>(PhantomData<B>);
+
+impl<B> Default for GraphicsBackendVisitor<B> {
+    fn default() -> Self {
+        GraphicsBackendVisitor(PhantomData::default())
+    }
+}
+
+impl<'de, B> Visitor<'de> for GraphicsBackendVisitor<B>
+where
+    B: BackendTrait,
+{
+    type Value = GraphicsBackend<B>;
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "a serialized GraphicsBackend struct")
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        let mut asset_tree: Option<DirPathBuf> = None;
+        let mut title: Option<String> = None;
+        let mut dimensions: Option<(u32, u32)> = None;
+        let mut vsync: Option<bool> = None;
+        let mut msaa: Option<u16> = None;
+
+        while let Some(field_name) = map.next_key()? {
+            match field_name {
+                GraphicsBackendField::AssetTree => {
+                    if asset_tree.is_some() {
+                        return Err(de::Error::duplicate_field("asset_tree"));
+                    }
+                    asset_tree = Some(map.next_value()?);
+                },
+                GraphicsBackendField::Title => {
+                    if title.is_some() {
+                        return Err(de::Error::duplicate_field("title"));
+                    }
+                    title = Some(map.next_value()?);
+                },
+                GraphicsBackendField::Dimensions => {
+                    if dimensions.is_some() {
+                        return Err(de::Error::duplicate_field("dimensions"));
+                    }
+                    dimensions = Some(map.next_value()?);
+                },
+                GraphicsBackendField::Vsync => {
+                    if vsync.is_some() {
+                        return Err(de::Error::duplicate_field("vsync"));
+                    }
+                    vsync = Some(map.next_value()?);
+                },
+                GraphicsBackendField::Msaa => {
+                    if msaa.is_some() {
+                        return Err(de::Error::duplicate_field("msaa"));
+                    }
+                    msaa = Some(map.next_value()?);
+                }
+            }
+        }
+
+        let asset_tree = asset_tree.ok_or_else(|| de::Error::missing_field("asset_tree"))?;
+        let title = title.ok_or_else(|| de::Error::missing_field("title"))?;
+        let dimensions = dimensions.ok_or_else(|| de::Error::missing_field("dimensions"))?;
+        let vsync = vsync.ok_or_else(|| de::Error::missing_field("vsync"))?;
+        let msaa = msaa.ok_or_else(|| de::Error::missing_field("msaa"))?;
+
+        let inner = B::new(
+            &title,
+            dimensions,
+            vsync,
+            msaa,
+        ).map_err(|e| de::Error::custom(format!("{}", e)))?;
+
+        Ok(GraphicsBackend {
+            asset_tree,
+            title,
+            dimensions,
+            vsync,
+            msaa,
+            textures: HashMap::default(),
+            shaders: HashMap::default(),
+            vertex_buffers: HashMap::default(),
+            index_buffers: HashMap::default(),
+            inner,
+        })
     }
 }

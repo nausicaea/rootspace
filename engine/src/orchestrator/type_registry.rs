@@ -6,6 +6,7 @@ use ecs::WorldEvent;
 use crate::components::{Camera, Info, Model, Renderable, Status, UiModel};
 use crate::event::EngineEvent;
 use crate::resources::SceneGraph;
+use crate::resources::GraphicsBackend;
 use crate::systems::{
     camera_manager::CameraManager,
     debug_console::DebugConsole,
@@ -18,7 +19,7 @@ use crate::systems::{
 };
 use crate::resources::settings::Settings;
 
-pub type ResourceTypes<RR> = RegAdd![
+pub type ResourceTypes<B, RR> = RegAdd![
     <Info as Component>::Storage,
     <Status as Component>::Storage,
     <Camera as Component>::Storage,
@@ -28,6 +29,7 @@ pub type ResourceTypes<RR> = RegAdd![
     SceneGraph<UiModel>,
     SceneGraph<Model>,
     EventQueue<EngineEvent>,
+    GraphicsBackend<B>,
     Settings,
     RR
 ];

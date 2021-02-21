@@ -2,13 +2,14 @@ use super::{
     iterators::{EnumRIter, RIter, WIter},
     Storage,
 };
-use crate::{entity::index::Index, resource::Resource};
+use crate::{entity::index::Index, resource::Resource, SerializationProxy};
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, Serializer},
     Deserialize, Serialize,
 };
 use std::{collections::HashSet, marker::PhantomData, ptr};
+use crate::serialization_proxy::EmptyProxyError;
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
@@ -146,6 +147,8 @@ impl<T> Storage for VecStorage<T> {
 }
 
 impl<T> Resource for VecStorage<T> where T: 'static {}
+
+impl<T> SerializationProxy for VecStorage<T> {}
 
 impl<T> Drop for VecStorage<T> {
     fn drop(&mut self) {

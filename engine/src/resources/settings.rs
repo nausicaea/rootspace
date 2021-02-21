@@ -1,7 +1,8 @@
-use ecs::{Resource, MaybeDefault};
+use ecs::{Resource, MaybeDefault, SerializationProxy};
 use file_manipulation::DirPathBuf;
 use serde::{Serialize, Deserialize};
 use std::time::Duration;
+use ecs::serialization_proxy::EmptyProxyError;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Settings {
@@ -23,6 +24,8 @@ impl Settings {
 }
 
 impl Resource for Settings {}
+
+impl SerializationProxy for Settings {}
 
 impl MaybeDefault for Settings {}
 

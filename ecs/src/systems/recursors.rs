@@ -47,7 +47,6 @@ where
 
     let stn = short_type_name::<SR::Head>();
 
-
     trace!("Serializing the system {}", &stn);
     if let Some((order, system)) = systems.find_with_position::<SR::Head>() {
         serialize_map.serialize_entry(

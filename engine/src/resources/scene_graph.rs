@@ -1,7 +1,8 @@
-use ecs::{Component, Entity, Resource, Storage};
+use ecs::{Component, Entity, Resource, Storage, SerializationProxy};
 use hierarchy::Hierarchy;
 use serde::{Deserialize, Serialize};
 use std::{fmt, ops::Mul};
+use ecs::serialization_proxy::EmptyProxyError;
 
 #[derive(Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SceneGraph<T>(Hierarchy<Entity, T>)
@@ -43,6 +44,8 @@ where
 }
 
 impl<T> Resource for SceneGraph<T> where T: Clone + Default + 'static {}
+
+impl<T> SerializationProxy for SceneGraph<T> where T: Clone + Default {}
 
 impl<'a, T> IntoIterator for &'a SceneGraph<T>
 where

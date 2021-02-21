@@ -21,6 +21,7 @@ pub use crate::{
     systems::Systems,
     world::{error::WorldError, event::WorldEvent, World},
     short_type_name::short_type_name,
+    serialization_proxy::SerializationProxy,
 };
 
 pub mod component;
@@ -41,3 +42,4 @@ pub mod systems;
 pub mod world;
 pub mod short_type_name;
 pub mod with_resources;
+pub mod serialization_proxy;

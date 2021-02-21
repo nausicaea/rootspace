@@ -26,8 +26,8 @@ use directories::ProjectDirs;
 
 pub mod type_registry;
 
-pub struct Orchestrator<B, RR, FUSR, USR, RSR> {
-    world: World<ResourceTypes<RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>,
+pub struct Orchestrator<B: BackendTrait, RR, FUSR, USR, RSR> {
+    world: World<ResourceTypes<B, RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>,
     delta_time: Duration,
     max_frame_time: Duration,
 }
@@ -49,7 +49,7 @@ where
         let mut world = World::with_settings(settings);
 
         // Retrieve the settings and create the backend as a resource
-        // FIXME: Can we make it so that the GraphicsBackend is also part of the registry?
+        // FIXME: Can we make it so that the GraphicsBackend is also automatically initialized?
         let backend = GraphicsBackend::<B>::new(&world.borrow::<Settings>())
             .context("Failed to initialise the graphics backend")?;
         world.insert(backend);
@@ -99,6 +99,8 @@ where
     }
 
     pub fn save<P: AsRef<Path>>(&self, path: &P) -> Result<()> {
+        debug!("Saving the game state to: {}", path.as_ref().display());
+
         // Create the deserializer
         let file_path = NewOrExFilePathBuf::try_from(path.as_ref())?;
         let mut file = File::create(file_path)?;
@@ -165,7 +167,7 @@ where
     }
 }
 
-impl<B, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR, FUSR, USR, RSR> {
+impl<B: BackendTrait, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR, FUSR, USR, RSR> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -182,9 +184,11 @@ mod tests {
     use super::*;
 
     use std::path::PathBuf;
-    use ecs::Reg;
+    use ecs::{Reg, Resource};
     use crate::{HeadlessBackend, GliumBackend, Orchestrator};
     use tempfile::NamedTempFile;
+    use std::marker::PhantomData;
+    use serde_test::{Token, assert_tokens};
 
     type TestGame<B> = Orchestrator<
         B,

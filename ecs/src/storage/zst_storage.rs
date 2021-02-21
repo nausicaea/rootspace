@@ -2,13 +2,14 @@ use super::{
     iterators::{EnumRIter, RIter, WIter},
     Storage,
 };
-use crate::{entity::index::Index, resource::Resource};
+use crate::{entity::index::Index, resource::Resource, SerializationProxy};
 use serde::{
     de::{Deserializer, SeqAccess, Visitor},
     ser::{SerializeSeq, Serializer},
     Deserialize, Serialize,
 };
 use std::{collections::HashSet, marker::PhantomData};
+use crate::serialization_proxy::EmptyProxyError;
 
 /// Implements component storage for zero-sized types.
 pub struct ZstStorage<T> {
@@ -85,6 +86,8 @@ impl<T> Storage for ZstStorage<T> {
 }
 
 impl<T> Resource for ZstStorage<T> where T: 'static {}
+
+impl<T> SerializationProxy for ZstStorage<T> {}
 
 impl<T> Default for ZstStorage<T>
 where

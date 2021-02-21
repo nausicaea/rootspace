@@ -20,7 +20,7 @@ use std::{
     path::Path,
 };
 
-pub trait BackendTrait: Sized + 'static {
+pub trait BackendTrait: Clone + Sized + 'static {
     type Event: EventTrait;
     type Frame: FrameTrait<Self>;
     type Texture: TextureTrait<Self>;
@@ -49,7 +49,7 @@ pub trait FrameTrait<B: BackendTrait> {
     fn finalize(self) -> Result<()>;
 }
 
-pub trait TextureTrait<B: BackendTrait>: Sized {
+pub trait TextureTrait<B: BackendTrait>: Sized + Clone {
     fn empty(backend: &B, dimensions: (u32, u32)) -> Result<Self>;
     fn from_image(backend: &B, image: Image) -> Result<Self>;
     fn dimensions(&self) -> (u32, u32);
@@ -61,7 +61,7 @@ pub trait TextureTrait<B: BackendTrait>: Sized {
     }
 }
 
-pub trait ShaderTrait<B: BackendTrait>: Sized {
+pub trait ShaderTrait<B: BackendTrait>: Sized + Clone {
     fn from_source<S: AsRef<str>>(backend: &B, vs: S, fs: S) -> Result<Self>;
     fn from_paths<P: AsRef<Path>>(backend: &B, vs: P, fs: P) -> Result<Self> {
         let vs = FilePathBuf::try_from(vs.as_ref())?;
@@ -74,10 +74,10 @@ pub trait ShaderTrait<B: BackendTrait>: Sized {
     }
 }
 
-pub trait VertexBufferTrait<B: BackendTrait>: Sized {
+pub trait VertexBufferTrait<B: BackendTrait>: Sized + Clone {
     fn from_vertices(backend: &B, vertices: &[Vertex]) -> Result<Self>;
 }
 
-pub trait IndexBufferTrait<B: BackendTrait>: Sized {
+pub trait IndexBufferTrait<B: BackendTrait>: Sized + Clone {
     fn from_indices(backend: &B, indices: &[u16]) -> Result<Self>;
 }

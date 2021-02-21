@@ -1,7 +1,7 @@
 use super::Resources;
 use std::marker::PhantomData;
 use crate::registry::ResourceRegistry;
-use crate::MaybeDefault;
+use crate::{MaybeDefault, SerializationProxy};
 use std::any::type_name;
 use serde::ser::SerializeMap;
 use serde::{ser, de};
@@ -45,20 +45,18 @@ pub fn serialize_recursive<RR, SM>(
         return Ok(())
     }
 
-    let stn = short_type_name::<RR::Head>();
-
     if !resources.contains::<RR::Head>() {
         return Err(ser::Error::custom(format!(
             "the resource {} was not found",
-            stn,
+            type_name::<RR::Head>(),
         )))
     }
 
-
-    trace!("Serializing the resource {}", &stn);
+    trace!("Serializing the resource {}", type_name::<RR::Head>());
+    let resource = resources.borrow::<RR::Head>();
     serialize_map.serialize_entry(
-        &stn,
-        &*resources.borrow::<RR::Head>(),
+        &<RR::Head as SerializationProxy>::name(),
+        &*resource,
     )?;
 
     serialize_recursive::<RR::Tail, SM>(resources, serialize_map, PhantomData::default())
@@ -76,20 +74,17 @@ pub fn deserialize_recursive<'de, A, RR>(
         RR: ResourceRegistry,
 {
     if RR::LEN == 0 {
-        return Err(de::Error::custom(format!("Unknown field {}", ser_type_name)));
+        return Err(de::Error::custom(format!("Unknown resource {}", ser_type_name)));
     }
 
-    let stn = short_type_name::<RR::Head>();
+    if resources.contains::<RR::Head>() {
+        return Err(de::Error::custom(format!("Duplicate resource {}", type_name::<RR::Head>())));
+    }
 
-    if ser_type_name == stn {
-        if resources.contains::<RR::Head>() {
-            return Err(de::Error::custom(format!("Duplicate field {}", stn)));
-        }
-
-
-        trace!("Deserializing the resource {}", stn);
-        let c = map_access.next_value::<RR::Head>()?;
-        resources.insert(c);
+    if ser_type_name == <RR::Head as SerializationProxy>::name() {
+        trace!("Deserializing the resource {}", type_name::<RR::Head>());
+        let resource = map_access.next_value::<RR::Head>()?;
+        resources.insert(resource);
         return Ok(());
     }
 
@@ -116,7 +111,7 @@ pub fn validate_recursive<'de, A, RR>(
     }
 
     if !resources.contains::<RR::Head>() {
-        return Err(de::Error::custom(format!("Missing field {}", short_type_name::<RR::Head>())));
+        return Err(de::Error::custom(format!("Missing resource {}", type_name::<RR::Head>())));
     }
 
     validate_recursive::<A, RR::Tail>(

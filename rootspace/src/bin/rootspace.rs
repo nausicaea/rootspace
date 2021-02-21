@@ -4,6 +4,8 @@ use clap::{App, load_yaml};
 use fern::Dispatch;
 use log::{LevelFilter, SetLoggerError};
 use std::io;
+use rootspace::EmptyGame;
+use engine::HeadlessBackend;
 
 fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {
     let log_level = match verbosity {
@@ -39,20 +41,36 @@ fn main() -> Result<()> {
     setup_logger(verbosity)
         .context("Could not configure the logging system")?;
 
-    // Configure the project-specific directories
-    let config_dir = directories::ProjectDirs::from(
-        "org",
-        "nausicaea",
-        "rootspace",
-    ).context("Could not find the project directories")?;
-
     if subcommand == "initialize" {
         let scm = maybe_subcommand_matches
             .context("No arguments were provided to the initialize subcommand")?;
         let name = scm.value_of("name")
             .context("Missing required argument 'name'")?;
 
-        todo!("Implement the initialize subcommand");
+        // Configure the project-specific directories
+        let project_dirs = directories::ProjectDirs::from(
+            "org",
+            "nausicaea",
+            name,
+        ).context("Could not find the project directories")?;
+
+        let asset_database = project_dirs.data_local_dir().join("assets");
+        if !asset_database.is_dir() {
+            std::fs::create_dir_all(&asset_database)
+                .context("Could not create the asset database directory")?;
+        }
+
+        let state_dir = project_dirs.data_local_dir().join("states");
+        if !state_dir.is_dir() {
+            std::fs::create_dir_all(&state_dir)
+                .context("Could not create the state directory")?;
+        }
+
+        let g = EmptyGame::<HeadlessBackend>::new(&asset_database)
+            .context("Could not create a new, empty game")?;
+
+        g.save(&state_dir.join("main.json"))
+            .context("Could not save the state for the new, empty game")?;
 
     } else if subcommand == "run" {
         let scm = maybe_subcommand_matches

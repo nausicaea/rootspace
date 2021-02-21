@@ -9,6 +9,8 @@ use std::{
     marker::PhantomData,
 };
 use crate::short_type_name::short_type_name;
+use crate::SerializationProxy;
+use crate::serialization_proxy::EmptyProxyError;
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Clone, Serialize, Deserialize)]
@@ -205,6 +207,8 @@ where
 }
 
 impl<E> Resource for EventQueue<E> where E: fmt::Debug + 'static {}
+
+impl<E> SerializationProxy for EventQueue<E> {}
 
 impl<E> Default for EventQueue<E> {
     fn default() -> Self {
