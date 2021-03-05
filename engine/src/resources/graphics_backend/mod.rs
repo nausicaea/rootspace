@@ -189,7 +189,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "BackendResource(#textures: {}, #shaders: {}, #vertex_buffers: {}, #index_buffers: {})",
+            "GraphicsBackend(#textures: {}, #shaders: {}, #vertex_buffers: {}, #index_buffers: {})",
             self.textures.len(),
             self.shaders.len(),
             self.vertex_buffers.len(),

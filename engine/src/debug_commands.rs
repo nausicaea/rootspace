@@ -13,6 +13,17 @@ use crate::{
     resources::SceneGraph,
 };
 use serde::{Serialize, Deserialize};
+use ecs::{impl_registry, Reg};
+
+impl_registry!(CommandRegistry, where Head: CommandTrait + Clone + Copy + Default);
+
+type EngineCommands = Reg![
+    ExitCommand,
+    CameraCommand,
+    EntityCommand,
+    StateCommand,
+    (),
+];
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -34,6 +45,20 @@ pub trait CommandTrait: 'static {
     fn name(&self) -> &'static str;
     fn description(&self) -> &'static str;
     fn run(&self, res: &Resources, args: &[String]) -> Result<()>;
+}
+
+impl CommandTrait for () {
+    fn name(&self) -> &'static str {
+        "()"
+    }
+
+    fn description(&self) -> &'static str {
+        "Empty operation (eg. a NOP)"
+    }
+
+    fn run(&self, _: &Resources, _: &[String]) -> Result<()> {
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]

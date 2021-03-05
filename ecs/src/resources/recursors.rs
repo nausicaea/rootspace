@@ -18,11 +18,9 @@ pub fn initialize_recursive<RR>(resources: &mut Resources, _: PhantomData<RR>)
     }
 
     if let Some(default_value) = RR::Head::maybe_default() {
-
         trace!("Initializing the resource {}", type_name::<RR::Head>());
         resources.insert(default_value)
     } else {
-
         debug!(
             "Not initializing the resource {} because it lacks a default constructor",
             type_name::<RR::Head>()

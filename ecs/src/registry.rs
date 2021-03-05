@@ -5,12 +5,18 @@ use std::fmt::Debug;
 
 /// An element within the heterogeneous list.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct Element<H, T>(H, T);
+pub struct Element<H, T> {
+    pub head: H,
+    pub tail: T,
+}
 
 impl<H, T> Element<H, T> {
     /// Create a new `Element`, given a head and a tail argument.
     pub fn new(head: H, tail: T) -> Self {
-        Element(head, tail)
+        Element {
+            head,
+            tail,
+        }
     }
 }
 
@@ -18,6 +24,7 @@ impl<H, T> Element<H, T> {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct End;
 
+#[macro_export]
 macro_rules! impl_registry {
     ($name:ident, where Head: $bound:tt $(+ $others:tt)*) => {
         pub trait $name: Sized {
@@ -25,7 +32,7 @@ macro_rules! impl_registry {
             const LEN: usize;
 
             /// Refers to the type associated with the head element of the list.
-            type Head: $bound $(+ $others)* + Serialize + for<'de> Deserialize<'de>;
+            type Head: $bound $(+ $others)* + serde::Serialize + for<'de> serde::Deserialize<'de>;
             /// Refers to the type of the tail of the list.
             type Tail: $name;
 
@@ -36,11 +43,11 @@ macro_rules! impl_registry {
             fn contains<E: 'static>(element: &E) -> bool;
 
             /// Push a new element onto the head of the heterogeneous list.
-            fn push<E>(self, element: E) -> Element<E, Self>
+            fn push<E>(self, element: E) -> $crate::registry::Element<E, Self>
             where
-                E: $bound $(+ $others)* + Serialize + for<'de> Deserialize<'de>,
+                E: $bound $(+ $others)* + serde::Serialize + for<'de> serde::Deserialize<'de>,
             {
-                Element::new(element, self)
+                $crate::registry::Element::new(element, self)
             }
 
             /// Return the length of the heterogeneous list.
@@ -55,9 +62,9 @@ macro_rules! impl_registry {
             fn tail(&self) -> &Self::Tail;
         }
 
-        impl<H, T> $name for Element<H, T>
+        impl<H, T> $name for $crate::registry::Element<H, T>
         where
-            H: $bound $(+ $others)* + Serialize + for<'de> Deserialize<'de>,
+            H: $bound $(+ $others)* + serde::Serialize + for<'de> serde::Deserialize<'de>,
             T: $name,
         {
             type Head = H;
@@ -66,7 +73,7 @@ macro_rules! impl_registry {
             const LEN: usize = 1 + <T as $name>::LEN;
 
             fn contains<E: 'static>(element: &E) -> bool {
-                if TypeId::of::<Self::Head>() == TypeId::of::<E>() {
+                if std::any::TypeId::of::<Self::Head>() == std::any::TypeId::of::<E>() {
                     return true;
                 }
 
@@ -74,17 +81,17 @@ macro_rules! impl_registry {
             }
 
             fn head(&self) -> &Self::Head {
-                &self.0
+                &self.head
             }
 
             fn tail(&self) -> &Self::Tail {
-                &self.1
+                &self.tail
             }
         }
 
-        impl $name for End {
+        impl $name for $crate::registry::End {
             type Head = ();
-            type Tail = End;
+            type Tail = $crate::registry::End;
 
             const LEN: usize = 0;
 
@@ -97,7 +104,7 @@ macro_rules! impl_registry {
             }
 
             fn tail(&self) -> &Self::Tail {
-                &End
+                &$crate::registry::End
             }
         }
     };

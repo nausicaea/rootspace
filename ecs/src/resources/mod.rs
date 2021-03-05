@@ -18,6 +18,7 @@ use crate::{component::Component, registry::ResourceRegistry, resource::Resource
 use crate::short_type_name::short_type_name;
 use self::typed_resources::TypedResources;
 use std::collections::HashSet;
+use std::any::type_name;
 
 mod recursors;
 pub(crate) mod typed_resources;
@@ -97,12 +98,7 @@ impl Resources {
         where
             RR: ResourceRegistry,
     {
-
-        trace!("Beginning the initialization of Resources");
         let helper = TypedResources::<RR>::default();
-
-        trace!("Completed the initialization of Resources");
-
         Resources::from(helper)
     }
 
@@ -113,12 +109,7 @@ impl Resources {
             RR: ResourceRegistry,
             D: Deserializer<'de>,
     {
-
-        trace!("Beginning the deserialization of Resources");
         let helper = TypedResources::<RR>::deserialize(deserializer)?;
-
-        trace!("Completed the deserialization of Resources");
-
         Ok(Resources::from(helper))
     }
 
@@ -129,13 +120,8 @@ impl Resources {
             RR: ResourceRegistry,
             S: Serializer,
     {
-
-        trace!("Beginning the serialization of Resources");
         let status = TypedResources::<RR>::from(self)
             .serialize(serializer)?;
-
-        trace!("Completed the serialization of Resources");
-
         Ok(status)
     }
 
