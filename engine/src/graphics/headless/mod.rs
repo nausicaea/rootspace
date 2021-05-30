@@ -1,10 +1,8 @@
 use super::{
-    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex,
-    VertexBufferTrait,
+    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
 };
 use crate::{
-    assets::Image, components::Renderable, event::EngineEvent, geometry::rect::Rect,
-    resources::GraphicsBackend,
+    assets::Image, components::Renderable, event::EngineEvent, geometry::rect::Rect, resources::GraphicsBackend,
 };
 use anyhow::Result;
 
@@ -31,18 +29,13 @@ pub struct HeadlessTexture {
 
 impl TextureTrait<HeadlessBackend> for HeadlessTexture {
     fn empty(_backend: &HeadlessBackend, dimensions: (u32, u32)) -> Result<Self> {
-
         debug!("Created an empty texture (dims={:?})", dimensions);
 
         Ok(HeadlessTexture { dimensions })
     }
 
     fn from_image(_backend: &HeadlessBackend, image: Image) -> Result<Self> {
-
-        debug!(
-            "Created a texture from an image (dims={:?})",
-            image.dimensions()
-        );
+        debug!("Created a texture from an image (dims={:?})", image.dimensions());
 
         Ok(HeadlessTexture {
             dimensions: image.dimensions(),
@@ -55,7 +48,6 @@ impl TextureTrait<HeadlessBackend> for HeadlessTexture {
 
     #[cfg_attr(not(test), allow(unused_variables))]
     fn write<R: Into<Rect<u32>>>(&self, rect: R, _data: Cow<[u8]>) {
-
         {
             let rect = rect.into();
             assert!(rect.max().x() < self.dimensions.0);
@@ -127,13 +119,7 @@ impl BackendTrait for HeadlessBackend {
     type VertexBuffer = HeadlessVertexBuffer;
 
     #[allow(unused_variables)]
-    fn new<S: AsRef<str>>(
-        title: S,
-        dimensions: (u32, u32),
-        _vsync: bool,
-        _msaa: u16,
-    ) -> Result<Self> {
-
+    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), _vsync: bool, _msaa: u16) -> Result<Self> {
         debug!(
             "Created a headless graphics_backend (title='{}', dims={:?})",
             title.as_ref(),
@@ -240,9 +226,7 @@ mod tests {
 
         let mut frame: HeadlessFrame = f.create_frame();
         frame.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
-        assert!(frame
-            .render(&MockLocation::default(), &mut f, &data)
-            .is_ok());
+        assert!(frame.render(&MockLocation::default(), &mut f, &data).is_ok());
         let r = frame.finalize();
         assert!(r.is_ok());
     }

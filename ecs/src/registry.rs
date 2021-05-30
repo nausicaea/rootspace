@@ -1,7 +1,9 @@
-use crate::{maybe_default::MaybeDefault, resource::Resource, system::System, with_resources::WithResources, serialization_proxy::SerializationProxy};
+use crate::{
+    maybe_default::MaybeDefault, resource::Resource, serialization_proxy::SerializationProxy, system::System,
+    with_resources::WithResources,
+};
 use serde::{Deserialize, Serialize};
-use std::any::TypeId;
-use std::fmt::Debug;
+use std::{fmt::Debug};
 
 /// An element within the heterogeneous list.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -13,10 +15,7 @@ pub struct Element<H, T> {
 impl<H, T> Element<H, T> {
     /// Create a new `Element`, given a head and a tail argument.
     pub fn new(head: H, tail: T) -> Self {
-        Element {
-            head,
-            tail,
-        }
+        Element { head, tail }
     }
 }
 
@@ -146,20 +145,14 @@ mod tests {
             ResourceRegistry::push(End, TestElementA::default()).push(TestElementB::default());
         assert_eq!(
             l,
-            Element::new(
-                TestElementB::default(),
-                Element::new(TestElementA::default(), End)
-            )
+            Element::new(TestElementB::default(), Element::new(TestElementA::default(), End))
         );
 
         let l: Element<TestElementA, Element<TestElementB, End>> =
             ResourceRegistry::push(End, TestElementB::default()).push(TestElementA::default());
         assert_eq!(
             l,
-            Element::new(
-                TestElementA::default(),
-                Element::new(TestElementB::default(), End)
-            )
+            Element::new(TestElementA::default(), Element::new(TestElementB::default(), End))
         );
     }
 
@@ -216,9 +209,7 @@ mod tests {
                     name: "Element",
                     len: 2,
                 },
-                Token::NewtypeStruct {
-                    name: "TestElementA",
-                },
+                Token::NewtypeStruct { name: "TestElementA" },
                 Token::U64(0),
                 Token::UnitStruct { name: "End" },
                 Token::TupleStructEnd,
@@ -237,17 +228,13 @@ mod tests {
                     name: "Element",
                     len: 2,
                 },
-                Token::NewtypeStruct {
-                    name: "TestElementB",
-                },
+                Token::NewtypeStruct { name: "TestElementB" },
                 Token::Str(""),
                 Token::TupleStruct {
                     name: "Element",
                     len: 2,
                 },
-                Token::NewtypeStruct {
-                    name: "TestElementA",
-                },
+                Token::NewtypeStruct { name: "TestElementA" },
                 Token::U64(0),
                 Token::UnitStruct { name: "End" },
                 Token::TupleStructEnd,

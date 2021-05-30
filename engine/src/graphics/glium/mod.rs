@@ -1,6 +1,5 @@
 use super::{
-    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex,
-    VertexBufferTrait,
+    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
 };
 use crate::{
     assets::Image,
@@ -14,14 +13,14 @@ use glium::{
     backend::glutin::DisplayCreationError,
     draw_parameters::DepthTest,
     glutin::{
-        Api, ContextBuilder, ElementState, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest,
-        KeyboardInput, ModifiersState, VirtualKeyCode as GliumVkc, WindowBuilder, WindowEvent,
+        Api, ContextBuilder, ElementState, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, KeyboardInput,
+        ModifiersState, VirtualKeyCode as GliumVkc, WindowBuilder, WindowEvent,
     },
     index::PrimitiveType,
     texture::{ClientFormat, RawImage2d, Texture2d},
     uniforms::{UniformValue, Uniforms},
-    Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer,
-    LinearBlendingFactor, Program, Surface, VertexBuffer,
+    Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
+    Surface, VertexBuffer,
 };
 use std::{
     borrow::{Borrow, Cow},
@@ -29,7 +28,6 @@ use std::{
     fmt,
     rc::Rc,
 };
-use std::borrow::BorrowMut;
 
 #[derive(Debug)]
 pub struct GliumEvent(pub GlutinEvent);
@@ -66,6 +64,7 @@ impl TryInto<EngineEvent> for GliumEvent {
                     virtual_keycode: vkc.map(|v| v.into()),
                     modifiers: mods.into(),
                 }),
+                #[allow(unreachable_patterns)]
                 #[cfg(target_os = "macos")]
                 WindowEvent::KeyboardInput {
                     input:
@@ -294,15 +293,9 @@ where
         f("transform", UniformValue::Mat4(*self.transform.as_ref()));
         f(
             "physical_dimensions",
-            UniformValue::Vec2([
-                self.physical_dimensions.0 as f32,
-                self.physical_dimensions.1 as f32,
-            ]),
+            UniformValue::Vec2([self.physical_dimensions.0 as f32, self.physical_dimensions.1 as f32]),
         );
-        f(
-            "diffuse_texture",
-            UniformValue::Texture2d(self.diffuse_texture, None),
-        );
+        f("diffuse_texture", UniformValue::Texture2d(self.diffuse_texture, None));
         if let Some(nt) = self.normal_texture {
             f("normal_texture", UniformValue::Texture2d(nt, None));
         }
@@ -384,12 +377,7 @@ impl FrameTrait<GliumBackend> for GliumFrame {
         self.0.clear_color_and_depth((c[0], c[1], c[2], c[3]), d)
     }
 
-    fn render<T>(
-        &mut self,
-        transform: &T,
-        factory: &GraphicsBackend<GliumBackend>,
-        data: &Renderable,
-    ) -> Result<()>
+    fn render<T>(&mut self, transform: &T, factory: &GraphicsBackend<GliumBackend>, data: &Renderable) -> Result<()>
     where
         T: AsRef<[[f32; 4]; 4]>,
     {
@@ -399,9 +387,7 @@ impl FrameTrait<GliumBackend> for GliumFrame {
             transform,
             physical_dimensions,
             diffuse_texture: &factory.borrow_texture(data.diffuse_texture()).0,
-            normal_texture: data
-                .normal_texture()
-                .map(|id| factory.borrow_texture(id).0.borrow()),
+            normal_texture: data.normal_texture().map(|id| factory.borrow_texture(id).0.borrow()),
         };
 
         let dp = DrawParameters {
@@ -467,12 +453,7 @@ impl BackendTrait for GliumBackend {
     type Texture = GliumTexture;
     type VertexBuffer = GliumVertexBuffer;
 
-    fn new<S: AsRef<str>>(
-        title: S,
-        dimensions: (u32, u32),
-        vsync: bool,
-        msaa: u16,
-    ) -> Result<Self> {
+    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self> {
         let window = WindowBuilder::new()
             .with_title(title.as_ref())
             .with_dimensions(dimensions.into())
@@ -497,8 +478,9 @@ impl BackendTrait for GliumBackend {
     }
 
     fn poll_events<F: FnMut(GliumEvent)>(&mut self, mut f: F) {
-        Rc::get_mut(&mut self.events_loop)
-            .map(|el| el.poll_events(|e| f(e.into())));
+        if let Some(el) = Rc::get_mut(&mut self.events_loop) {
+            el.poll_events(|e| f(e.into()))
+        }
     }
 
     fn create_frame(&self) -> GliumFrame {
@@ -525,9 +507,8 @@ mod tests {
     use super::*;
     use crate::resources::settings::Settings;
     use approx::assert_ulps_ne;
-    use std::f64;
     use file_manipulation::DirPathBuf;
-    use std::convert::TryFrom;
+    use std::{convert::TryFrom, f64};
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);
@@ -611,9 +592,7 @@ mod tests {
 
         let mut frame: GliumFrame = f.create_frame();
         frame.initialize([1.0, 0.0, 0.5, 1.0], 1.0);
-        assert!(frame
-            .render(&MockLocation::default(), &mut f, &data)
-            .is_ok());
+        assert!(frame.render(&MockLocation::default(), &mut f, &data).is_ok());
         let r = frame.finalize();
         assert!(r.is_ok());
     }

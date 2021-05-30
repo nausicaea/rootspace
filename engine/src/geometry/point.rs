@@ -27,10 +27,7 @@ where
 
 impl<N> From<(N, N)> for Point<N> {
     fn from(value: (N, N)) -> Self {
-        Point {
-            x: value.0,
-            y: value.1,
-        }
+        Point { x: value.0, y: value.1 }
     }
 }
 

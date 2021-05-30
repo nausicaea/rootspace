@@ -1,13 +1,13 @@
 use crate::{
     debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand, StateCommand},
     event::EngineEvent,
+    resources::settings::Settings,
 };
 use anyhow::Result;
 use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Duration};
 use thiserror::Error;
-use serde::{Serialize, Deserialize};
-use crate::resources::settings::Settings;
 
 #[derive(Serialize, Deserialize)]
 pub struct DebugShell {
@@ -29,8 +29,7 @@ impl std::fmt::Debug for DebugShell {
 
 impl WithResources for DebugShell {
     fn with_resources(res: &Resources) -> Self {
-        let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
-            .subscribe::<Self>();
+        let receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
         DebugShell {
             commands: default_commands(),
@@ -58,7 +57,7 @@ impl DebugShell {
             } else {
                 self.commands
                     .get(command_name)
-                    .ok_or(DebugShellError::CommandNotFound(command_name.to_string()).into())
+                    .ok_or_else(|| DebugShellError::CommandNotFound(command_name.to_string()).into())
                     .and_then(|c| c.run(res, token_group))?;
             }
         }
@@ -67,8 +66,7 @@ impl DebugShell {
     }
 
     fn command_help(&self) -> Result<()> {
-        let mut output =
-            String::from("For more information on a specific command, type COMMAND -h\n");
+        let mut output = String::from("For more information on a specific command, type COMMAND -h\n");
         for (k, v) in &self.commands {
             output.push_str(k);
             output.push_str(": ");
@@ -83,15 +81,10 @@ impl DebugShell {
 
 impl System for DebugShell {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
-        let events = res
-            .borrow_mut::<EventQueue<EngineEvent>>()
-            .receive(&self.receiver);
+        let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
         for event in events {
-            match event {
-                EngineEvent::Command(ref tokens) => self
-                    .interpret(res, tokens)
-                    .unwrap_or_else(|e| eprintln!("{}", e)),
-                _ => (),
+            if let EngineEvent::Command(ref tokens) = event {
+                self.interpret(res, tokens).unwrap_or_else(|e| eprintln!("{}", e))
             }
         }
     }

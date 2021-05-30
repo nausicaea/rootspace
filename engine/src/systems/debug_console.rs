@@ -2,14 +2,14 @@
 #![cfg_attr(test, allow(unused_mut))]
 #![cfg_attr(test, allow(dead_code))]
 
+#[cfg(not(test))]
+use std::thread::spawn;
 use std::{
     io::{self, Read},
     string,
     sync::mpsc::{self, channel, Receiver},
     time::Duration,
 };
-#[cfg(not(test))]
-use std::thread::spawn;
 
 use log::{error, warn};
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,7 @@ use thiserror::Error;
 
 use ecs::{EventQueue, Resources, System};
 
-use crate::{event::EngineEvent, text_manipulation::tokenize};
-use crate::resources::settings::Settings;
+use crate::{event::EngineEvent, resources::settings::Settings, text_manipulation::tokenize};
 
 #[derive(Serialize, Deserialize)]
 pub struct DebugConsole {
@@ -71,8 +70,8 @@ impl Default for DebugConsole {
 }
 
 impl<I> From<DebugConsoleBuilder<I>> for DebugConsole
-    where
-        I: Read + Send + 'static,
+where
+    I: Read + Send + 'static,
 {
     fn from(value: DebugConsoleBuilder<I>) -> Self {
         DebugConsole {
@@ -95,18 +94,16 @@ pub struct DebugConsoleBuilder<I> {
 
 impl<I> DebugConsoleBuilder<I> {
     pub fn with_input<T>(self, stream: T) -> DebugConsoleBuilder<T>
-        where
-            T: Read + Send + 'static,
+    where
+        T: Read + Send + 'static,
     {
-        DebugConsoleBuilder {
-            input_stream: stream,
-        }
+        DebugConsoleBuilder { input_stream: stream }
     }
 }
 
 impl<I> DebugConsoleBuilder<I>
-    where
-        I: Read + Send + 'static,
+where
+    I: Read + Send + 'static,
 {
     pub fn build(self) -> DebugConsole {
         DebugConsole::from(self)
@@ -137,7 +134,7 @@ fn spawn_worker<I: Read + Send + 'static>(mut input_stream: I) -> Receiver<Resul
     let (tx, rx) = channel();
 
     #[cfg(not(test))]
-        spawn(move || {
+    spawn(move || {
         let mut buf = Vec::new();
         let mut byte = [0u8];
 
@@ -150,7 +147,7 @@ fn spawn_worker<I: Read + Send + 'static>(mut input_stream: I) -> Receiver<Resul
                             Ok(l) => Ok(l),
                             Err(e) => Err(DebugConsoleError::Utf8Error(e)),
                         })
-                            .expect("Unable to send input from stdin via mpsc channel");
+                        .expect("Unable to send input from stdin via mpsc channel");
                         buf.clear()
                     } else {
                         buf.push(byte[0])

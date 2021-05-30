@@ -1,9 +1,9 @@
 use std::time::Duration;
 
-use ecs::{world::event::WorldEvent, EventQueue, ReceiverId, Resources, System, MaybeDefault, WithResources};
+use ecs::{world::event::WorldEvent, EventQueue, MaybeDefault, ReceiverId, Resources, System, WithResources};
 
 use crate::event::EngineEvent;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EventCoordinator {
@@ -12,12 +12,9 @@ pub struct EventCoordinator {
 
 impl WithResources for EventCoordinator {
     fn with_resources(res: &Resources) -> Self {
-        let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
-            .subscribe::<Self>();
+        let receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        EventCoordinator {
-            receiver,
-        }
+        EventCoordinator { receiver }
     }
 }
 

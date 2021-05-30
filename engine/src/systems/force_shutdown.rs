@@ -1,6 +1,4 @@
 use crate::event::EngineEvent;
-#[cfg(not(test))]
-use ctrlc;
 use ecs::{EventQueue, Resources, System, WithResources};
 
 use log::debug;
@@ -8,6 +6,7 @@ use log::debug;
 use log::error;
 #[cfg(not(test))]
 use log::info;
+use serde::{Deserialize, Serialize};
 #[cfg(not(test))]
 use std::process;
 use std::{
@@ -17,7 +16,6 @@ use std::{
     },
     time::Duration,
 };
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ForceShutdown {
@@ -50,10 +48,8 @@ impl WithResources for ForceShutdown {
 impl System for ForceShutdown {
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
-
             debug!("Recently caught a termination signal");
-            res.borrow_mut::<EventQueue<EngineEvent>>()
-                .send(EngineEvent::Shutdown);
+            res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::Shutdown);
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
     }

@@ -1,15 +1,13 @@
-pub(crate) mod typed_systems;
-mod typed_system;
 mod recursors;
+mod typed_system;
+pub(crate) mod typed_systems;
 
-use crate::system::System;
-use crate::registry::SystemRegistry;
-use std::slice::{Iter, IterMut};
-use log::trace;
 use self::typed_systems::TypedSystems;
+use crate::{registry::SystemRegistry, system::System};
+use std::slice::{Iter, IterMut};
 
-use serde::{Serialize, Deserialize, de::Deserializer, ser::Serializer};
-use crate::{with_resources::WithResources, resources::Resources};
+use crate::{resources::Resources, with_resources::WithResources};
+use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 
 #[derive(Default)]
 pub struct Systems(Vec<Box<dyn System>>);
@@ -26,32 +24,30 @@ impl Systems {
     }
 
     pub fn with_registry<SR>(res: &Resources) -> Self
-        where
-            SR: SystemRegistry,
+    where
+        SR: SystemRegistry,
     {
         let helper = TypedSystems::<SR>::with_resources(res);
         Systems::from(helper)
     }
 
     pub fn deserialize_with<'de, SR, D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            SR: SystemRegistry,
-            D: Deserializer<'de>,
+    where
+        SR: SystemRegistry,
+        D: Deserializer<'de>,
     {
         let helper = TypedSystems::<SR>::deserialize(deserializer)?;
         Ok(Systems::from(helper))
     }
 
     pub fn serialize_with<SR, S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            SR: SystemRegistry,
-            S: Serializer,
+    where
+        SR: SystemRegistry,
+        S: Serializer,
     {
-        let status = TypedSystems::<SR>::from(self)
-            .serialize(serializer)?;
+        let status = TypedSystems::<SR>::from(self).serialize(serializer)?;
         Ok(status)
     }
-
 
     pub fn len(&self) -> usize {
         self.0.len()
@@ -65,8 +61,7 @@ impl Systems {
     where
         S: System,
     {
-        self.0.iter()
-            .any(|s| s.is::<S>())
+        self.0.iter().any(|s| s.is::<S>())
     }
 
     pub fn clear(&mut self) {
@@ -85,43 +80,40 @@ impl Systems {
         S: System,
     {
         self.find::<S>()
-            .expect(&format!("Could not find the system {}", std::any::type_name::<S>()))
+            .unwrap_or_else(|| panic!("Could not find the system {}", std::any::type_name::<S>()))
     }
 
     pub fn get_mut<S>(&mut self) -> &mut S
-        where
-            S: System,
+    where
+        S: System,
     {
         self.find_mut::<S>()
-            .expect(&format!("Could not find the system {}", std::any::type_name::<S>()))
+            .unwrap_or_else(|| panic!("Could not find the system {}", std::any::type_name::<S>()))
     }
-
 
     pub fn find_with_position<S>(&self) -> Option<(usize, &S)>
     where
         S: System,
     {
-        self.0.iter()
+        self.0
+            .iter()
             .enumerate()
             .filter_map(|(i, s)| s.downcast_ref::<S>().map(|sdc| (i, sdc)))
-            .nth(0)
+            .next()
     }
 
     pub fn find<S>(&self) -> Option<&S>
     where
         S: System,
     {
-        self.0.iter().filter_map(|s| s.downcast_ref::<S>()).nth(0)
+        self.0.iter().filter_map(|s| s.downcast_ref::<S>()).next()
     }
 
     pub fn find_mut<S>(&mut self) -> Option<&mut S>
     where
         S: System,
     {
-        self.0
-            .iter_mut()
-            .filter_map(|s| s.downcast_mut::<S>())
-            .last()
+        self.0.iter_mut().filter_map(|s| s.downcast_mut::<S>()).last()
     }
 
     pub fn iter(&self) -> Iter<'_, Box<dyn System>> {
@@ -134,20 +126,20 @@ impl Systems {
 }
 
 impl<'a> IntoIterator for &'a Systems {
-    type Item = &'a Box<dyn System>;
     type IntoIter = Iter<'a, Box<dyn System>>;
+    type Item = &'a Box<dyn System>;
 
     fn into_iter(self) -> Self::IntoIter {
-        (&self.0).into_iter()
+        (&self.0).iter()
     }
 }
 
 impl<'a> IntoIterator for &'a mut Systems {
-    type Item = &'a mut Box<dyn System>;
     type IntoIter = IterMut<'a, Box<dyn System>>;
+    type Item = &'a mut Box<dyn System>;
 
     fn into_iter(self) -> Self::IntoIter {
-        (&mut self.0).into_iter()
+        (&mut self.0).iter_mut()
     }
 }
 
@@ -157,8 +149,6 @@ impl PartialEq for Systems {
             return false;
         }
 
-        self.0.iter()
-            .zip(rhs)
-            .all(|(lhs, rhs)| lhs.name() == rhs.name())
+        self.0.iter().zip(rhs).all(|(lhs, rhs)| lhs.name() == rhs.name())
     }
 }

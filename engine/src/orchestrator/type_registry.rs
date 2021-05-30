@@ -1,23 +1,15 @@
-use ecs::Component;
-use ecs::EventQueue;
-use ecs::RegAdd;
-use ecs::WorldEvent;
+use ecs::{Component, EventQueue, RegAdd, WorldEvent};
 
-use crate::components::{Camera, Info, Model, Renderable, Status, UiModel};
-use crate::event::EngineEvent;
-use crate::resources::SceneGraph;
-use crate::resources::GraphicsBackend;
-use crate::systems::{
-    camera_manager::CameraManager,
-    debug_console::DebugConsole,
-    debug_shell::DebugShell,
-    event_coordinator::EventCoordinator,
-    event_interface::EventInterface,
-    event_monitor::EventMonitor,
-    force_shutdown::ForceShutdown,
-    renderer::Renderer,
+use crate::{
+    components::{Camera, Info, Model, Renderable, Status, UiModel},
+    event::EngineEvent,
+    resources::{settings::Settings, GraphicsBackend, SceneGraph},
+    systems::{
+        camera_manager::CameraManager, debug_console::DebugConsole, debug_shell::DebugShell,
+        event_coordinator::EventCoordinator, event_interface::EventInterface, event_monitor::EventMonitor,
+        force_shutdown::ForceShutdown, renderer::Renderer,
+    },
 };
-use crate::resources::settings::Settings;
 
 pub type ResourceTypes<B, RR> = RegAdd![
     <Info as Component>::Storage,
@@ -46,7 +38,4 @@ pub type UpdateSystemTypes<B, SR> = RegAdd![
     SR
 ];
 
-pub type RenderSystemTypes<B, SR> = RegAdd![
-    Renderer<B>,
-    SR
-];
+pub type RenderSystemTypes<B, SR> = RegAdd![Renderer<B>, SR];

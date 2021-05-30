@@ -12,18 +12,10 @@ use crate::{
     event::EngineEvent,
     resources::SceneGraph,
 };
-use serde::{Serialize, Deserialize};
-use ecs::{impl_registry, Reg};
+use ecs::impl_registry;
+use serde::{Deserialize, Serialize};
 
 impl_registry!(CommandRegistry, where Head: CommandTrait + Clone + Copy + Default);
-
-type EngineCommands = Reg![
-    ExitCommand,
-    CameraCommand,
-    EntityCommand,
-    StateCommand,
-    (),
-];
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -74,8 +66,7 @@ impl CommandTrait for ExitCommand {
     }
 
     fn run(&self, res: &Resources, _: &[String]) -> Result<()> {
-        res.borrow_mut::<EventQueue<EngineEvent>>()
-            .send(EngineEvent::Shutdown);
+        res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::Shutdown);
         Ok(())
     }
 }
@@ -225,9 +216,7 @@ impl CommandTrait for CameraCommand {
             if let Some(index) = matches.value_of("index") {
                 let index: usize = index.parse()?;
 
-                let entity = entities
-                    .try_get(index)
-                    .ok_or(Error::EntityNotFound(index))?;
+                let entity = entities.try_get(index).ok_or(Error::EntityNotFound(index))?;
                 let cam = cameras.get(index).ok_or(Error::EntityNotFound(index))?;
 
                 self.list_camera(info_matches, &cam, &entity);
@@ -294,10 +283,7 @@ impl EntityCommand {
             if world_graph.contains(entity) {
                 let loc = models
                     .get(entity)
-                    .expect(&format!(
-                        "Cannot find the entity {} in the Model components",
-                        entity
-                    ))
+                    .unwrap_or_else(|| panic!("Cannot find the entity {} in the Model components", entity))
                     .position();
                 let pos = world_graph.get(entity).position();
                 output.push_str(&format!(
@@ -307,10 +293,7 @@ impl EntityCommand {
             } else if ui_graph.contains(entity) {
                 let loc = ui_models
                     .get(entity)
-                    .expect(&format!(
-                        "Cannot find the entity {} in the UiModel components",
-                        entity
-                    ))
+                    .unwrap_or_else(|| panic!("Cannot find the entity {} in the UiModel components", entity))
                     .position();
                 let pos = ui_graph.get(entity).position();
                 output.push_str(&format!(
@@ -334,17 +317,11 @@ impl EntityCommand {
                 if world_graph.contains(entity) {
                     let m = world_graph.get(entity);
                     let pos = camera.world_point_to_ndc(cam_model, &m.position());
-                    output.push_str(&format!(
-                        " cam-{}-ndc-pos=[{}, {}, {}]",
-                        cam_idx, pos.x, pos.y, pos.z
-                    ));
+                    output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", cam_idx, pos.x, pos.y, pos.z));
                 } else if ui_graph.contains(entity) {
                     let m = ui_graph.get(entity);
                     let pos = camera.ui_point_to_ndc(&m.position(), m.depth());
-                    output.push_str(&format!(
-                        " cam-{}-ndc-pos=[{}, {}, {}]",
-                        cam_idx, pos.x, pos.y, pos.z
-                    ));
+                    output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", cam_idx, pos.x, pos.y, pos.z));
                 } else {
                     output.push_str(" (no ndc position)");
                 }
@@ -464,9 +441,7 @@ impl CommandTrait for EntityCommand {
             if let Some(index) = matches.value_of("index") {
                 let index: usize = index.parse()?;
 
-                let entity = entities
-                    .try_get(index)
-                    .ok_or(Error::EntityNotFound(index))?;
+                let entity = entities.try_get(index).ok_or(Error::EntityNotFound(index))?;
 
                 self.list_entity(
                     list_matches,
@@ -504,9 +479,7 @@ impl CommandTrait for EntityCommand {
 
             if let Some(index) = matches.value_of("index") {
                 let index: usize = index.parse()?;
-                let entity = entities
-                    .try_get(index)
-                    .ok_or(Error::EntityNotFound(index))?;
+                let entity = entities.try_get(index).ok_or(Error::EntityNotFound(index))?;
 
                 if status_matches.is_present("enable") {
                     statuses

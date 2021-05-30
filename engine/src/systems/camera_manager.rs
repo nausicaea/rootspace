@@ -1,9 +1,9 @@
 use crate::{components::camera::Camera, event::EngineEvent};
-use ecs::{EventQueue, ReceiverId, Resources, System, MaybeDefault, WithResources};
+use ecs::{EventQueue, MaybeDefault, ReceiverId, Resources, System, WithResources};
 
 use log::debug;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CameraManager {
@@ -12,18 +12,14 @@ pub struct CameraManager {
 
 impl WithResources for CameraManager {
     fn with_resources(res: &Resources) -> Self {
-        let receiver = res.borrow_mut::<EventQueue<EngineEvent>>()
-            .subscribe::<Self>();
+        let receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        CameraManager {
-            receiver,
-        }
+        CameraManager { receiver }
     }
 }
 
 impl CameraManager {
     fn on_resize(&self, res: &Resources, dims: (u32, u32)) {
-
         debug!("Updating the camera dimensions (dims={:?})", dims);
 
         res.borrow_components_mut::<Camera>()
@@ -32,7 +28,6 @@ impl CameraManager {
     }
 
     fn on_change_dpi(&self, res: &Resources, factor: f64) {
-
         debug!("Updating the camera dpi factor (factor={:?})", factor);
 
         res.borrow_components_mut::<Camera>()
@@ -49,9 +44,7 @@ impl MaybeDefault for CameraManager {
 
 impl System for CameraManager {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
-        let events = res
-            .borrow_mut::<EventQueue<EngineEvent>>()
-            .receive(&self.receiver);
+        let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
         for event in events {
             match event {
                 EngineEvent::Resize(dims) => self.on_resize(res, dims),

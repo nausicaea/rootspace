@@ -1,12 +1,16 @@
-use either::Either;
-use either::Either::{Left, Right};
-use super::Resources;
+use super::{recursors, Resources};
 use crate::registry::ResourceRegistry;
-use std::marker::PhantomData;
-use super::recursors;
-use serde::{Serializer, Serialize, ser::SerializeMap, Deserialize, Deserializer};
-use serde::de::{Visitor, MapAccess};
+use either::{
+    Either,
+    Either::{Left, Right},
+};
 use log::debug;
+use serde::{
+    de::{MapAccess, Visitor},
+    ser::SerializeMap,
+    Deserialize, Deserializer, Serialize, Serializer,
+};
+use std::marker::PhantomData;
 
 #[derive(Debug)]
 pub struct TypedResources<'a, RR>(Either<&'a Resources, Resources>, PhantomData<RR>);
@@ -25,11 +29,12 @@ where
 }
 
 impl<'a, RR> PartialEq for TypedResources<'a, RR>
-    where
-        RR: ResourceRegistry,
+where
+    RR: ResourceRegistry,
 {
     fn eq(&self, rhs: &Self) -> bool {
-        self.0.as_ref()
+        self.0
+            .as_ref()
             .either(|&ref_lhs_r| ref_lhs_r, |lhs_r| lhs_r)
             .eq(rhs.0.as_ref().either(|&ref_lhs_r| ref_lhs_r, |lhs_r| lhs_r))
     }
@@ -53,7 +58,7 @@ where
     }
 }
 
-impl<'a, RR> Serialize for TypedResources<'a ,RR>
+impl<'a, RR> Serialize for TypedResources<'a, RR>
 where
     RR: ResourceRegistry,
 {
@@ -109,8 +114,8 @@ where
     }
 
     fn visit_map<A>(self, mut map_access: A) -> Result<Self::Value, A::Error>
-        where
-            A: MapAccess<'de>,
+    where
+        A: MapAccess<'de>,
     {
         // Do not use `map_access.size_hint()` because we deserialize successfully if and only if
         // all types of the registry are found.
@@ -129,11 +134,7 @@ where
             )?;
         }
 
-        recursors::validate_recursive::<A, RR>(
-            &resources,
-            PhantomData::default(),
-            PhantomData::default()
-        )?;
+        recursors::validate_recursive::<A, RR>(&resources, PhantomData::default(), PhantomData::default())?;
 
         Ok(TypedResources(Right(resources), PhantomData::default()))
     }
@@ -142,9 +143,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resource::Resource;
+    use crate::{resource::Resource, Reg};
     use serde_test::{assert_tokens, Token};
-    use crate::Reg;
 
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct TestResourceA;

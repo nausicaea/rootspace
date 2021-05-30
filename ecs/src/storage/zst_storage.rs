@@ -9,7 +9,6 @@ use serde::{
     Deserialize, Serialize,
 };
 use std::{collections::HashSet, marker::PhantomData};
-use crate::serialization_proxy::EmptyProxyError;
 
 /// Implements component storage for zero-sized types.
 pub struct ZstStorage<T> {

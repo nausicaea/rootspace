@@ -1,6 +1,5 @@
-use std::fmt::{Debug, Display};
-use serde::{Serialize, Deserialize};
 use crate::short_type_name;
+use std::fmt::{Debug, Display};
 
 #[derive(Copy, Clone, Debug)]
 pub struct EmptyProxyError;

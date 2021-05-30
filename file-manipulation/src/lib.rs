@@ -1,15 +1,14 @@
-use dirs;
+#[cfg(any(test, feature = "serde_support"))]
+use serde::{Deserialize, Serialize};
 use std::{
     convert::TryFrom,
-    ops::Deref,
     ffi::{OsStr, OsString},
     fs::File,
     io::{self, Read},
+    ops::Deref,
     path::{Path, PathBuf},
 };
 use thiserror::Error;
-#[cfg(any(test, feature = "serde_support"))]
-use serde::{Serialize, Deserialize};
 
 fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError> {
     let p = path_user_input.as_ref();
@@ -118,15 +117,10 @@ impl TryFrom<&Path> for NewOrExFilePathBuf {
             let parent = path
                 .parent()
                 .filter(|p| p.is_dir())
-                .ok_or(FileError::ParentDirectoryNotFound(path.to_path_buf()))
-                .and_then(|p| {
-                    p.canonicalize()
-                        .map_err(|e| FileError::IoError(path.to_path_buf(), e))
-                })?;
+                .ok_or_else(|| FileError::ParentDirectoryNotFound(path.to_path_buf()))
+                .and_then(|p| p.canonicalize().map_err(|e| FileError::IoError(path.to_path_buf(), e)))?;
 
-            let file_name = path
-                .file_name()
-                .ok_or(FileError::NoBaseNameFound(path.to_path_buf()))?;
+            let file_name = path.file_name().ok_or_else(|| FileError::NoBaseNameFound(path.to_path_buf()))?;
 
             Ok(NewOrExFilePathBuf(parent.join(file_name)))
         } else if path.is_file() {
@@ -135,7 +129,7 @@ impl TryFrom<&Path> for NewOrExFilePathBuf {
                 .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
             Ok(NewOrExFilePathBuf(path))
         } else {
-            Err(FileError::NotAFile(path.to_path_buf()))
+            Err(FileError::NotAFile(path))
         }
     }
 }
@@ -245,7 +239,7 @@ impl<'a> TryFrom<&Path> for FilePathBuf {
                 .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
             Ok(FilePathBuf(path))
         } else {
-            Err(FileError::NotAFile(path.to_path_buf()))
+            Err(FileError::NotAFile(path))
         }
     }
 }
@@ -337,7 +331,7 @@ impl<'a> TryFrom<&Path> for DirPathBuf {
                 .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
             Ok(DirPathBuf(path))
         } else {
-            Err(FileError::NotADirectory(path.to_path_buf()))
+            Err(FileError::NotADirectory(path))
         }
     }
 }
@@ -363,9 +357,9 @@ pub enum FileError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_test::{assert_tokens, Token};
     use std::io::Write;
     use tempfile::{tempdir, NamedTempFile};
-    use serde_test::{assert_tokens, Token};
 
     #[test]
     #[cfg_attr(not(target_family = "unix"), ignore)]
@@ -376,10 +370,7 @@ mod tests {
         let projects = PathBuf::from(format!("{}/Projects", home));
         assert_eq!(expand_tilde("~/Projects").unwrap(), projects);
         assert_eq!(expand_tilde("/foo/bar").unwrap(), Path::new("/foo/bar"));
-        assert_eq!(
-            expand_tilde("~alice/projects").unwrap(),
-            Path::new("~alice/projects")
-        );
+        assert_eq!(expand_tilde("~alice/projects").unwrap(), Path::new("~alice/projects"));
     }
 
     #[test]
@@ -481,22 +472,12 @@ mod tests {
         let fstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/nonex-file");
         let nfp = NewOrExFilePathBuf::try_from(fstr).unwrap();
 
-        assert_tokens(
-            &nfp,
-            &[
-                Token::Str(fstr),
-            ],
-        );
+        assert_tokens(&nfp, &[Token::Str(fstr)]);
 
         let fstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/empty-file");
         let nfp = NewOrExFilePathBuf::try_from(fstr).unwrap();
 
-        assert_tokens(
-            &nfp,
-            &[
-                Token::Str(fstr),
-            ],
-        );
+        assert_tokens(&nfp, &[Token::Str(fstr)]);
     }
 
     #[test]
@@ -504,12 +485,7 @@ mod tests {
         let fstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/empty-file");
         let fp = FilePathBuf::try_from(fstr).unwrap();
 
-        assert_tokens(
-            &fp,
-            &[
-                Token::Str(fstr),
-            ],
-        );
+        assert_tokens(&fp, &[Token::Str(fstr)]);
     }
 
     #[test]
@@ -517,11 +493,6 @@ mod tests {
         let dstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests");
         let dp = DirPathBuf::try_from(dstr).unwrap();
 
-        assert_tokens(
-            &dp,
-            &[
-                Token::Str(dstr),
-            ],
-        );
+        assert_tokens(&dp, &[Token::Str(dstr)]);
     }
 }

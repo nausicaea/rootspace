@@ -39,8 +39,7 @@ impl Ply {
     /// otherwise you cannot reliably search for elements or properties by name.
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let path = path.as_ref();
-        let file =
-            File::open(path).map_err(|e| Error::IoError(format!("{}", path.display()), e))?;
+        let file = File::open(path).map_err(|e| Error::IoError(format!("{}", path.display()), e))?;
 
         let stream = BufferedStream::new(State::new(ReadStream::new(file)), 32);
         let data = ply()
@@ -49,12 +48,7 @@ impl Ply {
             .map_err(|e| Error::ParserError(format!("{}", path.display()), format!("{}", e)))?;
 
         if !data.header.has_duplicate_elements() {
-            if !data
-                .header
-                .elements
-                .iter()
-                .any(|e| e.has_duplicate_properties())
-            {
+            if !data.header.elements.iter().any(|e| e.has_duplicate_properties()) {
                 Ok(data)
             } else {
                 Err(Error::DuplicateProperties)
@@ -199,9 +193,7 @@ mod tests {
         let data = Ply::from_path(&path).unwrap();
 
         let (eidx, el) = data.element(&["face", "faces"]).unwrap();
-        let (idx_idx, _) = el
-            .vector_property(&["vertex_indices", "vertex_index"])
-            .unwrap();
+        let (idx_idx, _) = el.vector_property(&["vertex_indices", "vertex_index"]).unwrap();
 
         let faces = data.generate(eidx, |props| {
             let f: Vec<u16> = (&props[idx_idx]).try_into().unwrap();

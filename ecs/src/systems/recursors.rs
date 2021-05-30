@@ -1,29 +1,26 @@
-use std::collections::{HashSet, BTreeMap};
-use std::any::{type_name, TypeId};
-use std::marker::PhantomData;
+use std::{
+    any::{type_name, TypeId},
+    collections::{BTreeMap, HashSet},
+    marker::PhantomData,
+};
 
-use serde::{de, ser};
-use serde::de::MapAccess;
-use serde::ser::SerializeMap;
+use serde::{de, de::MapAccess, ser, ser::SerializeMap};
 
-use crate::system::System;
-use crate::registry::SystemRegistry;
-use crate::short_type_name::short_type_name;
-use crate::resources::Resources;
-use crate::with_resources::WithResources;
+use crate::{
+    registry::SystemRegistry, resources::Resources, short_type_name::short_type_name, system::System,
+    with_resources::WithResources,
+};
 use log::trace;
 
-use super::Systems;
-use super::typed_system::TypedSystem;
+use super::{typed_system::TypedSystem, Systems};
 
 pub fn initialize_recursive<SR>(resources: &Resources, systems: &mut Systems, _: PhantomData<SR>)
-    where
-        SR: SystemRegistry,
+where
+    SR: SystemRegistry,
 {
     if SR::LEN == 0 {
         return;
     }
-
 
     trace!("Initializing the system {}", type_name::<SR::Head>());
     let default_value = SR::Head::with_resources(resources);
@@ -42,22 +39,16 @@ where
     SM: SerializeMap,
 {
     if SR::LEN == 0 {
-        return Ok(())
+        return Ok(());
     }
 
     let stn = short_type_name::<SR::Head>();
 
     trace!("Serializing the system {}", &stn);
     if let Some((order, system)) = systems.find_with_position::<SR::Head>() {
-        serialize_map.serialize_entry(
-            &stn,
-            &TypedSystem::new(order, system),
-        )?;
+        serialize_map.serialize_entry(&stn, &TypedSystem::new(order, system))?;
     } else {
-        return Err(ser::Error::custom(format!(
-            "the system {} was not found",
-            stn,
-        )))
+        return Err(ser::Error::custom(format!("the system {} was not found", stn,)));
     }
 
     serialize_recursive::<SR::Tail, SM>(systems, serialize_map, PhantomData::default())
@@ -86,7 +77,6 @@ where
         if type_tracker.contains(&tid) {
             return Err(de::Error::custom(format!("Duplicate field {}", stn)));
         }
-
 
         trace!("Deserializing the system {}", stn);
         let c = map_access.next_value::<TypedSystem<SR::Head>>()?;
@@ -119,12 +109,11 @@ where
     }
 
     if !type_tracker.contains(&TypeId::of::<SR::Head>()) {
-        return Err(de::Error::custom(format!("Missing field {}", short_type_name::<SR::Head>())));
+        return Err(de::Error::custom(format!(
+            "Missing field {}",
+            short_type_name::<SR::Head>()
+        )));
     }
 
-    validate_recursive::<A, SR::Tail>(
-        type_tracker,
-        PhantomData::default(),
-        PhantomData::default()
-    )
+    validate_recursive::<A, SR::Tail>(type_tracker, PhantomData::default(), PhantomData::default())
 }

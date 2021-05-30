@@ -202,8 +202,7 @@ mod tests {
     fn two_additive() {
         let a: Element<A, Element<B, End>> = Default::default();
         let b: RegAdd![A, Element<B, End>] = Default::default();
-        let c: RegAdd![A, Element<B, End>] =
-            reg_add![A::default(), Element::new(B::default(), End)];
+        let c: RegAdd![A, Element<B, End>] = reg_add![A::default(), Element::new(B::default(), End)];
 
         assert_eq!(a, b);
         assert_eq!(a, c);
@@ -232,8 +231,7 @@ mod tests {
 
     #[test]
     fn three_elements() {
-        let _: Element<E, Element<D, Element<C, End>>> =
-            reg![E::default(), D::default(), C::default()];
+        let _: Element<E, Element<D, Element<C, End>>> = reg![E::default(), D::default(), C::default()];
         let _: Reg![E, D, C] = reg![E::default(), D::default(), C::default()];
     }
 }

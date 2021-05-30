@@ -8,20 +8,19 @@ use std::{
 };
 
 use serde::{
-    Deserialize,
-    Serialize,
     de,
     ser::{self, SerializeStruct},
+    Deserialize, Serialize,
 };
-use serde_json;
 
 use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 
 use crate::{
     component::Component,
     entities::Entities,
-    entity::entity::Entity,
+    entity::Entity,
     event_queue::{EventQueue, ReceiverId},
+    loop_control::LoopControl,
     loop_stage::LoopStage,
     registry::ResourceRegistry,
     resource::Resource,
@@ -29,15 +28,13 @@ use crate::{
     storage::Storage,
     system::System,
     systems::Systems,
-    loop_control::LoopControl,
 };
 
 use crate::resources::typed_resources::TypedResources;
 
 use self::{error::WorldError, event::WorldEvent, type_registry::ResourceTypes};
-use crate::systems::typed_systems::TypedSystems;
-use crate::registry::SystemRegistry;
-use serde::de::{Visitor, MapAccess};
+use crate::{registry::SystemRegistry, systems::typed_systems::TypedSystems};
+use serde::de::{MapAccess, Visitor};
 
 pub mod error;
 pub mod event;
@@ -57,23 +54,21 @@ pub struct World<RR, FUSR, USR, RSR> {
     _sr3: PhantomData<RSR>,
 }
 
-impl<RR, FUSR, USR, RSR> World<RR, FUSR, USR, RSR>
+impl<RR, FUSR, USR, RSR> Default for World<RR, FUSR, USR, RSR>
 where
     RR: ResourceRegistry,
     FUSR: SystemRegistry,
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
-    pub fn with_settings<R: Resource>(settings: R) -> Self {
+    fn default() -> Self {
         let mut resources = Resources::with_registry::<ResourceTypes<RR>>();
-        resources.insert(settings);
 
         let fixed_update_systems = Systems::with_registry::<FUSR>(&resources);
         let update_systems = Systems::with_registry::<USR>(&resources);
         let render_systems = Systems::with_registry::<RSR>(&resources);
 
-        let receiver = resources.get_mut::<EventQueue<WorldEvent>>()
-            .subscribe::<Self>();
+        let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
         World {
             resources,
@@ -87,7 +82,15 @@ where
             _sr3: PhantomData::default(),
         }
     }
+}
 
+impl<RR, FUSR, USR, RSR> World<RR, FUSR, USR, RSR>
+where
+    RR: ResourceRegistry,
+    FUSR: SystemRegistry,
+    USR: SystemRegistry,
+    RSR: SystemRegistry,
+{
     pub fn resources(&self) -> &Resources {
         &self.resources
     }
@@ -150,9 +153,7 @@ where
     where
         C: Component,
     {
-        self.resources
-            .get_mut::<C::Storage>()
-            .insert(entity, component);
+        self.resources.get_mut::<C::Storage>().insert(entity, component);
     }
 
     pub fn borrow_components<C>(&self) -> Ref<C::Storage>
@@ -186,8 +187,8 @@ where
     }
 
     pub fn get_system_mut<S>(&mut self, stage: LoopStage) -> &mut S
-        where
-            S: System,
+    where
+        S: System,
     {
         match stage {
             LoopStage::FixedUpdate => self.fixed_update_systems.get_mut::<S>(),
@@ -265,7 +266,9 @@ where
     /// main loop shall continue, otherwise it shall abort.
     pub fn maintain(&mut self) -> LoopControl {
         // Receive all pending events
-        let events = self.resources.get_mut::<EventQueue<WorldEvent>>()
+        let events = self
+            .resources
+            .get_mut::<EventQueue<WorldEvent>>()
             .receive(&self.receiver);
 
         // Process all pending events
@@ -310,8 +313,8 @@ where
         let mut d = serde_json::Deserializer::from_reader(&mut file);
 
         // Deserialize the entire world
-        let world: World<RR, FUSR, USR, RSR> = World::deserialize(&mut d)
-            .map_err(|e| WorldError::JsonError(path.into(), e))?;
+        let world: World<RR, FUSR, USR, RSR> =
+            World::deserialize(&mut d).map_err(|e| WorldError::JsonError(path.into(), e))?;
 
         // Assign its parts to the current instance
         self.resources = world.resources;
@@ -342,7 +345,6 @@ impl<RR, FUSR, USR, RSR> std::fmt::Debug for World<RR, FUSR, USR, RSR> {
         )
     }
 }
-
 
 impl<RR, FUSR, USR, RSR> Serialize for World<RR, FUSR, USR, RSR>
 where
@@ -399,7 +401,7 @@ enum WorldField {
     Receiver,
 }
 
-const WORLD_FIELDS: &'static [&'static str] = &[
+const WORLD_FIELDS: &[&str] = &[
     "resources",
     "fixed_update_systems",
     "update_systems",
@@ -411,7 +413,12 @@ struct WorldVisitor<RR, FUSR, USR, RSR>(PhantomData<RR>, PhantomData<FUSR>, Phan
 
 impl<RR, FUSR, USR, RSR> Default for WorldVisitor<RR, FUSR, USR, RSR> {
     fn default() -> Self {
-        WorldVisitor(PhantomData::default(), PhantomData::default(), PhantomData::default(), PhantomData::default())
+        WorldVisitor(
+            PhantomData::default(),
+            PhantomData::default(),
+            PhantomData::default(),
+            PhantomData::default(),
+        )
     }
 }
 
@@ -429,8 +436,8 @@ where
     }
 
     fn visit_map<A>(self, mut map_access: A) -> Result<Self::Value, A::Error>
-        where
-            A: MapAccess<'de>,
+    where
+        A: MapAccess<'de>,
     {
         let mut resources: Option<TypedResources<ResourceTypes<RR>>> = None;
         let mut fixed_update_systems: Option<TypedSystems<FUSR>> = None;
@@ -445,36 +452,37 @@ where
                         return Err(de::Error::duplicate_field("resources"));
                     }
                     resources = Some(map_access.next_value()?);
-                },
+                }
                 WorldField::FixedUpdateSystems => {
                     if fixed_update_systems.is_some() {
                         return Err(de::Error::duplicate_field("fixed_update_systems"));
                     }
                     fixed_update_systems = Some(map_access.next_value()?);
-                },
+                }
                 WorldField::UpdateSystems => {
                     if update_systems.is_some() {
                         return Err(de::Error::duplicate_field("update_systems"));
                     }
                     update_systems = Some(map_access.next_value()?);
-                },
+                }
                 WorldField::RenderSystems => {
                     if render_systems.is_some() {
                         return Err(de::Error::duplicate_field("render_systems"));
                     }
                     render_systems = Some(map_access.next_value()?);
-                },
+                }
                 WorldField::Receiver => {
                     if receiver.is_some() {
                         return Err(de::Error::duplicate_field("receiver"));
                     }
                     receiver = Some(map_access.next_value()?);
-                },
+                }
             }
         }
 
         let resources = resources.ok_or_else(|| de::Error::missing_field("resources"))?;
-        let fixed_update_systems = fixed_update_systems.ok_or_else(|| de::Error::missing_field("fixed_update_systems"))?;
+        let fixed_update_systems =
+            fixed_update_systems.ok_or_else(|| de::Error::missing_field("fixed_update_systems"))?;
         let update_systems = update_systems.ok_or_else(|| de::Error::missing_field("update_systems"))?;
         let render_systems = render_systems.ok_or_else(|| de::Error::missing_field("render_systems"))?;
         let receiver = receiver.ok_or_else(|| de::Error::missing_field("receiver"))?;
@@ -509,16 +517,14 @@ mod tests {
         assert_ser_tokens(
             &world,
             &[
-                Token::Struct {
-                    name: "World",
-                    len: 5,
-                },
+                Token::Struct { name: "World", len: 5 },
                 Token::Str("resources"),
-                Token::Map {
-                    len: Some(4),
-                },
+                Token::Map { len: Some(4) },
                 Token::Str("Entities"),
-                Token::Struct { name: "Entities", len: 3},
+                Token::Struct {
+                    name: "Entities",
+                    len: 3,
+                },
                 Token::Str("max_idx"),
                 Token::U32(0),
                 Token::Str("free_idx"),
@@ -529,14 +535,20 @@ mod tests {
                 Token::SeqEnd,
                 Token::StructEnd,
                 Token::Str("EventQueue<WorldEvent>"),
-                Token::Struct { name: "EventQueue", len: 4 },
+                Token::Struct {
+                    name: "EventQueue",
+                    len: 4,
+                },
                 Token::Str("events"),
                 Token::Seq { len: Some(0) },
                 Token::SeqEnd,
                 Token::Str("receivers"),
                 Token::Map { len: Some(1) },
                 Token::U64(0),
-                Token::Struct { name: "ReceiverState", len: 3 },
+                Token::Struct {
+                    name: "ReceiverState",
+                    len: 3,
+                },
                 Token::Str("read"),
                 Token::U64(0),
                 Token::Str("received"),
@@ -552,28 +564,23 @@ mod tests {
                 Token::SeqEnd,
                 Token::StructEnd,
                 Token::Str("VecStorage<usize>"),
-                Token::Map {
-                    len: Some(0),
-                },
+                Token::Map { len: Some(0) },
                 Token::MapEnd,
                 Token::MapEnd,
                 Token::Str("fixed_update_systems"),
-                Token::Map {
-                    len: Some(0),
-                },
+                Token::Map { len: Some(0) },
                 Token::MapEnd,
                 Token::Str("update_systems"),
-                Token::Map {
-                    len: Some(0),
-                },
+                Token::Map { len: Some(0) },
                 Token::MapEnd,
                 Token::Str("render_systems"),
-                Token::Map {
-                    len: Some(0),
-                },
+                Token::Map { len: Some(0) },
                 Token::MapEnd,
                 Token::Str("receiver"),
-                Token::Struct { name: "ReceiverId", len: 1 },
+                Token::Struct {
+                    name: "ReceiverId",
+                    len: 1,
+                },
                 Token::Str("id"),
                 Token::U64(0),
                 Token::StructEnd,

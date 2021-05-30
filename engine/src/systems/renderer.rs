@@ -1,19 +1,22 @@
-
-use std::time::Instant;
-use std::{collections::VecDeque, marker::PhantomData, time::Duration};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::VecDeque,
+    marker::PhantomData,
+    time::{Duration, Instant},
+};
 
 use log::debug;
 
-use ecs::{world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System, MaybeDefault, WithResources};
+use ecs::{
+    world::event::WorldEvent, Entities, EventQueue, MaybeDefault, ReceiverId, Resources, Storage, System, WithResources,
+};
 
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
     event::EngineEvent,
     graphics::{BackendTrait, FrameTrait},
-    resources::{GraphicsBackend, SceneGraph},
+    resources::{settings::Settings, GraphicsBackend, SceneGraph},
 };
-use crate::resources::settings::Settings;
 
 static DRAW_CALL_WINDOW: usize = 10;
 static FRAME_TIME_WINDOW: usize = 10;
@@ -38,10 +41,7 @@ impl<B> std::fmt::Debug for Renderer<B> {
         write!(
             f,
             "Renderer {{ receiver: {:?}, initialised: {:?}, draw_calls: {:?}, frame_times: {:?} }}",
-            self.receiver,
-            self.initialised,
-            self.draw_calls,
-            self.frame_times,
+            self.receiver, self.initialised, self.draw_calls, self.frame_times,
         )
     }
 }
@@ -51,8 +51,7 @@ where
     B: BackendTrait,
 {
     fn with_resources(res: &Resources) -> Self {
-        let receiver = res.borrow_mut::<EventQueue<WorldEvent>>()
-            .subscribe::<Self>();
+        let receiver = res.borrow_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
         Renderer {
             receiver,
@@ -63,7 +62,6 @@ where
         }
     }
 }
-
 
 impl<B> Renderer<B>
 where
@@ -76,7 +74,6 @@ where
     }
 
     fn reload_renderables(&self, res: &Resources) {
-
         debug!("Reloading all renderables");
 
         let reload_mark = Instant::now();
@@ -85,36 +82,27 @@ where
             .reload_assets(&mut res.borrow_components_mut::<Renderable>())
             .expect("Could not reload all renderable assets");
 
-        debug!(
-            "Completed reloading all renderables after {:?}",
-            reload_mark.elapsed()
-        );
+        debug!("Completed reloading all renderables after {:?}", reload_mark.elapsed());
     }
-
 
     pub fn average_world_draw_calls(&self) -> f32 {
         self.draw_calls.iter().map(|(wdc, _)| wdc).sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
     }
 
-
     pub fn average_ui_draw_calls(&self) -> f32 {
         self.draw_calls.iter().map(|(_, udc)| udc).sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
     }
-
 
     pub fn average_frame_time(&self) -> Duration {
         self.frame_times.iter().sum::<Duration>() / FRAME_TIME_WINDOW as u32
     }
 
-
     fn update_draw_calls(&mut self, world_draw_calls: usize, ui_draw_calls: usize) {
-        self.draw_calls
-            .push_front((world_draw_calls, ui_draw_calls));
+        self.draw_calls.push_front((world_draw_calls, ui_draw_calls));
         if self.draw_calls.len() > DRAW_CALL_WINDOW {
             self.draw_calls.truncate(DRAW_CALL_WINDOW);
         }
     }
-
 
     fn update_frame_time(&mut self, frame_time: Duration) {
         self.frame_times.push_front(frame_time);
@@ -129,32 +117,23 @@ where
     B: BackendTrait,
 {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
-
         let start_mark = Instant::now();
 
-
         let mut world_draw_calls: usize = 0;
-
 
         let mut ui_draw_calls: usize = 0;
 
         // The following is just a workaround for the DPI factor not being set properly by the
         // graphics_backend at initialisation.
         if !self.initialised {
-
             debug!("Initialising the renderer");
             self.set_dpi_factor(res);
             self.initialised = true;
         }
 
         // Reload all renderables.
-        let events = res
-            .borrow_mut::<EventQueue<WorldEvent>>()
-            .receive(&self.receiver);
-        if events
-            .into_iter()
-            .any(|e| e == WorldEvent::DeserializationComplete)
-        {
+        let events = res.borrow_mut::<EventQueue<WorldEvent>>().receive(&self.receiver);
+        if events.into_iter().any(|e| e == WorldEvent::DeserializationComplete) {
             self.reload_renderables(res);
         }
 
@@ -194,18 +173,9 @@ where
             // Render the world scene.
             world_graph
                 .iter()
-                .filter(|&(entity, _)| {
-                    statuses
-                        .get(entity)
-                        .map_or(false, |s| s.enabled() && s.visible())
-                })
-                .filter_map(|(entity, model)| {
-                    renderables
-                        .get(entity)
-                        .map(|renderable| (model, renderable))
-                })
+                .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
+                .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
                 .for_each(|(model, renderable)| {
-
                     {
                         world_draw_calls += 1;
                     }
@@ -217,18 +187,9 @@ where
             // Render the ui scene.
             ui_graph
                 .iter()
-                .filter(|&(entity, _)| {
-                    statuses
-                        .get(entity)
-                        .map_or(false, |s| s.enabled() && s.visible())
-                })
-                .filter_map(|(entity, model)| {
-                    renderables
-                        .get(entity)
-                        .map(|renderable| (model, renderable))
-                })
+                .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
+                .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
                 .for_each(|(model, renderable)| {
-
                     {
                         ui_draw_calls += 1;
                     }
@@ -241,9 +202,7 @@ where
         // Finalize the frame and thus swap the display buffers.
         target.finalize().expect("Unable to finalize the frame");
 
-
         self.update_draw_calls(world_draw_calls, ui_draw_calls);
-
 
         self.update_frame_time(start_mark.elapsed());
     }

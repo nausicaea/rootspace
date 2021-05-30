@@ -9,7 +9,6 @@ use serde::{
     Deserialize, Serialize,
 };
 use std::{collections::HashSet, marker::PhantomData, ptr};
-use crate::serialization_proxy::EmptyProxyError;
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
@@ -194,7 +193,7 @@ where
 
         self.index
             .iter()
-            .map(|idx| Into::<usize>::into(idx))
+            .map(Into::<usize>::into)
             .all(|idx| self.data[idx].eq(&rhs.data[idx]))
     }
 }
@@ -268,7 +267,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{component::Component, entities::Entities, entity::entity::Entity};
+    use crate::{component::Component, entities::Entities, entity::Entity};
     use serde_test::{assert_tokens, Token};
 
     struct DropCounter<'a> {
@@ -387,23 +386,13 @@ mod tests {
 
             {
                 let a = Entity::new(0u32, 1u32);
-                let _ = s.insert(
-                    a,
-                    DropCounter {
-                        count: &mut a_count,
-                    },
-                );
+                let _ = s.insert(a, DropCounter { count: &mut a_count });
                 let _ = s.remove(&a);
             }
 
             {
                 let b = Entity::new(1u32, 1u32);
-                let _ = s.insert(
-                    b,
-                    DropCounter {
-                        count: &mut b_count,
-                    },
-                );
+                let _ = s.insert(b, DropCounter { count: &mut b_count });
             }
         }
 
@@ -427,9 +416,7 @@ mod tests {
             &[
                 Token::Map { len: Some(1) },
                 Token::U32(2),
-                Token::NewtypeStruct {
-                    name: "TestComponent",
-                },
+                Token::NewtypeStruct { name: "TestComponent" },
                 Token::U64(100),
                 Token::MapEnd,
             ],

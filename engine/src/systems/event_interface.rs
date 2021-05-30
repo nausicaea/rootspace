@@ -2,7 +2,7 @@ use crate::{event::EngineEvent, graphics::BackendTrait, resources::GraphicsBacke
 use ecs::{EventQueue, Resources, System};
 use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct EventInterface<B> {
@@ -26,7 +26,7 @@ impl<B> std::fmt::Debug for EventInterface<B> {
 
 impl<B> System for EventInterface<B>
 where
-    B: BackendTrait
+    B: BackendTrait,
 {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let mut events: Vec<EngineEvent> = Vec::default();

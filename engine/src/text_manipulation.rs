@@ -1,6 +1,6 @@
 /// Splits a command line (String) into a vector of arguments. Based on a solution posted to
 /// [Stack Overflow](https://stackoverflow.com/a/23961658).
-pub fn tokenize<'a, S: AsRef<str>>(
+pub fn tokenize<S: AsRef<str>>(
     arg_string: S,
     escape_char: char,
     quote_char: char,
@@ -78,7 +78,7 @@ pub fn tokenize<'a, S: AsRef<str>>(
     }
     // Save the last argument
     if !current_arg.is_empty() || had_quote {
-        args.push(current_arg.clone());
+        args.push(current_arg);
     }
 
     args
@@ -90,17 +90,9 @@ mod test {
 
     #[test]
     fn simple_argument_list() {
-        let args = tokenize(
-            "command -f flagvalue  positional_argument 100 ",
-            '\\',
-            '"',
-            ';',
-        );
+        let args = tokenize("command -f flagvalue  positional_argument 100 ", '\\', '"', ';');
 
-        assert_eq!(
-            args,
-            vec!["command", "-f", "flagvalue", "positional_argument", "100"]
-        );
+        assert_eq!(args, vec!["command", "-f", "flagvalue", "positional_argument", "100"]);
     }
 
     #[test]
@@ -112,32 +104,16 @@ mod test {
             ';',
         );
 
-        assert_eq!(
-            args,
-            vec!["command", "-f", "flag value", "positional argument", "100"]
-        );
+        assert_eq!(args, vec!["command", "-f", "flag value", "positional argument", "100"]);
     }
 
     #[test]
     fn escaped_argument_list() {
-        let args = tokenize(
-            r"command -f flag\\ value  positional argument 100 ",
-            '\\',
-            '"',
-            ';',
-        );
+        let args = tokenize(r"command -f flag\\ value  positional argument 100 ", '\\', '"', ';');
 
         assert_eq!(
             args,
-            vec![
-                "command",
-                "-f",
-                "flag\\",
-                "value",
-                "positional",
-                "argument",
-                "100"
-            ]
+            vec!["command", "-f", "flag\\", "value", "positional", "argument", "100"]
         );
     }
 

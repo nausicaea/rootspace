@@ -2,7 +2,6 @@ use super::AssetTrait;
 use crate::graphics::vertex::Vertex;
 use anyhow::Result;
 use file_manipulation::FilePathBuf;
-use ply;
 use std::{
     convert::{TryFrom, TryInto},
     path::Path,

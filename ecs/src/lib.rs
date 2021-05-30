@@ -6,22 +6,22 @@
 pub use crate::{
     component::Component,
     entities::Entities,
-    entity::entity::Entity,
+    entity::Entity,
     event_queue::{EventQueue, ReceiverId},
     events::EventTrait,
     loop_control::LoopControl,
     loop_stage::LoopStage,
     maybe_default::MaybeDefault,
-    with_resources::WithResources,
     registry::{Element, End, ResourceRegistry, SystemRegistry},
     resource::Resource,
     resources::Resources,
+    serialization_proxy::SerializationProxy,
+    short_type_name::short_type_name,
     storage::{vec_storage::VecStorage, zst_storage::ZstStorage, Storage},
     system::System,
     systems::Systems,
+    with_resources::WithResources,
     world::{error::WorldError, event::WorldEvent, World},
-    short_type_name::short_type_name,
-    serialization_proxy::SerializationProxy,
 };
 
 pub mod component;
@@ -36,10 +36,10 @@ pub mod maybe_default;
 pub mod registry;
 pub mod resource;
 pub mod resources;
+pub mod serialization_proxy;
+pub mod short_type_name;
 pub mod storage;
 pub mod system;
 pub mod systems;
-pub mod world;
-pub mod short_type_name;
 pub mod with_resources;
-pub mod serialization_proxy;
+pub mod world;

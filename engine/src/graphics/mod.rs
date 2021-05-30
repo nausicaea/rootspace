@@ -28,8 +28,7 @@ pub trait BackendTrait: Clone + Sized + 'static {
     type VertexBuffer: VertexBufferTrait<Self>;
     type IndexBuffer: IndexBufferTrait<Self>;
 
-    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16)
-        -> Result<Self>;
+    fn new<S: AsRef<str>>(title: S, dimensions: (u32, u32), vsync: bool, msaa: u16) -> Result<Self>;
     fn poll_events<F: FnMut(Self::Event)>(&mut self, f: F);
     fn create_frame(&self) -> Self::Frame;
     fn dpi_factor(&self) -> f64;
@@ -53,7 +52,7 @@ pub trait TextureTrait<B: BackendTrait>: Sized + Clone {
     fn empty(backend: &B, dimensions: (u32, u32)) -> Result<Self>;
     fn from_image(backend: &B, image: Image) -> Result<Self>;
     fn dimensions(&self) -> (u32, u32);
-    fn write<'a, R: Into<Rect<u32>>>(&self, rect: R, data: Cow<'a, [u8]>);
+    fn write<R: Into<Rect<u32>>>(&self, rect: R, data: Cow<[u8]>);
     fn from_path<P: AsRef<Path>>(backend: &B, image: P) -> Result<Self> {
         let img = Image::from_path(image)?;
 

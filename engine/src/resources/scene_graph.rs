@@ -1,8 +1,7 @@
-use ecs::{Component, Entity, Resource, Storage, SerializationProxy};
+use ecs::{Component, Entity, Resource, SerializationProxy, Storage};
 use hierarchy::Hierarchy;
 use serde::{Deserialize, Serialize};
 use std::{fmt, ops::Mul};
-use ecs::serialization_proxy::EmptyProxyError;
 
 #[derive(Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SceneGraph<T>(Hierarchy<Entity, T>)
@@ -15,10 +14,8 @@ where
     for<'r> &'r T: Mul<&'r T, Output = T>,
 {
     pub fn update(&mut self, data: &<T as Component>::Storage) {
-        self.0.update(&|entity, _, parent_datum| {
-            data.get(entity)
-                .map(|current_datum| parent_datum * current_datum)
-        })
+        self.0
+            .update(&|entity, _, parent_datum| data.get(entity).map(|current_datum| parent_datum * current_datum))
     }
 
     pub fn insert(&mut self, entity: Entity) {
@@ -115,10 +112,7 @@ mod tests {
                 Token::Str("root_idx"),
                 Token::U32(0),
                 Token::Str("graph"),
-                Token::Struct {
-                    name: "Graph",
-                    len: 4,
-                },
+                Token::Struct { name: "Graph", len: 4 },
                 Token::Str("nodes"),
                 Token::Seq { len: Some(2) },
                 Token::NewtypeStruct { name: "HierNode" },
@@ -130,9 +124,7 @@ mod tests {
                 Token::U32(0),
                 Token::U32(1),
                 Token::TupleEnd,
-                Token::NewtypeStruct {
-                    name: "TestComponent",
-                },
+                Token::NewtypeStruct { name: "TestComponent" },
                 Token::U64(0),
                 Token::TupleEnd,
                 Token::SeqEnd,

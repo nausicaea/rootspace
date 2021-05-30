@@ -1,9 +1,14 @@
+use either::{
+    Either,
+    Either::{Left, Right},
+};
+use serde::{
+    de,
+    de::{MapAccess, Visitor},
+    ser::SerializeStruct,
+    Deserialize, Deserializer, Serialize, Serializer,
+};
 use std::marker::PhantomData;
-use either::Either;
-use either::Either::{Left, Right};
-use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use serde::de::{MapAccess, Visitor};
-use serde::ser::SerializeStruct;
 
 use crate::system::System;
 
@@ -14,10 +19,7 @@ enum TypedSystemField {
     System,
 }
 
-const TYPED_SYSTEM_FIELDS: &'static [&'static str] = &[
-    "order",
-    "system",
-];
+const TYPED_SYSTEM_FIELDS: &[&str] = &["order", "system"];
 
 #[derive(Debug)]
 pub struct TypedSystem<'a, S> {
@@ -100,13 +102,13 @@ where
                         return Err(de::Error::duplicate_field("order"));
                     }
                     order = Some(map_access.next_value()?);
-                },
+                }
                 TypedSystemField::System => {
                     if system.is_some() {
                         return Err(de::Error::duplicate_field("system"));
                     }
                     system = Some(map_access.next_value()?);
-                },
+                }
             }
         }
 

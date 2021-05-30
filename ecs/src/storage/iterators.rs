@@ -549,7 +549,7 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining_len = self.indices.len().checked_sub(self.cursor).unwrap_or(0);
+        let remaining_len = self.indices.len().saturating_sub(self.cursor);
 
         (remaining_len, Some(remaining_len))
     }

@@ -148,11 +148,7 @@ where
     I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
-    (
-        lex(keyword(&b"format"[..])),
-        lex(format_type()),
-        lex(format_version()),
-    )
+    (lex(keyword(&b"format"[..])), lex(format_type()), lex(format_version()))
         .map(|(_, format, version)| Format { format, version })
         .expected("a format statement")
 }
@@ -163,10 +159,7 @@ where
     I: Stream<Item = u8, Range = u8> + 'a,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
-    (
-        lex(keyword(&b"comment"[..])),
-        lex(take_until::<Vec<_>, _>(eol())),
-    )
+    (lex(keyword(&b"comment"[..])), lex(take_until::<Vec<_>, _>(eol())))
         .map(|(_, c)| String::from_utf8_lossy(&c).to_string())
         .expected("a comment statement")
 }

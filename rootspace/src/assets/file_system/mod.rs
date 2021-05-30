@@ -12,7 +12,6 @@ use daggy::{Dag, NodeIndex, Walker};
 use engine::{AssetMutTrait, AssetTrait};
 use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use serde::{Deserialize, Serialize};
-use serde_json;
 use std::{
     collections::HashMap,
     convert::TryFrom,
@@ -82,12 +81,7 @@ impl FileSystem {
         self.data.len()
     }
 
-    pub fn access(
-        &self,
-        path: &Path,
-        how: AccessMode,
-        process_data: &ProcessData,
-    ) -> Result<(), Error> {
+    pub fn access(&self, path: &Path, how: AccessMode, process_data: &ProcessData) -> Result<(), Error> {
         self.for_node(path, process_data, |_, node| {
             let fail_access = (how.intersects(AccessMode::READ_OK) && !node.may_read(process_data))
                 || (how.intersects(AccessMode::WRITE_OK) && !node.may_write(process_data))
@@ -109,12 +103,7 @@ impl FileSystem {
         self.for_node(path, process_data, |idx, _| Ok(self.data[&idx].as_slice()))
     }
 
-    fn for_node<'a, T, F>(
-        &'a self,
-        path: &Path,
-        process_data: &ProcessData,
-        op: F,
-    ) -> Result<T, Error>
+    fn for_node<'a, T, F>(&'a self, path: &Path, process_data: &ProcessData, op: F) -> Result<T, Error>
     where
         F: Fn(NodeIndex, &'a Node) -> Result<T, Error>,
     {
@@ -128,10 +117,7 @@ impl FileSystem {
                 let child_node = self.find_child(parent_node, node_name, process_data)?;
 
                 if i == num_segments - 1 {
-                    let node = self
-                        .graph
-                        .node_weight(child_node)
-                        .ok_or(Error::NodeNotFound)?;
+                    let node = self.graph.node_weight(child_node).ok_or(Error::NodeNotFound)?;
 
                     return op(child_node, node);
                 }
@@ -193,12 +179,7 @@ impl AssetMutTrait for FileSystem {
 impl From<FileSystemBuilder> for FileSystem {
     fn from(value: FileSystemBuilder) -> Self {
         let mut graph = Dag::default();
-        let root_node = Node::new(
-            None,
-            value.root_uid,
-            value.root_gid,
-            Mode::directory(value.mode_mask),
-        );
+        let root_node = Node::new(None, value.root_uid, value.root_gid, Mode::directory(value.mode_mask));
         let root_idx = graph.add_node(root_node);
 
         FileSystem {
@@ -278,9 +259,7 @@ mod tests {
 
     #[test]
     fn builder() {
-        let _: FileSystem = FileSystem::builder()
-            .with_mode_mask(Mode::from(0o012))
-            .build();
+        let _: FileSystem = FileSystem::builder().with_mode_mask(Mode::from(0o012)).build();
     }
 
     #[test]

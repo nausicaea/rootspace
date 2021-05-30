@@ -7,18 +7,11 @@ use std::{
     collections::HashMap,
 };
 
-use log::trace;
-use serde::{
-    de::{Deserializer},
-    ser::{Serializer},
-    Serialize, Deserialize
-};
+use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 
-use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
-use crate::short_type_name::short_type_name;
 use self::typed_resources::TypedResources;
+use crate::{component::Component, registry::ResourceRegistry, resource::Resource, short_type_name::short_type_name};
 use std::collections::HashSet;
-use std::any::type_name;
 
 mod recursors;
 pub(crate) mod typed_resources;
@@ -95,8 +88,8 @@ impl Resources {
     /// in the registry to initialize those resources that have a default, parameterless
     /// constructor.
     pub fn with_registry<RR>() -> Self
-        where
-            RR: ResourceRegistry,
+    where
+        RR: ResourceRegistry,
     {
         let helper = TypedResources::<RR>::default();
         Resources::from(helper)
@@ -105,9 +98,9 @@ impl Resources {
     /// Deserialize [`Resources`](Self) with the supplied
     /// [`ResourceRegistry`](crate::registry::ResourceRegistry). Here, the registry determines the types that are
     pub fn deserialize_with<'de, RR, D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            RR: ResourceRegistry,
-            D: Deserializer<'de>,
+    where
+        RR: ResourceRegistry,
+        D: Deserializer<'de>,
     {
         let helper = TypedResources::<RR>::deserialize(deserializer)?;
         Ok(Resources::from(helper))
@@ -116,12 +109,11 @@ impl Resources {
     /// Serialize [`Resources`](Self) with the supplied
     /// [`ResourceRegistry`](crate::registry::ResourceRegistry).
     pub fn serialize_with<RR, S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            RR: ResourceRegistry,
-            S: Serializer,
+    where
+        RR: ResourceRegistry,
+        S: Serializer,
     {
-        let status = TypedResources::<RR>::from(self)
-            .serialize(serializer)?;
+        let status = TypedResources::<RR>::from(self).serialize(serializer)?;
         Ok(status)
     }
 
@@ -171,13 +163,13 @@ impl Resources {
             .get(&TypeId::of::<R>())
             .map(|r| {
                 Ref::map(r.borrow(), |i| {
-                    i.downcast_ref::<R>().expect(&format!(
+                    i.downcast_ref::<R>().unwrap_or_else(|| panic!(
                         "Could not downcast the requested resource to type {}",
                         short_type_name::<R>()
                     ))
                 })
             })
-            .expect(&format!(
+            .unwrap_or_else(|| panic!(
                 "Could not find any resource of type {}",
                 short_type_name::<R>()
             ))
@@ -192,13 +184,13 @@ impl Resources {
             .get(&TypeId::of::<R>())
             .map(|r| {
                 RefMut::map(r.borrow_mut(), |i| {
-                    i.downcast_mut::<R>().expect(&format!(
+                    i.downcast_mut::<R>().unwrap_or_else(|| panic!(
                         "Could not downcast the requested resource to type {}",
                         short_type_name::<R>()
                     ))
                 })
             })
-            .expect(&format!(
+            .unwrap_or_else(|| panic!(
                 "Could not find any resource of type {}",
                 short_type_name::<R>()
             ))
@@ -212,12 +204,12 @@ impl Resources {
         self.0
             .get_mut(&TypeId::of::<R>())
             .map(|r| {
-                r.get_mut().downcast_mut::<R>().expect(&format!(
+                r.get_mut().downcast_mut::<R>().unwrap_or_else(|| panic!(
                     "Could not downcast the requested resource to type {}",
                     short_type_name::<R>()
                 ))
             })
-            .expect(&format!(
+            .unwrap_or_else(|| panic!(
                 "Could not find any resource of type {}",
                 short_type_name::<R>()
             ))
@@ -239,7 +231,6 @@ impl Resources {
     {
         self.borrow_mut::<C::Storage>()
     }
-
 }
 
 impl PartialEq for Resources {
@@ -324,22 +315,14 @@ mod tests {
         let resources = Resources::deserialize_with::<TestRegistry, _>(&mut d).unwrap();
         assert!(d.end().is_ok());
         assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
-        assert_eq!(
-            *resources.borrow::<TestResourceB>(),
-            TestResourceB(vec![0, 1])
-        );
-        assert_eq!(
-            *resources.borrow::<TestResourceC>(),
-            TestResourceC(String::from("Bye"))
-        );
+        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(vec![0, 1]));
+        assert_eq!(*resources.borrow::<TestResourceC>(), TestResourceC(String::from("Bye")));
     }
 
     #[test]
     fn deserialize_with_complex() {
-        let mut d = serde_json::Deserializer::from_str(include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/tests/ok.json"
-        )));
+        let mut d =
+            serde_json::Deserializer::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/ok.json")));
         let r = Resources::deserialize_with::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
         let dr = d.end();
         assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));

@@ -8,8 +8,8 @@ use std::{
 
 use anyhow::{Error, Result};
 
-use ecs::{Component, Resource, MaybeDefault, SerializationProxy};
-use file_manipulation::{FilePathBuf, DirPathBuf};
+use ecs::{Component, MaybeDefault, Resource, SerializationProxy};
+use file_manipulation::{DirPathBuf, FilePathBuf};
 use index_buffer_id::IndexBufferId;
 use shader_id::ShaderId;
 use texture_id::TextureId;
@@ -18,21 +18,69 @@ use vertex_buffer_id::VertexBufferId;
 use crate::{
     assets::AssetError,
     components::Renderable,
-    graphics::{
-        BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
-    },
+    graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait},
 };
-use crate::resources::settings::Settings;
-use serde::{Serialize, Deserialize, Serializer, Deserializer, de};
-use serde::ser::SerializeStruct;
-use std::marker::PhantomData;
-use serde::de::{Visitor, MapAccess};
-use std::fmt::Formatter;
+use serde::{
+    de,
+    de::{MapAccess, Visitor},
+    ser::SerializeStruct,
+    Deserialize, Deserializer, Serialize, Serializer,
+};
+use std::{convert::TryInto, marker::PhantomData};
 
-pub mod texture_id;
-pub mod shader_id;
-pub mod vertex_buffer_id;
 pub mod index_buffer_id;
+pub mod shader_id;
+pub mod texture_id;
+pub mod vertex_buffer_id;
+
+pub struct GraphicsBackendBuilder<B> {
+    asset_tree: DirPathBuf,
+    title: String,
+    dimensions: (u32, u32),
+    vsync: bool,
+    msaa: u16,
+    _b: PhantomData<B>,
+}
+
+impl<B> GraphicsBackendBuilder<B>
+where
+    B: BackendTrait,
+{
+    pub fn new(asset_tree: DirPathBuf) -> Self {
+        GraphicsBackendBuilder {
+            asset_tree,
+            title: String::default(),
+            dimensions: (800, 600),
+            vsync: false,
+            msaa: 0,
+            _b: PhantomData::default(),
+        }
+    }
+
+    pub fn with_title(mut self, title: String) -> Self {
+        self.title = title;
+        self
+    }
+
+    pub fn with_dimensions(mut self, dimensions: (u32, u32)) -> Self {
+        self.dimensions = dimensions;
+        self
+    }
+
+    pub fn with_vsync(mut self, enabled: bool) -> Self {
+        self.vsync = enabled;
+        self
+    }
+
+    pub fn with_msaa(mut self, msaa: u16) -> Self {
+        self.msaa = msaa;
+        self
+    }
+
+    pub fn build(self) -> Result<GraphicsBackend<B>, Error> {
+        self.try_into()
+    }
+}
 
 // FIXME: The GraphicsBackend cannot be automatically initialized by World
 pub struct GraphicsBackend<B>
@@ -55,24 +103,12 @@ impl<B> GraphicsBackend<B>
 where
     B: BackendTrait,
 {
-    pub fn new(settings: &Settings) -> Result<Self, Error> {
-        Ok(GraphicsBackend {
-        asset_tree: settings.asset_tree.clone(),
-        title: settings.title.clone(),
-        dimensions: settings.dimensions,
-        vsync: settings.vsync,
-        msaa: settings.msaa,
-        textures: HashMap::default(),
-        shaders: HashMap::default(),
-        vertex_buffers: HashMap::default(),
-        index_buffers: HashMap::default(),
-        inner: B::new(
-            &settings.title,
-            settings.dimensions,
-            settings.vsync,
-            settings.msaa,
-        )?,
-    })
+    pub fn new(asset_tree: DirPathBuf) -> Result<Self, Error> {
+        GraphicsBackendBuilder::new(asset_tree).build()
+    }
+
+    pub fn builder(asset_tree: DirPathBuf) -> GraphicsBackendBuilder<B> {
+        GraphicsBackendBuilder::new(asset_tree)
     }
 
     pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {
@@ -85,10 +121,7 @@ where
         Ok(asset_path)
     }
 
-    pub fn reload_assets(
-        &mut self,
-        renderables: &mut <Renderable as Component>::Storage,
-    ) -> Result<()> {
+    pub fn reload_assets(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<()> {
         self.textures.clear();
         self.shaders.clear();
         self.vertex_buffers.clear();
@@ -146,15 +179,11 @@ where
     }
 
     pub fn borrow_texture(&self, id: &TextureId) -> &B::Texture {
-        self.textures
-            .get(id)
-            .expect("Could not find the requested texture")
+        self.textures.get(id).expect("Could not find the requested texture")
     }
 
     pub fn borrow_shader(&self, id: &ShaderId) -> &B::Shader {
-        self.shaders
-            .get(id)
-            .expect("Could not find the requested shader")
+        self.shaders.get(id).expect("Could not find the requested shader")
     }
 
     pub fn borrow_vertex_buffer(&self, id: &VertexBufferId) -> &B::VertexBuffer {
@@ -173,7 +202,8 @@ where
 impl<B> Resource for GraphicsBackend<B> where B: BackendTrait + 'static {}
 
 impl<B> SerializationProxy for GraphicsBackend<B>
-where B: BackendTrait,
+where
+    B: BackendTrait,
 {
     fn name() -> String {
         String::from("GraphicsBackend")
@@ -218,6 +248,30 @@ where
     }
 }
 
+impl<B> TryFrom<GraphicsBackendBuilder<B>> for GraphicsBackend<B>
+where
+    B: BackendTrait,
+{
+    type Error = Error;
+
+    fn try_from(value: GraphicsBackendBuilder<B>) -> Result<Self, Self::Error> {
+        let inner = B::new(&value.title, value.dimensions, value.vsync, value.msaa)?;
+
+        Ok(GraphicsBackend {
+            asset_tree: value.asset_tree,
+            title: value.title,
+            dimensions: value.dimensions,
+            vsync: value.vsync,
+            msaa: value.msaa,
+            textures: HashMap::default(),
+            shaders: HashMap::default(),
+            vertex_buffers: HashMap::default(),
+            index_buffers: HashMap::default(),
+            inner,
+        })
+    }
+}
+
 impl<B> Serialize for GraphicsBackend<B>
 where
     B: BackendTrait,
@@ -257,13 +311,7 @@ where
     }
 }
 
-const GRAPHICS_BACKEND_FIELDS: &'static [&'static str] = &[
-    "asset_tree",
-    "title",
-    "dimensions",
-    "vsync",
-    "msaa",
-];
+const GRAPHICS_BACKEND_FIELDS: &[&str] = &["asset_tree", "title", "dimensions", "vsync", "msaa"];
 
 #[derive(Deserialize)]
 #[serde(field_identifier, rename_all = "snake_case")]
@@ -310,25 +358,25 @@ where
                         return Err(de::Error::duplicate_field("asset_tree"));
                     }
                     asset_tree = Some(map.next_value()?);
-                },
+                }
                 GraphicsBackendField::Title => {
                     if title.is_some() {
                         return Err(de::Error::duplicate_field("title"));
                     }
                     title = Some(map.next_value()?);
-                },
+                }
                 GraphicsBackendField::Dimensions => {
                     if dimensions.is_some() {
                         return Err(de::Error::duplicate_field("dimensions"));
                     }
                     dimensions = Some(map.next_value()?);
-                },
+                }
                 GraphicsBackendField::Vsync => {
                     if vsync.is_some() {
                         return Err(de::Error::duplicate_field("vsync"));
                     }
                     vsync = Some(map.next_value()?);
-                },
+                }
                 GraphicsBackendField::Msaa => {
                     if msaa.is_some() {
                         return Err(de::Error::duplicate_field("msaa"));
@@ -344,12 +392,7 @@ where
         let vsync = vsync.ok_or_else(|| de::Error::missing_field("vsync"))?;
         let msaa = msaa.ok_or_else(|| de::Error::missing_field("msaa"))?;
 
-        let inner = B::new(
-            &title,
-            dimensions,
-            vsync,
-            msaa,
-        ).map_err(|e| de::Error::custom(format!("{}", e)))?;
+        let inner = B::new(&title, dimensions, vsync, msaa).map_err(|e| de::Error::custom(format!("{}", e)))?;
 
         Ok(GraphicsBackend {
             asset_tree,

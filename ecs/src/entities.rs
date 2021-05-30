@@ -1,8 +1,11 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
-use crate::{entity::{entity::Entity, generation::Generation, index::Index}, resource::Resource, SerializationProxy};
+use crate::{
+    entity::{Entity, generation::Generation, index::Index},
+    resource::Resource,
+    SerializationProxy,
+};
 use serde::{Deserialize, Serialize};
-use crate::serialization_proxy::EmptyProxyError;
 
 /// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -25,8 +28,7 @@ impl Entities {
         };
 
         if idx.idx() as usize >= self.generations.len() {
-            self.generations
-                .resize(idx.idx() as usize + 1, Generation::default());
+            self.generations.resize(idx.idx() as usize + 1, Generation::default());
         }
 
         let gen = self.generations[idx.idx() as usize].activate();
@@ -45,6 +47,11 @@ impl Entities {
         self.free_idx.push(entity.idx());
     }
 
+    /// Return `true` if there are no active entities
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Return the number of active entities.
     pub fn len(&self) -> usize {
         self.generations.iter().filter(|g| g.is_active()).count()
@@ -60,9 +67,7 @@ impl Entities {
     pub fn try_get<I: Into<Index>>(&self, index: I) -> Option<Entity> {
         let idx = index.into();
         let idx_usize: usize = idx.into();
-        self.generations
-            .get(idx_usize)
-            .map(|gen| Entity::new(idx, *gen))
+        self.generations.get(idx_usize).map(|gen| Entity::new(idx, *gen))
     }
 
     /// Create an iterator over all active entities.

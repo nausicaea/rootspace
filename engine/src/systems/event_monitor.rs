@@ -1,7 +1,7 @@
-use ecs::{EventQueue, ReceiverId, Resources, System, MaybeDefault, WithResources};
+use ecs::{EventQueue, MaybeDefault, ReceiverId, Resources, System, WithResources};
 use log::trace;
+use serde::{Deserialize, Serialize};
 use std::{fmt, time::Duration};
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EventMonitor<E> {
@@ -13,12 +13,9 @@ where
     E: 'static + Clone + std::fmt::Debug,
 {
     fn with_resources(res: &Resources) -> Self {
-        let receiver = res.borrow_mut::<EventQueue<E>>()
-            .subscribe::<Self>();
+        let receiver = res.borrow_mut::<EventQueue<E>>().subscribe::<Self>();
 
-        EventMonitor {
-            receiver,
-        }
+        EventMonitor { receiver }
     }
 }
 

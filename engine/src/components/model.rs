@@ -16,8 +16,7 @@ impl Model {
     pub fn new(translation: Vector3<f32>, axisangle: Vector3<f32>, scale: Vector3<f32>) -> Self {
         let isometry = Isometry3::new(translation, axisangle);
         let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(
-            scale.x, 0.0, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 0.0, scale.z, 0.0, 0.0, 0.0, 0.0,
-            1.0,
+            scale.x, 0.0, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 0.0, scale.z, 0.0, 0.0, 0.0, 0.0, 1.0,
         ));
 
         Model {
@@ -26,16 +25,10 @@ impl Model {
         }
     }
 
-    pub fn look_at(
-        eye: Point3<f32>,
-        target: Point3<f32>,
-        up: Vector3<f32>,
-        scale: Vector3<f32>,
-    ) -> Self {
+    pub fn look_at(eye: Point3<f32>, target: Point3<f32>, up: Vector3<f32>, scale: Vector3<f32>) -> Self {
         let isometry = Isometry3::look_at_rh(&eye, &target, &up);
         let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(
-            scale.x, 0.0, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 0.0, scale.z, 0.0, 0.0, 0.0, 0.0,
-            1.0,
+            scale.x, 0.0, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 0.0, scale.z, 0.0, 0.0, 0.0, 0.0, 1.0,
         ));
 
         Model {
@@ -188,9 +181,7 @@ mod tests {
         let mut ident = Model::identity();
         ident.set_position(Point3::new(1.0, 2.0, 3.0));
         assert_eq!(ident.position(), Point3::new(1.0, 2.0, 3.0));
-        ident.set_orientation(UnitQuaternion::from_scaled_axis(Vector3::new(
-            0.0, 1.5, 0.0,
-        )));
+        ident.set_orientation(UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0)));
         assert_eq!(
             ident.orientation(),
             &UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0))

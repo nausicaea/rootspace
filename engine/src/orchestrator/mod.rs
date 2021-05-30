@@ -6,7 +6,6 @@ use std::{
 use anyhow::{Context, Result};
 use log::debug;
 use serde::{Deserialize, Serialize};
-use serde_json;
 
 use ecs::{LoopControl, ResourceRegistry, SystemRegistry, World};
 
@@ -15,19 +14,17 @@ use crate::{
     graphics::BackendTrait,
     resources::{GraphicsBackend, SceneGraph},
 };
-use crate::resources::settings::Settings;
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
-use file_manipulation::{FilePathBuf, DirPathBuf, NewOrExFilePathBuf};
-use std::fs::File;
-use std::convert::TryFrom;
-use std::path::Path;
-use directories::ProjectDirs;
+use file_manipulation::{DirPathBuf, FilePathBuf, NewOrExFilePathBuf};
+use std::{convert::TryFrom, fs::File, path::Path};
 
 pub mod type_registry;
 
+type OrchestratorWorld<B, RR, FUSR, USR, RSR> = World<ResourceTypes<B, RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>;
+
 pub struct Orchestrator<B: BackendTrait, RR, FUSR, USR, RSR> {
-    world: World<ResourceTypes<B, RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>,
+    world: OrchestratorWorld<B, RR, FUSR, USR, RSR>,
     delta_time: Duration,
     max_frame_time: Duration,
 }
@@ -41,24 +38,14 @@ where
     RSR: SystemRegistry,
 {
     pub fn new<P: AsRef<Path>>(asset_database: &P) -> Result<Self> {
-        // Create a new settings instance
-        let asset_database = DirPathBuf::try_from(asset_database.as_ref())?;
-        let settings = Settings::builder(asset_database).build();
-
         // Create the world
-        let mut world = World::with_settings(settings);
+        let mut world = World::default();
 
         // Retrieve the settings and create the backend as a resource
         // FIXME: Can we make it so that the GraphicsBackend is also automatically initialized?
-        let backend = GraphicsBackend::<B>::new(&world.borrow::<Settings>())
-            .context("Failed to initialise the graphics backend")?;
+        let asset_database = DirPathBuf::try_from(asset_database.as_ref())?;
+        let backend = GraphicsBackend::<B>::new(asset_database).context("Failed to initialise the graphics backend")?;
         world.insert(backend);
-
-        // // Add an additional command to the debug shell
-        // // TODO: Create a registry of debug commands and serialize those as well
-        // orch.world
-        //     .get_system_mut::<DebugShell>(LoopStage::Update)
-        //     .add_command(FileSystemCommand);
 
         Ok(Orchestrator {
             world,
@@ -74,13 +61,13 @@ where
         let mut deserializer = serde_json::Deserializer::from_reader(&mut file);
 
         // Deserialize the entire world
-        let mut world = World::deserialize(&mut deserializer)?;
+        let world = World::deserialize(&mut deserializer)?;
 
-        // Retrieve the settings and create the backend as a resource
-        // FIXME: Can we make it so that the GraphicsBackend is serialized aswell?
-        let backend = GraphicsBackend::<B>::new(&world.borrow::<Settings>())
-            .context("Failed to initialise the graphics backend")?;
-        world.insert(backend);
+        // // Add an additional command to the debug shell
+        // // TODO: Create a registry of debug commands and serialize those as well
+        // orch.world
+        //     .get_system_mut::<DebugShell>(LoopStage::Update)
+        //     .add_command(FileSystemCommand);
 
         // Update the scene graphs for the first time
         // FIXME: Do we really need to update the scene graphs?
@@ -146,24 +133,7 @@ where
     }
 
     fn maintain(&mut self) -> LoopControl {
-        let running = self.world.maintain();
-
-        if !self.world.contains::<GraphicsBackend<B>>() {
-            // Reload the graphics_backend
-            debug!("Reloading the graphics backend");
-            let reload_mark = Instant::now();
-
-            let backend = GraphicsBackend::<B>::new(&*self.world.borrow::<Settings>())
-                .expect("Unable to reload the graphics backend");
-            self.world.insert(backend);
-
-            debug!(
-                "Completed reloading the graphics backend after {:?}",
-                reload_mark.elapsed()
-            );
-        }
-
-        running
+        self.world.maintain()
     }
 }
 
@@ -172,9 +142,7 @@ impl<B: BackendTrait, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR
         write!(
             f,
             "Orchestrator {{ world: {:?}, delta_time: {:?}, max_frame_time: {:?} }}",
-            self.world,
-            self.delta_time,
-            self.max_frame_time,
+            self.world, self.delta_time, self.max_frame_time,
         )
     }
 }
@@ -183,20 +151,13 @@ impl<B: BackendTrait, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR
 mod tests {
     use super::*;
 
-    use std::path::PathBuf;
+    use crate::{GliumBackend, HeadlessBackend, Orchestrator};
     use ecs::{Reg, Resource};
-    use crate::{HeadlessBackend, GliumBackend, Orchestrator};
+    use serde_test::{assert_tokens, Token};
+    use std::{marker::PhantomData, path::PathBuf};
     use tempfile::NamedTempFile;
-    use std::marker::PhantomData;
-    use serde_test::{Token, assert_tokens};
 
-    type TestGame<B> = Orchestrator<
-        B,
-        Reg![],
-        Reg![],
-        Reg![],
-        Reg![],
-    >;
+    type TestGame<B> = Orchestrator<B, Reg![], Reg![], Reg![], Reg![]>;
 
     #[test]
     fn game_creation_headless() {
@@ -207,7 +168,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn game_creation_glium() {
         let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
 
@@ -231,7 +195,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn game_loading_and_saving_glium_glium() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
@@ -247,7 +214,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn game_loading_and_saving_headless_glium() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
@@ -263,7 +233,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(target_os = "macos", should_panic(expected = "Windows can only be created on the main thread on macOS"))]
+    #[cfg_attr(
+        target_os = "macos",
+        should_panic(expected = "Windows can only be created on the main thread on macOS")
+    )]
     fn game_loading_and_saving_glium_headless() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 

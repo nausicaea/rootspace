@@ -1,21 +1,21 @@
-use std::any::TypeId;
-use std::collections::BTreeMap;
-use std::collections::HashSet;
-use std::marker::PhantomData;
+use std::{
+    any::TypeId,
+    collections::{BTreeMap, HashSet},
+    marker::PhantomData,
+};
 
 use either::{Either, Left, Right};
 use log::debug;
-use serde::{Deserialize, Serialize};
-use serde::de::{Deserializer, MapAccess, Visitor};
-use serde::ser::{SerializeMap, Serializer};
+use serde::{
+    de::{Deserializer, MapAccess, Visitor},
+    ser::{SerializeMap, Serializer},
+    Deserialize, Serialize,
+};
 
-use crate::registry::SystemRegistry;
-use crate::system::System;
+use crate::{registry::SystemRegistry, system::System};
 
-use super::recursors;
-use super::Systems;
-use crate::resources::Resources;
-use crate::with_resources::WithResources;
+use super::{recursors, Systems};
+use crate::{resources::Resources, with_resources::WithResources};
 
 #[derive(Debug)]
 pub struct TypedSystems<'a, SR>(Either<&'a Systems, Systems>, PhantomData<SR>);
@@ -38,7 +38,8 @@ where
     SR: SystemRegistry,
 {
     fn eq(&self, rhs: &Self) -> bool {
-        self.0.as_ref()
+        self.0
+            .as_ref()
             .either(|&ref_lhs_s| ref_lhs_s, |lhs_s| lhs_s)
             .eq(rhs.0.as_ref().either(|&ref_lhs_s| ref_lhs_s, |lhs_s| lhs_s))
     }
@@ -140,11 +141,7 @@ where
             )?;
         }
 
-        recursors::validate_recursive::<A, SR>(
-            &type_tracker,
-            PhantomData::default(),
-            PhantomData::default(),
-        )?;
+        recursors::validate_recursive::<A, SR>(&type_tracker, PhantomData::default(), PhantomData::default())?;
 
         let sys_vec: Vec<Box<dyn System>> = sys_map.into_iter().map(|(_, v)| v).collect();
 
@@ -159,9 +156,7 @@ mod tests {
     use serde::Deserialize;
     use serde_test::{assert_tokens, Token};
 
-    use crate::Reg;
-    use crate::resources::Resources;
-    use crate::system::System;
+    use crate::{resources::Resources, system::System, Reg};
 
     use super::*;
 
@@ -198,21 +193,30 @@ mod tests {
             &[
                 Token::Map { len: Some(3) },
                 Token::Str("TestSystemA"),
-                Token::Struct { name: "TypedSystem", len: 2 },
+                Token::Struct {
+                    name: "TypedSystem",
+                    len: 2,
+                },
                 Token::Str("order"),
                 Token::U64(0),
                 Token::Str("system"),
                 Token::UnitStruct { name: "TestSystemA" },
                 Token::StructEnd,
                 Token::Str("TestSystemB"),
-                Token::Struct { name: "TypedSystem", len: 2 },
+                Token::Struct {
+                    name: "TypedSystem",
+                    len: 2,
+                },
                 Token::Str("order"),
                 Token::U64(1),
                 Token::Str("system"),
                 Token::UnitStruct { name: "TestSystemB" },
                 Token::StructEnd,
                 Token::Str("TestSystemC"),
-                Token::Struct { name: "TypedSystem", len: 2 },
+                Token::Struct {
+                    name: "TypedSystem",
+                    len: 2,
+                },
                 Token::Str("order"),
                 Token::U64(2),
                 Token::Str("system"),

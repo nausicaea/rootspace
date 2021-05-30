@@ -1,6 +1,8 @@
 //! Provides facilities to define and manage events.
 
-use crate::resource::Resource;
+use crate::{
+    resource::Resource, short_type_name::short_type_name, SerializationProxy,
+};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -8,9 +10,6 @@ use std::{
     fmt,
     marker::PhantomData,
 };
-use crate::short_type_name::short_type_name;
-use crate::SerializationProxy;
-use crate::serialization_proxy::EmptyProxyError;
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Clone, Serialize, Deserialize)]
@@ -62,7 +61,11 @@ impl<E> ReceiverState<E> {
 
 impl<E> std::fmt::Debug for ReceiverState<E> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "ReceiverState {{ read: {:?}, received: {:?} }}", self.read, self.received)
+        write!(
+            f,
+            "ReceiverState {{ read: {:?}, received: {:?} }}",
+            self.read, self.received
+        )
     }
 }
 
@@ -84,11 +87,8 @@ where
         write!(
             f,
             "EventQueue {{ events: {:?}, receivers: {:?}, max_id: {:?}, free_ids: {:?} }}",
-            self.events,
-            self.receivers,
-            self.max_id,
-            self.free_ids,
-)
+            self.events, self.receivers, self.max_id, self.free_ids,
+        )
     }
 }
 
@@ -101,11 +101,7 @@ where
         let stnt = short_type_name::<T>();
         let stns = short_type_name::<Self>();
         if self.receivers.values().any(|rs| rs.receiver_id == stnt) {
-            warn!(
-                "Type {} already has a listener for {}. Is that intended?",
-                stnt,
-                stns,
-            );
+            warn!("Type {} already has a listener for {}. Is that intended?", stnt, stns,);
         }
 
         let id = if let Some(id) = self.free_ids.pop() {
@@ -118,11 +114,7 @@ where
 
         self.receivers.insert(id, ReceiverState::new::<T>());
 
-        debug!(
-            "Adding subscriber {} to queue {}",
-            stnt,
-            stns,
-        );
+        debug!("Adding subscriber {} to queue {}", stnt, stns,);
         ReceiverId::new(id)
     }
 
@@ -167,13 +159,7 @@ where
                 let total = events.len();
                 let unread = s.received - s.read;
                 s.read += unread;
-                events
-                    .iter()
-                    .rev()
-                    .skip(total - unread)
-                    .take(unread)
-                    .cloned()
-                    .collect()
+                events.iter().rev().skip(total - unread).take(unread).cloned().collect()
             })
             .unwrap_or_default();
 
@@ -193,6 +179,11 @@ where
         }
 
         evs
+    }
+
+    /// Return `true` if there are no queued events.
+    pub fn is_empty(&self) -> bool {
+        self.events.is_empty()
     }
 
     /// Return the number of queued events.
