@@ -8,7 +8,7 @@ use std::{
 use log::debug;
 
 use ecs::{
-    world::event::WorldEvent, Entities, EventQueue, MaybeDefault, ReceiverId, Resources, Storage, System, WithResources,
+    world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System, WithResources,
 };
 
 use crate::{
@@ -33,8 +33,6 @@ pub struct Renderer<B> {
     #[serde(skip)]
     _b: PhantomData<B>,
 }
-
-impl<B> MaybeDefault for Renderer<B> {}
 
 impl<B> std::fmt::Debug for Renderer<B> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {

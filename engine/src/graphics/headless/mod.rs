@@ -147,7 +147,6 @@ impl BackendTrait for HeadlessBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resources::settings::Settings;
     use file_manipulation::DirPathBuf;
     use std::convert::TryFrom;
 
@@ -175,8 +174,7 @@ mod tests {
     #[test]
     fn frame() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let settings = Settings::builder(resource_path).build();
-        let mut f = GraphicsBackend::<HeadlessBackend>::new(&settings).unwrap();
+        let mut f = GraphicsBackend::<HeadlessBackend>::new(resource_path).unwrap();
 
         let vertices = f
             .create_vertex_buffer(&[

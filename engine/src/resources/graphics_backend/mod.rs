@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{Error, Result};
 
-use ecs::{Component, MaybeDefault, Resource, SerializationProxy};
+use ecs::{Component, Resource, SerializationProxy};
 use file_manipulation::{DirPathBuf, FilePathBuf};
 use index_buffer_id::IndexBufferId;
 use shader_id::ShaderId;
@@ -209,8 +209,6 @@ where
         String::from("GraphicsBackend")
     }
 }
-
-impl<B> MaybeDefault for GraphicsBackend<B> where B: BackendTrait {}
 
 impl<B> fmt::Debug for GraphicsBackend<B>
 where

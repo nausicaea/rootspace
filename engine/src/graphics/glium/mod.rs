@@ -505,7 +505,6 @@ impl fmt::Debug for GliumBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resources::settings::Settings;
     use approx::assert_ulps_ne;
     use file_manipulation::DirPathBuf;
     use std::{convert::TryFrom, f64};
@@ -541,8 +540,7 @@ mod tests {
     #[cfg_attr(target_os = "macos", ignore)]
     fn frame() {
         let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let settings = Settings::builder(resource_path).build();
-        let mut f = GraphicsBackend::<GliumBackend>::new(&settings).unwrap();
+        let mut f = GraphicsBackend::<GliumBackend>::new(resource_path).unwrap();
 
         let vertices = f
             .create_vertex_buffer(&[

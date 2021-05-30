@@ -1,5 +1,5 @@
 use crate::{components::camera::Camera, event::EngineEvent};
-use ecs::{EventQueue, MaybeDefault, ReceiverId, Resources, System, WithResources};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -33,12 +33,6 @@ impl CameraManager {
         res.borrow_components_mut::<Camera>()
             .iter_mut()
             .for_each(|c| c.set_dpi_factor(factor));
-    }
-}
-
-impl MaybeDefault for CameraManager {
-    fn maybe_default() -> Option<Self> {
-        None
     }
 }
 

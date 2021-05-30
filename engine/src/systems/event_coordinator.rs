@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use ecs::{world::event::WorldEvent, EventQueue, MaybeDefault, ReceiverId, Resources, System, WithResources};
+use ecs::{world::event::WorldEvent, EventQueue, ReceiverId, Resources, System, WithResources};
 
 use crate::event::EngineEvent;
 use serde::{Deserialize, Serialize};
@@ -17,8 +17,6 @@ impl WithResources for EventCoordinator {
         EventCoordinator { receiver }
     }
 }
-
-impl MaybeDefault for EventCoordinator {}
 
 impl System for EventCoordinator {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {

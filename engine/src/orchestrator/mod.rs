@@ -7,7 +7,7 @@ use anyhow::{Context, Result};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use ecs::{LoopControl, ResourceRegistry, SystemRegistry, World};
+use ecs::{LoopControl, ResourceRegistry, SystemRegistry, World, TryDefault};
 
 use crate::{
     components::{Model, UiModel},
@@ -39,7 +39,7 @@ where
 {
     pub fn new<P: AsRef<Path>>(asset_database: &P) -> Result<Self> {
         // Create the world
-        let mut world = World::default();
+        let mut world = World::try_default()?;
 
         // Retrieve the settings and create the backend as a resource
         // FIXME: Can we make it so that the GraphicsBackend is also automatically initialized?
@@ -152,9 +152,8 @@ mod tests {
     use super::*;
 
     use crate::{GliumBackend, HeadlessBackend, Orchestrator};
-    use ecs::{Reg, Resource};
-    use serde_test::{assert_tokens, Token};
-    use std::{marker::PhantomData, path::PathBuf};
+    use ecs::Reg;
+    use std::path::PathBuf;
     use tempfile::NamedTempFile;
 
     type TestGame<B> = Orchestrator<B, Reg![], Reg![], Reg![], Reg![]>;
