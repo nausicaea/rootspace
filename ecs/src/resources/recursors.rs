@@ -1,28 +1,29 @@
 use super::Resources;
-use crate::{registry::ResourceRegistry, MaybeDefault, SerializationProxy};
-use log::{debug, trace};
+use crate::{registry::ResourceRegistry, try_default::TryDefault, serialization_proxy::SerializationProxy};
+use log::trace;
 use serde::{de, de::MapAccess, ser, ser::SerializeMap};
 use std::{any::type_name, marker::PhantomData};
+use anyhow::Error;
 
-pub fn initialize_recursive<RR>(resources: &mut Resources, _: PhantomData<RR>)
+pub fn initialize_recursive<RR>(resources: &mut Resources, _: PhantomData<RR>) -> Result<(), Error>
 where
     RR: ResourceRegistry,
 {
     if RR::LEN == 0 {
-        return;
+        return Ok(());
     }
 
-    if let Some(default_value) = RR::Head::maybe_default() {
-        trace!("Initializing the resource {}", type_name::<RR::Head>());
-        resources.insert(default_value)
-    } else {
-        debug!(
-            "Not initializing the resource {} because it lacks a default constructor",
-            type_name::<RR::Head>()
-        );
+    match RR::Head::try_default() {
+        Ok(default_value) => {
+            trace!("Initializing the resource {}", type_name::<RR::Head>());
+            resources.insert(default_value);
+        },
+        Err(e) => {
+            return Err(e);
+        }
     }
 
-    initialize_recursive::<RR::Tail>(resources, PhantomData::default());
+    initialize_recursive::<RR::Tail>(resources, PhantomData::default())
 }
 
 pub fn serialize_recursive<RR, SM>(

@@ -11,7 +11,6 @@ pub use crate::{
     events::EventTrait,
     loop_control::LoopControl,
     loop_stage::LoopStage,
-    maybe_default::MaybeDefault,
     registry::{Element, End, ResourceRegistry, SystemRegistry},
     resource::Resource,
     resources::Resources,
@@ -22,6 +21,7 @@ pub use crate::{
     systems::Systems,
     with_resources::WithResources,
     world::{error::WorldError, event::WorldEvent, World},
+    try_default::TryDefault,
 };
 
 pub mod component;
@@ -32,7 +32,6 @@ pub mod events;
 mod loop_control;
 pub mod loop_stage;
 pub mod macros;
-pub mod maybe_default;
 pub mod registry;
 pub mod resource;
 pub mod resources;
@@ -43,3 +42,4 @@ pub mod system;
 pub mod systems;
 pub mod with_resources;
 pub mod world;
+pub mod try_default;

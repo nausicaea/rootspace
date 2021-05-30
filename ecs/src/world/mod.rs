@@ -6,6 +6,7 @@ use std::{
     path::Path,
     time::Duration,
 };
+use anyhow::Error;
 
 use serde::{
     de,
@@ -28,6 +29,7 @@ use crate::{
     storage::Storage,
     system::System,
     systems::Systems,
+    try_default::TryDefault,
 };
 
 use crate::resources::typed_resources::TypedResources;
@@ -54,15 +56,15 @@ pub struct World<RR, FUSR, USR, RSR> {
     _sr3: PhantomData<RSR>,
 }
 
-impl<RR, FUSR, USR, RSR> Default for World<RR, FUSR, USR, RSR>
+impl<RR, FUSR, USR, RSR> TryDefault for World<RR, FUSR, USR, RSR>
 where
     RR: ResourceRegistry,
     FUSR: SystemRegistry,
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
-    fn default() -> Self {
-        let mut resources = Resources::with_registry::<ResourceTypes<RR>>();
+    fn try_default() -> Result<Self, Error> {
+        let mut resources = Resources::with_registry::<ResourceTypes<RR>>()?;
 
         let fixed_update_systems = Systems::with_registry::<FUSR>(&resources);
         let update_systems = Systems::with_registry::<USR>(&resources);
@@ -70,7 +72,7 @@ where
 
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
-        World {
+        Ok(World {
             resources,
             fixed_update_systems,
             update_systems,
@@ -80,7 +82,7 @@ where
             _sr1: PhantomData::default(),
             _sr2: PhantomData::default(),
             _sr3: PhantomData::default(),
-        }
+        })
     }
 }
 
@@ -512,7 +514,7 @@ mod tests {
 
     #[test]
     fn serde() {
-        let world = World::<Trreg, Reg![], Reg![], Reg![]>::with_settings(());
+        let world = World::<Trreg, Reg![], Reg![], Reg![]>::try_default().unwrap();
 
         assert_ser_tokens(
             &world,

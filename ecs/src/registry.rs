@@ -1,5 +1,5 @@
 use crate::{
-    maybe_default::MaybeDefault, resource::Resource, serialization_proxy::SerializationProxy, system::System,
+    try_default::TryDefault, resource::Resource, serialization_proxy::SerializationProxy, system::System,
     with_resources::WithResources,
 };
 use serde::{Deserialize, Serialize};
@@ -109,7 +109,7 @@ macro_rules! impl_registry {
     };
 }
 
-impl_registry!(ResourceRegistry, where Head: Resource + MaybeDefault + Debug + SerializationProxy);
+impl_registry!(ResourceRegistry, where Head: Resource + TryDefault + Debug + SerializationProxy);
 impl_registry!(SystemRegistry, where Head: System + WithResources + Debug);
 
 #[cfg(test)]
@@ -123,10 +123,14 @@ mod tests {
 
     impl Resource for TestElementA {}
 
+    impl SerializationProxy for TestElementA {}
+
     #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
     struct TestElementB(String);
 
     impl Resource for TestElementB {}
+
+    impl SerializationProxy for TestElementB {}
 
     #[test]
     fn end() {

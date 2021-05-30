@@ -12,6 +12,8 @@ use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use self::typed_resources::TypedResources;
 use crate::{component::Component, registry::ResourceRegistry, resource::Resource, short_type_name::short_type_name};
 use std::collections::HashSet;
+use anyhow::Error;
+use crate::try_default::TryDefault;
 
 mod recursors;
 pub(crate) mod typed_resources;
@@ -87,12 +89,13 @@ impl Resources {
     /// In a similar fashion to Resources::deserialize, the following method uses the types stored
     /// in the registry to initialize those resources that have a default, parameterless
     /// constructor.
-    pub fn with_registry<RR>() -> Self
+    pub fn with_registry<RR>() -> Result<Self, Error>
     where
         RR: ResourceRegistry,
     {
-        let helper = TypedResources::<RR>::default();
-        Resources::from(helper)
+        let helper = TypedResources::<RR>::try_default()?;
+
+        Ok(Resources::from(helper))
     }
 
     /// Deserialize [`Resources`](Self) with the supplied
@@ -251,7 +254,7 @@ mod tests {
     use serde::{Deserialize, Serialize};
     use serde_json;
 
-    use crate::{world::event::WorldEvent, Entities, EventQueue, Reg};
+    use crate::{world::event::WorldEvent, Entities, EventQueue, Reg, SerializationProxy};
 
     use super::*;
 
@@ -260,15 +263,21 @@ mod tests {
 
     impl Resource for TestResourceA {}
 
+    impl SerializationProxy for TestResourceA {}
+
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceB(Vec<usize>);
 
     impl Resource for TestResourceB {}
 
+    impl SerializationProxy for TestResourceB {}
+
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceC(String);
 
     impl Resource for TestResourceC {}
+
+    impl SerializationProxy for TestResourceC {}
 
     type TestRegistry = Reg![TestResourceA, TestResourceB, TestResourceC,];
 
@@ -325,8 +334,8 @@ mod tests {
             serde_json::Deserializer::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/ok.json")));
         let r = Resources::deserialize_with::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
         let dr = d.end();
-        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
-        assert!(dr.is_ok(), format!("{:?}", dr.unwrap_err()));
+        assert!(r.is_ok(), "{:?}", r.unwrap_err());
+        assert!(dr.is_ok(), "{:?}", dr.unwrap_err());
     }
 
     #[test]
@@ -338,7 +347,7 @@ mod tests {
         )));
         let r = Resources::deserialize_with::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
         let dr = d.end();
-        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
-        assert!(dr.is_ok(), format!("{:?}", dr.unwrap_err()));
+        assert!(r.is_ok(), "{:?}", r.unwrap_err());
+        assert!(dr.is_ok(), "{:?}", dr.unwrap_err());
     }
 }

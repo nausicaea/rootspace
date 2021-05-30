@@ -11,20 +11,22 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 use std::marker::PhantomData;
+use crate::try_default::TryDefault;
+use anyhow::Error;
 
 #[derive(Debug)]
 pub struct TypedResources<'a, RR>(Either<&'a Resources, Resources>, PhantomData<RR>);
 
-impl<'a, RR> Default for TypedResources<'a, RR>
+impl<'a, RR> TryDefault for TypedResources<'a, RR>
 where
     RR: ResourceRegistry,
 {
-    fn default() -> Self {
+    fn try_default() -> Result<Self, Error> {
         let mut resources = Resources::with_capacity(RR::LEN);
 
-        recursors::initialize_recursive::<RR>(&mut resources, PhantomData::default());
+        recursors::initialize_recursive::<RR>(&mut resources, PhantomData::default())?;
 
-        TypedResources(Right(resources), PhantomData::default())
+        Ok(TypedResources(Right(resources), PhantomData::default()))
     }
 }
 
@@ -143,7 +145,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{resource::Resource, Reg};
+    use crate::{resource::Resource, Reg, SerializationProxy};
     use serde_test::{assert_tokens, Token};
 
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -151,21 +153,25 @@ mod tests {
 
     impl Resource for TestResourceA {}
 
+    impl SerializationProxy for TestResourceA {}
+
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct TestResourceB;
 
     impl Resource for TestResourceB {}
+    impl SerializationProxy for TestResourceB {}
 
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct TestResourceC;
 
     impl Resource for TestResourceC {}
+    impl SerializationProxy for TestResourceC {}
 
     type TypeRegistry = Reg![TestResourceA, TestResourceB, TestResourceC];
 
     #[test]
     fn serialization_and_deserialization() {
-        let res = Resources::with_registry::<TypeRegistry>();
+        let res = Resources::with_registry::<TypeRegistry>().unwrap();
         let tres: TypedResources<'_, TypeRegistry> = (&res).into();
         assert_tokens(
             &tres,

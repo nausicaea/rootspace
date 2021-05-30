@@ -185,7 +185,7 @@ mod tests {
 
     #[test]
     fn serialization_and_deserialization() {
-        let res = Resources::with_registry::<Reg![]>();
+        let res = Resources::with_registry::<Reg![]>().unwrap();
         let sys = Systems::with_registry::<TypeRegistry>(&res);
         let tsys = TypedSystems::<TypeRegistry>::from(&sys);
         assert_tokens(
