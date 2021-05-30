@@ -380,12 +380,12 @@ mod tests {
 
         // The operation must succeed for an existing file
         let r = NewOrExFilePathBuf::try_from(tf.path());
-        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
+        assert!(r.is_ok(), "{:?}", r.unwrap_err());
 
         // The operation must succeed for a path whose basename does not exist
         let new_file = base_dir.path().join("newfile.txt");
         let r = NewOrExFilePathBuf::try_from(new_file);
-        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
+        assert!(r.is_ok(), "{:?}", r.unwrap_err());
 
         // The operation must fail for a path whose parent does not exist
         let bad_new_file = base_dir.path().join("/i/do/not/exist.tmp");
@@ -404,7 +404,7 @@ mod tests {
 
         // The operation must succeed for an existing file
         let r = FilePathBuf::try_from(tf.path());
-        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()));
+        assert!(r.is_ok(), "{:?}", r.unwrap_err());
 
         // The operation must fail for a path that does not exist
         let new_file = base_dir.path().join("newfile.txt");
@@ -442,7 +442,7 @@ mod tests {
 
         // The operation must succeed for a directory
         let r = DirPathBuf::try_from(base_dir.path());
-        assert!(r.is_ok(), format!("{:?}", r.unwrap_err()))
+        assert!(r.is_ok(), "{:?}", r.unwrap_err())
     }
 
     #[test]
