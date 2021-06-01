@@ -13,7 +13,7 @@ use self::typed_resources::TypedResources;
 use crate::{component::Component, registry::ResourceRegistry, resource::Resource, short_type_name::short_type_name};
 use std::collections::HashSet;
 use anyhow::Error;
-use crate::try_default::TryDefault;
+use try_default::TryDefault;
 
 mod recursors;
 pub(crate) mod typed_resources;

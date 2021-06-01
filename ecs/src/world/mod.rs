@@ -14,6 +14,8 @@ use serde::{
     Deserialize, Serialize,
 };
 
+use try_default::TryDefault;
+
 use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 
 use crate::{
@@ -29,7 +31,6 @@ use crate::{
     storage::Storage,
     system::System,
     systems::Systems,
-    try_default::TryDefault,
 };
 
 use crate::resources::typed_resources::TypedResources;

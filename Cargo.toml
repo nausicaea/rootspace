@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "try-default",
     "file-manipulation",
     "affine-transform",
     "ply",

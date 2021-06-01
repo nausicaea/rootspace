@@ -1,9 +1,10 @@
 use crate::{
-    try_default::TryDefault, resource::Resource, serialization_proxy::SerializationProxy, system::System,
+    resource::Resource, serialization_proxy::SerializationProxy, system::System,
     with_resources::WithResources,
 };
 use serde::{Deserialize, Serialize};
 use std::{fmt::Debug};
+use try_default::TryDefault;
 
 /// An element within the heterogeneous list.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]

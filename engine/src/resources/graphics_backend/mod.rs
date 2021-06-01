@@ -27,6 +27,7 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 use std::{convert::TryInto, marker::PhantomData};
+use try_default::TryDefault;
 
 pub mod index_buffer_id;
 pub mod shader_id;
@@ -34,7 +35,6 @@ pub mod texture_id;
 pub mod vertex_buffer_id;
 
 pub struct GraphicsBackendBuilder<B> {
-    asset_tree: DirPathBuf,
     title: String,
     dimensions: (u32, u32),
     vsync: bool,
@@ -46,17 +46,6 @@ impl<B> GraphicsBackendBuilder<B>
 where
     B: BackendTrait,
 {
-    pub fn new(asset_tree: DirPathBuf) -> Self {
-        GraphicsBackendBuilder {
-            asset_tree,
-            title: String::default(),
-            dimensions: (800, 600),
-            vsync: false,
-            msaa: 0,
-            _b: PhantomData::default(),
-        }
-    }
-
     pub fn with_title(mut self, title: String) -> Self {
         self.title = title;
         self
@@ -82,12 +71,26 @@ where
     }
 }
 
+impl<B> Default for GraphicsBackendBuilder<B>
+where
+    B: BackendTrait,
+{
+    fn default() -> Self {
+        GraphicsBackendBuilder {
+            title: String::default(),
+            dimensions: (800, 600),
+            vsync: false,
+            msaa: 0,
+            _b: PhantomData::default(),
+        }
+    }
+}
+
 // FIXME: The GraphicsBackend cannot be automatically initialized by World
 pub struct GraphicsBackend<B>
 where
     B: BackendTrait,
 {
-    asset_tree: DirPathBuf,
     title: String,
     dimensions: (u32, u32),
     vsync: bool,
@@ -103,22 +106,8 @@ impl<B> GraphicsBackend<B>
 where
     B: BackendTrait,
 {
-    pub fn new(asset_tree: DirPathBuf) -> Result<Self, Error> {
-        GraphicsBackendBuilder::new(asset_tree).build()
-    }
-
-    pub fn builder(asset_tree: DirPathBuf) -> GraphicsBackendBuilder<B> {
-        GraphicsBackendBuilder::new(asset_tree)
-    }
-
-    pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {
-        let asset_path = FilePathBuf::try_from(self.asset_tree.join(path))?;
-
-        if !asset_path.path().starts_with(&self.asset_tree) {
-            return Err(AssetError::OutOfTree(asset_path.into()));
-        }
-
-        Ok(asset_path)
+    pub fn builder() -> GraphicsBackendBuilder<B> {
+        GraphicsBackendBuilder::default()
     }
 
     pub fn reload_assets(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<()> {
@@ -199,6 +188,15 @@ where
     }
 }
 
+impl<B> TryDefault for GraphicsBackend<B>
+where
+    B: BackendTrait,
+{
+    fn try_default() -> Result<Self, Error> {
+        GraphicsBackendBuilder::<B>::default().build()
+    }
+}
+
 impl<B> Resource for GraphicsBackend<B> where B: BackendTrait + 'static {}
 
 impl<B> SerializationProxy for GraphicsBackend<B>
@@ -256,7 +254,6 @@ where
         let inner = B::new(&value.title, value.dimensions, value.vsync, value.msaa)?;
 
         Ok(GraphicsBackend {
-            asset_tree: value.asset_tree,
             title: value.title,
             dimensions: value.dimensions,
             vsync: value.vsync,
@@ -279,7 +276,6 @@ where
         S: Serializer,
     {
         let mut state = serializer.serialize_struct("GraphicsBackend", 5)?;
-        state.serialize_field("asset_tree", &self.asset_tree)?;
         state.serialize_field("title", &self.title)?;
         state.serialize_field("dimensions", &self.dimensions)?;
         state.serialize_field("vsync", &self.vsync)?;
@@ -309,12 +305,11 @@ where
     }
 }
 
-const GRAPHICS_BACKEND_FIELDS: &[&str] = &["asset_tree", "title", "dimensions", "vsync", "msaa"];
+const GRAPHICS_BACKEND_FIELDS: &[&str] = &["title", "dimensions", "vsync", "msaa"];
 
 #[derive(Deserialize)]
 #[serde(field_identifier, rename_all = "snake_case")]
 enum GraphicsBackendField {
-    AssetTree,
     Title,
     Dimensions,
     Vsync,
@@ -343,7 +338,6 @@ where
     where
         A: MapAccess<'de>,
     {
-        let mut asset_tree: Option<DirPathBuf> = None;
         let mut title: Option<String> = None;
         let mut dimensions: Option<(u32, u32)> = None;
         let mut vsync: Option<bool> = None;
@@ -351,12 +345,6 @@ where
 
         while let Some(field_name) = map.next_key()? {
             match field_name {
-                GraphicsBackendField::AssetTree => {
-                    if asset_tree.is_some() {
-                        return Err(de::Error::duplicate_field("asset_tree"));
-                    }
-                    asset_tree = Some(map.next_value()?);
-                }
                 GraphicsBackendField::Title => {
                     if title.is_some() {
                         return Err(de::Error::duplicate_field("title"));
@@ -384,7 +372,6 @@ where
             }
         }
 
-        let asset_tree = asset_tree.ok_or_else(|| de::Error::missing_field("asset_tree"))?;
         let title = title.ok_or_else(|| de::Error::missing_field("title"))?;
         let dimensions = dimensions.ok_or_else(|| de::Error::missing_field("dimensions"))?;
         let vsync = vsync.ok_or_else(|| de::Error::missing_field("vsync"))?;
@@ -393,7 +380,6 @@ where
         let inner = B::new(&title, dimensions, vsync, msaa).map_err(|e| de::Error::custom(format!("{}", e)))?;
 
         Ok(GraphicsBackend {
-            asset_tree,
             title,
             dimensions,
             vsync,

@@ -7,7 +7,7 @@ use anyhow::{Context, Result};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use ecs::{LoopControl, ResourceRegistry, SystemRegistry, World, TryDefault};
+use ecs::{LoopControl, ResourceRegistry, SystemRegistry, World};
 
 use crate::{
     components::{Model, UiModel},

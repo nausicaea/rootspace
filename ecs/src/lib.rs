@@ -21,7 +21,6 @@ pub use crate::{
     systems::Systems,
     with_resources::WithResources,
     world::{error::WorldError, event::WorldEvent, World},
-    try_default::TryDefault,
 };
 
 pub mod component;
@@ -42,4 +41,3 @@ pub mod system;
 pub mod systems;
 pub mod with_resources;
 pub mod world;
-pub mod try_default;
