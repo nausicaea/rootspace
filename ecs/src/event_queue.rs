@@ -38,7 +38,7 @@ impl<E> ReceiverId<E> {
 struct ReceiverState<E> {
     read: usize,
     received: usize,
-    receiver_id: String,
+    receiver_name: String,
     #[serde(skip)]
     _e: PhantomData<E>,
 }
@@ -48,7 +48,7 @@ impl<E> ReceiverState<E> {
         ReceiverState {
             read: 0,
             received: 0,
-            receiver_id: short_type_name::<T>(),
+            receiver_name: short_type_name::<T>(),
             _e: PhantomData::default(),
         }
     }
@@ -100,7 +100,7 @@ where
     pub fn subscribe<T>(&mut self) -> ReceiverId<E> {
         let stnt = short_type_name::<T>();
         let stns = short_type_name::<Self>();
-        if self.receivers.values().any(|rs| rs.receiver_id == stnt) {
+        if self.receivers.values().any(|rs| rs.receiver_name == stnt) {
             warn!("Type {} already has a listener for {}. Is that intended?", stnt, stns,);
         }
 
