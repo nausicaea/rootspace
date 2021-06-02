@@ -3,20 +3,18 @@ use std::{
     convert::TryFrom,
     fmt,
     ops::{Deref, DerefMut},
-    path::Path,
 };
 
 use anyhow::{Error, Result};
 
 use ecs::{Component, Resource, SerializationProxy};
-use file_manipulation::{DirPathBuf, FilePathBuf};
+use file_manipulation::FilePathBuf;
 use index_buffer_id::IndexBufferId;
 use shader_id::ShaderId;
 use texture_id::TextureId;
 use vertex_buffer_id::VertexBufferId;
 
 use crate::{
-    assets::AssetError,
     components::Renderable,
     graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait},
 };
@@ -28,6 +26,7 @@ use serde::{
 };
 use std::{convert::TryInto, marker::PhantomData};
 use try_default::TryDefault;
+use crate::resources::AssetDatabase;
 
 pub mod index_buffer_id;
 pub mod shader_id;
@@ -110,20 +109,19 @@ where
         GraphicsBackendBuilder::default()
     }
 
-    pub fn reload_assets(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<()> {
+    pub fn reload_assets(&mut self, db: &AssetDatabase, renderables: &mut <Renderable as Component>::Storage) -> Result<()> {
         self.textures.clear();
         self.shaders.clear();
         self.vertex_buffers.clear();
         self.index_buffers.clear();
         for r in renderables.iter_mut() {
-            r.reload(self)?;
+            r.reload(self, db)?;
         }
 
         Ok(())
     }
 
-    pub fn create_texture<P: AsRef<Path>>(&mut self, image: P) -> Result<TextureId> {
-        let image = self.find_asset(image)?;
+    pub fn create_texture(&mut self, image: &FilePathBuf) -> Result<TextureId> {
         let t = B::Texture::from_path(&self.inner, image)?;
         let id = TextureId::generate();
         self.textures.insert(id, t);
@@ -137,16 +135,14 @@ where
         Ok(id)
     }
 
-    pub fn create_shader<P: AsRef<Path>>(&mut self, vs: P, fs: P) -> Result<ShaderId> {
-        let vs = self.find_asset(vs)?;
-        let fs = self.find_asset(fs)?;
+    pub fn create_shader(&mut self, vs: &FilePathBuf, fs: &FilePathBuf) -> Result<ShaderId> {
         let s = B::Shader::from_paths(&self.inner, vs, fs)?;
         let id = ShaderId::generate();
         self.shaders.insert(id, s);
         Ok(id)
     }
 
-    pub fn create_source_shader<S: AsRef<str>>(&mut self, vs: S, fs: S) -> Result<ShaderId> {
+    pub fn create_source_shader(&mut self, vs: &str, fs: &str) -> Result<ShaderId> {
         let s = B::Shader::from_source(&self.inner, &vs, &fs)?;
         let id = ShaderId::generate();
         self.shaders.insert(id, s);

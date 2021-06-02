@@ -3,7 +3,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
@@ -12,12 +12,13 @@ use ecs::{LoopControl, ResourceRegistry, SystemRegistry, World};
 use crate::{
     components::{Model, UiModel},
     graphics::BackendTrait,
-    resources::{GraphicsBackend, SceneGraph},
+    resources::SceneGraph,
 };
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
-use file_manipulation::{DirPathBuf, FilePathBuf, NewOrExFilePathBuf};
+use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use std::{convert::TryFrom, fs::File, path::Path};
+use try_default::TryDefault;
 
 pub mod type_registry;
 
@@ -37,15 +38,9 @@ where
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
-    pub fn new<P: AsRef<Path>>(asset_database: &P) -> Result<Self> {
+    pub fn new() -> Result<Self> {
         // Create the world
-        let mut world = World::try_default()?;
-
-        // Retrieve the settings and create the backend as a resource
-        // FIXME: Can we make it so that the GraphicsBackend is also automatically initialized?
-        let asset_database = DirPathBuf::try_from(asset_database.as_ref())?;
-        let backend = GraphicsBackend::<B>::new(asset_database).context("Failed to initialise the graphics backend")?;
-        world.insert(backend);
+        let world = World::try_default()?;
 
         Ok(Orchestrator {
             world,
@@ -153,16 +148,13 @@ mod tests {
 
     use crate::{GliumBackend, HeadlessBackend, Orchestrator};
     use ecs::Reg;
-    use std::path::PathBuf;
     use tempfile::NamedTempFile;
 
     type TestGame<B> = Orchestrator<B, Reg![], Reg![], Reg![], Reg![]>;
 
     #[test]
     fn game_creation_headless() {
-        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
-
-        let r: Result<TestGame<HeadlessBackend>> = TestGame::new(&asset_database);
+        let r: Result<TestGame<HeadlessBackend>> = TestGame::new();
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -172,9 +164,7 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn game_creation_glium() {
-        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
-
-        let r: Result<TestGame<GliumBackend>> = TestGame::new(&asset_database);
+        let r: Result<TestGame<GliumBackend>> = TestGame::new();
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -182,10 +172,9 @@ mod tests {
     fn game_loading_and_saving_headless_headless() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
-        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let tf = NamedTempFile::new().unwrap();
 
-        let first: TestGame<HeadlessBackend> = TestGame::new(&asset_database).unwrap();
+        let first: TestGame<HeadlessBackend> = TestGame::new().unwrap();
         let r = first.save(&tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
@@ -201,10 +190,9 @@ mod tests {
     fn game_loading_and_saving_glium_glium() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
-        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let tf = NamedTempFile::new().unwrap();
 
-        let first: TestGame<GliumBackend> = TestGame::new(&asset_database).unwrap();
+        let first: TestGame<GliumBackend> = TestGame::new().unwrap();
         let r = first.save(&tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
@@ -220,10 +208,9 @@ mod tests {
     fn game_loading_and_saving_headless_glium() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
-        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let tf = NamedTempFile::new().unwrap();
 
-        let first: TestGame<HeadlessBackend> = TestGame::new(&asset_database).unwrap();
+        let first: TestGame<HeadlessBackend> = TestGame::new().unwrap();
         let r = first.save(&tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
@@ -239,10 +226,9 @@ mod tests {
     fn game_loading_and_saving_glium_headless() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
-        let asset_database = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests"));
         let tf = NamedTempFile::new().unwrap();
 
-        let first: TestGame<GliumBackend> = TestGame::new(&asset_database).unwrap();
+        let first: TestGame<GliumBackend> = TestGame::new().unwrap();
         let r = first.save(&tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 

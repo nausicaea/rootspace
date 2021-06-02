@@ -20,6 +20,7 @@ use crate::{
 };
 
 use super::vertex::Vertex;
+use crate::resources::AssetDatabase;
 
 pub struct Text<'a> {
     text: String,
@@ -115,12 +116,12 @@ impl TextBuilder {
         self
     }
 
-    pub fn layout<'a, B: BackendTrait>(self, factory: &GraphicsBackend<B>, text: &str) -> Result<Text<'a>> {
+    pub fn layout<'a, B: BackendTrait>(self, factory: &GraphicsBackend<B>, assets: &AssetDatabase, text: &str) -> Result<Text<'a>> {
         let font_data = self
             .font_path
             .as_ref()
             .ok_or(TextRenderError::MissingFont)
-            .and_then(|fp| factory.find_asset(fp).map_err(|e| e.into()))
+            .and_then(|fp| assets.find_asset(fp).map_err(|e| e.into()))
             .and_then(|fp| fp.read_to_bytes().map_err(|e| e.into()))?;
 
         let cache_gpu_id = self.cache_gpu.ok_or(TextRenderError::MissingCache)?;
@@ -319,20 +320,17 @@ fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dim
 
 #[cfg(test)]
 mod tests {
-    use std::convert::TryFrom;
-
-    use file_manipulation::DirPathBuf;
-
     use crate::graphics::headless::HeadlessBackend;
 
     use super::*;
+    use try_default::TryDefault;
 
     #[test]
     fn text_builder_headless() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = GraphicsBackend::<HeadlessBackend>::new(resource_path).unwrap();
+        let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
+        let a = AssetDatabase::try_default().unwrap();
 
-        let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = a.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let _: Text = Text::builder()
@@ -340,16 +338,16 @@ mod tests {
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, "Hello, World!")
+            .layout(&mut f, &a, "Hello, World!")
             .unwrap();
     }
 
     #[test]
     fn text_mesh_headless() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = GraphicsBackend::<HeadlessBackend>::new(resource_path).unwrap();
+        let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
+        let a = AssetDatabase::try_default().unwrap();
 
-        let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = a.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let text: Text = Text::builder()
@@ -357,7 +355,7 @@ mod tests {
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, "Hello, World!")
+            .layout(&mut f, &a, "Hello, World!")
             .unwrap();
 
         let model_width: f32 = 2.0;
@@ -374,10 +372,10 @@ mod tests {
 
     #[test]
     fn text_scale_headless() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = GraphicsBackend::<HeadlessBackend>::new(resource_path).unwrap();
+        let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
+        let a = AssetDatabase::try_default().unwrap();
 
-        let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = a.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
@@ -385,7 +383,7 @@ mod tests {
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, "Hello, World!")
+            .layout(&mut f, &a, "Hello, World!")
             .unwrap();
 
         text.scale(24.0f32);
@@ -393,10 +391,10 @@ mod tests {
 
     #[test]
     fn text_width_headless() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = GraphicsBackend::<HeadlessBackend>::new(resource_path).unwrap();
+        let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
+        let a = AssetDatabase::try_default().unwrap();
 
-        let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = a.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
@@ -404,7 +402,7 @@ mod tests {
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, "Hello, World!")
+            .layout(&mut f, &a, "Hello, World!")
             .unwrap();
 
         text.width(200u32);
@@ -412,10 +410,10 @@ mod tests {
 
     #[test]
     fn text_update_headless() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = GraphicsBackend::<HeadlessBackend>::new(resource_path).unwrap();
+        let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
+        let a = AssetDatabase::try_default().unwrap();
 
-        let font_path = f.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = a.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
@@ -423,7 +421,7 @@ mod tests {
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, "Hello, World!")
+            .layout(&mut f, &a, "Hello, World!")
             .unwrap();
 
         text.text(&mut f, "Hello, you!").unwrap();

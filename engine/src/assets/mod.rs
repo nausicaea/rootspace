@@ -17,6 +17,8 @@ pub trait AssetMutTrait: AssetTrait {
 
 #[derive(Debug, Error)]
 pub enum AssetError {
+    #[error("The asset tree was not found")]
+    TreeUnknown,
     #[error("Is not within the asset tree: {}", .0.display())]
     OutOfTree(PathBuf),
     #[error(transparent)]

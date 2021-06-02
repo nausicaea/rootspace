@@ -17,6 +17,9 @@ use crate::{
         GraphicsBackend,
     },
 };
+use crate::resources::AssetDatabase;
+use file_manipulation::FilePathBuf;
+use std::convert::TryFrom;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RenderableType {
@@ -77,7 +80,7 @@ impl Renderable {
         }
     }
 
-    pub fn reload<B: BackendTrait>(&mut self, factory: &mut GraphicsBackend<B>) -> Result<()> {
+    pub fn reload<B: BackendTrait>(&mut self, factory: &mut GraphicsBackend<B>, assets: &AssetDatabase) -> Result<()> {
         match self.source {
             Some(SourceData::Mesh {
                 ref file,
@@ -86,15 +89,20 @@ impl Renderable {
                 ref diffuse_texture,
                 ref normal_texture,
             }) => {
-                let mesh_path = factory.find_asset(file)?;
+                let mesh_path = assets.find_asset(file)?;
                 let mesh = Mesh::from_path(mesh_path)?;
+
+                let vs = FilePathBuf::try_from(vertex_shader)?;
+                let fs = FilePathBuf::try_from(fragment_shader)?;
+                let dt = FilePathBuf::try_from(diffuse_texture)?;
 
                 self.vertices = factory.create_vertex_buffer(&mesh.vertices)?;
                 self.indices = factory.create_index_buffer(&mesh.indices)?;
-                self.shader = factory.create_shader(vertex_shader, fragment_shader)?;
-                self.diffuse_texture = factory.create_texture(diffuse_texture)?;
+                self.shader = factory.create_shader(&vs, &fs)?;
+                self.diffuse_texture = factory.create_texture(&dt)?;
                 self.normal_texture = if let Some(ref p) = normal_texture {
-                    Some(factory.create_texture(p)?)
+                    let img = FilePathBuf::try_from(p)?;
+                    Some(factory.create_texture(&img)?)
                 } else {
                     None
                 };
@@ -117,18 +125,21 @@ impl Renderable {
                 );
                 let scaled_text_scale = (text_scale as f64 * dpi_factor) as f32;
 
+                let vs = FilePathBuf::try_from(vertex_shader)?;
+                let fs = FilePathBuf::try_from(fragment_shader)?;
+
                 self.diffuse_texture = factory.create_empty_texture(scaled_cache_size)?;
-                let font_path = factory.find_asset(font)?;
+                let font_path = assets.find_asset(font)?;
                 let text_data = Text::builder()
                     .font(font_path)
                     .cache(self.diffuse_texture)
                     .scale(scaled_text_scale)
                     .width(virtual_pixel_text_width)
-                    .layout(factory, &text)?;
+                    .layout(factory, assets, &text)?;
                 let mesh = text_data.mesh(text_width);
                 self.vertices = factory.create_vertex_buffer(&mesh.vertices)?;
                 self.indices = factory.create_index_buffer(&mesh.indices)?;
-                self.shader = factory.create_shader(&vertex_shader, &fragment_shader)?;
+                self.shader = factory.create_shader(&vs, &fs)?;
                 self.normal_texture = None;
                 Ok(())
             }
@@ -253,7 +264,7 @@ impl RenderableBuilder {
         self
     }
 
-    pub fn build<B: BackendTrait>(&self, factory: &mut GraphicsBackend<B>) -> Result<Renderable> {
+    pub fn build<B: BackendTrait>(&self, factory: &mut GraphicsBackend<B>, assets: &AssetDatabase) -> Result<Renderable> {
         match self.ty {
             RenderableType::Mesh => {
                 let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;
@@ -272,7 +283,7 @@ impl RenderableBuilder {
                     ..Default::default()
                 };
 
-                renderable.reload(factory)?;
+                renderable.reload(factory, assets)?;
 
                 Ok(renderable)
             }
@@ -296,7 +307,7 @@ impl RenderableBuilder {
                     ..Default::default()
                 };
 
-                renderable.reload(factory)?;
+                renderable.reload(factory, assets)?;
 
                 Ok(renderable)
             }
@@ -324,40 +335,37 @@ pub enum RenderableError {
 
 #[cfg(test)]
 mod tests {
-    use std::convert::TryFrom;
-
-    use file_manipulation::DirPathBuf;
-
     use crate::graphics::headless::HeadlessBackend;
 
     use super::*;
+    use try_default::TryDefault;
 
     #[test]
     fn headless_builder_mesh() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = GraphicsBackend::<HeadlessBackend>::new(resource_path).unwrap();
+        let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
+        let a = AssetDatabase::try_default().unwrap();
         let r: Result<Renderable> = Renderable::builder()
             .with_mesh("meshes/cube.ply")
             .with_vertex_shader("shaders/test-vertex.glsl")
             .with_fragment_shader("shaders/test-fragment.glsl")
             .with_diffuse_texture("textures/tv-test-image.png")
             .with_type(RenderableType::Mesh)
-            .build(&mut f);
+            .build(&mut f, &a);
 
         r.unwrap();
     }
 
     #[test]
     fn headless_builder_text() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = GraphicsBackend::<HeadlessBackend>::new(resource_path).unwrap();
+        let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
+        let a = AssetDatabase::try_default().unwrap();
         let r: Result<Renderable> = Renderable::builder()
             .with_font("fonts/SourceSansPro-Regular.ttf")
             .with_vertex_shader("shaders/test-vertex.glsl")
             .with_fragment_shader("shaders/test-fragment.glsl")
             .with_text("Hello, World!")
             .with_type(RenderableType::Text)
-            .build(&mut f);
+            .build(&mut f, &a);
 
         r.unwrap();
     }

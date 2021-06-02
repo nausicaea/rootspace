@@ -147,8 +147,7 @@ impl BackendTrait for HeadlessBackend {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use file_manipulation::DirPathBuf;
-    use std::convert::TryFrom;
+    use try_default::TryDefault;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);
@@ -173,8 +172,7 @@ mod tests {
 
     #[test]
     fn frame() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = GraphicsBackend::<HeadlessBackend>::new(resource_path).unwrap();
+        let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
 
         let vertices = f
             .create_vertex_buffer(&[

@@ -506,8 +506,8 @@ impl fmt::Debug for GliumBackend {
 mod tests {
     use super::*;
     use approx::assert_ulps_ne;
-    use file_manipulation::DirPathBuf;
-    use std::{convert::TryFrom, f64};
+    use std::f64;
+    use try_default::TryDefault;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);
@@ -539,8 +539,7 @@ mod tests {
     #[cfg_attr(feature = "wsl", ignore)]
     #[cfg_attr(target_os = "macos", ignore)]
     fn frame() {
-        let resource_path = DirPathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/rootspace")).unwrap();
-        let mut f = GraphicsBackend::<GliumBackend>::new(resource_path).unwrap();
+        let mut f = GraphicsBackend::<GliumBackend>::try_default().unwrap();
 
         let vertices = f
             .create_vertex_buffer(&[

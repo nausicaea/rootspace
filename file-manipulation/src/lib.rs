@@ -134,6 +134,14 @@ impl TryFrom<&Path> for NewOrExFilePathBuf {
     }
 }
 
+impl TryFrom<&PathBuf> for NewOrExFilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &PathBuf) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(path.as_ref())
+    }
+}
+
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
 #[derive(Clone, PartialEq)]
@@ -227,7 +235,7 @@ impl TryFrom<&OsStr> for FilePathBuf {
     }
 }
 
-impl<'a> TryFrom<&Path> for FilePathBuf {
+impl TryFrom<&Path> for FilePathBuf {
     type Error = FileError;
 
     fn try_from(path: &Path) -> Result<Self, Self::Error> {
@@ -241,6 +249,14 @@ impl<'a> TryFrom<&Path> for FilePathBuf {
         } else {
             Err(FileError::NotAFile(path))
         }
+    }
+}
+
+impl TryFrom<&PathBuf> for FilePathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &PathBuf) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(path.as_ref())
     }
 }
 
@@ -333,6 +349,14 @@ impl<'a> TryFrom<&Path> for DirPathBuf {
         } else {
             Err(FileError::NotADirectory(path))
         }
+    }
+}
+
+impl TryFrom<&PathBuf> for DirPathBuf {
+    type Error = FileError;
+
+    fn try_from(path: &PathBuf) -> Result<Self, Self::Error> {
+        TryFrom::<&Path>::try_from(path.as_ref())
     }
 }
 
