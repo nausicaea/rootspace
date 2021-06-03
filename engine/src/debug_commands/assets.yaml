@@ -1,0 +1,10 @@
+name: asset
+author: Eleanor Young <developer@nausicaea.net
+about: Provides access to assets
+settings:
+  - DisableVersion
+  - VersionlessSubcommands
+  - SubcommandRequiredElseHelp
+subcommands:
+  - info:
+      about: Presents an overview of known assets

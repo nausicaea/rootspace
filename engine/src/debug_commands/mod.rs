@@ -13,6 +13,7 @@ use crate::{
 };
 use ecs::impl_registry;
 use serde::{Deserialize, Serialize};
+use crate::resources::AssetDatabase;
 
 impl_registry!(CommandRegistry, where Head: CommandTrait + Clone + Copy + Default);
 
@@ -71,11 +72,11 @@ impl CommandTrait for ExitCommand {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct StateCommand;
+pub struct StatesCommand;
 
-impl CommandTrait for StateCommand {
+impl CommandTrait for StatesCommand {
     fn name(&self) -> &'static str {
-        "state"
+        "states"
     }
 
     fn description(&self) -> &'static str {
@@ -83,7 +84,7 @@ impl CommandTrait for StateCommand {
     }
 
     fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
-        let app_yaml = load_yaml!("state.yaml");
+        let app_yaml = load_yaml!("states.yaml");
         let matches = App::from_yaml(app_yaml).get_matches_from_safe(args)?;
         let (subcommand, maybe_subcommand_matches) = matches.subcommand();
 
@@ -110,9 +111,38 @@ impl CommandTrait for StateCommand {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct CameraCommand;
+pub struct AssetsCommand;
 
-impl CameraCommand {
+impl CommandTrait for AssetsCommand {
+    fn name(&self) -> &'static str {
+        "assets"
+    }
+
+    fn description(&self) -> &'static str {
+        "Provides access to assets"
+    }
+
+    fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
+        let app_yaml = load_yaml!("assets.yaml");
+        let matches = App::from_yaml(app_yaml).get_matches_from_safe(args)?;
+        let (subcommand, maybe_subcommand_matches) = matches.subcommand();
+
+        if subcommand == "info" {
+            let _scm = maybe_subcommand_matches.context("No arguments were provided to the save subcommand")?;
+
+            let asset_database = res.borrow::<AssetDatabase>();
+            println!("Asset tree location: {:?}", asset_database.asset_tree());
+        }
+
+        Ok(())
+    }
+}
+
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct CamerasCommand;
+
+impl CamerasCommand {
     fn list_camera(&self, args: &ArgMatches, cam: &Camera, entity: &Entity) {
         let mut output = String::new();
 
@@ -136,9 +166,9 @@ impl CameraCommand {
     }
 }
 
-impl CommandTrait for CameraCommand {
+impl CommandTrait for CamerasCommand {
     fn name(&self) -> &'static str {
-        "camera"
+        "cameras"
     }
 
     fn description(&self) -> &'static str {
@@ -146,7 +176,7 @@ impl CommandTrait for CameraCommand {
     }
 
     fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
-        let app_yaml = load_yaml!("camera.yaml");
+        let app_yaml = load_yaml!("cameras.yaml");
         let matches = App::from_yaml(app_yaml).get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
@@ -176,9 +206,9 @@ impl CommandTrait for CameraCommand {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct EntityCommand;
+pub struct EntitiesCommand;
 
-impl EntityCommand {
+impl EntitiesCommand {
     fn list_entity(
         &self,
         args: &ArgMatches,
@@ -276,9 +306,9 @@ impl EntityCommand {
     }
 }
 
-impl CommandTrait for EntityCommand {
+impl CommandTrait for EntitiesCommand {
     fn name(&self) -> &'static str {
-        "entity"
+        "entities"
     }
 
     fn description(&self) -> &'static str {
@@ -286,7 +316,7 @@ impl CommandTrait for EntityCommand {
     }
 
     fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
-        let app_yaml = load_yaml!("entity.yaml");
+        let app_yaml = load_yaml!("entities.yaml");
         let matches = App::from_yaml(app_yaml).get_matches_from_safe(args)?;
 
         if let Some(create_matches) = matches.subcommand_matches("create") {

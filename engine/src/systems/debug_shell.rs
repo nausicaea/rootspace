@@ -1,5 +1,5 @@
 use crate::{
-    debug_commands::{CameraCommand, CommandTrait, EntityCommand, ExitCommand, StateCommand},
+    debug_commands::{CamerasCommand, CommandTrait, EntitiesCommand, ExitCommand, StatesCommand},
     event::EngineEvent,
     resources::settings::Settings,
 };
@@ -8,6 +8,7 @@ use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithReso
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Duration};
 use thiserror::Error;
+use crate::debug_commands::AssetsCommand;
 
 #[derive(Serialize, Deserialize)]
 pub struct DebugShell {
@@ -105,8 +106,9 @@ fn box_command<C: CommandTrait>(command: C) -> Box<dyn CommandTrait + 'static> {
 fn default_commands() -> HashMap<&'static str, Box<dyn CommandTrait>> {
     let mut commands = HashMap::with_capacity(4);
     commands.insert(ExitCommand.name(), box_command(ExitCommand));
-    commands.insert(CameraCommand.name(), box_command(CameraCommand));
-    commands.insert(EntityCommand.name(), box_command(EntityCommand));
-    commands.insert(StateCommand.name(), box_command(StateCommand));
+    commands.insert(CamerasCommand.name(), box_command(CamerasCommand));
+    commands.insert(EntitiesCommand.name(), box_command(EntitiesCommand));
+    commands.insert(StatesCommand.name(), box_command(StatesCommand));
+    commands.insert(AssetsCommand.name(), box_command(AssetsCommand));
     commands
 }

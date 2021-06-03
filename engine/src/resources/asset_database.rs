@@ -17,6 +17,10 @@ impl Resource for AssetDatabase {}
 impl SerializationName for AssetDatabase {}
 
 impl AssetDatabase {
+    pub fn asset_tree(&self) -> Option<&Path> {
+        self.asset_tree.as_ref().map(|p| p.as_path())
+    }
+
     pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {
         let asset_tree = self.asset_tree.as_ref().ok_or(AssetError::TreeUnknown)?;
 
