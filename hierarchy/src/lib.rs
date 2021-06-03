@@ -15,7 +15,6 @@ use daggy::{
 #[cfg(any(test, feature = "serde_support"))]
 use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
-    ser::{SerializeStruct, Serializer},
     Deserialize, Serialize,
 };
 use std::{collections::HashMap, fmt, hash::Hash, marker::PhantomData};
