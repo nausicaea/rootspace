@@ -50,6 +50,7 @@ use thiserror::Error;
 ///     Some(*value)
 /// });
 /// ```
+#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize))]
 #[derive(Clone)]
 pub struct Hierarchy<K, V>
 where
@@ -59,15 +60,15 @@ where
     root_idx: NodeIndex,
     /// Provides an entity relationship between keys and `NodeIndex` instances that in turn index
     /// into the directed acyclic graph (`Dag`).
+    #[cfg_attr(any(test, feature = "serde_support"), serde(skip))]
     index: HashMap<K, NodeIndex>,
     /// Holds the directed acyclic graph of `HierNode`s.
-    graph: Dag<HierNode<K, V>, ()>,
+    graph: Dag<HierarchyNode<K, V>, ()>,
 }
 
 impl<K, V> Hierarchy<K, V>
 where
-    K: Clone + Eq + Hash,
-    V: Clone + Default,
+    K: Eq + Hash,
 {
     /// Creates a new `Hierarchy`.
     pub fn new() -> Self {
@@ -78,26 +79,39 @@ where
     pub fn clear(&mut self) {
         self.graph.clear();
         self.index.clear();
-        self.root_idx = self.graph.add_node(HierNode::root());
+        self.root_idx = self.graph.add_node(HierarchyNode::root());
     }
 
-    /// Deletes the hierarchical node identified by the specified `key`.
+    /// Returns `true` if the specified key is represented within the `Hierarchy`.
     ///
     /// # Arguments
     ///
-    /// * `key` - The identifier of the node to be deleted.
-    ///
-    /// # Errors
-    ///
-    /// * `HierarchyError::CannotRemoveRootNode` if you try to remove the root node.
-    /// * `HierarchyError::KeyNotFound` if `key` identifies no known node.
-    pub fn remove(&mut self, key: &K) -> Result<(), HierarchyError> {
-        let node_idx = self.get_index(key)?;
-        self.graph.remove_node(node_idx);
-        self.rebuild_index();
-        Ok(())
+    /// * `key` - The identifier to be verified for presence.
+    pub fn has(&self, key: &K) -> bool {
+        self.index.contains_key(key)
     }
 
+    /// Returns the number of nodes contained in the `Hierarchy` (excluding the internal root node).
+    pub fn len(&self) -> usize {
+        self.index.len()
+    }
+
+    /// Returns `true` if the `Hierarchy` is empty, false otherwise.
+    pub fn is_empty(&self) -> bool {
+        self.index.is_empty()
+    }
+
+    /// Returns an iterator over all pairs of identifier and data irrespective of hierarchical
+    /// order.
+    pub fn iter(&self) -> RawNodes<K, V> {
+        self.into_iter()
+    }
+}
+
+impl<K, V> Hierarchy<K, V>
+where
+    K: Eq + Hash + Clone,
+{
     /// Inserts a new node as child of the root node.
     ///
     /// # Arguments
@@ -126,25 +140,52 @@ where
         Ok(())
     }
 
-    /// Returns `true` if the specified key is represented within the `Hierarchy`.
+    /// Deletes the hierarchical node identified by the specified `key`.
     ///
     /// # Arguments
     ///
-    /// * `key` - The identifier to be verified for presence.
-    pub fn has(&self, key: &K) -> bool {
-        self.index.contains_key(key)
+    /// * `key` - The identifier of the node to be deleted.
+    ///
+    /// # Errors
+    ///
+    /// * `HierarchyError::CannotRemoveRootNode` if you try to remove the root node.
+    /// * `HierarchyError::KeyNotFound` if `key` identifies no known node.
+    pub fn remove(&mut self, key: &K) -> Result<(), HierarchyError> {
+        let node_idx = self.get_index(key)?;
+        self.graph.remove_node(node_idx);
+        self.rebuild_index();
+        Ok(())
     }
 
-    /// Returns the number of nodes contained in the `Hierarchy` (excluding the internal root node).
-    pub fn len(&self) -> usize {
-        self.index.len()
+    /// Rebuilds the `Key`-`HierNode` index from the underlying `Graph`.
+    pub fn rebuild_index(&mut self) {
+        self.index.clear();
+        for idx in self.graph.graph().node_indices() {
+            let node = self.graph.node_weight(idx).unwrap_or_else(|| unreachable!());
+            if let Some(HierarchyNodeData { ref key, .. }) = node.0 {
+                self.index.insert(key.clone(), idx);
+            }
+        }
     }
 
-    /// Returns `true` if the `Hierarchy` is empty, false otherwise.
-    pub fn is_empty(&self) -> bool {
-        self.index.is_empty()
+    /// Returns the `NodeIndex` for a particular key.
+    fn get_index(&self, key: &K) -> Result<NodeIndex, HierarchyError> {
+        self.index.get(key).cloned().ok_or(HierarchyError::KeyNotFound)
     }
 
+    /// Insert a new node as a child of another node.
+    fn insert_child_internal(&mut self, parent: NodeIndex, child: K, data: V) {
+        let child_node = HierarchyNode::new(child.clone(), data);
+        let (_, child_idx) = self.graph.add_child(parent, (), child_node);
+        self.index.insert(child, child_idx);
+    }
+}
+
+impl<K, V> Hierarchy<K, V>
+where
+    K: Clone + Eq + Hash,
+    V: Clone + Default,
+{
     /// Updates each node in breadth-first search order. Given a parent node's data, update the
     /// child nodes' data with the supplied closure. This allows users to establish hierarchical
     /// relationships between identifiers and associated data.
@@ -165,7 +206,7 @@ where
                 let parent_data = self
                     .graph
                     .node_weight(parent_idx)
-                    .and_then(|n| n.0.as_ref().map(|(_, data)| data.clone()))
+                    .and_then(|n| n.0.as_ref().map(|HierarchyNodeData { value, .. }| value.clone()))
                     .unwrap_or_default();
 
                 self.graph
@@ -174,35 +215,6 @@ where
                     .unwrap_or_else(|| panic!("Could not find the child with index {:?}", nidx));
             }
         }
-    }
-
-    /// Returns an iterator over all pairs of identifier and data irrespective of hierarchical
-    /// order.
-    pub fn iter(&self) -> RawNodes<K, V> {
-        self.into_iter()
-    }
-
-    /// Rebuilds the `Key`-`HierNode` index from the underlying `Graph`.
-    pub fn rebuild_index(&mut self) {
-        self.index.clear();
-        for idx in self.graph.graph().node_indices() {
-            let node = self.graph.node_weight(idx).unwrap_or_else(|| unreachable!());
-            if let Some((ref key, _)) = node.0 {
-                self.index.insert(key.clone(), idx);
-            }
-        }
-    }
-
-    /// Insert a new node as a child of another node.
-    fn insert_child_internal(&mut self, parent: NodeIndex, child: K, data: V) {
-        let child_node = HierNode::new(child.clone(), data);
-        let (_, child_idx) = self.graph.add_child(parent, (), child_node);
-        self.index.insert(child, child_idx);
-    }
-
-    /// Returns the `NodeIndex` for a particular key.
-    fn get_index(&self, key: &K) -> Result<NodeIndex, HierarchyError> {
-        self.index.get(key).cloned().ok_or(HierarchyError::KeyNotFound)
     }
 }
 
@@ -226,7 +238,7 @@ where
     /// Creates a default `Hierarchy` with just a root node.
     fn default() -> Self {
         let mut dag = Dag::new();
-        let root_idx = dag.add_node(HierNode::root());
+        let root_idx = dag.add_node(HierarchyNode::root());
 
         Hierarchy {
             root_idx,
@@ -277,34 +289,19 @@ where
 }
 
 #[cfg(any(test, feature = "serde_support"))]
-impl<K, V> Serialize for Hierarchy<K, V>
-where
-    K: Eq + Hash + Serialize,
-    V: Serialize,
-{
-    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = ser.serialize_struct("Hierarchy", 2)?;
-        state.serialize_field("root_idx", &self.root_idx)?;
-        state.skip_field("index")?;
-        state.serialize_field("graph", &self.graph)?;
-        state.end()
-    }
-}
-
-#[cfg(any(test, feature = "serde_support"))]
 impl<'de, K, V> Deserialize<'de> for Hierarchy<K, V>
 where
     K: Clone + Eq + Hash + Deserialize<'de>,
-    V: Clone + Default + Deserialize<'de>,
+    V: Deserialize<'de>,
 {
     fn deserialize<D>(de: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        const FIELDS: &[&str] = &["root_idx", "graph"];
+        const FIELDS: &[&str] = &[
+            "root_idx",
+            "graph",
+        ];
 
         #[derive(Deserialize)]
         #[serde(field_identifier, rename_all = "snake_case")]
@@ -324,7 +321,7 @@ where
         impl<'de, K, V> Visitor<'de> for HierarchyVisitor<K, V>
         where
             K: Clone + Eq + Hash + Deserialize<'de>,
-            V: Clone + Default + Deserialize<'de>,
+            V: Deserialize<'de>,
         {
             type Value = Hierarchy<K, V>;
 
@@ -375,20 +372,28 @@ where
     }
 }
 
-/// Each `HierNode` consists of an identifying key and the associated data.
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[derive(Clone, PartialEq, Eq)]
-struct HierNode<K, V>(Option<(K, V)>);
+struct HierarchyNodeData<K, V> {
+    key: K,
+    value: V,
+}
 
-impl<K, V> HierNode<K, V> {
+/// Each `HierNode` consists of an identifying key and the associated data.
+#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
+#[derive(Clone, PartialEq, Eq)]
+struct HierarchyNode<K, V>(Option<HierarchyNodeData<K, V>>);
+
+impl<K, V> HierarchyNode<K, V> {
     /// Creates a new `HierNode`.
-    fn new(key: K, data: V) -> Self {
-        HierNode(Some((key, data)))
+    fn new(key: K, value: V) -> Self {
+        HierarchyNode(Some(HierarchyNodeData { key, value }))
     }
 
     /// Creates a new root node.
     fn root() -> Self {
-        HierNode(None)
+        HierarchyNode(None)
     }
 
     /// Given the parent node's data, update the current node's data with the supplied closure.
@@ -399,9 +404,9 @@ impl<K, V> HierNode<K, V> {
     where
         for<'r> F: Fn(&'r K, &'r V, &'r V) -> Option<V>,
     {
-        if let Some((ref k, ref mut v)) = self.0 {
-            if let Some(data) = merge_fn(k, v, parent_data) {
-                *v = data;
+        if let Some(HierarchyNodeData { ref key, ref mut value }) = self.0 {
+            if let Some(data) = merge_fn(key, value, parent_data) {
+                *value = data;
             }
         }
     }
@@ -410,7 +415,7 @@ impl<K, V> HierNode<K, V> {
 /// Provides the ability to iterate over all `HierNode`s stored within a `Hierarchy`.
 pub struct RawNodes<'a, K: 'a, V: 'a> {
     index: usize,
-    data: &'a [Node<HierNode<K, V>, DefaultIx>],
+    data: &'a [Node<HierarchyNode<K, V>, DefaultIx>],
 }
 
 impl<'a, K, V> RawNodes<'a, K, V>
@@ -449,7 +454,7 @@ where
             // Retrieve the current node's data
             let w = &self.data[self.index].weight;
             self.index += 1;
-            w.0.as_ref().map(|&(ref k, ref v)| (k, v))
+            w.0.as_ref().map(|&HierarchyNodeData { ref key, ref value }| (key, value))
         } else {
             None
         }

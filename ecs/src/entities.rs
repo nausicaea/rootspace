@@ -13,8 +13,10 @@ pub struct Entities {
     /// Stores the highest assigned `Entity` index plus one.
     max_idx: Index,
     /// Stores all previously assigned `Entity` indices that are now available again.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     free_idx: Vec<Index>,
     /// Stores the generations of each `Entity`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     generations: Vec<Generation>,
 }
 

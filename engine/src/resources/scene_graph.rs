@@ -3,10 +3,15 @@ use hierarchy::Hierarchy;
 use serde::{Deserialize, Serialize};
 use std::{fmt, ops::Mul};
 
-#[derive(Default, Clone, PartialEq, Serialize, Deserialize)]
-pub struct SceneGraph<T>(Hierarchy<Entity, T>)
-where
-    T: Clone + Default;
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct SceneGraph<T>(Hierarchy<Entity, T>);
+
+impl<T> Default for SceneGraph<T> {
+    fn default() -> Self {
+        SceneGraph(Hierarchy::default())
+    }
+}
 
 impl<T> SceneGraph<T>
 where

@@ -11,6 +11,7 @@ use std::{
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Clone, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct ReceiverId<E> {
     id: usize,
     #[serde(skip)]
@@ -32,11 +33,11 @@ impl<E> ReceiverId<E> {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
+#[serde(from = "(usize, usize)", into = "(usize, usize)")]
 struct ReceiverState<E> {
     read: usize,
     received: usize,
-    receiver_name: String,
     #[serde(skip)]
     _e: PhantomData<E>,
 }
@@ -46,7 +47,6 @@ impl<E> ReceiverState<E> {
         ReceiverState {
             read: 0,
             received: 0,
-            receiver_name: short_type_name::<T>(),
             _e: PhantomData::default(),
         }
     }
@@ -54,6 +54,32 @@ impl<E> ReceiverState<E> {
     fn reset(&mut self) {
         self.read = 0;
         self.received = 0;
+    }
+}
+
+impl<E> Clone for ReceiverState<E> {
+    fn clone(&self) -> Self {
+        ReceiverState {
+            read: self.read,
+            received: self.received,
+            _e: PhantomData::default(),
+        }
+    }
+}
+
+impl<E> From<(usize, usize)> for ReceiverState<E> {
+    fn from(value: (usize, usize)) -> Self {
+        ReceiverState {
+            read: value.0,
+            received: value.1,
+            _e: PhantomData::default(),
+        }
+    }
+}
+
+impl<E> From<ReceiverState<E>> for (usize, usize) {
+    fn from(value: ReceiverState<E>) -> Self {
+        (value.read, value.received)
     }
 }
 
@@ -71,9 +97,12 @@ impl<E> std::fmt::Debug for ReceiverState<E> {
 /// those events.
 #[derive(Serialize, Deserialize)]
 pub struct EventQueue<E> {
+    #[serde(default = "VecDeque::default", skip_serializing_if = "VecDeque::is_empty")]
     events: VecDeque<E>,
+    #[serde(default = "HashMap::default", skip_serializing_if = "HashMap::is_empty")]
     receivers: HashMap<usize, ReceiverState<E>>,
     max_id: usize,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     free_ids: Vec<usize>,
 }
 
@@ -96,12 +125,6 @@ where
 {
     /// Subscribe to this event queue.
     pub fn subscribe<T>(&mut self) -> ReceiverId<E> {
-        let stnt = short_type_name::<T>();
-        let stns = short_type_name::<Self>();
-        if self.receivers.values().any(|rs| rs.receiver_name == stnt) {
-            warn!("Type {} already has a listener for {}. Is that intended?", stnt, stns,);
-        }
-
         let id = if let Some(id) = self.free_ids.pop() {
             id
         } else {
@@ -112,7 +135,9 @@ where
 
         self.receivers.insert(id, ReceiverState::new::<T>());
 
-        debug!("Adding subscriber {} to queue {}", stnt, stns,);
+        let stnt = short_type_name::<T>();
+        let stns = short_type_name::<Self>();
+        debug!("Adding subscriber {} to queue {}", stnt, stns);
         ReceiverId::new(id)
     }
 
