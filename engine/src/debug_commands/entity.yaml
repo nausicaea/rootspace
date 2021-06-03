@@ -12,6 +12,10 @@ args:
       takes_value: true
       help: Specify the index of the desired entity
 subcommands:
+  - create:
+      about: Creates a new entity
+      aliases:
+        - c
   - list:
       about: Prints a list of entities
       aliases:

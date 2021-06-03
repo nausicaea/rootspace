@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Result, Context};
 use clap::{App, ArgMatches, load_yaml};
 use thiserror::Error;
 
@@ -83,23 +83,26 @@ impl CommandTrait for StateCommand {
     }
 
     fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
-        let state_yaml = load_yaml!("state.yaml");
-        let matches = App::from_yaml(state_yaml).get_matches_from_safe(args)?;
+        let app_yaml = load_yaml!("state.yaml");
+        let matches = App::from_yaml(app_yaml).get_matches_from_safe(args)?;
+        let (subcommand, maybe_subcommand_matches) = matches.subcommand();
 
-        if let Some(save_matches) = matches.subcommand_matches("save") {
-            if let Some(path_str) = save_matches.value_of("path") {
-                let path = PathBuf::from(path_str);
-                res.borrow_mut::<EventQueue<WorldEvent>>()
-                    .send(WorldEvent::Serialize(path));
-            }
-        }
+        if subcommand == "save" {
+            let scm = maybe_subcommand_matches.context("No arguments were provided to the save subcommand")?;
+            let path = scm.value_of("path")
+                .map(|p| PathBuf::from(p))
+                .context("Missing required argument 'path'")?;
 
-        if let Some(load_matches) = matches.subcommand_matches("load") {
-            if let Some(path_str) = load_matches.value_of("path") {
-                let path = PathBuf::from(path_str);
-                res.borrow_mut::<EventQueue<WorldEvent>>()
-                    .send(WorldEvent::Deserialize(path));
-            }
+            res.borrow_mut::<EventQueue<WorldEvent>>()
+                .send(WorldEvent::Serialize(path));
+        } else if subcommand == "load" {
+            let scm = maybe_subcommand_matches.context("No arguments were provided to the load subcommand")?;
+            let path = scm.value_of("path")
+                .map(|p| PathBuf::from(p))
+                .context("Missing required argument 'path'")?;
+
+            res.borrow_mut::<EventQueue<WorldEvent>>()
+                .send(WorldEvent::Deserialize(path));
         }
 
         Ok(())
@@ -143,8 +146,8 @@ impl CommandTrait for CameraCommand {
     }
 
     fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
-        let camera_yaml = load_yaml!("camera.yaml");
-        let matches = App::from_yaml(camera_yaml).get_matches_from_safe(args)?;
+        let app_yaml = load_yaml!("camera.yaml");
+        let matches = App::from_yaml(app_yaml).get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
             let entities = res.borrow::<Entities>();
@@ -283,8 +286,24 @@ impl CommandTrait for EntityCommand {
     }
 
     fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
-        let entity_yaml = load_yaml!("entity.yaml");
-        let matches = App::from_yaml(entity_yaml).get_matches_from_safe(args)?;
+        let app_yaml = load_yaml!("entity.yaml");
+        let matches = App::from_yaml(app_yaml).get_matches_from_safe(args)?;
+
+        if let Some(create_matches) = matches.subcommand_matches("create") {
+            let ui_element = create_matches.is_present("ui");
+
+            let new_entity = res.borrow_mut::<Entities>().create();
+            res.borrow_components_mut::<Info>().insert(new_entity, Info::default());
+            res.borrow_components_mut::<Status>().insert(new_entity, Status::default());
+
+            if ui_element {
+                res.borrow_components_mut::<UiModel>().insert(new_entity, UiModel::default());
+                res.borrow_mut::<SceneGraph<UiModel>>().insert(new_entity);
+            } else {
+                res.borrow_components_mut::<Model>().insert(new_entity, Model::default());
+                res.borrow_mut::<SceneGraph<Model>>().insert(new_entity);
+            }
+        }
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
             let entities = res.borrow::<Entities>();
