@@ -15,7 +15,7 @@ use log::{error, warn};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use ecs::{EventQueue, Resources, System, SerializationName};
+use ecs::{EventQueue, Resources, SerializationName, System};
 
 use crate::{event::EngineEvent, resources::settings::Settings, text_manipulation::tokenize};
 

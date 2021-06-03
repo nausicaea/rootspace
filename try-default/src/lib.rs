@@ -6,8 +6,8 @@ pub trait TryDefault: Sized {
 }
 
 impl<T> TryDefault for T
-    where
-        T: Default,
+where
+    T: Default,
 {
     fn try_default() -> Result<Self, Error> {
         Ok(Default::default())

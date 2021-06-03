@@ -1,5 +1,5 @@
 use crate::{event::EngineEvent, graphics::BackendTrait, resources::GraphicsBackend};
-use ecs::{EventQueue, Resources, System, SerializationName};
+use ecs::{EventQueue, Resources, SerializationName, System};
 use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
 use serde::{Deserialize, Serialize};
@@ -20,8 +20,8 @@ impl<B> Default for EventInterface<B> {
 }
 
 impl<B> SerializationName for EventInterface<B>
-    where
-        B: BackendTrait,
+where
+    B: BackendTrait,
 {
     fn name() -> String {
         String::from("EventInterface")

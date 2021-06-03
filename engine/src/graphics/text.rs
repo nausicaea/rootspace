@@ -116,7 +116,12 @@ impl TextBuilder {
         self
     }
 
-    pub fn layout<'a, B: BackendTrait>(self, factory: &GraphicsBackend<B>, assets: &AssetDatabase, text: &str) -> Result<Text<'a>> {
+    pub fn layout<'a, B: BackendTrait>(
+        self,
+        factory: &GraphicsBackend<B>,
+        assets: &AssetDatabase,
+        text: &str,
+    ) -> Result<Text<'a>> {
         let font_data = self
             .font_path
             .as_ref()

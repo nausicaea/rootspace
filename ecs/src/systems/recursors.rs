@@ -6,7 +6,10 @@ use std::{
 
 use serde::{de, de::MapAccess, ser, ser::SerializeMap};
 
-use crate::{registry::SystemRegistry, resources::Resources, short_type_name::short_type_name, system::System, with_resources::WithResources, SerializationName};
+use crate::{
+    registry::SystemRegistry, resources::Resources, short_type_name::short_type_name, system::System,
+    with_resources::WithResources, SerializationName,
+};
 use log::trace;
 
 use super::{typed_system::TypedSystem, Systems};

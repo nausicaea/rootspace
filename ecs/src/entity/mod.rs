@@ -17,9 +17,9 @@ pub struct Entity {
 impl Entity {
     /// Create a new entity by specifying index and generation directly.
     pub(crate) fn new<I, G>(idx: I, gen: G) -> Entity
-        where
-            I: Into<Index>,
-            G: Into<Generation>,
+    where
+        I: Into<Index>,
+        G: Into<Generation>,
     {
         Entity {
             idx: idx.into(),

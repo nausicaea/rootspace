@@ -21,10 +21,7 @@ where
 {
     /// Creates a new `Ray`.
     pub fn new(origin: Point3<N>, direction: Unit<Vector3<N>>) -> Self {
-        Ray {
-            origin,
-            direction,
-        }
+        Ray { origin, direction }
     }
 
     /// Extends the `Ray` to the specified position and returns the resulting point.

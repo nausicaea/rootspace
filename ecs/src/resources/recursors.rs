@@ -1,9 +1,9 @@
 use super::Resources;
 use crate::{registry::ResourceRegistry, serialization_name::SerializationName};
+use anyhow::Error;
 use log::trace;
 use serde::{de, de::MapAccess, ser, ser::SerializeMap};
 use std::{any::type_name, marker::PhantomData};
-use anyhow::Error;
 use try_default::TryDefault;
 
 pub fn initialize_recursive<RR>(resources: &mut Resources, _: PhantomData<RR>) -> Result<(), Error>
@@ -18,7 +18,7 @@ where
         Ok(default_value) => {
             trace!("Initializing the resource {}", type_name::<RR::Head>());
             resources.insert(default_value);
-        },
+        }
         Err(e) => {
             return Err(e);
         }

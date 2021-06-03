@@ -1,8 +1,6 @@
 //! Provides facilities to define and manage events.
 
-use crate::{
-    resource::Resource, short_type_name::short_type_name, SerializationName,
-};
+use crate::{resource::Resource, short_type_name::short_type_name, SerializationName};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use std::{

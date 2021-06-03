@@ -1,9 +1,6 @@
-use crate::{
-    resource::Resource, serialization_name::SerializationName, system::System,
-    with_resources::WithResources,
-};
+use crate::{resource::Resource, serialization_name::SerializationName, system::System, with_resources::WithResources};
 use serde::{Deserialize, Serialize};
-use std::{fmt::Debug};
+use std::fmt::Debug;
 use try_default::TryDefault;
 
 /// An element within the heterogeneous list.

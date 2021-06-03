@@ -120,7 +120,9 @@ impl TryFrom<&Path> for NewOrExFilePathBuf {
                 .ok_or_else(|| FileError::ParentDirectoryNotFound(path.to_path_buf()))
                 .and_then(|p| p.canonicalize().map_err(|e| FileError::IoError(path.to_path_buf(), e)))?;
 
-            let file_name = path.file_name().ok_or_else(|| FileError::NoBaseNameFound(path.to_path_buf()))?;
+            let file_name = path
+                .file_name()
+                .ok_or_else(|| FileError::NoBaseNameFound(path.to_path_buf()))?;
 
             Ok(NewOrExFilePathBuf(parent.join(file_name)))
         } else if path.is_file() {

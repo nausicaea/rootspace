@@ -4,7 +4,7 @@ use crate::{
     resources::settings::Settings,
 };
 use anyhow::Result;
-use ecs::{EventQueue, ReceiverId, Resources, System, WithResources, SerializationName};
+use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Duration};
 use thiserror::Error;

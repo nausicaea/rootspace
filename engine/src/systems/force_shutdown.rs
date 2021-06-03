@@ -1,5 +1,5 @@
 use crate::event::EngineEvent;
-use ecs::{EventQueue, Resources, System, WithResources, SerializationName};
+use ecs::{EventQueue, Resources, SerializationName, System, WithResources};
 
 use log::debug;
 #[cfg(not(test))]

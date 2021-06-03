@@ -1,11 +1,11 @@
 use std::path::Path;
 
-use file_manipulation::{FilePathBuf, DirPathBuf};
+use file_manipulation::{DirPathBuf, FilePathBuf};
 
 use crate::assets::AssetError;
-use std::convert::TryFrom;
 use ecs::{Resource, SerializationName};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use std::convert::TryFrom;
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AssetDatabase {
@@ -18,9 +18,7 @@ impl SerializationName for AssetDatabase {}
 
 impl AssetDatabase {
     pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {
-        let asset_tree = self.asset_tree
-            .as_ref()
-            .ok_or(AssetError::TreeUnknown)?;
+        let asset_tree = self.asset_tree.as_ref().ok_or(AssetError::TreeUnknown)?;
 
         let asset_path = FilePathBuf::try_from(asset_tree.join(path))?;
 

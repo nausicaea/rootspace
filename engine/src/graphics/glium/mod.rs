@@ -52,11 +52,11 @@ impl TryInto<EngineEvent> for GliumEvent {
                 #[cfg(target_os = "macos")]
                 WindowEvent::KeyboardInput {
                     input:
-                    KeyboardInput {
-                        virtual_keycode: Some(GliumVkc::Q),
-                        modifiers: ModifiersState { logo: true, .. },
-                        ..
-                    },
+                        KeyboardInput {
+                            virtual_keycode: Some(GliumVkc::Q),
+                            modifiers: ModifiersState { logo: true, .. },
+                            ..
+                        },
                     ..
                 } => Ok(EngineEvent::Shutdown),
                 WindowEvent::KeyboardInput {

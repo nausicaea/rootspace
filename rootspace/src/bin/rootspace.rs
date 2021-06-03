@@ -1,10 +1,10 @@
 use anyhow::{Context, Result};
 use clap::{load_yaml, App};
-use engine::{HeadlessBackend, GliumBackend};
+use engine::{GliumBackend, HeadlessBackend};
 use fern::Dispatch;
-use log::{LevelFilter, SetLoggerError, debug};
-use std::io;
+use log::{debug, LevelFilter, SetLoggerError};
 use rootspace::Rootspace;
+use std::io;
 
 fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {
     let log_level = match verbosity {
@@ -77,8 +77,8 @@ fn main() -> Result<()> {
                 .context("Could not load a headless game from an existing state")?;
             g.run();
         } else {
-            let mut g = Rootspace::<GliumBackend>::load(&main_state)
-                .context("Could not load a game from an existing state")?;
+            let mut g =
+                Rootspace::<GliumBackend>::load(&main_state).context("Could not load a game from an existing state")?;
             g.run();
         }
     }

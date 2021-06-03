@@ -1,5 +1,5 @@
 use crate::{components::camera::Camera, event::EngineEvent};
-use ecs::{EventQueue, ReceiverId, Resources, System, WithResources, SerializationName};
+use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources};
 
 use log::debug;
 use serde::{Deserialize, Serialize};

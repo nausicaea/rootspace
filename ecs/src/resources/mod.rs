@@ -11,8 +11,8 @@ use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 
 use self::typed_resources::TypedResources;
 use crate::{component::Component, registry::ResourceRegistry, resource::Resource, short_type_name::short_type_name};
-use std::collections::HashSet;
 use anyhow::Error;
+use std::collections::HashSet;
 use try_default::TryDefault;
 
 mod recursors;
@@ -166,16 +166,15 @@ impl Resources {
             .get(&TypeId::of::<R>())
             .map(|r| {
                 Ref::map(r.borrow(), |i| {
-                    i.downcast_ref::<R>().unwrap_or_else(|| panic!(
-                        "Could not downcast the requested resource to type {}",
-                        short_type_name::<R>()
-                    ))
+                    i.downcast_ref::<R>().unwrap_or_else(|| {
+                        panic!(
+                            "Could not downcast the requested resource to type {}",
+                            short_type_name::<R>()
+                        )
+                    })
                 })
             })
-            .unwrap_or_else(|| panic!(
-                "Could not find any resource of type {}",
-                short_type_name::<R>()
-            ))
+            .unwrap_or_else(|| panic!("Could not find any resource of type {}", short_type_name::<R>()))
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
@@ -187,16 +186,15 @@ impl Resources {
             .get(&TypeId::of::<R>())
             .map(|r| {
                 RefMut::map(r.borrow_mut(), |i| {
-                    i.downcast_mut::<R>().unwrap_or_else(|| panic!(
-                        "Could not downcast the requested resource to type {}",
-                        short_type_name::<R>()
-                    ))
+                    i.downcast_mut::<R>().unwrap_or_else(|| {
+                        panic!(
+                            "Could not downcast the requested resource to type {}",
+                            short_type_name::<R>()
+                        )
+                    })
                 })
             })
-            .unwrap_or_else(|| panic!(
-                "Could not find any resource of type {}",
-                short_type_name::<R>()
-            ))
+            .unwrap_or_else(|| panic!("Could not find any resource of type {}", short_type_name::<R>()))
     }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
@@ -207,15 +205,14 @@ impl Resources {
         self.0
             .get_mut(&TypeId::of::<R>())
             .map(|r| {
-                r.get_mut().downcast_mut::<R>().unwrap_or_else(|| panic!(
-                    "Could not downcast the requested resource to type {}",
-                    short_type_name::<R>()
-                ))
+                r.get_mut().downcast_mut::<R>().unwrap_or_else(|| {
+                    panic!(
+                        "Could not downcast the requested resource to type {}",
+                        short_type_name::<R>()
+                    )
+                })
             })
-            .unwrap_or_else(|| panic!(
-                "Could not find any resource of type {}",
-                short_type_name::<R>()
-            ))
+            .unwrap_or_else(|| panic!("Could not find any resource of type {}", short_type_name::<R>()))
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).

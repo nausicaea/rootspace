@@ -7,13 +7,16 @@ use std::{
 
 use log::debug;
 
-use ecs::{world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System, WithResources, SerializationName};
+use ecs::{
+    world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, SerializationName, Storage, System,
+    WithResources,
+};
 
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
     event::EngineEvent,
     graphics::{BackendTrait, FrameTrait},
-    resources::{Settings, GraphicsBackend, SceneGraph, AssetDatabase},
+    resources::{AssetDatabase, GraphicsBackend, SceneGraph, Settings},
 };
 
 static DRAW_CALL_WINDOW: usize = 10;

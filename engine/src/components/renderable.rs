@@ -14,10 +14,9 @@ use crate::{
             index_buffer_id::IndexBufferId, shader_id::ShaderId, texture_id::TextureId,
             vertex_buffer_id::VertexBufferId,
         },
-        GraphicsBackend,
+        AssetDatabase, GraphicsBackend,
     },
 };
-use crate::resources::AssetDatabase;
 use file_manipulation::FilePathBuf;
 use std::convert::TryFrom;
 
@@ -264,7 +263,11 @@ impl RenderableBuilder {
         self
     }
 
-    pub fn build<B: BackendTrait>(&self, factory: &mut GraphicsBackend<B>, assets: &AssetDatabase) -> Result<Renderable> {
+    pub fn build<B: BackendTrait>(
+        &self,
+        factory: &mut GraphicsBackend<B>,
+        assets: &AssetDatabase,
+    ) -> Result<Renderable> {
         match self.ty {
             RenderableType::Mesh => {
                 let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;

@@ -3,7 +3,7 @@ use ecs::{Component, EventQueue, RegAdd, WorldEvent};
 use crate::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,
-    resources::{Settings, GraphicsBackend, SceneGraph, AssetDatabase},
+    resources::{AssetDatabase, GraphicsBackend, SceneGraph, Settings},
     systems::{
         camera_manager::CameraManager, debug_console::DebugConsole, debug_shell::DebugShell,
         event_coordinator::EventCoordinator, event_interface::EventInterface, event_monitor::EventMonitor,

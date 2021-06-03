@@ -1,3 +1,4 @@
+use anyhow::Error;
 use std::{
     cell::{Ref, RefMut},
     convert::TryFrom,
@@ -6,7 +7,6 @@ use std::{
     path::Path,
     time::Duration,
 };
-use anyhow::Error;
 
 use serde::{
     de,

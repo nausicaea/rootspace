@@ -17,6 +17,7 @@ use vertex_buffer_id::VertexBufferId;
 use crate::{
     components::Renderable,
     graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait},
+    resources::AssetDatabase,
 };
 use serde::{
     de,
@@ -26,7 +27,6 @@ use serde::{
 };
 use std::{convert::TryInto, marker::PhantomData};
 use try_default::TryDefault;
-use crate::resources::AssetDatabase;
 
 pub mod index_buffer_id;
 pub mod shader_id;
@@ -109,7 +109,11 @@ where
         GraphicsBackendBuilder::default()
     }
 
-    pub fn reload_assets(&mut self, db: &AssetDatabase, renderables: &mut <Renderable as Component>::Storage) -> Result<()> {
+    pub fn reload_assets(
+        &mut self,
+        db: &AssetDatabase,
+        renderables: &mut <Renderable as Component>::Storage,
+    ) -> Result<()> {
         self.textures.clear();
         self.shaders.clear();
         self.vertex_buffers.clear();

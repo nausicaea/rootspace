@@ -7,7 +7,7 @@ use anyhow::Result;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use ecs::{LoopControl, ResourceRegistry, SystemRegistry, World, Reg};
+use ecs::{LoopControl, Reg, ResourceRegistry, SystemRegistry, World};
 
 use crate::{
     components::{Model, UiModel},
@@ -24,7 +24,8 @@ pub mod type_registry;
 
 pub type EmptyGame<B> = Orchestrator<B, Reg![], Reg![], Reg![], Reg![]>;
 
-type OrchestratorWorld<B, RR, FUSR, USR, RSR> = World<ResourceTypes<B, RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>;
+type OrchestratorWorld<B, RR, FUSR, USR, RSR> =
+    World<ResourceTypes<B, RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>;
 
 pub struct Orchestrator<B: BackendTrait, RR, FUSR, USR, RSR> {
     world: OrchestratorWorld<B, RR, FUSR, USR, RSR>,

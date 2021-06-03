@@ -1,4 +1,4 @@
-use ecs::{EventQueue, ReceiverId, Resources, System, WithResources, SerializationName};
+use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources};
 use log::trace;
 use serde::{Deserialize, Serialize};
 use std::{fmt, time::Duration};
