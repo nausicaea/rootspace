@@ -1,11 +1,10 @@
-use std::{convert::TryFrom, ffi::OsString, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::Result;
-use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use clap::{App, ArgMatches, load_yaml};
 use thiserror::Error;
 
 use ecs::{world::event::WorldEvent, Component, Entities, Entity, EventQueue, Resources, Storage};
-use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 
 use crate::{
     components::{Camera, Info, Model, Status, UiModel},
@@ -84,44 +83,8 @@ impl CommandTrait for StateCommand {
     }
 
     fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
-        let matches = App::new("state")
-            .setting(AppSettings::DisableVersion)
-            .setting(AppSettings::SubcommandRequiredElseHelp)
-            .subcommand(
-                SubCommand::with_name("save")
-                    .about("Saves the world state to a file")
-                    .setting(AppSettings::DisableVersion)
-                    .setting(AppSettings::ArgRequiredElseHelp)
-                    .arg(
-                        Arg::with_name("path")
-                            .required(true)
-                            .takes_value(true)
-                            .validator_os(|s| {
-                                NewOrExFilePathBuf::try_from(s)
-                                    .map(|_| ())
-                                    .map_err(|e| OsString::from(format!("{}", e)))
-                            })
-                            .help("Sets the path of the file to write to"),
-                    ),
-            )
-            .subcommand(
-                SubCommand::with_name("load")
-                    .about("Loads the world state from a file")
-                    .setting(AppSettings::DisableVersion)
-                    .setting(AppSettings::ArgRequiredElseHelp)
-                    .arg(
-                        Arg::with_name("path")
-                            .required(true)
-                            .takes_value(true)
-                            .validator_os(|s| {
-                                FilePathBuf::try_from(s)
-                                    .map(|_| ())
-                                    .map_err(|e| OsString::from(format!("{}", e)))
-                            })
-                            .help("Sets the path of the file to read from"),
-                    ),
-            )
-            .get_matches_from_safe(args)?;
+        let state_yaml = load_yaml!("state.yaml");
+        let matches = App::from_yaml(state_yaml).get_matches_from_safe(args)?;
 
         if let Some(save_matches) = matches.subcommand_matches("save") {
             if let Some(path_str) = save_matches.value_of("path") {
@@ -180,30 +143,8 @@ impl CommandTrait for CameraCommand {
     }
 
     fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
-        let matches = App::new("camera")
-            .about("Provides access to the camera")
-            .setting(AppSettings::DisableVersion)
-            .setting(AppSettings::SubcommandRequiredElseHelp)
-            .arg(
-                Arg::with_name("index")
-                    .short("i")
-                    .long("index")
-                    .takes_value(true)
-                    .help("Specify the index of the desired camera"),
-            )
-            .subcommand(
-                SubCommand::with_name("info")
-                    .about("Prints camera settings")
-                    .setting(AppSettings::DisableVersion)
-                    .setting(AppSettings::ArgRequiredElseHelp)
-                    .arg(
-                        Arg::with_name("dimensions")
-                            .short("d")
-                            .long("dimensions")
-                            .help("Display the viewport dimensions"),
-                    ),
-            )
-            .get_matches_from_safe(args)?;
+        let camera_yaml = load_yaml!("camera.yaml");
+        let matches = App::from_yaml(camera_yaml).get_matches_from_safe(args)?;
 
         if let Some(info_matches) = matches.subcommand_matches("info") {
             let entities = res.borrow::<Entities>();
@@ -342,87 +283,8 @@ impl CommandTrait for EntityCommand {
     }
 
     fn run(&self, res: &Resources, args: &[String]) -> Result<()> {
-        let matches = App::new("entity")
-            .about("Provides access to entities within the world")
-            .setting(AppSettings::DisableVersion)
-            .setting(AppSettings::SubcommandRequiredElseHelp)
-            .arg(
-                Arg::with_name("index")
-                    .short("i")
-                    .long("index")
-                    .takes_value(true)
-                    .help("Specify the index of the desired entity"),
-            )
-            .subcommand(
-                SubCommand::with_name("list")
-                    .about("Prints a list of entities")
-                    .setting(AppSettings::DisableVersion)
-                    .arg(
-                        Arg::with_name("count")
-                            .short("c")
-                            .long("count")
-                            .help("Displays the number of entities"),
-                    )
-                    .arg(
-                        Arg::with_name("names")
-                            .short("n")
-                            .long("names")
-                            .help("Displays the names of entities"),
-                    )
-                    .arg(
-                        Arg::with_name("statuses")
-                            .short("s")
-                            .long("statuses")
-                            .help("Displays the statuses of entities"),
-                    )
-                    .arg(
-                        Arg::with_name("positions")
-                            .short("p")
-                            .long("positions")
-                            .help("Displays the absolute positions of entities"),
-                    )
-                    .arg(
-                        Arg::with_name("ndc-positions")
-                            .short("q")
-                            .long("ndc-positions")
-                            .help("Displays the positions of entities in NDC space"),
-                    ),
-            )
-            .subcommand(
-                SubCommand::with_name("status")
-                    .about("Updates the status of one or more entities")
-                    .setting(AppSettings::DisableVersion)
-                    .setting(AppSettings::ArgRequiredElseHelp)
-                    .arg(
-                        Arg::with_name("enable")
-                            .short("e")
-                            .long("enable")
-                            .conflicts_with("disable")
-                            .help("Enables the selected entity"),
-                    )
-                    .arg(
-                        Arg::with_name("disable")
-                            .short("d")
-                            .long("disable")
-                            .conflicts_with("enable")
-                            .help("Disables the selected entity"),
-                    )
-                    .arg(
-                        Arg::with_name("show")
-                            .short("s")
-                            .long("show")
-                            .conflicts_with("hide")
-                            .help("Shows the selected entity"),
-                    )
-                    .arg(
-                        Arg::with_name("hide")
-                            .short("h")
-                            .long("hide")
-                            .conflicts_with("show")
-                            .help("Hides the selected entity"),
-                    ),
-            )
-            .get_matches_from_safe(args)?;
+        let entity_yaml = load_yaml!("entity.yaml");
+        let matches = App::from_yaml(entity_yaml).get_matches_from_safe(args)?;
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
             let entities = res.borrow::<Entities>();

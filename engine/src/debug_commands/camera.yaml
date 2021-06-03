@@ -1,0 +1,25 @@
+name: camera
+author: Eleanor Young <developer@nausicaea.net
+about: Provides access to the camera
+settings:
+  - DisableVersion
+  - VersionlessSubcommands
+  - SubcommandRequiredElseHelp
+args:
+  - index:
+      short: i
+      long: index
+      takes_value: true
+      help: Specify the index of the desired camera
+subcommands:
+  - info:
+      about: Prints camera settings
+      args:
+        - count:
+            short: c
+            long: count
+            help: Shows the number of cameras
+        - dimensions:
+            short: d
+            long: dimensions
+            help: Display the viewport dimensions
