@@ -7,9 +7,7 @@ use std::{
 
 use log::debug;
 
-use ecs::{
-    world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System, WithResources,
-};
+use ecs::{world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, Storage, System, WithResources, SerializationName};
 
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
@@ -204,5 +202,11 @@ where
         self.update_draw_calls(world_draw_calls, ui_draw_calls);
 
         self.update_frame_time(start_mark.elapsed());
+    }
+}
+
+impl<B> SerializationName for Renderer<B> {
+    fn name() -> String {
+        String::from("Renderer")
     }
 }

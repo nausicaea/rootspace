@@ -1,4 +1,4 @@
-use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources, SerializationName};
 use log::trace;
 use serde::{Deserialize, Serialize};
 use std::{fmt, time::Duration};
@@ -18,6 +18,8 @@ where
         EventMonitor { receiver }
     }
 }
+
+impl<E> SerializationName for EventMonitor<E> {}
 
 impl<E> System for EventMonitor<E>
 where

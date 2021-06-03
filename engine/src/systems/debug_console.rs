@@ -15,7 +15,7 @@ use log::{error, warn};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use ecs::{EventQueue, Resources, System};
+use ecs::{EventQueue, Resources, System, SerializationName};
 
 use crate::{event::EngineEvent, resources::settings::Settings, text_manipulation::tokenize};
 
@@ -40,6 +40,8 @@ impl DebugConsole {
             .send(EngineEvent::Command(tokens));
     }
 }
+
+impl SerializationName for DebugConsole {}
 
 impl DebugConsole {
     pub fn builder() -> DebugConsoleBuilder<std::io::Stdin> {

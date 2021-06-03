@@ -1,10 +1,11 @@
 use crate::{event::EngineEvent, graphics::BackendTrait, resources::GraphicsBackend};
-use ecs::{EventQueue, Resources, System};
+use ecs::{EventQueue, Resources, System, SerializationName};
 use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename(serialize = "EventInterface", deserialize = "EventInterface"))]
 pub struct EventInterface<B> {
     #[serde(skip)]
     _b: PhantomData<B>,
@@ -15,6 +16,15 @@ impl<B> Default for EventInterface<B> {
         EventInterface {
             _b: PhantomData::default(),
         }
+    }
+}
+
+impl<B> SerializationName for EventInterface<B>
+    where
+        B: BackendTrait,
+{
+    fn name() -> String {
+        String::from("EventInterface")
     }
 }
 

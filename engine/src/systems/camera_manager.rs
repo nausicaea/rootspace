@@ -1,5 +1,5 @@
 use crate::{components::camera::Camera, event::EngineEvent};
-use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources, SerializationName};
 
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -35,6 +35,8 @@ impl CameraManager {
             .for_each(|c| c.set_dpi_factor(factor));
     }
 }
+
+impl SerializationName for CameraManager {}
 
 impl System for CameraManager {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {

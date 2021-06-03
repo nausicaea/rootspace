@@ -145,7 +145,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{resource::Resource, Reg, SerializationProxy};
+    use crate::{resource::Resource, Reg, SerializationName};
     use serde_test::{assert_tokens, Token};
 
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -153,19 +153,19 @@ mod tests {
 
     impl Resource for TestResourceA {}
 
-    impl SerializationProxy for TestResourceA {}
+    impl SerializationName for TestResourceA {}
 
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct TestResourceB;
 
     impl Resource for TestResourceB {}
-    impl SerializationProxy for TestResourceB {}
+    impl SerializationName for TestResourceB {}
 
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct TestResourceC;
 
     impl Resource for TestResourceC {}
-    impl SerializationProxy for TestResourceC {}
+    impl SerializationName for TestResourceC {}
 
     type TypeRegistry = Reg![TestResourceA, TestResourceB, TestResourceC];
 

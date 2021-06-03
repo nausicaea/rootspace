@@ -156,7 +156,7 @@ mod tests {
     use serde::Deserialize;
     use serde_test::{assert_tokens, Token};
 
-    use crate::{resources::Resources, system::System, Reg};
+    use crate::{resources::Resources, system::System, Reg, SerializationName};
 
     use super::*;
 
@@ -167,6 +167,8 @@ mod tests {
         fn run(&mut self, _: &Resources, _: &Duration, _: &Duration) {}
     }
 
+    impl SerializationName for TestSystemA {}
+
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct TestSystemB;
 
@@ -174,12 +176,16 @@ mod tests {
         fn run(&mut self, _: &Resources, _: &Duration, _: &Duration) {}
     }
 
+    impl SerializationName for TestSystemB {}
+
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct TestSystemC;
 
     impl System for TestSystemC {
         fn run(&mut self, _: &Resources, _: &Duration, _: &Duration) {}
     }
+
+    impl SerializationName for TestSystemC {}
 
     type TypeRegistry = Reg![TestSystemA, TestSystemB, TestSystemC];
 

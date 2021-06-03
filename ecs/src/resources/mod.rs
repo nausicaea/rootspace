@@ -254,7 +254,7 @@ mod tests {
     use serde::{Deserialize, Serialize};
     use serde_json;
 
-    use crate::{world::event::WorldEvent, Entities, EventQueue, Reg, SerializationProxy};
+    use crate::{world::event::WorldEvent, Entities, EventQueue, Reg, SerializationName};
 
     use super::*;
 
@@ -263,21 +263,21 @@ mod tests {
 
     impl Resource for TestResourceA {}
 
-    impl SerializationProxy for TestResourceA {}
+    impl SerializationName for TestResourceA {}
 
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceB(Vec<usize>);
 
     impl Resource for TestResourceB {}
 
-    impl SerializationProxy for TestResourceB {}
+    impl SerializationName for TestResourceB {}
 
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceC(String);
 
     impl Resource for TestResourceC {}
 
-    impl SerializationProxy for TestResourceC {}
+    impl SerializationName for TestResourceC {}
 
     type TestRegistry = Reg![TestResourceA, TestResourceB, TestResourceC,];
 

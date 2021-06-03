@@ -49,6 +49,16 @@ impl TryInto<EngineEvent> for GliumEvent {
                 WindowEvent::CloseRequested => Ok(EngineEvent::Shutdown),
                 WindowEvent::Resized(l) => Ok(EngineEvent::Resize(l.into())),
                 WindowEvent::HiDpiFactorChanged(f) => Ok(EngineEvent::ChangeDpi(f)),
+                #[cfg(target_os = "macos")]
+                WindowEvent::KeyboardInput {
+                    input:
+                    KeyboardInput {
+                        virtual_keycode: Some(GliumVkc::Q),
+                        modifiers: ModifiersState { logo: true, .. },
+                        ..
+                    },
+                    ..
+                } => Ok(EngineEvent::Shutdown),
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
@@ -64,17 +74,6 @@ impl TryInto<EngineEvent> for GliumEvent {
                     virtual_keycode: vkc.map(|v| v.into()),
                     modifiers: mods.into(),
                 }),
-                #[allow(unreachable_patterns)]
-                #[cfg(target_os = "macos")]
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(GliumVkc::Q),
-                            modifiers: ModifiersState { logo: true, .. },
-                            ..
-                        },
-                    ..
-                } => Ok(EngineEvent::Shutdown),
                 _ => Err(()),
             }
         } else {
@@ -519,16 +518,14 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", ignore)]
-    #[cfg_attr(target_os = "macos", ignore)]
+    #[cfg_attr(target_os = "macos", ignore = "Crashes on macos")]
     fn backend() {
         let r = GliumBackend::new("Title", (800, 600), false, 0);
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", ignore)]
-    #[cfg_attr(target_os = "macos", ignore)]
+    #[cfg_attr(target_os = "macos", ignore = "Crashes on macos")]
     fn dpi_factor() {
         let b = GliumBackend::new("Title", (800, 600), false, 0).unwrap();
 
@@ -536,8 +533,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "wsl", ignore)]
-    #[cfg_attr(target_os = "macos", ignore)]
+    #[cfg_attr(target_os = "macos", ignore = "Crashes on macos")]
     fn frame() {
         let mut f = GraphicsBackend::<GliumBackend>::try_default().unwrap();
 

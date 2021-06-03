@@ -1,4 +1,4 @@
-use ecs::{Resource, SerializationProxy};
+use ecs::{Resource, SerializationName};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -22,4 +22,4 @@ impl Default for Settings {
 
 impl Resource for Settings {}
 
-impl SerializationProxy for Settings {}
+impl SerializationName for Settings {}

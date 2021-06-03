@@ -10,10 +10,10 @@ impl Display for EmptyProxyError {
     }
 }
 
-pub trait SerializationProxy: Sized {
+pub trait SerializationName: Sized {
     fn name() -> String {
         short_type_name::<Self>()
     }
 }
 
-impl SerializationProxy for () {}
+impl SerializationName for () {}

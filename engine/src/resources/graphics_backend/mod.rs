@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::{Error, Result};
 
-use ecs::{Component, Resource, SerializationProxy};
+use ecs::{Component, Resource, SerializationName};
 use file_manipulation::FilePathBuf;
 use index_buffer_id::IndexBufferId;
 use shader_id::ShaderId;
@@ -195,7 +195,7 @@ where
 
 impl<B> Resource for GraphicsBackend<B> where B: BackendTrait + 'static {}
 
-impl<B> SerializationProxy for GraphicsBackend<B>
+impl<B> SerializationName for GraphicsBackend<B>
 where
     B: BackendTrait,
 {

@@ -3,7 +3,7 @@
 use crate::{
     entity::{Entity, generation::Generation, index::Index},
     resource::Resource,
-    SerializationProxy,
+    SerializationName,
 };
 use serde::{Deserialize, Serialize};
 
@@ -78,7 +78,7 @@ impl Entities {
 
 impl Resource for Entities {}
 
-impl SerializationProxy for Entities {}
+impl SerializationName for Entities {}
 
 impl<'a> IntoIterator for &'a Entities {
     type IntoIter = EntitiesIter<'a>;

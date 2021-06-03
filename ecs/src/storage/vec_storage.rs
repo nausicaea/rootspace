@@ -2,7 +2,7 @@ use super::{
     iterators::{EnumRIter, RIter, WIter},
     Storage,
 };
-use crate::{entity::index::Index, resource::Resource, SerializationProxy};
+use crate::{entity::index::Index, resource::Resource, SerializationName};
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, Serializer},
@@ -147,7 +147,7 @@ impl<T> Storage for VecStorage<T> {
 
 impl<T> Resource for VecStorage<T> where T: 'static {}
 
-impl<T> SerializationProxy for VecStorage<T> {}
+impl<T> SerializationName for VecStorage<T> {}
 
 impl<T> Drop for VecStorage<T> {
     fn drop(&mut self) {

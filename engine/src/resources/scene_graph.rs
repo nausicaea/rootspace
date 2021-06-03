@@ -1,4 +1,4 @@
-use ecs::{Component, Entity, Resource, SerializationProxy, Storage};
+use ecs::{Component, Entity, Resource, SerializationName, Storage};
 use hierarchy::Hierarchy;
 use serde::{Deserialize, Serialize};
 use std::{fmt, ops::Mul};
@@ -42,7 +42,7 @@ where
 
 impl<T> Resource for SceneGraph<T> where T: Clone + Default + 'static {}
 
-impl<T> SerializationProxy for SceneGraph<T> where T: Clone + Default {}
+impl<T> SerializationName for SceneGraph<T> where T: Clone + Default {}
 
 impl<'a, T> IntoIterator for &'a SceneGraph<T>
 where

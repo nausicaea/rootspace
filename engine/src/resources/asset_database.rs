@@ -4,7 +4,7 @@ use file_manipulation::{FilePathBuf, DirPathBuf};
 
 use crate::assets::AssetError;
 use std::convert::TryFrom;
-use ecs::{Resource, SerializationProxy};
+use ecs::{Resource, SerializationName};
 use serde::{Serialize, Deserialize};
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -14,7 +14,7 @@ pub struct AssetDatabase {
 
 impl Resource for AssetDatabase {}
 
-impl SerializationProxy for AssetDatabase {}
+impl SerializationName for AssetDatabase {}
 
 impl AssetDatabase {
     pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {

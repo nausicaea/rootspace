@@ -1,5 +1,5 @@
 use crate::event::EngineEvent;
-use ecs::{EventQueue, Resources, System, WithResources};
+use ecs::{EventQueue, Resources, System, WithResources, SerializationName};
 
 use log::debug;
 #[cfg(not(test))]
@@ -44,6 +44,8 @@ impl WithResources for ForceShutdown {
         ForceShutdown { ctrlc_triggered }
     }
 }
+
+impl SerializationName for ForceShutdown {}
 
 impl System for ForceShutdown {
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {

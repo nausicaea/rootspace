@@ -4,7 +4,7 @@ use crate::{
     resources::settings::Settings,
 };
 use anyhow::Result;
-use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources, SerializationName};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Duration};
 use thiserror::Error;
@@ -89,6 +89,8 @@ impl System for DebugShell {
         }
     }
 }
+
+impl SerializationName for DebugShell {}
 
 #[derive(Debug, Error)]
 enum DebugShellError {

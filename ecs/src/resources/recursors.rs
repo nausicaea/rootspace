@@ -1,5 +1,5 @@
 use super::Resources;
-use crate::{registry::ResourceRegistry, serialization_proxy::SerializationProxy};
+use crate::{registry::ResourceRegistry, serialization_name::SerializationName};
 use log::trace;
 use serde::{de, de::MapAccess, ser, ser::SerializeMap};
 use std::{any::type_name, marker::PhantomData};
@@ -49,7 +49,7 @@ where
 
     trace!("Serializing the resource {}", type_name::<RR::Head>());
     let resource = resources.borrow::<RR::Head>();
-    serialize_map.serialize_entry(&<RR::Head as SerializationProxy>::name(), &*resource)?;
+    serialize_map.serialize_entry(&<RR::Head as SerializationName>::name(), &*resource)?;
 
     serialize_recursive::<RR::Tail, SM>(resources, serialize_map, PhantomData::default())
 }
@@ -69,14 +69,14 @@ where
         return Err(de::Error::custom(format!("Unknown resource {}", ser_type_name)));
     }
 
-    if resources.contains::<RR::Head>() {
-        return Err(de::Error::custom(format!(
-            "Duplicate resource {}",
-            type_name::<RR::Head>()
-        )));
-    }
+    if ser_type_name == <RR::Head as SerializationName>::name() {
+        if resources.contains::<RR::Head>() {
+            return Err(de::Error::custom(format!(
+                "Duplicate resource {}",
+                type_name::<RR::Head>()
+            )));
+        }
 
-    if ser_type_name == <RR::Head as SerializationProxy>::name() {
         trace!("Deserializing the resource {}", type_name::<RR::Head>());
         let resource = map_access.next_value::<RR::Head>()?;
         resources.insert(resource);

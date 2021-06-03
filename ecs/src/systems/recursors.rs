@@ -6,10 +6,7 @@ use std::{
 
 use serde::{de, de::MapAccess, ser, ser::SerializeMap};
 
-use crate::{
-    registry::SystemRegistry, resources::Resources, short_type_name::short_type_name, system::System,
-    with_resources::WithResources,
-};
+use crate::{registry::SystemRegistry, resources::Resources, short_type_name::short_type_name, system::System, with_resources::WithResources, SerializationName};
 use log::trace;
 
 use super::{typed_system::TypedSystem, Systems};
@@ -42,13 +39,13 @@ where
         return Ok(());
     }
 
-    let stn = short_type_name::<SR::Head>();
+    let stn = <SR::Head as SerializationName>::name();
 
     trace!("Serializing the system {}", &stn);
     if let Some((order, system)) = systems.find_with_position::<SR::Head>() {
         serialize_map.serialize_entry(&stn, &TypedSystem::new(order, system))?;
     } else {
-        return Err(ser::Error::custom(format!("the system {} was not found", stn,)));
+        return Err(ser::Error::custom(format!("the system {} was not found", stn)));
     }
 
     serialize_recursive::<SR::Tail, SM>(systems, serialize_map, PhantomData::default())
@@ -70,7 +67,7 @@ where
         return Err(de::Error::custom(format!("Unknown field {}", ser_type_name)));
     }
 
-    let stn: String = short_type_name::<SR::Head>();
+    let stn = <SR::Head as SerializationName>::name();
 
     if ser_type_name == stn {
         let tid = TypeId::of::<SR::Head>();
@@ -78,7 +75,7 @@ where
             return Err(de::Error::custom(format!("Duplicate field {}", stn)));
         }
 
-        trace!("Deserializing the system {}", stn);
+        trace!("Deserializing the system {}", type_name::<SR::Head>());
         let c = map_access.next_value::<TypedSystem<SR::Head>>()?;
         systems.insert(c.order, Box::new(c.system.unwrap_right()));
         type_tracker.insert(tid);

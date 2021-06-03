@@ -2,7 +2,7 @@ use super::{
     iterators::{EnumRIter, RIter, WIter},
     Storage,
 };
-use crate::{entity::index::Index, resource::Resource, SerializationProxy};
+use crate::{entity::index::Index, resource::Resource, SerializationName};
 use serde::{
     de::{Deserializer, SeqAccess, Visitor},
     ser::{SerializeSeq, Serializer},
@@ -86,7 +86,7 @@ impl<T> Storage for ZstStorage<T> {
 
 impl<T> Resource for ZstStorage<T> where T: 'static {}
 
-impl<T> SerializationProxy for ZstStorage<T> {}
+impl<T> SerializationName for ZstStorage<T> {}
 
 impl<T> Default for ZstStorage<T>
 where

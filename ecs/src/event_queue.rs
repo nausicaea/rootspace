@@ -1,7 +1,7 @@
 //! Provides facilities to define and manage events.
 
 use crate::{
-    resource::Resource, short_type_name::short_type_name, SerializationProxy,
+    resource::Resource, short_type_name::short_type_name, SerializationName,
 };
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
@@ -199,7 +199,7 @@ where
 
 impl<E> Resource for EventQueue<E> where E: fmt::Debug + 'static {}
 
-impl<E> SerializationProxy for EventQueue<E> {}
+impl<E> SerializationName for EventQueue<E> {}
 
 impl<E> Default for EventQueue<E> {
     fn default() -> Self {

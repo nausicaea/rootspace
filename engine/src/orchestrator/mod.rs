@@ -7,7 +7,7 @@ use anyhow::Result;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use ecs::{LoopControl, ResourceRegistry, SystemRegistry, World};
+use ecs::{LoopControl, ResourceRegistry, SystemRegistry, World, Reg};
 
 use crate::{
     components::{Model, UiModel},
@@ -21,6 +21,8 @@ use std::{convert::TryFrom, fs::File, path::Path};
 use try_default::TryDefault;
 
 pub mod type_registry;
+
+pub type EmptyGame<B> = Orchestrator<B, Reg![], Reg![], Reg![], Reg![]>;
 
 type OrchestratorWorld<B, RR, FUSR, USR, RSR> = World<ResourceTypes<B, RR>, FUSR, UpdateSystemTypes<B, USR>, RenderSystemTypes<B, RSR>>;
 
@@ -39,11 +41,8 @@ where
     RSR: SystemRegistry,
 {
     pub fn new() -> Result<Self> {
-        // Create the world
-        let world = World::try_default()?;
-
         Ok(Orchestrator {
-            world,
+            world: World::try_default()?,
             delta_time: Duration::from_millis(50),
             max_frame_time: Duration::from_millis(250),
         })
