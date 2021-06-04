@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::VecDeque,
     marker::PhantomData,
     time::{Duration, Instant},
 };
@@ -18,19 +17,13 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     resources::{AssetDatabase, GraphicsBackend, SceneGraph, Settings},
 };
-
-static DRAW_CALL_WINDOW: usize = 10;
-static FRAME_TIME_WINDOW: usize = 10;
+use crate::resources::Statistics;
 
 #[derive(Serialize, Deserialize)]
 pub struct Renderer<B> {
     receiver: ReceiverId<WorldEvent>,
     #[serde(skip)]
     initialised: bool,
-    #[serde(skip)]
-    draw_calls: VecDeque<(usize, usize)>,
-    #[serde(skip)]
-    frame_times: VecDeque<Duration>,
     #[serde(skip)]
     _b: PhantomData<B>,
 }
@@ -39,8 +32,8 @@ impl<B> std::fmt::Debug for Renderer<B> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Renderer {{ receiver: {:?}, initialised: {:?}, draw_calls: {:?}, frame_times: {:?} }}",
-            self.receiver, self.initialised, self.draw_calls, self.frame_times,
+            "Renderer {{ receiver: {:?}, initialised: {:?} }}",
+            self.receiver, self.initialised,
         )
     }
 }
@@ -55,8 +48,6 @@ where
         Renderer {
             receiver,
             initialised: false,
-            draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
-            frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
             _b: PhantomData::default(),
         }
     }
@@ -83,32 +74,6 @@ where
             .expect("Could not reload all renderable assets");
 
         debug!("Completed reloading all renderables after {:?}", reload_mark.elapsed());
-    }
-
-    pub fn average_world_draw_calls(&self) -> f32 {
-        self.draw_calls.iter().map(|(wdc, _)| wdc).sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
-    }
-
-    pub fn average_ui_draw_calls(&self) -> f32 {
-        self.draw_calls.iter().map(|(_, udc)| udc).sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
-    }
-
-    pub fn average_frame_time(&self) -> Duration {
-        self.frame_times.iter().sum::<Duration>() / FRAME_TIME_WINDOW as u32
-    }
-
-    fn update_draw_calls(&mut self, world_draw_calls: usize, ui_draw_calls: usize) {
-        self.draw_calls.push_front((world_draw_calls, ui_draw_calls));
-        if self.draw_calls.len() > DRAW_CALL_WINDOW {
-            self.draw_calls.truncate(DRAW_CALL_WINDOW);
-        }
-    }
-
-    fn update_frame_time(&mut self, frame_time: Duration) {
-        self.frame_times.push_front(frame_time);
-        if self.frame_times.len() > FRAME_TIME_WINDOW {
-            self.frame_times.truncate(FRAME_TIME_WINDOW);
-        }
     }
 }
 
@@ -147,11 +112,11 @@ where
         let cameras = res.borrow_components::<Camera>();
 
         // Grab the necessary resources
+        let factory = res.borrow_mut::<GraphicsBackend<B>>();
         let settings = res.borrow::<Settings>();
         let entities = res.borrow::<Entities>();
         let world_graph = res.borrow::<SceneGraph<Model>>();
         let ui_graph = res.borrow::<SceneGraph<UiModel>>();
-        let factory = res.borrow::<GraphicsBackend<B>>();
         let statuses = res.borrow_components::<Status>();
         let renderables = res.borrow_components::<Renderable>();
 
@@ -176,9 +141,7 @@ where
                 .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
                 .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
                 .for_each(|(model, renderable)| {
-                    {
-                        world_draw_calls += 1;
-                    }
+                    world_draw_calls += 1;
                     target
                         .render(&(cam_matrix * model.matrix()), &factory, renderable)
                         .expect("Unable to render the world");
@@ -190,9 +153,7 @@ where
                 .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
                 .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
                 .for_each(|(model, renderable)| {
-                    {
-                        ui_draw_calls += 1;
-                    }
+                    ui_draw_calls += 1;
                     target
                         .render(&(cam.ui_matrix() * model.matrix()), &factory, renderable)
                         .expect("Unable to render the UI");
@@ -202,9 +163,9 @@ where
         // Finalize the frame and thus swap the display buffers.
         target.finalize().expect("Unable to finalize the frame");
 
-        self.update_draw_calls(world_draw_calls, ui_draw_calls);
-
-        self.update_frame_time(start_mark.elapsed());
+        let mut stats = res.borrow_mut::<Statistics>();
+        stats.update_draw_calls(world_draw_calls, ui_draw_calls);
+        stats.update_frame_time(start_mark.elapsed());
     }
 }
 

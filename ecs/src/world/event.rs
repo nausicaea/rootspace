@@ -1,18 +1,17 @@
-use downcast_rs::__std::path::PathBuf;
-
 use serde::{Deserialize, Serialize};
+use file_manipulation::{NewOrExFilePathBuf, FilePathBuf};
 
 /// Events defined and processed by the world itself.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum WorldEvent {
     /// Causes the WorldTrait::maintain() method to serialize the entire world state to the given
     /// file.
-    Serialize(PathBuf),
+    Serialize(NewOrExFilePathBuf),
     /// Signals the completion of serialization.
     SerializationComplete,
     /// Causes the WorldTrait::maintain() method to deserialize the entire world state from the
     /// given file.
-    Deserialize(PathBuf),
+    Deserialize(FilePathBuf),
     /// Signals the completion of deserialization.
     DeserializationComplete,
     /// Causes the WorldTrait::maintain() method to return `false`, which should result in the game

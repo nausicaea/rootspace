@@ -3,7 +3,7 @@ use ecs::{Component, EventQueue, RegAdd, WorldEvent};
 use crate::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,
-    resources::{AssetDatabase, GraphicsBackend, SceneGraph, Settings},
+    resources::{AssetDatabase, GraphicsBackend, SceneGraph, Settings, Statistics},
     systems::{
         camera_manager::CameraManager, debug_console::DebugConsole, debug_shell::DebugShell,
         event_coordinator::EventCoordinator, event_interface::EventInterface, event_monitor::EventMonitor,
@@ -23,6 +23,7 @@ pub type ResourceTypes<B, RR> = RegAdd![
     EventQueue<EngineEvent>,
     GraphicsBackend<B>,
     AssetDatabase,
+    Statistics,
     Settings,
     RR
 ];

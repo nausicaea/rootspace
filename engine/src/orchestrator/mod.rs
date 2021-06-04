@@ -19,8 +19,14 @@ use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
 use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use std::{convert::TryFrom, fs::File, path::Path};
 use try_default::TryDefault;
+use std::thread::sleep;
+use crate::resources::Statistics;
 
 pub mod type_registry;
+
+const DELTA_TIME: u64 = 50;
+const MIN_FRAME_DURATION: u64 = 15625;
+const MAX_FRAME_DURATION: u64 = 250;
 
 pub type EmptyGame<B> = Orchestrator<B, Reg![], Reg![], Reg![], Reg![]>;
 
@@ -30,7 +36,8 @@ type OrchestratorWorld<B, RR, FUSR, USR, RSR> =
 pub struct Orchestrator<B: BackendTrait, RR, FUSR, USR, RSR> {
     world: OrchestratorWorld<B, RR, FUSR, USR, RSR>,
     delta_time: Duration,
-    max_frame_time: Duration,
+    min_frame_duration: Duration,
+    max_frame_duration: Duration,
 }
 
 impl<B, RR, FUSR, USR, RSR> Orchestrator<B, RR, FUSR, USR, RSR>
@@ -44,8 +51,9 @@ where
     pub fn new() -> Result<Self> {
         Ok(Orchestrator {
             world: World::try_default()?,
-            delta_time: Duration::from_millis(50),
-            max_frame_time: Duration::from_millis(250),
+            delta_time: Duration::from_millis(DELTA_TIME),
+            min_frame_duration: Duration::from_micros(MIN_FRAME_DURATION),
+            max_frame_duration: Duration::from_millis(MAX_FRAME_DURATION),
         })
     }
 
@@ -75,8 +83,9 @@ where
 
         Ok(Orchestrator {
             world,
-            delta_time: Duration::from_millis(50),
-            max_frame_time: Duration::from_millis(250),
+            delta_time: Duration::from_millis(DELTA_TIME),
+            min_frame_duration: Duration::from_micros(MIN_FRAME_DURATION),
+            max_frame_duration: Duration::from_millis(MAX_FRAME_DURATION),
         })
     }
 
@@ -104,7 +113,7 @@ where
         // Run the main game loop
         loop {
             // Assess the duration of the last frame
-            let frame_time = cmp::min(loop_time.elapsed(), self.max_frame_time);
+            let frame_time = cmp::min(loop_time.elapsed(), self.max_frame_duration);
             loop_time = Instant::now();
             accumulator += frame_time;
             dynamic_game_time += frame_time;
@@ -124,6 +133,14 @@ where
             if self.maintain() == LoopControl::Abort {
                 break;
             }
+
+            // Artificially prolong the frame if it was too short
+            if frame_time < self.min_frame_duration {
+                sleep(self.min_frame_duration - frame_time);
+            }
+
+            // Update the frame time statistics
+            self.world.borrow_mut::<Statistics>().update_loop_times(frame_time);
         }
     }
 
@@ -137,7 +154,7 @@ impl<B: BackendTrait, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR
         write!(
             f,
             "Orchestrator {{ world: {:?}, delta_time: {:?}, max_frame_time: {:?} }}",
-            self.world, self.delta_time, self.max_frame_time,
+            self.world, self.delta_time, self.max_frame_duration,
         )
     }
 }

@@ -15,6 +15,25 @@ subcommands:
       about: Creates a new entity
       aliases:
         - c
+      args:
+        - ui:
+            long: ui
+            conflicts_with: camera
+            help: If set, create a new UI entity instead
+        - camera:
+            short: c
+            long: camera
+            conflicts_with: ui
+            help: If set, create a camera entity instead
+        - parent:
+            short: p
+            long: parent
+            takes_value: true
+            help: Specify the parent of the new entity by its index
+        - name:
+            required: true
+            takes_value: true
+            help: Specify the name of the new entity
   - list:
       about: Prints a list of entities
       aliases:

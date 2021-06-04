@@ -34,7 +34,7 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct NewOrExFilePathBuf(PathBuf);
 
 impl NewOrExFilePathBuf {
@@ -66,6 +66,12 @@ impl AsRef<PathBuf> for NewOrExFilePathBuf {
 impl AsRef<Path> for NewOrExFilePathBuf {
     fn as_ref(&self) -> &Path {
         &self.0
+    }
+}
+
+impl AsRef<OsStr> for NewOrExFilePathBuf {
+    fn as_ref(&self) -> &OsStr {
+        self.0.as_ref()
     }
 }
 
@@ -146,7 +152,7 @@ impl TryFrom<&PathBuf> for NewOrExFilePathBuf {
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct FilePathBuf(PathBuf);
 
 impl FilePathBuf {
@@ -196,6 +202,12 @@ impl AsRef<PathBuf> for FilePathBuf {
 impl AsRef<Path> for FilePathBuf {
     fn as_ref(&self) -> &Path {
         &self.0
+    }
+}
+
+impl AsRef<OsStr> for FilePathBuf {
+    fn as_ref(&self) -> &OsStr {
+        self.0.as_ref()
     }
 }
 
@@ -264,7 +276,7 @@ impl TryFrom<&PathBuf> for FilePathBuf {
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct DirPathBuf(PathBuf);
 
 impl DirPathBuf {
@@ -296,6 +308,12 @@ impl AsRef<PathBuf> for DirPathBuf {
 impl AsRef<Path> for DirPathBuf {
     fn as_ref(&self) -> &Path {
         &self.0
+    }
+}
+
+impl AsRef<OsStr> for DirPathBuf {
+    fn as_ref(&self) -> &OsStr {
+        self.0.as_ref()
     }
 }
 

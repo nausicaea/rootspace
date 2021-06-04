@@ -27,6 +27,11 @@ where
         self.0.insert(entity, Default::default())
     }
 
+    pub fn insert_child(&mut self, parent: &Entity, child: Entity) {
+        self.0.insert_child(parent, child, Default::default())
+            .unwrap_or_else(|e| panic!("Unable to add child {} to parent {}: {}", child, parent, e))
+    }
+
     pub fn contains(&self, entity: &Entity) -> bool {
         self.0.iter().any(|(k, _)| k == entity)
     }

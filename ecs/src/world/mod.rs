@@ -1,10 +1,8 @@
 use anyhow::Error;
 use std::{
     cell::{Ref, RefMut},
-    convert::TryFrom,
     fs::File,
     marker::PhantomData,
-    path::Path,
     time::Duration,
 };
 
@@ -289,11 +287,10 @@ where
         LoopControl::Continue
     }
 
-    fn on_serialize(&mut self, path: &Path) -> Result<(), WorldError> {
+    fn on_serialize(&mut self, path: &NewOrExFilePathBuf) -> Result<(), WorldError> {
         // Create the serializer
         // FIXME: Find a solution not to hard-code the Serializer type
-        let file_path = NewOrExFilePathBuf::try_from(path)?;
-        let mut file = File::create(file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
+        let mut file = File::create(path.with_extension("json")).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut s = serde_json::Serializer::pretty(&mut file);
 
         // Serialize the entire World
@@ -308,11 +305,10 @@ where
         Ok(())
     }
 
-    fn on_deserialize(&mut self, path: &Path) -> Result<(), WorldError> {
+    fn on_deserialize(&mut self, path: &FilePathBuf) -> Result<(), WorldError> {
         // Create the deserializer
         // FIXME: Find a solution not to hard-code the Deserializer type
-        let file_path = FilePathBuf::try_from(path)?;
-        let mut file = File::open(&file_path).map_err(|e| WorldError::IoError(path.into(), e))?;
+        let mut file = File::open(path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut d = serde_json::Deserializer::from_reader(&mut file);
 
         // Deserialize the entire world

@@ -1,18 +1,16 @@
-use crate::{
-    debug_commands::{CamerasCommand, CommandTrait, EntitiesCommand, ExitCommand, StatesCommand},
-    event::EngineEvent,
-    resources::settings::Settings,
-};
-use anyhow::Result;
-use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources};
-use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Duration};
+
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use crate::debug_commands::AssetsCommand;
+
+use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources};
+
+use crate::{debug_commands, debug_commands::CommandTrait, event::EngineEvent, resources::settings::Settings};
 
 #[derive(Serialize, Deserialize)]
 pub struct DebugShell {
-    #[serde(skip, default = "default_commands")]
+    #[serde(skip, default = "crate::debug_commands::default_commands")]
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
     receiver: ReceiverId<EngineEvent>,
 }
@@ -33,7 +31,7 @@ impl WithResources for DebugShell {
         let receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
         DebugShell {
-            commands: default_commands(),
+            commands: debug_commands::default_commands(),
             receiver,
         }
     }
@@ -101,18 +99,4 @@ impl SerializationName for DebugShell {}
 enum DebugShellError {
     #[error("'{0}' is not a recognized builtin or command")]
     CommandNotFound(String),
-}
-
-fn box_command<C: CommandTrait>(command: C) -> Box<dyn CommandTrait + 'static> {
-    Box::new(command)
-}
-
-fn default_commands() -> HashMap<&'static str, Box<dyn CommandTrait>> {
-    let mut commands = HashMap::with_capacity(4);
-    commands.insert(ExitCommand.name(), box_command(ExitCommand));
-    commands.insert(CamerasCommand.name(), box_command(CamerasCommand));
-    commands.insert(EntitiesCommand.name(), box_command(EntitiesCommand));
-    commands.insert(StatesCommand.name(), box_command(StatesCommand));
-    commands.insert(AssetsCommand.name(), box_command(AssetsCommand));
-    commands
 }
