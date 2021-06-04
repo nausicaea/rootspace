@@ -49,6 +49,10 @@ impl DebugShell {
 
         // Iterate over all commands
         for token_group in tokens.split(|t| t.len() == 1 && t.contains(terminator)) {
+            if token_group.is_empty() {
+                continue;
+            }
+
             // Determine the current command name
             let command_name = token_group[0].as_str();
 

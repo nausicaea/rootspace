@@ -2,18 +2,14 @@
 #![cfg_attr(test, allow(unused_mut))]
 #![cfg_attr(test, allow(dead_code))]
 
-#[cfg(not(test))]
-use std::thread::spawn;
 use std::{
-    io::{self, Read},
-    string,
-    sync::mpsc::{self, channel, Receiver},
+    io::Read,
+    sync::mpsc::{self, Receiver},
     time::Duration,
 };
 
-use log::{error, warn};
+use log::error;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 use ecs::{EventQueue, Resources, SerializationName, System};
 
@@ -22,7 +18,7 @@ use crate::{event::EngineEvent, resources::settings::Settings, text_manipulation
 #[derive(Serialize, Deserialize)]
 pub struct DebugConsole {
     #[serde(skip, default = "default_worker_rx")]
-    worker_rx: Receiver<Result<String, DebugConsoleError>>,
+    worker_rx: Receiver<String>,
 }
 
 impl DebugConsole {
@@ -50,10 +46,9 @@ impl DebugConsole {
 
     fn try_read_line(&self) -> Option<String> {
         match self.worker_rx.try_recv() {
-            Ok(Ok(s)) => return Some(s),
-            Ok(Err(e)) => warn!("{}", e),
+            Ok(s) => return Some(s),
             Err(mpsc::TryRecvError::Empty) => (),
-            Err(e) => error!("{}", e),
+            Err(e) => error!("Cannot receive data from the mpsc channel: {}", e),
         };
         None
     }
@@ -120,44 +115,40 @@ impl Default for DebugConsoleBuilder<std::io::Stdin> {
     }
 }
 
-#[derive(Debug, Error)]
-enum DebugConsoleError {
-    #[error(transparent)]
-    IoError(#[from] io::Error),
-    #[error(transparent)]
-    Utf8Error(#[from] string::FromUtf8Error),
-}
-
-fn default_worker_rx() -> Receiver<Result<String, DebugConsoleError>> {
+fn default_worker_rx() -> Receiver<String> {
     spawn_worker(std::io::stdin())
 }
 
-fn spawn_worker<I: Read + Send + 'static>(mut input_stream: I) -> Receiver<Result<String, DebugConsoleError>> {
-    let (tx, rx) = channel();
+fn spawn_worker<I: Read + Send + 'static>(mut input_stream: I) -> Receiver<String> {
+    let (tx, rx) = std::sync::mpsc::channel::<String>();
 
     #[cfg(not(test))]
-    spawn(move || {
+    std::thread::spawn(move || {
         let mut buf = Vec::new();
         let mut byte = [0u8];
 
         loop {
+            // Read a single byte from the input stream
             match input_stream.read(&mut byte) {
                 Ok(0) => (),
                 Ok(_) => {
-                    if byte[0] == 0x0A {
-                        tx.send(match String::from_utf8(buf.clone()) {
-                            Ok(l) => Ok(l),
-                            Err(e) => Err(DebugConsoleError::Utf8Error(e)),
-                        })
-                        .expect("Unable to send input from stdin via mpsc channel");
+                    // Listen for a line feed byte and send the entire buffer to the main thread.
+                    // Otherwise, append the byte to the buffer.
+                    if byte[0] == b'\n' {
+                        let line = String::from_utf8_lossy(&buf).to_string();
+                        if let Err(e) = tx.send(line) {
+                            error!("Cannot send data over the mpsc channel (this will happen once after you load a new world state; just try again): {}", e);
+                            return;
+                        }
                         buf.clear()
                     } else {
                         buf.push(byte[0])
                     }
                 }
-                Err(e) => tx
-                    .send(Err(DebugConsoleError::IoError(e)))
-                    .expect("Unable to send error information via mpsc channel"),
+                Err(e) => {
+                    error!("Cannot read data from the input stream {}: {}", std::any::type_name::<I>(), e);
+                    return;
+                },
             }
         }
     });

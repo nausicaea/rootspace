@@ -5,7 +5,7 @@ use std::{
 };
 
 use either::{Either, Left, Right};
-use log::debug;
+use log::trace;
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, Serializer},
@@ -130,7 +130,7 @@ where
         while let Some(ser_type_name) = map_access.next_key::<String>()? {
             // TODO: Provide a proper list of expected fields based on the complete resource registry
 
-            debug!("Starting deser attempt for field {}", ser_type_name);
+            trace!("Starting deserialization attempt for field {}", ser_type_name);
             recursors::deserialize_recursive::<A, SR>(
                 &mut type_tracker,
                 &mut sys_map,

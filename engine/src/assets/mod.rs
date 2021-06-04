@@ -18,9 +18,11 @@ pub trait AssetMutTrait: AssetTrait {
 #[derive(Debug, Error)]
 pub enum AssetError {
     #[error("The asset tree was not found")]
-    TreeUnknown,
+    AssetTreeNotFound,
     #[error("Is not within the asset tree: {}", .0.display())]
     OutOfTree(PathBuf),
+    #[error("The asset name {:?} contains path separators", .0)]
+    InvalidCharacters(String),
     #[error(transparent)]
     FileError(#[from] FileError),
 }
