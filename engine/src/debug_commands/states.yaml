@@ -1,5 +1,4 @@
 name: state
-author: Eleanor Young <developer@nausicaea.net
 about: Access and modify the world state
 settings:
   - DisableVersion
@@ -9,14 +8,14 @@ subcommands:
   - save:
       about: Saves the world state to a file
       args:
-        - path:
+        - name:
             required: true
             takes_value: true
-            help: Sets the path of the file to write to
+            help: Sets the name of the file to write to
   - load:
       about: Loads the world state from a file
       args:
-        - path:
+        - name:
             required: true
             takes_value: true
-            help: Sets the path of the file to read from
+            help: Sets the name of the file to read from

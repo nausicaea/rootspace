@@ -1,5 +1,4 @@
 name: asset
-author: Eleanor Young <developer@nausicaea.net
 about: Provides access to assets
 settings:
   - DisableVersion

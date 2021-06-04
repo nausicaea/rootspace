@@ -1,5 +1,4 @@
 name: camera
-author: Eleanor Young <developer@nausicaea.net
 about: Provides access to the camera
 settings:
   - DisableVersion

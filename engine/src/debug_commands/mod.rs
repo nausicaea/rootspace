@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use anyhow::{Result, Context};
 use clap::{App, ArgMatches, load_yaml};
 use thiserror::Error;
@@ -90,20 +88,22 @@ impl CommandTrait for StatesCommand {
 
         if subcommand == "save" {
             let scm = maybe_subcommand_matches.context("No arguments were provided to the save subcommand")?;
-            let path = scm.value_of("path")
-                .map(|p| PathBuf::from(p))
-                .context("Missing required argument 'path'")?;
+            let name = scm.value_of("name")
+                .context("Missing required argument 'name'")?;
+
+            let path = res.borrow::<AssetDatabase>().create_state_path(name)?;
 
             res.borrow_mut::<EventQueue<WorldEvent>>()
-                .send(WorldEvent::Serialize(path));
+                .send(WorldEvent::Serialize(path.into()));
         } else if subcommand == "load" {
             let scm = maybe_subcommand_matches.context("No arguments were provided to the load subcommand")?;
-            let path = scm.value_of("path")
-                .map(|p| PathBuf::from(p))
-                .context("Missing required argument 'path'")?;
+            let name = scm.value_of("name")
+                .context("Missing required argument 'name'")?;
+
+            let path = res.borrow::<AssetDatabase>().find_state(name)?;
 
             res.borrow_mut::<EventQueue<WorldEvent>>()
-                .send(WorldEvent::Deserialize(path));
+                .send(WorldEvent::Deserialize(path.into()));
         }
 
         Ok(())
@@ -131,7 +131,8 @@ impl CommandTrait for AssetsCommand {
             let _scm = maybe_subcommand_matches.context("No arguments were provided to the save subcommand")?;
 
             let asset_database = res.borrow::<AssetDatabase>();
-            println!("Asset tree location: {:?}", asset_database.asset_tree());
+            println!("Asset tree directory: {:?}", asset_database.asset_directory());
+            println!("States directory: {:?}", asset_database.state_directory());
         }
 
         Ok(())

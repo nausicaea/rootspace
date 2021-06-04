@@ -1,5 +1,4 @@
 name: entity
-author: Eleanor Young <developer@nausicaea.net
 about: Provides access to entities within the world
 settings:
   - DisableVersion
