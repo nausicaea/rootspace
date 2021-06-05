@@ -17,7 +17,6 @@ use vertex_buffer_id::VertexBufferId;
 use crate::{
     components::Renderable,
     graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait},
-    resources::AssetDatabase,
 };
 use serde::{
     de,
@@ -111,7 +110,6 @@ where
 
     pub fn reload_assets(
         &mut self,
-        db: &AssetDatabase,
         renderables: &mut <Renderable as Component>::Storage,
     ) -> Result<()> {
         self.textures.clear();
@@ -119,7 +117,7 @@ where
         self.vertex_buffers.clear();
         self.index_buffers.clear();
         for r in renderables.iter_mut() {
-            r.reload(self, db)?;
+            r.reload(self)?;
         }
 
         Ok(())

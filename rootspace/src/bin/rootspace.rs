@@ -5,6 +5,8 @@ use fern::Dispatch;
 use log::{debug, LevelFilter, SetLoggerError};
 use rootspace::Rootspace;
 use std::io;
+use file_manipulation::copy_recursive;
+use std::path::PathBuf;
 
 fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {
     let log_level = match verbosity {
@@ -43,7 +45,11 @@ fn main() -> Result<()> {
         let asset_database = project_dirs.data_local_dir().join("assets");
         debug!("Located the asset database at: {}", asset_database.display());
         if !asset_database.is_dir() {
-            std::fs::create_dir_all(&asset_database).context("Could not create the asset database directory")?;
+            copy_recursive(
+                PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("assets").join(name),
+                &asset_database,
+            )
+                .context("Could not copy the asset database contents to the new directory")?;
         }
 
         let state_dir = project_dirs.data_local_dir().join("states");

@@ -15,7 +15,7 @@ use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
     event::EngineEvent,
     graphics::{BackendTrait, FrameTrait},
-    resources::{AssetDatabase, GraphicsBackend, SceneGraph, Settings},
+    resources::{GraphicsBackend, SceneGraph, Settings},
 };
 use crate::resources::Statistics;
 
@@ -68,9 +68,8 @@ where
 
         let reload_mark = Instant::now();
         let mut backend = res.borrow_mut::<GraphicsBackend<B>>();
-        let assets = res.borrow::<AssetDatabase>();
         backend
-            .reload_assets(&assets, &mut res.borrow_components_mut::<Renderable>())
+            .reload_assets(&mut res.borrow_components_mut::<Renderable>())
             .expect("Could not reload all renderable assets");
 
         debug!("Completed reloading all renderables after {:?}", reload_mark.elapsed());

@@ -527,7 +527,9 @@ dependencies = [
 name = "file-manipulation"
 version = "0.1.2"
 dependencies = [
+ "anyhow",
  "dirs",
+ "log",
  "serde",
  "serde_test",
  "tempfile",

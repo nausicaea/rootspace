@@ -1,6 +1,6 @@
 use std::path::{Path, is_separator};
 
-use file_manipulation::{DirPathBuf, FilePathBuf, NewOrExFilePathBuf};
+use file_manipulation::{DirPathBuf, FilePathBuf, NewOrExFilePathBuf, ValidatedPath};
 
 use crate::assets::AssetError;
 use ecs::{Resource, SerializationName};

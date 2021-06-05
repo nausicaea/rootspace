@@ -1,7 +1,6 @@
 use std::{
     borrow::{Borrow, Cow},
     fmt,
-    path::{Path, PathBuf},
 };
 
 use anyhow::Result;
@@ -11,7 +10,7 @@ use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as Rus
 use thiserror::Error;
 use unicode_normalization::UnicodeNormalization;
 
-use file_manipulation::FileError;
+use file_manipulation::{FileError, FilePathBuf};
 
 use crate::{
     assets::{AssetError, Mesh},
@@ -20,7 +19,6 @@ use crate::{
 };
 
 use super::vertex::Vertex;
-use crate::resources::AssetDatabase;
 
 pub struct Text<'a> {
     text: String,
@@ -78,7 +76,7 @@ impl<'a> Text<'a> {
 
 #[derive(Debug)]
 pub struct TextBuilder {
-    font_path: Option<PathBuf>,
+    font_path: Option<FilePathBuf>,
     cache_gpu: Option<TextureId>,
     font_scale: f32,
     text_width: u32,
@@ -96,8 +94,8 @@ impl Default for TextBuilder {
 }
 
 impl TextBuilder {
-    pub fn font<P: AsRef<Path>>(mut self, path: P) -> Self {
-        self.font_path = Some(path.as_ref().to_path_buf());
+    pub fn font(mut self, path: FilePathBuf) -> Self {
+        self.font_path = Some(path);
         self
     }
 
@@ -119,15 +117,13 @@ impl TextBuilder {
     pub fn layout<'a, B: BackendTrait>(
         self,
         factory: &GraphicsBackend<B>,
-        assets: &AssetDatabase,
         text: &str,
     ) -> Result<Text<'a>> {
         let font_data = self
             .font_path
             .as_ref()
             .ok_or(TextRenderError::MissingFont)
-            .and_then(|fp| assets.find_asset(fp).map_err(|e| e.into()))
-            .and_then(|fp| fp.read_to_bytes().map_err(|e| e.into()))?;
+            .and_then(|fp| std::fs::read(fp).map_err(|e| e.into()))?;
 
         let cache_gpu_id = self.cache_gpu.ok_or(TextRenderError::MissingCache)?;
         let cache_gpu = factory.borrow_texture(&cache_gpu_id);
@@ -184,6 +180,8 @@ pub enum TextRenderError {
     AssetError(#[from] AssetError),
     #[error(transparent)]
     FileError(#[from] FileError),
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
 }
 
 impl From<rusttype::Error> for TextRenderError {
@@ -329,38 +327,37 @@ mod tests {
 
     use super::*;
     use try_default::TryDefault;
+    use std::convert::TryFrom;
 
     #[test]
     fn text_builder_headless() {
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
-        let a = AssetDatabase::try_default().unwrap();
 
-        let font_path = a.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = FilePathBuf::try_from("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let _: Text = Text::builder()
-            .font(&font_path)
+            .font(font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, &a, "Hello, World!")
+            .layout(&mut f, "Hello, World!")
             .unwrap();
     }
 
     #[test]
     fn text_mesh_headless() {
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
-        let a = AssetDatabase::try_default().unwrap();
 
-        let font_path = a.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = FilePathBuf::try_from("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let text: Text = Text::builder()
-            .font(&font_path)
+            .font(font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, &a, "Hello, World!")
+            .layout(&mut f, "Hello, World!")
             .unwrap();
 
         let model_width: f32 = 2.0;
@@ -378,17 +375,16 @@ mod tests {
     #[test]
     fn text_scale_headless() {
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
-        let a = AssetDatabase::try_default().unwrap();
 
-        let font_path = a.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = FilePathBuf::try_from("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
-            .font(&font_path)
+            .font(font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, &a, "Hello, World!")
+            .layout(&mut f, "Hello, World!")
             .unwrap();
 
         text.scale(24.0f32);
@@ -397,17 +393,16 @@ mod tests {
     #[test]
     fn text_width_headless() {
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
-        let a = AssetDatabase::try_default().unwrap();
 
-        let font_path = a.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = FilePathBuf::try_from("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
-            .font(&font_path)
+            .font(font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, &a, "Hello, World!")
+            .layout(&mut f, "Hello, World!")
             .unwrap();
 
         text.width(200u32);
@@ -416,17 +411,16 @@ mod tests {
     #[test]
     fn text_update_headless() {
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
-        let a = AssetDatabase::try_default().unwrap();
 
-        let font_path = a.find_asset("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = FilePathBuf::try_from("fonts/SourceSansPro-Regular.ttf").unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
-            .font(&font_path)
+            .font(font_path)
             .cache(cache)
             .scale(24.0)
             .width(100)
-            .layout(&mut f, &a, "Hello, World!")
+            .layout(&mut f, "Hello, World!")
             .unwrap();
 
         text.text(&mut f, "Hello, you!").unwrap();

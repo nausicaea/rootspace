@@ -4,13 +4,20 @@ settings:
   - DisableVersion
   - VersionlessSubcommands
   - SubcommandRequiredElseHelp
-args:
-  - index:
-      short: i
-      long: index
-      takes_value: true
-      help: Specify the index of the desired entity
 subcommands:
+  - add:
+      about: Add a new component to an entity
+      aliases:
+        - a
+      args:
+        - renderable:
+            short: r
+            long: renderable
+            help: Add a Renderable component to the specified entity
+        - index:
+            required: true
+            takes_value: true
+            help: Specify the index of the entity
   - create:
       about: Creates a new entity
       aliases:
@@ -86,3 +93,7 @@ subcommands:
             long: hide
             conflicts_with: show
             help: Hides the selected entity
+        - index:
+            required: true
+            takes_value: true
+            help: Specify the index of the desired entity

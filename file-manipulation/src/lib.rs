@@ -9,6 +9,11 @@ use std::{
     path::{Path, PathBuf},
 };
 use thiserror::Error;
+use std::hash::Hash;
+use std::fmt::Debug;
+use log::trace;
+use anyhow::anyhow;
+use std::fs::{metadata, create_dir_all, read_dir, copy};
 
 fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError> {
     let p = path_user_input.as_ref();
@@ -32,22 +37,80 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError
         .ok_or(FileError::NoHomeDirectoryFound)
 }
 
-#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
-#[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
-#[derive(Clone, PartialEq, Eq, Hash)]
-pub struct NewOrExFilePathBuf(PathBuf);
+pub fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow::Result<()> {
+    let input_root = PathBuf::from(from.as_ref());
+    let num_input_components = input_root.components().count();
+    let output_root = PathBuf::from(to.as_ref());
 
-impl NewOrExFilePathBuf {
-    pub fn path(&self) -> &Path {
+    // Initialize the directory stack
+    let mut stack = Vec::new();
+    stack.push(input_root);
+
+    // As long as there are directories on the stack, proceed
+    while let Some(working_path) = stack.pop() {
+        trace!("Processing: {}", working_path.display());
+
+        // Generate a relative path
+        let src: PathBuf = working_path.components().skip(num_input_components).collect();
+
+        // Generate the destination path
+        let dest = if src.components().count() == 0 {
+            output_root.clone()
+        } else {
+            output_root.join(&src)
+        };
+
+        // Create the destination if it is missing
+        // Why don't they use `dest.is_dir()` or `dest.exists()`?
+        if metadata(&dest).is_err() {
+            trace!("Creating directory: {}", dest.display());
+            create_dir_all(&dest)?;
+        }
+
+        // Read the contents of the directory
+        let read_dir_iter = read_dir(&working_path)
+            .map_err(|e| anyhow!("Cannot read the directory {}: {}", working_path.display(), e))?;
+
+        // Iterate over the contents of the working directory
+        for entry in read_dir_iter {
+            let path = entry
+                .map_err(|e| anyhow!("Cannot retrieve metadata for an entry of {}: {}", working_path.display(), e))?
+                .path();
+
+            // Push child directories onto the stack, and copy files
+            if path.is_dir() {
+                stack.push(path);
+            } else {
+                match path.file_name() {
+                    Some(filename) => {
+                        let dest_path = dest.join(filename);
+                        trace!("Copying file: {} -> {}", path.display(), dest_path.display());
+                        copy(&path, &dest_path)
+                            .map_err(|e| anyhow!("Cannot copy the file {} -> {}: {}", path.display(), dest_path.display(), e))?;
+                    }
+                    None => {
+                        return Err(anyhow!("Unable to copy the file: {:?}", path));
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+pub trait ValidatedPath: Debug + Clone + PartialEq + Eq + Hash + Deref<Target = PathBuf> + AsRef<PathBuf> + AsRef<Path> + AsRef<OsStr> + Into<PathBuf> + for<'r> TryFrom<&'r str> + for<'r> TryFrom<&'r PathBuf> + TryFrom<PathBuf> + for<'r> TryFrom<&'r Path> + TryFrom<OsString> + for<'r> TryFrom<&'r OsStr> {
+    fn path(&self) -> &Path {
         AsRef::<Path>::as_ref(self)
     }
 }
 
-impl std::fmt::Debug for NewOrExFilePathBuf {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self.0)
-    }
-}
+#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub struct NewOrExFilePathBuf(PathBuf);
+
+impl ValidatedPath for NewOrExFilePathBuf {}
 
 impl Deref for NewOrExFilePathBuf {
     type Target = PathBuf;
@@ -152,14 +215,10 @@ impl TryFrom<&PathBuf> for NewOrExFilePathBuf {
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct FilePathBuf(PathBuf);
 
 impl FilePathBuf {
-    pub fn path(&self) -> &Path {
-        AsRef::<Path>::as_ref(self)
-    }
-
     pub fn read_to_string(&self) -> Result<String, FileError> {
         let mut f = File::open(&self.0).map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = String::new();
@@ -179,11 +238,7 @@ impl FilePathBuf {
     }
 }
 
-impl std::fmt::Debug for FilePathBuf {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self.0)
-    }
-}
+impl ValidatedPath for FilePathBuf {}
 
 impl Deref for FilePathBuf {
     type Target = PathBuf;
@@ -276,20 +331,10 @@ impl TryFrom<&PathBuf> for FilePathBuf {
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct DirPathBuf(PathBuf);
 
-impl DirPathBuf {
-    pub fn path(&self) -> &Path {
-        AsRef::<Path>::as_ref(self)
-    }
-}
-
-impl std::fmt::Debug for DirPathBuf {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self.0)
-    }
-}
+impl ValidatedPath for DirPathBuf {}
 
 impl Deref for DirPathBuf {
     type Target = PathBuf;
