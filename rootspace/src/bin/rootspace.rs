@@ -33,20 +33,21 @@ fn main() -> Result<()> {
 
     if subcommand == "initialize" {
         let scm = maybe_subcommand_matches.context("No arguments were provided to the initialize subcommand")?;
+        let force = scm.is_present("force");
         let name = scm.value_of("name").context("Missing required argument 'name'")?;
 
         // Configure the project-specific directories
         let project_dirs = directories::ProjectDirs::from("org", "nausicaea", name)
             .context("Could not find the project directories")?;
+        let asset_dir = project_dirs.data_local_dir().join("assets");
+        let scene_dir = asset_dir.join("scenes");
+        let main_scene = scene_dir.join("main.json");
 
-        let state_dir = project_dirs.data_local_dir().join("states");
-        debug!("Located the state directory at: {}", state_dir.display());
-
-        let main_state = state_dir.join("main.json");
-
-        let g = Rootspace::<HeadlessBackend>::new(name).context("Could not create a new, empty game")?;
-        g.save(main_state)
-            .context("Could not save the state for the new, empty game")?;
+        if force || !asset_dir.exists() {
+            let g = Rootspace::<HeadlessBackend>::new(name).context("Could not create a new, empty game")?;
+            g.save(main_scene)
+                .context("Could create the new main scene")?;
+        }
     } else if subcommand == "run" {
         let scm = maybe_subcommand_matches.context("No arguments were provided to the run subcommand")?;
         let headless = scm.is_present("headless");
@@ -56,19 +57,16 @@ fn main() -> Result<()> {
         // Configure the project-specific directories
         let project_dirs = directories::ProjectDirs::from("org", "nausicaea", name)
             .context("Could not find the project directories")?;
-
-        let state_dir = project_dirs.data_local_dir().join("states");
-        debug!("Located the state directory at: {}", state_dir.display());
-
-        let main_state = state_dir.join("main.json");
+        let scene_dir = project_dirs.data_local_dir().join("assets").join("scenes");
+        let main_scene = scene_dir.join("main.json");
 
         if headless {
-            let mut g = Rootspace::<HeadlessBackend>::load(main_state)
+            let mut g = Rootspace::<HeadlessBackend>::load(main_scene)
                 .context("Could not load a headless game from an existing state")?;
             g.run();
         } else {
             let mut g =
-                Rootspace::<GliumBackend>::load(main_state).context("Could not load a game from an existing state")?;
+                Rootspace::<GliumBackend>::load(main_scene).context("Could not load a game from an existing state")?;
             g.run();
         }
     }

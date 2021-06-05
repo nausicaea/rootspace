@@ -568,7 +568,7 @@ mod tests {
         a.insert(2usize, 102usize);
 
         for ca in RIter::new(&a) {
-            eprintln!("ca: {}", ca);
+            std::convert::identity(ca);
         }
     }
 
@@ -580,7 +580,7 @@ mod tests {
         a.insert(2usize, 102usize);
 
         for ca in WIter::new(&mut a) {
-            eprintln!("ca: {}", ca);
+            std::convert::identity(ca);
         }
     }
 }
