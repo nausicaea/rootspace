@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use clap::{load_yaml, App};
 use engine::{GliumBackend, HeadlessBackend};
 use fern::Dispatch;
-use log::{debug, LevelFilter, SetLoggerError};
+use log::{LevelFilter, SetLoggerError};
 use rootspace::Rootspace;
 
 fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {

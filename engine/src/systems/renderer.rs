@@ -112,12 +112,13 @@ where
 
             // Obtain the model component of the camera
             let cam_entity = entities.get(cam_idx);
-            let cam_model = world_graph.get(&cam_entity);
+            let cam_model = world_graph.get(&cam_entity).expect("The camera is not part of the scene graph");
             let cam_matrix = cam.world_matrix() * cam_model.matrix();
 
             // Render the world scene.
             world_graph
                 .iter()
+                // FIXME: Status filtering does not work if parent entities are disabled or hidden
                 .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
                 .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
                 .for_each(|(model, renderable)| {
@@ -130,6 +131,7 @@ where
             // Render the ui scene.
             ui_graph
                 .iter()
+                // FIXME: Status filtering does not work if parent entities are disabled or hidden
                 .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
                 .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
                 .for_each(|(model, renderable)| {

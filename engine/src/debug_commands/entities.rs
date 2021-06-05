@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context};
-use clap::{load_yaml, App, ArgMatches};
+use clap::{load_yaml, App};
 
-use ecs::{Component, Entities, Entity, Resources, Storage};
+use ecs::{Entities, Resources, Storage};
 
 use super::Error;
 use crate::{
@@ -13,104 +13,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EntitiesCommand;
-
-impl EntitiesCommand {
-    fn list_entity(
-        &self,
-        args: &ArgMatches,
-        entities: &Entities,
-        cameras: &<Camera as Component>::Storage,
-        infos: &<Info as Component>::Storage,
-        statuses: &<Status as Component>::Storage,
-        models: &<Model as Component>::Storage,
-        ui_models: &<UiModel as Component>::Storage,
-        world_graph: &SceneGraph<Model>,
-        ui_graph: &SceneGraph<UiModel>,
-        entity: &Entity,
-    ) {
-        let mut output = String::new();
-
-        if args.is_present("names")
-            || args.is_present("statuses")
-            || args.is_present("positions")
-            || args.is_present("ndc-positions")
-        {
-            output.push(':');
-        }
-
-        if args.is_present("names") {
-            if let Some(i) = infos.get(entity) {
-                output.push(' ');
-                output.push_str(i.name());
-            } else {
-                output.push_str(" (no name)");
-            }
-        }
-
-        if args.is_present("statuses") {
-            if let Some(s) = statuses.get(entity) {
-                output.push_str(&format!(
-                    " status=({}, {})",
-                    if s.enabled() { "enabled" } else { "disabled" },
-                    if s.visible() { "visible" } else { "hidden" }
-                ));
-            } else {
-                output.push_str(" (no status)");
-            }
-        }
-
-        if args.is_present("positions") {
-            if world_graph.contains(entity) {
-                let loc = models
-                    .get(entity)
-                    .unwrap_or_else(|| panic!("Cannot find the entity {} in the Model components", entity))
-                    .position();
-                let pos = world_graph.get(entity).position();
-                output.push_str(&format!(
-                    " local-pos=[{}, {}, {}] world-pos=[{}, {}, {}]",
-                    loc.x, loc.y, loc.z, pos.x, pos.y, pos.z
-                ));
-            } else if ui_graph.contains(entity) {
-                let loc = ui_models
-                    .get(entity)
-                    .unwrap_or_else(|| panic!("Cannot find the entity {} in the UiModel components", entity))
-                    .position();
-                let pos = ui_graph.get(entity).position();
-                output.push_str(&format!(
-                    " local-pos=[{}, {}] ui-pos=[{}, {}]",
-                    loc.x, loc.y, pos.x, pos.y
-                ));
-            } else {
-                output.push_str(" (no position)");
-            }
-        }
-
-        if args.is_present("ndc-positions") {
-            for (cam_idx, camera) in cameras.iter_enum() {
-                let cam_entity = entities.get(cam_idx);
-                let cam_model = world_graph.get(&cam_entity);
-
-                if entity == &cam_entity {
-                    continue;
-                }
-
-                if world_graph.contains(entity) {
-                    let m = world_graph.get(entity);
-                    let pos = camera.world_point_to_ndc(cam_model, &m.position());
-                    output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", cam_idx, pos.x, pos.y, pos.z));
-                } else if ui_graph.contains(entity) {
-                    let m = ui_graph.get(entity);
-                    let pos = camera.ui_point_to_ndc(&m.position(), m.depth());
-                    output.push_str(&format!(" cam-{}-ndc-pos=[{}, {}, {}]", cam_idx, pos.x, pos.y, pos.z));
-                } else {
-                    output.push_str(" (no ndc position)");
-                }
-            }
-        }
-
-        println!("{}{}", entity.idx(), output);
-    }
-}
 
 impl CommandTrait for EntitiesCommand {
     fn name(&self) -> &'static str {
@@ -124,6 +26,48 @@ impl CommandTrait for EntitiesCommand {
     fn run(&self, res: &Resources, args: &[String]) -> anyhow::Result<()> {
         let app_yaml = load_yaml!("entities.yaml");
         let matches = App::from_yaml(app_yaml).get_matches_from_safe(args)?;
+
+        if let Some(info_matches) = matches.subcommand_matches("info") {
+            let index = info_matches.value_of("index").ok_or(Error::NoIndexSpecified)?;
+
+            let index: usize = index.parse()?;
+            let entities = res.borrow::<Entities>();
+            let entity = entities.try_get(index).ok_or(Error::EntityNotFound(index))?;
+
+            if let Some(ic) = res.borrow_components::<Info>().get(&entity) {
+                println!("Name: {}, Description: {}", ic.name(), ic.description());
+            }
+
+            if let Some(sc) = res.borrow_components::<Status>().get(&entity) {
+                println!("Enabled: {}, Visible: {}", sc.enabled(), sc.visible());
+            }
+
+            if let Some(mc) = res.borrow_components::<Model>().get(&entity) {
+                println!("LOCAL - Position: {:?}, Orientation: {}, Scale: {:?}", mc.position().coords, mc.orientation(), mc.scale());
+            }
+
+            if let Some(sgmc) = res.borrow::<SceneGraph<Model>>().get(&entity) {
+                println!("GLOBAL - Position: {:?}, Orientation: {}, Scale: {:?}", sgmc.position().coords, sgmc.orientation(), sgmc.scale());
+            }
+
+            if let Some(umc) = res.borrow_components::<UiModel>().get(&entity) {
+                println!("UI LOCAL - Position: {:?}, Depth: {}, Scale: {:?}", umc.position().coords, umc.depth(), umc.scale());
+            }
+
+            if let Some(sgumc) = res.borrow::<SceneGraph<UiModel>>().get(&entity) {
+                println!("UI GLOBAL - Position: {:?}, Depth: {}, Scale: {:?}", sgumc.position().coords, sgumc.depth(), sgumc.scale());
+            }
+
+            let mut other_components = String::from("Other components:");
+            if res.borrow_components::<Camera>().has(&entity) {
+                other_components.push_str(" CAMERA");
+            }
+
+            if res.borrow_components::<Renderable>().has(&entity) {
+                other_components.push_str(" RENDERABLE");
+            }
+            println!("{}", other_components);
+        }
 
         if let Some(add_matches) = matches.subcommand_matches("add") {
             let add_renderable = add_matches.is_present("renderable");
@@ -199,32 +143,24 @@ impl CommandTrait for EntitiesCommand {
         }
 
         if let Some(list_matches) = matches.subcommand_matches("list") {
+            let show_count = list_matches.is_present("count");
+            let show_disabled = list_matches.is_present("disabled");
+            let show_hidden = list_matches.is_present("hidden");
+
             let entities = res.borrow::<Entities>();
-            let cameras = res.borrow_components::<Camera>();
             let infos = res.borrow_components::<Info>();
             let statuses = res.borrow_components::<Status>();
-            let models = res.borrow_components::<Model>();
-            let ui_models = res.borrow_components::<UiModel>();
-            let world_graph = res.borrow::<SceneGraph<Model>>();
-            let ui_graph = res.borrow::<SceneGraph<UiModel>>();
 
-            if list_matches.is_present("count") {
-                println!("Loaded entities: {}", entities.len());
+            if show_count {
+                println!("Loaded entities (including disabled and hidden): {}", entities.len());
             }
 
             for entity in &*entities {
-                self.list_entity(
-                    list_matches,
-                    &entities,
-                    &cameras,
-                    &infos,
-                    &statuses,
-                    &models,
-                    &ui_models,
-                    &world_graph,
-                    &ui_graph,
-                    &entity,
-                );
+                if statuses.get(entity).map_or(true, |s| !((show_disabled || s.enabled()) && (show_hidden || s.visible()))) {
+                    continue
+                }
+                let (name, description) = infos.get(entity).map_or(("(no name)", "(no description)"), |i| (i.name(), i.description()));
+                println!("{} {} {}", entity.idx(), name, description);
             }
         }
 

@@ -5,6 +5,15 @@ settings:
   - VersionlessSubcommands
   - SubcommandRequiredElseHelp
 subcommands:
+  - info:
+      about: Provide information about a single entity
+      aliases:
+        - i
+      args:
+        - index:
+            required: true
+            takes_value: true
+            help: Specify the index of the entity
   - add:
       about: Add a new component to an entity
       aliases:
@@ -50,22 +59,14 @@ subcommands:
             short: c
             long: count
             help: Displays the number of entities
-        - names:
-            short: n
-            long: names
-            help: Displays the names of entities
-        - statuses:
-            short: s
-            long: statuses
-            help: Displays the statuses of entities
-        - positions:
-            short: p
-            long: positions
-            help: Displays the absolute positions of entities
-        - ndc-positions:
-            short: q
-            long: ndc-positions
-            help: Displays the positions of entities in normalized device coordinates
+        - disabled:
+            short: d
+            long: disabled
+            help: Include disabled entities
+        - hidden:
+            short: H
+            long: hidden
+            help: Include hidden entities
   - status:
       about: Updates the status of one or more entities
       aliases:

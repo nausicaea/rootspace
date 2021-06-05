@@ -3,12 +3,20 @@ use approx::ulps_eq;
 use ecs::{Component, VecStorage};
 use nalgebra::{Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
 use serde::{Deserialize, Serialize};
-use std::f32;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Projection {
     Perspective,
     Orthographic,
+}
+
+impl std::fmt::Display for Projection {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Projection::Perspective => f.write_str("Perspective"),
+            Projection::Orthographic => f.write_str("Orthographic")
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -141,6 +149,18 @@ impl Camera {
         self.orthographic.as_matrix()
     }
 
+    pub fn projection(&self) -> Projection {
+        self.projection
+    }
+
+    pub fn fov_y(&self) -> f32 {
+        self.fov_y
+    }
+
+    pub fn frustum_z(&self) -> (f32, f32) {
+        self.frustum_z
+    }
+
     pub fn dimensions(&self) -> (u32, u32) {
         self.dimensions
     }
@@ -248,7 +268,7 @@ impl Default for Camera {
         Camera::new(
             Projection::Perspective,
             (800, 600),
-            f32::consts::PI / 4.0,
+            std::f32::consts::PI / 4.0,
             (0.1, 1000.0),
             1.0,
         )
@@ -268,7 +288,7 @@ mod tests {
         let _ = Camera::new(
             Projection::Perspective,
             (800, 600),
-            f32::consts::PI / 4.0,
+            std::f32::consts::PI / 4.0,
             (0.1, 1000.0),
             1.0,
         );
@@ -281,7 +301,7 @@ mod tests {
             Camera::new(
                 Projection::Perspective,
                 (800, 600),
-                f32::consts::PI / 4.0,
+                std::f32::consts::PI / 4.0,
                 (0.1, 1000.0),
                 1.0,
             )
