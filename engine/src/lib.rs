@@ -9,6 +9,9 @@ pub mod resources;
 pub mod systems;
 pub mod text_manipulation;
 
+pub const APP_QUALIFIER: &str = "org";
+pub const APP_ORGANIZATION: &str = "nausicaea";
+
 pub use self::{
     assets::{AssetMutTrait, AssetTrait},
     debug_commands::CommandTrait,

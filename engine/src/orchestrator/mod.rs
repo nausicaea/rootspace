@@ -20,7 +20,7 @@ use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use std::{convert::TryFrom, fs::File, path::Path};
 use try_default::TryDefault;
 use std::thread::sleep;
-use crate::resources::Statistics;
+use crate::resources::{Statistics, AssetDatabase};
 
 pub mod type_registry;
 
@@ -48,16 +48,19 @@ where
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
-    pub fn new() -> Result<Self> {
+    pub fn new<S: AsRef<str>>(name: S) -> Result<Self> {
+        let mut world = World::try_default()?;
+        world.get_mut::<AssetDatabase>().initialize(name.as_ref())?;
+
         Ok(Orchestrator {
-            world: World::try_default()?,
+            world,
             delta_time: Duration::from_millis(DELTA_TIME),
             min_frame_duration: Duration::from_micros(MIN_FRAME_DURATION),
             max_frame_duration: Duration::from_millis(MAX_FRAME_DURATION),
         })
     }
 
-    pub fn load<P: AsRef<Path>>(path: &P) -> Result<Self> {
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         // Create the deserializer
         let file_path = FilePathBuf::try_from(path.as_ref())?;
         let mut file = File::open(file_path)?;
@@ -89,12 +92,10 @@ where
         })
     }
 
-    pub fn save<P: AsRef<Path>>(&self, path: &P) -> Result<()> {
-        debug!("Saving the game state to: {}", path.as_ref().display());
-
+    pub fn save<S: AsRef<str>>(&self, name: S) -> Result<()> {
         // Create the deserializer
-        let file_path = NewOrExFilePathBuf::try_from(path.as_ref())?;
-        let mut file = File::create(file_path)?;
+        let state_path = self.world.borrow::<AssetDatabase>().create_state_path(name)?;
+        let mut file = File::create(state_path)?;
         let mut serializer = serde_json::Serializer::pretty(&mut file);
 
         // Serialize the World
@@ -171,7 +172,7 @@ mod tests {
 
     #[test]
     fn game_creation_headless() {
-        let r: Result<TestGame<HeadlessBackend>> = TestGame::new();
+        let r: Result<TestGame<HeadlessBackend>> = TestGame::new("test");
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -181,7 +182,7 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn game_creation_glium() {
-        let r: Result<TestGame<GliumBackend>> = TestGame::new();
+        let r: Result<TestGame<GliumBackend>> = TestGame::new("test");
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -189,13 +190,11 @@ mod tests {
     fn game_loading_and_saving_headless_headless() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
-        let tf = NamedTempFile::new().unwrap();
-
-        let first: TestGame<HeadlessBackend> = TestGame::new().unwrap();
-        let r = first.save(&tf.path());
+        let first: TestGame<HeadlessBackend> = TestGame::new("test").unwrap();
+        let r = first.save("test.json");
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
-        let r: Result<TestGame<HeadlessBackend>> = TestGame::load(&tf.path());
+        let r: Result<TestGame<HeadlessBackend>> = TestGame::load("test.json");
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -207,13 +206,11 @@ mod tests {
     fn game_loading_and_saving_glium_glium() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
-        let tf = NamedTempFile::new().unwrap();
-
-        let first: TestGame<GliumBackend> = TestGame::new().unwrap();
-        let r = first.save(&tf.path());
+        let first: TestGame<GliumBackend> = TestGame::new("test").unwrap();
+        let r = first.save("test.json");
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
-        let r: Result<TestGame<GliumBackend>> = TestGame::load(&tf.path());
+        let r: Result<TestGame<GliumBackend>> = TestGame::load("test.json");
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -225,13 +222,11 @@ mod tests {
     fn game_loading_and_saving_headless_glium() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
-        let tf = NamedTempFile::new().unwrap();
-
-        let first: TestGame<HeadlessBackend> = TestGame::new().unwrap();
-        let r = first.save(&tf.path());
+        let first: TestGame<HeadlessBackend> = TestGame::new("test").unwrap();
+        let r = first.save("test.json");
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
-        let r: Result<TestGame<GliumBackend>> = TestGame::load(&tf.path());
+        let r: Result<TestGame<GliumBackend>> = TestGame::load("test.json");
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -243,13 +238,11 @@ mod tests {
     fn game_loading_and_saving_glium_headless() {
         // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
 
-        let tf = NamedTempFile::new().unwrap();
-
-        let first: TestGame<GliumBackend> = TestGame::new().unwrap();
-        let r = first.save(&tf.path());
+        let first: TestGame<GliumBackend> = TestGame::new("test").unwrap();
+        let r = first.save("test.json");
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
-        let r: Result<TestGame<HeadlessBackend>> = TestGame::load(&tf.path());
+        let r: Result<TestGame<HeadlessBackend>> = TestGame::load("test.json");
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 }

@@ -8,6 +8,7 @@ use std::io;
 use file_manipulation::copy_recursive;
 use std::path::PathBuf;
 use std::fs::create_dir_all;
+use directories::ProjectDirs;
 
 fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {
     let log_level = match verbosity {
@@ -39,36 +40,8 @@ fn main() -> Result<()> {
         let scm = maybe_subcommand_matches.context("No arguments were provided to the initialize subcommand")?;
         let name = scm.value_of("name").context("Missing required argument 'name'")?;
 
-        // Configure the project-specific directories
-        let project_dirs = directories::ProjectDirs::from("org", "nausicaea", name)
-            .context("Could not find the project directories")?;
-
-        let asset_database = project_dirs.data_local_dir().join("assets");
-        debug!("Located the asset database at: {}", asset_database.display());
-        if !asset_database.is_dir() {
-            let source_assets = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("assets").join(name);
-            if source_assets.is_dir() {
-                copy_recursive(
-                    &source_assets,
-                    &asset_database,
-                )
-                    .context("Could not copy the asset database contents to the new directory")?;
-            } else {
-                create_dir_all(&asset_database)
-                    .context("Could not create the asset database")?;
-            }
-        }
-
-        let state_dir = project_dirs.data_local_dir().join("states");
-        debug!("Located the state directory at: {}", state_dir.display());
-        if !state_dir.is_dir() {
-            std::fs::create_dir_all(&state_dir).context("Could not create the state directory")?;
-        }
-
-        let main_state = state_dir.join("main.json");
-
-        let g = Rootspace::<HeadlessBackend>::new().context("Could not create a new, empty game")?;
-        g.save(&main_state)
+        let g = Rootspace::<HeadlessBackend>::new(name).context("Could not create a new, empty game")?;
+        g.save("main.json")
             .context("Could not save the state for the new, empty game")?;
     } else if subcommand == "run" {
         let scm = maybe_subcommand_matches.context("No arguments were provided to the run subcommand")?;

@@ -1,14 +1,19 @@
-use std::path::{Path, is_separator};
+use std::path::{Path, PathBuf, is_separator};
 
-use file_manipulation::{DirPathBuf, FilePathBuf, NewOrExFilePathBuf, ValidatedPath};
+use file_manipulation::{DirPathBuf, FilePathBuf, NewOrExFilePathBuf, ValidatedPath, copy_recursive};
 
 use crate::assets::AssetError;
 use ecs::{Resource, SerializationName};
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
+use directories::ProjectDirs;
+use crate::{APP_QUALIFIER, APP_ORGANIZATION};
+use anyhow::{Context, Error};
+use std::fs::create_dir_all;
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AssetDatabase {
+    game_name: Option<String>,
     assets: Option<DirPathBuf>,
     states: Option<DirPathBuf>,
 }
@@ -18,6 +23,39 @@ impl Resource for AssetDatabase {}
 impl SerializationName for AssetDatabase {}
 
 impl AssetDatabase {
+    pub fn initialize(&mut self, name: &str) -> Result<(), Error> {
+
+        let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, name.as_ref())
+            .context("Could not find the project directories")?;
+
+        let data_local_dir = project_dirs.data_local_dir();
+        let asset_database = data_local_dir.join("assets");
+        let state_database = data_local_dir.join("states");
+
+        if !asset_database.is_dir() {
+            let source_assets = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("assets").join(name);
+            if source_assets.is_dir() {
+                copy_recursive(
+                    &source_assets,
+                    &asset_database,
+                )
+                    .context("Could not copy the asset database contents to the new directory")?;
+            } else {
+                create_dir_all(&asset_database)
+                    .context("Could not create the asset database")?;
+            }
+        }
+        if !state_database.is_dir() {
+            std::fs::create_dir_all(&state_database).context("Could not create the state directory")?;
+        }
+
+        self.game_name = Some(name.to_string());
+        self.assets = Some(DirPathBuf::try_from(asset_database)?);
+        self.states = Some(DirPathBuf::try_from(state_database)?);
+
+        Ok(())
+    }
+
     pub fn asset_directory(&self) -> Option<&Path> {
         self.assets.as_ref().map(|p| p.as_path())
     }
