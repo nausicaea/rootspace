@@ -15,9 +15,8 @@ use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
     event::EngineEvent,
     graphics::{BackendTrait, FrameTrait},
-    resources::{GraphicsBackend, SceneGraph, Settings},
+    resources::{GraphicsBackend, SceneGraph, Settings, Statistics},
 };
-use crate::resources::Statistics;
 
 #[derive(Serialize, Deserialize)]
 pub struct Renderer<B> {

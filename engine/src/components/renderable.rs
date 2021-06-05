@@ -252,10 +252,7 @@ impl RenderableBuilder {
         self
     }
 
-    pub fn build<B: BackendTrait>(
-        &self,
-        factory: &mut GraphicsBackend<B>,
-    ) -> Result<Renderable> {
+    pub fn build<B: BackendTrait>(&self, factory: &mut GraphicsBackend<B>) -> Result<Renderable> {
         match self.ty {
             RenderableType::Mesh => {
                 let mesh_path = self.mesh.as_ref().ok_or(RenderableError::MissingMesh)?;

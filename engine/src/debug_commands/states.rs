@@ -1,11 +1,10 @@
 use anyhow::Context;
-use serde::{Serialize, Deserialize};
-use clap::{App, load_yaml};
+use clap::{load_yaml, App};
+use serde::{Deserialize, Serialize};
 
 use ecs::{EventQueue, Resources, WorldEvent};
 
-use crate::CommandTrait;
-use crate::resources::AssetDatabase;
+use crate::{resources::AssetDatabase, CommandTrait};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct StatesCommand;
@@ -26,8 +25,7 @@ impl CommandTrait for StatesCommand {
 
         if subcommand == "save" {
             let scm = maybe_subcommand_matches.context("No arguments were provided to the save subcommand")?;
-            let name = scm.value_of("name")
-                .context("Missing required argument 'name'")?;
+            let name = scm.value_of("name").context("Missing required argument 'name'")?;
 
             let path = res.borrow::<AssetDatabase>().create_state_path(name)?;
 
@@ -35,8 +33,7 @@ impl CommandTrait for StatesCommand {
                 .send(WorldEvent::Serialize(path));
         } else if subcommand == "load" {
             let scm = maybe_subcommand_matches.context("No arguments were provided to the load subcommand")?;
-            let name = scm.value_of("name")
-                .context("Missing required argument 'name'")?;
+            let name = scm.value_of("name").context("Missing required argument 'name'")?;
 
             let path = res.borrow::<AssetDatabase>().find_state(name)?;
 

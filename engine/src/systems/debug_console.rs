@@ -146,9 +146,13 @@ fn spawn_worker<I: Read + Send + 'static>(mut input_stream: I) -> Receiver<Strin
                     }
                 }
                 Err(e) => {
-                    error!("Cannot read data from the input stream {}: {}", std::any::type_name::<I>(), e);
+                    error!(
+                        "Cannot read data from the input stream {}: {}",
+                        std::any::type_name::<I>(),
+                        e
+                    );
                     return;
-                },
+                }
             }
         }
     });

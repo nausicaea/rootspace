@@ -1,14 +1,12 @@
 use anyhow::{Context, Result};
 use clap::{load_yaml, App};
+use directories::ProjectDirs;
 use engine::{GliumBackend, HeadlessBackend};
 use fern::Dispatch;
+use file_manipulation::copy_recursive;
 use log::{debug, LevelFilter, SetLoggerError};
 use rootspace::Rootspace;
-use std::io;
-use file_manipulation::copy_recursive;
-use std::path::PathBuf;
-use std::fs::create_dir_all;
-use directories::ProjectDirs;
+use std::{fs::create_dir_all, io, path::PathBuf};
 
 fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {
     let log_level = match verbosity {

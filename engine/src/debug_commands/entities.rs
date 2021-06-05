@@ -1,13 +1,15 @@
 use anyhow::{anyhow, Context};
-use clap::{App, ArgMatches, load_yaml};
+use clap::{load_yaml, App, ArgMatches};
 
 use ecs::{Component, Entities, Entity, Resources, Storage};
 
-use crate::{CommandTrait, HeadlessBackend};
-use crate::components::{Camera, Info, Model, Status, UiModel, Renderable, RenderableType};
 use super::Error;
-use serde::{Serialize, Deserialize};
-use crate::resources::{SceneGraph, GraphicsBackend, AssetDatabase};
+use crate::{
+    components::{Camera, Info, Model, Renderable, RenderableType, Status, UiModel},
+    resources::{AssetDatabase, GraphicsBackend, SceneGraph},
+    CommandTrait, HeadlessBackend,
+};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EntitiesCommand;
@@ -125,8 +127,7 @@ impl CommandTrait for EntitiesCommand {
 
         if let Some(add_matches) = matches.subcommand_matches("add") {
             let add_renderable = add_matches.is_present("renderable");
-            let index = add_matches.value_of("index")
-                .ok_or(Error::NoIndexSpecified)?;
+            let index = add_matches.value_of("index").ok_or(Error::NoIndexSpecified)?;
 
             let index: usize = index.parse()?;
             let entities = res.borrow::<Entities>();
@@ -142,20 +143,24 @@ impl CommandTrait for EntitiesCommand {
                     .with_vertex_shader(assets.find_asset("shaders/text-vertex.glsl")?)
                     .with_fragment_shader(assets.find_asset("shaders/text-fragment.glsl")?)
                     .build(&mut factory)?;
-                res.borrow_components_mut::<Renderable>()
-                    .insert(entity, renderable);
+                res.borrow_components_mut::<Renderable>().insert(entity, renderable);
             }
         }
 
         if let Some(create_matches) = matches.subcommand_matches("create") {
             let ui_element = create_matches.is_present("ui");
             let camera = create_matches.is_present("camera");
-            let name = create_matches.value_of("name").context("Missing required argument name")?;
+            let name = create_matches
+                .value_of("name")
+                .context("Missing required argument name")?;
 
             // FIXME: The following can cause issues if adding a UI entity as a child of a world entity or vice versa
             let parent = if let Some(parent_str) = create_matches.value_of("parent") {
-                let parent_idx: usize = parent_str.parse().context("The value of argument parent is not a positive integer")?;
-                let parent_entity = res.borrow::<Entities>()
+                let parent_idx: usize = parent_str
+                    .parse()
+                    .context("The value of argument parent is not a positive integer")?;
+                let parent_entity = res
+                    .borrow::<Entities>()
                     .try_get(parent_idx)
                     .ok_or(anyhow!("The entity with index {} was not found", parent_idx))?;
 
@@ -165,11 +170,14 @@ impl CommandTrait for EntitiesCommand {
             };
 
             let new_entity = res.borrow_mut::<Entities>().create();
-            res.borrow_components_mut::<Info>().insert(new_entity, Info::new(name, ""));
-            res.borrow_components_mut::<Status>().insert(new_entity, Status::default());
+            res.borrow_components_mut::<Info>()
+                .insert(new_entity, Info::new(name, ""));
+            res.borrow_components_mut::<Status>()
+                .insert(new_entity, Status::default());
 
             if ui_element {
-                res.borrow_components_mut::<UiModel>().insert(new_entity, UiModel::default());
+                res.borrow_components_mut::<UiModel>()
+                    .insert(new_entity, UiModel::default());
                 if let Some(ref p) = parent {
                     res.borrow_mut::<SceneGraph<UiModel>>().insert_child(p, new_entity);
                 } else {
@@ -177,9 +185,11 @@ impl CommandTrait for EntitiesCommand {
                 }
             } else {
                 if camera {
-                    res.borrow_components_mut::<Camera>().insert(new_entity, Camera::default());
+                    res.borrow_components_mut::<Camera>()
+                        .insert(new_entity, Camera::default());
                 }
-                res.borrow_components_mut::<Model>().insert(new_entity, Model::default());
+                res.borrow_components_mut::<Model>()
+                    .insert(new_entity, Model::default());
                 if let Some(ref p) = parent {
                     res.borrow_mut::<SceneGraph<Model>>().insert_child(p, new_entity);
                 } else {
@@ -221,8 +231,7 @@ impl CommandTrait for EntitiesCommand {
         if let Some(status_matches) = matches.subcommand_matches("status") {
             let entities = res.borrow::<Entities>();
             let mut statuses = res.borrow_components_mut::<Status>();
-            let index = status_matches.value_of("index")
-                .ok_or(Error::NoIndexSpecified)?;
+            let index = status_matches.value_of("index").ok_or(Error::NoIndexSpecified)?;
 
             let index: usize = index.parse()?;
             let entity = entities.try_get(index).ok_or(Error::EntityNotFound(index))?;
@@ -251,7 +260,8 @@ impl CommandTrait for EntitiesCommand {
                     .ok_or(Error::CannotHideEntity(index))?;
             }
 
-            let (enabled, visible) = statuses.get(entity)
+            let (enabled, visible) = statuses
+                .get(entity)
                 .map(|s| (s.enabled(), s.visible()))
                 .unwrap_or((false, false));
             println!("Enabled: {}, Visible: {}", enabled, visible);

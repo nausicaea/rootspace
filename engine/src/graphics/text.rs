@@ -114,11 +114,7 @@ impl TextBuilder {
         self
     }
 
-    pub fn layout<'a, B: BackendTrait>(
-        self,
-        factory: &GraphicsBackend<B>,
-        text: &str,
-    ) -> Result<Text<'a>> {
+    pub fn layout<'a, B: BackendTrait>(self, factory: &GraphicsBackend<B>, text: &str) -> Result<Text<'a>> {
         let font_data = self
             .font_path
             .as_ref()
@@ -326,8 +322,8 @@ mod tests {
     use crate::graphics::headless::HeadlessBackend;
 
     use super::*;
-    use try_default::TryDefault;
     use std::convert::TryFrom;
+    use try_default::TryDefault;
 
     #[test]
     fn text_builder_headless() {

@@ -16,11 +16,10 @@ use crate::{
 };
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
+use crate::resources::{AssetDatabase, Statistics};
 use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
-use std::{convert::TryFrom, fs::File, path::Path};
+use std::{convert::TryFrom, fs::File, path::Path, thread::sleep};
 use try_default::TryDefault;
-use std::thread::sleep;
-use crate::resources::{Statistics, AssetDatabase};
 
 pub mod type_registry;
 

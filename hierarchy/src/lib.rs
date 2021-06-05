@@ -297,10 +297,7 @@ where
     where
         D: Deserializer<'de>,
     {
-        const FIELDS: &[&str] = &[
-            "root_idx",
-            "graph",
-        ];
+        const FIELDS: &[&str] = &["root_idx", "graph"];
 
         #[derive(Deserialize)]
         #[serde(field_identifier, rename_all = "snake_case")]
@@ -453,7 +450,8 @@ where
             // Retrieve the current node's data
             let w = &self.data[self.index].weight;
             self.index += 1;
-            w.0.as_ref().map(|&HierarchyNodeData { ref key, ref value }| (key, value))
+            w.0.as_ref()
+                .map(|&HierarchyNodeData { ref key, ref value }| (key, value))
         } else {
             None
         }

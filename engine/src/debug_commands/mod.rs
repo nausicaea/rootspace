@@ -3,21 +3,18 @@ use std::collections::HashMap;
 use anyhow::Result;
 use thiserror::Error;
 
-use ecs::impl_registry;
-use ecs::Resources;
+use ecs::{impl_registry, Resources};
 
-pub use self::assets::AssetsCommand;
-pub use self::cameras::CamerasCommand;
-pub use self::entities::EntitiesCommand;
-pub use self::exit::ExitCommand;
-pub use self::states::StatesCommand;
-pub use self::stats::StatisticsCommand;
+pub use self::{
+    assets::AssetsCommand, cameras::CamerasCommand, entities::EntitiesCommand, exit::ExitCommand,
+    states::StatesCommand, stats::StatisticsCommand,
+};
 
-pub mod exit;
+pub mod assets;
 pub mod cameras;
 pub mod entities;
+pub mod exit;
 pub mod states;
-pub mod assets;
 pub mod stats;
 
 impl_registry!(CommandRegistry, where Head: CommandTrait + Clone + Copy + Default);

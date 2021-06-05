@@ -1,19 +1,18 @@
+use anyhow::anyhow;
+use log::trace;
 #[cfg(any(test, feature = "serde_support"))]
 use serde::{Deserialize, Serialize};
 use std::{
     convert::TryFrom,
     ffi::{OsStr, OsString},
-    fs::File,
+    fmt::Debug,
+    fs::{copy, create_dir_all, metadata, read_dir, File},
+    hash::Hash,
     io::{self, Read},
     ops::Deref,
     path::{Path, PathBuf},
 };
 use thiserror::Error;
-use std::hash::Hash;
-use std::fmt::Debug;
-use log::trace;
-use anyhow::anyhow;
-use std::fs::{metadata, create_dir_all, read_dir, copy};
 
 fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError> {
     let p = path_user_input.as_ref();
@@ -74,7 +73,13 @@ pub fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow:
         // Iterate over the contents of the working directory
         for entry in read_dir_iter {
             let path = entry
-                .map_err(|e| anyhow!("Cannot retrieve metadata for an entry of {}: {}", working_path.display(), e))?
+                .map_err(|e| {
+                    anyhow!(
+                        "Cannot retrieve metadata for an entry of {}: {}",
+                        working_path.display(),
+                        e
+                    )
+                })?
                 .path();
 
             // Push child directories onto the stack, and copy files
@@ -85,8 +90,14 @@ pub fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow:
                     Some(filename) => {
                         let dest_path = dest.join(filename);
                         trace!("Copying file: {} -> {}", path.display(), dest_path.display());
-                        copy(&path, &dest_path)
-                            .map_err(|e| anyhow!("Cannot copy the file {} -> {}: {}", path.display(), dest_path.display(), e))?;
+                        copy(&path, &dest_path).map_err(|e| {
+                            anyhow!(
+                                "Cannot copy the file {} -> {}: {}",
+                                path.display(),
+                                dest_path.display(),
+                                e
+                            )
+                        })?;
                     }
                     None => {
                         return Err(anyhow!("Unable to copy the file: {:?}", path));
@@ -99,7 +110,24 @@ pub fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow:
     Ok(())
 }
 
-pub trait ValidatedPath: Debug + Clone + PartialEq + Eq + Hash + Deref<Target = PathBuf> + AsRef<PathBuf> + AsRef<Path> + AsRef<OsStr> + Into<PathBuf> + for<'r> TryFrom<&'r str> + for<'r> TryFrom<&'r PathBuf> + TryFrom<PathBuf> + for<'r> TryFrom<&'r Path> + TryFrom<OsString> + for<'r> TryFrom<&'r OsStr> {
+pub trait ValidatedPath:
+    Debug
+    + Clone
+    + PartialEq
+    + Eq
+    + Hash
+    + Deref<Target = PathBuf>
+    + AsRef<PathBuf>
+    + AsRef<Path>
+    + AsRef<OsStr>
+    + Into<PathBuf>
+    + for<'r> TryFrom<&'r str>
+    + for<'r> TryFrom<&'r PathBuf>
+    + TryFrom<PathBuf>
+    + for<'r> TryFrom<&'r Path>
+    + TryFrom<OsString>
+    + for<'r> TryFrom<&'r OsStr>
+{
     fn path(&self) -> &Path {
         AsRef::<Path>::as_ref(self)
     }

@@ -108,10 +108,7 @@ where
         GraphicsBackendBuilder::default()
     }
 
-    pub fn reload_assets(
-        &mut self,
-        renderables: &mut <Renderable as Component>::Storage,
-    ) -> Result<()> {
+    pub fn reload_assets(&mut self, renderables: &mut <Renderable as Component>::Storage) -> Result<()> {
         self.textures.clear();
         self.shaders.clear();
         self.vertex_buffers.clear();

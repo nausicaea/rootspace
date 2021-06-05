@@ -1,11 +1,10 @@
 use anyhow::Context;
-use serde::{Serialize, Deserialize};
-use clap::{App, load_yaml};
+use clap::{load_yaml, App};
+use serde::{Deserialize, Serialize};
 
 use ecs::Resources;
 
-use crate::CommandTrait;
-use crate::resources::AssetDatabase;
+use crate::{resources::AssetDatabase, CommandTrait};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AssetsCommand;

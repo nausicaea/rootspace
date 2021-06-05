@@ -28,7 +28,8 @@ where
     }
 
     pub fn insert_child(&mut self, parent: &Entity, child: Entity) {
-        self.0.insert_child(parent, child, Default::default())
+        self.0
+            .insert_child(parent, child, Default::default())
             .unwrap_or_else(|e| panic!("Unable to add child {} to parent {}: {}", child, parent, e))
     }
 

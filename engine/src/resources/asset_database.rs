@@ -1,15 +1,13 @@
-use std::path::{Path, PathBuf, is_separator};
+use std::path::{is_separator, Path, PathBuf};
 
-use file_manipulation::{DirPathBuf, FilePathBuf, NewOrExFilePathBuf, ValidatedPath, copy_recursive};
+use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf, NewOrExFilePathBuf, ValidatedPath};
 
-use crate::assets::AssetError;
+use crate::{assets::AssetError, APP_ORGANIZATION, APP_QUALIFIER};
+use anyhow::{Context, Error};
+use directories::ProjectDirs;
 use ecs::{Resource, SerializationName};
 use serde::{Deserialize, Serialize};
-use std::convert::TryFrom;
-use directories::ProjectDirs;
-use crate::{APP_QUALIFIER, APP_ORGANIZATION};
-use anyhow::{Context, Error};
-use std::fs::create_dir_all;
+use std::{convert::TryFrom, fs::create_dir_all};
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AssetDatabase {
@@ -24,7 +22,6 @@ impl SerializationName for AssetDatabase {}
 
 impl AssetDatabase {
     pub fn initialize(&mut self, name: &str) -> Result<(), Error> {
-
         let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, name.as_ref())
             .context("Could not find the project directories")?;
 
@@ -33,16 +30,15 @@ impl AssetDatabase {
         let state_database = data_local_dir.join("states");
 
         if !asset_database.is_dir() {
-            let source_assets = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("assets").join(name);
+            let source_assets = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("..")
+                .join("assets")
+                .join(name);
             if source_assets.is_dir() {
-                copy_recursive(
-                    &source_assets,
-                    &asset_database,
-                )
+                copy_recursive(&source_assets, &asset_database)
                     .context("Could not copy the asset database contents to the new directory")?;
             } else {
-                create_dir_all(&asset_database)
-                    .context("Could not create the asset database")?;
+                create_dir_all(&asset_database).context("Could not create the asset database")?;
             }
         }
         if !state_database.is_dir() {

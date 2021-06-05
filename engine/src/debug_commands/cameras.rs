@@ -1,11 +1,9 @@
-use clap::{App, ArgMatches, load_yaml};
-use serde::{Serialize, Deserialize};
+use clap::{load_yaml, App, ArgMatches};
+use serde::{Deserialize, Serialize};
 
 use ecs::{Entities, Entity, Resources, Storage};
 
-use crate::CommandTrait;
-use crate::components::Camera;
-use crate::debug_commands::Error;
+use crate::{components::Camera, debug_commands::Error, CommandTrait};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CamerasCommand;
