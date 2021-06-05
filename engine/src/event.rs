@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum EngineEvent {
-    Shutdown,
-    HardShutdown,
+    PhaseOneShutdown,
+    PhaseTwoShutdown,
     Command(Vec<String>),
     Resize((u32, u32)),
     ChangeDpi(f64),

@@ -46,7 +46,7 @@ impl TryInto<EngineEvent> for GliumEvent {
     fn try_into(self) -> Result<EngineEvent, Self::Error> {
         if let GliumEvent(GlutinEvent::WindowEvent { event: we, .. }) = self {
             match we {
-                WindowEvent::CloseRequested => Ok(EngineEvent::Shutdown),
+                WindowEvent::CloseRequested => Ok(EngineEvent::PhaseOneShutdown),
                 WindowEvent::Resized(l) => Ok(EngineEvent::Resize(l.into())),
                 WindowEvent::HiDpiFactorChanged(f) => Ok(EngineEvent::ChangeDpi(f)),
                 #[cfg(target_os = "macos")]
@@ -58,7 +58,7 @@ impl TryInto<EngineEvent> for GliumEvent {
                             ..
                         },
                     ..
-                } => Ok(EngineEvent::Shutdown),
+                } => Ok(EngineEvent::PhaseOneShutdown),
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {

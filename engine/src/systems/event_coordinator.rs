@@ -26,8 +26,8 @@ impl System for EventCoordinator {
         let events = queue.receive(&self.receiver);
         for event in events {
             match event {
-                EngineEvent::Shutdown => queue.send(EngineEvent::HardShutdown),
-                EngineEvent::HardShutdown => {
+                EngineEvent::PhaseOneShutdown => queue.send(EngineEvent::PhaseTwoShutdown),
+                EngineEvent::PhaseTwoShutdown => {
                     let mut queue = res.borrow_mut::<EventQueue<WorldEvent>>();
                     queue.send(WorldEvent::Abort)
                 }
