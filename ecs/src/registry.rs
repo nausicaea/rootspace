@@ -164,8 +164,7 @@ mod tests {
 
         fn eval<H: ResourceRegistry>(list: &H) {
             if H::LEN > 0 {
-                let head = list.head();
-                eprintln!("{:?}", head);
+                let _head: &H::Head = list.head();
                 eval(list.tail());
             }
         }
@@ -207,14 +206,16 @@ mod tests {
         assert_tokens(
             &h,
             &[
-                Token::TupleStruct {
+                Token::Struct {
                     name: "Element",
                     len: 2,
                 },
+                Token::Str("head"),
                 Token::NewtypeStruct { name: "TestElementA" },
                 Token::U64(0),
+                Token::Str("tail"),
                 Token::UnitStruct { name: "End" },
-                Token::TupleStructEnd,
+                Token::StructEnd,
             ],
         );
     }
@@ -226,21 +227,25 @@ mod tests {
         assert_tokens(
             &h,
             &[
-                Token::TupleStruct {
+                Token::Struct {
                     name: "Element",
                     len: 2,
                 },
+                Token::Str("head"),
                 Token::NewtypeStruct { name: "TestElementB" },
                 Token::Str(""),
-                Token::TupleStruct {
+                Token::Str("tail"),
+                Token::Struct {
                     name: "Element",
                     len: 2,
                 },
+                Token::Str("head"),
                 Token::NewtypeStruct { name: "TestElementA" },
                 Token::U64(0),
+                Token::Str("tail"),
                 Token::UnitStruct { name: "End" },
-                Token::TupleStructEnd,
-                Token::TupleStructEnd,
+                Token::StructEnd,
+                Token::StructEnd,
             ],
         );
     }

@@ -336,7 +336,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Error(\"Unknown field SceneGraph<Model>\", line: 1, column: 410)")]
+    #[should_panic(expected = "Error(\"Unknown resource SceneGraph<Model>\", line: 1, column: 250)")]
     fn deserialize_with_extraneous_types() {
         let mut d = serde_json::Deserializer::from_str(include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),

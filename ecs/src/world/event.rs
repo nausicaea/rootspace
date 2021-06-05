@@ -7,8 +7,6 @@ pub enum WorldEvent {
     /// Causes the WorldTrait::maintain() method to serialize the entire world state to the given
     /// file.
     Serialize(NewOrExFilePathBuf),
-    /// Signals the completion of serialization.
-    SerializationComplete,
     /// Causes the WorldTrait::maintain() method to deserialize the entire world state from the
     /// given file.
     Deserialize(FilePathBuf),

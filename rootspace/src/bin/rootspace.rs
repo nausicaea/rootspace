@@ -1,12 +1,9 @@
 use anyhow::{Context, Result};
 use clap::{load_yaml, App};
-use directories::ProjectDirs;
 use engine::{GliumBackend, HeadlessBackend};
 use fern::Dispatch;
-use file_manipulation::copy_recursive;
 use log::{debug, LevelFilter, SetLoggerError};
 use rootspace::Rootspace;
-use std::{fs::create_dir_all, io, path::PathBuf};
 
 fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {
     let log_level = match verbosity {
@@ -20,7 +17,7 @@ fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {
     Dispatch::new()
         .format(|out, message, record| out.finish(format_args!("{} @{}: {}", record.level(), record.target(), message)))
         .level(log_level)
-        .chain(io::stderr())
+        .chain(std::io::stderr())
         .apply()
 }
 
@@ -38,8 +35,17 @@ fn main() -> Result<()> {
         let scm = maybe_subcommand_matches.context("No arguments were provided to the initialize subcommand")?;
         let name = scm.value_of("name").context("Missing required argument 'name'")?;
 
+        // Configure the project-specific directories
+        let project_dirs = directories::ProjectDirs::from("org", "nausicaea", name)
+            .context("Could not find the project directories")?;
+
+        let state_dir = project_dirs.data_local_dir().join("states");
+        debug!("Located the state directory at: {}", state_dir.display());
+
+        let main_state = state_dir.join("main.json");
+
         let g = Rootspace::<HeadlessBackend>::new(name).context("Could not create a new, empty game")?;
-        g.save("main.json")
+        g.save(main_state)
             .context("Could not save the state for the new, empty game")?;
     } else if subcommand == "run" {
         let scm = maybe_subcommand_matches.context("No arguments were provided to the run subcommand")?;
@@ -57,12 +63,12 @@ fn main() -> Result<()> {
         let main_state = state_dir.join("main.json");
 
         if headless {
-            let mut g = Rootspace::<HeadlessBackend>::load(&main_state)
+            let mut g = Rootspace::<HeadlessBackend>::load(main_state)
                 .context("Could not load a headless game from an existing state")?;
             g.run();
         } else {
             let mut g =
-                Rootspace::<GliumBackend>::load(&main_state).context("Could not load a game from an existing state")?;
+                Rootspace::<GliumBackend>::load(main_state).context("Could not load a game from an existing state")?;
             g.run();
         }
     }

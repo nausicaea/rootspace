@@ -48,7 +48,7 @@ pub struct World<RR, FUSR, USR, RSR> {
     fixed_update_systems: Systems,
     update_systems: Systems,
     render_systems: Systems,
-    receiver: ReceiverId<WorldEvent>,
+    receiver: Option<ReceiverId<WorldEvent>>,
     _rr: PhantomData<RR>,
     _sr1: PhantomData<FUSR>,
     _sr2: PhantomData<USR>,
@@ -69,7 +69,7 @@ where
         let update_systems = Systems::with_registry::<USR>(&resources);
         let render_systems = Systems::with_registry::<RSR>(&resources);
 
-        let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
+        let receiver = Some(resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>());
 
         Ok(World {
             resources,
@@ -92,6 +92,20 @@ where
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
+    pub fn empty() -> Self {
+        World {
+            resources: Resources::default(),
+            fixed_update_systems: Systems::default(),
+            update_systems: Systems::default(),
+            render_systems: Systems::default(),
+            receiver: None,
+            _rr: PhantomData::default(),
+            _sr1: PhantomData::default(),
+            _sr2: PhantomData::default(),
+            _sr3: PhantomData::default(),
+        }
+    }
+
     pub fn resources(&self) -> &Resources {
         &self.resources
     }
@@ -266,21 +280,23 @@ where
     /// [`LoopControl::Continue`](crate::loop_control::LoopControl), the execution of the
     /// main loop shall continue, otherwise it shall abort.
     pub fn maintain(&mut self) -> LoopControl {
-        // Receive all pending events
-        let events = self
-            .resources
-            .get_mut::<EventQueue<WorldEvent>>()
-            .receive(&self.receiver);
+        if let Some(ref receiver) = self.receiver {
+            // Receive all pending events
+            let events = self
+                .resources
+                .get_mut::<EventQueue<WorldEvent>>()
+                .receive(receiver);
 
-        // Process all pending events
-        for e in events {
-            match e {
-                WorldEvent::Abort => {
-                    return LoopControl::Abort;
+            // Process all pending events
+            for e in events {
+                match e {
+                    WorldEvent::Abort => {
+                        return LoopControl::Abort;
+                    }
+                    WorldEvent::Serialize(p) => self.on_serialize(&p).unwrap(),
+                    WorldEvent::Deserialize(p) => self.on_deserialize(&p).unwrap(),
+                    _ => (),
                 }
-                WorldEvent::Serialize(p) => self.on_serialize(&p).unwrap(),
-                WorldEvent::Deserialize(p) => self.on_deserialize(&p).unwrap(),
-                _ => (),
             }
         }
 
@@ -290,17 +306,12 @@ where
     fn on_serialize(&mut self, path: &NewOrExFilePathBuf) -> Result<(), WorldError> {
         // Create the serializer
         // FIXME: Find a solution not to hard-code the Serializer type
-        let mut file = File::create(path.with_extension("json")).map_err(|e| WorldError::IoError(path.into(), e))?;
+        let mut file = File::create(path).map_err(|e| WorldError::IoError(path.into(), e))?;
         let mut s = serde_json::Serializer::pretty(&mut file);
 
         // Serialize the entire World
         self.serialize(&mut s)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
-
-        // Notify the world of the serialization event
-        self.resources
-            .get_mut::<EventQueue<WorldEvent>>()
-            .send(WorldEvent::SerializationComplete);
 
         Ok(())
     }
@@ -321,11 +332,6 @@ where
         self.update_systems = world.update_systems;
         self.render_systems = world.render_systems;
         self.receiver = world.receiver;
-
-        // Notify the world of the deserialization event
-        self.resources
-            .get_mut::<EventQueue<WorldEvent>>()
-            .send(WorldEvent::DeserializationComplete);
 
         Ok(())
     }
@@ -438,56 +444,61 @@ where
     where
         A: MapAccess<'de>,
     {
-        let mut resources: Option<TypedResources<ResourceTypes<RR>>> = None;
+        let mut typed_resources: Option<TypedResources<ResourceTypes<RR>>> = None;
         let mut fixed_update_systems: Option<TypedSystems<FUSR>> = None;
         let mut update_systems: Option<TypedSystems<USR>> = None;
         let mut render_systems: Option<TypedSystems<RSR>> = None;
-        let mut receiver: Option<ReceiverId<WorldEvent>> = None;
+        let mut receiver: Option<Option<ReceiverId<WorldEvent>>> = None;
 
         while let Some(field_name) = map_access.next_key()? {
             match field_name {
                 WorldField::Resources => {
-                    if resources.is_some() {
+                    if typed_resources.is_some() {
                         return Err(de::Error::duplicate_field("resources"));
                     }
-                    resources = Some(map_access.next_value()?);
+                    typed_resources = Some(map_access.next_value::<TypedResources<ResourceTypes<RR>>>()?);
                 }
                 WorldField::FixedUpdateSystems => {
                     if fixed_update_systems.is_some() {
                         return Err(de::Error::duplicate_field("fixed_update_systems"));
                     }
-                    fixed_update_systems = Some(map_access.next_value()?);
+                    fixed_update_systems = Some(map_access.next_value::<TypedSystems<FUSR>>()?);
                 }
                 WorldField::UpdateSystems => {
                     if update_systems.is_some() {
                         return Err(de::Error::duplicate_field("update_systems"));
                     }
-                    update_systems = Some(map_access.next_value()?);
+                    update_systems = Some(map_access.next_value::<TypedSystems<USR>>()?);
                 }
                 WorldField::RenderSystems => {
                     if render_systems.is_some() {
                         return Err(de::Error::duplicate_field("render_systems"));
                     }
-                    render_systems = Some(map_access.next_value()?);
+                    render_systems = Some(map_access.next_value::<TypedSystems<RSR>>()?);
                 }
                 WorldField::Receiver => {
                     if receiver.is_some() {
                         return Err(de::Error::duplicate_field("receiver"));
                     }
-                    receiver = Some(map_access.next_value()?);
+                    receiver = Some(map_access.next_value::<Option<ReceiverId<WorldEvent>>>()?);
                 }
             }
         }
 
-        let resources = resources.ok_or_else(|| de::Error::missing_field("resources"))?;
+        let typed_resources = typed_resources.ok_or_else(|| de::Error::missing_field("resources"))?;
         let fixed_update_systems =
             fixed_update_systems.ok_or_else(|| de::Error::missing_field("fixed_update_systems"))?;
         let update_systems = update_systems.ok_or_else(|| de::Error::missing_field("update_systems"))?;
         let render_systems = render_systems.ok_or_else(|| de::Error::missing_field("render_systems"))?;
-        let receiver = receiver.ok_or_else(|| de::Error::missing_field("receiver"))?;
+        let receiver = receiver.flatten();
+
+        // De-type the resources, and notify the world of completed deserialization
+        let mut resources: Resources = typed_resources.into();
+        resources.get_mut::<EventQueue<WorldEvent>>()
+            .send(WorldEvent::DeserializationComplete);
 
         Ok(World {
-            resources: resources.into(),
+            resources,
             fixed_update_systems: fixed_update_systems.into(),
             update_systems: update_systems.into(),
             render_systems: render_systems.into(),
@@ -518,49 +529,32 @@ mod tests {
             &[
                 Token::Struct { name: "World", len: 5 },
                 Token::Str("resources"),
-                Token::Map { len: Some(4) },
+                Token::Map { len: Some(3) },
                 Token::Str("Entities"),
                 Token::Struct {
                     name: "Entities",
-                    len: 3,
+                    len: 1,
                 },
                 Token::Str("max_idx"),
                 Token::U32(0),
-                Token::Str("free_idx"),
-                Token::Seq { len: Some(0) },
-                Token::SeqEnd,
-                Token::Str("generations"),
-                Token::Seq { len: Some(0) },
-                Token::SeqEnd,
                 Token::StructEnd,
                 Token::Str("EventQueue<WorldEvent>"),
                 Token::Struct {
                     name: "EventQueue",
-                    len: 4,
+                    len: 2,
                 },
-                Token::Str("events"),
-                Token::Seq { len: Some(0) },
-                Token::SeqEnd,
                 Token::Str("receivers"),
                 Token::Map { len: Some(1) },
                 Token::U64(0),
-                Token::Struct {
-                    name: "ReceiverState",
-                    len: 3,
+                Token::Tuple {
+                    len: 2,
                 },
-                Token::Str("read"),
                 Token::U64(0),
-                Token::Str("received"),
                 Token::U64(0),
-                Token::Str("receiver_id"),
-                Token::Str("World<Element<VecStorage<usize>, End>, End, End, End>"),
-                Token::StructEnd,
+                Token::TupleEnd,
                 Token::MapEnd,
                 Token::Str("max_id"),
                 Token::U64(1),
-                Token::Str("free_ids"),
-                Token::Seq { len: Some(0) },
-                Token::SeqEnd,
                 Token::StructEnd,
                 Token::Str("VecStorage<usize>"),
                 Token::Map { len: Some(0) },
@@ -576,13 +570,8 @@ mod tests {
                 Token::Map { len: Some(0) },
                 Token::MapEnd,
                 Token::Str("receiver"),
-                Token::Struct {
-                    name: "ReceiverId",
-                    len: 1,
-                },
-                Token::Str("id"),
+                Token::Some,
                 Token::U64(0),
-                Token::StructEnd,
                 Token::StructEnd,
             ],
         );

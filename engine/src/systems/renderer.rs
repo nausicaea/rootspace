@@ -13,7 +13,6 @@ use ecs::{
 
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
-    event::EngineEvent,
     graphics::{BackendTrait, FrameTrait},
     resources::{GraphicsBackend, SceneGraph, Settings, Statistics},
 };
@@ -22,8 +21,6 @@ use crate::{
 pub struct Renderer<B> {
     receiver: ReceiverId<WorldEvent>,
     #[serde(skip)]
-    initialised: bool,
-    #[serde(skip)]
     _b: PhantomData<B>,
 }
 
@@ -31,8 +28,8 @@ impl<B> std::fmt::Debug for Renderer<B> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "Renderer {{ receiver: {:?}, initialised: {:?} }}",
-            self.receiver, self.initialised,
+            "Renderer {{ receiver: {:?} }}",
+            self.receiver,
         )
     }
 }
@@ -46,7 +43,6 @@ where
 
         Renderer {
             receiver,
-            initialised: false,
             _b: PhantomData::default(),
         }
     }
@@ -56,12 +52,6 @@ impl<B> Renderer<B>
 where
     B: BackendTrait,
 {
-    fn set_dpi_factor(&self, res: &Resources) {
-        let dpi_factor = res.borrow::<GraphicsBackend<B>>().dpi_factor();
-        res.borrow_mut::<EventQueue<EngineEvent>>()
-            .send(EngineEvent::ChangeDpi(dpi_factor));
-    }
-
     fn reload_renderables(&self, res: &Resources) {
         debug!("Reloading all renderables");
 
@@ -85,14 +75,6 @@ where
         let mut world_draw_calls: usize = 0;
 
         let mut ui_draw_calls: usize = 0;
-
-        // The following is just a workaround for the DPI factor not being set properly by the
-        // graphics_backend at initialisation.
-        if !self.initialised {
-            debug!("Initialising the renderer");
-            self.set_dpi_factor(res);
-            self.initialised = true;
-        }
 
         // Reload all renderables.
         let events = res.borrow_mut::<EventQueue<WorldEvent>>().receive(&self.receiver);

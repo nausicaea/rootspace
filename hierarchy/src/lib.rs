@@ -161,7 +161,7 @@ where
         self.index.clear();
         for idx in self.graph.graph().node_indices() {
             let node = self.graph.node_weight(idx).unwrap_or_else(|| unreachable!());
-            if let Some(HierarchyNodeData { ref key, .. }) = node.0 {
+            if let Some((ref key, _)) = node.0 {
                 self.index.insert(key.clone(), idx);
             }
         }
@@ -205,7 +205,7 @@ where
                 let parent_data = self
                     .graph
                     .node_weight(parent_idx)
-                    .and_then(|n| n.0.as_ref().map(|HierarchyNodeData { value, .. }| value.clone()))
+                    .and_then(|n| n.0.as_ref().map(|(_, value)| value.clone()))
                     .unwrap_or_default();
 
                 self.graph
@@ -368,23 +368,16 @@ where
     }
 }
 
-#[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
-#[derive(Clone, PartialEq, Eq)]
-struct HierarchyNodeData<K, V> {
-    key: K,
-    value: V,
-}
-
 /// Each `HierNode` consists of an identifying key and the associated data.
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
 #[derive(Clone, PartialEq, Eq)]
-struct HierarchyNode<K, V>(Option<HierarchyNodeData<K, V>>);
+struct HierarchyNode<K, V>(Option<(K, V)>);
 
 impl<K, V> HierarchyNode<K, V> {
     /// Creates a new `HierNode`.
     fn new(key: K, value: V) -> Self {
-        HierarchyNode(Some(HierarchyNodeData { key, value }))
+        HierarchyNode(Some((key, value)))
     }
 
     /// Creates a new root node.
@@ -400,7 +393,7 @@ impl<K, V> HierarchyNode<K, V> {
     where
         for<'r> F: Fn(&'r K, &'r V, &'r V) -> Option<V>,
     {
-        if let Some(HierarchyNodeData { ref key, ref mut value }) = self.0 {
+        if let Some((ref key, ref mut value)) = self.0 {
             if let Some(data) = merge_fn(key, value, parent_data) {
                 *value = data;
             }
@@ -451,7 +444,7 @@ where
             let w = &self.data[self.index].weight;
             self.index += 1;
             w.0.as_ref()
-                .map(|&HierarchyNodeData { ref key, ref value }| (key, value))
+                .map(|&(ref key, ref value)| (key, value))
         } else {
             None
         }

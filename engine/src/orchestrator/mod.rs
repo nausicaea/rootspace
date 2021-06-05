@@ -4,15 +4,12 @@ use std::{
 };
 
 use anyhow::Result;
-use log::debug;
 use serde::{Deserialize, Serialize};
 
 use ecs::{LoopControl, Reg, ResourceRegistry, SystemRegistry, World};
 
 use crate::{
-    components::{Model, UiModel},
     graphics::BackendTrait,
-    resources::SceneGraph,
 };
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
@@ -74,15 +71,6 @@ where
         //     .get_system_mut::<DebugShell>(LoopStage::Update)
         //     .add_command(FileSystemCommand);
 
-        // Update the scene graphs for the first time
-        // FIXME: Do we really need to update the scene graphs?
-        world
-            .borrow_mut::<SceneGraph<Model>>()
-            .update(&world.borrow_components::<Model>());
-        world
-            .borrow_mut::<SceneGraph<UiModel>>()
-            .update(&world.borrow_components::<UiModel>());
-
         Ok(Orchestrator {
             world,
             delta_time: Duration::from_millis(DELTA_TIME),
@@ -91,9 +79,9 @@ where
         })
     }
 
-    pub fn save<S: AsRef<str>>(&self, name: S) -> Result<()> {
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         // Create the deserializer
-        let state_path = self.world.borrow::<AssetDatabase>().create_state_path(name)?;
+        let state_path = NewOrExFilePathBuf::try_from(path.as_ref())?;
         let mut file = File::create(state_path)?;
         let mut serializer = serde_json::Serializer::pretty(&mut file);
 
@@ -165,7 +153,6 @@ mod tests {
 
     use crate::{GliumBackend, HeadlessBackend, Orchestrator};
     use ecs::Reg;
-    use tempfile::NamedTempFile;
 
     type TestGame<B> = Orchestrator<B, Reg![], Reg![], Reg![], Reg![]>;
 

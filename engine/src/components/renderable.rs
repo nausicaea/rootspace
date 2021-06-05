@@ -1,5 +1,3 @@
-use std::path::{Path, PathBuf};
-
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -18,7 +16,6 @@ use crate::{
     },
 };
 use file_manipulation::FilePathBuf;
-use std::convert::TryFrom;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RenderableType {
@@ -327,32 +324,42 @@ mod tests {
 
     use super::*;
     use try_default::TryDefault;
+    use std::convert::TryFrom;
 
-    // #[test]
-    // fn headless_builder_mesh() {
-    //     let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
-    //     let r: Result<Renderable> = Renderable::builder()
-    //         .with_mesh("meshes/cube.ply")
-    //         .with_vertex_shader("shaders/test-vertex.glsl")
-    //         .with_fragment_shader("shaders/test-fragment.glsl")
-    //         .with_diffuse_texture("textures/tv-test-image.png")
-    //         .with_type(RenderableType::Mesh)
-    //         .build(&mut f);
+    #[test]
+    fn headless_builder_mesh() {
+        let meshp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/cube.ply")).unwrap();
+        let vsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/test-vertex.glsl")).unwrap();
+        let fsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/test-fragment.glsl")).unwrap();
+        let dtp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/tv-test-image.png")).unwrap();
 
-    //     r.unwrap();
-    // }
+        let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
+        let r: Result<Renderable> = Renderable::builder()
+            .with_mesh(meshp)
+            .with_vertex_shader(vsp)
+            .with_fragment_shader(fsp)
+            .with_diffuse_texture(dtp)
+            .with_type(RenderableType::Mesh)
+            .build(&mut f);
 
-    // #[test]
-    // fn headless_builder_text() {
-    //     let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
-    //     let r: Result<Renderable> = Renderable::builder()
-    //         .with_font("fonts/SourceSansPro-Regular.ttf")
-    //         .with_vertex_shader("shaders/test-vertex.glsl")
-    //         .with_fragment_shader("shaders/test-fragment.glsl")
-    //         .with_text("Hello, World!")
-    //         .with_type(RenderableType::Text)
-    //         .build(&mut f);
+        r.unwrap();
+    }
 
-    //     r.unwrap();
-    // }
+    #[test]
+    fn headless_builder_text() {
+        let fontp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/SourceSansPro-Regular.ttf")).unwrap();
+        let vsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/test-vertex.glsl")).unwrap();
+        let fsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/test-fragment.glsl")).unwrap();
+
+        let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
+        let r: Result<Renderable> = Renderable::builder()
+            .with_font(fontp)
+            .with_vertex_shader(vsp)
+            .with_fragment_shader(fsp)
+            .with_text("Hello, World!")
+            .with_type(RenderableType::Text)
+            .build(&mut f);
+
+        r.unwrap();
+    }
 }
