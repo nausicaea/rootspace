@@ -8,8 +8,19 @@ pub struct Status {
 }
 
 impl Status {
+    pub fn new(enabled: bool, visible: bool) -> Self {
+        Status {
+            enabled,
+            visible,
+        }
+    }
+
     pub fn enabled(&self) -> bool {
         self.enabled
+    }
+
+    pub fn set_enabled(&mut self, enabled: bool) {
+        self.enabled = enabled;
     }
 
     pub fn enable(&mut self) {
@@ -22,6 +33,10 @@ impl Status {
 
     pub fn visible(&self) -> bool {
         self.visible
+    }
+
+    pub fn set_visible(&mut self, visible: bool) {
+        self.visible = visible;
     }
 
     pub fn show(&mut self) {

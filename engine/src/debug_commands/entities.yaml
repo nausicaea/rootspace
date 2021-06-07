@@ -71,8 +71,6 @@ subcommands:
       about: Updates the status of one or more entities
       aliases:
         - s
-      settings:
-        - ArgRequiredElseHelp
       args:
         - enable:
             short: e

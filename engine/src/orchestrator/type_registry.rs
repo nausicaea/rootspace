@@ -5,9 +5,9 @@ use crate::{
     event::EngineEvent,
     resources::{AssetDatabase, GraphicsBackend, SceneGraph, Settings, Statistics},
     systems::{
-        camera_manager::CameraManager, debug_console::DebugConsole, debug_shell::DebugShell,
-        event_coordinator::EventCoordinator, event_interface::EventInterface, event_monitor::EventMonitor,
-        force_shutdown::ForceShutdown, renderer::Renderer,
+        CameraManager, DebugConsole, DebugShell,
+        EventCoordinator, EventInterface, EventMonitor,
+        ForceShutdown, Renderer, StatusManager,
     },
 };
 
@@ -35,6 +35,7 @@ pub type UpdateSystemTypes<B, SR> = RegAdd![
     EventMonitor<WorldEvent>,
     EventMonitor<EngineEvent>,
     CameraManager,
+    StatusManager,
     EventCoordinator,
     EventInterface<B>,
     SR

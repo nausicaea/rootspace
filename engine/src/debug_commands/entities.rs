@@ -1,14 +1,10 @@
 use anyhow::{anyhow, Context};
 use clap::{load_yaml, App};
 
-use ecs::{Entities, Resources, Storage};
+use ecs::{Entities, Resources, Storage, EventQueue};
 
 use super::Error;
-use crate::{
-    components::{Camera, Info, Model, Renderable, RenderableType, Status, UiModel},
-    resources::{AssetDatabase, GraphicsBackend, SceneGraph},
-    CommandTrait, HeadlessBackend,
-};
+use crate::{components::{Camera, Info, Model, Renderable, RenderableType, Status, UiModel}, resources::{AssetDatabase, GraphicsBackend, SceneGraph}, CommandTrait, HeadlessBackend, EngineEvent};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -172,35 +168,24 @@ impl CommandTrait for EntitiesCommand {
             let index: usize = index.parse()?;
             let entity = entities.try_get(index).ok_or(Error::EntityNotFound(index))?;
 
-            if status_matches.is_present("enable") {
-                statuses
-                    .get_mut(entity)
-                    .map(|s| s.enable())
-                    .ok_or(Error::CannotEnableEntity(index))?;
+            let enabled = if status_matches.is_present("enable") {
+                Some(true)
             } else if status_matches.is_present("disable") {
-                statuses
-                    .get_mut(entity)
-                    .map(|s| s.disable())
-                    .ok_or(Error::CannotDisableEntity(index))?;
-            }
+                Some(false)
+            } else {
+                None
+            };
 
-            if status_matches.is_present("show") {
-                statuses
-                    .get_mut(entity)
-                    .map(|s| s.show())
-                    .ok_or(Error::CannotShowEntity(index))?;
+            let visible = if status_matches.is_present("show") {
+                Some(true)
             } else if status_matches.is_present("hide") {
-                statuses
-                    .get_mut(entity)
-                    .map(|s| s.hide())
-                    .ok_or(Error::CannotHideEntity(index))?;
-            }
+                Some(false)
+            } else {
+                None
+            };
 
-            let (enabled, visible) = statuses
-                .get(entity)
-                .map(|s| (s.enabled(), s.visible()))
-                .unwrap_or((false, false));
-            println!("Enabled: {}, Visible: {}", enabled, visible);
+            res.borrow_mut::<EventQueue<EngineEvent>>()
+                .send(EngineEvent::SetStatus { entity, enabled, visible });
         }
 
         Ok(())
