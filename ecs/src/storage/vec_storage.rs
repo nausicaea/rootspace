@@ -9,6 +9,7 @@ use serde::{
     Deserialize, Serialize,
 };
 use std::{collections::HashSet, marker::PhantomData, ptr};
+use crate::storage::Entry;
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
@@ -103,6 +104,15 @@ impl<T> Storage for VecStorage<T> {
         self.index.clear();
         unsafe {
             data.set_len(0);
+        }
+    }
+
+    fn entry<I: Into<Index>>(&mut self, index: I) -> Entry<'_, T, Self> {
+        let idx: Index = index.into();
+        if self.index.contains(&idx) {
+            Entry::Occupied(self, idx)
+        } else {
+            Entry::Vacant(self, idx)
         }
     }
 
