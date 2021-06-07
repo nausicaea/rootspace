@@ -70,7 +70,7 @@ pub trait Storage: Sized {
     /// Empties the component storage.
     fn clear(&mut self);
 
-    // TODO: Add an entry() API similar to std::collections::HashMap::entry.
+    /// Gets the given indexe's corresponding entry in the map for in-place manipulation.
     fn entry<I: Into<Index>>(&mut self, index: I) -> Entry<'_, Self::Item, Self> {
         let idx: Index = index.into();
         if self.has(idx) {
