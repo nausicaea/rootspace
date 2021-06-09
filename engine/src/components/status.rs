@@ -1,5 +1,6 @@
 use ecs::{Component, VecStorage};
 use serde::{Deserialize, Serialize};
+use std::ops::Mul;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Status {
@@ -50,6 +51,25 @@ impl Default for Status {
         Status {
             enabled: true,
             visible: true,
+        }
+    }
+}
+
+impl Mul<Status> for Status {
+    type Output = Status;
+
+    fn mul(self, rhs: Status) -> Status {
+        &self * &rhs
+    }
+}
+
+impl<'a> Mul<&'a Status> for &'a Status {
+    type Output = Status;
+
+    fn mul(self, rhs: &'a Status) -> Status {
+        Status {
+            enabled: self.enabled && rhs.enabled,
+            visible: self.visible && rhs.visible,
         }
     }
 }
