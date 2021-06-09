@@ -1,6 +1,7 @@
 use clap::{load_yaml, App};
-
 use ecs::{Entities, EventQueue, Resources, Storage, WorldEvent};
+use serde::{Deserialize, Serialize};
+use term_table::{row::Row, table_cell::TableCell, TableBuilder, TableStyle};
 
 use super::Error;
 use crate::{
@@ -8,8 +9,6 @@ use crate::{
     resources::SceneGraph,
     CommandTrait,
 };
-use serde::{Deserialize, Serialize};
-use term_table::{row::Row, table_cell::TableCell, TableBuilder, TableStyle};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EntitiesCommand;

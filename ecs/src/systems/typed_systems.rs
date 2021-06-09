@@ -12,10 +12,8 @@ use serde::{
     Deserialize, Serialize,
 };
 
-use crate::{registry::SystemRegistry, system::System};
-
 use super::{recursors, Systems};
-use crate::{resources::Resources, with_resources::WithResources};
+use crate::{registry::SystemRegistry, resources::Resources, system::System, with_resources::WithResources};
 
 #[derive(Debug)]
 pub struct TypedSystems<'a, SR>(Either<&'a Systems, Systems>, PhantomData<SR>);
@@ -156,9 +154,8 @@ mod tests {
     use serde::Deserialize;
     use serde_test::{assert_tokens, Token};
 
-    use crate::{resources::Resources, system::System, Reg, SerializationName};
-
     use super::*;
+    use crate::{resources::Resources, system::System, Reg, SerializationName};
 
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct TestSystemA;

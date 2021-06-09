@@ -4,15 +4,14 @@ use std::{
     marker::PhantomData,
 };
 
+use log::trace;
 use serde::{de, de::MapAccess, ser, ser::SerializeMap};
 
+use super::{typed_system::TypedSystem, Systems};
 use crate::{
     registry::SystemRegistry, resources::Resources, short_type_name::short_type_name, system::System,
     with_resources::WithResources, SerializationName,
 };
-use log::trace;
-
-use super::{typed_system::TypedSystem, Systems};
 
 pub fn initialize_recursive<SR>(resources: &Resources, systems: &mut Systems, _: PhantomData<SR>)
 where

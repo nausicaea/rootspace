@@ -1,9 +1,10 @@
-use crate::{components::camera::Camera, event::EngineEvent};
-use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources};
+use std::time::Duration;
 
+use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources};
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
+
+use crate::{components::camera::Camera, event::EngineEvent};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CameraManager {

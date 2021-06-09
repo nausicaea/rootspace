@@ -1,8 +1,9 @@
-use crate::{components::model::Model, geometry::ray::Ray};
 use approx::ulps_eq;
 use ecs::{Component, VecStorage};
 use nalgebra::{Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
 use serde::{Deserialize, Serialize};
+
+use crate::{components::model::Model, geometry::ray::Ray};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Projection {

@@ -1,6 +1,7 @@
+use std::{collections::VecDeque, time::Duration};
+
 use ecs::{Resource, SerializationName};
 use serde::{Deserialize, Serialize};
-use std::{collections::VecDeque, time::Duration};
 
 const DRAW_CALL_WINDOW: usize = 10;
 const FRAME_TIME_WINDOW: usize = 10;

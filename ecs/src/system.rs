@@ -1,8 +1,10 @@
 //! Provides traits to specify behaviour (e.g. systems) that operates on data (e.g. components).
 
-use crate::resources::Resources;
-use downcast_rs::{impl_downcast, Downcast};
 use std::time::Duration;
+
+use downcast_rs::{impl_downcast, Downcast};
+
+use crate::resources::Resources;
 
 /// Encodes a system or behaviour.
 pub trait System: Downcast {

@@ -1,5 +1,3 @@
-use super::base::{ascii_unsigned_integral, eol, identity, keyword, lex};
-use crate::types::{CountType, DataType, Element, Format, FormatType, Header, Property};
 use combine::{
     error::ParseError,
     parser::{
@@ -12,6 +10,9 @@ use combine::{
     },
     stream::Stream,
 };
+
+use super::base::{ascii_unsigned_integral, eol, identity, keyword, lex};
+use crate::types::{CountType, DataType, Element, Format, FormatType, Header, Property};
 
 /// Parses the beginning of the ply header.
 fn begin_header<'a, I>() -> impl Parser<Input = I, Output = ()> + 'a
@@ -242,8 +243,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
+
+    use super::*;
 
     const BUFFER_SIZE: usize = 32;
 

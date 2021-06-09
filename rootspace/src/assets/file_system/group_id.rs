@@ -34,8 +34,9 @@ impl From<u32> for GroupId {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use proptest::prelude::*;
+
+    use super::*;
 
     #[test]
     fn privileged() {

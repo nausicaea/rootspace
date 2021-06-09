@@ -1,14 +1,16 @@
-use super::{
-    iterators::{EnumRIter, RIter, WIter},
-    Storage,
-};
-use crate::{entity::index::Index, resource::Resource, storage::Entry, SerializationName};
+use std::{collections::HashSet, marker::PhantomData, ptr};
+
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, Serializer},
     Deserialize, Serialize,
 };
-use std::{collections::HashSet, marker::PhantomData, ptr};
+
+use super::{
+    iterators::{EnumRIter, RIter, WIter},
+    Storage,
+};
+use crate::{entity::index::Index, resource::Resource, storage::Entry, SerializationName};
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
@@ -275,9 +277,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use serde_test::{assert_tokens, Token};
+
     use super::*;
     use crate::{component::Component, entities::Entities, entity::Entity};
-    use serde_test::{assert_tokens, Token};
 
     struct DropCounter<'a> {
         count: &'a mut usize,

@@ -1,6 +1,7 @@
+use std::fmt;
+
 use ecs::{Component, VecStorage};
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Info {

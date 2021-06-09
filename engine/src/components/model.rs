@@ -1,9 +1,9 @@
-use ecs::{Component, VecStorage};
+use std::{f32, ops::Mul};
 
 use affine_transform::AffineTransform;
+use ecs::{Component, VecStorage};
 use nalgebra::{Affine3, Isometry3, Matrix4, Point3, UnitQuaternion, Vector3};
 use serde::{Deserialize, Serialize};
-use std::{f32, ops::Mul};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "AffineTransform<f32>", from = "AffineTransform<f32>")]

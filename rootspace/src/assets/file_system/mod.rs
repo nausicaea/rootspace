@@ -5,13 +5,6 @@ mod mode;
 mod node;
 mod user_id;
 
-use self::{group_id::GroupId, mode::Mode, node::Node, user_id::UserId};
-use anyhow::Result;
-use bitflags::bitflags;
-use daggy::{Dag, NodeIndex, Walker};
-use engine::{AssetMutTrait, AssetTrait};
-use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
-use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     convert::TryFrom,
@@ -19,7 +12,16 @@ use std::{
     fs::File,
     path::{Component, Path},
 };
+
+use anyhow::Result;
+use bitflags::bitflags;
+use daggy::{Dag, NodeIndex, Walker};
+use engine::{AssetMutTrait, AssetTrait};
+use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
+
+use self::{group_id::GroupId, mode::Mode, node::Node, user_id::UserId};
 
 #[derive(Debug, Error)]
 pub enum Error {

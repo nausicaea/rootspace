@@ -1,6 +1,7 @@
+use std::convert::TryFrom;
+
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
-use std::convert::TryFrom;
 use thiserror::Error;
 
 static FILE_TYPE_MASK: u16 = 0o170000;
@@ -288,8 +289,9 @@ impl Default for ModeBuilder {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use proptest::prelude::*;
+
+    use super::*;
 
     #[test]
     fn directory() {

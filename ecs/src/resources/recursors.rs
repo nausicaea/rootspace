@@ -1,10 +1,12 @@
-use super::Resources;
-use crate::{registry::ResourceRegistry, serialization_name::SerializationName};
+use std::{any::type_name, marker::PhantomData};
+
 use anyhow::Error;
 use log::trace;
 use serde::{de, de::MapAccess, ser, ser::SerializeMap};
-use std::{any::type_name, marker::PhantomData};
 use try_default::TryDefault;
+
+use super::Resources;
+use crate::{registry::ResourceRegistry, serialization_name::SerializationName};
 
 pub fn initialize_recursive<RR>(resources: &mut Resources, _: PhantomData<RR>) -> Result<(), Error>
 where

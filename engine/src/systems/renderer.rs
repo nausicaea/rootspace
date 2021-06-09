@@ -1,15 +1,14 @@
-use serde::{Deserialize, Serialize};
 use std::{
     marker::PhantomData,
     time::{Duration, Instant},
 };
 
-use log::debug;
-
 use ecs::{
     world::event::WorldEvent, Entities, EventQueue, ReceiverId, Resources, SerializationName, Storage, System,
     WithResources,
 };
+use log::debug;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},

@@ -136,8 +136,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
+
+    use super::*;
 
     #[test]
     fn is_eol() {

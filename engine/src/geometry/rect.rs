@@ -1,8 +1,10 @@
-use super::point::Point;
+use std::fmt;
+
 use glium::Rect as GliumRect;
 use num_traits::{Num, RefNum};
 use rusttype::{Point as RusttypePoint, Rect as RusttypeRect};
-use std::fmt;
+
+use super::point::Point;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Rect<N> {
@@ -112,8 +114,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use rusttype::point as rusttype_point;
+
+    use super::*;
 
     #[test]
     fn new() {

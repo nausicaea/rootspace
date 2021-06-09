@@ -1,31 +1,30 @@
 use std::{
     collections::HashMap,
-    convert::TryFrom,
+    convert::{TryFrom, TryInto},
     fmt,
+    marker::PhantomData,
     ops::{Deref, DerefMut},
 };
 
 use anyhow::{Error, Result};
-
 use ecs::{Component, Resource, SerializationName};
 use file_manipulation::FilePathBuf;
 use index_buffer_id::IndexBufferId;
-use shader_id::ShaderId;
-use texture_id::TextureId;
-use vertex_buffer_id::VertexBufferId;
-
-use crate::{
-    components::Renderable,
-    graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait},
-};
 use serde::{
     de,
     de::{MapAccess, Visitor},
     ser::SerializeStruct,
     Deserialize, Deserializer, Serialize, Serializer,
 };
-use std::{convert::TryInto, marker::PhantomData};
+use shader_id::ShaderId;
+use texture_id::TextureId;
 use try_default::TryDefault;
+use vertex_buffer_id::VertexBufferId;
+
+use crate::{
+    components::Renderable,
+    graphics::{BackendTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait},
+};
 
 pub mod index_buffer_id;
 pub mod shader_id;

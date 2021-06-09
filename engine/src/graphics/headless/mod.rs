@@ -1,13 +1,14 @@
+use std::{borrow::Cow, convert::TryInto};
+
+use anyhow::Result;
+use log::{debug, trace};
+
 use super::{
     BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
 };
 use crate::{
     assets::Image, components::Renderable, event::EngineEvent, geometry::rect::Rect, resources::GraphicsBackend,
 };
-use anyhow::Result;
-
-use log::{debug, trace};
-use std::{borrow::Cow, convert::TryInto};
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HeadlessEvent;
@@ -146,8 +147,9 @@ impl BackendTrait for HeadlessBackend {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use try_default::TryDefault;
+
+    use super::*;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);

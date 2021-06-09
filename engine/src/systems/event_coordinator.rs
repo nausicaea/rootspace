@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use ecs::{world::event::WorldEvent, EventQueue, ReceiverId, Resources, SerializationName, System, WithResources};
+use serde::{Deserialize, Serialize};
 
 use crate::event::EngineEvent;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EventCoordinator {

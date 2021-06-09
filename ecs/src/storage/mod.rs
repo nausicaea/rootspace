@@ -2,8 +2,9 @@ pub mod iterators;
 pub mod vec_storage;
 pub mod zst_storage;
 
-use crate::entity::index::Index;
 use std::collections::HashSet;
+
+use crate::entity::index::Index;
 
 #[derive(Debug)]
 pub enum Entry<'a, T: 'a, S: Storage<Item = T>> {

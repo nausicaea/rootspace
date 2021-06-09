@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use thiserror::Error;
-
 use ecs::{impl_registry, Resources};
+use thiserror::Error;
 
 pub use self::{
     assets::AssetsCommand, components::ComponentsCommand, entities::EntitiesCommand, exit::ExitCommand,

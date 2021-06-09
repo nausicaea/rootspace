@@ -3,21 +3,22 @@ pub mod headless;
 pub mod text;
 pub mod vertex;
 
-pub use self::{text::Text, vertex::Vertex};
+use std::{
+    borrow::Cow,
+    convert::{TryFrom, TryInto},
+    path::Path,
+};
 
+use anyhow::Result;
+use file_manipulation::FilePathBuf;
+
+pub use self::{text::Text, vertex::Vertex};
 use crate::{
     assets::{AssetTrait, Image},
     components::Renderable,
     event::EngineEvent,
     geometry::rect::Rect,
     resources::GraphicsBackend,
-};
-use anyhow::Result;
-use file_manipulation::FilePathBuf;
-use std::{
-    borrow::Cow,
-    convert::{TryFrom, TryInto},
-    path::Path,
 };
 
 pub trait BackendTrait: Clone + Sized + 'static {

@@ -1,13 +1,16 @@
-use std::path::{is_separator, Path, PathBuf};
+use std::{
+    convert::TryFrom,
+    fs::create_dir_all,
+    path::{is_separator, Path, PathBuf},
+};
 
-use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf, NewOrExFilePathBuf, ValidatedPath};
-
-use crate::{assets::AssetError, APP_ORGANIZATION, APP_QUALIFIER};
 use anyhow::{Context, Error};
 use directories::ProjectDirs;
 use ecs::{Resource, SerializationName};
+use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf, NewOrExFilePathBuf, ValidatedPath};
 use serde::{Deserialize, Serialize};
-use std::{convert::TryFrom, fs::create_dir_all};
+
+use crate::{assets::AssetError, APP_ORGANIZATION, APP_QUALIFIER};
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct AssetDatabase {

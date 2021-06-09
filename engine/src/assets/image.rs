@@ -1,9 +1,11 @@
-use super::AssetTrait;
+use std::{convert::TryFrom, fmt, path::Path};
+
 use anyhow::Result;
 use file_manipulation::FilePathBuf;
 use glium::texture::RawImage2d;
 use image::{self, GenericImageView};
-use std::{convert::TryFrom, fmt, path::Path};
+
+use super::AssetTrait;
 
 pub struct Image(image::DynamicImage);
 

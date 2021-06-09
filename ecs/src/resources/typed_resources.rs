@@ -1,5 +1,5 @@
-use super::{recursors, Resources};
-use crate::registry::ResourceRegistry;
+use std::marker::PhantomData;
+
 use anyhow::Error;
 use either::{
     Either,
@@ -11,8 +11,10 @@ use serde::{
     ser::SerializeMap,
     Deserialize, Deserializer, Serialize, Serializer,
 };
-use std::marker::PhantomData;
 use try_default::TryDefault;
+
+use super::{recursors, Resources};
+use crate::registry::ResourceRegistry;
 
 #[derive(Debug)]
 pub struct TypedResources<'a, RR>(Either<&'a Resources, Resources>, PhantomData<RR>);
@@ -144,9 +146,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use serde_test::{assert_tokens, Token};
+
     use super::*;
     use crate::{resource::Resource, Reg, SerializationName};
-    use serde_test::{assert_tokens, Token};
 
     #[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct TestResourceA;

@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use either::{
     Either,
     Either::{Left, Right},
@@ -8,7 +10,6 @@ use serde::{
     ser::SerializeStruct,
     Deserialize, Deserializer, Serialize, Serializer,
 };
-use std::marker::PhantomData;
 
 use crate::system::System;
 

@@ -5,6 +5,8 @@
 //! associated with each identifier.
 #![deny(missing_docs)]
 
+use std::{collections::HashMap, fmt, hash::Hash, marker::PhantomData};
+
 use daggy::{
     petgraph::{
         graph::{DefaultIx, Node},
@@ -17,7 +19,6 @@ use serde::{
     de::{self, Deserializer, MapAccess, Visitor},
     Deserialize, Serialize,
 };
-use std::{collections::HashMap, fmt, hash::Hash, marker::PhantomData};
 use thiserror::Error;
 
 /// Given a set of identifying keys and corresponding data, `Hierarchy` allows users to establish
@@ -466,9 +467,11 @@ pub enum HierarchyError {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use serde_test::{assert_ser_tokens, Token};
     use std::{num::ParseIntError, str::FromStr};
+
+    use serde_test::{assert_ser_tokens, Token};
+
+    use super::*;
 
     #[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
     struct TestKey(u64);

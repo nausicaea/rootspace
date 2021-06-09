@@ -1,11 +1,13 @@
 pub mod image;
 pub mod mesh;
 
-pub use self::{image::Image, mesh::Mesh};
+use std::path::{Path, PathBuf};
+
 use anyhow::Result;
 use file_manipulation::FileError;
-use std::path::{Path, PathBuf};
 use thiserror::Error;
+
+pub use self::{image::Image, mesh::Mesh};
 
 pub trait AssetTrait: Sized {
     fn from_path<P: AsRef<Path>>(path: P) -> Result<Self>;

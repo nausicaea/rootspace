@@ -1,12 +1,3 @@
-use crate::event::EngineEvent;
-use ecs::{EventQueue, Resources, SerializationName, System, WithResources};
-
-use log::debug;
-#[cfg(not(test))]
-use log::error;
-#[cfg(not(test))]
-use log::info;
-use serde::{Deserialize, Serialize};
 #[cfg(not(test))]
 use std::process;
 use std::{
@@ -16,6 +7,16 @@ use std::{
     },
     time::Duration,
 };
+
+use ecs::{EventQueue, Resources, SerializationName, System, WithResources};
+use log::debug;
+#[cfg(not(test))]
+use log::error;
+#[cfg(not(test))]
+use log::info;
+use serde::{Deserialize, Serialize};
+
+use crate::event::EngineEvent;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ForceShutdown {

@@ -4,16 +4,15 @@
 use std::{
     any::TypeId,
     cell::{Ref, RefCell, RefMut},
-    collections::HashMap,
+    collections::{HashMap, HashSet},
 };
 
+use anyhow::Error;
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
+use try_default::TryDefault;
 
 use self::typed_resources::TypedResources;
 use crate::{component::Component, registry::ResourceRegistry, resource::Resource, short_type_name::short_type_name};
-use anyhow::Error;
-use std::collections::HashSet;
-use try_default::TryDefault;
 
 mod recursors;
 pub(crate) mod typed_resources;
@@ -259,9 +258,8 @@ mod tests {
     use serde::{Deserialize, Serialize};
     use serde_json;
 
-    use crate::{world::event::WorldEvent, Entities, EventQueue, Reg, SerializationName};
-
     use super::*;
+    use crate::{world::event::WorldEvent, Entities, EventQueue, Reg, SerializationName};
 
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceA(usize);

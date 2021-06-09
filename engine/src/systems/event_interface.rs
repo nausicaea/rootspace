@@ -1,8 +1,9 @@
-use crate::{event::EngineEvent, graphics::BackendTrait, resources::GraphicsBackend};
-use ecs::{EventQueue, Resources, SerializationName, System};
 use std::{convert::TryInto, marker::PhantomData, time::Duration};
 
+use ecs::{EventQueue, Resources, SerializationName, System};
 use serde::{Deserialize, Serialize};
+
+use crate::{event::EngineEvent, graphics::BackendTrait, resources::GraphicsBackend};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename(serialize = "EventInterface", deserialize = "EventInterface"))]

@@ -4,21 +4,18 @@ use std::{
 };
 
 use anyhow::Result;
-
+use file_manipulation::{FileError, FilePathBuf};
 use log::debug;
 use rusttype::{self, gpu_cache::Cache, point, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use thiserror::Error;
 use unicode_normalization::UnicodeNormalization;
 
-use file_manipulation::{FileError, FilePathBuf};
-
+use super::vertex::Vertex;
 use crate::{
     assets::{AssetError, Mesh},
     graphics::{BackendTrait, TextureTrait},
     resources::{graphics_backend::texture_id::TextureId, GraphicsBackend},
 };
-
-use super::vertex::Vertex;
 
 pub struct Text<'a> {
     text: String,
@@ -319,11 +316,12 @@ fn generate_mesh<'a>(cache: &Cache<'a>, glyphs: &[PositionedGlyph<'a>], text_dim
 
 #[cfg(test)]
 mod tests {
-    use crate::graphics::headless::HeadlessBackend;
+    use std::convert::TryFrom;
+
+    use try_default::TryDefault;
 
     use super::*;
-    use std::convert::TryFrom;
-    use try_default::TryDefault;
+    use crate::graphics::headless::HeadlessBackend;
 
     #[test]
     fn text_builder_headless() {

@@ -1,7 +1,8 @@
 //! The module `types` defines internal representations of parts of a Stanford PLY file.
 
-use crate::impl_property_data;
 use std::collections::HashSet;
+
+use crate::impl_property_data;
 
 /// Describes the recognized formats of a PLY file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

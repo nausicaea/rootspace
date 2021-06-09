@@ -2,12 +2,12 @@ mod recursors;
 mod typed_system;
 pub(crate) mod typed_systems;
 
-use self::typed_systems::TypedSystems;
-use crate::{registry::SystemRegistry, system::System};
 use std::slice::{Iter, IterMut};
 
-use crate::{resources::Resources, with_resources::WithResources};
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
+
+use self::typed_systems::TypedSystems;
+use crate::{registry::SystemRegistry, resources::Resources, system::System, with_resources::WithResources};
 
 #[derive(Default)]
 pub struct Systems(Vec<Box<dyn System>>);

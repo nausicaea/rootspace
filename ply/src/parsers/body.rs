@@ -1,8 +1,3 @@
-use super::base::{ascii_floating_point, ascii_signed_integral, ascii_unsigned_integral, lex};
-use crate::{
-    impl_ascii_scalar_property, impl_ascii_vector_property,
-    types::{Body, CountType, DataType, Element, ElementData, FormatType, Header, PropertyData},
-};
 use combine::{
     byteorder::{ByteOrder, BE, LE},
     error::ParseError,
@@ -14,6 +9,12 @@ use combine::{
         Parser,
     },
     stream::Stream,
+};
+
+use super::base::{ascii_floating_point, ascii_signed_integral, ascii_unsigned_integral, lex};
+use crate::{
+    impl_ascii_scalar_property, impl_ascii_vector_property,
+    types::{Body, CountType, DataType, Element, ElementData, FormatType, Header, PropertyData},
 };
 
 impl_ascii_scalar_property!(pai8, ascii_signed_integral, i8);
@@ -334,9 +335,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
+
     use super::*;
     use crate::types::Property;
-    use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
 
     #[test]
     fn property_ascii() {

@@ -1,8 +1,7 @@
 use anyhow::Context;
 use clap::{load_yaml, App};
-use serde::{Deserialize, Serialize};
-
 use ecs::{EventQueue, Resources, WorldEvent};
+use serde::{Deserialize, Serialize};
 
 use crate::{resources::AssetDatabase, CommandTrait};
 

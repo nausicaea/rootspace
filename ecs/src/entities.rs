@@ -1,11 +1,12 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
+use serde::{Deserialize, Serialize};
+
 use crate::{
     entity::{generation::Generation, index::Index, Entity},
     resource::Resource,
     SerializationName,
 };
-use serde::{Deserialize, Serialize};
 
 /// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug, Serialize, Deserialize)]

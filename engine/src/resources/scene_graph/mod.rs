@@ -1,7 +1,8 @@
+use std::{fmt, ops::Mul};
+
 use ecs::{Component, Entity, Resource, SerializationName, Storage};
 use hierarchy::Hierarchy;
 use serde::{Deserialize, Serialize};
-use std::{fmt, ops::Mul};
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -77,10 +78,12 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::ops::Mul;
+
     use ecs::{Entities, VecStorage};
     use serde_test::{assert_tokens, Token};
-    use std::ops::Mul;
+
+    use super::*;
 
     #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct TestComponent(usize);

@@ -8,10 +8,9 @@ use std::{
     time::Duration,
 };
 
+use ecs::{EventQueue, Resources, SerializationName, System};
 use log::error;
 use serde::{Deserialize, Serialize};
-
-use ecs::{EventQueue, Resources, SerializationName, System};
 
 use crate::{event::EngineEvent, resources::settings::Settings, text_manipulation::tokenize};
 

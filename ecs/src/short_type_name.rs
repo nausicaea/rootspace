@@ -14,8 +14,9 @@ pub fn short_type_name<T: ?Sized>() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::any::type_name;
+
+    use super::*;
 
     mod greek {
         pub struct Alpha;

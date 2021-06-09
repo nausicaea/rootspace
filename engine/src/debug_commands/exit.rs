@@ -1,7 +1,7 @@
 use ecs::{EventQueue, Resources};
+use serde::{Deserialize, Serialize};
 
 use crate::{CommandTrait, EngineEvent};
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ExitCommand;

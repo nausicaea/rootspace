@@ -1,10 +1,12 @@
-use crate::assets::FileSystem;
+use std::{convert::TryFrom, ffi::OsString, path::PathBuf};
+
 use anyhow::Result;
 use clap::{App, AppSettings, Arg, SubCommand};
 use ecs::Resources;
 use engine::{AssetMutTrait, CommandTrait};
 use file_manipulation::NewOrExFilePathBuf;
-use std::{convert::TryFrom, ffi::OsString, path::PathBuf};
+
+use crate::assets::FileSystem;
 
 #[derive(Debug, Clone, Copy)]
 pub struct FileSystemCommand;

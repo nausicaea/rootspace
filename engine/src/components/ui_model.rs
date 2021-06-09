@@ -1,7 +1,8 @@
+use std::ops::Mul;
+
 use ecs::{Component, VecStorage};
 use nalgebra::{zero, Affine3, Isometry3, Matrix4, Point2, Vector2, Vector3};
 use serde::{Deserialize, Serialize};
-use std::ops::Mul;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct UiModelSerDe {

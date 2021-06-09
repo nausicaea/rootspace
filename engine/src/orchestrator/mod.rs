@@ -1,24 +1,25 @@
 use std::{
     cmp,
+    convert::TryFrom,
+    fs::File,
+    path::Path,
+    thread::sleep,
     time::{Duration, Instant},
 };
 
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
-
 use ecs::{Entity, EventQueue, LoopControl, Reg, ResourceRegistry, Storage, SystemRegistry, World, WorldEvent};
-
-use crate::graphics::BackendTrait;
+use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use log::debug;
+use serde::{Deserialize, Serialize};
+use try_default::TryDefault;
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
 use crate::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
+    graphics::BackendTrait,
     resources::{AssetDatabase, SceneGraph, Statistics},
 };
-use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
-use std::{convert::TryFrom, fs::File, path::Path, thread::sleep};
-use try_default::TryDefault;
 
 pub mod type_registry;
 
@@ -176,10 +177,10 @@ impl<B: BackendTrait, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use crate::{GliumBackend, HeadlessBackend, Orchestrator};
     use ecs::Reg;
+
+    use super::*;
+    use crate::{GliumBackend, HeadlessBackend, Orchestrator};
 
     type TestGame<B> = Orchestrator<B, Reg![], Reg![], Reg![], Reg![]>;
 

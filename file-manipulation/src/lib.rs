@@ -1,7 +1,3 @@
-use anyhow::anyhow;
-use log::trace;
-#[cfg(any(test, feature = "serde_support"))]
-use serde::{Deserialize, Serialize};
 use std::{
     convert::TryFrom,
     ffi::{OsStr, OsString},
@@ -12,6 +8,11 @@ use std::{
     ops::Deref,
     path::{Path, PathBuf},
 };
+
+use anyhow::anyhow;
+use log::trace;
+#[cfg(any(test, feature = "serde_support"))]
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError> {
@@ -473,10 +474,12 @@ pub enum FileError {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use serde_test::{assert_tokens, Token};
     use std::io::Write;
+
+    use serde_test::{assert_tokens, Token};
     use tempfile::{tempdir, NamedTempFile};
+
+    use super::*;
 
     #[test]
     #[cfg_attr(not(target_family = "unix"), ignore)]

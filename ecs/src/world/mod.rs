@@ -1,4 +1,3 @@
-use anyhow::Error;
 use std::{
     cell::{Ref, RefMut},
     fs::File,
@@ -6,16 +5,18 @@ use std::{
     time::Duration,
 };
 
+use anyhow::Error;
+use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
+use log::debug;
 use serde::{
     de,
+    de::{MapAccess, Visitor},
     ser::{self, SerializeStruct},
     Deserialize, Serialize,
 };
-
 use try_default::TryDefault;
 
-use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
-
+use self::{error::WorldError, event::WorldEvent, type_registry::ResourceTypes};
 use crate::{
     component::Component,
     entities::Entities,
@@ -23,20 +24,13 @@ use crate::{
     event_queue::{EventQueue, ReceiverId},
     loop_control::LoopControl,
     loop_stage::LoopStage,
-    registry::ResourceRegistry,
+    registry::{ResourceRegistry, SystemRegistry},
     resource::Resource,
-    resources::Resources,
+    resources::{typed_resources::TypedResources, Resources},
     storage::Storage,
     system::System,
-    systems::Systems,
+    systems::{typed_systems::TypedSystems, Systems},
 };
-
-use crate::resources::typed_resources::TypedResources;
-
-use self::{error::WorldError, event::WorldEvent, type_registry::ResourceTypes};
-use crate::{registry::SystemRegistry, systems::typed_systems::TypedSystems};
-use log::debug;
-use serde::de::{MapAccess, Visitor};
 
 pub mod error;
 pub mod event;
@@ -552,10 +546,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{Reg, VecStorage};
     use serde_test::{assert_ser_tokens, Token};
 
     use super::*;
+    use crate::{Reg, VecStorage};
 
     pub type Trreg = Reg![VecStorage<usize>,];
 

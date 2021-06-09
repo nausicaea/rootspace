@@ -1,13 +1,10 @@
-use super::{
-    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
+use std::{
+    borrow::{Borrow, Cow},
+    convert::TryInto,
+    fmt,
+    rc::Rc,
 };
-use crate::{
-    assets::Image,
-    components::Renderable,
-    event::{EngineEvent, KeyModifiers, KeyState, VirtualKeyCode},
-    geometry::rect::Rect,
-    resources::GraphicsBackend,
-};
+
 use anyhow::Result;
 use glium::{
     backend::glutin::DisplayCreationError,
@@ -22,11 +19,16 @@ use glium::{
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
-use std::{
-    borrow::{Borrow, Cow},
-    convert::TryInto,
-    fmt,
-    rc::Rc,
+
+use super::{
+    BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
+};
+use crate::{
+    assets::Image,
+    components::Renderable,
+    event::{EngineEvent, KeyModifiers, KeyState, VirtualKeyCode},
+    geometry::rect::Rect,
+    resources::GraphicsBackend,
 };
 
 #[derive(Debug)]
@@ -503,10 +505,12 @@ impl fmt::Debug for GliumBackend {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use approx::assert_ulps_ne;
     use std::f64;
+
+    use approx::assert_ulps_ne;
     use try_default::TryDefault;
+
+    use super::*;
 
     #[derive(Debug, Clone, Default)]
     struct MockLocation([[f32; 4]; 4]);

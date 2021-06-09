@@ -1,9 +1,10 @@
-use super::{CommandTrait, Error};
-use crate::components::{Camera, Status};
 use anyhow::Result;
 use clap::{load_yaml, App};
 use ecs::{Entities, Resources, Storage};
 use serde::{Deserialize, Serialize};
+
+use super::{CommandTrait, Error};
+use crate::components::{Camera, Status};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ComponentsCommand;

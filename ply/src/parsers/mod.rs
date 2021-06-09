@@ -2,13 +2,14 @@ mod base;
 mod body;
 mod header;
 
-use self::{body::body, header::header};
-use super::types::Ply;
 use combine::{
     error::ParseError,
     parser::{item::value, Parser},
     stream::Stream,
 };
+
+use self::{body::body, header::header};
+use super::types::Ply;
 
 pub fn ply<'a, I>() -> impl Parser<Input = I, Output = Ply> + 'a
 where
@@ -22,9 +23,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
     use std::fs::File;
+
+    use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
+
+    use super::*;
 
     #[test]
     fn ply_ascii() {

@@ -1,7 +1,9 @@
-use crate::{resource::Resource, serialization_name::SerializationName, system::System, with_resources::WithResources};
-use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
+
+use serde::{Deserialize, Serialize};
 use try_default::TryDefault;
+
+use crate::{resource::Resource, serialization_name::SerializationName, system::System, with_resources::WithResources};
 
 /// An element within the heterogeneous list.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -112,9 +114,10 @@ impl_registry!(SystemRegistry, where Head: System + WithResources + Debug + Seri
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use proptest::prelude::*;
     use serde_test::{assert_tokens, Token};
+
+    use super::*;
 
     #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
     struct TestElementA(usize);

@@ -1,7 +1,9 @@
-use super::{group_id::GroupId, mode::Mode, user_id::UserId, ProcessData};
+use std::ffi::{OsStr, OsString};
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::ffi::{OsStr, OsString};
+
+use super::{group_id::GroupId, mode::Mode, user_id::UserId, ProcessData};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Node {
@@ -95,8 +97,9 @@ impl Node {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use proptest::prelude::*;
+
+    use super::*;
 
     #[test]
     fn new() {

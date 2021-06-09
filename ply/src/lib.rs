@@ -6,15 +6,17 @@ mod macros;
 mod parsers;
 pub mod types;
 
-pub use self::types::Ply;
-use self::types::{Element, PropertyData};
+use std::{fs::File, io, path::Path};
+
 use combine::{
     parser::Parser,
     stream::{buffered::BufferedStream, state::State, ReadStream},
 };
 use parsers::ply;
-use std::{fs::File, io, path::Path};
 use thiserror::Error;
+
+pub use self::types::Ply;
+use self::types::{Element, PropertyData};
 
 /// Describes errors that may occur when parsing a ply file.
 #[derive(Debug, Error)]
@@ -115,8 +117,9 @@ impl Ply {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::{convert::TryInto, path::PathBuf};
+
+    use super::*;
 
     #[test]
     fn from_valid_path() {

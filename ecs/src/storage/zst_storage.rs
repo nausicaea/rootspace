@@ -1,14 +1,16 @@
-use super::{
-    iterators::{EnumRIter, RIter, WIter},
-    Storage,
-};
-use crate::{entity::index::Index, resource::Resource, SerializationName};
+use std::{collections::HashSet, marker::PhantomData};
+
 use serde::{
     de::{Deserializer, SeqAccess, Visitor},
     ser::{SerializeSeq, Serializer},
     Deserialize, Serialize,
 };
-use std::{collections::HashSet, marker::PhantomData};
+
+use super::{
+    iterators::{EnumRIter, RIter, WIter},
+    Storage,
+};
+use crate::{entity::index::Index, resource::Resource, SerializationName};
 
 /// Implements component storage for zero-sized types.
 pub struct ZstStorage<T> {

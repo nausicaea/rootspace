@@ -1,8 +1,8 @@
 use anyhow::Result;
+use ecs::{Component, VecStorage};
+use file_manipulation::FilePathBuf;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-
-use ecs::{Component, VecStorage};
 
 use crate::{
     assets::{AssetTrait, Mesh},
@@ -15,7 +15,6 @@ use crate::{
         GraphicsBackend,
     },
 };
-use file_manipulation::FilePathBuf;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RenderableType {
@@ -320,11 +319,12 @@ pub enum RenderableError {
 
 #[cfg(test)]
 mod tests {
-    use crate::graphics::headless::HeadlessBackend;
+    use std::convert::TryFrom;
+
+    use try_default::TryDefault;
 
     use super::*;
-    use std::convert::TryFrom;
-    use try_default::TryDefault;
+    use crate::graphics::headless::HeadlessBackend;
 
     #[test]
     fn headless_builder_mesh() {

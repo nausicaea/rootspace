@@ -178,8 +178,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use serde_test::{assert_tokens, Token};
+
+    use super::*;
 
     #[test]
     fn identity() {
