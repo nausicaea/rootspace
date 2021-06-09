@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use ecs::Entity;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum EngineEvent {

@@ -51,7 +51,8 @@ impl System for ForceShutdown {
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             debug!("Recently caught a termination signal");
-            res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::PhaseOneShutdown);
+            res.borrow_mut::<EventQueue<EngineEvent>>()
+                .send(EngineEvent::PhaseOneShutdown);
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
     }

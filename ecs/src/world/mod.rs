@@ -35,8 +35,8 @@ use crate::resources::typed_resources::TypedResources;
 
 use self::{error::WorldError, event::WorldEvent, type_registry::ResourceTypes};
 use crate::{registry::SystemRegistry, systems::typed_systems::TypedSystems};
-use serde::de::{MapAccess, Visitor};
 use log::debug;
+use serde::de::{MapAccess, Visitor};
 
 pub mod error;
 pub mod event;
@@ -299,10 +299,7 @@ where
     pub fn maintain(&mut self) -> LoopControl {
         if let Some(ref receiver) = self.receiver {
             // Receive all pending events
-            let events = self
-                .resources
-                .get_mut::<EventQueue<WorldEvent>>()
-                .receive(receiver);
+            let events = self.resources.get_mut::<EventQueue<WorldEvent>>().receive(receiver);
 
             // Process all pending events
             for e in events {
@@ -356,7 +353,7 @@ where
     }
 
     fn on_create_entity(&mut self) {
-       let entity = self.resources.get_mut::<Entities>().create();
+        let entity = self.resources.get_mut::<Entities>().create();
         debug!("Created the entity {}", entity);
     }
 
@@ -534,7 +531,8 @@ where
 
         // De-type the resources, and notify the world of completed deserialization
         let mut resources: Resources = typed_resources.into();
-        resources.get_mut::<EventQueue<WorldEvent>>()
+        resources
+            .get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::DeserializationComplete);
 
         Ok(World {
@@ -588,16 +586,12 @@ mod tests {
                 Token::Str("receivers"),
                 Token::Map { len: Some(2) },
                 Token::U64(1),
-                Token::Tuple {
-                    len: 2,
-                },
+                Token::Tuple { len: 2 },
                 Token::U64(0),
                 Token::U64(0),
                 Token::TupleEnd,
                 Token::U64(0),
-                Token::Tuple {
-                    len: 2,
-                },
+                Token::Tuple { len: 2 },
                 Token::U64(0),
                 Token::U64(0),
                 Token::TupleEnd,

@@ -323,8 +323,8 @@ mod tests {
     use crate::graphics::headless::HeadlessBackend;
 
     use super::*;
-    use try_default::TryDefault;
     use std::convert::TryFrom;
+    use try_default::TryDefault;
 
     #[test]
     fn headless_builder_mesh() {
@@ -347,7 +347,8 @@ mod tests {
 
     #[test]
     fn headless_builder_text() {
-        let fontp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/SourceSansPro-Regular.ttf")).unwrap();
+        let fontp =
+            FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/SourceSansPro-Regular.ttf")).unwrap();
         let vsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/test-vertex.glsl")).unwrap();
         let fsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/test-fragment.glsl")).unwrap();
 

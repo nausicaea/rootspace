@@ -9,10 +9,7 @@ pub struct Status {
 
 impl Status {
     pub fn new(enabled: bool, visible: bool) -> Self {
-        Status {
-            enabled,
-            visible,
-        }
+        Status { enabled, visible }
     }
 
     pub fn enabled(&self) -> bool {

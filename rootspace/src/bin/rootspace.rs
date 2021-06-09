@@ -45,8 +45,7 @@ fn main() -> Result<()> {
 
         if force || !asset_dir.exists() {
             let g = Rootspace::<HeadlessBackend>::new(name).context("Could not create a new, empty game")?;
-            g.save(main_scene)
-                .context("Could create the new main scene")?;
+            g.save(main_scene).context("Could create the new main scene")?;
         }
     } else if subcommand == "run" {
         let scm = maybe_subcommand_matches.context("No arguments were provided to the run subcommand")?;

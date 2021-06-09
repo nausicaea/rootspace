@@ -16,7 +16,8 @@ impl CommandTrait for ExitCommand {
     }
 
     fn run(&self, res: &Resources, _: &[String]) -> anyhow::Result<()> {
-        res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::PhaseOneShutdown);
+        res.borrow_mut::<EventQueue<EngineEvent>>()
+            .send(EngineEvent::PhaseOneShutdown);
         Ok(())
     }
 }

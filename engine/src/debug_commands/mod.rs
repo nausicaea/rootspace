@@ -6,16 +6,16 @@ use thiserror::Error;
 use ecs::{impl_registry, Resources};
 
 pub use self::{
-    assets::AssetsCommand, entities::EntitiesCommand, exit::ExitCommand,
-    states::StatesCommand, stats::StatisticsCommand, components::ComponentsCommand,
+    assets::AssetsCommand, components::ComponentsCommand, entities::EntitiesCommand, exit::ExitCommand,
+    states::StatesCommand, stats::StatisticsCommand,
 };
 
 pub mod assets;
+pub mod components;
 pub mod entities;
 pub mod exit;
 pub mod states;
 pub mod stats;
-pub mod components;
 
 impl_registry!(CommandRegistry, where Head: CommandTrait + Clone + Copy + Default);
 

@@ -443,8 +443,7 @@ where
             // Retrieve the current node's data
             let w = &self.data[self.index].weight;
             self.index += 1;
-            w.0.as_ref()
-                .map(|&(ref key, ref value)| (key, value))
+            w.0.as_ref().map(|&(ref key, ref value)| (key, value))
         } else {
             None
         }

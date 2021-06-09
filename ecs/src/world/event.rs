@@ -1,6 +1,6 @@
+use crate::Entity;
 use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use serde::{Deserialize, Serialize};
-use crate::Entity;
 
 /// Events defined and processed by the world itself.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

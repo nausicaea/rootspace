@@ -26,11 +26,7 @@ pub struct Renderer<B> {
 
 impl<B> std::fmt::Debug for Renderer<B> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "Renderer {{ receiver: {:?} }}",
-            self.receiver,
-        )
+        write!(f, "Renderer {{ receiver: {:?} }}", self.receiver,)
     }
 }
 
@@ -112,7 +108,9 @@ where
 
             // Obtain the model component of the camera
             let cam_entity = entities.get(cam_idx);
-            let cam_model = world_graph.get(&cam_entity).expect("The camera is not part of the scene graph");
+            let cam_model = world_graph
+                .get(&cam_entity)
+                .expect("The camera is not part of the scene graph");
             let cam_matrix = cam.world_matrix() * cam_model.matrix();
 
             // Render the world scene.

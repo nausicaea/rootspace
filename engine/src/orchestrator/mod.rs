@@ -6,19 +6,19 @@ use std::{
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use ecs::{LoopControl, Reg, ResourceRegistry, SystemRegistry, World, EventQueue, WorldEvent, Entity, Storage};
+use ecs::{Entity, EventQueue, LoopControl, Reg, ResourceRegistry, Storage, SystemRegistry, World, WorldEvent};
 
-use crate::{
-    graphics::BackendTrait,
-};
+use crate::graphics::BackendTrait;
 use log::debug;
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
-use crate::resources::{AssetDatabase, Statistics, SceneGraph};
+use crate::{
+    components::{Camera, Info, Model, Renderable, Status, UiModel},
+    resources::{AssetDatabase, SceneGraph, Statistics},
+};
 use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use std::{convert::TryFrom, fs::File, path::Path, thread::sleep};
 use try_default::TryDefault;
-use crate::components::{Info, Status, Model, UiModel, Camera, Renderable};
 
 pub mod type_registry;
 
@@ -137,10 +137,7 @@ where
     fn maintain(&mut self) -> LoopControl {
         if let Some(receiver) = self.world.foreign_receiver() {
             // Receive all pending events
-            let events = self
-                .world
-                .get_mut::<EventQueue<WorldEvent>>()
-                .receive(&receiver);
+            let events = self.world.get_mut::<EventQueue<WorldEvent>>().receive(&receiver);
 
             // Process all pending events
             for e in events {

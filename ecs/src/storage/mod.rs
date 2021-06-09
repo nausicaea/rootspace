@@ -24,10 +24,8 @@ impl<'a, T: 'a, S: Storage<Item = T>> Entry<'a, T, S> {
             Entry::Vacant(s, i) => {
                 s.insert(i, default);
                 unsafe { s.get_unchecked_mut(i) }
-            },
-            Entry::Occupied(s, i) => {
-                unsafe { s.get_unchecked_mut(i) }
             }
+            Entry::Occupied(s, i) => unsafe { s.get_unchecked_mut(i) },
         }
     }
 

@@ -5,9 +5,8 @@ use crate::{
     event::EngineEvent,
     resources::{AssetDatabase, GraphicsBackend, SceneGraph, Settings, Statistics},
     systems::{
-        CameraManager, DebugConsole, DebugShell,
-        EventCoordinator, EventInterface, EventMonitor,
-        ForceShutdown, Renderer,
+        CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor, ForceShutdown,
+        Renderer,
     },
 };
 

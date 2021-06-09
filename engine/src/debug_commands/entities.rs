@@ -1,13 +1,15 @@
 use clap::{load_yaml, App};
 
-use ecs::{Entities, Resources, Storage, EventQueue, WorldEvent};
+use ecs::{Entities, EventQueue, Resources, Storage, WorldEvent};
 
 use super::Error;
-use crate::{components::{Camera, Info, Model, Renderable, Status, UiModel}, resources::{SceneGraph}, CommandTrait};
+use crate::{
+    components::{Camera, Info, Model, Renderable, Status, UiModel},
+    resources::SceneGraph,
+    CommandTrait,
+};
 use serde::{Deserialize, Serialize};
-use term_table::{TableBuilder, TableStyle};
-use term_table::row::Row;
-use term_table::table_cell::TableCell;
+use term_table::{row::Row, table_cell::TableCell, TableBuilder, TableStyle};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EntitiesCommand;
@@ -31,7 +33,10 @@ impl CommandTrait for EntitiesCommand {
             let index = scm.value_of("index").ok_or(Error::NoIndexSpecified)?;
 
             let index: usize = index.parse()?;
-            let entity = res.borrow::<Entities>().try_get(index).ok_or(Error::EntityNotFound(index))?;
+            let entity = res
+                .borrow::<Entities>()
+                .try_get(index)
+                .ok_or(Error::EntityNotFound(index))?;
 
             if let Some(ic) = res.borrow_components::<Info>().get(&entity) {
                 println!("Name: {}, Description: {}", ic.name(), ic.description());
@@ -42,19 +47,39 @@ impl CommandTrait for EntitiesCommand {
             }
 
             if let Some(mc) = res.borrow_components::<Model>().get(&entity) {
-                println!("LOCAL - Position: {:?}, Orientation: {}, Scale: {:?}", mc.position().coords, mc.orientation(), mc.scale());
+                println!(
+                    "LOCAL - Position: {:?}, Orientation: {}, Scale: {:?}",
+                    mc.position().coords,
+                    mc.orientation(),
+                    mc.scale()
+                );
             }
 
             if let Some(sgmc) = res.borrow::<SceneGraph<Model>>().get(&entity) {
-                println!("GLOBAL - Position: {:?}, Orientation: {}, Scale: {:?}", sgmc.position().coords, sgmc.orientation(), sgmc.scale());
+                println!(
+                    "GLOBAL - Position: {:?}, Orientation: {}, Scale: {:?}",
+                    sgmc.position().coords,
+                    sgmc.orientation(),
+                    sgmc.scale()
+                );
             }
 
             if let Some(umc) = res.borrow_components::<UiModel>().get(&entity) {
-                println!("UI LOCAL - Position: {:?}, Depth: {}, Scale: {:?}", umc.position().coords, umc.depth(), umc.scale());
+                println!(
+                    "UI LOCAL - Position: {:?}, Depth: {}, Scale: {:?}",
+                    umc.position().coords,
+                    umc.depth(),
+                    umc.scale()
+                );
             }
 
             if let Some(sgumc) = res.borrow::<SceneGraph<UiModel>>().get(&entity) {
-                println!("UI GLOBAL - Position: {:?}, Depth: {}, Scale: {:?}", sgumc.position().coords, sgumc.depth(), sgumc.scale());
+                println!(
+                    "UI GLOBAL - Position: {:?}, Depth: {}, Scale: {:?}",
+                    sgumc.position().coords,
+                    sgumc.depth(),
+                    sgumc.scale()
+                );
             }
 
             let mut other_components = String::from("Other components:");
@@ -80,11 +105,31 @@ impl CommandTrait for EntitiesCommand {
             let table = TableBuilder::new()
                 .style(TableStyle::simple())
                 .rows(vec![
-                    Row::new(vec![TableCell::new("Loaded entities"), TableCell::new(format!("Total {}", total_count)), TableCell::new(format!("No status {}", no_status))]),
-                    Row::new(vec![TableCell::new(""), TableCell::new("Enabled"), TableCell::new("Disabled")]),
-                    Row::new(vec![TableCell::new("Visible"), TableCell::new(ev_count), TableCell::new(dv_count)]),
-                    Row::new(vec![TableCell::new("Hidden"), TableCell::new(eh_count), TableCell::new(dh_count)]),
-                    Row::new(vec![TableCell::new("Sub total"), TableCell::new(ev_count + eh_count), TableCell::new(dv_count + dh_count)]),
+                    Row::new(vec![
+                        TableCell::new("Loaded entities"),
+                        TableCell::new(format!("Total {}", total_count)),
+                        TableCell::new(format!("No status {}", no_status)),
+                    ]),
+                    Row::new(vec![
+                        TableCell::new(""),
+                        TableCell::new("Enabled"),
+                        TableCell::new("Disabled"),
+                    ]),
+                    Row::new(vec![
+                        TableCell::new("Visible"),
+                        TableCell::new(ev_count),
+                        TableCell::new(dv_count),
+                    ]),
+                    Row::new(vec![
+                        TableCell::new("Hidden"),
+                        TableCell::new(eh_count),
+                        TableCell::new(dh_count),
+                    ]),
+                    Row::new(vec![
+                        TableCell::new("Sub total"),
+                        TableCell::new(ev_count + eh_count),
+                        TableCell::new(dv_count + dh_count),
+                    ]),
                 ])
                 .build();
 
@@ -101,21 +146,33 @@ impl CommandTrait for EntitiesCommand {
             let statuses = res.borrow_components::<Status>();
 
             for entity in entities.iter() {
-                if show_all || statuses.get(entity).map_or(false, |s| (s.enabled() || show_disabled) && (s.visible() || show_hidden)) {
-                    println!("{}: {}", entity.idx(), infos.get(entity).map_or("(no name)", |i| i.name()));
+                if show_all
+                    || statuses.get(entity).map_or(false, |s| {
+                        (s.enabled() || show_disabled) && (s.visible() || show_hidden)
+                    })
+                {
+                    println!(
+                        "{}: {}",
+                        entity.idx(),
+                        infos.get(entity).map_or("(no name)", |i| i.name())
+                    );
                 }
             }
-
         } else if subcommand == "create" {
-            res.borrow_mut::<EventQueue<WorldEvent>>().send(WorldEvent::CreateEntity);
+            res.borrow_mut::<EventQueue<WorldEvent>>()
+                .send(WorldEvent::CreateEntity);
         } else if subcommand == "destroy" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("destroy"))?;
             let index = scm.value_of("index").ok_or(Error::NoIndexSpecified)?;
 
             let index: usize = index.parse()?;
-            let entity = res.borrow::<Entities>().try_get(index).ok_or(Error::EntityNotFound(index))?;
+            let entity = res
+                .borrow::<Entities>()
+                .try_get(index)
+                .ok_or(Error::EntityNotFound(index))?;
 
-            res.borrow_mut::<EventQueue<WorldEvent>>().send(WorldEvent::DestroyEntity(entity))
+            res.borrow_mut::<EventQueue<WorldEvent>>()
+                .send(WorldEvent::DestroyEntity(entity))
         }
 
         Ok(())

@@ -2,14 +2,13 @@ use super::{
     iterators::{EnumRIter, RIter, WIter},
     Storage,
 };
-use crate::{entity::index::Index, resource::Resource, SerializationName};
+use crate::{entity::index::Index, resource::Resource, storage::Entry, SerializationName};
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, Serializer},
     Deserialize, Serialize,
 };
 use std::{collections::HashSet, marker::PhantomData, ptr};
-use crate::storage::Entry;
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
