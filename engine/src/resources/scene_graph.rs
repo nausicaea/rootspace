@@ -33,6 +33,10 @@ where
             .unwrap_or_else(|e| panic!("Unable to add child {} to parent {}: {}", child, parent, e))
     }
 
+    pub fn remove(&mut self, entity: Entity) {
+        let _ = self.0.remove(entity);
+    }
+
     pub fn contains(&self, entity: &Entity) -> bool {
         self.0.iter().any(|(k, _)| k == entity)
     }

@@ -1,4 +1,4 @@
-name: asset
+name: assets
 about: Provides access to assets
 settings:
   - DisableVersion

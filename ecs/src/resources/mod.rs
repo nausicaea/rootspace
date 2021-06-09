@@ -231,6 +231,14 @@ impl Resources {
     {
         self.borrow_mut::<C::Storage>()
     }
+
+    /// Mutably borrows the requested component storage (with a compile-time borrow check).
+    pub fn get_components_mut<C>(&mut self) -> &mut C::Storage
+    where
+        C: Component,
+    {
+        self.get_mut::<C::Storage>()
+    }
 }
 
 impl PartialEq for Resources {

@@ -1,11 +1,13 @@
-use anyhow::{anyhow, Context};
 use clap::{load_yaml, App};
 
-use ecs::{Entities, Resources, Storage, EventQueue};
+use ecs::{Entities, Resources, Storage, EventQueue, WorldEvent};
 
 use super::Error;
-use crate::{components::{Camera, Info, Model, Renderable, RenderableType, Status, UiModel}, resources::{AssetDatabase, GraphicsBackend, SceneGraph}, CommandTrait, HeadlessBackend, EngineEvent};
+use crate::{components::{Camera, Info, Model, Renderable, Status, UiModel}, resources::{SceneGraph}, CommandTrait};
 use serde::{Deserialize, Serialize};
+use term_table::{TableBuilder, TableStyle};
+use term_table::row::Row;
+use term_table::table_cell::TableCell;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EntitiesCommand;
@@ -22,13 +24,14 @@ impl CommandTrait for EntitiesCommand {
     fn run(&self, res: &Resources, args: &[String]) -> anyhow::Result<()> {
         let app_yaml = load_yaml!("entities.yaml");
         let matches = App::from_yaml(app_yaml).get_matches_from_safe(args)?;
+        let (subcommand, scm) = matches.subcommand();
 
-        if let Some(info_matches) = matches.subcommand_matches("info") {
-            let index = info_matches.value_of("index").ok_or(Error::NoIndexSpecified)?;
+        if subcommand == "info" {
+            let scm = scm.ok_or(Error::NoSubcommandArguments("info"))?;
+            let index = scm.value_of("index").ok_or(Error::NoIndexSpecified)?;
 
             let index: usize = index.parse()?;
-            let entities = res.borrow::<Entities>();
-            let entity = entities.try_get(index).ok_or(Error::EntityNotFound(index))?;
+            let entity = res.borrow::<Entities>().try_get(index).ok_or(Error::EntityNotFound(index))?;
 
             if let Some(ic) = res.borrow_components::<Info>().get(&entity) {
                 println!("Name: {}, Description: {}", ic.name(), ic.description());
@@ -63,129 +66,56 @@ impl CommandTrait for EntitiesCommand {
                 other_components.push_str(" RENDERABLE");
             }
             println!("{}", other_components);
-        }
-
-        if let Some(add_matches) = matches.subcommand_matches("add") {
-            let add_renderable = add_matches.is_present("renderable");
-            let index = add_matches.value_of("index").ok_or(Error::NoIndexSpecified)?;
-
-            let index: usize = index.parse()?;
+        } else if subcommand == "count" {
             let entities = res.borrow::<Entities>();
-            let entity = entities.try_get(index).ok_or(Error::EntityNotFound(index))?;
+            let statuses = res.borrow_components::<Status>();
 
-            if add_renderable {
-                let mut factory = res.borrow_mut::<GraphicsBackend<HeadlessBackend>>();
-                let assets = res.borrow::<AssetDatabase>();
-                let renderable = Renderable::builder()
-                    .with_type(RenderableType::Text)
-                    .with_text("Hello, World!")
-                    .with_font(assets.find_asset("fonts/SourceSansPro-Regular.ttf")?)
-                    .with_vertex_shader(assets.find_asset("shaders/text-vertex.glsl")?)
-                    .with_fragment_shader(assets.find_asset("shaders/text-fragment.glsl")?)
-                    .build(&mut factory)?;
-                res.borrow_components_mut::<Renderable>().insert(entity, renderable);
-            }
-        }
+            let total_count = entities.len();
+            let ev_count = statuses.iter().filter(|s| s.enabled() && s.visible()).count();
+            let eh_count = statuses.iter().filter(|s| s.enabled() && !s.visible()).count();
+            let dh_count = statuses.iter().filter(|s| !s.enabled() && !s.visible()).count();
+            let dv_count = statuses.iter().filter(|s| !s.enabled() && s.visible()).count();
+            let no_status = entities.iter().filter(|e| !statuses.has(e)).count();
 
-        if let Some(create_matches) = matches.subcommand_matches("create") {
-            let ui_element = create_matches.is_present("ui");
-            let camera = create_matches.is_present("camera");
-            let name = create_matches
-                .value_of("name")
-                .context("Missing required argument name")?;
+            let table = TableBuilder::new()
+                .style(TableStyle::simple())
+                .rows(vec![
+                    Row::new(vec![TableCell::new("Loaded entities"), TableCell::new(format!("Total {}", total_count)), TableCell::new(format!("No status {}", no_status))]),
+                    Row::new(vec![TableCell::new(""), TableCell::new("Enabled"), TableCell::new("Disabled")]),
+                    Row::new(vec![TableCell::new("Visible"), TableCell::new(ev_count), TableCell::new(dv_count)]),
+                    Row::new(vec![TableCell::new("Hidden"), TableCell::new(eh_count), TableCell::new(dh_count)]),
+                    Row::new(vec![TableCell::new("Sub total"), TableCell::new(ev_count + eh_count), TableCell::new(dv_count + dh_count)]),
+                ])
+                .build();
 
-            // FIXME: The following can cause issues if adding a UI entity as a child of a world entity or vice versa
-            let parent = if let Some(parent_str) = create_matches.value_of("parent") {
-                let parent_idx: usize = parent_str
-                    .parse()
-                    .context("The value of argument parent is not a positive integer")?;
-                let parent_entity = res
-                    .borrow::<Entities>()
-                    .try_get(parent_idx)
-                    .ok_or(anyhow!("The entity with index {} was not found", parent_idx))?;
+            println!("{}", table.render());
+        } else if subcommand == "list" {
+            let scm = scm.ok_or(Error::NoSubcommandArguments("list"))?;
 
-                Some(parent_entity)
-            } else {
-                None
-            };
-
-            let new_entity = res.borrow_mut::<Entities>().create();
-            res.borrow_components_mut::<Info>()
-                .insert(new_entity, Info::new(name, ""));
-            res.borrow_components_mut::<Status>()
-                .insert(new_entity, Status::default());
-
-            if ui_element {
-                res.borrow_components_mut::<UiModel>()
-                    .insert(new_entity, UiModel::default());
-                if let Some(ref p) = parent {
-                    res.borrow_mut::<SceneGraph<UiModel>>().insert_child(p, new_entity);
-                } else {
-                    res.borrow_mut::<SceneGraph<UiModel>>().insert(new_entity);
-                }
-            } else {
-                if camera {
-                    res.borrow_components_mut::<Camera>()
-                        .insert(new_entity, Camera::default());
-                }
-                res.borrow_components_mut::<Model>()
-                    .insert(new_entity, Model::default());
-                if let Some(ref p) = parent {
-                    res.borrow_mut::<SceneGraph<Model>>().insert_child(p, new_entity);
-                } else {
-                    res.borrow_mut::<SceneGraph<Model>>().insert(new_entity);
-                }
-            }
-        }
-
-        if let Some(list_matches) = matches.subcommand_matches("list") {
-            let show_count = list_matches.is_present("count");
-            let show_disabled = list_matches.is_present("disabled");
-            let show_hidden = list_matches.is_present("hidden");
+            let show_all = scm.is_present("all");
+            let show_disabled = scm.is_present("disabled");
+            let show_hidden = scm.is_present("hidden");
 
             let entities = res.borrow::<Entities>();
             let infos = res.borrow_components::<Info>();
             let statuses = res.borrow_components::<Status>();
 
-            if show_count {
-                println!("Loaded entities (including disabled and hidden): {}", entities.len());
-            }
-
-            for entity in &*entities {
-                if statuses.get(entity).map_or(true, |s| !((show_disabled || s.enabled()) && (show_hidden || s.visible()))) {
-                    continue
+            for entity in entities.iter() {
+                if show_all || statuses.get(entity).map_or(false, |s| (s.enabled() || show_disabled) && (s.visible() || show_hidden)) {
+                    println!("{}: {}", entity.idx(), infos.get(entity).map_or("(no name)", |i| i.name()));
                 }
-                let (name, description) = infos.get(entity).map_or(("(no name)", "(no description)"), |i| (i.name(), i.description()));
-                println!("{} {} {}", entity.idx(), name, description);
             }
-        }
 
-        if let Some(status_matches) = matches.subcommand_matches("status") {
-            let entities = res.borrow::<Entities>();
-            let mut statuses = res.borrow_components_mut::<Status>();
-            let index = status_matches.value_of("index").ok_or(Error::NoIndexSpecified)?;
+        } else if subcommand == "create" {
+            res.borrow_mut::<EventQueue<WorldEvent>>().send(WorldEvent::CreateEntity);
+        } else if subcommand == "destroy" {
+            let scm = scm.ok_or(Error::NoSubcommandArguments("destroy"))?;
+            let index = scm.value_of("index").ok_or(Error::NoIndexSpecified)?;
 
             let index: usize = index.parse()?;
-            let entity = entities.try_get(index).ok_or(Error::EntityNotFound(index))?;
+            let entity = res.borrow::<Entities>().try_get(index).ok_or(Error::EntityNotFound(index))?;
 
-            let enabled = if status_matches.is_present("enable") {
-                Some(true)
-            } else if status_matches.is_present("disable") {
-                Some(false)
-            } else {
-                None
-            };
-
-            let visible = if status_matches.is_present("show") {
-                Some(true)
-            } else if status_matches.is_present("hide") {
-                Some(false)
-            } else {
-                None
-            };
-
-            res.borrow_mut::<EventQueue<EngineEvent>>()
-                .send(EngineEvent::SetStatus { entity, enabled, visible });
+            res.borrow_mut::<EventQueue<WorldEvent>>().send(WorldEvent::DestroyEntity(entity))
         }
 
         Ok(())

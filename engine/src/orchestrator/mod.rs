@@ -6,17 +6,19 @@ use std::{
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use ecs::{LoopControl, Reg, ResourceRegistry, SystemRegistry, World};
+use ecs::{LoopControl, Reg, ResourceRegistry, SystemRegistry, World, EventQueue, WorldEvent, Entity, Storage};
 
 use crate::{
     graphics::BackendTrait,
 };
+use log::debug;
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
-use crate::resources::{AssetDatabase, Statistics};
+use crate::resources::{AssetDatabase, Statistics, SceneGraph};
 use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use std::{convert::TryFrom, fs::File, path::Path, thread::sleep};
 use try_default::TryDefault;
+use crate::components::{Info, Status, Model, UiModel, Camera, Renderable};
 
 pub mod type_registry;
 
@@ -133,7 +135,35 @@ where
     }
 
     fn maintain(&mut self) -> LoopControl {
+        if let Some(receiver) = self.world.foreign_receiver() {
+            // Receive all pending events
+            let events = self
+                .world
+                .get_mut::<EventQueue<WorldEvent>>()
+                .receive(&receiver);
+
+            // Process all pending events
+            for e in events {
+                match e {
+                    WorldEvent::DestroyEntity(e) => self.on_destroy_entity(e),
+                    _ => (),
+                }
+            }
+        }
+
         self.world.maintain()
+    }
+
+    fn on_destroy_entity(&mut self, entity: Entity) {
+        debug!("Removing entity {} from scene graphs and all components", entity);
+        self.world.get_mut::<SceneGraph<Model>>().remove(entity);
+        self.world.get_mut::<SceneGraph<UiModel>>().remove(entity);
+        self.world.get_components_mut::<Info>().remove(entity);
+        self.world.get_components_mut::<Status>().remove(entity);
+        self.world.get_components_mut::<Model>().remove(entity);
+        self.world.get_components_mut::<UiModel>().remove(entity);
+        self.world.get_components_mut::<Camera>().remove(entity);
+        self.world.get_components_mut::<Renderable>().remove(entity);
     }
 }
 

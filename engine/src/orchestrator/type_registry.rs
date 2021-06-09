@@ -7,7 +7,7 @@ use crate::{
     systems::{
         CameraManager, DebugConsole, DebugShell,
         EventCoordinator, EventInterface, EventMonitor,
-        ForceShutdown, Renderer, StatusManager,
+        ForceShutdown, Renderer,
     },
 };
 
@@ -35,7 +35,6 @@ pub type UpdateSystemTypes<B, SR> = RegAdd![
     EventMonitor<WorldEvent>,
     EventMonitor<EngineEvent>,
     CameraManager,
-    StatusManager,
     EventCoordinator,
     EventInterface<B>,
     SR

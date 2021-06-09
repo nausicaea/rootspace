@@ -149,8 +149,8 @@ where
     ///
     /// * `HierarchyError::CannotRemoveRootNode` if you try to remove the root node.
     /// * `HierarchyError::KeyNotFound` if `key` identifies no known node.
-    pub fn remove(&mut self, key: &K) -> Result<(), HierarchyError> {
-        let node_idx = self.get_index(key)?;
+    pub fn remove(&mut self, key: K) -> Result<(), HierarchyError> {
+        let node_idx = self.get_index(&key)?;
         self.graph.remove_node(node_idx);
         self.rebuild_index();
         Ok(())
@@ -471,7 +471,7 @@ mod tests {
     use serde_test::{assert_ser_tokens, Token};
     use std::{num::ParseIntError, str::FromStr};
 
-    #[derive(Debug, Default, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
     struct TestKey(u64);
 
     impl fmt::Display for TestKey {
@@ -518,9 +518,9 @@ mod tests {
 
         h.insert(key.clone(), 2.0);
         assert!(h.has(&key));
-        assert!(h.remove(&key).is_ok());
+        assert!(h.remove(key).is_ok());
         assert!(!h.has(&key));
-        assert!(h.remove(&key).is_err());
+        assert!(h.remove(key).is_err());
     }
 
     #[test]

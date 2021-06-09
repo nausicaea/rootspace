@@ -30,6 +30,7 @@ try-default = { path = "../try-default" }
 ply = { path = "../ply" }
 ecs = { path = "../ecs" }
 file-manipulation = { path = "../file-manipulation", features = ["serde_support"] }
+term-table = "^1.3.1"
 
 [dev-dependencies]
 serde_test = { version = "^1.0.0" }

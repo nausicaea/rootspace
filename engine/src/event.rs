@@ -8,11 +8,6 @@ pub enum EngineEvent {
     Command(Vec<String>),
     Resize((u32, u32)),
     ChangeDpi(f64),
-    SetStatus {
-        entity: Entity,
-        enabled: Option<bool>,
-        visible: Option<bool>,
-    },
     KeyboardInput {
         scan_code: u32,
         state: KeyState,

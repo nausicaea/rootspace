@@ -1,4 +1,4 @@
-name: state
+name: states
 about: Access and modify the world state
 settings:
   - DisableVersion

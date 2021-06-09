@@ -6,16 +6,16 @@ use thiserror::Error;
 use ecs::{impl_registry, Resources};
 
 pub use self::{
-    assets::AssetsCommand, cameras::CamerasCommand, entities::EntitiesCommand, exit::ExitCommand,
-    states::StatesCommand, stats::StatisticsCommand,
+    assets::AssetsCommand, entities::EntitiesCommand, exit::ExitCommand,
+    states::StatesCommand, stats::StatisticsCommand, components::ComponentsCommand,
 };
 
 pub mod assets;
-pub mod cameras;
 pub mod entities;
 pub mod exit;
 pub mod states;
 pub mod stats;
+pub mod components;
 
 impl_registry!(CommandRegistry, where Head: CommandTrait + Clone + Copy + Default);
 
@@ -33,6 +33,8 @@ pub enum Error {
     CannotShowEntity(usize),
     #[error("The entity with index {0} cannot be hidden")]
     CannotHideEntity(usize),
+    #[error("No arguments were given for the subcommand {}", .0)]
+    NoSubcommandArguments(&'static str),
 }
 
 pub trait CommandTrait: 'static {
@@ -62,10 +64,10 @@ fn box_command<C: CommandTrait>(command: C) -> Box<dyn CommandTrait + 'static> {
 pub fn default_commands() -> HashMap<&'static str, Box<dyn CommandTrait>> {
     let mut commands = HashMap::with_capacity(4);
     commands.insert(ExitCommand.name(), box_command(ExitCommand));
-    commands.insert(CamerasCommand.name(), box_command(CamerasCommand));
     commands.insert(EntitiesCommand.name(), box_command(EntitiesCommand));
     commands.insert(StatesCommand.name(), box_command(StatesCommand));
     commands.insert(AssetsCommand.name(), box_command(AssetsCommand));
+    commands.insert(ComponentsCommand.name(), box_command(ComponentsCommand));
     commands.insert(StatisticsCommand.name(), box_command(StatisticsCommand));
     commands
 }

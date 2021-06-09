@@ -10,7 +10,7 @@ use std::{
 };
 
 /// A handle that allows a receiver to receive events from the related event queue.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct ReceiverId<E> {
     id: usize,
@@ -23,6 +23,17 @@ impl<E> std::fmt::Debug for ReceiverId<E> {
         write!(f, "ReceiverId {{ id: {:?} }}", self.id)
     }
 }
+
+impl<E> Clone for ReceiverId<E> {
+    fn clone(&self) -> Self {
+        ReceiverId {
+            id: self.id,
+            _e: PhantomData::default(),
+        }
+    }
+}
+
+impl<E> Copy for ReceiverId<E> {}
 
 impl<E> ReceiverId<E> {
     fn new(id: usize) -> Self {

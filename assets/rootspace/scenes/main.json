@@ -1,19 +1,11 @@
 {
   "resources": {
     "Entities": {
-      "max_idx": 6,
-      "generations": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
-      ]
+      "max_idx": 0
     },
     "EventQueue<WorldEvent>": {
       "receivers": {
-        "0": [
+        "2": [
           0,
           0
         ],
@@ -21,210 +13,19 @@
           0,
           0
         ],
-        "2": [
+        "0": [
           0,
           0
         ]
       },
       "max_id": 3
     },
-    "VecStorage<Info>": {
-      "3": {
-        "name": "Example B",
-        "description": ""
-      },
-      "1": {
-        "name": "Example A",
-        "description": ""
-      },
-      "2": {
-        "name": "Example A.A",
-        "description": ""
-      },
-      "4": {
-        "name": "Example C",
-        "description": ""
-      },
-      "5": {
-        "name": "Example D",
-        "description": ""
-      },
-      "0": {
-        "name": "Camera",
-        "description": ""
-      }
-    },
-    "VecStorage<Status>": {
-      "1": {
-        "enabled": true,
-        "visible": true
-      },
-      "3": {
-        "enabled": true,
-        "visible": true
-      },
-      "5": {
-        "enabled": false,
-        "visible": true
-      },
-      "4": {
-        "enabled": true,
-        "visible": false
-      },
-      "0": {
-        "enabled": true,
-        "visible": true
-      },
-      "2": {
-        "enabled": true,
-        "visible": true
-      }
-    },
-    "VecStorage<Camera>": {
-      "0": {
-        "projection": "Perspective",
-        "dimensions": [
-          800,
-          600
-        ],
-        "fov_y": 0.7853982,
-        "frustum_z": [
-          0.1,
-          1000.0
-        ],
-        "dpi_factor": 2.0
-      }
-    },
-    "VecStorage<Renderable>": {
-      "3": {
-        "source": {
-          "Text": {
-            "text": "Hello, World!",
-            "font": "/Users/eleanore/Library/Application Support/org.nausicaea.rootspace/assets/fonts/SourceSansPro-Regular.ttf",
-            "text_scale": 16.0,
-            "text_width": 1.0,
-            "virtual_pixel_text_width": 100,
-            "cache_size": [
-              512,
-              512
-            ],
-            "vertex_shader": "/Users/eleanore/Library/Application Support/org.nausicaea.rootspace/assets/shaders/text-vertex.glsl",
-            "fragment_shader": "/Users/eleanore/Library/Application Support/org.nausicaea.rootspace/assets/shaders/text-fragment.glsl"
-          }
-        }
-      }
-    },
+    "VecStorage<Info>": {},
+    "VecStorage<Status>": {},
+    "VecStorage<Camera>": {},
+    "VecStorage<Renderable>": {},
     "VecStorage<UiModel>": {},
-    "VecStorage<Model>": {
-      "3": {
-        "translation": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "1": {
-        "translation": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "2": {
-        "translation": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "4": {
-        "translation": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "5": {
-        "translation": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "0": {
-        "translation": [
-          0.0,
-          0.0,
-          -10.0
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
-        ],
-        "scale": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      }
-    },
+    "VecStorage<Model>": {},
     "SceneGraph<UiModel>": {
       "root_idx": 0,
       "graph": {
@@ -240,191 +41,16 @@
       "root_idx": 0,
       "graph": {
         "nodes": [
-          null,
-          [
-            [
-              0,
-              1
-            ],
-            {
-              "translation": [
-                0.0,
-                0.0,
-                -10.0
-              ],
-              "rotation": [
-                0.0,
-                0.0,
-                0.0,
-                1.0
-              ],
-              "scale": [
-                1.0,
-                1.0,
-                1.0
-              ]
-            }
-          ],
-          [
-            [
-              1,
-              1
-            ],
-            {
-              "translation": [
-                0.0,
-                0.0,
-                0.0
-              ],
-              "rotation": [
-                0.0,
-                0.0,
-                0.0,
-                1.0
-              ],
-              "scale": [
-                1.0,
-                1.0,
-                1.0
-              ]
-            }
-          ],
-          [
-            [
-              2,
-              1
-            ],
-            {
-              "translation": [
-                0.0,
-                0.0,
-                -10.0
-              ],
-              "rotation": [
-                0.0,
-                0.0,
-                0.0,
-                1.0
-              ],
-              "scale": [
-                1.0,
-                1.0,
-                1.0
-              ]
-            }
-          ],
-          [
-            [
-              3,
-              1
-            ],
-            {
-              "translation": [
-                0.0,
-                0.0,
-                0.0
-              ],
-              "rotation": [
-                0.0,
-                0.0,
-                0.0,
-                1.0
-              ],
-              "scale": [
-                1.0,
-                1.0,
-                1.0
-              ]
-            }
-          ],
-          [
-            [
-              4,
-              1
-            ],
-            {
-              "translation": [
-                0.0,
-                0.0,
-                0.0
-              ],
-              "rotation": [
-                0.0,
-                0.0,
-                0.0,
-                1.0
-              ],
-              "scale": [
-                1.0,
-                1.0,
-                1.0
-              ]
-            }
-          ],
-          [
-            [
-              5,
-              1
-            ],
-            {
-              "translation": [
-                0.0,
-                0.0,
-                0.0
-              ],
-              "rotation": [
-                0.0,
-                0.0,
-                0.0,
-                1.0
-              ],
-              "scale": [
-                1.0,
-                1.0,
-                1.0
-              ]
-            }
-          ]
+          null
         ],
         "node_holes": [],
         "edge_property": "directed",
-        "edges": [
-          [
-            0,
-            1,
-            null
-          ],
-          [
-            0,
-            2,
-            null
-          ],
-          [
-            1,
-            3,
-            null
-          ],
-          [
-            0,
-            4,
-            null
-          ],
-          [
-            0,
-            5,
-            null
-          ],
-          [
-            0,
-            6,
-            null
-          ]
-        ]
+        "edges": []
       }
     },
     "EventQueue<EngineEvent>": {
       "receivers": {
-        "1": [
+        "0": [
           0,
           0
         ],
@@ -432,16 +58,16 @@
           0,
           0
         ],
-        "3": [
+        "4": [
           0,
           0
         ],
-        "0": [
+        "1": [
           0,
           0
         ]
       },
-      "max_id": 4
+      "max_id": 5
     },
     "GraphicsBackend": {
       "title": "",
@@ -505,13 +131,13 @@
       }
     },
     "EventCoordinator": {
-      "order": 6,
+      "order": 7,
       "system": {
-        "receiver": 3
+        "receiver": 4
       }
     },
     "EventInterface": {
-      "order": 7,
+      "order": 8,
       "system": {}
     }
   },
