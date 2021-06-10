@@ -1,6 +1,7 @@
 pub mod iterators;
 pub mod vec_storage;
 pub mod zst_storage;
+pub mod bit_indices;
 
 use std::collections::HashSet;
 
@@ -23,7 +24,7 @@ pub trait Storage: Sized {
     fn remove<I: Into<Index>>(&mut self, index: I) -> Option<Self::Item>;
 
     /// Return `true` if the specified entity has a component of type `Item`.
-    fn has<I: Into<Index>>(&self, index: I) -> bool;
+    fn contains<I: Into<Index>>(&self, index: I) -> bool;
 
     /// Empties the component storage.
     fn clear(&mut self);
@@ -31,7 +32,7 @@ pub trait Storage: Sized {
     /// Gets the given indexe's corresponding entry in the map for in-place manipulation.
     fn entry<I: Into<Index>>(&mut self, index: I) -> Entry<'_, Self::Item, Self> {
         let idx: Index = index.into();
-        if self.has(idx) {
+        if self.contains(idx) {
             Entry::Occupied(self, idx)
         } else {
             Entry::Vacant(self, idx)
@@ -45,7 +46,7 @@ pub trait Storage: Sized {
     fn get_mut<I: Into<Index>>(&mut self, index: I) -> Option<&mut Self::Item>;
 
     /// Returns the registered indices
-    fn index(&self) -> &HashSet<Index>;
+    fn indices(&self) -> &HashSet<Index>;
 
     /// Borrows the component of type `Item` for the specified `Entity` without checking for existence.
     unsafe fn get_unchecked<I: Into<Index>>(&self, index: I) -> &Self::Item;

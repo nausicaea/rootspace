@@ -36,6 +36,18 @@ impl<T> ZstStorage<T> {
     }
 }
 
+impl<T> ZstStorage<T>
+where
+    T: Default,
+{
+    pub fn with_capacity(capacity: usize) -> Self {
+        ZstStorage {
+            index: HashSet::with_capacity(capacity),
+            data: T::default(),
+        }
+    }
+}
+
 impl<T> Storage for ZstStorage<T> {
     type Item = T;
 
@@ -57,7 +69,7 @@ impl<T> Storage for ZstStorage<T> {
         None
     }
 
-    fn has<I: Into<Index>>(&self, index: I) -> bool {
+    fn contains<I: Into<Index>>(&self, index: I) -> bool {
         self.index.contains(&index.into())
     }
 
@@ -73,7 +85,7 @@ impl<T> Storage for ZstStorage<T> {
         Some(&mut self.data)
     }
 
-    fn index(&self) -> &HashSet<Index> {
+    fn indices(&self) -> &HashSet<Index> {
         &self.index
     }
 
@@ -175,7 +187,7 @@ where
             where
                 A: SeqAccess<'ef>,
             {
-                let mut storage = ZstStorage::default();
+                let mut storage = ZstStorage::with_capacity(access.size_hint().unwrap_or(0));
 
                 while let Some(idx) = access.next_element::<Index>()? {
                     storage.insert_internal(idx);

@@ -21,6 +21,13 @@ pub struct VecStorage<T> {
 }
 
 impl<T> VecStorage<T> {
+    pub fn with_capacity(capacity: usize) -> Self {
+        VecStorage {
+            index: HashSet::with_capacity(capacity),
+            data: Vec::default(),
+        }
+    }
+
     pub fn iter(&self) -> RIter<Self> {
         self.into_iter()
     }
@@ -90,14 +97,14 @@ impl<T> Storage for VecStorage<T> {
         }
     }
 
-    fn has<I: Into<Index>>(&self, index: I) -> bool {
+    fn contains<I: Into<Index>>(&self, index: I) -> bool {
         self.index.contains(&index.into())
     }
 
     fn clear(&mut self) {
         let data = &mut self.data;
 
-        for idx in self.index.iter() {
+        for idx in &self.index {
             let idx_usize: usize = idx.into();
             unsafe { ptr::drop_in_place(data.get_unchecked_mut(idx_usize)) }
         }
@@ -139,7 +146,7 @@ impl<T> Storage for VecStorage<T> {
         }
     }
 
-    fn index(&self) -> &HashSet<Index> {
+    fn indices(&self) -> &HashSet<Index> {
         &self.index
     }
 
@@ -261,7 +268,7 @@ where
             where
                 A: MapAccess<'de>,
             {
-                let mut storage = VecStorage::default();
+                let mut storage = VecStorage::with_capacity(access.size_hint().unwrap_or(0));
 
                 while let Some((idx, v)) = access.next_entry::<Index, T>()? {
                     storage.insert_internal(idx, v);
@@ -335,9 +342,9 @@ mod tests {
         let mut s: VecStorage<u32> = Default::default();
 
         let a = Entity::new(0u32, 1u32);
-        assert!(!s.has(&a));
+        assert!(!s.contains(&a));
         let _ = s.insert(a, 101);
-        assert!(s.has(&a));
+        assert!(s.contains(&a));
     }
 
     #[test]
@@ -353,15 +360,15 @@ mod tests {
         let c = Entity::new(2u32, 1u32);
         let _ = s.insert(c, 103);
 
-        assert!(s.has(&a));
-        assert!(s.has(&b));
-        assert!(s.has(&c));
+        assert!(s.contains(&a));
+        assert!(s.contains(&b));
+        assert!(s.contains(&c));
 
         s.clear();
 
-        assert!(!s.has(&a));
-        assert!(!s.has(&b));
-        assert!(!s.has(&c));
+        assert!(!s.contains(&a));
+        assert!(!s.contains(&b));
+        assert!(!s.contains(&c));
     }
 
     #[test]

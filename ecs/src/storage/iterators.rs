@@ -32,7 +32,7 @@ macro_rules! impl_joined_iter {
         {
             pub(crate) fn new($ty: &$tlt $ty) -> Self {
                 $name {
-                    indices: $ty.index().iter().cloned().collect(),
+                    indices: $ty.indices().iter().cloned().collect(),
                     cursor: 0,
                     $ty,
                 }
@@ -95,7 +95,7 @@ macro_rules! impl_joined_iter {
         {
             pub(crate) fn new($tym: &$tltm mut $tym) -> Self {
                 $name {
-                    indices: $tym.index().iter().cloned().collect(),
+                    indices: $tym.indices().iter().cloned().collect(),
                     cursor: 0,
                     $tym,
                 }
@@ -178,7 +178,7 @@ macro_rules! impl_joined_iter {
         {
             pub(crate) fn new($($ty: &$tlt $ty,)* $($tym: &$tltm mut $tym,)*) -> Self {
                 $name {
-                    indices: intersect_many(&[$($ty.index(),)* $($tym.index(),)*]),
+                    indices: intersect_many(&[$($ty.indices(),)* $($tym.indices(),)*]),
                     cursor: 0,
                     $(
                         $ty,
@@ -254,7 +254,7 @@ macro_rules! impl_joined_iter {
 }
 
 macro_rules! impl_joined_iter_ref {
-    ($name:ident, #reads: &$tlt:lifetime $ty:ident $(,)?) => {
+    ($name:ident, #reads: Ref<$tlt:lifetime, $ty:ident> $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
@@ -270,7 +270,7 @@ macro_rules! impl_joined_iter_ref {
         {
             pub(crate) fn new($ty: std::cell::Ref<$tlt, $ty>) -> Self {
                 $name {
-                    indices: $ty.index().iter().cloned().collect(),
+                    indices: $ty.indices().iter().cloned().collect(),
                     cursor: 0,
                     $ty,
                 }
@@ -319,7 +319,7 @@ macro_rules! impl_joined_iter_ref {
         }
     };
 
-    ($name:ident, #writes: &$tltm:lifetime mut $tym:ident $(,)?) => {
+    ($name:ident, #writes: RefMut<$tltm:lifetime, $tym:ident> $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
@@ -335,7 +335,7 @@ macro_rules! impl_joined_iter_ref {
         {
             pub(crate) fn new($tym: std::cell::RefMut<$tltm, $tym>) -> Self {
                 $name {
-                    indices: $tym.index().iter().cloned().collect(),
+                    indices: $tym.indices().iter().cloned().collect(),
                     cursor: 0,
                     $tym,
                 }
@@ -384,15 +384,15 @@ macro_rules! impl_joined_iter_ref {
         }
     };
 
-    ($name:ident, #reads: $(&$tlt:lifetime $ty:ident),* $(,)?) => {
-        impl_joined_iter_ref!($name, #reads: $(&$tlt $ty),*, #writes: );
+    ($name:ident, #reads: $(Ref<$tlt:lifetime, $ty:ident>),* $(,)?) => {
+        impl_joined_iter_ref!($name, #reads: $(Ref<$tlt, $ty>),*, #writes: );
     };
 
-    ($name:ident, #writes: $(&$tltm:lifetime mut $tym:ident),* $(,)?) => {
-        impl_joined_iter_ref!($name, #reads: , #writes: $(&$tltm mut $tym),*);
+    ($name:ident, #writes: $(RefMut<$tltm:lifetime, $tym:ident>),* $(,)?) => {
+        impl_joined_iter_ref!($name, #reads: , #writes: $(RefMut<$tltm, $tym>),*);
     };
 
-    ($name:ident, #reads: $(&$tlt:lifetime $ty:ident),*, #writes: $(&$tltm:lifetime mut $tym:ident),* $(,)?) => {
+    ($name:ident, #reads: $(Ref<$tlt:lifetime, $ty:ident>),*, #writes: $(RefMut<$tltm:lifetime, $tym:ident>),* $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
@@ -418,7 +418,7 @@ macro_rules! impl_joined_iter_ref {
         {
             pub(crate) fn new($($ty: std::cell::Ref<$tlt, $ty>,)* $($tym: std::cell::RefMut<$tltm, $tym>,)*) -> Self {
                 $name {
-                    indices: intersect_many(&[$($ty.index(),)* $($tym.index(),)*]),
+                    indices: intersect_many(&[$($ty.indices(),)* $($tym.indices(),)*]),
                     cursor: 0,
                     $(
                         $ty,
@@ -496,17 +496,21 @@ macro_rules! impl_joined_iter_ref {
 impl_joined_iter!(RIter, #reads: &'a A);
 impl_joined_iter!(WIter, #writes: &'a mut A);
 
-impl_joined_iter_ref!(RIterRef, #reads: &'a A);
-impl_joined_iter_ref!(WIterRef, #writes: &'a mut A);
+impl_joined_iter!(RRIter, #reads: &'a A, &'b B);
+impl_joined_iter!(RWIter, #reads: &'a A, #writes: &'b mut B);
+impl_joined_iter!(WWIter, #writes: &'a mut A, &'b mut B);
 
-impl_joined_iter_ref!(RRIterRef, #reads: &'a A, &'b B);
-impl_joined_iter_ref!(RWIterRef, #reads: &'a A, #writes: &'b mut B);
-impl_joined_iter_ref!(WWIterRef, #writes: &'a mut A, &'b mut B);
+impl_joined_iter_ref!(RIterRef, #reads: Ref<'a, A>);
+impl_joined_iter_ref!(WIterRef, #writes: RefMut<'a, A>);
 
-impl_joined_iter_ref!(RRRIterRef, #reads: &'a A, &'b B, &'c C);
-impl_joined_iter_ref!(RRWIterRef, #reads: &'a A, &'b B, #writes: &'c mut C);
-impl_joined_iter_ref!(RWWIterRef, #reads: &'a A, #writes: &'b mut B, &'c mut C);
-impl_joined_iter_ref!(WWWIterRef, #writes: &'a mut A, &'b mut B, &'c mut C);
+impl_joined_iter_ref!(RRIterRef, #reads: Ref<'a, A>, Ref<'b, B>);
+impl_joined_iter_ref!(RWIterRef, #reads: Ref<'a, A>, #writes: RefMut<'b, B>);
+impl_joined_iter_ref!(WWIterRef, #writes: RefMut<'a, A>, RefMut<'b, B>);
+
+impl_joined_iter_ref!(RRRIterRef, #reads: Ref<'a, A>, Ref<'b, B>, Ref<'c, C>);
+impl_joined_iter_ref!(RRWIterRef, #reads: Ref<'a, A>, Ref<'b, B>, #writes: RefMut<'c, C>);
+impl_joined_iter_ref!(RWWIterRef, #reads: Ref<'a, A>, #writes: RefMut<'b, B>, RefMut<'c, C>);
+impl_joined_iter_ref!(WWWIterRef, #writes: RefMut<'a, A>, RefMut<'b, B>, RefMut<'c, C>);
 
 pub struct EnumRIter<'a, T> {
     indices: Vec<crate::entity::index::Index>,
@@ -520,7 +524,7 @@ where
 {
     pub(crate) fn new(data: &'a T) -> Self {
         EnumRIter {
-            indices: data.index().iter().cloned().collect(),
+            indices: data.indices().iter().cloned().collect(),
             cursor: 0,
             data,
         }
@@ -559,6 +563,7 @@ where
 mod tests {
     use super::*;
     use crate::storage::{vec_storage::VecStorage, Storage};
+    use std::cell::Ref;
 
     #[test]
     fn r_iter() {
@@ -567,9 +572,11 @@ mod tests {
         a.insert(1usize, 101usize);
         a.insert(2usize, 102usize);
 
-        for ca in RIter::new(&a) {
-            std::convert::identity(ca);
-        }
+        let mut riter = RIter::new(&a);
+        assert_eq!(riter.next(), Some(&100usize));
+        assert_eq!(riter.next(), Some(&101usize));
+        assert_eq!(riter.next(), Some(&102usize));
+        assert_eq!(riter.next(), None);
     }
 
     #[test]
@@ -579,8 +586,28 @@ mod tests {
         a.insert(1usize, 101usize);
         a.insert(2usize, 102usize);
 
-        for ca in WIter::new(&mut a) {
+        let mut witer = WIter::new(&mut a);
+        assert_eq!(witer.next(), Some(&mut 100usize));
+        assert_eq!(witer.next(), Some(&mut 101usize));
+        assert_eq!(witer.next(), Some(&mut 102usize));
+        assert_eq!(witer.next(), None);
+    }
+
+    #[test]
+    fn rr_iter() {
+        let mut a: VecStorage<usize> = VecStorage::default();
+        a.insert(0usize, 100usize);
+        a.insert(1usize, 101usize);
+        a.insert(2usize, 102usize);
+
+        let mut b: VecStorage<usize> = VecStorage::default();
+        b.insert(0usize, 100usize);
+        b.insert(1usize, 101usize);
+        b.insert(2usize, 102usize);
+
+        for (ca, cb) in RRIter::new(&a, &b) {
             std::convert::identity(ca);
+            std::convert::identity(cb);
         }
     }
 }

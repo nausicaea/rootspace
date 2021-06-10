@@ -82,11 +82,11 @@ impl CommandTrait for EntitiesCommand {
             }
 
             let mut other_components = String::from("Other components:");
-            if res.borrow_components::<Camera>().has(&entity) {
+            if res.borrow_components::<Camera>().contains(&entity) {
                 other_components.push_str(" CAMERA");
             }
 
-            if res.borrow_components::<Renderable>().has(&entity) {
+            if res.borrow_components::<Renderable>().contains(&entity) {
                 other_components.push_str(" RENDERABLE");
             }
             println!("{}", other_components);
@@ -99,7 +99,7 @@ impl CommandTrait for EntitiesCommand {
             let eh_count = statuses.iter().filter(|s| s.enabled() && !s.visible()).count();
             let dh_count = statuses.iter().filter(|s| !s.enabled() && !s.visible()).count();
             let dv_count = statuses.iter().filter(|s| !s.enabled() && s.visible()).count();
-            let no_status = entities.iter().filter(|e| !statuses.has(e)).count();
+            let no_status = entities.iter().filter(|e| !statuses.contains(e)).count();
 
             let table = TableBuilder::new()
                 .style(TableStyle::simple())
