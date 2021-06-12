@@ -39,10 +39,14 @@ impl CommandTrait for EntitiesCommand {
 
             if let Some(ic) = res.borrow_components::<Info>().get(&entity) {
                 println!("Name: {}, Description: {}", ic.name(), ic.description());
+            } else {
+                println!("No description found");
             }
 
             if let Some(sc) = res.borrow_components::<Status>().get(&entity) {
                 println!("Enabled: {}, Visible: {}", sc.enabled(), sc.visible());
+            } else {
+                println!("No status information found");
             }
 
             if let Some(mc) = res.borrow_components::<Model>().get(&entity) {
@@ -52,6 +56,8 @@ impl CommandTrait for EntitiesCommand {
                     mc.orientation(),
                     mc.scale()
                 );
+            } else {
+                println!("No world position data found");
             }
 
             if let Some(sgmc) = res.borrow::<SceneGraph<Model>>().get(&entity) {
@@ -70,6 +76,8 @@ impl CommandTrait for EntitiesCommand {
                     umc.depth(),
                     umc.scale()
                 );
+            } else {
+                println!("No UI position data found");
             }
 
             if let Some(sgumc) = res.borrow::<SceneGraph<UiModel>>().get(&entity) {
@@ -81,15 +89,18 @@ impl CommandTrait for EntitiesCommand {
                 );
             }
 
-            let mut other_components = String::from("Other components:");
+            let mut other_components = String::new();
             if res.borrow_components::<Camera>().contains(&entity) {
                 other_components.push_str(" CAMERA");
             }
-
             if res.borrow_components::<Renderable>().contains(&entity) {
                 other_components.push_str(" RENDERABLE");
             }
-            println!("{}", other_components);
+            if other_components.len() > 0 {
+                println!("Other components:{}", other_components);
+            } else {
+                println!("No other components found");
+            }
         } else if subcommand == "count" {
             let entities = res.borrow::<Entities>();
             let statuses = res.borrow_components::<Status>();
