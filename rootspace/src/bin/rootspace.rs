@@ -50,7 +50,7 @@ fn main() -> Result<()> {
     } else if subcommand == "run" {
         let scm = maybe_subcommand_matches.context("No arguments were provided to the run subcommand")?;
         let headless = scm.is_present("headless");
-        let _command = scm.value_of("command");
+        let command = scm.value_of("command");
         let name = scm.value_of("name").context("Missing required argument 'name'")?;
 
         // Configure the project-specific directories
@@ -62,10 +62,16 @@ fn main() -> Result<()> {
         if headless {
             let mut g = Rootspace::<HeadlessBackend>::load(main_scene)
                 .context("Could not load a headless game from an existing state")?;
+            if let Some(cmd) = command {
+                g.with_command(cmd);
+            }
             g.run();
         } else {
             let mut g =
                 Rootspace::<GliumBackend>::load(main_scene).context("Could not load a game from an existing state")?;
+            if let Some(cmd) = command {
+                g.with_command(cmd);
+            }
             g.run();
         }
     }

@@ -169,8 +169,10 @@ impl CommandTrait for EntitiesCommand {
                 }
             }
         } else if subcommand == "create" {
+            let entity = res.borrow_mut::<Entities>().create();
+            println!("Created the entity {}", entity.idx());
             res.borrow_mut::<EventQueue<WorldEvent>>()
-                .send(WorldEvent::CreateEntity);
+                .send(WorldEvent::EntityCreated(entity));
         } else if subcommand == "destroy" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("destroy"))?;
             let index = scm.value_of("index").ok_or(Error::NoIndexSpecified)?;
@@ -181,8 +183,16 @@ impl CommandTrait for EntitiesCommand {
                 .try_get(index)
                 .ok_or(Error::EntityNotFound(index))?;
 
-            res.borrow_mut::<EventQueue<WorldEvent>>()
-                .send(WorldEvent::DestroyEntity(entity))
+            res.borrow_mut::<SceneGraph<Model>>().remove(entity);
+            res.borrow_mut::<SceneGraph<UiModel>>().remove(entity);
+            res.borrow_components_mut::<Info>().remove(entity);
+            res.borrow_components_mut::<Status>().remove(entity);
+            res.borrow_components_mut::<Model>().remove(entity);
+            res.borrow_components_mut::<UiModel>().remove(entity);
+            res.borrow_components_mut::<Camera>().remove(entity);
+            res.borrow_components_mut::<Renderable>().remove(entity);
+            res.borrow_mut::<Entities>().destroy(entity);
+            println!("Destroyed the entity {}", entity.idx());
         }
 
         Ok(())

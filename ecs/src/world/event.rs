@@ -9,6 +9,7 @@ pub enum WorldEvent {
     CreateEntity,
     EntityCreated(Entity),
     DestroyEntity(Entity),
+    EntityDestroyed(Entity),
     /// Causes the WorldTrait::maintain() method to serialize the entire world state to the given
     /// file.
     Serialize(NewOrExFilePathBuf),

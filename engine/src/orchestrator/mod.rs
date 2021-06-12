@@ -15,11 +15,9 @@ use serde::{Deserialize, Serialize};
 use try_default::TryDefault;
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
-use crate::{
-    components::{Camera, Info, Model, Renderable, Status, UiModel},
-    graphics::BackendTrait,
-    resources::{AssetDatabase, SceneGraph, Statistics},
-};
+use crate::{components::{Camera, Info, Model, Renderable, Status, UiModel}, graphics::BackendTrait, resources::{AssetDatabase, SceneGraph, Statistics}, EngineEvent};
+use crate::text_manipulation::tokenize;
+use crate::resources::Settings;
 
 pub mod type_registry;
 
@@ -92,6 +90,16 @@ where
         self.world.serialize(&mut serializer)?;
 
         Ok(())
+    }
+
+    pub fn with_command<S: AsRef<str>>(&mut self, command: S) {
+        let (esc, quo, punct) = {
+            let settings = self.world.borrow::<Settings>();
+            (settings.command_escape, settings.command_quote, settings.command_punctuation)
+        };
+        let cmd = tokenize(command, esc, quo, punct);
+        self.world.get_mut::<EventQueue<EngineEvent>>()
+            .send(EngineEvent::Command(cmd))
     }
 
     pub fn run(&mut self) {

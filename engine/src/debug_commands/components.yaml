@@ -5,15 +5,73 @@ settings:
   - VersionlessSubcommands
   - SubcommandRequiredElseHelp
 subcommands:
-  - camera:
-      about: Provide access to the camera component
+  - model:
+      about: Provide access to model components
       args:
+        - create:
+            short: c
+            long: create
+            help: Create a component for the entity unless one exists
         - index:
             required: true
             takes_value: true
-            help: Specify the index of the desired camera
+            help: Specify the index of the desired entity
+  - ui:
+      about: Provide access to ui model components
+      args:
+        - create:
+            short: c
+            long: create
+            help: Create a component for the entity unless one exists
+        - index:
+            required: true
+            takes_value: true
+            help: Specify the index of the desired entity
+  - renderable:
+      about: Provide access to renderable components
+      args:
+        - create:
+            short: c
+            long: create
+            help: Create a component for the entity unless one exists
+        - index:
+            required: true
+            takes_value: true
+            help: Specify the index of the desired entity
+  - info:
+      about: Provide access to info components
+      args:
+        - create:
+            short: c
+            long: create
+            help: Create an info component for the entity unless one exists
+        - name:
+            short: n
+            long: name
+            takes_value: true
+            help: Specify the new name for the entity
+        - description:
+            short: d
+            long: description
+            takes_value: true
+            help: Specify the new description for the entity
+        - index:
+            required: true
+            takes_value: true
+            help: Specify the index of the desired entity
+  - camera:
+      about: Provide access to camera components
+      args:
+        - create:
+            short: c
+            long: create
+            help: Create a camera component for the entity unless one exists
+        - index:
+            required: true
+            takes_value: true
+            help: Specify the index of the desired entity
   - status:
-      about: Provide access to the status component
+      about: Provide access to status components
       args:
         - create:
             short: c

@@ -41,7 +41,7 @@ impl Entity {
 
 impl std::fmt::Display for Entity {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "({}, {})", self.idx, self.gen)
+        write!(f, "{}", self.idx)
     }
 }
 

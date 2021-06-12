@@ -21,9 +21,18 @@ impl Info {
         self.name.as_str()
     }
 
+    pub fn set_name<S: AsRef<str>>(&mut self, name: S) {
+        self.name = name.as_ref().to_string();
+    }
+
     pub fn description(&self) -> &str {
         self.description.as_str()
     }
+
+    pub fn set_description<S: AsRef<str>>(&mut self, description: S) {
+        self.description = description.as_ref().to_string();
+    }
+
 }
 
 impl Component for Info {
