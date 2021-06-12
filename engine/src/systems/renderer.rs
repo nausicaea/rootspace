@@ -79,9 +79,9 @@ where
 
         // Update the scene graphs.
         res.borrow_mut::<SceneGraph<Model>>()
-            .update(&res.borrow_components::<Model>());
+            .update(res.borrow_components::<Model>());
         res.borrow_mut::<SceneGraph<UiModel>>()
-            .update(&res.borrow_components::<UiModel>());
+            .update(res.borrow_components::<UiModel>());
 
         // Obtain a reference to the camera.
         let cameras = res.borrow_components::<Camera>();

@@ -48,6 +48,15 @@ where
     }
 }
 
+impl<T> std::ops::Index<Index> for ZstStorage<T> {
+    type Output = T;
+
+    fn index(&self, index: Index) -> &Self::Output {
+        self.get(index)
+            .unwrap_or_else(|| panic!("Could not find the index {}", index))
+    }
+}
+
 impl<T> Storage for ZstStorage<T> {
     type Item = T;
 

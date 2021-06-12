@@ -1,28 +1,28 @@
-use std::ops::Mul;
+mod octree;
+
+use std::ops::{Mul, Deref};
 use anyhow::{anyhow, Result};
 
-use ecs::{Component, Entity, Resource, SerializationName, Storage};
+use ecs::{Component, Entity, Resource, SerializationName};
 use hierarchy::Hierarchy;
 use serde::{Deserialize, Serialize};
+use ecs::entity::index::Index;
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct SceneGraph<T>(Hierarchy<Entity, T>);
-
-impl<T> Default for SceneGraph<T> {
-    fn default() -> Self {
-        SceneGraph(Hierarchy::default())
-    }
-}
 
 impl<T> SceneGraph<T>
 where
     T: Clone + Default + Component,
     for<'r> &'r T: Mul<&'r T, Output = T>,
 {
-    pub fn update(&mut self, data: &<T as Component>::Storage) {
-        self.0
-            .update(&|entity, _, parent_datum| data.get(entity).map(|current_datum| parent_datum * current_datum))
+    pub fn update<D, F>(&mut self, data: D)
+    where
+        D: Deref<Target = F>,
+        F: std::ops::Index<Index, Output = T>,
+    {
+        self.0.update(&|entity, _, parent_datum| Some(parent_datum * &data[entity.into()]))
     }
 
     pub fn insert(&mut self, entity: Entity) {
@@ -48,6 +48,12 @@ where
 
     pub fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
         self.into_iter()
+    }
+}
+
+impl<T> Default for SceneGraph<T> {
+    fn default() -> Self {
+        SceneGraph(Hierarchy::default())
     }
 }
 

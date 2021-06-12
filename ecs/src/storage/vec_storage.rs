@@ -67,6 +67,15 @@ impl<T> VecStorage<T> {
     }
 }
 
+impl<T> std::ops::Index<Index> for VecStorage<T> {
+    type Output = T;
+
+    fn index(&self, index: Index) -> &Self::Output {
+        self.get(index)
+            .unwrap_or_else(|| panic!("Could not find the index {}", index))
+    }
+}
+
 impl<T> Storage for VecStorage<T> {
     type Item = T;
 

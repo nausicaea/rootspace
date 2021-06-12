@@ -27,10 +27,10 @@ pub use crate::{
 
 pub mod component;
 pub mod entities;
-mod entity;
+pub mod entity;
 pub mod event_queue;
 pub mod events;
-mod loop_control;
+pub mod loop_control;
 pub mod loop_stage;
 pub mod macros;
 pub mod registry;

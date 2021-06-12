@@ -11,7 +11,7 @@ pub mod vec_storage;
 pub mod zst_storage;
 
 /// A component storage resource must provide the following methods.
-pub trait Storage: Sized {
+pub trait Storage: Sized + std::ops::Index<Index, Output = Self::Item> {
     type Item;
 
     /// Return the number of stored components.
