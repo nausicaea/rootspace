@@ -1,4 +1,4 @@
-use std::{collections::HashSet, marker::PhantomData};
+use std::{marker::PhantomData};
 
 use serde::{
     de::{Deserializer, SeqAccess, Visitor},
@@ -11,10 +11,11 @@ use super::{
     Storage,
 };
 use crate::{entity::index::Index, resource::Resource, SerializationName};
+use std::collections::BTreeSet;
 
 /// Implements component storage for zero-sized types.
 pub struct ZstStorage<T> {
-    index: HashSet<Index>,
+    index: BTreeSet<Index>,
     data: T,
 }
 
@@ -40,9 +41,9 @@ impl<T> ZstStorage<T>
 where
     T: Default,
 {
-    pub fn with_capacity(capacity: usize) -> Self {
+    pub fn with_capacity(_capacity: usize) -> Self {
         ZstStorage {
-            index: HashSet::with_capacity(capacity),
+            index: BTreeSet::default(),
             data: T::default(),
         }
     }
@@ -85,7 +86,7 @@ impl<T> Storage for ZstStorage<T> {
         Some(&mut self.data)
     }
 
-    fn indices(&self) -> &HashSet<Index> {
+    fn indices(&self) -> &BTreeSet<Index> {
         &self.index
     }
 
@@ -108,7 +109,7 @@ where
 {
     fn default() -> Self {
         ZstStorage {
-            index: HashSet::default(),
+            index: BTreeSet::default(),
             data: T::default(),
         }
     }

@@ -554,7 +554,6 @@ mod tests {
     pub type Trreg = Reg![VecStorage<usize>,];
 
     #[test]
-    #[ignore = "Fails because assert_ser_tokens is not equipped to tell me the location of the error"]
     fn serde() {
         let world = World::<Trreg, Reg![], Reg![], Reg![]>::try_default().unwrap();
 
@@ -579,12 +578,12 @@ mod tests {
                 },
                 Token::Str("receivers"),
                 Token::Map { len: Some(2) },
-                Token::U64(1),
+                Token::U64(0),
                 Token::Tuple { len: 2 },
                 Token::U64(0),
                 Token::U64(0),
                 Token::TupleEnd,
-                Token::U64(0),
+                Token::U64(1),
                 Token::Tuple { len: 2 },
                 Token::U64(0),
                 Token::U64(0),

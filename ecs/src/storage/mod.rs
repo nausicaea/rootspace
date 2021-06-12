@@ -3,7 +3,7 @@ pub mod vec_storage;
 pub mod zst_storage;
 pub mod bit_indices;
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet};
 
 use crate::entity::index::Index;
 
@@ -46,7 +46,7 @@ pub trait Storage: Sized {
     fn get_mut<I: Into<Index>>(&mut self, index: I) -> Option<&mut Self::Item>;
 
     /// Returns the registered indices
-    fn indices(&self) -> &HashSet<Index>;
+    fn indices(&self) -> &BTreeSet<Index>;
 
     /// Borrows the component of type `Item` for the specified `Entity` without checking for existence.
     unsafe fn get_unchecked<I: Into<Index>>(&self, index: I) -> &Self::Item;

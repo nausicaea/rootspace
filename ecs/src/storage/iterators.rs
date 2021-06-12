@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
-fn intersect_many<T, C>(sets: &[&std::collections::HashSet<T>]) -> C
+fn intersect_many<T, C>(sets: &[&std::collections::BTreeSet<T>]) -> C
 where
-    T: std::hash::Hash + Eq + Clone,
+    T: std::hash::Hash + Eq + Ord + Clone,
     C: std::iter::FromIterator<T>,
 {
     let shortest_set = sets.iter().min_by(|&&a, &&b| a.len().cmp(&b.len()));

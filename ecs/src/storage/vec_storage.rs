@@ -1,4 +1,4 @@
-use std::{collections::HashSet, marker::PhantomData, ptr};
+use std::{marker::PhantomData, ptr};
 
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
@@ -11,19 +11,20 @@ use super::{
     Storage,
 };
 use crate::{entity::index::Index, resource::Resource, storage::Entry, SerializationName};
+use std::collections::BTreeSet;
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
     /// The index into the data vector.
-    index: HashSet<Index>,
+    index: BTreeSet<Index>,
     /// The data vector containing the components.
     data: Vec<T>,
 }
 
 impl<T> VecStorage<T> {
-    pub fn with_capacity(capacity: usize) -> Self {
+    pub fn with_capacity(_capacity: usize) -> Self {
         VecStorage {
-            index: HashSet::with_capacity(capacity),
+            index: BTreeSet::default(),
             data: Vec::default(),
         }
     }
@@ -146,7 +147,7 @@ impl<T> Storage for VecStorage<T> {
         }
     }
 
-    fn indices(&self) -> &HashSet<Index> {
+    fn indices(&self) -> &BTreeSet<Index> {
         &self.index
     }
 
@@ -194,7 +195,7 @@ impl<'a, T> IntoIterator for &'a mut VecStorage<T> {
 impl<T> Default for VecStorage<T> {
     fn default() -> Self {
         VecStorage {
-            index: HashSet::default(),
+            index: BTreeSet::default(),
             data: Vec::default(),
         }
     }

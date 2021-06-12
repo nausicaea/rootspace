@@ -396,7 +396,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn impl_into_iterator() {
         let mut bi = BitIndices::default();
 

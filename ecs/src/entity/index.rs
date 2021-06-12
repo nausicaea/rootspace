@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// A zero-based index that can be used as index into data structures. Entities may reuse these
 /// indices.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Index(u32);
 
