@@ -1,4 +1,5 @@
-use std::{fmt, ops::Mul};
+use std::ops::Mul;
+use anyhow::{anyhow, Result};
 
 use ecs::{Component, Entity, Resource, SerializationName, Storage};
 use hierarchy::Hierarchy;
@@ -28,10 +29,9 @@ where
         self.0.insert(entity, Default::default())
     }
 
-    pub fn insert_child(&mut self, parent: &Entity, child: Entity) {
-        self.0
-            .insert_child(parent, child, Default::default())
-            .unwrap_or_else(|e| panic!("Unable to add child {} to parent {}: {}", child, parent, e))
+    pub fn insert_child(&mut self, parent: &Entity, child: Entity) -> Result<()> {
+        self.0.insert_child(parent, child, Default::default())
+            .map_err(|e| anyhow!("Cannot add the entity {} to the parent {}: {}", parent, child, e))
     }
 
     pub fn remove(&mut self, entity: Entity) {
@@ -67,11 +67,11 @@ where
     }
 }
 
-impl<T> fmt::Debug for SceneGraph<T>
+impl<T> std::fmt::Debug for SceneGraph<T>
 where
     T: Clone + Default,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "SceneGraph(#nodes: {})", self.0.len())
     }
 }
