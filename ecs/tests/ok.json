@@ -1,1 +1,1 @@
-{"Entities":{"max_idx":4,"free_idx":[],"generations":[1,1,1,1]},"EventQueue<WorldEvent>":{"events":[{"Serialize":"/home/kitsune/Downloads/main.json"}],"receivers":{"0":[1,1],"2":[0,1],"1":[0,1],"3":[1,1]},"max_id":4}}
+{"Entities":{"max_idx":4,"free_idx":[],"generations":[1,1,1,1]},"EventQueue<WorldEvent>":{"events":[{"Serialize":"/home/kitsune/Downloads/main.json"}],"receivers":{"0":[0, 1,1],"2":[2, 0,1],"1":[1, 0,1],"3":[3, 1,1]},"max_id":4}}
