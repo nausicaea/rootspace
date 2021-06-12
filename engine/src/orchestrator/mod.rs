@@ -181,6 +181,7 @@ mod tests {
 
     use super::*;
     use crate::{GliumBackend, HeadlessBackend, Orchestrator};
+    use tempfile::NamedTempFile;
 
     type TestGame<B> = Orchestrator<B, Reg![], Reg![], Reg![], Reg![]>;
 
@@ -202,13 +203,13 @@ mod tests {
 
     #[test]
     fn game_loading_and_saving_headless_headless() {
-        // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
+        let tf = NamedTempFile::new().unwrap();
 
         let first: TestGame<HeadlessBackend> = TestGame::new("test").unwrap();
-        let r = first.save("test.json");
+        let r = first.save(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
-        let r: Result<TestGame<HeadlessBackend>> = TestGame::load("test.json");
+        let r: Result<TestGame<HeadlessBackend>> = TestGame::load(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -218,13 +219,13 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn game_loading_and_saving_glium_glium() {
-        // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
+        let tf = NamedTempFile::new().unwrap();
 
         let first: TestGame<GliumBackend> = TestGame::new("test").unwrap();
-        let r = first.save("test.json");
+        let r = first.save(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
-        let r: Result<TestGame<GliumBackend>> = TestGame::load("test.json");
+        let r: Result<TestGame<GliumBackend>> = TestGame::load(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -234,13 +235,13 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn game_loading_and_saving_headless_glium() {
-        // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
+        let tf = NamedTempFile::new().unwrap();
 
         let first: TestGame<HeadlessBackend> = TestGame::new("test").unwrap();
-        let r = first.save("test.json");
+        let r = first.save(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
-        let r: Result<TestGame<GliumBackend>> = TestGame::load("test.json");
+        let r: Result<TestGame<GliumBackend>> = TestGame::load(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -250,13 +251,13 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn game_loading_and_saving_glium_headless() {
-        // TODO: Extend the test to evaluate whether the loaded game equals the newly created game
+        let tf = NamedTempFile::new().unwrap();
 
         let first: TestGame<GliumBackend> = TestGame::new("test").unwrap();
-        let r = first.save("test.json");
+        let r = first.save(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
-        let r: Result<TestGame<HeadlessBackend>> = TestGame::load("test.json");
+        let r: Result<TestGame<HeadlessBackend>> = TestGame::load(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 }

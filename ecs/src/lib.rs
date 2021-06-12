@@ -3,11 +3,13 @@
 //! relationship with Entities, and finally, Systems encode (mostly) behaviour. The World manages
 //! all three type categories and provides access to each.
 
+pub use event_queue::receiver_id::ReceiverId;
+
 pub use crate::{
     component::Component,
     entities::Entities,
     entity::Entity,
-    event_queue::{EventQueue, ReceiverId},
+    event_queue::EventQueue,
     events::EventTrait,
     loop_control::LoopControl,
     loop_stage::LoopStage,
@@ -16,7 +18,7 @@ pub use crate::{
     resources::Resources,
     serialization_name::SerializationName,
     short_type_name::short_type_name,
-    storage::{vec_storage::VecStorage, zst_storage::ZstStorage, Storage},
+    storage::{Storage, vec_storage::VecStorage, zst_storage::ZstStorage},
     system::System,
     systems::Systems,
     with_resources::WithResources,

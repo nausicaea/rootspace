@@ -6,31 +6,34 @@ use std::{
 };
 
 use anyhow::Error;
-use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use log::debug;
 use serde::{
     de,
     de::{MapAccess, Visitor},
-    ser::{self, SerializeStruct},
-    Deserialize, Serialize,
+    Deserialize,
+    ser::{self, SerializeStruct}, Serialize,
 };
+
+use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use try_default::TryDefault;
 
-use self::{error::WorldError, event::WorldEvent, type_registry::ResourceTypes};
 use crate::{
     component::Component,
     entities::Entities,
     entity::Entity,
-    event_queue::{EventQueue, ReceiverId},
+    event_queue::EventQueue,
     loop_control::LoopControl,
     loop_stage::LoopStage,
     registry::{ResourceRegistry, SystemRegistry},
     resource::Resource,
-    resources::{typed_resources::TypedResources, Resources},
+    resources::{Resources, typed_resources::TypedResources},
     storage::Storage,
     system::System,
-    systems::{typed_systems::TypedSystems, Systems},
+    systems::{Systems, typed_systems::TypedSystems},
 };
+use crate::event_queue::receiver_id::ReceiverId;
+
+use self::{error::WorldError, event::WorldEvent, type_registry::ResourceTypes};
 
 pub mod error;
 pub mod event;
@@ -548,8 +551,9 @@ where
 mod tests {
     use serde_test::{assert_ser_tokens, Token};
 
-    use super::*;
     use crate::{Reg, VecStorage};
+
+    use super::*;
 
     pub type Trreg = Reg![VecStorage<usize>,];
 

@@ -1,9 +1,11 @@
 use std::{collections::HashMap, time::Duration};
 
 use anyhow::Result;
-use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+
+use ecs::{EventQueue, Resources, SerializationName, System, WithResources};
+use ecs::event_queue::receiver_id::ReceiverId;
 
 use crate::{debug_commands, debug_commands::CommandTrait, event::EngineEvent, resources::settings::Settings};
 

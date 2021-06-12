@@ -327,7 +327,7 @@ mod tests {
     fn text_builder_headless() {
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
 
-        let font_path = FilePathBuf::try_from("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf")).unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let _: Text = Text::builder()
@@ -343,7 +343,7 @@ mod tests {
     fn text_mesh_headless() {
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
 
-        let font_path = FilePathBuf::try_from("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf")).unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let text: Text = Text::builder()
@@ -370,7 +370,7 @@ mod tests {
     fn text_scale_headless() {
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
 
-        let font_path = FilePathBuf::try_from("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf")).unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
@@ -388,7 +388,7 @@ mod tests {
     fn text_width_headless() {
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
 
-        let font_path = FilePathBuf::try_from("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf")).unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()
@@ -406,7 +406,7 @@ mod tests {
     fn text_update_headless() {
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
 
-        let font_path = FilePathBuf::try_from("fonts/SourceSansPro-Regular.ttf").unwrap();
+        let font_path = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf")).unwrap();
         let cache = f.create_empty_texture((512, 512)).unwrap();
 
         let mut text: Text = Text::builder()

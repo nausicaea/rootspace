@@ -1,0 +1,65 @@
+use std::marker::PhantomData;
+use serde::{Serialize, Deserialize};
+
+/// A handle that allows a receiver to receive events from the related event queue.
+#[derive(Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ReceiverId<E> {
+    id: usize,
+    #[serde(skip)]
+    _e: PhantomData<E>,
+}
+
+impl<E> PartialEq<ReceiverId<E>> for ReceiverId<E> {
+    fn eq(&self, other: &ReceiverId<E>) -> bool {
+        self.id == other.id
+    }
+}
+
+impl<E> std::fmt::Debug for ReceiverId<E> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "ReceiverId {{ id: {:?} }}", self.id)
+    }
+}
+
+impl<E> Clone for ReceiverId<E> {
+    fn clone(&self) -> Self {
+        ReceiverId {
+            id: self.id,
+            _e: PhantomData::default(),
+        }
+    }
+}
+
+impl<E> Copy for ReceiverId<E> {}
+
+impl<E> ReceiverId<E> {
+    pub(super) fn new(id: usize) -> Self {
+        ReceiverId {
+            id,
+            _e: PhantomData::default(),
+        }
+    }
+
+    pub(super) fn id(&self) -> usize {
+        self.id
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_test::{assert_tokens, Token};
+
+    #[test]
+    fn receiver_id_serde() {
+        let ri = ReceiverId::<()>::new(0);
+
+        assert_tokens(
+            &ri,
+            &[
+                Token::U64(0),
+            ],
+        )
+    }
+}

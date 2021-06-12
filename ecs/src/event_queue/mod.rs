@@ -3,112 +3,23 @@
 use std::{
     collections::{HashMap, VecDeque},
     fmt,
-    marker::PhantomData,
 };
 
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use crate::{resource::Resource, short_type_name::short_type_name, SerializationName};
+use receiver_state::ReceiverState;
 
-/// A handle that allows a receiver to receive events from the related event queue.
-#[derive(Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct ReceiverId<E> {
-    id: usize,
-    #[serde(skip)]
-    _e: PhantomData<E>,
-}
+use crate::{resource::Resource, SerializationName, short_type_name::short_type_name};
 
-impl<E> std::fmt::Debug for ReceiverId<E> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "ReceiverId {{ id: {:?} }}", self.id)
-    }
-}
+use self::receiver_id::ReceiverId;
 
-impl<E> Clone for ReceiverId<E> {
-    fn clone(&self) -> Self {
-        ReceiverId {
-            id: self.id,
-            _e: PhantomData::default(),
-        }
-    }
-}
-
-impl<E> Copy for ReceiverId<E> {}
-
-impl<E> ReceiverId<E> {
-    fn new(id: usize) -> Self {
-        ReceiverId {
-            id,
-            _e: PhantomData::default(),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(from = "(usize, usize)", into = "(usize, usize)")]
-struct ReceiverState<E> {
-    read: usize,
-    received: usize,
-    #[serde(skip)]
-    _e: PhantomData<E>,
-}
-
-impl<E> ReceiverState<E> {
-    pub fn new<T>() -> Self {
-        ReceiverState {
-            read: 0,
-            received: 0,
-            _e: PhantomData::default(),
-        }
-    }
-
-    fn reset(&mut self) {
-        self.read = 0;
-        self.received = 0;
-    }
-}
-
-impl<E> Clone for ReceiverState<E> {
-    fn clone(&self) -> Self {
-        ReceiverState {
-            read: self.read,
-            received: self.received,
-            _e: PhantomData::default(),
-        }
-    }
-}
-
-impl<E> From<(usize, usize)> for ReceiverState<E> {
-    fn from(value: (usize, usize)) -> Self {
-        ReceiverState {
-            read: value.0,
-            received: value.1,
-            _e: PhantomData::default(),
-        }
-    }
-}
-
-impl<E> From<ReceiverState<E>> for (usize, usize) {
-    fn from(value: ReceiverState<E>) -> Self {
-        (value.read, value.received)
-    }
-}
-
-impl<E> std::fmt::Debug for ReceiverState<E> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "ReceiverState {{ read: {:?}, received: {:?} }}",
-            self.read, self.received
-        )
-    }
-}
+pub mod receiver_id;
+pub mod receiver_state;
 
 /// An `EventQueue` contains a queue of events and provides rudimentary facilities of retrieving
 /// those events.
-#[derive(Serialize, Deserialize)]
+#[derive(PartialEq, Serialize, Deserialize)]
 pub struct EventQueue<E> {
     #[serde(default = "VecDeque::default", skip_serializing_if = "VecDeque::is_empty")]
     events: VecDeque<E>,
@@ -146,7 +57,7 @@ where
             tmp
         };
 
-        self.receivers.insert(id, ReceiverState::new::<T>());
+        self.receivers.insert(id, ReceiverState::new(id));
 
         let stnt = short_type_name::<T>();
         let stns = short_type_name::<Self>();
@@ -156,8 +67,8 @@ where
 
     /// Unsubscribe from this event queue.
     pub fn unsubscribe(&mut self, id: ReceiverId<E>) {
-        self.receivers.remove(&id.id);
-        self.free_ids.push(id.id);
+        self.receivers.remove(&id.id());
+        self.free_ids.push(id.id());
     }
 
     /// Renew an existing subscription to this event queue
@@ -172,7 +83,7 @@ where
     /// Return `true` if the receiver is subscribed to this
     /// [`EventQueue<T>`](crate::event_queue::EventQueue), `false` otherwise.
     pub fn is_subscribed(&self, id: &ReceiverId<E>) -> bool {
-        self.receivers.contains_key(&id.id)
+        self.receivers.contains_key(&id.id())
     }
 
     /// Send an event into the queue.
@@ -189,7 +100,7 @@ where
         let events = &self.events;
         let evs: Vec<E> = self
             .receivers
-            .get_mut(&id.id)
+            .get_mut(&id.id())
             .filter(|s| s.read < s.received)
             .map(|s| {
                 let total = events.len();
@@ -250,29 +161,31 @@ impl<E> Default for EventQueue<E> {
 
 #[cfg(test)]
 mod tests {
+    use serde_test::{assert_tokens, Token};
+
     use super::*;
 
-    #[derive(Debug, PartialEq, Eq, Clone)]
-    struct MockEvent(usize);
+    #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+    struct TestEvent(usize);
 
     #[test]
     fn default_event_queue() {
-        let _: EventQueue<MockEvent> = Default::default();
+        let _: EventQueue<TestEvent> = Default::default();
     }
 
     #[test]
     fn send_no_receivers() {
-        let mut q: EventQueue<MockEvent> = EventQueue::default();
+        let mut q: EventQueue<TestEvent> = EventQueue::default();
         assert_eq!(q.len(), 0);
-        q.send(MockEvent(0));
+        q.send(TestEvent(0));
         assert_eq!(q.len(), 0);
     }
 
     #[test]
     fn subscribe() {
-        let mut q: EventQueue<MockEvent> = EventQueue::default();
+        let mut q: EventQueue<TestEvent> = EventQueue::default();
         assert_eq!(q.subscribers(), 0);
-        let s: ReceiverId<MockEvent> = q.subscribe::<()>();
+        let s: ReceiverId<TestEvent> = q.subscribe::<()>();
         assert_eq!(q.subscribers(), 1);
         q.unsubscribe(s);
         assert_eq!(q.subscribers(), 0);
@@ -280,21 +193,21 @@ mod tests {
 
     #[test]
     fn send_one_receiver() {
-        let mut q: EventQueue<MockEvent> = EventQueue::default();
+        let mut q: EventQueue<TestEvent> = EventQueue::default();
 
         let s = q.subscribe::<()>();
 
-        q.send(MockEvent(0));
+        q.send(TestEvent(0));
         assert_eq!(q.len(), 1);
 
-        let evs: Vec<MockEvent> = q.receive(&s);
-        assert_eq!(evs, vec![MockEvent(0)]);
+        let evs: Vec<TestEvent> = q.receive(&s);
+        assert_eq!(evs, vec![TestEvent(0)]);
         assert_eq!(q.len(), 0);
     }
 
     #[test]
     fn send_two_concurrent_receivers() {
-        let mut q: EventQueue<MockEvent> = EventQueue::default();
+        let mut q: EventQueue<TestEvent> = EventQueue::default();
 
         // Subscribe both receivers
         let s = q.subscribe::<()>();
@@ -302,64 +215,135 @@ mod tests {
         assert_eq!(q.subscribers(), 2);
 
         // Send first event
-        q.send(MockEvent(0));
+        q.send(TestEvent(0));
         assert_eq!(q.len(), 1);
 
         // Receive with both receivers
-        let s_evs: Vec<MockEvent> = q.receive(&s);
-        assert_eq!(s_evs, vec![MockEvent(0)]);
+        let s_evs: Vec<TestEvent> = q.receive(&s);
+        assert_eq!(s_evs, vec![TestEvent(0)]);
         assert_eq!(q.len(), 1);
-        let t_evs: Vec<MockEvent> = q.receive(&t);
-        assert_eq!(t_evs, vec![MockEvent(0)]);
+        let t_evs: Vec<TestEvent> = q.receive(&t);
+        assert_eq!(t_evs, vec![TestEvent(0)]);
         assert_eq!(q.len(), 0);
 
         // Send two additional events
-        q.send(MockEvent(1));
-        q.send(MockEvent(2));
+        q.send(TestEvent(1));
+        q.send(TestEvent(2));
         assert_eq!(q.len(), 2);
 
         // Receive with both receivers
-        let s_evs: Vec<MockEvent> = q.receive(&s);
-        assert_eq!(s_evs, vec![MockEvent(1), MockEvent(2)]);
+        let s_evs: Vec<TestEvent> = q.receive(&s);
+        assert_eq!(s_evs, vec![TestEvent(1), TestEvent(2)]);
         assert_eq!(q.len(), 2);
-        let t_evs: Vec<MockEvent> = q.receive(&t);
-        assert_eq!(t_evs, vec![MockEvent(1), MockEvent(2)]);
+        let t_evs: Vec<TestEvent> = q.receive(&t);
+        assert_eq!(t_evs, vec![TestEvent(1), TestEvent(2)]);
         assert_eq!(q.len(), 0);
     }
 
     #[test]
     fn send_two_interleaved_receivers() {
-        let mut q: EventQueue<MockEvent> = EventQueue::default();
+        let mut q: EventQueue<TestEvent> = EventQueue::default();
 
         // Subscribe with the first receiver
         let s = q.subscribe::<()>();
 
         // Send the first event
-        q.send(MockEvent(0));
+        q.send(TestEvent(0));
         assert_eq!(q.len(), 1);
 
         // Subscribe with the second receiver
         let t = q.subscribe::<()>();
 
         // Send the second event
-        q.send(MockEvent(1));
+        q.send(TestEvent(1));
         assert_eq!(q.len(), 2);
 
         // Receive with the first receiver
-        let s_evs: Vec<MockEvent> = q.receive(&s);
-        assert_eq!(s_evs, vec![MockEvent(0), MockEvent(1)]);
+        let s_evs: Vec<TestEvent> = q.receive(&s);
+        assert_eq!(s_evs, vec![TestEvent(0), TestEvent(1)]);
         assert_eq!(q.len(), 1);
 
         // Send the third event
-        q.send(MockEvent(2));
+        q.send(TestEvent(2));
         assert_eq!(q.len(), 2);
 
-        let s_evs: Vec<MockEvent> = q.receive(&s);
-        assert_eq!(s_evs, vec![MockEvent(2)]);
+        let s_evs: Vec<TestEvent> = q.receive(&s);
+        assert_eq!(s_evs, vec![TestEvent(2)]);
         assert_eq!(q.len(), 2);
 
-        let t_evs: Vec<MockEvent> = q.receive(&t);
-        assert_eq!(t_evs, vec![MockEvent(1), MockEvent(2)]);
+        let t_evs: Vec<TestEvent> = q.receive(&t);
+        assert_eq!(t_evs, vec![TestEvent(1), TestEvent(2)]);
         assert_eq!(q.len(), 0);
+    }
+
+    #[test]
+    fn event_queue_serde() {
+        let mut eq = EventQueue::<TestEvent>::default();
+        eq.send(TestEvent(0));
+        let _r1 = eq.subscribe::<()>();
+        eq.send(TestEvent(1));
+        let r2 = eq.subscribe::<()>();
+        eq.send(TestEvent(2));
+        let _r3 = eq.subscribe::<()>();
+        eq.send(TestEvent(3));
+        eq.unsubscribe(r2);
+
+
+        assert_tokens(
+            &eq,
+            &[
+                Token::Struct {
+                    name: "EventQueue",
+                    len: 4,
+                },
+                Token::Str("events"),
+                Token::Seq {
+                    len: Some(3),
+                },
+                Token::NewtypeStruct {
+                    name: "TestEvent",
+                },
+                Token::U64(3),
+                Token::NewtypeStruct {
+                    name: "TestEvent",
+                },
+                Token::U64(2),
+                Token::NewtypeStruct {
+                    name: "TestEvent",
+                },
+                Token::U64(1),
+                Token::SeqEnd,
+                Token::Str("receivers"),
+                Token::Map {
+                    len: Some(2),
+                },
+                Token::U64(0),
+                Token::Tuple {
+                    len: 3,
+                },
+                Token::U64(0),
+                Token::U64(0),
+                Token::U64(3),
+                Token::TupleEnd,
+                Token::U64(2),
+                Token::Tuple {
+                    len: 3,
+                },
+                Token::U64(2),
+                Token::U64(0),
+                Token::U64(1),
+                Token::TupleEnd,
+                Token::MapEnd,
+                Token::Str("max_id"),
+                Token::U64(3),
+                Token::Str("free_ids"),
+                Token::Seq {
+                    len: Some(1),
+                },
+                Token::U64(1),
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+        );
     }
 }

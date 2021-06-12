@@ -328,10 +328,10 @@ mod tests {
 
     #[test]
     fn headless_builder_mesh() {
-        let meshp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/cube.ply")).unwrap();
-        let vsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/test-vertex.glsl")).unwrap();
-        let fsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/test-fragment.glsl")).unwrap();
-        let dtp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/tv-test-image.png")).unwrap();
+        let meshp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply")).unwrap();
+        let vsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/test-vertex.glsl")).unwrap();
+        let fsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/test-fragment.glsl")).unwrap();
+        let dtp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/tv-test-image.png")).unwrap();
 
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
         let r: Result<Renderable> = Renderable::builder()
@@ -348,9 +348,9 @@ mod tests {
     #[test]
     fn headless_builder_text() {
         let fontp =
-            FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/SourceSansPro-Regular.ttf")).unwrap();
-        let vsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/test-vertex.glsl")).unwrap();
-        let fsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "tests/test-fragment.glsl")).unwrap();
+            FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/SourceSansPro-Regular.ttf")).unwrap();
+        let vsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/test-vertex.glsl")).unwrap();
+        let fsp = FilePathBuf::try_from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/test-fragment.glsl")).unwrap();
 
         let mut f = GraphicsBackend::<HeadlessBackend>::try_default().unwrap();
         let r: Result<Renderable> = Renderable::builder()

@@ -117,7 +117,6 @@ mod tests {
         assert_tokens(
             &sg,
             &[
-                Token::NewtypeStruct { name: "SceneGraph" },
                 Token::Struct {
                     name: "Hierarchy",
                     len: 2,
@@ -128,9 +127,7 @@ mod tests {
                 Token::Struct { name: "Graph", len: 4 },
                 Token::Str("nodes"),
                 Token::Seq { len: Some(2) },
-                Token::NewtypeStruct { name: "HierNode" },
                 Token::None,
-                Token::NewtypeStruct { name: "HierNode" },
                 Token::Some,
                 Token::Tuple { len: 2 },
                 Token::Tuple { len: 2 },

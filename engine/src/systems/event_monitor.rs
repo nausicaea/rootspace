@@ -1,8 +1,10 @@
 use std::{fmt, time::Duration};
 
-use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources};
 use log::trace;
 use serde::{Deserialize, Serialize};
+
+use ecs::{EventQueue, Resources, SerializationName, System, WithResources};
+use ecs::event_queue::receiver_id::ReceiverId;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EventMonitor<E> {

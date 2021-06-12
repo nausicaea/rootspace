@@ -563,7 +563,6 @@ where
 mod tests {
     use super::*;
     use crate::storage::{vec_storage::VecStorage, Storage};
-    use std::cell::Ref;
 
     #[test]
     fn r_iter() {

@@ -9,7 +9,7 @@ use crate::{
 };
 
 /// The `Entities` resource keeps track of all entities.
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Entities {
     /// Stores the highest assigned `Entity` index plus one.
     max_idx: Index,
@@ -126,6 +126,7 @@ impl<'a> Iterator for EntitiesIter<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_test::{Token, assert_tokens};
 
     #[test]
     fn entities_default() {
@@ -194,5 +195,41 @@ mod tests {
         let c = r.create();
         assert_eq!(c.idx(), Index::new(0));
         assert_eq!(c.gen(), Generation::new(3));
+    }
+
+    #[test]
+    fn serde() {
+        let mut es = Entities::default();
+        let e1 = es.create();
+        let e2 = es.create();
+        let e3 = es.create();
+        es.destroy(e2);
+
+        assert_tokens(
+            &es,
+            &[
+                Token::Struct {
+                    name: "Entities",
+                    len: 3,
+                },
+                Token::Str("max_idx"),
+                Token::U32(3),
+                Token::Str("free_idx"),
+                Token::Seq {
+                    len: Some(1),
+                },
+                Token::U32(1),
+                Token::SeqEnd,
+                Token::Str("generations"),
+                Token::Seq {
+                    len: Some(3),
+                },
+                Token::U32(1),
+                Token::U32(2),
+                Token::U32(1),
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+        );
     }
 }
