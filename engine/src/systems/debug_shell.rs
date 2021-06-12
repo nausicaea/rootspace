@@ -1,22 +1,24 @@
 use std::{collections::HashMap, time::Duration};
 
 use anyhow::Result;
+use ecs::{event_queue::receiver_id::ReceiverId, EventQueue, Resources, SerializationName, System, WithResources};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use ecs::{EventQueue, Resources, SerializationName, System, WithResources};
-use ecs::event_queue::receiver_id::ReceiverId;
-
 use crate::{debug_commands, debug_commands::CommandTrait, event::EngineEvent, resources::settings::Settings};
+use std::marker::PhantomData;
+use crate::graphics::BackendTrait;
 
 #[derive(Serialize, Deserialize)]
-pub struct DebugShell {
-    #[serde(skip, default = "crate::debug_commands::default_commands")]
+pub struct DebugShell<B> {
+    #[serde(skip, bound(serialize = "B: BackendTrait", deserialize = "B: BackendTrait"), default = "crate::debug_commands::default_commands::<B>")]
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
     receiver: ReceiverId<EngineEvent>,
+    #[serde(skip)]
+    _b: PhantomData<B>,
 }
 
-impl std::fmt::Debug for DebugShell {
+impl<B> std::fmt::Debug for DebugShell<B> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -27,18 +29,19 @@ impl std::fmt::Debug for DebugShell {
     }
 }
 
-impl WithResources for DebugShell {
+impl<B: BackendTrait> WithResources for DebugShell<B> {
     fn with_resources(res: &Resources) -> Self {
         let receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
         DebugShell {
-            commands: debug_commands::default_commands(),
+            commands: debug_commands::default_commands::<B>(),
             receiver,
+            _b: PhantomData::default(),
         }
     }
 }
 
-impl DebugShell {
+impl<B> DebugShell<B> {
     pub fn add_command<C: CommandTrait>(&mut self, command: C) {
         self.commands.insert(command.name(), Box::new(command));
     }
@@ -83,7 +86,7 @@ impl DebugShell {
     }
 }
 
-impl System for DebugShell {
+impl<B: 'static> System for DebugShell<B> {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
         for event in events {
@@ -94,7 +97,11 @@ impl System for DebugShell {
     }
 }
 
-impl SerializationName for DebugShell {}
+impl<B> SerializationName for DebugShell<B> {
+    fn name() -> String {
+        String::from("DebugShell")
+    }
+}
 
 #[derive(Debug, Error)]
 enum DebugShellError {

@@ -15,9 +15,13 @@ use serde::{Deserialize, Serialize};
 use try_default::TryDefault;
 
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
-use crate::{components::{Camera, Info, Model, Renderable, Status, UiModel}, graphics::BackendTrait, resources::{AssetDatabase, SceneGraph, Statistics}, EngineEvent};
-use crate::text_manipulation::tokenize;
-use crate::resources::Settings;
+use crate::{
+    components::{Camera, Info, Model, Renderable, Status, UiModel},
+    graphics::BackendTrait,
+    resources::{AssetDatabase, SceneGraph, Settings, Statistics},
+    text_manipulation::tokenize,
+    EngineEvent,
+};
 
 pub mod type_registry;
 
@@ -95,10 +99,15 @@ where
     pub fn with_command<S: AsRef<str>>(&mut self, command: S) {
         let (esc, quo, punct) = {
             let settings = self.world.borrow::<Settings>();
-            (settings.command_escape, settings.command_quote, settings.command_punctuation)
+            (
+                settings.command_escape,
+                settings.command_quote,
+                settings.command_punctuation,
+            )
         };
         let cmd = tokenize(command, esc, quo, punct);
-        self.world.get_mut::<EventQueue<EngineEvent>>()
+        self.world
+            .get_mut::<EventQueue<EngineEvent>>()
             .send(EngineEvent::Command(cmd))
     }
 
@@ -186,10 +195,10 @@ impl<B: BackendTrait, RR, FUSR, USR, RSR> std::fmt::Debug for Orchestrator<B, RR
 #[cfg(test)]
 mod tests {
     use ecs::Reg;
+    use tempfile::NamedTempFile;
 
     use super::*;
     use crate::{GliumBackend, HeadlessBackend, Orchestrator};
-    use tempfile::NamedTempFile;
 
     type TestGame<B> = Orchestrator<B, Reg![], Reg![], Reg![], Reg![]>;
 

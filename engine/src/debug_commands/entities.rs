@@ -34,7 +34,7 @@ impl CommandTrait for EntitiesCommand {
             let index: usize = index.parse()?;
             let entity = res
                 .borrow::<Entities>()
-                .try_get(index)
+                .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
 
             if let Some(ic) = res.borrow_components::<Info>().get(&entity) {
@@ -162,15 +162,15 @@ impl CommandTrait for EntitiesCommand {
                     })
                 {
                     println!(
-                        "{}: {}",
-                        entity.idx(),
+                        "Entity {}: {}",
+                        entity,
                         infos.get(entity).map_or("(no name)", |i| i.name())
                     );
                 }
             }
         } else if subcommand == "create" {
             let entity = res.borrow_mut::<Entities>().create();
-            println!("Created the entity {}", entity.idx());
+            println!("Created the entity {}", entity);
             res.borrow_mut::<EventQueue<WorldEvent>>()
                 .send(WorldEvent::EntityCreated(entity));
         } else if subcommand == "destroy" {
@@ -180,7 +180,7 @@ impl CommandTrait for EntitiesCommand {
             let index: usize = index.parse()?;
             let entity = res
                 .borrow::<Entities>()
-                .try_get(index)
+                .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
 
             res.borrow_mut::<SceneGraph<Model>>().remove(entity);
@@ -192,7 +192,7 @@ impl CommandTrait for EntitiesCommand {
             res.borrow_components_mut::<Camera>().remove(entity);
             res.borrow_components_mut::<Renderable>().remove(entity);
             res.borrow_mut::<Entities>().destroy(entity);
-            println!("Destroyed the entity {}", entity.idx());
+            println!("Destroyed the entity {}", entity);
         }
 
         Ok(())

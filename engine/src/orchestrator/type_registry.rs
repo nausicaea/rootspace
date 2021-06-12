@@ -29,7 +29,7 @@ pub type ResourceTypes<B, RR> = RegAdd![
 
 pub type UpdateSystemTypes<B, SR> = RegAdd![
     DebugConsole,
-    DebugShell,
+    DebugShell<B>,
     ForceShutdown,
     EventMonitor<WorldEvent>,
     EventMonitor<EngineEvent>,

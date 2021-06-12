@@ -1,9 +1,10 @@
 use std::time::Duration;
 
+use ecs::{
+    event_queue::receiver_id::ReceiverId, world::event::WorldEvent, EventQueue, Resources, SerializationName, System,
+    WithResources,
+};
 use serde::{Deserialize, Serialize};
-
-use ecs::{EventQueue, Resources, SerializationName, System, WithResources, world::event::WorldEvent};
-use ecs::event_queue::receiver_id::ReceiverId;
 
 use crate::event::EngineEvent;
 

@@ -1,6 +1,7 @@
+use std::ops::Mul;
+
 use ecs::{Component, VecStorage};
 use serde::{Deserialize, Serialize};
-use std::ops::Mul;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Status {
@@ -10,7 +11,11 @@ pub struct Status {
 
 impl Status {
     pub fn new(enabled: bool, visible: bool) -> Self {
-        Status { enabled, visible }
+        Status::builder().with_enabled(enabled).with_visible(visible).build()
+    }
+
+    pub fn builder() -> StatusBuilder {
+        StatusBuilder::default()
     }
 
     pub fn enabled(&self) -> bool {
@@ -48,10 +53,7 @@ impl Status {
 
 impl Default for Status {
     fn default() -> Self {
-        Status {
-            enabled: true,
-            visible: true,
-        }
+        Status::builder().build()
     }
 }
 
@@ -63,7 +65,7 @@ impl Mul<Status> for Status {
     }
 }
 
-impl<'a> Mul<&'a Status> for &'a Status {
+impl<'a, 'b> Mul<&'a Status> for &'b Status {
     type Output = Status;
 
     fn mul(self, rhs: &'a Status) -> Status {
@@ -76,4 +78,54 @@ impl<'a> Mul<&'a Status> for &'a Status {
 
 impl Component for Status {
     type Storage = VecStorage<Self>;
+}
+
+impl std::fmt::Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let enbl = if self.enabled {
+            "enabled"
+        } else {
+            "disabled"
+        };
+        let vsbl = if self.visible {
+            "visible"
+        } else {
+            "hidden"
+        };
+        write!(f, "{}, {}", enbl, vsbl)
+    }
+}
+
+#[derive(Debug)]
+pub struct StatusBuilder {
+    enabled: bool,
+    visible: bool,
+}
+
+impl StatusBuilder {
+    pub fn with_enabled(mut self, enabled: bool) -> Self {
+        self.enabled = enabled;
+        self
+    }
+
+    pub fn with_visible(mut self, visible: bool) -> Self {
+        self.visible = visible;
+        self
+    }
+
+    pub fn build(self) -> Status {
+        Status {
+            enabled: self.enabled,
+            visible: self.visible,
+        }
+    }
+}
+
+impl Default for StatusBuilder {
+    fn default() -> Self {
+        StatusBuilder {
+            enabled: true,
+            visible: true,
+        }
+    }
 }

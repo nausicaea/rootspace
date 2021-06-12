@@ -29,12 +29,13 @@ impl Entity {
     }
 
     /// Return the integer index of the entity, which can be used to index into data structures.
-    pub fn idx(&self) -> Index {
+    pub(crate) fn idx(&self) -> Index {
         self.idx
     }
 
     /// Returns the integer generation of the entity, which indicates how often an entity has been reused.
-    pub fn gen(&self) -> Generation {
+    #[cfg(test)]
+    pub(crate) fn gen(&self) -> Generation {
         self.gen
     }
 }

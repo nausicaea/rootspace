@@ -4,12 +4,24 @@ use ecs::{Entities, Resources, Storage};
 use serde::{Deserialize, Serialize};
 
 use super::{CommandTrait, Error};
-use crate::components::{Camera, Status, Info, Model, UiModel, Renderable};
+use crate::components::{Camera, Info, Model, Renderable, Status, UiModel, RenderableType};
+use crate::resources::{GraphicsBackend, AssetDatabase};
+use std::marker::PhantomData;
+use crate::graphics::BackendTrait;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct ComponentsCommand;
+pub struct ComponentsCommand<B>(PhantomData<B>);
 
-impl CommandTrait for ComponentsCommand {
+impl<B> Default for ComponentsCommand<B> {
+    fn default() -> Self {
+        ComponentsCommand(PhantomData::default())
+    }
+}
+
+impl<B> CommandTrait for ComponentsCommand<B>
+where
+    B: BackendTrait + 'static,
+{
     fn name(&self) -> &'static str {
         "components"
     }
@@ -33,13 +45,14 @@ impl CommandTrait for ComponentsCommand {
             let index: usize = index.parse()?;
             let entity = res
                 .borrow::<Entities>()
-                .try_get(index)
+                .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
 
             let mut infos = res.borrow_components_mut::<Info>();
 
             if create || name.is_some() || description.is_some() {
-                infos.entry(entity)
+                infos
+                    .entry(entity)
                     .and_modify(|i| {
                         if let Some(name) = name {
                             i.set_name(name);
@@ -49,13 +62,22 @@ impl CommandTrait for ComponentsCommand {
                             i.set_description(description);
                         }
                     })
-                    .or_insert(Info::new(name.unwrap_or(""), description.unwrap_or("")));
+                    .or_insert_with(|| {
+                        Info::builder()
+                            .with_name(name.unwrap_or(""))
+                            .with_description(description.unwrap_or(""))
+                            .build()
+                    });
             }
 
             if let Some(ic) = infos.get(&entity) {
-                println!("Entity {}: Name='{}', Description='{}'", entity.idx(), ic.name(), ic.description());
+                println!(
+                    "Entity {}: {}",
+                    entity,
+                    ic,
+                );
             } else {
-                println!("Entity {}: (no name or description)", entity.idx());
+                println!("Entity {}: (no name or description)", entity);
             }
         } else if subcommand == "status" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("status"))?;
@@ -69,13 +91,14 @@ impl CommandTrait for ComponentsCommand {
             let index: usize = index.parse()?;
             let entity = res
                 .borrow::<Entities>()
-                .try_get(index)
+                .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
 
             let mut statuses = res.borrow_components_mut::<Status>();
 
             if create || enable || disable || show || hide {
-                statuses.entry(entity)
+                statuses
+                    .entry(entity)
                     .and_modify(|s| {
                         if enable {
                             s.enable();
@@ -89,16 +112,18 @@ impl CommandTrait for ComponentsCommand {
                             s.hide();
                         }
                     })
-                    .or_insert(Status::new(enable || !disable, show || !hide));
+                    .or_insert_with(|| {
+                        Status::builder()
+                            .with_enabled(enable || !disable)
+                            .with_visible(show || !hide)
+                            .build()
+                    });
             }
 
             if let Some(sc) = statuses.get(&entity) {
-                let enbl = if sc.enabled() { "enabled" } else { "disabled" };
-                let vis = if sc.visible() { "visible" } else { "hidden" };
-
-                println!("Entity {}: {} {}", entity.idx(), enbl, vis);
+                println!("Entity {}: {}", entity, sc);
             } else {
-                println!("Entity {}: (no status)", entity.idx());
+                println!("Entity {}: (no status)", entity);
             }
         } else if subcommand == "camera" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("camera"))?;
@@ -108,31 +133,32 @@ impl CommandTrait for ComponentsCommand {
             let index: usize = index.parse()?;
             let entity = res
                 .borrow::<Entities>()
-                .try_get(index)
+                .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
 
             let mut cameras = res.borrow_components_mut::<Camera>();
 
-            if !cameras.contains(&entity) && create {
-                cameras.insert(entity, Camera::default());
+            if create {
+                cameras.entry(entity).or_default();
             }
 
-            let cam = cameras.get(entity).ok_or(Error::EntityNotFound(index))?;
+            if let Some(cc) = cameras.get(&entity) {
+                let dims = cc.dimensions();
+                let pdims = cc.physical_dimensions();
 
-            let dims = cam.dimensions();
-            let pdims = cam.physical_dimensions();
-            let dpi = cam.dpi_factor();
-
-            println!("Dimensions: {}x{}", dims.0, dims.1);
-            println!("Physical dimensions: {}x{}", pdims.0, pdims.1);
-            println!("DPI-factor: {}", dpi);
-            println!("Projection type: {}", cam.projection());
-            println!(
-                "Vertical field of view: {} rad ({} deg)",
-                cam.fov_y(),
-                cam.fov_y() * 360.0 / std::f32::consts::PI
-            );
-            println!("Depth frustum: {:?}", cam.frustum_z());
+                println!("Dimensions: {}x{}", dims.0, dims.1);
+                println!("Physical dimensions: {}x{}", pdims.0, pdims.1);
+                println!("DPI-factor: {}", cc.dpi_factor());
+                println!("Projection type: {}", cc.projection());
+                println!(
+                    "Vertical field of view: {} rad ({} deg)",
+                    cc.fov_y(),
+                    cc.fov_y() * 360.0 / std::f32::consts::PI
+                );
+                println!("Depth frustum: {:?}", cc.frustum_z());
+            } else {
+                println!("Entity {}: (no camera)", entity);
+            }
         } else if subcommand == "model" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("model"))?;
             let create = scm.is_present("create");
@@ -141,12 +167,21 @@ impl CommandTrait for ComponentsCommand {
             let index: usize = index.parse()?;
             let entity = res
                 .borrow::<Entities>()
-                .try_get(index)
+                .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
 
             let mut models = res.borrow_components_mut::<Model>();
 
-            todo!()
+            if create {
+                models.entry(entity)
+                    .or_default();
+            }
+
+            if let Some(mc) = models.get(entity) {
+                println!("Entity {}: {}", entity, mc);
+            } else {
+                println!("Entity {}: (no model)", entity);
+            }
         } else if subcommand == "ui" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("ui"))?;
             let create = scm.is_present("create");
@@ -155,12 +190,21 @@ impl CommandTrait for ComponentsCommand {
             let index: usize = index.parse()?;
             let entity = res
                 .borrow::<Entities>()
-                .try_get(index)
+                .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
 
             let mut ui_models = res.borrow_components_mut::<UiModel>();
 
-            todo!()
+            if create {
+                ui_models.entry(entity)
+                    .or_default();
+            }
+
+            if let Some(umc) = ui_models.get(entity) {
+                println!("Entity {}: {}", entity, umc);
+            } else {
+                println!("Entity {}: (no UI model)", entity);
+            }
         } else if subcommand == "renderable" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("renderable"))?;
             let create = scm.is_present("create");
@@ -169,12 +213,39 @@ impl CommandTrait for ComponentsCommand {
             let index: usize = index.parse()?;
             let entity = res
                 .borrow::<Entities>()
-                .try_get(index)
+                .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
 
+            let mut factory = res.borrow_mut::<GraphicsBackend<B>>();
+            let assets = res.borrow::<AssetDatabase>();
             let mut renderables = res.borrow_components_mut::<Renderable>();
 
-            todo!()
+            if create {
+                renderables.entry(entity)
+                    .or_insert_with(|| {
+                        let font = assets.find_asset("fonts/SourceSansPro-Regular.ttf")
+                            .expect("Unable to find the font asset");
+                        let vs = assets.find_asset("shaders/text-vertex.glsl")
+                            .expect("Unable to find the vertex shader asset");
+                        let fs = assets.find_asset("shaders/text-fragment.glsl")
+                            .expect("Unable to find the fragment shader asset");
+
+                        Renderable::builder()
+                            .with_type(RenderableType::Text)
+                            .with_text("Hello, World!")
+                            .with_font(font)
+                            .with_vertex_shader(vs)
+                            .with_fragment_shader(fs)
+                            .build(&mut factory)
+                            .expect("Unable to create a renderable component")
+                    });
+            }
+
+            if let Some(_rc) = renderables.get(entity) {
+                println!("Entity {}: renderable", entity);
+            } else {
+                println!("Entity {}: (no renderable)", entity);
+            }
         }
 
         Ok(())

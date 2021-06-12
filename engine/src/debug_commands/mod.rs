@@ -8,6 +8,7 @@ pub use self::{
     assets::AssetsCommand, components::ComponentsCommand, entities::EntitiesCommand, exit::ExitCommand,
     states::StatesCommand, stats::StatisticsCommand,
 };
+use crate::graphics::BackendTrait;
 
 pub mod assets;
 pub mod components;
@@ -60,13 +61,13 @@ fn box_command<C: CommandTrait>(command: C) -> Box<dyn CommandTrait + 'static> {
     Box::new(command)
 }
 
-pub fn default_commands() -> HashMap<&'static str, Box<dyn CommandTrait>> {
+pub fn default_commands<B: BackendTrait + 'static>() -> HashMap<&'static str, Box<dyn CommandTrait>> {
     let mut commands = HashMap::with_capacity(4);
     commands.insert(ExitCommand.name(), box_command(ExitCommand));
     commands.insert(EntitiesCommand.name(), box_command(EntitiesCommand));
     commands.insert(StatesCommand.name(), box_command(StatesCommand));
     commands.insert(AssetsCommand.name(), box_command(AssetsCommand));
-    commands.insert(ComponentsCommand.name(), box_command(ComponentsCommand));
+    commands.insert(ComponentsCommand::<B>::default().name(), box_command(ComponentsCommand::<B>::default()));
     commands.insert(StatisticsCommand.name(), box_command(StatisticsCommand));
     commands
 }

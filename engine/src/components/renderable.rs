@@ -16,12 +16,6 @@ use crate::{
     },
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum RenderableType {
-    Mesh,
-    Text,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SourceData {
     Mesh {
@@ -154,6 +148,12 @@ impl Renderable {
 
 impl Component for Renderable {
     type Storage = VecStorage<Self>;
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum RenderableType {
+    Mesh,
+    Text,
 }
 
 #[derive(Debug)]

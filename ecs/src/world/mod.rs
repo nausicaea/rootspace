@@ -6,34 +6,31 @@ use std::{
 };
 
 use anyhow::Error;
+use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use log::debug;
 use serde::{
     de,
     de::{MapAccess, Visitor},
-    Deserialize,
-    ser::{self, SerializeStruct}, Serialize,
+    ser::{self, SerializeStruct},
+    Deserialize, Serialize,
 };
-
-use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use try_default::TryDefault;
 
+use self::{error::WorldError, event::WorldEvent, type_registry::ResourceTypes};
 use crate::{
     component::Component,
     entities::Entities,
     entity::Entity,
-    event_queue::EventQueue,
+    event_queue::{receiver_id::ReceiverId, EventQueue},
     loop_control::LoopControl,
     loop_stage::LoopStage,
     registry::{ResourceRegistry, SystemRegistry},
     resource::Resource,
-    resources::{Resources, typed_resources::TypedResources},
+    resources::{typed_resources::TypedResources, Resources},
     storage::Storage,
     system::System,
-    systems::{Systems, typed_systems::TypedSystems},
+    systems::{typed_systems::TypedSystems, Systems},
 };
-use crate::event_queue::receiver_id::ReceiverId;
-
-use self::{error::WorldError, event::WorldEvent, type_registry::ResourceTypes};
 
 pub mod error;
 pub mod event;
@@ -352,13 +349,17 @@ where
     fn on_create_entity(&mut self) {
         let entity = self.resources.get_mut::<Entities>().create();
         debug!("Created the entity {}", entity.idx());
-        self.resources.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::EntityCreated(entity));
+        self.resources
+            .get_mut::<EventQueue<WorldEvent>>()
+            .send(WorldEvent::EntityCreated(entity));
     }
 
     fn on_destroy_entity(&mut self, entity: Entity) {
         self.resources.get_mut::<Entities>().destroy(entity);
         debug!("Destroyed the entity {}", entity);
-        self.resources.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::EntityDestroyed(entity));
+        self.resources
+            .get_mut::<EventQueue<WorldEvent>>()
+            .send(WorldEvent::EntityDestroyed(entity));
     }
 }
 
@@ -553,9 +554,8 @@ where
 mod tests {
     use serde_test::{assert_ser_tokens, Token};
 
-    use crate::{Reg, VecStorage};
-
     use super::*;
+    use crate::{Reg, VecStorage};
 
     pub type Trreg = Reg![VecStorage<usize>,];
 

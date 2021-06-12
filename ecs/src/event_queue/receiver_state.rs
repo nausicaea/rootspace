@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
-use serde::{Serialize, Deserialize};
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 #[serde(from = "(usize, usize, usize)", into = "(usize, usize, usize)")]
@@ -73,8 +74,9 @@ impl<E> std::fmt::Debug for ReceiverState<E> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use serde_test::{assert_tokens, Token};
+
+    use super::*;
 
     #[test]
     fn receiver_state_serde() {
@@ -83,9 +85,7 @@ mod tests {
         assert_tokens(
             &rs,
             &[
-                Token::Tuple {
-                    len: 3,
-                },
+                Token::Tuple { len: 3 },
                 Token::U64(1),
                 Token::U64(0),
                 Token::U64(0),
@@ -94,4 +94,3 @@ mod tests {
         )
     }
 }
-

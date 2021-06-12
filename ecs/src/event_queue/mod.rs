@@ -6,13 +6,11 @@ use std::{
 };
 
 use log::debug;
+use receiver_state::ReceiverState;
 use serde::{Deserialize, Serialize};
 
-use receiver_state::ReceiverState;
-
-use crate::{resource::Resource, SerializationName, short_type_name::short_type_name};
-
 use self::receiver_id::ReceiverId;
+use crate::{resource::Resource, short_type_name::short_type_name, SerializationName};
 
 pub mod receiver_id;
 pub mod receiver_state;
@@ -288,7 +286,6 @@ mod tests {
         eq.send(TestEvent(3));
         eq.unsubscribe(r2);
 
-
         assert_tokens(
             &eq,
             &[
@@ -297,38 +294,24 @@ mod tests {
                     len: 4,
                 },
                 Token::Str("events"),
-                Token::Seq {
-                    len: Some(3),
-                },
-                Token::NewtypeStruct {
-                    name: "TestEvent",
-                },
+                Token::Seq { len: Some(3) },
+                Token::NewtypeStruct { name: "TestEvent" },
                 Token::U64(3),
-                Token::NewtypeStruct {
-                    name: "TestEvent",
-                },
+                Token::NewtypeStruct { name: "TestEvent" },
                 Token::U64(2),
-                Token::NewtypeStruct {
-                    name: "TestEvent",
-                },
+                Token::NewtypeStruct { name: "TestEvent" },
                 Token::U64(1),
                 Token::SeqEnd,
                 Token::Str("receivers"),
-                Token::Map {
-                    len: Some(2),
-                },
+                Token::Map { len: Some(2) },
                 Token::U64(0),
-                Token::Tuple {
-                    len: 3,
-                },
+                Token::Tuple { len: 3 },
                 Token::U64(0),
                 Token::U64(0),
                 Token::U64(3),
                 Token::TupleEnd,
                 Token::U64(2),
-                Token::Tuple {
-                    len: 3,
-                },
+                Token::Tuple { len: 3 },
                 Token::U64(2),
                 Token::U64(0),
                 Token::U64(1),
@@ -337,9 +320,7 @@ mod tests {
                 Token::Str("max_id"),
                 Token::U64(3),
                 Token::Str("free_ids"),
-                Token::Seq {
-                    len: Some(1),
-                },
+                Token::Seq { len: Some(1) },
                 Token::U64(1),
                 Token::SeqEnd,
                 Token::StructEnd,

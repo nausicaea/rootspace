@@ -3,14 +3,12 @@ use std::{
     time::{Duration, Instant},
 };
 
+use ecs::{
+    event_queue::receiver_id::ReceiverId, world::event::WorldEvent, Entities, EventQueue, Resources, SerializationName,
+    Storage, System, WithResources,
+};
 use log::debug;
 use serde::{Deserialize, Serialize};
-
-use ecs::{
-    Entities, EventQueue, Resources, SerializationName, Storage, System, WithResources,
-    world::event::WorldEvent,
-};
-use ecs::event_queue::receiver_id::ReceiverId;
 
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
@@ -108,7 +106,8 @@ where
             }
 
             // Obtain the model component of the camera
-            let cam_entity = entities.get(cam_idx);
+            let cam_entity = entities.get(cam_idx)
+                .expect("Could not find the camera entity");
             let cam_model = world_graph
                 .get(&cam_entity)
                 .expect("The camera is not part of the scene graph");

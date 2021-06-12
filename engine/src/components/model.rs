@@ -2,7 +2,7 @@ use std::{f32, ops::Mul};
 
 use affine_transform::AffineTransform;
 use ecs::{Component, VecStorage};
-use nalgebra::{Affine3, Isometry3, Matrix4, Point3, UnitQuaternion, Vector3};
+use nalgebra::{Affine3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -13,35 +13,8 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn new(translation: Vector3<f32>, axisangle: Vector3<f32>, scale: Vector3<f32>) -> Self {
-        let isometry = Isometry3::new(translation, axisangle);
-        let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(
-            scale.x, 0.0, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 0.0, scale.z, 0.0, 0.0, 0.0, 0.0, 1.0,
-        ));
-
-        Model {
-            model: isometry * scale_matrix,
-            decomposed: AffineTransform::from_parts(isometry.translation, isometry.rotation, scale),
-        }
-    }
-
-    pub fn look_at(eye: Point3<f32>, target: Point3<f32>, up: Vector3<f32>, scale: Vector3<f32>) -> Self {
-        let isometry = Isometry3::look_at_rh(&eye, &target, &up);
-        let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(
-            scale.x, 0.0, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 0.0, scale.z, 0.0, 0.0, 0.0, 0.0, 1.0,
-        ));
-
-        Model {
-            model: isometry * scale_matrix,
-            decomposed: AffineTransform::from_parts(isometry.translation, isometry.rotation, scale),
-        }
-    }
-
-    pub fn identity() -> Self {
-        Model {
-            model: Affine3::identity(),
-            decomposed: AffineTransform::identity(),
-        }
+    pub fn builder() -> ModelBuilder {
+        ModelBuilder::default()
     }
 
     pub fn transform_point(&self, point: &Point3<f32>) -> Point3<f32> {
@@ -53,7 +26,7 @@ impl Model {
     }
 
     pub fn set_position(&mut self, value: Point3<f32>) {
-        self.decomposed.translation.vector = value.coords;
+        self.decomposed.translation = Translation3::new(value.x, value.y, value.z);
         self.recalculate_matrix();
     }
 
@@ -90,7 +63,7 @@ impl Model {
 
 impl Default for Model {
     fn default() -> Self {
-        Model::identity()
+        Model::builder().build()
     }
 }
 
@@ -110,7 +83,7 @@ impl<'a, 'b> Mul<&'a Model> for &'b Model {
     type Output = Model;
 
     fn mul(self, rhs: &'a Model) -> Model {
-        let product = self.model * rhs.model;
+        let product = &self.model * &rhs.model;
 
         Model {
             model: product,
@@ -134,51 +107,79 @@ impl From<Model> for AffineTransform<f32> {
     }
 }
 
+impl std::fmt::Display for Model {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "position: [{}, {}, {}], orientation: {}, scale: [{}, {}, {}]", self.position().x, self.position().y, self.position().z, self.orientation(), self.scale().x, self.scale().y, self.scale().z)
+    }
+}
+
+#[derive(Debug)]
+pub struct ModelBuilder {
+    position: Point3<f32>,
+    orientation: UnitQuaternion<f32>,
+    scale: Vector3<f32>,
+}
+
+impl ModelBuilder {
+    pub fn with_position(mut self, position: Point3<f32>) -> Self {
+        self.position = position;
+        self
+    }
+
+    pub fn with_orientation(mut self, orientation: UnitQuaternion<f32>) -> Self {
+        self.orientation = orientation;
+        self
+    }
+
+    pub fn with_scale(mut self, scale: Vector3<f32>) -> Self {
+        self.scale = scale;
+        self
+    }
+
+    pub fn build(self) -> Model {
+        let at = AffineTransform::from_parts(
+            Translation3::new(self.position.x, self.position.y, self.position.z),
+            self.orientation,
+            self.scale,
+        );
+
+        Model {
+            model: at.recompose(),
+            decomposed: at,
+        }
+    }
+}
+
+impl Default for ModelBuilder {
+    fn default() -> Self {
+        ModelBuilder {
+            position: Point3::from([0.0; 3]),
+            orientation: UnitQuaternion::identity(),
+            scale: Vector3::new(1.0, 1.0, 1.0),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn new() {
-        let _: Model = Model::new(Vector3::y(), Vector3::z(), Vector3::new(1.0, 1.0, 1.0));
-    }
-
-    #[test]
     fn default() {
         let _: Model = Default::default();
-        assert_eq!(Model::default(), Model::identity());
-    }
-
-    #[test]
-    fn identity() {
-        let ident = Model::identity();
-        let ident_mat: &Matrix4<f32> = ident.matrix();
-        assert_eq!(ident_mat, &Matrix4::identity());
     }
 
     #[test]
     fn getters() {
-        let ident = Model::identity();
+        let ident = Model::default();
         assert_eq!(ident.position(), Point3::new(0.0, 0.0, 0.0));
         assert_eq!(ident.orientation(), &UnitQuaternion::identity());
         assert_eq!(ident.scale(), &Vector3::new(1.0, 1.0, 1.0));
-
-        let mat = Model::new(
-            Vector3::new(2.0, 3.0, 1.0),
-            Vector3::new(1.0, 0.0, 0.0),
-            Vector3::new(1.0, 1.1, 1.0),
-        );
-        assert_eq!(mat.position(), Point3::new(2.0, 3.0, 1.0));
-        assert_eq!(
-            mat.orientation(),
-            &UnitQuaternion::from_scaled_axis(Vector3::new(1.0, 0.0, 0.0))
-        );
-        assert_eq!(mat.scale(), &Vector3::new(1.0, 1.1, 1.0));
     }
 
     #[test]
     fn setters() {
-        let mut ident = Model::identity();
+        let mut ident = Model::default();
         ident.set_position(Point3::new(1.0, 2.0, 3.0));
         assert_eq!(ident.position(), Point3::new(1.0, 2.0, 3.0));
         ident.set_orientation(UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0)));
@@ -192,8 +193,8 @@ mod tests {
 
     #[test]
     fn multiply() {
-        let a = Model::identity();
-        let b = Model::identity();
+        let a = Model::default();
+        let b = Model::default();
         let expected = a.clone();
 
         assert_eq!(&a * &b, expected);

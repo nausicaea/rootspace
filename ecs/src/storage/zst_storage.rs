@@ -1,4 +1,4 @@
-use std::{marker::PhantomData};
+use std::{collections::BTreeSet, marker::PhantomData};
 
 use serde::{
     de::{Deserializer, SeqAccess, Visitor},
@@ -11,7 +11,6 @@ use super::{
     Storage,
 };
 use crate::{entity::index::Index, resource::Resource, SerializationName};
-use std::collections::BTreeSet;
 
 /// Implements component storage for zero-sized types.
 pub struct ZstStorage<T> {

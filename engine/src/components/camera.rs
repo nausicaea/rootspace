@@ -5,54 +5,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{components::model::Model, geometry::ray::Ray};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Projection {
-    Perspective,
-    Orthographic,
-}
-
-impl std::fmt::Display for Projection {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            Projection::Perspective => f.write_str("Perspective"),
-            Projection::Orthographic => f.write_str("Orthographic"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct CameraSerDe {
-    projection: Projection,
-    dimensions: (u32, u32),
-    fov_y: f32,
-    frustum_z: (f32, f32),
-    dpi_factor: f64,
-}
-
-impl From<Camera> for CameraSerDe {
-    fn from(value: Camera) -> Self {
-        CameraSerDe {
-            projection: value.projection,
-            dimensions: value.dimensions,
-            fov_y: value.fov_y,
-            frustum_z: value.frustum_z,
-            dpi_factor: value.dpi_factor,
-        }
-    }
-}
-
-impl From<CameraSerDe> for Camera {
-    fn from(value: CameraSerDe) -> Self {
-        Camera::new(
-            value.projection,
-            value.dimensions,
-            value.fov_y,
-            value.frustum_z,
-            value.dpi_factor,
-        )
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "CameraSerDe", from = "CameraSerDe")]
 pub struct Camera {
@@ -66,37 +18,8 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new<D: Into<Option<f64>>>(
-        projection: Projection,
-        dimensions: (u32, u32),
-        fov_y: f32,
-        frustum_z: (f32, f32),
-        dpi_factor: D,
-    ) -> Self {
-        let orthographic = Orthographic3::new(
-            dimensions.0 as f32 / -2.0,
-            dimensions.0 as f32 / 2.0,
-            dimensions.1 as f32 / -2.0,
-            dimensions.1 as f32 / 2.0,
-            frustum_z.0,
-            frustum_z.1,
-        );
-        let perspective = Perspective3::new(
-            dimensions.0 as f32 / dimensions.1 as f32,
-            fov_y,
-            frustum_z.0,
-            frustum_z.1,
-        );
-
-        Camera {
-            projection,
-            orthographic,
-            perspective,
-            dimensions,
-            fov_y,
-            frustum_z,
-            dpi_factor: dpi_factor.into().unwrap_or(1.0),
-        }
+    pub fn builder() -> CameraBuilder {
+        CameraBuilder::default()
     }
 
     pub fn set_dimensions(&mut self, value: (u32, u32)) {
@@ -266,13 +189,7 @@ impl Camera {
 
 impl Default for Camera {
     fn default() -> Self {
-        Camera::new(
-            Projection::Perspective,
-            (800, 600),
-            std::f32::consts::PI / 4.0,
-            (0.1, 1000.0),
-            1.0,
-        )
+        Camera::builder().build()
     }
 }
 
@@ -280,33 +197,138 @@ impl Component for Camera {
     type Storage = VecStorage<Self>;
 }
 
+#[derive(Debug)]
+pub struct CameraBuilder {
+    projection: Projection,
+    dimensions: (u32, u32),
+    fov_y: f32,
+    frustum_z: (f32, f32),
+    dpi_factor: f64,
+}
+
+impl CameraBuilder {
+    pub fn with_projection(mut self, projection: Projection) -> Self {
+        self.projection = projection;
+        self
+    }
+
+    pub fn with_dimensions(mut self, dimensions: (u32, u32)) -> Self {
+        self.dimensions = dimensions;
+        self
+    }
+
+    pub fn with_fov_y(mut self, fov_y: f32) -> Self {
+        self.fov_y = fov_y;
+        self
+    }
+
+    pub fn with_frustum_z(mut self, frustum_z: (f32, f32)) -> Self {
+        self.frustum_z = frustum_z;
+        self
+    }
+
+    pub fn with_dpi_factor(mut self, dpi_factor: f64) -> Self {
+        self.dpi_factor = dpi_factor;
+        self
+    }
+
+    pub fn build(self) -> Camera {
+        let orthographic = Orthographic3::new(
+            self.dimensions.0 as f32 / -2.0,
+            self.dimensions.0 as f32 / 2.0,
+            self.dimensions.1 as f32 / -2.0,
+            self.dimensions.1 as f32 / 2.0,
+            self.frustum_z.0,
+            self.frustum_z.1,
+        );
+        let perspective = Perspective3::new(
+            self.dimensions.0 as f32 / self.dimensions.1 as f32,
+            self.fov_y,
+            self.frustum_z.0,
+            self.frustum_z.1,
+        );
+
+        Camera {
+            projection: self.projection,
+            orthographic,
+            perspective,
+            dimensions: self.dimensions,
+            fov_y: self.fov_y,
+            frustum_z: self.frustum_z,
+            dpi_factor: self.dpi_factor,
+        }
+    }
+}
+
+impl Default for CameraBuilder {
+    fn default() -> Self {
+        CameraBuilder {
+            projection: Projection::Perspective,
+            dimensions: (800, 600),
+            fov_y: std::f32::consts::PI / 4.0,
+            frustum_z: (0.1, 1000.0),
+            dpi_factor: 1.0,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Projection {
+    Perspective,
+    Orthographic,
+}
+
+impl std::fmt::Display for Projection {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Projection::Perspective => f.write_str("Perspective"),
+            Projection::Orthographic => f.write_str("Orthographic"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+struct CameraSerDe {
+    projection: Projection,
+    dimensions: (u32, u32),
+    fov_y: f32,
+    frustum_z: (f32, f32),
+    dpi_factor: f64,
+}
+
+impl From<Camera> for CameraSerDe {
+    fn from(value: Camera) -> Self {
+        CameraSerDe {
+            projection: value.projection,
+            dimensions: value.dimensions,
+            fov_y: value.fov_y,
+            frustum_z: value.frustum_z,
+            dpi_factor: value.dpi_factor,
+        }
+    }
+}
+
+impl From<CameraSerDe> for Camera {
+    fn from(value: CameraSerDe) -> Self {
+        Camera::builder()
+            .with_projection(value.projection)
+            .with_dimensions(value.dimensions)
+            .with_fov_y(value.fov_y)
+            .with_frustum_z(value.frustum_z)
+            .with_dpi_factor(value.dpi_factor)
+            .build()
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use nalgebra::UnitQuaternion;
+
     use super::*;
 
     #[test]
-    fn new() {
-        let _ = Camera::new(
-            Projection::Perspective,
-            (800, 600),
-            std::f32::consts::PI / 4.0,
-            (0.1, 1000.0),
-            1.0,
-        );
-    }
-
-    #[test]
     fn default() {
-        assert_eq!(
-            Camera::default(),
-            Camera::new(
-                Projection::Perspective,
-                (800, 600),
-                std::f32::consts::PI / 4.0,
-                (0.1, 1000.0),
-                1.0,
-            )
-        );
+        let _: Camera = Default::default();
     }
 
     #[test]
@@ -327,12 +349,11 @@ mod tests {
     #[test]
     fn word_vs_ndc() {
         let c = Camera::default();
-        let m = Model::look_at(
-            Point3::new(0.0, 0.0, 1.0),
-            Point3::new(0.0, 0.0, -1.0),
-            Vector3::y(),
-            Vector3::new(1.0, 1.0, 1.0),
-        );
+        let m = Model::builder()
+            .with_position(Point3::new(0.0, 0.0, 1.0))
+            .with_orientation(UnitQuaternion::look_at_rh(&Vector3::new(0.0, 0.0, -1.0), &Vector3::y()))
+            .with_scale(Vector3::new(1.0, 1.0, 1.0))
+            .build();
         let p = Point3::new(1.0, 0.0, -5.0);
         let q = c.perspective.project_point(&m.transform_point(&p));
         let r = m.inverse_transform_point(&c.perspective.unproject_point(&q));
@@ -355,12 +376,11 @@ mod tests {
     #[test]
     fn world_vs_screen() {
         let c = Camera::default();
-        let m = Model::look_at(
-            Point3::new(0.0, 0.0, 1.0),
-            Point3::new(0.0, 0.0, -1.0),
-            Vector3::y(),
-            Vector3::new(1.0, 1.0, 1.0),
-        );
+        let m = Model::builder()
+            .with_position(Point3::new(0.0, 0.0, 1.0))
+            .with_orientation(UnitQuaternion::look_at_rh(&Vector3::new(0.0, 0.0, -1.0), &Vector3::y()))
+            .with_scale(Vector3::new(1.0, 1.0, 1.0))
+            .build();
         let p = Point3::new(1.0, 0.0, -5.0);
         let q = {
             let tmp = c.world_point_to_ndc(&m, &p);

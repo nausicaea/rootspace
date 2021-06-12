@@ -1,5 +1,4 @@
-use std::iter::FusedIterator;
-use std::mem::size_of;
+use std::{iter::FusedIterator, mem::size_of};
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct BitIndices {
@@ -88,8 +87,8 @@ impl BitIndices {
 }
 
 impl<'a> IntoIterator for &'a BitIndices {
-    type Item = u32;
     type IntoIter = Iter<'a>;
+    type Item = u32;
 
     fn into_iter(self) -> Self::IntoIter {
         Iter::new(self)
@@ -163,13 +162,17 @@ impl<'a> DoubleEndedIterator for Iter<'a> {
             return None;
         }
 
-        while (self.indices.inner[(self.num_groups - self.group_cursor - 1) as usize] & (1 << (bit_size::<u32>() - self.local_cursor - 1))) == 0 {
+        while (self.indices.inner[(self.num_groups - self.group_cursor - 1) as usize]
+            & (1 << (bit_size::<u32>() - self.local_cursor - 1)))
+            == 0
+        {
             if !self.increment_cursor() {
                 return None;
             }
         }
 
-        let item = (self.num_groups - self.group_cursor - 1) * bit_size::<u32>() + (bit_size::<u32>() - self.local_cursor - 1);
+        let item =
+            (self.num_groups - self.group_cursor - 1) * bit_size::<u32>() + (bit_size::<u32>() - self.local_cursor - 1);
         self.increment_cursor();
         Some(item)
     }

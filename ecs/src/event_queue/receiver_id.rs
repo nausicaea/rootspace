@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
-use serde::{Serialize, Deserialize};
+
+use serde::{Deserialize, Serialize};
 
 /// A handle that allows a receiver to receive events from the related event queue.
 #[derive(Serialize, Deserialize)]
@@ -48,18 +49,14 @@ impl<E> ReceiverId<E> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use serde_test::{assert_tokens, Token};
+
+    use super::*;
 
     #[test]
     fn receiver_id_serde() {
         let ri = ReceiverId::<()>::new(0);
 
-        assert_tokens(
-            &ri,
-            &[
-                Token::U64(0),
-            ],
-        )
+        assert_tokens(&ri, &[Token::U64(0)])
     }
 }

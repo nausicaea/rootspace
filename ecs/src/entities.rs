@@ -60,14 +60,8 @@ impl Entities {
         self.generations.iter().filter(|g| g.is_active()).count()
     }
 
-    // Given an index, retrieve the currently used entity
-    pub fn get<I: Into<Index>>(&self, index: I) -> Entity {
-        let idx = index.into();
-        let idx_usize: usize = idx.into();
-        Entity::new(idx, self.generations[idx_usize])
-    }
-
-    pub fn try_get<I: Into<Index>>(&self, index: I) -> Option<Entity> {
+    /// Given an index, retrieve the currently used entity
+    pub fn get<I: Into<Index>>(&self, index: I) -> Option<Entity> {
         let idx = index.into();
         let idx_usize: usize = idx.into();
         self.generations.get(idx_usize).map(|gen| Entity::new(idx, *gen))
@@ -125,8 +119,9 @@ impl<'a> Iterator for EntitiesIter<'a> {
 
 #[cfg(test)]
 mod tests {
+    use serde_test::{assert_tokens, Token};
+
     use super::*;
-    use serde_test::{Token, assert_tokens};
 
     #[test]
     fn entities_default() {
@@ -215,15 +210,11 @@ mod tests {
                 Token::Str("max_idx"),
                 Token::U32(3),
                 Token::Str("free_idx"),
-                Token::Seq {
-                    len: Some(1),
-                },
+                Token::Seq { len: Some(1) },
                 Token::U32(1),
                 Token::SeqEnd,
                 Token::Str("generations"),
-                Token::Seq {
-                    len: Some(3),
-                },
+                Token::Seq { len: Some(3) },
                 Token::U32(1),
                 Token::U32(2),
                 Token::U32(1),

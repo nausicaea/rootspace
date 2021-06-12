@@ -1,10 +1,8 @@
 use std::time::Duration;
 
+use ecs::{event_queue::receiver_id::ReceiverId, EventQueue, Resources, SerializationName, System, WithResources};
 use log::debug;
 use serde::{Deserialize, Serialize};
-
-use ecs::{EventQueue, Resources, SerializationName, System, WithResources};
-use ecs::event_queue::receiver_id::ReceiverId;
 
 use crate::{components::camera::Camera, event::EngineEvent};
 

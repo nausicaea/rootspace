@@ -18,7 +18,7 @@ pub use crate::{
     resources::Resources,
     serialization_name::SerializationName,
     short_type_name::short_type_name,
-    storage::{Storage, vec_storage::VecStorage, zst_storage::ZstStorage},
+    storage::{vec_storage::VecStorage, zst_storage::ZstStorage, Storage},
     system::System,
     systems::Systems,
     with_resources::WithResources,

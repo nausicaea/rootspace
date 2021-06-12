@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ptr};
+use std::{collections::BTreeSet, marker::PhantomData, ptr};
 
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
@@ -10,8 +10,7 @@ use super::{
     iterators::{EnumRIter, RIter, WIter},
     Storage,
 };
-use crate::{entity::index::Index, resource::Resource, storage::Entry, SerializationName};
-use std::collections::BTreeSet;
+use crate::{entity::index::Index, resource::Resource, storage::entry::Entry, SerializationName};
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
