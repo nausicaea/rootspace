@@ -1,4 +1,5 @@
 use std::iter::FusedIterator;
+use std::mem::size_of;
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct BitIndices {
@@ -8,12 +9,12 @@ pub struct BitIndices {
 impl BitIndices {
     pub fn with_capacity(capacity: usize) -> Self {
         BitIndices {
-            inner: Vec::with_capacity((capacity - 1) / 32 + 1),
+            inner: Vec::with_capacity((capacity - 1) / bit_size::<u32>() as usize + 1),
         }
     }
 
     pub fn capacity(&self) -> usize {
-        self.inner.capacity() * 32
+        self.inner.capacity() * bit_size::<u32>() as usize
     }
 
     pub fn is_empty(&self) -> bool {
@@ -30,8 +31,8 @@ impl BitIndices {
 
     pub fn contains<I: Into<u32>>(&self, index: I) -> bool {
         let idx = index.into();
-        let group = (idx / 32) as usize;
-        let position = idx % 32;
+        let group = (idx / bit_size::<u32>()) as usize;
+        let position = idx % bit_size::<u32>();
 
         if self.inner.len() < group + 1 {
             return false;
@@ -46,8 +47,8 @@ impl BitIndices {
 
     pub fn insert<I: Into<u32>>(&mut self, index: I) -> bool {
         let idx = index.into();
-        let group = (idx / 32) as usize;
-        let position = idx % 32;
+        let group = (idx / bit_size::<u32>()) as usize;
+        let position = idx % bit_size::<u32>();
 
         if group + 1 > self.inner.len() {
             self.inner.resize(group + 1, Default::default());
@@ -62,8 +63,8 @@ impl BitIndices {
 
     pub fn remove<I: Into<u32>>(&mut self, index: I) -> bool {
         let idx = index.into();
-        let group = (idx / 32) as usize;
-        let position = idx % 32;
+        let group = (idx / bit_size::<u32>()) as usize;
+        let position = idx % bit_size::<u32>();
 
         if self.inner.len() < group + 1 {
             return false;
@@ -120,7 +121,7 @@ impl<'a> Iter<'a> {
         }
 
         self.local_cursor += 1;
-        if self.local_cursor >= 32 {
+        if self.local_cursor >= bit_size::<u32>() {
             self.group_cursor += 1;
             self.local_cursor = 0;
             if self.group_cursor >= self.num_groups {
@@ -146,7 +147,7 @@ impl<'a> Iterator for Iter<'a> {
             }
         }
 
-        let item = self.group_cursor * 32 + self.local_cursor;
+        let item = self.group_cursor * bit_size::<u32>() + self.local_cursor;
         self.increment_cursor();
         Some(item)
     }
@@ -162,13 +163,13 @@ impl<'a> DoubleEndedIterator for Iter<'a> {
             return None;
         }
 
-        while (self.indices.inner[(self.num_groups - self.group_cursor - 1) as usize] & (1 << (32 - self.local_cursor - 1))) == 0 {
+        while (self.indices.inner[(self.num_groups - self.group_cursor - 1) as usize] & (1 << (bit_size::<u32>() - self.local_cursor - 1))) == 0 {
             if !self.increment_cursor() {
                 return None;
             }
         }
 
-        let item = (self.num_groups - self.group_cursor - 1) * 32 + (32 - self.local_cursor - 1);
+        let item = (self.num_groups - self.group_cursor - 1) * bit_size::<u32>() + (bit_size::<u32>() - self.local_cursor - 1);
         self.increment_cursor();
         Some(item)
     }
@@ -177,6 +178,10 @@ impl<'a> DoubleEndedIterator for Iter<'a> {
 impl<'a> ExactSizeIterator for Iter<'a> {}
 
 impl<'a> FusedIterator for Iter<'a> {}
+
+const fn bit_size<T>() -> u32 {
+    size_of::<T>() as u32 * 8
+}
 
 #[cfg(test)]
 mod tests {
