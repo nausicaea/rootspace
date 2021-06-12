@@ -83,7 +83,6 @@ where
     }
 }
 
-// FIXME: The GraphicsBackend cannot be automatically initialized by World
 pub struct GraphicsBackend<B>
 where
     B: BackendTrait,
