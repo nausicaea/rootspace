@@ -352,6 +352,7 @@ where
     fn on_create_entity(&mut self) {
         let entity = self.resources.get_mut::<Entities>().create();
         debug!("Created the entity {}", entity);
+        self.resources.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::EntityCreated(entity));
     }
 
     fn on_destroy_entity(&mut self, entity: Entity) {

@@ -200,9 +200,9 @@ mod tests {
     #[test]
     fn serde() {
         let mut es = Entities::default();
-        let e1 = es.create();
+        let _e1 = es.create();
         let e2 = es.create();
-        let e3 = es.create();
+        let _e3 = es.create();
         es.destroy(e2);
 
         assert_tokens(
