@@ -7,6 +7,7 @@ use crate::{
     resource::Resource,
     SerializationName,
 };
+use std::iter::FusedIterator;
 
 /// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
@@ -68,7 +69,7 @@ impl Entities {
     }
 
     /// Create an iterator over all active entities.
-    pub fn iter(&self) -> EntitiesIter {
+    pub fn iter(&self) -> Iter {
         self.into_iter()
     }
 }
@@ -78,11 +79,11 @@ impl Resource for Entities {}
 impl SerializationName for Entities {}
 
 impl<'a> IntoIterator for &'a Entities {
-    type IntoIter = EntitiesIter<'a>;
+    type IntoIter = Iter<'a>;
     type Item = Entity;
 
     fn into_iter(self) -> Self::IntoIter {
-        EntitiesIter {
+        Iter {
             idx: 0,
             gens: &self.generations,
         }
@@ -90,32 +91,44 @@ impl<'a> IntoIterator for &'a Entities {
 }
 
 /// An iterator over all active entities.
-pub struct EntitiesIter<'a> {
+pub struct Iter<'a> {
     /// Tracks the current index into the generations slice.
     idx: usize,
     /// Holds a reference to the current generations.
     gens: &'a [Generation],
 }
 
-impl<'a> Iterator for EntitiesIter<'a> {
+impl<'a> Iterator for Iter<'a> {
     type Item = Entity;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.idx < self.gens.len() {
-            while self.idx < self.gens.len() {
-                if self.gens[self.idx].is_active() {
-                    let tmp = Entity::new(self.idx, self.gens[self.idx]);
-                    self.idx += 1;
-                    return Some(tmp);
-                } else {
-                    self.idx += 1;
-                }
+        if self.idx >= self.gens.len() {
+            return None;
+        }
+
+        while self.idx < self.gens.len() {
+            if self.gens[self.idx].is_active() {
+                let tmp = Entity::new(self.idx, self.gens[self.idx]);
+                self.idx += 1;
+                return Some(tmp);
+            } else {
+                self.idx += 1;
             }
         }
 
         None
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining_length = self.gens.len().saturating_sub(self.idx);
+
+        (remaining_length, Some(remaining_length))
+    }
 }
+
+impl<'a> ExactSizeIterator for Iter<'a> {}
+
+impl<'a> FusedIterator for Iter<'a> {}
 
 #[cfg(test)]
 mod tests {

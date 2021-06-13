@@ -101,6 +101,7 @@ pub struct Iter<'a> {
     num_groups: u32,
     group_cursor: u32,
     local_cursor: u32,
+    entry_cursor: u32,
 }
 
 impl<'a> Iter<'a> {
@@ -111,6 +112,7 @@ impl<'a> Iter<'a> {
             num_groups: indices.inner.len() as u32,
             group_cursor: 0,
             local_cursor: 0,
+            entry_cursor: 0,
         }
     }
 
@@ -119,6 +121,7 @@ impl<'a> Iter<'a> {
             return false;
         }
 
+        self.entry_cursor += 1;
         self.local_cursor += 1;
         if self.local_cursor >= bit_size::<u32>() {
             self.group_cursor += 1;
@@ -152,7 +155,8 @@ impl<'a> Iterator for Iter<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.num_entries as usize, Some(self.num_entries as usize))
+        let remaining_length = self.num_entries.saturating_sub(self.entry_cursor);
+        (remaining_length as usize, Some(remaining_length as usize))
     }
 }
 
@@ -351,7 +355,15 @@ mod tests {
 
         let bivec: Vec<u32> = Iter::new(&bi).collect();
         assert_eq!(bivec, [0u32, 1u32, 2u32, 3u32, 45u32]);
-        assert_eq!(Iter::new(&bi).size_hint(), (5, Some(5)));
+
+        let mut bit = Iter::new(&bi);
+        assert_eq!(bit.size_hint(), (5, Some(5)));
+        bit.next();
+        assert_eq!(bit.size_hint(), (4, Some(4)));
+        bit.next();
+        assert_eq!(bit.size_hint(), (3, Some(3)));
+        bit.next();
+        assert_eq!(bit.size_hint(), (2, Some(2)));
     }
 
     #[test]

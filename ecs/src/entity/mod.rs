@@ -3,7 +3,7 @@ pub mod index;
 
 use serde::{Deserialize, Serialize};
 
-use self::{generation::Generation, index::Index};
+pub use self::{generation::Generation, index::Index};
 
 /// An entity serves as an identifier to an object within the world.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

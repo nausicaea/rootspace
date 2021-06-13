@@ -8,7 +8,7 @@ pub use event_queue::receiver_id::ReceiverId;
 pub use crate::{
     component::Component,
     entities::Entities,
-    entity::Entity,
+    entity::{Entity, Index, Generation},
     event_queue::EventQueue,
     events::EventTrait,
     loop_control::LoopControl,

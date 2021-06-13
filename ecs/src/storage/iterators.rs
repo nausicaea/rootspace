@@ -71,8 +71,7 @@ macro_rules! impl_joined_iter {
             fn size_hint(&self) -> (usize, Option<usize>) {
                 let remaining_len = self.indices
                     .len()
-                    .checked_sub(self.cursor)
-                    .unwrap_or(0);
+                    .saturating_sub(self.cursor);
 
                 (remaining_len, Some(remaining_len))
             }
@@ -136,8 +135,7 @@ macro_rules! impl_joined_iter {
             fn size_hint(&self) -> (usize, Option<usize>) {
                 let remaining_len = self.indices
                     .len()
-                    .checked_sub(self.cursor)
-                    .unwrap_or(0);
+                    .saturating_sub(self.cursor);
 
                 (remaining_len, Some(remaining_len))
             }
@@ -244,8 +242,7 @@ macro_rules! impl_joined_iter {
             fn size_hint(&self) -> (usize, Option<usize>) {
                 let remaining_len = self.indices
                     .len()
-                    .checked_sub(self.cursor)
-                    .unwrap_or(0);
+                    .saturating_sub(self.cursor);
 
                 (remaining_len, Some(remaining_len))
             }
@@ -259,14 +256,14 @@ macro_rules! impl_joined_iter_ref {
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
         pub struct $name<$tlt, $ty> {
-            indices: Vec<$crate::entity::index::Index>,
+            indices: Vec<$crate::Index>,
             cursor: usize,
             $ty: std::cell::Ref<$tlt, $ty>,
         }
 
         impl<$tlt, $ty> $name<$tlt, $ty>
         where
-            $ty: $crate::storage::Storage,
+            $ty: $crate::Storage,
         {
             pub(crate) fn new($ty: std::cell::Ref<$tlt, $ty>) -> Self {
                 $name {
@@ -275,21 +272,27 @@ macro_rules! impl_joined_iter_ref {
                     $ty,
                 }
             }
+
+            pub fn get(&mut self, index: $crate::Index) -> Option<&$tlt $ty::Item> {
+                let $ty = self.$ty.get(index)?;
+
+                unsafe { Some(& *($ty as *const _)) }
+            }
         }
 
         impl<$tlt, $ty> ExactSizeIterator for $name<$tlt, $ty>
         where
-            $ty: $crate::storage::Storage,
+            $ty: $crate::Storage,
         {}
 
         impl<$tlt, $ty> std::iter::FusedIterator for $name<$tlt, $ty>
         where
-            $ty: $crate::storage::Storage,
+            $ty: $crate::Storage,
         {}
 
         impl<$tlt, $ty> Iterator for $name<$tlt, $ty>
         where
-            $ty: $crate::storage::Storage,
+            $ty: $crate::Storage,
         {
             type Item = &$tlt $ty::Item;
 
@@ -311,8 +314,7 @@ macro_rules! impl_joined_iter_ref {
             fn size_hint(&self) -> (usize, Option<usize>) {
                 let remaining_len = self.indices
                     .len()
-                    .checked_sub(self.cursor)
-                    .unwrap_or(0);
+                    .saturating_sub(self.cursor);
 
                 (remaining_len, Some(remaining_len))
             }
@@ -324,14 +326,14 @@ macro_rules! impl_joined_iter_ref {
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
         pub struct $name<$tltm, $tym> {
-            indices: Vec<$crate::entity::index::Index>,
+            indices: Vec<$crate::Index>,
             cursor: usize,
             $tym: std::cell::RefMut<$tltm, $tym>,
         }
 
         impl<$tltm, $tym> $name<$tltm, $tym>
         where
-            $tym: $crate::storage::Storage,
+            $tym: $crate::Storage,
         {
             pub(crate) fn new($tym: std::cell::RefMut<$tltm, $tym>) -> Self {
                 $name {
@@ -340,21 +342,27 @@ macro_rules! impl_joined_iter_ref {
                     $tym,
                 }
             }
+
+            pub fn get(&mut self, index: $crate::Index) -> Option<&$tltm mut $tym::Item> {
+                let $tym = self.$tym.get_mut(index)?;
+
+                unsafe { Some(&mut *($tym as *mut _)) }
+            }
         }
 
         impl<$tltm, $tym> ExactSizeIterator for $name<$tltm, $tym>
         where
-            $tym: $crate::storage::Storage,
+            $tym: $crate::Storage,
         {}
 
         impl<$tltm, $tym> std::iter::FusedIterator for $name<$tltm, $tym>
         where
-            $tym: $crate::storage::Storage,
+            $tym: $crate::Storage,
         {}
 
         impl<$tltm, $tym> Iterator for $name<$tltm, $tym>
         where
-            $tym: $crate::storage::Storage,
+            $tym: $crate::Storage,
         {
             type Item = &$tltm mut $tym::Item;
 
@@ -376,8 +384,7 @@ macro_rules! impl_joined_iter_ref {
             fn size_hint(&self) -> (usize, Option<usize>) {
                 let remaining_len = self.indices
                     .len()
-                    .checked_sub(self.cursor)
-                    .unwrap_or(0);
+                    .saturating_sub(self.cursor);
 
                 (remaining_len, Some(remaining_len))
             }
@@ -397,7 +404,7 @@ macro_rules! impl_joined_iter_ref {
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
         pub struct $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> {
-            indices: Vec<$crate::entity::index::Index>,
+            indices: Vec<$crate::Index>,
             cursor: usize,
             $(
                 $ty: std::cell::Ref<$tlt, $ty>,
@@ -410,10 +417,10 @@ macro_rules! impl_joined_iter_ref {
         impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
         where
             $(
-                $ty: $crate::storage::Storage,
+                $ty: $crate::Storage,
             )*
             $(
-                $tym: $crate::storage::Storage,
+                $tym: $crate::Storage,
             )*
         {
             pub(crate) fn new($($ty: std::cell::Ref<$tlt, $ty>,)* $($tym: std::cell::RefMut<$tltm, $tym>,)*) -> Self {
@@ -428,35 +435,46 @@ macro_rules! impl_joined_iter_ref {
                     )*
                 }
             }
+
+            pub fn get(&mut self, index: $crate::Index) -> Option<($(&$tlt $ty::Item,)* $(&$tltm mut $tym::Item,)*)> {
+                $(
+                    let $ty = self.$ty.get(index)?;
+                )*
+                $(
+                    let $tym = self.$tym.get_mut(index)?;
+                )*
+
+                unsafe { Some(($(& *($ty as *const _),)* $(&mut *($tym as *mut _),)*)) }
+            }
         }
 
         impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> ExactSizeIterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
         where
             $(
-                $ty: $crate::storage::Storage,
+                $ty: $crate::Storage,
             )*
             $(
-                $tym: $crate::storage::Storage,
+                $tym: $crate::Storage,
             )*
         {}
 
         impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> std::iter::FusedIterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
         where
             $(
-                $ty: $crate::storage::Storage,
+                $ty: $crate::Storage,
             )*
             $(
-                $tym: $crate::storage::Storage,
+                $tym: $crate::Storage,
             )*
         {}
 
         impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> Iterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
         where
             $(
-                $ty: $crate::storage::Storage,
+                $ty: $crate::Storage,
             )*
             $(
-                $tym: $crate::storage::Storage,
+                $tym: $crate::Storage,
             )*
         {
             type Item = ($(&$tlt $ty::Item,)* $(&$tltm mut $tym::Item,)*);
@@ -484,8 +502,7 @@ macro_rules! impl_joined_iter_ref {
             fn size_hint(&self) -> (usize, Option<usize>) {
                 let remaining_len = self.indices
                     .len()
-                    .checked_sub(self.cursor)
-                    .unwrap_or(0);
+                    .saturating_sub(self.cursor);
 
                 (remaining_len, Some(remaining_len))
             }
@@ -495,10 +512,6 @@ macro_rules! impl_joined_iter_ref {
 
 impl_joined_iter!(RIter, #reads: &'a A);
 impl_joined_iter!(WIter, #writes: &'a mut A);
-
-impl_joined_iter!(RRIter, #reads: &'a A, &'b B);
-impl_joined_iter!(RWIter, #reads: &'a A, #writes: &'b mut B);
-impl_joined_iter!(WWIter, #writes: &'a mut A, &'b mut B);
 
 impl_joined_iter_ref!(RIterRef, #reads: Ref<'a, A>);
 impl_joined_iter_ref!(WIterRef, #writes: RefMut<'a, A>);
@@ -512,34 +525,34 @@ impl_joined_iter_ref!(RRWIterRef, #reads: Ref<'a, A>, Ref<'b, B>, #writes: RefMu
 impl_joined_iter_ref!(RWWIterRef, #reads: Ref<'a, A>, #writes: RefMut<'b, B>, RefMut<'c, C>);
 impl_joined_iter_ref!(WWWIterRef, #writes: RefMut<'a, A>, RefMut<'b, B>, RefMut<'c, C>);
 
-pub struct EnumRIter<'a, T> {
+pub struct EnumRIter<'a, S> {
     indices: Vec<crate::entity::index::Index>,
     cursor: usize,
-    data: &'a T,
+    storage: &'a S,
 }
 
-impl<'a, T> EnumRIter<'a, T>
+impl<'a, S> EnumRIter<'a, S>
 where
-    T: crate::storage::Storage,
+    S: crate::storage::Storage,
 {
-    pub(crate) fn new(data: &'a T) -> Self {
+    pub(crate) fn new(storage: &'a S) -> Self {
         EnumRIter {
-            indices: data.indices().iter().cloned().collect(),
+            indices: storage.indices().iter().cloned().collect(),
             cursor: 0,
-            data,
+            storage,
         }
     }
 }
 
-impl<'a, T> ExactSizeIterator for EnumRIter<'a, T> where T: crate::storage::Storage {}
+impl<'a, S> ExactSizeIterator for EnumRIter<'a, S> where S: crate::storage::Storage {}
 
-impl<'a, T> std::iter::FusedIterator for EnumRIter<'a, T> where T: crate::storage::Storage {}
+impl<'a, S> std::iter::FusedIterator for EnumRIter<'a, S> where S: crate::storage::Storage {}
 
-impl<'a, T> Iterator for EnumRIter<'a, T>
+impl<'a, S> Iterator for EnumRIter<'a, S>
 where
-    T: crate::storage::Storage,
+    S: crate::storage::Storage,
 {
-    type Item = (crate::entity::index::Index, &'a T::Item);
+    type Item = (crate::entity::index::Index, &'a S::Item);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.cursor >= self.indices.len() {
@@ -549,7 +562,7 @@ where
         let idx = self.indices[self.cursor];
         self.cursor += 1;
 
-        unsafe { Some((idx, self.data.get_unchecked(idx))) }
+        unsafe { Some((idx, self.storage.get_unchecked(idx))) }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -563,6 +576,16 @@ where
 mod tests {
     use super::*;
     use crate::storage::{vec_storage::VecStorage, Storage};
+
+    #[test]
+    fn size_hint() {
+        let mut it = 0..10;
+        assert_eq!(it.size_hint(), (10, Some(10)));
+        it.next();
+        assert_eq!(it.size_hint(), (9, Some(9)));
+        it.next();
+        assert_eq!(it.size_hint(), (8, Some(8)));
+    }
 
     #[test]
     fn r_iter() {
@@ -592,21 +615,21 @@ mod tests {
         assert_eq!(witer.next(), None);
     }
 
-    #[test]
-    fn rr_iter() {
-        let mut a: VecStorage<usize> = VecStorage::default();
-        a.insert(0usize, 100usize);
-        a.insert(1usize, 101usize);
-        a.insert(2usize, 102usize);
+    // #[test]
+    // fn rr_iter() {
+    //     let mut a: VecStorage<usize> = VecStorage::default();
+    //     a.insert(0usize, 100usize);
+    //     a.insert(1usize, 101usize);
+    //     a.insert(2usize, 102usize);
 
-        let mut b: VecStorage<usize> = VecStorage::default();
-        b.insert(0usize, 100usize);
-        b.insert(1usize, 101usize);
-        b.insert(2usize, 102usize);
+    //     let mut b: VecStorage<usize> = VecStorage::default();
+    //     b.insert(0usize, 100usize);
+    //     b.insert(1usize, 101usize);
+    //     b.insert(2usize, 102usize);
 
-        for (ca, cb) in RRIter::new(&a, &b) {
-            std::convert::identity(ca);
-            std::convert::identity(cb);
-        }
-    }
+    //     for (ca, cb) in RRIter::new(&a, &b) {
+    //         std::convert::identity(ca);
+    //         std::convert::identity(cb);
+    //     }
+    // }
 }
