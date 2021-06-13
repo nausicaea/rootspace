@@ -2,12 +2,14 @@ use std::{iter::FusedIterator, mem::size_of};
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct BitIndices {
+    num_entries: usize,
     inner: Vec<u32>,
 }
 
 impl BitIndices {
     pub fn with_capacity(capacity: usize) -> Self {
         BitIndices {
+            num_entries: 0,
             inner: Vec::with_capacity((capacity - 1) / bit_size::<u32>() as usize + 1),
         }
     }
@@ -17,15 +19,11 @@ impl BitIndices {
     }
 
     pub fn is_empty(&self) -> bool {
-        if self.inner.is_empty() {
-            return true;
-        }
-
-        self.inner.iter().all(|&g| g == 0)
+        self.num_entries == 0
     }
 
     pub fn len(&self) -> usize {
-        self.inner.iter().map(|g| g.count_ones()).sum::<u32>() as usize
+        self.num_entries
     }
 
     pub fn contains<I: Into<u32>>(&self, index: I) -> bool {
@@ -33,11 +31,11 @@ impl BitIndices {
         let group = (idx / bit_size::<u32>()) as usize;
         let position = idx % bit_size::<u32>();
 
-        if self.inner.len() < group + 1 {
+        if self.num_entries == 0 || self.inner.len() < group + 1 {
             return false;
         }
 
-        (self.inner[group] & (1 << position)) > 0
+        (self.inner[group] & (1 << position)) != 0
     }
 
     pub fn iter(&self) -> Iter {
@@ -53,11 +51,14 @@ impl BitIndices {
             self.inner.resize(group + 1, Default::default());
         }
 
-        let previously_occupied = (self.inner[group] & (1 << position)) > 0;
+        if (self.inner[group] & (1 << position)) != 0 {
+            return false;
+        }
 
         self.inner[group] |= 1 << position;
+        self.num_entries += 1;
 
-        !previously_occupied
+        true
     }
 
     pub fn remove<I: Into<u32>>(&mut self, index: I) -> bool {
@@ -65,24 +66,28 @@ impl BitIndices {
         let group = (idx / bit_size::<u32>()) as usize;
         let position = idx % bit_size::<u32>();
 
-        if self.inner.len() < group + 1 {
+        if self.num_entries == 0 || self.inner.len() < group + 1 {
             return false;
         }
 
-        let previously_occupied = (self.inner[group] & (1 << position)) > 0;
+        if (self.inner[group] & (1 << position)) == 0 {
+            return false;
+        }
 
         self.inner[group] &= !(1 << position);
+        self.num_entries -= 1;
 
         let remove_groups = self.inner.iter().rev().take_while(|&&g| g == 0).count();
         if remove_groups > 0 {
             self.inner.resize(self.inner.len() - remove_groups, 0);
         }
 
-        previously_occupied
+        true
     }
 
     pub fn clear(&mut self) {
-        self.inner.clear()
+        self.inner.clear();
+        self.num_entries = 0;
     }
 }
 
@@ -98,35 +103,56 @@ impl<'a> IntoIterator for &'a BitIndices {
 pub struct Iter<'a> {
     indices: &'a BitIndices,
     num_entries: u32,
-    num_groups: u32,
     group_cursor: u32,
     local_cursor: u32,
+    rev_group_cursor: u32,
+    rev_local_cursor: u32,
     entry_cursor: u32,
 }
 
 impl<'a> Iter<'a> {
     fn new(indices: &'a BitIndices) -> Self {
+        let num_entries = indices.num_entries as u32;
+        let num_groups = indices.inner.len() as u32;
+
         Iter {
             indices,
-            num_entries: indices.len() as u32,
-            num_groups: indices.inner.len() as u32,
+            num_entries,
             group_cursor: 0,
             local_cursor: 0,
+            rev_group_cursor: num_groups,
+            rev_local_cursor: bit_size::<u32>(),
             entry_cursor: 0,
         }
     }
 
     fn increment_cursor(&mut self) -> bool {
-        if self.group_cursor >= self.num_groups {
+        if self.entry_cursor >= self.num_entries {
             return false;
         }
 
-        self.entry_cursor += 1;
         self.local_cursor += 1;
         if self.local_cursor >= bit_size::<u32>() {
             self.group_cursor += 1;
             self.local_cursor = 0;
-            if self.group_cursor >= self.num_groups {
+            if self.entry_cursor >= self.num_entries {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    fn increment_rev_cursor(&mut self) -> bool {
+        if self.entry_cursor >= self.num_entries {
+            return false;
+        }
+
+        self.rev_local_cursor -= 1;
+        if self.rev_local_cursor == 0 {
+            self.rev_group_cursor -= 1;
+            self.rev_local_cursor = bit_size::<u32>();
+            if self.entry_cursor >= self.num_entries {
                 return false;
             }
         }
@@ -139,7 +165,7 @@ impl<'a> Iterator for Iter<'a> {
     type Item = u32;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.group_cursor >= self.num_groups {
+        if self.entry_cursor >= self.num_entries {
             return None;
         }
 
@@ -150,6 +176,7 @@ impl<'a> Iterator for Iter<'a> {
         }
 
         let item = self.group_cursor * bit_size::<u32>() + self.local_cursor;
+        self.entry_cursor += 1;
         self.increment_cursor();
         Some(item)
     }
@@ -162,22 +189,22 @@ impl<'a> Iterator for Iter<'a> {
 
 impl<'a> DoubleEndedIterator for Iter<'a> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.group_cursor >= self.num_groups {
+        if self.entry_cursor >= self.num_entries {
             return None;
         }
 
-        while (self.indices.inner[(self.num_groups - self.group_cursor - 1) as usize]
-            & (1 << (bit_size::<u32>() - self.local_cursor - 1)))
+        while self.indices.inner[self.rev_group_cursor as usize - 1]
+            & (1 << (self.rev_local_cursor - 1))
             == 0
         {
-            if !self.increment_cursor() {
+            if !self.increment_rev_cursor() {
                 return None;
             }
         }
 
-        let item =
-            (self.num_groups - self.group_cursor - 1) * bit_size::<u32>() + (bit_size::<u32>() - self.local_cursor - 1);
-        self.increment_cursor();
+        let item = (self.rev_group_cursor - 1) * bit_size::<u32>() + (self.rev_local_cursor - 1);
+        self.entry_cursor += 1;
+        self.increment_rev_cursor();
         Some(item)
     }
 }
@@ -223,14 +250,37 @@ mod tests {
         let mut bi = BitIndices::default();
 
         assert_eq!(bi.inner, Vec::<u32>::new());
+        assert_eq!(bi.num_entries, 0usize);
         bi.insert(0u32);
         assert_eq!(bi.inner, vec![0b1u32]);
+        assert_eq!(bi.num_entries, 1usize);
         bi.insert(1u32);
         assert_eq!(bi.inner, vec![0b11u32]);
+        assert_eq!(bi.num_entries, 2usize);
         bi.insert(2u32);
         assert_eq!(bi.inner, vec![0b111u32]);
+        assert_eq!(bi.num_entries, 3usize);
         bi.insert(45u32);
         assert_eq!(bi.inner, vec![0b111u32, 0b10000000000000u32]);
+        assert_eq!(bi.num_entries, 4usize);
+        bi.remove(2u32);
+        assert_eq!(bi.inner, vec![0b011u32, 0b10000000000000u32]);
+        assert_eq!(bi.num_entries, 3usize);
+        bi.remove(45u32);
+        assert_eq!(bi.inner, vec![0b011u32]);
+        assert_eq!(bi.num_entries, 2usize);
+        bi.remove(2u32);
+        assert_eq!(bi.inner, vec![0b011u32]);
+        assert_eq!(bi.num_entries, 2usize);
+        bi.remove(1u32);
+        assert_eq!(bi.inner, vec![0b001u32]);
+        assert_eq!(bi.num_entries, 1usize);
+        bi.remove(0u32);
+        assert_eq!(bi.inner, Vec::<u32>::new());
+        assert_eq!(bi.num_entries, 0usize);
+        bi.remove(0u32);
+        assert_eq!(bi.inner, Vec::<u32>::new());
+        assert_eq!(bi.num_entries, 0usize);
     }
 
     #[test]
@@ -378,6 +428,20 @@ mod tests {
 
         let bivec: Vec<u32> = Iter::new(&bi).rev().collect();
         assert_eq!(bivec, [45u32, 3u32, 2u32, 1u32, 0u32]);
+
+        let mut biter = Iter::new(&bi);
+        assert_eq!(biter.next(), Some(0u32));
+        assert_eq!(biter.next(), Some(1u32));
+        assert_eq!(biter.next(), Some(2u32));
+        assert_eq!(biter.next_back(), Some(45u32));
+        assert_eq!(biter.next_back(), Some(3u32));
+        assert_eq!(biter.next_back(), None);
+        assert_eq!(biter.next_back(), None);
+        assert_eq!(biter.next_back(), None);
+        assert_eq!(biter.next_back(), None);
+        assert_eq!(biter.next(), None);
+        assert_eq!(biter.next(), None);
+        assert_eq!(biter.next(), None);
     }
 
     #[test]
