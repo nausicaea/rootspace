@@ -103,11 +103,9 @@ impl<'a> IntoIterator for &'a BitIndices {
 pub struct Iter<'a> {
     indices: &'a BitIndices,
     num_entries: u32,
-    group_cursor: u32,
-    local_cursor: u32,
-    rev_group_cursor: u32,
-    rev_local_cursor: u32,
     entry_cursor: u32,
+    cursor: u32,
+    rev_cursor: u32,
 }
 
 impl<'a> Iter<'a> {
@@ -118,46 +116,24 @@ impl<'a> Iter<'a> {
         Iter {
             indices,
             num_entries,
-            group_cursor: 0,
-            local_cursor: 0,
-            rev_group_cursor: num_groups,
-            rev_local_cursor: bit_size::<u32>(),
             entry_cursor: 0,
+            cursor: 0,
+            rev_cursor: num_groups * bit_size::<u32>(),
         }
     }
 
-    fn increment_cursor(&mut self) -> bool {
-        if self.entry_cursor >= self.num_entries {
-            return false;
-        }
-
-        self.local_cursor += 1;
-        if self.local_cursor >= bit_size::<u32>() {
-            self.group_cursor += 1;
-            self.local_cursor = 0;
-            if self.entry_cursor >= self.num_entries {
-                return false;
-            }
-        }
-
-        true
+    fn cursors(&self) -> (u32, u32) {
+        (
+            self.cursor / bit_size::<u32>(),
+            self.cursor % bit_size::<u32>(),
+        )
     }
 
-    fn increment_rev_cursor(&mut self) -> bool {
-        if self.entry_cursor >= self.num_entries {
-            return false;
-        }
-
-        self.rev_local_cursor -= 1;
-        if self.rev_local_cursor == 0 {
-            self.rev_group_cursor -= 1;
-            self.rev_local_cursor = bit_size::<u32>();
-            if self.entry_cursor >= self.num_entries {
-                return false;
-            }
-        }
-
-        true
+    fn rev_cursors(&self) -> (u32, u32) {
+        (
+            (self.rev_cursor - 1) / bit_size::<u32>(),
+            (self.rev_cursor - 1) % bit_size::<u32>(),
+        )
     }
 }
 
@@ -168,16 +144,23 @@ impl<'a> Iterator for Iter<'a> {
         if self.entry_cursor >= self.num_entries {
             return None;
         }
+        if self.cursor >= self.indices.inner.len() as u32 * bit_size::<u32>() {
+            return None;
+        }
 
-        while (self.indices.inner[self.group_cursor as usize] & (1 << self.local_cursor)) == 0 {
-            if !self.increment_cursor() {
+        let mut c = self.cursors();
+        while (self.indices.inner[c.0 as usize] & (1 << c.1)) == 0 {
+            self.cursor += 1;
+            c = self.cursors();
+
+            if self.cursor >= self.indices.inner.len() as u32 * bit_size::<u32>() {
                 return None;
             }
         }
 
-        let item = self.group_cursor * bit_size::<u32>() + self.local_cursor;
+        let item = self.cursor;
         self.entry_cursor += 1;
-        self.increment_cursor();
+        self.cursor += 1;
         Some(item)
     }
 
@@ -192,19 +175,23 @@ impl<'a> DoubleEndedIterator for Iter<'a> {
         if self.entry_cursor >= self.num_entries {
             return None;
         }
+        if self.rev_cursor == 0 {
+            return None;
+        }
 
-        while self.indices.inner[self.rev_group_cursor as usize - 1]
-            & (1 << (self.rev_local_cursor - 1))
-            == 0
-        {
-            if !self.increment_rev_cursor() {
+        let mut c = self.rev_cursors();
+        while self.indices.inner[c.0 as usize] & (1 << c.1) == 0 {
+            self.rev_cursor -= 1;
+            c = self.rev_cursors();
+
+            if self.rev_cursor == 0 {
                 return None;
             }
         }
 
-        let item = (self.rev_group_cursor - 1) * bit_size::<u32>() + (self.rev_local_cursor - 1);
+        let item = self.rev_cursor - 1;
         self.entry_cursor += 1;
-        self.increment_rev_cursor();
+        self.rev_cursor -= 1;
         Some(item)
     }
 }
