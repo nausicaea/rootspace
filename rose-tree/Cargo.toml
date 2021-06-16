@@ -1,0 +1,13 @@
+[package]
+name = "rose-tree"
+version = "0.1.0"
+authors = ["Eleanore Young"]
+edition = "2018"
+
+[features]
+default = ["serde_support"]
+serde_support = ["serde", "petgraph/serde-1"]
+
+[dependencies]
+petgraph = "^0.5.1"
+serde = { version = "^1.0.0", features = ["derive"], optional = true }

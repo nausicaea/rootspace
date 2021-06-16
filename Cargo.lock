@@ -1518,6 +1518,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "rose-tree"
+version = "0.1.0"
+dependencies = [
+ "petgraph",
+ "serde",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
