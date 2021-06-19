@@ -41,10 +41,15 @@ where
     pub fn remove(&mut self, key: &K) -> Option<Hierarchy<K, V>> {
         // Retrieve the parent node
         let (parent_node, target_node) = self.index.get(key)
-            .and_then(|it| it.parent.clone().map(|p| (p, it.target.clone())))?;
+            .map(|it| (it.parent.clone(), it.target.clone()))?;
 
-        // Remove the target node from said parent
-        RefCell::borrow_mut(&parent_node).children.retain(|child| &child.borrow().key != key);
+        if let Some(parent_node) = parent_node {
+            // Remove the target node from said parent
+            RefCell::borrow_mut(&parent_node).children.retain(|child| &child.borrow().key != key);
+        } else {
+            // Remove the target node from the root node
+            self.children.retain(|child| &child.borrow().key != key);
+        }
 
         // Rebuild our own index
         self.rebuild_index();
