@@ -1,19 +1,29 @@
+use std::marker::PhantomData;
+
 use anyhow::Result;
 use clap::{load_yaml, App};
 use ecs::{Entities, Resources, Storage};
 use serde::{Deserialize, Serialize};
 
 use super::{CommandTrait, Error};
-use crate::components::{Camera, Info, Model, Renderable, Status, UiModel, RenderableType};
-use crate::resources::{GraphicsBackend, AssetDatabase, SceneGraph};
-use std::marker::PhantomData;
-use crate::graphics::BackendTrait;
+use crate::{
+    components::{Camera, Info, Model, Renderable, RenderableType, Status, UiModel},
+    graphics::BackendTrait,
+    resources::{AssetDatabase, GraphicsBackend, SceneGraph},
+};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ComponentsCommand<B>(PhantomData<B>);
 
 impl<B> ComponentsCommand<B> {
-    fn info(&self, res: &Resources, index: &str, create: bool, name: Option<&str>, description: Option<&str>) -> Result<()> {
+    fn info(
+        &self,
+        res: &Resources,
+        index: &str,
+        create: bool,
+        name: Option<&str>,
+        description: Option<&str>,
+    ) -> Result<()> {
         let index: usize = index.parse()?;
         let entity = res
             .borrow::<Entities>()
@@ -43,11 +53,7 @@ impl<B> ComponentsCommand<B> {
         }
 
         if let Some(ic) = infos.get(&entity) {
-            println!(
-                "Entity {}: {}",
-                entity,
-                ic,
-            );
+            println!("Entity {}: {}", entity, ic,);
         } else {
             println!("Entity {}: (no name or description)", entity);
         }
@@ -55,7 +61,16 @@ impl<B> ComponentsCommand<B> {
         Ok(())
     }
 
-    fn status(&self, res: &Resources, index: &str, create: bool, enable: bool, disable: bool, show: bool, hide: bool) -> Result<()> {
+    fn status(
+        &self,
+        res: &Resources,
+        index: &str,
+        create: bool,
+        enable: bool,
+        disable: bool,
+        show: bool,
+        hide: bool,
+    ) -> Result<()> {
         let index: usize = index.parse()?;
         let entity = res
             .borrow::<Entities>()
@@ -205,8 +220,7 @@ where
             let mut models = res.borrow_components_mut::<Model>();
 
             if create || parent.is_some() {
-                models.entry(entity)
-                    .or_default();
+                models.entry(entity).or_default();
 
                 if let Some(parent) = parent {
                     res.borrow_mut::<SceneGraph<Model>>().insert_child(&parent, entity)?;
@@ -246,8 +260,7 @@ where
             let mut ui_models = res.borrow_components_mut::<UiModel>();
 
             if create || parent.is_some() {
-                ui_models.entry(entity)
-                    .or_default();
+                ui_models.entry(entity).or_default();
 
                 if let Some(parent) = parent {
                     res.borrow_mut::<SceneGraph<UiModel>>().insert_child(&parent, entity)?;
@@ -277,24 +290,26 @@ where
             let mut renderables = res.borrow_components_mut::<Renderable>();
 
             if create {
-                renderables.entry(entity)
-                    .or_insert_with(|| {
-                        let font = assets.find_asset("fonts/SourceSansPro-Regular.ttf")
-                            .expect("Unable to find the font asset");
-                        let vs = assets.find_asset("shaders/text-vertex.glsl")
-                            .expect("Unable to find the vertex shader asset");
-                        let fs = assets.find_asset("shaders/text-fragment.glsl")
-                            .expect("Unable to find the fragment shader asset");
+                renderables.entry(entity).or_insert_with(|| {
+                    let font = assets
+                        .find_asset("fonts/SourceSansPro-Regular.ttf")
+                        .expect("Unable to find the font asset");
+                    let vs = assets
+                        .find_asset("shaders/text-vertex.glsl")
+                        .expect("Unable to find the vertex shader asset");
+                    let fs = assets
+                        .find_asset("shaders/text-fragment.glsl")
+                        .expect("Unable to find the fragment shader asset");
 
-                        Renderable::builder()
-                            .with_type(RenderableType::Text)
-                            .with_text("Hello, World!")
-                            .with_font(font)
-                            .with_vertex_shader(vs)
-                            .with_fragment_shader(fs)
-                            .build(&mut factory)
-                            .expect("Unable to create a renderable component")
-                    });
+                    Renderable::builder()
+                        .with_type(RenderableType::Text)
+                        .with_text("Hello, World!")
+                        .with_font(font)
+                        .with_vertex_shader(vs)
+                        .with_fragment_shader(fs)
+                        .build(&mut factory)
+                        .expect("Unable to create a renderable component")
+                });
             }
 
             if let Some(_rc) = renderables.get(entity) {

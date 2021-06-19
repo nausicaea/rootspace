@@ -67,7 +67,10 @@ pub fn default_commands<B: BackendTrait + 'static>() -> HashMap<&'static str, Bo
     commands.insert(EntitiesCommand.name(), box_command(EntitiesCommand));
     commands.insert(StatesCommand.name(), box_command(StatesCommand));
     commands.insert(AssetsCommand.name(), box_command(AssetsCommand));
-    commands.insert(ComponentsCommand::<B>::default().name(), box_command(ComponentsCommand::<B>::default()));
+    commands.insert(
+        ComponentsCommand::<B>::default().name(),
+        box_command(ComponentsCommand::<B>::default()),
+    );
     commands.insert(StatisticsCommand.name(), box_command(StatisticsCommand));
     commands
 }

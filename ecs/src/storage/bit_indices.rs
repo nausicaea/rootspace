@@ -123,10 +123,7 @@ impl<'a> Iter<'a> {
     }
 
     fn cursors(&self) -> (u32, u32) {
-        (
-            self.cursor / bit_size::<u32>(),
-            self.cursor % bit_size::<u32>(),
-        )
+        (self.cursor / bit_size::<u32>(), self.cursor % bit_size::<u32>())
     }
 
     fn rev_cursors(&self) -> (u32, u32) {

@@ -1,17 +1,22 @@
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, marker::PhantomData, time::Duration};
 
 use anyhow::Result;
 use ecs::{event_queue::receiver_id::ReceiverId, EventQueue, Resources, SerializationName, System, WithResources};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{debug_commands, debug_commands::CommandTrait, event::EngineEvent, resources::settings::Settings};
-use std::marker::PhantomData;
-use crate::graphics::BackendTrait;
+use crate::{
+    debug_commands, debug_commands::CommandTrait, event::EngineEvent, graphics::BackendTrait,
+    resources::settings::Settings,
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct DebugShell<B> {
-    #[serde(skip, bound(serialize = "B: BackendTrait", deserialize = "B: BackendTrait"), default = "crate::debug_commands::default_commands::<B>")]
+    #[serde(
+        skip,
+        bound(serialize = "B: BackendTrait", deserialize = "B: BackendTrait"),
+        default = "crate::debug_commands::default_commands::<B>"
+    )]
     commands: HashMap<&'static str, Box<dyn CommandTrait>>,
     receiver: ReceiverId<EngineEvent>,
     #[serde(skip)]

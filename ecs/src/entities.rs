@@ -1,5 +1,7 @@
 //! Provides facilities for reasoning about entities (e.g. objects) within a world.
 
+use std::iter::FusedIterator;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -7,7 +9,6 @@ use crate::{
     resource::Resource,
     SerializationName,
 };
-use std::iter::FusedIterator;
 
 /// The `Entities` resource keeps track of all entities.
 #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]

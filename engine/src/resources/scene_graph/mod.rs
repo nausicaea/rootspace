@@ -1,10 +1,9 @@
-use std::ops::{Mul, Deref};
-use anyhow::{anyhow, Result};
+use std::ops::{Deref, Mul};
 
-use ecs::{Component, Entity, Resource, SerializationName};
+use anyhow::{anyhow, Result};
+use ecs::{entity::index::Index, Component, Entity, Resource, SerializationName};
 use hierarchy::Hierarchy;
 use serde::{Deserialize, Serialize};
-use ecs::entity::index::Index;
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -20,7 +19,8 @@ where
         D: Deref<Target = F>,
         F: std::ops::Index<Index, Output = T>,
     {
-        self.0.update(&|entity, _, parent_datum| Some(parent_datum * &data[entity.into()]))
+        self.0
+            .update(&|entity, _, parent_datum| Some(parent_datum * &data[entity.into()]))
     }
 
     pub fn insert(&mut self, entity: Entity) {
@@ -28,7 +28,8 @@ where
     }
 
     pub fn insert_child(&mut self, parent: &Entity, child: Entity) -> Result<()> {
-        self.0.insert_child(parent, child, Default::default())
+        self.0
+            .insert_child(parent, child, Default::default())
             .map_err(|e| anyhow!("Cannot add the entity {} to the parent {}: {}", parent, child, e))
     }
 

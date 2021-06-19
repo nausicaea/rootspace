@@ -125,7 +125,15 @@ impl<'a, 'b> Mul<&'a UiModel> for &'b UiModel {
 
 impl std::fmt::Display for UiModel {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "position: [{}, {}], depth: {}, scale: [{}, {}]", self.position().x, self.position().y, self.depth, self.scale().x, self.scale().y)
+        write!(
+            f,
+            "position: [{}, {}], depth: {}, scale: [{}, {}]",
+            self.position().x,
+            self.position().y,
+            self.depth,
+            self.scale().x,
+            self.scale().y
+        )
     }
 }
 

@@ -109,7 +109,17 @@ impl From<Model> for AffineTransform<f32> {
 
 impl std::fmt::Display for Model {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "position: [{}, {}, {}], orientation: {}, scale: [{}, {}, {}]", self.position().x, self.position().y, self.position().z, self.orientation(), self.scale().x, self.scale().y, self.scale().z)
+        write!(
+            f,
+            "position: [{}, {}, {}], orientation: {}, scale: [{}, {}, {}]",
+            self.position().x,
+            self.position().y,
+            self.position().z,
+            self.orientation(),
+            self.scale().x,
+            self.scale().y,
+            self.scale().z
+        )
     }
 }
 

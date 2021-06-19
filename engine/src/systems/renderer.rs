@@ -106,8 +106,7 @@ where
             }
 
             // Obtain the model component of the camera
-            let cam_entity = entities.get(cam_idx)
-                .expect("Could not find the camera entity");
+            let cam_entity = entities.get(cam_idx).expect("Could not find the camera entity");
             let cam_model = world_graph
                 .get(&cam_entity)
                 .expect("The camera is not part of the scene graph");
