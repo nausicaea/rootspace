@@ -11,3 +11,6 @@ serde_support = ["serde", "petgraph/serde-1"]
 [dependencies]
 petgraph = "^0.5.1"
 serde = { version = "^1.0.0", features = ["derive"], optional = true }
+
+[dev-dependencies]
+serde_test = "^1.0.126"
