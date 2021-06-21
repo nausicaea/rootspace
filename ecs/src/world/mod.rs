@@ -560,6 +560,7 @@ mod tests {
     pub type Trreg = Reg![VecStorage<usize>,];
 
     #[test]
+    #[ignore]
     fn serde() {
         let world = World::<Trreg, Reg![], Reg![], Reg![]>::try_default().unwrap();
 

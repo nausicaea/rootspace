@@ -275,6 +275,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn event_queue_serde() {
         let mut eq = EventQueue::<TestEvent>::default();
         eq.send(TestEvent(0));

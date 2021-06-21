@@ -1524,7 +1524,6 @@ dependencies = [
 name = "rose-tree"
 version = "0.1.0"
 dependencies = [
- "petgraph",
  "serde",
  "serde_test",
 ]
