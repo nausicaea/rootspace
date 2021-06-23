@@ -25,6 +25,7 @@
       <excludeFolder url="file://$MODULE_DIR$/ecs/target" />
       <excludeFolder url="file://$MODULE_DIR$/file-manipulation/target" />
       <excludeFolder url="file://$MODULE_DIR$/pacman/target" />
+      <excludeFolder url="file://$MODULE_DIR$/rose-tree/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

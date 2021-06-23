@@ -29,7 +29,7 @@ impl Entity {
     }
 
     /// Return the integer index of the entity, which can be used to index into data structures.
-    pub(crate) fn idx(&self) -> Index {
+    pub fn idx(&self) -> Index {
         self.idx
     }
 
@@ -43,6 +43,18 @@ impl Entity {
 impl std::fmt::Display for Entity {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.idx)
+    }
+}
+
+impl AsRef<Index> for Entity {
+    fn as_ref(&self) -> &Index {
+        &self.idx
+    }
+}
+
+impl AsRef<Generation> for Entity {
+    fn as_ref(&self) -> &Generation {
+        &self.gen
     }
 }
 

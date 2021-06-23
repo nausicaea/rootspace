@@ -38,9 +38,27 @@ impl Generation {
     }
 }
 
+impl PartialEq<u32> for Generation {
+    fn eq(&self, other: &u32) -> bool {
+        &self.0 == other
+    }
+}
+
+impl PartialEq<Generation> for u32 {
+    fn eq(&self, other: &Generation) -> bool {
+        self == &other.0
+    }
+}
+
 impl std::fmt::Display for Generation {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl AsRef<u32> for Generation {
+    fn as_ref(&self) -> &u32 {
+        &self.0
     }
 }
 

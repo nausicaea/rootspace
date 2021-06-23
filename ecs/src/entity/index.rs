@@ -24,9 +24,27 @@ impl Index {
     }
 }
 
+impl PartialEq<u32> for Index {
+    fn eq(&self, other: &u32) -> bool {
+        &self.0 == other
+    }
+}
+
+impl PartialEq<Index> for u32 {
+    fn eq(&self, other: &Index) -> bool {
+        self == &other.0
+    }
+}
+
 impl std::fmt::Display for Index {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl AsRef<u32> for Index {
+    fn as_ref(&self) -> &u32 {
+        &self.0
     }
 }
 

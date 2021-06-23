@@ -99,7 +99,7 @@ where
         let mut target = factory.create_frame();
         target.initialize(settings.clear_color, 1.0);
 
-        for (cam_idx, cam) in cameras.iter_enum() {
+        for (cam_idx, cam) in cameras.indexed_iter() {
             // Skip any inactive cameras
             if statuses.get(cam_idx).map_or(true, |s| !s.enabled()) {
                 continue;

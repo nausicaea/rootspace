@@ -7,7 +7,7 @@ use serde::{
 };
 
 use super::{
-    iterators::{EnumRIter, RIter, WIter},
+    iterators::{IndexedRIter, RIter, WIter},
     Storage,
 };
 use crate::{entity::index::Index, resource::Resource, storage::entry::Entry, SerializationName};
@@ -36,8 +36,8 @@ impl<T> VecStorage<T> {
         self.into_iter()
     }
 
-    pub fn iter_enum(&self) -> EnumRIter<Self> {
-        EnumRIter::new(self)
+    pub fn indexed_iter(&self) -> IndexedRIter<Self> {
+        IndexedRIter::new(self)
     }
 
     fn insert_internal(&mut self, idx: Index, datum: T) -> Option<T> {
@@ -297,6 +297,8 @@ mod tests {
 
     use super::*;
     use crate::{component::Component, entities::Entities, entity::Entity};
+    use std::ops::Add;
+    use std::iter::Sum;
 
     struct DropCounter<'a> {
         count: &'a mut usize,
@@ -308,11 +310,39 @@ mod tests {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    struct TestComponent(usize);
+    #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+    struct Tc(usize);
 
-    impl Component for TestComponent {
+    impl Component for Tc {
         type Storage = VecStorage<Self>;
+    }
+
+    impl<'a> Add for &'a Tc {
+        type Output = Tc;
+
+        fn add(self, rhs: Self) -> Self::Output {
+            Tc(self.0 + rhs.0)
+        }
+    }
+
+    impl Add for Tc {
+        type Output = Tc;
+
+        fn add(self, rhs: Self) -> Self::Output {
+            Tc(self.0 + rhs.0)
+        }
+    }
+
+    impl<'a> Sum<&'a Tc> for Tc {
+        fn sum<I: Iterator<Item=&'a Tc>>(iter: I) -> Self {
+            iter.fold(Tc(0), |state, value| &state + value)
+        }
+    }
+
+    impl Sum for Tc {
+        fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+            iter.fold(Tc(0), |state, value| state + value)
+        }
     }
 
     #[test]
@@ -405,6 +435,18 @@ mod tests {
     }
 
     #[test]
+    fn vec_storage_aggregate() {
+        let mut s: <Tc as Component>::Storage = Default::default();
+        s.insert(0u32, Tc(2));
+        s.insert(1u32, Tc(3));
+        s.insert(2u32, Tc(5));
+        s.insert(3u32, Tc(7));
+
+        assert_eq!(s.indexed_iter().filter(|(idx, _)| [0u32, 1, 3].iter().any(|i| idx == i)).map(|(_, tc)| tc).sum::<Tc>(), Tc(12));
+        assert_eq!([0u32, 1, 3].iter().filter_map(|i| s.get(*i)).sum::<Tc>(), Tc(12));
+    }
+
+    #[test]
     fn vec_storage_drops() {
         let mut a_count = 0usize;
         let mut b_count = 0usize;
@@ -431,13 +473,13 @@ mod tests {
     #[test]
     fn vec_storage_serde() {
         let mut entities = Entities::default();
-        let mut v: <TestComponent as Component>::Storage = Default::default();
+        let mut v: <Tc as Component>::Storage = Default::default();
 
         let _a = entities.create();
         let _b = entities.create();
         let c = entities.create();
 
-        v.insert(c, TestComponent(100));
+        v.insert(c, Tc(100));
 
         assert_tokens(
             &v,

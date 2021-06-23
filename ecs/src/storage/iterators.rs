@@ -525,18 +525,18 @@ impl_joined_iter_ref!(RRWIterRef, #reads: Ref<'a, A>, Ref<'b, B>, #writes: RefMu
 impl_joined_iter_ref!(RWWIterRef, #reads: Ref<'a, A>, #writes: RefMut<'b, B>, RefMut<'c, C>);
 impl_joined_iter_ref!(WWWIterRef, #writes: RefMut<'a, A>, RefMut<'b, B>, RefMut<'c, C>);
 
-pub struct EnumRIter<'a, S> {
+pub struct IndexedRIter<'a, S> {
     indices: Vec<crate::entity::index::Index>,
     cursor: usize,
     storage: &'a S,
 }
 
-impl<'a, S> EnumRIter<'a, S>
+impl<'a, S> IndexedRIter<'a, S>
 where
     S: crate::storage::Storage,
 {
     pub(crate) fn new(storage: &'a S) -> Self {
-        EnumRIter {
+        IndexedRIter {
             indices: storage.indices().iter().cloned().collect(),
             cursor: 0,
             storage,
@@ -544,11 +544,11 @@ where
     }
 }
 
-impl<'a, S> ExactSizeIterator for EnumRIter<'a, S> where S: crate::storage::Storage {}
+impl<'a, S> ExactSizeIterator for IndexedRIter<'a, S> where S: crate::storage::Storage {}
 
-impl<'a, S> std::iter::FusedIterator for EnumRIter<'a, S> where S: crate::storage::Storage {}
+impl<'a, S> std::iter::FusedIterator for IndexedRIter<'a, S> where S: crate::storage::Storage {}
 
-impl<'a, S> Iterator for EnumRIter<'a, S>
+impl<'a, S> Iterator for IndexedRIter<'a, S>
 where
     S: crate::storage::Storage,
 {

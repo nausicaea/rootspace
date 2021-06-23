@@ -7,7 +7,7 @@ use serde::{
 };
 
 use super::{
-    iterators::{EnumRIter, RIter, WIter},
+    iterators::{IndexedRIter, RIter, WIter},
     Storage,
 };
 use crate::{entity::index::Index, resource::Resource, SerializationName};
@@ -31,8 +31,8 @@ impl<T> ZstStorage<T> {
         self.into_iter()
     }
 
-    pub fn iter_enum(&self) -> EnumRIter<Self> {
-        EnumRIter::new(self)
+    pub fn indexed_iter(&self) -> IndexedRIter<Self> {
+        IndexedRIter::new(self)
     }
 }
 

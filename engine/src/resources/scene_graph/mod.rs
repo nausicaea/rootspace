@@ -85,38 +85,75 @@ where
 mod tests {
     use std::ops::Mul;
 
-    use ecs::{Entities, VecStorage};
+    use ecs::{Entities, VecStorage, Storage};
     use serde_test::{assert_tokens, Token};
+    use rose_tree::Hierarchy as Hierarchy2;
 
     use super::*;
+    use std::iter::Product;
 
     #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-    struct TestComponent(usize);
+    struct Tc(usize);
 
-    impl Component for TestComponent {
+    impl Component for Tc {
         type Storage = VecStorage<Self>;
     }
 
-    impl Mul<TestComponent> for TestComponent {
-        type Output = TestComponent;
+    impl Mul<Tc> for Tc {
+        type Output = Tc;
 
-        fn mul(self, rhs: TestComponent) -> TestComponent {
+        fn mul(self, rhs: Tc) -> Tc {
             &self * &rhs
         }
     }
 
-    impl<'a, 'b> Mul<&'a TestComponent> for &'b TestComponent {
-        type Output = TestComponent;
+    impl<'a, 'b> Mul<&'a Tc> for &'b Tc {
+        type Output = Tc;
 
-        fn mul(self, rhs: &'a TestComponent) -> TestComponent {
-            TestComponent(self.0 * rhs.0)
+        fn mul(self, rhs: &'a Tc) -> Tc {
+            Tc(self.0 * rhs.0)
         }
+    }
+
+    impl<'a> Product<&'a Tc> for Tc {
+        fn product<I: Iterator<Item=&'a Tc>>(iter: I) -> Self {
+            iter.fold(Tc(1), |state, value| &state * value)
+        }
+    }
+
+    impl Product for Tc {
+        fn product<I: Iterator<Item=Self>>(iter: I) -> Self {
+            iter.fold(Tc(1), |state, value| state * value)
+        }
+    }
+
+    #[test]
+    fn hierarchy_2() {
+        let mut entities = Entities::default();
+        let mut s = <Tc as Component>::Storage::default();
+        let mut rt: Hierarchy2<Index> = Hierarchy2::default();
+
+        let e1 = entities.create();
+        s.insert(e1, Tc(2));
+        rt.insert(e1);
+        let e2 = entities.create();
+        s.insert(e2, Tc(3));
+        rt.insert(e2);
+        let e3 = entities.create();
+        s.insert(e3, Tc(5));
+        rt.insert_child(e1, e3);
+        let e4 = entities.create();
+        s.insert(e4, Tc(7));
+        rt.insert_child(e3, e4);
+
+        assert_eq!(rt.ancestors(e4).collect::<Vec<_>>(), [e4.idx(), e3.idx(), e1.idx()]);
+        assert_eq!(rt.ancestors(e4).filter_map(|idx| s.get(idx)).product::<Tc>(), Tc(70));
     }
 
     #[test]
     fn serde() {
         let mut entities = Entities::default();
-        let mut sg: SceneGraph<TestComponent> = Default::default();
+        let mut sg: SceneGraph<Tc> = Default::default();
         sg.insert(entities.create());
 
         assert_tokens(
