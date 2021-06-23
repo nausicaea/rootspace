@@ -87,7 +87,6 @@ mod tests {
 
     use ecs::{Entities, VecStorage, Storage};
     use serde_test::{assert_tokens, Token};
-    use rose_tree::Hierarchy as Hierarchy2;
 
     use super::*;
     use std::iter::Product;
@@ -131,7 +130,7 @@ mod tests {
     fn hierarchy_2() {
         let mut entities = Entities::default();
         let mut s = <Tc as Component>::Storage::default();
-        let mut rt: Hierarchy2<Index> = Hierarchy2::default();
+        let mut rt: rose_tree::Hierarchy<Index> = rose_tree::Hierarchy::default();
 
         let e1 = entities.create();
         s.insert(e1, Tc(2));

@@ -1,5 +1,4 @@
 use crate::tree::Tree;
-use std::iter::FusedIterator;
 use std::collections::VecDeque;
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
@@ -101,7 +100,7 @@ where
 
 impl<'a, K> Iterator for AncestorsIter<'a, K>
 where
-    K: Clone + Ord + Eq + std::hash::Hash + std::fmt::Debug,
+    K: Clone + Ord + Eq + std::hash::Hash,
 {
     type Item = K;
 
