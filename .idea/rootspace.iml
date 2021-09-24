@@ -2,30 +2,27 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/rootspace/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/affine-transform/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ecs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ecs/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/engine/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/engine/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/file-manipulation/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/file-manipulation/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/hierarchy/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ply/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ply/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/hierarchy/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/affine-transform/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/pacman/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/ecs/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/file-manipulation/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/rootspace/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/file-manipulation/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/try-default/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rootspace/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/rose-tree/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/try-default/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/affine-transform/target" />
-      <excludeFolder url="file://$MODULE_DIR$/engine/target" />
       <excludeFolder url="file://$MODULE_DIR$/ecs/target" />
-      <excludeFolder url="file://$MODULE_DIR$/file-manipulation/target" />
-      <excludeFolder url="file://$MODULE_DIR$/pacman/target" />
+      <excludeFolder url="file://$MODULE_DIR$/try-default/target" />
+      <excludeFolder url="file://$MODULE_DIR$/engine/target" />
+      <excludeFolder url="file://$MODULE_DIR$/hierarchy/target" />
       <excludeFolder url="file://$MODULE_DIR$/rose-tree/target" />
+      <excludeFolder url="file://$MODULE_DIR$/rootspace/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

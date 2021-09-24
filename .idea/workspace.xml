@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/.idea.rootspace.dir.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/encodings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/indexLayout.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/riderModule.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/rootspace.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rootspace.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Test_All.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/affine-transform/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/affine-transform/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/entity/generation.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/entity/generation.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/entity/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/entity/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/scene_graph/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/resources/scene_graph/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hierarchy/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/hierarchy/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hierarchy/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/hierarchy/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/src/hierarchy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/src/hierarchy.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/src/octree.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/tests/test_spatial_partitioning.rs" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="8vgs609l" />
+  </component>
+  <component name="ProjectId" id="1yZruzrKUvOTW2ObNaJrocdrnfH" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+  </component>
+  <component name="RustProjectSettings">
+    <option name="runRustfmtOnSave" value="true" />
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+    <option name="useRustfmt" value="true" />
+    <option name="version" value="2" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="" />
+      <created>1632470179365</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1632470179365</updated>
+      <workItem from="1632470183080" duration="360000" />
+      <workItem from="1632470562576" duration="243000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
