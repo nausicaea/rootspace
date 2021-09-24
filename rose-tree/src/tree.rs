@@ -1,8 +1,16 @@
-use std::collections::{HashMap, VecDeque, BTreeMap};
-use std::iter::FusedIterator;
+use std::{
+    collections::{BTreeMap, HashMap, VecDeque},
+    iter::FusedIterator,
+};
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde_support", serde(bound(serialize = "K: Ord + std::hash::Hash + serde::Serialize, V: serde::Serialize", deserialize = "K: Ord + std::hash::Hash + for<'r> serde::Deserialize<'r>, V: for<'r> serde::Deserialize<'r>")))]
+#[cfg_attr(
+    feature = "serde_support",
+    serde(bound(
+        serialize = "K: Ord + std::hash::Hash + serde::Serialize, V: serde::Serialize",
+        deserialize = "K: Ord + std::hash::Hash + for<'r> serde::Deserialize<'r>, V: for<'r> serde::Deserialize<'r>"
+    ))
+)]
 #[derive(Debug)]
 pub struct Tree<K, V> {
     pub(crate) edges: HashMap<K, Vec<K>>,
@@ -85,7 +93,8 @@ where
             return false;
         }
 
-        self.edges.entry(parent.clone())
+        self.edges
+            .entry(parent.clone())
             .and_modify(|e| e.push(key.clone()))
             .or_insert_with(|| vec![key.clone()]);
         self.parents.insert(key.clone(), Some(parent.clone()));
@@ -107,7 +116,12 @@ where
 
         while let Some(k) = queue.pop_front() {
             // Remove all edges of the current node
-            queue.extend(self.edges.remove(&k).into_iter().flat_map(|children| children.into_iter()));
+            queue.extend(
+                self.edges
+                    .remove(&k)
+                    .into_iter()
+                    .flat_map(|children| children.into_iter()),
+            );
 
             // Remove all dangling edges
             for (_, children) in &mut self.edges {
@@ -133,22 +147,32 @@ where
     pub fn traverse_with<F: Fn(&K, Option<&V>, &V) -> V>(&mut self, f: F) {
         let mut queue: VecDeque<(K, Option<K>)> = VecDeque::default();
 
-        queue.extend(self.parents.iter().filter(|(_, p)| p.is_none()).map(|(k, _)| (k.clone(), None)));
+        queue.extend(
+            self.parents
+                .iter()
+                .filter(|(_, p)| p.is_none())
+                .map(|(k, _)| (k.clone(), None)),
+        );
 
         while let Some((target, parent)) = queue.pop_front() {
             let new_value = {
                 let parent_value = parent.and_then(|p| self.nodes.get(&p));
-                let target_value = self.nodes.get(&target)
-                    .expect("The node was not found");
+                let target_value = self.nodes.get(&target).expect("The node was not found");
 
                 f(&target, parent_value, target_value)
             };
 
-            self.nodes.get_mut(&target)
+            self.nodes
+                .get_mut(&target)
                 .map(|v| *v = new_value)
                 .expect("The node was not found");
 
-            queue.extend(self.edges.get(&target).iter().flat_map(|children| children.iter().map(|c| (c.clone(), Some(target.clone())))));
+            queue.extend(
+                self.edges
+                    .get(&target)
+                    .iter()
+                    .flat_map(|children| children.iter().map(|c| (c.clone(), Some(target.clone())))),
+            );
         }
     }
 }
@@ -167,9 +191,9 @@ where
 }
 
 impl<K, V> PartialEq for Tree<K, V>
-    where
-        K: Eq + std::hash::Hash,
-        V: PartialEq,
+where
+    K: Eq + std::hash::Hash,
+    V: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         self.edges.eq(&other.edges) && self.nodes.eq(&other.nodes) && self.parents.eq(&other.parents)
@@ -213,10 +237,7 @@ where
     }
 }
 
-impl<'a, K, V> FusedIterator for AncestorsIter<'a, K, V>
-where
-    K: Clone + Ord + Eq + std::hash::Hash,
-{}
+impl<'a, K, V> FusedIterator for AncestorsIter<'a, K, V> where K: Clone + Ord + Eq + std::hash::Hash {}
 
 pub struct BfsIter<'a, K, V> {
     queue: VecDeque<K>,
@@ -229,7 +250,13 @@ where
 {
     fn new(hier: &'a Tree<K, V>) -> Self {
         BfsIter {
-            queue: hier.parents.iter().filter(|(_, p)| p.is_none()).map(|(k, _)| k).cloned().collect(),
+            queue: hier
+                .parents
+                .iter()
+                .filter(|(_, p)| p.is_none())
+                .map(|(k, _)| k)
+                .cloned()
+                .collect(),
             hier,
         }
     }
@@ -243,7 +270,13 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(next_node) = self.queue.pop_front() {
-            self.queue.extend(self.hier.edges.get(&next_node).iter().flat_map(|children| children.iter().cloned()));
+            self.queue.extend(
+                self.hier
+                    .edges
+                    .get(&next_node)
+                    .iter()
+                    .flat_map(|children| children.iter().cloned()),
+            );
 
             self.hier.nodes.get_key_value(&next_node)
         } else {
@@ -263,7 +296,14 @@ where
 {
     fn new(hier: &'a Tree<K, V>) -> Self {
         DfsIter {
-            stack: hier.parents.iter().filter(|(_, p)| p.is_none()).map(|(k, _)| k).rev().cloned().collect(),
+            stack: hier
+                .parents
+                .iter()
+                .filter(|(_, p)| p.is_none())
+                .map(|(k, _)| k)
+                .rev()
+                .cloned()
+                .collect(),
             hier,
         }
     }
@@ -277,7 +317,13 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(next_node) = self.stack.pop() {
-            self.stack.extend(self.hier.edges.get(&next_node).iter().flat_map(|children| children.iter().rev().cloned()));
+            self.stack.extend(
+                self.hier
+                    .edges
+                    .get(&next_node)
+                    .iter()
+                    .flat_map(|children| children.iter().rev().cloned()),
+            );
 
             self.hier.nodes.get_key_value(&next_node)
         } else {
@@ -445,10 +491,7 @@ mod tests {
 
         let bfsiter = BfsIter::new(&rt);
         let keys: Vec<Tk> = bfsiter.map(|n| n.0.clone()).collect();
-        assert_eq!(
-            keys,
-            &[Tk(0), Tk(1), Tk(2), Tk(3), Tk(4), Tk(5)]
-        );
+        assert_eq!(keys, &[Tk(0), Tk(1), Tk(2), Tk(3), Tk(4), Tk(5)]);
     }
 
     #[test]
@@ -463,10 +506,7 @@ mod tests {
 
         let dfsiter = DfsIter::new(&rt);
         let keys: Vec<Tk> = dfsiter.map(|n| n.0.clone()).collect();
-        assert_eq!(
-            keys,
-            &[Tk(0), Tk(2), Tk(1), Tk(3), Tk(5), Tk(4)]
-        );
+        assert_eq!(keys, &[Tk(0), Tk(2), Tk(1), Tk(3), Tk(5), Tk(4)]);
     }
 
     #[test]

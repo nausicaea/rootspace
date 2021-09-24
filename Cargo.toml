@@ -4,9 +4,9 @@ members = [
     "file-manipulation",
     "affine-transform",
     "ply",
-    "rose-tree",
     "hierarchy",
     "ecs",
     "engine",
     "rootspace",
+    "rose-tree",
 ]

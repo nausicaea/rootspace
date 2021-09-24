@@ -14,5 +14,6 @@ nalgebra = "^0.21.0"
 serde = { version = "^1.0.0", features = [ "derive" ], optional = true }
 
 [dev-dependencies]
+nalgebra = { version = "^0.21.0", features = ["serde-serialize"] }
 serde = { version = "^1.0.0", features = [ "derive" ] }
 serde_test = "^1.0.0"

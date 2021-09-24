@@ -1,6 +1,4 @@
-pub mod tree;
-pub mod octree;
 pub mod hierarchy;
+pub mod tree;
 
-pub use self::tree::Tree;
-pub use self::hierarchy::Hierarchy;
+pub use self::{hierarchy::Hierarchy, tree::Tree};

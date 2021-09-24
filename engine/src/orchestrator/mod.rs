@@ -11,6 +11,7 @@ use anyhow::Result;
 use ecs::{Entity, EventQueue, LoopControl, Reg, ResourceRegistry, Storage, SystemRegistry, World, WorldEvent};
 use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use log::debug;
+use rose_tree::Hierarchy;
 use serde::{Deserialize, Serialize};
 use try_default::TryDefault;
 
@@ -171,6 +172,7 @@ where
 
     fn on_destroy_entity(&mut self, entity: Entity) {
         debug!("Removing entity {} from scene graphs and all components", entity);
+        self.world.get_mut::<Hierarchy<Entity>>().remove(entity);
         self.world.get_mut::<SceneGraph<Model>>().remove(entity);
         self.world.get_mut::<SceneGraph<UiModel>>().remove(entity);
         self.world.get_components_mut::<Info>().remove(entity);

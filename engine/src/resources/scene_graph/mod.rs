@@ -83,13 +83,12 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Mul;
+    use std::{iter::Product, ops::Mul};
 
-    use ecs::{Entities, VecStorage, Storage};
+    use ecs::{Entities, Storage, VecStorage};
     use serde_test::{assert_tokens, Token};
 
     use super::*;
-    use std::iter::Product;
 
     #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
     struct Tc(usize);
@@ -115,38 +114,15 @@ mod tests {
     }
 
     impl<'a> Product<&'a Tc> for Tc {
-        fn product<I: Iterator<Item=&'a Tc>>(iter: I) -> Self {
+        fn product<I: Iterator<Item = &'a Tc>>(iter: I) -> Self {
             iter.fold(Tc(1), |state, value| &state * value)
         }
     }
 
     impl Product for Tc {
-        fn product<I: Iterator<Item=Self>>(iter: I) -> Self {
+        fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
             iter.fold(Tc(1), |state, value| state * value)
         }
-    }
-
-    #[test]
-    fn hierarchy_2() {
-        let mut entities = Entities::default();
-        let mut s = <Tc as Component>::Storage::default();
-        let mut rt: rose_tree::Hierarchy<Index> = rose_tree::Hierarchy::default();
-
-        let e1 = entities.create();
-        s.insert(e1, Tc(2));
-        rt.insert(e1);
-        let e2 = entities.create();
-        s.insert(e2, Tc(3));
-        rt.insert(e2);
-        let e3 = entities.create();
-        s.insert(e3, Tc(5));
-        rt.insert_child(e1, e3);
-        let e4 = entities.create();
-        s.insert(e4, Tc(7));
-        rt.insert_child(e3, e4);
-
-        assert_eq!(rt.ancestors(e4).collect::<Vec<_>>(), [e4.idx(), e3.idx(), e1.idx()]);
-        assert_eq!(rt.ancestors(e4).filter_map(|idx| s.get(idx)).product::<Tc>(), Tc(70));
     }
 
     #[test]

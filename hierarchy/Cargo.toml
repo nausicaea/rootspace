@@ -7,14 +7,14 @@ repository = "https://gitlab.com/nausicaea/hierarchy.git"
 edition = "2018"
 
 [features]
-serde_support = ["serde", "serde_derive", "daggy/serde-1"]
+serde_support = ["serde", "daggy/serde-1"]
 
 [dependencies]
 thiserror = "^1.0.0"
 daggy = "^0.7.0"
-serde = { version = "^1.0.0", optional = true }
-serde_derive = { version = "^1.0.0", optional = true }
+serde = { version = "^1.0.0", optional = true, features = ["derive"] }
 
 [dev-dependencies]
-serde = { version = "^1.0.0" }
+daggy = { version = "^0.7.0", features = ["serde-1"] }
+serde = { version = "^1.0.0", features = ["derive"] }
 serde_test = "^1.0.0"

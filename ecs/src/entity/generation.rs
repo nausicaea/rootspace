@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// A zero-based generation that can be used to track the number of times that a corresponding
 /// index has been used previously.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Generation(u32);
 

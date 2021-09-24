@@ -1,8 +1,21 @@
-use crate::tree::Tree;
 use std::collections::VecDeque;
 
-#[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde_support", serde(transparent, bound(serialize = "K: Ord + std::hash::Hash + serde::Serialize", deserialize = "K: Ord + std::hash::Hash + for<'r> serde::Deserialize<'r>")))]
+#[cfg(any(test, feature = "ecs"))]
+use ecs::{Resource, SerializationName};
+
+use crate::tree::Tree;
+
+#[cfg_attr(any(test, feature = "serde_support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    any(test, feature = "serde_support"),
+    serde(
+        transparent,
+        bound(
+            serialize = "K: Ord + std::hash::Hash + serde::Serialize",
+            deserialize = "K: Ord + std::hash::Hash + for<'r> serde::Deserialize<'r>"
+        )
+    )
+)]
 #[derive(Debug)]
 pub struct Hierarchy<K>(Tree<K, ()>);
 
@@ -81,6 +94,12 @@ where
     }
 }
 
+#[cfg(any(test, feature = "ecs"))]
+impl<K> Resource for Hierarchy<K> where K: 'static {}
+
+#[cfg(any(test, feature = "ecs"))]
+impl<K> SerializationName for Hierarchy<K> {}
+
 pub struct AncestorsIter<'a, K> {
     key: Option<K>,
     hier: &'a Hierarchy<K>,
@@ -128,7 +147,14 @@ where
 {
     fn new(hier: &'a Hierarchy<K>) -> Self {
         BfsIter {
-            queue: hier.0.parents.iter().filter(|(_, p)| p.is_none()).map(|(k, _)| k).cloned().collect(),
+            queue: hier
+                .0
+                .parents
+                .iter()
+                .filter(|(_, p)| p.is_none())
+                .map(|(k, _)| k)
+                .cloned()
+                .collect(),
             hier,
         }
     }
@@ -142,7 +168,14 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(next_node) = self.queue.pop_front() {
-            self.queue.extend(self.hier.0.edges.get(&next_node).iter().flat_map(|children| children.iter().cloned()));
+            self.queue.extend(
+                self.hier
+                    .0
+                    .edges
+                    .get(&next_node)
+                    .iter()
+                    .flat_map(|children| children.iter().cloned()),
+            );
 
             Some(next_node)
         } else {
@@ -162,7 +195,15 @@ where
 {
     fn new(hier: &'a Hierarchy<K>) -> Self {
         DfsIter {
-            stack: hier.0.parents.iter().filter(|(_, p)| p.is_none()).map(|(k, _)| k).rev().cloned().collect(),
+            stack: hier
+                .0
+                .parents
+                .iter()
+                .filter(|(_, p)| p.is_none())
+                .map(|(k, _)| k)
+                .rev()
+                .cloned()
+                .collect(),
             hier,
         }
     }
@@ -176,7 +217,14 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(next_node) = self.stack.pop() {
-            self.stack.extend(self.hier.0.edges.get(&next_node).iter().flat_map(|children| children.iter().rev().cloned()));
+            self.stack.extend(
+                self.hier
+                    .0
+                    .edges
+                    .get(&next_node)
+                    .iter()
+                    .flat_map(|children| children.iter().rev().cloned()),
+            );
 
             Some(next_node)
         } else {
@@ -187,6 +235,11 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::{iter::Product, ops::Mul};
+
+    use ecs::{Component, Entities, Index, Storage, VecStorage};
+    use serde::{Deserialize, Serialize};
+
     use super::*;
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize)]
@@ -195,6 +248,41 @@ mod tests {
     impl AsRef<Tk> for Tk {
         fn as_ref(&self) -> &Tk {
             self
+        }
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    struct Tc(usize);
+
+    impl Component for Tc {
+        type Storage = VecStorage<Self>;
+    }
+
+    impl Mul<Tc> for Tc {
+        type Output = Tc;
+
+        fn mul(self, rhs: Tc) -> Tc {
+            &self * &rhs
+        }
+    }
+
+    impl<'a, 'b> Mul<&'a Tc> for &'b Tc {
+        type Output = Tc;
+
+        fn mul(self, rhs: &'a Tc) -> Tc {
+            Tc(self.0 * rhs.0)
+        }
+    }
+
+    impl<'a> Product<&'a Tc> for Tc {
+        fn product<I: Iterator<Item = &'a Tc>>(iter: I) -> Self {
+            iter.fold(Tc(1), |state, value| &state * value)
+        }
+    }
+
+    impl Product for Tc {
+        fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+            iter.fold(Tc(1), |state, value| state * value)
         }
     }
 
@@ -302,10 +390,7 @@ mod tests {
 
         let bfsiter = BfsIter::new(&rt);
         let keys: Vec<Tk> = bfsiter.collect();
-        assert_eq!(
-            keys,
-            &[Tk(0), Tk(1), Tk(2), Tk(3), Tk(4), Tk(5)]
-        );
+        assert_eq!(keys, &[Tk(0), Tk(1), Tk(2), Tk(3), Tk(4), Tk(5)]);
     }
 
     #[test]
@@ -320,10 +405,7 @@ mod tests {
 
         let dfsiter = DfsIter::new(&rt);
         let keys: Vec<Tk> = dfsiter.collect();
-        assert_eq!(
-            keys,
-            &[Tk(0), Tk(2), Tk(1), Tk(3), Tk(5), Tk(4)]
-        );
+        assert_eq!(keys, &[Tk(0), Tk(2), Tk(1), Tk(3), Tk(5), Tk(4)]);
     }
 
     #[test]
@@ -338,6 +420,29 @@ mod tests {
 
         let ancestors: Vec<Tk> = rt.ancestors(&Tk(5)).collect();
         assert_eq!(ancestors, [Tk(5), Tk(3), Tk(1)]);
+    }
+
+    #[test]
+    fn ancestor_and_ecs_usage() {
+        let mut entities = Entities::default();
+        let mut s = <Tc as Component>::Storage::default();
+        let mut rt: Hierarchy<Index> = Hierarchy::default();
+
+        let e1 = entities.create();
+        s.insert(e1, Tc(2));
+        rt.insert(e1);
+        let e2 = entities.create();
+        s.insert(e2, Tc(3));
+        rt.insert(e2);
+        let e3 = entities.create();
+        s.insert(e3, Tc(5));
+        rt.insert_child(e1, e3);
+        let e4 = entities.create();
+        s.insert(e4, Tc(7));
+        rt.insert_child(e3, e4);
+
+        assert_eq!(rt.ancestors(e4).collect::<Vec<_>>(), [e4.idx(), e3.idx(), e1.idx()]);
+        assert_eq!(rt.ancestors(e4).filter_map(|idx| s.get(idx)).product::<Tc>(), Tc(70));
     }
 
     #[test]

@@ -1,27 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="CargoProjects">
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/.idea.rootspace.dir.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/encodings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/indexLayout.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.rootspace.dir/riderModule.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/rootspace.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rootspace.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Test_All.xml" beforeDir="false" />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="I had to delete and recreate the JetBrains project folder">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/affine-transform/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/affine-transform/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ecs/src/entity/generation.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/entity/generation.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ecs/src/entity/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/entity/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/storage/vec_storage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/storage/vec_storage.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" afterDir="false" />
@@ -32,6 +25,7 @@
       <change beforePath="$PROJECT_DIR$/rose-tree/src/hierarchy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/src/hierarchy.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rose-tree/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/src/lib.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rose-tree/src/octree.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/src/tree.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/src/tree.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rose-tree/tests/test_spatial_partitioning.rs" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -42,8 +36,19 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
   <component name="MacroExpansionManager">
     <option name="directoryName" value="8vgs609l" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedIndex" value="1" />
   </component>
   <component name="ProjectId" id="1yZruzrKUvOTW2ObNaJrocdrnfH" />
   <component name="ProjectViewState">
@@ -55,9 +60,34 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="true" />
     <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+  </component>
+  <component name="RunManager">
+    <configuration name="Test hierarchy::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package rose-tree --lib hierarchy::tests" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Cargo.Test hierarchy::tests" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="RustProjectSettings">
     <option name="runRustfmtOnSave" value="true" />
@@ -74,11 +104,33 @@
       <option name="presentableId" value="Default" />
       <updated>1632470179365</updated>
       <workItem from="1632470183080" duration="360000" />
-      <workItem from="1632470562576" duration="243000" />
+      <workItem from="1632470562576" duration="2145000" />
     </task>
+    <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
+      <created>1632471245885</created>
+      <option name="number" value="LOCAL−00001" />
+      <option name="presentableId" value="LOCAL−00001" />
+      <updated>1632471245885</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="I had to delete and recreate the JetBrains project folder" />
+    <option name="LAST_COMMIT_MESSAGE" value="I had to delete and recreate the JetBrains project folder" />
   </component>
 </project>

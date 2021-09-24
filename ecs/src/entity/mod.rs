@@ -1,6 +1,8 @@
 pub mod generation;
 pub mod index;
 
+use std::cmp::Ordering;
+
 use serde::{Deserialize, Serialize};
 
 pub use self::{generation::Generation, index::Index};
@@ -43,6 +45,24 @@ impl Entity {
 impl std::fmt::Display for Entity {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.idx)
+    }
+}
+
+impl PartialOrd for Entity {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.idx.partial_cmp(&other.idx)
+    }
+}
+
+impl Ord for Entity {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.idx.cmp(&other.idx)
+    }
+}
+
+impl AsRef<Entity> for Entity {
+    fn as_ref(&self) -> &Entity {
+        &self
     }
 }
 

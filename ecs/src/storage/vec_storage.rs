@@ -293,12 +293,12 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::{iter::Sum, ops::Add};
+
     use serde_test::{assert_tokens, Token};
 
     use super::*;
     use crate::{component::Component, entities::Entities, entity::Entity};
-    use std::ops::Add;
-    use std::iter::Sum;
 
     struct DropCounter<'a> {
         count: &'a mut usize,
@@ -334,13 +334,13 @@ mod tests {
     }
 
     impl<'a> Sum<&'a Tc> for Tc {
-        fn sum<I: Iterator<Item=&'a Tc>>(iter: I) -> Self {
+        fn sum<I: Iterator<Item = &'a Tc>>(iter: I) -> Self {
             iter.fold(Tc(0), |state, value| &state + value)
         }
     }
 
     impl Sum for Tc {
-        fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+        fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
             iter.fold(Tc(0), |state, value| state + value)
         }
     }
@@ -442,7 +442,13 @@ mod tests {
         s.insert(2u32, Tc(5));
         s.insert(3u32, Tc(7));
 
-        assert_eq!(s.indexed_iter().filter(|(idx, _)| [0u32, 1, 3].iter().any(|i| idx == i)).map(|(_, tc)| tc).sum::<Tc>(), Tc(12));
+        assert_eq!(
+            s.indexed_iter()
+                .filter(|(idx, _)| [0u32, 1, 3].iter().any(|i| idx == i))
+                .map(|(_, tc)| tc)
+                .sum::<Tc>(),
+            Tc(12)
+        );
         assert_eq!([0u32, 1, 3].iter().filter_map(|i| s.get(*i)).sum::<Tc>(), Tc(12));
     }
 

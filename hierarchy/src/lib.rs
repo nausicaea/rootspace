@@ -5,7 +5,9 @@
 //! associated with each identifier.
 #![deny(missing_docs)]
 
-use std::{collections::HashMap, fmt, hash::Hash, marker::PhantomData};
+#[cfg(any(test, feature = "serde_support"))]
+use std::marker::PhantomData;
+use std::{collections::HashMap, fmt, hash::Hash};
 
 use daggy::{
     petgraph::{
@@ -605,16 +607,13 @@ mod tests {
                 Token::Struct { name: "Graph", len: 4 },
                 Token::Str("nodes"),
                 Token::Seq { len: Some(3) },
-                Token::NewtypeStruct { name: "HierNode" },
                 Token::None,
-                Token::NewtypeStruct { name: "HierNode" },
                 Token::Some,
                 Token::Tuple { len: 2 },
                 Token::NewtypeStruct { name: "TestKey" },
                 Token::U64(1),
                 Token::F32(1.0),
                 Token::TupleEnd,
-                Token::NewtypeStruct { name: "HierNode" },
                 Token::Some,
                 Token::Tuple { len: 2 },
                 Token::NewtypeStruct { name: "TestKey" },

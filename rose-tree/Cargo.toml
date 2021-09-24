@@ -11,6 +11,9 @@ serde_support = ["serde"]
 [dependencies]
 nalgebra = "^0.27.1"
 serde = { version = "^1.0.0", features = ["derive"], optional = true }
+ecs = { path = "../ecs", optional = true }
 
 [dev-dependencies]
+serde = { version = "^1.0.0", features = ["derive"]}
+ecs = { path = "../ecs" }
 serde_test = "^1.0.126"
