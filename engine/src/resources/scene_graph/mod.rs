@@ -97,34 +97,6 @@ mod tests {
         type Storage = VecStorage<Self>;
     }
 
-    impl Mul<Tc> for Tc {
-        type Output = Tc;
-
-        fn mul(self, rhs: Tc) -> Tc {
-            &self * &rhs
-        }
-    }
-
-    impl<'a, 'b> Mul<&'a Tc> for &'b Tc {
-        type Output = Tc;
-
-        fn mul(self, rhs: &'a Tc) -> Tc {
-            Tc(self.0 * rhs.0)
-        }
-    }
-
-    impl<'a> Product<&'a Tc> for Tc {
-        fn product<I: Iterator<Item = &'a Tc>>(iter: I) -> Self {
-            iter.fold(Tc(1), |state, value| &state * value)
-        }
-    }
-
-    impl Product for Tc {
-        fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
-            iter.fold(Tc(1), |state, value| state * value)
-        }
-    }
-
     #[test]
     fn serde() {
         let mut entities = Entities::default();

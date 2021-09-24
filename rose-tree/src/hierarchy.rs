@@ -441,7 +441,6 @@ mod tests {
         s.insert(e4, Tc(7));
         rt.insert_child(e3, e4);
 
-        assert_eq!(rt.ancestors(e4).collect::<Vec<_>>(), [e4.idx(), e3.idx(), e1.idx()]);
         assert_eq!(rt.ancestors(e4).filter_map(|idx| s.get(idx)).product::<Tc>(), Tc(70));
     }
 

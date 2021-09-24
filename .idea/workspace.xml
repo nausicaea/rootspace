@@ -7,26 +7,10 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="I had to delete and recreate the JetBrains project folder">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Moved the more complex ancestors test to where it belongs.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/affine-transform/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/affine-transform/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/src/entity/generation.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/entity/generation.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/src/entity/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/entity/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/src/storage/vec_storage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/storage/vec_storage.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/resources/scene_graph/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/resources/scene_graph/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hierarchy/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/hierarchy/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hierarchy/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/hierarchy/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rose-tree/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rose-tree/src/hierarchy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/src/hierarchy.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rose-tree/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rose-tree/src/octree.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/rose-tree/src/tree.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/src/tree.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rose-tree/tests/test_spatial_partitioning.rs" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,7 +50,21 @@
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Cargo.Build">
+    <configuration name="Build" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="build" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="Test hierarchy::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package rose-tree --lib hierarchy::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -83,6 +81,10 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Cargo.Build" />
+      <item itemvalue="Cargo.Test hierarchy::tests" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Cargo.Test hierarchy::tests" />
@@ -104,7 +106,8 @@
       <option name="presentableId" value="Default" />
       <updated>1632470179365</updated>
       <workItem from="1632470183080" duration="360000" />
-      <workItem from="1632470562576" duration="2145000" />
+      <workItem from="1632470562576" duration="2231000" />
+      <workItem from="1632508974473" duration="721000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -112,7 +115,13 @@
       <option name="presentableId" value="LOCAL−00001" />
       <updated>1632471245885</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL−00002" summary="Moved the more complex ancestors test to where it belongs.">
+      <created>1632496834221</created>
+      <option name="number" value="LOCAL−00002" />
+      <option name="presentableId" value="LOCAL−00002" />
+      <updated>1632496834221</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -128,9 +137,11 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="I had to delete and recreate the JetBrains project folder" />
-    <option name="LAST_COMMIT_MESSAGE" value="I had to delete and recreate the JetBrains project folder" />
+    <MESSAGE value="Moved the more complex ancestors test to where it belongs." />
+    <option name="LAST_COMMIT_MESSAGE" value="Moved the more complex ancestors test to where it belongs." />
   </component>
 </project>
