@@ -507,7 +507,6 @@ dependencies = [
  "ecs",
  "file-manipulation",
  "glium",
- "hierarchy",
  "image",
  "log",
  "nalgebra 0.21.1",
@@ -764,16 +763,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "hierarchy"
-version = "0.2.4"
-dependencies = [
- "daggy",
- "serde",
- "serde_test",
- "thiserror",
 ]
 
 [[package]]

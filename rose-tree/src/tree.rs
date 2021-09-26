@@ -36,6 +36,15 @@ impl<K, V> Tree<K, V> {
 
 impl<K, V> Tree<K, V>
 where
+    K: Eq + std::hash::Hash,
+{
+    pub fn has_children<J: AsRef<K>>(&self, key: J) -> bool {
+        self.edges.get(key.as_ref()).map(|e| !e.is_empty()).unwrap_or(false)
+    }
+}
+
+impl<K, V> Tree<K, V>
+where
     K: Clone,
 {
     pub fn bfs_iter(&self) -> BfsIter<K, V> {
@@ -91,6 +100,10 @@ where
 
         if self.nodes.contains_key(&key) {
             return false;
+        }
+
+        if !self.nodes.contains_key(&parent) {
+            panic!("The parent node does not exist");
         }
 
         self.edges
@@ -390,6 +403,13 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn insert_child_parent_does_not_exist() {
+        let mut rt: Tree<Tk, Tv> = Tree::default();
+        rt.insert_child(&Tk(0), Tk(1), Tv("Good night, World!"));
+    }
+
+    #[test]
     fn no_cycles() {
         let mut rt: Tree<Tk, Tv> = Tree::default();
         assert!(rt.insert(Tk(0), Tv("0")));
@@ -405,6 +425,19 @@ mod tests {
         assert_eq!(rt.get(&Tk(0)), Some(&Tv("Zero")));
         assert!(!rt.insert_child(&Tk(3), Tk(3), Tv("Self-cycle")));
         assert_eq!(rt.get(&Tk(3)), None);
+    }
+
+    #[test]
+    fn has_children() {
+        let mut rt: Tree<Tk, Tv> = Tree::default();
+        rt.insert(Tk(0), Tv("A"));
+        rt.insert(Tk(1), Tv("B"));
+        rt.insert_child(&Tk(1), Tk(3), Tv("C"));
+        rt.insert_child(&Tk(3), Tk(5), Tv("D"));
+        rt.insert_child(&Tk(1), Tk(4), Tv("E"));
+
+        assert!(!rt.has_children(&Tk(0)));
+        assert!(rt.has_children(&Tk(1)));
     }
 
     #[test]

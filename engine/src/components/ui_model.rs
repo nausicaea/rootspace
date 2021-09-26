@@ -3,6 +3,7 @@ use std::ops::Mul;
 use ecs::{Component, VecStorage};
 use nalgebra::{zero, Affine3, Isometry3, Matrix4, Point2, Vector2, Vector3};
 use serde::{Deserialize, Serialize};
+use std::iter::Product;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "UiModelSerDe", from = "UiModelSerDe")]
@@ -120,6 +121,18 @@ impl<'a, 'b> Mul<&'a UiModel> for &'b UiModel {
             self.scale.component_mul(&rhs.scale),
             self.depth + rhs.depth,
         )
+    }
+}
+
+impl<'a> Product<&'a UiModel> for UiModel {
+    fn product<I: Iterator<Item = &'a UiModel>>(iter: I) -> Self {
+        iter.fold(UiModel::default(), |state, value| &state * value)
+    }
+}
+
+impl Product for UiModel {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(UiModel::default(), |state, value| state * value)
     }
 }
 

@@ -1,10 +1,10 @@
-use ecs::{Component, Entity, EventQueue, RegAdd, WorldEvent};
+use ecs::{Component, EventQueue, Index, RegAdd, WorldEvent};
 use rose_tree::Hierarchy;
 
 use crate::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     event::EngineEvent,
-    resources::{AssetDatabase, GraphicsBackend, SceneGraph, Settings, Statistics},
+    resources::{AssetDatabase, GraphicsBackend, Settings, Statistics},
     systems::{
         CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor, ForceShutdown,
         Renderer,
@@ -18,9 +18,7 @@ pub type ResourceTypes<B, RR> = RegAdd![
     <Renderable as Component>::Storage,
     <UiModel as Component>::Storage,
     <Model as Component>::Storage,
-    Hierarchy<Entity>,
-    SceneGraph<UiModel>,
-    SceneGraph<Model>,
+    Hierarchy<Index>,
     EventQueue<EngineEvent>,
     GraphicsBackend<B>,
     AssetDatabase,

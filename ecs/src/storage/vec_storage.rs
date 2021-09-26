@@ -492,7 +492,7 @@ mod tests {
             &[
                 Token::Map { len: Some(1) },
                 Token::U32(2),
-                Token::NewtypeStruct { name: "TestComponent" },
+                Token::NewtypeStruct { name: "Tc" },
                 Token::U64(100),
                 Token::MapEnd,
             ],

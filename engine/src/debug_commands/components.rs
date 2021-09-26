@@ -9,7 +9,7 @@ use super::{CommandTrait, Error};
 use crate::{
     components::{Camera, Info, Model, Renderable, RenderableType, Status, UiModel},
     graphics::BackendTrait,
-    resources::{AssetDatabase, GraphicsBackend, SceneGraph},
+    resources::{AssetDatabase, GraphicsBackend},
 };
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -197,7 +197,6 @@ where
         } else if subcommand == "model" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("model"))?;
             let create = scm.is_present("create");
-            let parent = scm.value_of("parent");
             let index = scm.value_of("index").ok_or(Error::NoIndexSpecified)?;
 
             let index: usize = index.parse()?;
@@ -205,28 +204,11 @@ where
                 .borrow::<Entities>()
                 .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
-            let parent = if let Some(parent) = parent {
-                let parent = parent.parse::<usize>()?;
-                let parent = res
-                    .borrow::<Entities>()
-                    .get(parent)
-                    .ok_or(Error::EntityNotFound(parent))?;
-
-                Some(parent)
-            } else {
-                None
-            };
 
             let mut models = res.borrow_components_mut::<Model>();
 
-            if create || parent.is_some() {
+            if create {
                 models.entry(entity).or_default();
-
-                if let Some(parent) = parent {
-                    res.borrow_mut::<SceneGraph<Model>>().insert_child(&parent, entity)?;
-                } else {
-                    res.borrow_mut::<SceneGraph<Model>>().insert(entity);
-                }
             }
 
             if let Some(mc) = models.get(entity) {
@@ -237,7 +219,6 @@ where
         } else if subcommand == "ui" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("ui"))?;
             let create = scm.is_present("create");
-            let parent = scm.value_of("parent");
             let index = scm.value_of("index").ok_or(Error::NoIndexSpecified)?;
 
             let index: usize = index.parse()?;
@@ -245,28 +226,11 @@ where
                 .borrow::<Entities>()
                 .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
-            let parent = if let Some(parent) = parent {
-                let parent = parent.parse::<usize>()?;
-                let parent = res
-                    .borrow::<Entities>()
-                    .get(parent)
-                    .ok_or(Error::EntityNotFound(parent))?;
-
-                Some(parent)
-            } else {
-                None
-            };
 
             let mut ui_models = res.borrow_components_mut::<UiModel>();
 
-            if create || parent.is_some() {
+            if create {
                 ui_models.entry(entity).or_default();
-
-                if let Some(parent) = parent {
-                    res.borrow_mut::<SceneGraph<UiModel>>().insert_child(&parent, entity)?;
-                } else {
-                    res.borrow_mut::<SceneGraph<UiModel>>().insert(entity);
-                }
             }
 
             if let Some(umc) = ui_models.get(entity) {

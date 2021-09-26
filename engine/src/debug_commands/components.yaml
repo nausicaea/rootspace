@@ -12,11 +12,6 @@ subcommands:
             short: c
             long: create
             help: Create a component for the entity unless one exists
-        - parent:
-            short: p
-            long: parent
-            takes_value: true
-            help: Specify the parent of the entity
         - index:
             required: true
             takes_value: true
@@ -28,11 +23,6 @@ subcommands:
             short: c
             long: create
             help: Create a component for the entity unless one exists
-        - parent:
-            short: p
-            long: parent
-            takes_value: true
-            help: Specify the parent of the entity
         - index:
             required: true
             takes_value: true

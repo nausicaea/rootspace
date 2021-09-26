@@ -1,14 +1,14 @@
 use clap::{load_yaml, App};
-use ecs::{Entities, EventQueue, Resources, Storage, WorldEvent};
+use ecs::{Entities, EventQueue, Index, Resources, Storage, WorldEvent};
 use serde::{Deserialize, Serialize};
 use term_table::{row::Row, table_cell::TableCell, TableBuilder, TableStyle};
 
 use super::Error;
 use crate::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
-    resources::SceneGraph,
     CommandTrait,
 };
+use rose_tree::Hierarchy;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EntitiesCommand;
@@ -60,12 +60,19 @@ impl CommandTrait for EntitiesCommand {
                 println!("No world position data found");
             }
 
-            if let Some(sgmc) = res.borrow::<SceneGraph<Model>>().get(&entity) {
+            {
+                let models = res.borrow_components::<Model>();
+                let local_model = res
+                    .borrow::<Hierarchy<Index>>()
+                    .ancestors(&entity)
+                    .filter_map(|idx| models.get(idx))
+                    .product::<Model>();
+
                 println!(
                     "GLOBAL - Position: {:?}, Orientation: {}, Scale: {:?}",
-                    sgmc.position().coords,
-                    sgmc.orientation(),
-                    sgmc.scale()
+                    local_model.position().coords,
+                    local_model.orientation(),
+                    local_model.scale()
                 );
             }
 
@@ -80,12 +87,19 @@ impl CommandTrait for EntitiesCommand {
                 println!("No UI position data found");
             }
 
-            if let Some(sgumc) = res.borrow::<SceneGraph<UiModel>>().get(&entity) {
+            {
+                let ui_models = res.borrow_components::<UiModel>();
+                let local_ui_model = res
+                    .borrow::<Hierarchy<Index>>()
+                    .ancestors(&entity)
+                    .filter_map(|idx| ui_models.get(idx))
+                    .product::<UiModel>();
+
                 println!(
                     "UI GLOBAL - Position: {:?}, Depth: {}, Scale: {:?}",
-                    sgumc.position().coords,
-                    sgumc.depth(),
-                    sgumc.scale()
+                    local_ui_model.position().coords,
+                    local_ui_model.depth(),
+                    local_ui_model.scale()
                 );
             }
 
@@ -169,7 +183,28 @@ impl CommandTrait for EntitiesCommand {
                 }
             }
         } else if subcommand == "create" {
+            let scm = scm.ok_or(Error::NoSubcommandArguments("create"))?;
+            let parent = scm.value_of("parent");
+            let parent = if let Some(parent) = parent {
+                let parent = parent.parse::<usize>()?;
+                let parent = res
+                    .borrow::<Entities>()
+                    .get(parent)
+                    .ok_or(Error::EntityNotFound(parent))?;
+
+                Some(parent)
+            } else {
+                None
+            };
+
             let entity = res.borrow_mut::<Entities>().create();
+
+            if let Some(parent) = parent {
+                res.borrow_mut::<Hierarchy<Index>>().insert_child(&parent, entity);
+            } else {
+                res.borrow_mut::<Hierarchy<Index>>().insert(entity);
+            }
+
             println!("Created the entity {}", entity);
             res.borrow_mut::<EventQueue<WorldEvent>>()
                 .send(WorldEvent::EntityCreated(entity));
@@ -183,14 +218,17 @@ impl CommandTrait for EntitiesCommand {
                 .get(index)
                 .ok_or(Error::EntityNotFound(index))?;
 
-            res.borrow_mut::<SceneGraph<Model>>().remove(entity);
-            res.borrow_mut::<SceneGraph<UiModel>>().remove(entity);
-            res.borrow_components_mut::<Info>().remove(entity);
-            res.borrow_components_mut::<Status>().remove(entity);
-            res.borrow_components_mut::<Model>().remove(entity);
-            res.borrow_components_mut::<UiModel>().remove(entity);
-            res.borrow_components_mut::<Camera>().remove(entity);
-            res.borrow_components_mut::<Renderable>().remove(entity);
+            if res.borrow::<Hierarchy<Index>>().has_children(&entity) {
+                return Err(Into::into(Error::CannotDestroyEntity(index)));
+            }
+
+            res.borrow_mut::<Hierarchy<Index>>().remove(&entity);
+            res.borrow_components_mut::<Info>().remove(&entity);
+            res.borrow_components_mut::<Status>().remove(&entity);
+            res.borrow_components_mut::<Model>().remove(&entity);
+            res.borrow_components_mut::<UiModel>().remove(&entity);
+            res.borrow_components_mut::<Camera>().remove(&entity);
+            res.borrow_components_mut::<Renderable>().remove(&entity);
             res.borrow_mut::<Entities>().destroy(entity);
             println!("Destroyed the entity {}", entity);
         }

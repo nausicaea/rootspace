@@ -35,6 +35,15 @@ impl<K> Hierarchy<K> {
 
 impl<K> Hierarchy<K>
 where
+    K: Eq + std::hash::Hash,
+{
+    pub fn has_children<J: AsRef<K>>(&self, key: J) -> bool {
+        self.0.has_children(key)
+    }
+}
+
+impl<K> Hierarchy<K>
+where
     K: Clone,
 {
     pub fn bfs_iter(&self) -> BfsIter<K> {
@@ -335,6 +344,19 @@ mod tests {
         assert!(!rt.contains_key(&Tk(4)));
         assert!(!rt.contains_key(&Tk(5)));
         assert!(!rt.remove(&Tk(1)));
+    }
+
+    #[test]
+    fn has_children() {
+        let mut rt: Hierarchy<Tk> = Hierarchy::default();
+        rt.insert(Tk(0));
+        rt.insert(Tk(1));
+        rt.insert_child(&Tk(1), Tk(3));
+        rt.insert_child(&Tk(3), Tk(5));
+        rt.insert_child(&Tk(1), Tk(4));
+
+        assert!(!rt.has_children(&Tk(0)));
+        assert!(rt.has_children(&Tk(1)));
     }
 
     #[test]

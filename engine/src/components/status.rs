@@ -2,6 +2,7 @@ use std::ops::Mul;
 
 use ecs::{Component, VecStorage};
 use serde::{Deserialize, Serialize};
+use std::iter::Product;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Status {
@@ -73,6 +74,18 @@ impl<'a, 'b> Mul<&'a Status> for &'b Status {
             enabled: self.enabled && rhs.enabled,
             visible: self.visible && rhs.visible,
         }
+    }
+}
+
+impl<'a> Product<&'a Status> for Status {
+    fn product<I: Iterator<Item = &'a Status>>(iter: I) -> Self {
+        iter.fold(Status::default(), |state, value| &state * value)
+    }
+}
+
+impl Product for Status {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Status::default(), |state, value| state * value)
     }
 }
 

@@ -8,7 +8,7 @@ use std::{
 };
 
 use anyhow::Result;
-use ecs::{Entity, EventQueue, LoopControl, Reg, ResourceRegistry, Storage, SystemRegistry, World, WorldEvent};
+use ecs::{Entity, EventQueue, Index, LoopControl, Reg, ResourceRegistry, Storage, SystemRegistry, World, WorldEvent};
 use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use log::debug;
 use rose_tree::Hierarchy;
@@ -19,7 +19,7 @@ use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
 use crate::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
     graphics::BackendTrait,
-    resources::{AssetDatabase, SceneGraph, Settings, Statistics},
+    resources::{AssetDatabase, Settings, Statistics},
     text_manipulation::tokenize,
     EngineEvent,
 };
@@ -172,9 +172,7 @@ where
 
     fn on_destroy_entity(&mut self, entity: Entity) {
         debug!("Removing entity {} from scene graphs and all components", entity);
-        self.world.get_mut::<Hierarchy<Entity>>().remove(entity);
-        self.world.get_mut::<SceneGraph<Model>>().remove(entity);
-        self.world.get_mut::<SceneGraph<UiModel>>().remove(entity);
+        self.world.get_mut::<Hierarchy<Index>>().remove(entity);
         self.world.get_components_mut::<Info>().remove(entity);
         self.world.get_components_mut::<Status>().remove(entity);
         self.world.get_components_mut::<Model>().remove(entity);

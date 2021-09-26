@@ -42,6 +42,12 @@ impl std::fmt::Display for Index {
     }
 }
 
+impl AsRef<Index> for Index {
+    fn as_ref(&self) -> &Index {
+        &self
+    }
+}
+
 impl AsRef<u32> for Index {
     fn as_ref(&self) -> &u32 {
         &self.0

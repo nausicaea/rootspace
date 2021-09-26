@@ -4,7 +4,7 @@ use std::{
 };
 
 use ecs::{
-    event_queue::receiver_id::ReceiverId, world::event::WorldEvent, Entities, EventQueue, Resources, SerializationName,
+    event_queue::receiver_id::ReceiverId, world::event::WorldEvent, EventQueue, Index, Resources, SerializationName,
     Storage, System, WithResources,
 };
 use log::debug;
@@ -13,8 +13,9 @@ use serde::{Deserialize, Serialize};
 use crate::{
     components::{Camera, Model, Renderable, Status, UiModel},
     graphics::{BackendTrait, FrameTrait},
-    resources::{GraphicsBackend, SceneGraph, Settings, Statistics},
+    resources::{GraphicsBackend, Settings, Statistics},
 };
+use rose_tree::Hierarchy;
 
 #[derive(Serialize, Deserialize)]
 pub struct Renderer<B> {
@@ -66,9 +67,7 @@ where
 {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         let start_mark = Instant::now();
-
         let mut world_draw_calls: usize = 0;
-
         let mut ui_draw_calls: usize = 0;
 
         // Reload all renderables.
@@ -77,21 +76,13 @@ where
             self.reload_renderables(res);
         }
 
-        // Update the scene graphs.
-        res.borrow_mut::<SceneGraph<Model>>()
-            .update(res.borrow_components::<Model>());
-        res.borrow_mut::<SceneGraph<UiModel>>()
-            .update(res.borrow_components::<UiModel>());
-
-        // Obtain a reference to the camera.
-        let cameras = res.borrow_components::<Camera>();
-
         // Grab the necessary resources
         let factory = res.borrow_mut::<GraphicsBackend<B>>();
         let settings = res.borrow::<Settings>();
-        let entities = res.borrow::<Entities>();
-        let world_graph = res.borrow::<SceneGraph<Model>>();
-        let ui_graph = res.borrow::<SceneGraph<UiModel>>();
+        let hierarchy = res.borrow::<Hierarchy<Index>>();
+        let cameras = res.borrow_components::<Camera>();
+        let models = res.borrow_components::<Model>();
+        let ui_models = res.borrow_components::<UiModel>();
         let statuses = res.borrow_components::<Status>();
         let renderables = res.borrow_components::<Renderable>();
 
@@ -101,42 +92,78 @@ where
 
         for (cam_idx, cam) in cameras.indexed_iter() {
             // Skip any inactive cameras
-            if statuses.get(cam_idx).map_or(true, |s| !s.enabled()) {
+            let local_cam_status = hierarchy
+                .ancestors(cam_idx)
+                .filter_map(|aidx| statuses.get(aidx))
+                .product::<Status>();
+
+            if !local_cam_status.enabled() {
                 continue;
             }
 
             // Obtain the model component of the camera
-            let cam_entity = entities.get(cam_idx).expect("Could not find the camera entity");
-            let cam_model = world_graph
-                .get(&cam_entity)
-                .expect("The camera is not part of the scene graph");
-            let cam_matrix = cam.world_matrix() * cam_model.matrix();
+            let local_cam_model = hierarchy
+                .ancestors(&cam_idx)
+                .filter_map(|aidx| models.get(aidx))
+                .product::<Model>();
+            let cam_world_matrix = cam.world_matrix() * local_cam_model.matrix();
+            let cam_ui_matrix = cam.ui_matrix();
 
             // Render the world scene.
-            world_graph
-                .iter()
-                // FIXME: Status filtering does not work if parent entities are disabled or hidden
-                .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
-                .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
-                .for_each(|(model, renderable)| {
-                    world_draw_calls += 1;
-                    target
-                        .render(&(cam_matrix * model.matrix()), &factory, renderable)
-                        .expect("Unable to render the world");
-                });
+            for (idx, _) in models.indexed_iter() {
+                let renderable = if let Some(rdrbl) = renderables.get(idx) {
+                    rdrbl
+                } else {
+                    continue;
+                };
+
+                let local_status = hierarchy
+                    .ancestors(&idx)
+                    .filter_map(|aidx| statuses.get(aidx))
+                    .product::<Status>();
+
+                if !(local_status.enabled() && local_status.visible()) {
+                    continue;
+                }
+
+                let local_model = hierarchy
+                    .ancestors(&idx)
+                    .filter_map(|aidx| models.get(aidx))
+                    .product::<Model>();
+
+                world_draw_calls += 1;
+                target
+                    .render(&(cam_world_matrix * local_model.matrix()), &factory, renderable)
+                    .unwrap_or_else(|e| panic!("Unable to render the world entity {}: {}", idx, e));
+            }
 
             // Render the ui scene.
-            ui_graph
-                .iter()
-                // FIXME: Status filtering does not work if parent entities are disabled or hidden
-                .filter(|&(entity, _)| statuses.get(entity).map_or(false, |s| s.enabled() && s.visible()))
-                .filter_map(|(entity, model)| renderables.get(entity).map(|renderable| (model, renderable)))
-                .for_each(|(model, renderable)| {
-                    ui_draw_calls += 1;
-                    target
-                        .render(&(cam.ui_matrix() * model.matrix()), &factory, renderable)
-                        .expect("Unable to render the UI");
-                });
+            for (idx, _) in ui_models.indexed_iter() {
+                let renderable = if let Some(rdrbl) = renderables.get(idx) {
+                    rdrbl
+                } else {
+                    continue;
+                };
+
+                let local_status = hierarchy
+                    .ancestors(&idx)
+                    .filter_map(|aidx| statuses.get(aidx))
+                    .product::<Status>();
+
+                if !(local_status.enabled() && local_status.visible()) {
+                    continue;
+                }
+
+                let local_ui_model = hierarchy
+                    .ancestors(&idx)
+                    .filter_map(|aidx| ui_models.get(aidx))
+                    .product::<UiModel>();
+
+                ui_draw_calls += 1;
+                target
+                    .render(&(cam_ui_matrix * local_ui_model.matrix()), &factory, renderable)
+                    .unwrap_or_else(|e| panic!("Unable to render the UI entity {}: {}", idx, e));
+            }
         }
 
         // Finalize the frame and thus swap the display buffers.

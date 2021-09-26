@@ -25,6 +25,8 @@ pub enum Error {
     NoIndexSpecified,
     #[error("The entity with index {0} was not found")]
     EntityNotFound(usize),
+    #[error("The entity with index {0} cannot be destroyed")]
+    CannotDestroyEntity(usize),
     #[error("The entity with index {0} cannot be enabled")]
     CannotEnableEntity(usize),
     #[error("The entity with index {0} cannot be disabled")]

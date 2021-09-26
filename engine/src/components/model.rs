@@ -4,6 +4,7 @@ use affine_transform::AffineTransform;
 use ecs::{Component, VecStorage};
 use nalgebra::{Affine3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3};
 use serde::{Deserialize, Serialize};
+use std::iter::Product;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "AffineTransform<f32>", from = "AffineTransform<f32>")]
@@ -89,6 +90,18 @@ impl<'a, 'b> Mul<&'a Model> for &'b Model {
             model: product,
             decomposed: product.into(),
         }
+    }
+}
+
+impl<'a> Product<&'a Model> for Model {
+    fn product<I: Iterator<Item = &'a Model>>(iter: I) -> Self {
+        iter.fold(Model::default(), |state, value| &state * value)
+    }
+}
+
+impl Product for Model {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Model::default(), |state, value| state * value)
     }
 }
 
