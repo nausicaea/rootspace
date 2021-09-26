@@ -239,14 +239,13 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         let key = self.key.as_ref()?;
 
-        if !self.hier.nodes.contains_key(key) {
+        if let Some(node) = self.hier.nodes.get_key_value(key) {
+            self.key = self.hier.parents.get(key).map(|p| p.clone()).flatten();
+            Some(node)
+        } else {
             self.key = None;
-            return None;
+            None
         }
-
-        let node = self.hier.nodes.get_key_value(key);
-        self.key = self.hier.parents.get(key).map(|p| p.clone()).flatten();
-        node
     }
 }
 
