@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{load_yaml, App};
 use ecs::{Entities, Resources, Storage};
 use serde::{Deserialize, Serialize};
@@ -254,26 +254,25 @@ where
             let mut renderables = res.borrow_components_mut::<Renderable>();
 
             if create {
-                renderables.entry(entity).or_insert_with(|| {
-                    let font = assets
-                        .find_asset("fonts/SourceSansPro-Regular.ttf")
-                        .expect("Unable to find the font asset");
-                    let vs = assets
-                        .find_asset("shaders/text-vertex.glsl")
-                        .expect("Unable to find the vertex shader asset");
-                    let fs = assets
-                        .find_asset("shaders/text-fragment.glsl")
-                        .expect("Unable to find the fragment shader asset");
+                let font = assets
+                    .find_asset("fonts/SourceSansPro-Regular.ttf")
+                    .context("Unable to find the font asset")?;
+                let vs = assets
+                    .find_asset("shaders/text-vertex.glsl")
+                    .context("Unable to find the vertex shader asset")?;
+                let fs = assets
+                    .find_asset("shaders/text-fragment.glsl")
+                    .context("Unable to find the fragment shader asset")?;
 
-                    Renderable::builder()
-                        .with_type(RenderableType::Text)
-                        .with_text("Hello, World!")
-                        .with_font(font)
-                        .with_vertex_shader(vs)
-                        .with_fragment_shader(fs)
-                        .build(&mut factory)
-                        .expect("Unable to create a renderable component")
-                });
+                let renderable = Renderable::builder()
+                    .with_type(RenderableType::Text)
+                    .with_text("Hello, World!")
+                    .with_font(font)
+                    .with_vertex_shader(vs)
+                    .with_fragment_shader(fs)
+                    .build(&mut factory)?;
+
+                renderables.insert(entity, renderable);
             }
 
             if let Some(_rc) = renderables.get(entity) {

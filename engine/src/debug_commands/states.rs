@@ -38,6 +38,9 @@ impl CommandTrait for StatesCommand {
 
             res.borrow_mut::<EventQueue<WorldEvent>>()
                 .send(WorldEvent::Deserialize(path));
+        } else if subcommand == "reload" {
+            res.borrow_mut::<EventQueue<WorldEvent>>()
+                .send(WorldEvent::DeserializeLastState);
         }
 
         Ok(())

@@ -7,9 +7,13 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Completely replaced SceneGraph with the new implementation of Hierarchy.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Removed one dictionary lookup from AncestorsIter::next.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rose-tree/src/tree.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/src/tree.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/world/event.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/world/event.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/world/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/world/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/states.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/states.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/states.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/states.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,7 +53,7 @@
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager" selected="Cargo.Test tree::tests::insert_child_parent_does_not_exist">
+  <component name="RunManager" selected="Cargo.Test">
     <configuration name="Test assets::image::tests::from_path" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package engine --lib assets::image::tests::from_path -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -120,9 +124,9 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test rose-tree" />
         <item itemvalue="Cargo.Test tree::tests::insert_child_parent_does_not_exist" />
         <item itemvalue="Cargo.Test assets::image::tests::from_path" />
-        <item itemvalue="Cargo.Test rose-tree" />
       </list>
     </recent_temporary>
   </component>
@@ -143,7 +147,9 @@
       <workItem from="1632470183080" duration="360000" />
       <workItem from="1632470562576" duration="2231000" />
       <workItem from="1632508974473" duration="4466000" />
-      <workItem from="1632629792178" duration="5650000" />
+      <workItem from="1632629792178" duration="6629000" />
+      <workItem from="1632682414284" duration="171000" />
+      <workItem from="1632682839088" duration="1071000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -169,7 +175,13 @@
       <option name="presentableId" value="LOCAL−00004" />
       <updated>1632634680915</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL−00005" summary="Removed one dictionary lookup from AncestorsIter::next.">
+      <created>1632677190686</created>
+      <option name="number" value="LOCAL−00005" />
+      <option name="presentableId" value="LOCAL−00005" />
+      <updated>1632677190686</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -192,6 +204,7 @@
     <MESSAGE value="Moved the more complex ancestors test to where it belongs." />
     <MESSAGE value="Preparing to remove SceneGraph" />
     <MESSAGE value="Completely replaced SceneGraph with the new implementation of Hierarchy." />
-    <option name="LAST_COMMIT_MESSAGE" value="Completely replaced SceneGraph with the new implementation of Hierarchy." />
+    <MESSAGE value="Removed one dictionary lookup from AncestorsIter::next." />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed one dictionary lookup from AncestorsIter::next." />
   </component>
 </project>

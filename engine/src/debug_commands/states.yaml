@@ -19,3 +19,5 @@ subcommands:
             required: true
             takes_value: true
             help: Sets the name of the file to read from
+  - reload:
+      about: Reloads the current world state

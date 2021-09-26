@@ -31,6 +31,8 @@ use crate::{
     system::System,
     systems::{typed_systems::TypedSystems, Systems},
 };
+use std::convert::TryFrom;
+use std::path::PathBuf;
 
 pub mod error;
 pub mod event;
@@ -45,6 +47,7 @@ pub struct World<RR, FUSR, USR, RSR> {
     render_systems: Systems,
     receiver: Option<ReceiverId<WorldEvent>>,
     foreign_receiver: Option<ReceiverId<WorldEvent>>,
+    last_state: Option<PathBuf>,
     _rr: PhantomData<RR>,
     _sr1: PhantomData<FUSR>,
     _sr2: PhantomData<USR>,
@@ -75,6 +78,7 @@ where
             render_systems,
             receiver,
             foreign_receiver,
+            last_state: None,
             _rr: PhantomData::default(),
             _sr1: PhantomData::default(),
             _sr2: PhantomData::default(),
@@ -98,6 +102,7 @@ where
             render_systems: Systems::default(),
             receiver: None,
             foreign_receiver: None,
+            last_state: None,
             _rr: PhantomData::default(),
             _sr1: PhantomData::default(),
             _sr2: PhantomData::default(),
@@ -303,6 +308,12 @@ where
                     }
                     WorldEvent::Serialize(p) => self.on_serialize(&p).unwrap(),
                     WorldEvent::Deserialize(p) => self.on_deserialize(&p).unwrap(),
+                    WorldEvent::DeserializeLastState => {
+                        if let Some(ref ls) = self.last_state {
+                            let ls = FilePathBuf::try_from(ls).unwrap();
+                            self.on_deserialize(&ls).unwrap();
+                        }
+                    }
                     WorldEvent::CreateEntity => self.on_create_entity(),
                     WorldEvent::DestroyEntity(e) => self.on_destroy_entity(e),
                     _ => (),
@@ -323,6 +334,8 @@ where
         self.serialize(&mut s)
             .map_err(|e| WorldError::JsonError(path.into(), e))?;
 
+        self.last_state = Some(path.into());
+
         Ok(())
     }
 
@@ -342,6 +355,7 @@ where
         self.update_systems = world.update_systems;
         self.render_systems = world.render_systems;
         self.receiver = world.receiver;
+        self.last_state = Some(path.into());
 
         Ok(())
     }
@@ -400,6 +414,7 @@ where
         state.serialize_field("render_systems", &ts3)?;
         state.serialize_field("receiver", &self.receiver)?;
         state.serialize_field("foreign_receiver", &self.foreign_receiver)?;
+        state.skip_field("last_state")?;
         state.skip_field("_rr")?;
         state.skip_field("_sr1")?;
         state.skip_field("_sr2")?;
@@ -542,6 +557,7 @@ where
             render_systems: render_systems.into(),
             receiver,
             foreign_receiver,
+            last_state: None,
             _rr: PhantomData::default(),
             _sr1: PhantomData::default(),
             _sr2: PhantomData::default(),
