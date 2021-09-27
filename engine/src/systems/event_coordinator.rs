@@ -25,15 +25,13 @@ impl SerializationName for EventCoordinator {}
 
 impl System for EventCoordinator {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
-        let mut queue = res.borrow_mut::<EventQueue<EngineEvent>>();
-        let events = queue.receive(&self.receiver);
+        let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
         for event in events {
             match event {
-                EngineEvent::PhaseOneShutdown => queue.send(EngineEvent::PhaseTwoShutdown),
-                EngineEvent::PhaseTwoShutdown => {
-                    let mut queue = res.borrow_mut::<EventQueue<WorldEvent>>();
-                    queue.send(WorldEvent::Abort)
-                }
+                EngineEvent::PhaseOneShutdown => res
+                    .borrow_mut::<EventQueue<EngineEvent>>()
+                    .send(EngineEvent::PhaseTwoShutdown),
+                EngineEvent::PhaseTwoShutdown => res.borrow_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Abort),
                 _ => (),
             }
         }
