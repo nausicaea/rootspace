@@ -1,4 +1,4 @@
-use crate::event::{KeyModifiers, KeyState, VirtualKeyCode};
+use crate::event::{ElementState, ModifiersState, VirtualKeyCode};
 use crate::EngineEvent;
 use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources, WorldEvent};
 use serde::{Deserialize, Serialize};
@@ -25,9 +25,18 @@ impl System for DebugInteractions {
         for event in events {
             match event {
                 EngineEvent::KeyboardInput {
-                    state: KeyState::Pressed,
+                    state: ElementState::Released,
+                    virtual_keycode: Some(VirtualKeyCode::Q),
+                    modifiers: ModifiersState { logo: true, .. },
+                    ..
+                } => {
+                    res.borrow_mut::<EventQueue<EngineEvent>>()
+                        .send(EngineEvent::PhaseOneShutdown);
+                }
+                EngineEvent::KeyboardInput {
+                    state: ElementState::Released,
                     virtual_keycode: Some(VirtualKeyCode::R),
-                    modifiers: KeyModifiers { logo: true, .. },
+                    modifiers: ModifiersState { logo: true, .. },
                     ..
                 } => {
                     res.borrow_mut::<EventQueue<WorldEvent>>()

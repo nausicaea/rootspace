@@ -524,6 +524,7 @@ dependencies = [
  "thiserror",
  "try-default",
  "unicode-normalization",
+ "winit",
 ]
 
 [[package]]

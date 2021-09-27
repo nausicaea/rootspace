@@ -44,8 +44,8 @@ impl System for CameraManager {
         let events = res.borrow_mut::<EventQueue<EngineEvent>>().receive(&self.receiver);
         for event in events {
             match event {
-                EngineEvent::Resize(dims) => self.on_resize(res, dims),
-                EngineEvent::ChangeDpi(factor) => self.on_change_dpi(res, factor),
+                EngineEvent::Resized(dims) => self.on_resize(res, dims),
+                EngineEvent::DpiChanged(factor) => self.on_change_dpi(res, factor),
                 _ => (),
             }
         }

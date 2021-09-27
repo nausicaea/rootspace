@@ -5,28 +5,58 @@ pub enum EngineEvent {
     PhaseOneShutdown,
     PhaseTwoShutdown,
     Command(Vec<String>),
-    Resize((u32, u32)),
-    ChangeDpi(f64),
+    Resized((u32, u32)),
+    DpiChanged(f64),
+    Focused(bool),
+    CursorEntered,
+    CursorLeft,
     KeyboardInput {
         scan_code: u32,
-        state: KeyState,
+        state: ElementState,
         virtual_keycode: Option<VirtualKeyCode>,
-        modifiers: KeyModifiers,
+        modifiers: ModifiersState,
+    },
+    MouseInput {
+        state: ElementState,
+        button: MouseButton,
+        modifiers: ModifiersState,
+    },
+    CursorMoved {
+        position: LogicalPosition,
+        modifiers: ModifiersState,
+    },
+    TouchpadPressure {
+        pressure: f32,
+        stage: i64,
     },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum KeyState {
+pub enum ElementState {
     Pressed,
     Released,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct LogicalPosition {
+    pub x: f64,
+    pub y: f64,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct KeyModifiers {
+pub struct ModifiersState {
     pub shift: bool,
     pub ctrl: bool,
     pub alt: bool,
     pub logo: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum MouseButton {
+    Left,
+    Right,
+    Middle,
+    Other(u8),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -9,33 +9,40 @@ use anyhow::Result;
 use glium::{
     backend::glutin::DisplayCreationError,
     draw_parameters::DepthTest,
-    glutin::{
-        Api, ContextBuilder, ElementState, Event as GlutinEvent, EventsLoop, GlProfile, GlRequest, KeyboardInput,
-        ModifiersState, VirtualKeyCode as GliumVkc, WindowBuilder, WindowEvent,
-    },
+    glutin::{Api, ContextBuilder, GlProfile, GlRequest, WindowBuilder},
     index::PrimitiveType,
     texture::{ClientFormat, RawImage2d, Texture2d},
     uniforms::{UniformValue, Uniforms},
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
+use winit::dpi::LogicalPosition as WinitLogicalPosition;
+use winit::ElementState as WinitElementState;
+use winit::Event as WinitEvent;
+use winit::EventsLoop;
+use winit::KeyboardInput;
+use winit::ModifiersState as WinitModifierState;
+use winit::MouseButton as WinitMouseButton;
+use winit::VirtualKeyCode as WinitVirtualKeyCode;
+use winit::WindowEvent;
 
 use super::{
     BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
 };
+use crate::event::{LogicalPosition, MouseButton};
 use crate::{
     assets::Image,
     components::Renderable,
-    event::{EngineEvent, KeyModifiers, KeyState, VirtualKeyCode},
+    event::{ElementState, EngineEvent, ModifiersState, VirtualKeyCode},
     geometry::rect::Rect,
     resources::GraphicsBackend,
 };
 
 #[derive(Debug)]
-pub struct GliumEvent(pub GlutinEvent);
+pub struct GliumEvent(pub WinitEvent);
 
-impl From<GlutinEvent> for GliumEvent {
-    fn from(value: GlutinEvent) -> Self {
+impl From<WinitEvent> for GliumEvent {
+    fn from(value: WinitEvent) -> Self {
         GliumEvent(value)
     }
 }
@@ -46,37 +53,52 @@ impl TryInto<EngineEvent> for GliumEvent {
     type Error = ();
 
     fn try_into(self) -> Result<EngineEvent, Self::Error> {
-        if let GliumEvent(GlutinEvent::WindowEvent { event: we, .. }) = self {
+        if let GliumEvent(WinitEvent::WindowEvent { event: we, .. }) = self {
             match we {
                 WindowEvent::CloseRequested => Ok(EngineEvent::PhaseOneShutdown),
-                WindowEvent::Resized(l) => Ok(EngineEvent::Resize(l.into())),
-                WindowEvent::HiDpiFactorChanged(f) => Ok(EngineEvent::ChangeDpi(f)),
-                #[cfg(target_os = "macos")]
+                WindowEvent::Resized(l) => Ok(EngineEvent::Resized(l.into())),
+                WindowEvent::HiDpiFactorChanged(f) => Ok(EngineEvent::DpiChanged(f)),
+                WindowEvent::Focused(f) => Ok(EngineEvent::Focused(f)),
+                WindowEvent::CursorEntered { .. } => Ok(EngineEvent::CursorEntered),
+                WindowEvent::CursorLeft { .. } => Ok(EngineEvent::CursorLeft),
+                WindowEvent::CursorMoved {
+                    position, modifiers, ..
+                } => Ok(EngineEvent::CursorMoved {
+                    position: position.into(),
+                    modifiers: modifiers.into(),
+                }),
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
-                            virtual_keycode: Some(GliumVkc::Q),
-                            modifiers: ModifiersState { logo: true, .. },
-                            ..
-                        },
-                    ..
-                } => Ok(EngineEvent::PhaseOneShutdown),
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            scancode: sc,
-                            state: st,
-                            virtual_keycode: vkc,
-                            modifiers: mods,
+                            scancode,
+                            state,
+                            virtual_keycode,
+                            modifiers,
                         },
                     ..
                 } => Ok(EngineEvent::KeyboardInput {
-                    scan_code: sc,
-                    state: st.into(),
-                    virtual_keycode: vkc.map(|v| v.into()),
-                    modifiers: mods.into(),
+                    scan_code: scancode,
+                    state: state.into(),
+                    virtual_keycode: virtual_keycode.map(|v| v.into()),
+                    modifiers: modifiers.into(),
                 }),
-                _ => Err(()),
+                WindowEvent::MouseInput {
+                    state,
+                    button,
+                    modifiers,
+                    ..
+                } => Ok(EngineEvent::MouseInput {
+                    state: state.into(),
+                    button: button.into(),
+                    modifiers: modifiers.into(),
+                }),
+                WindowEvent::TouchpadPressure { pressure, stage, .. } => {
+                    Ok(EngineEvent::TouchpadPressure { pressure, stage })
+                }
+                e => {
+                    dbg!(&e);
+                    Err(())
+                }
             }
         } else {
             Err(())
@@ -84,18 +106,24 @@ impl TryInto<EngineEvent> for GliumEvent {
     }
 }
 
-impl From<ElementState> for KeyState {
-    fn from(value: ElementState) -> Self {
+impl From<WinitElementState> for ElementState {
+    fn from(value: WinitElementState) -> Self {
         match value {
-            ElementState::Pressed => KeyState::Pressed,
-            ElementState::Released => KeyState::Released,
+            WinitElementState::Pressed => ElementState::Pressed,
+            WinitElementState::Released => ElementState::Released,
         }
     }
 }
 
-impl From<ModifiersState> for KeyModifiers {
-    fn from(value: ModifiersState) -> Self {
-        KeyModifiers {
+impl From<WinitLogicalPosition> for LogicalPosition {
+    fn from(value: WinitLogicalPosition) -> Self {
+        LogicalPosition { x: value.x, y: value.y }
+    }
+}
+
+impl From<WinitModifierState> for ModifiersState {
+    fn from(value: WinitModifierState) -> Self {
+        ModifiersState {
             shift: value.shift,
             ctrl: value.ctrl,
             alt: value.alt,
@@ -104,171 +132,182 @@ impl From<ModifiersState> for KeyModifiers {
     }
 }
 
-impl From<GliumVkc> for VirtualKeyCode {
-    fn from(value: GliumVkc) -> Self {
+impl From<WinitMouseButton> for MouseButton {
+    fn from(value: WinitMouseButton) -> Self {
+        match value {
+            WinitMouseButton::Left => MouseButton::Left,
+            WinitMouseButton::Right => MouseButton::Right,
+            WinitMouseButton::Middle => MouseButton::Middle,
+            WinitMouseButton::Other(o) => MouseButton::Other(o),
+        }
+    }
+}
+
+impl From<WinitVirtualKeyCode> for VirtualKeyCode {
+    fn from(value: WinitVirtualKeyCode) -> Self {
         use crate::event::VirtualKeyCode::*;
         match value {
-            GliumVkc::Key1 => Key1,
-            GliumVkc::Key2 => Key2,
-            GliumVkc::Key3 => Key3,
-            GliumVkc::Key4 => Key4,
-            GliumVkc::Key5 => Key5,
-            GliumVkc::Key6 => Key6,
-            GliumVkc::Key7 => Key7,
-            GliumVkc::Key8 => Key8,
-            GliumVkc::Key9 => Key9,
-            GliumVkc::Key0 => Key0,
-            GliumVkc::A => A,
-            GliumVkc::B => B,
-            GliumVkc::C => C,
-            GliumVkc::D => D,
-            GliumVkc::E => E,
-            GliumVkc::F => F,
-            GliumVkc::G => G,
-            GliumVkc::H => H,
-            GliumVkc::I => I,
-            GliumVkc::J => J,
-            GliumVkc::K => K,
-            GliumVkc::L => L,
-            GliumVkc::M => M,
-            GliumVkc::N => N,
-            GliumVkc::O => O,
-            GliumVkc::P => P,
-            GliumVkc::Q => Q,
-            GliumVkc::R => R,
-            GliumVkc::S => S,
-            GliumVkc::T => T,
-            GliumVkc::U => U,
-            GliumVkc::V => V,
-            GliumVkc::W => W,
-            GliumVkc::X => X,
-            GliumVkc::Y => Y,
-            GliumVkc::Z => Z,
-            GliumVkc::Escape => Escape,
-            GliumVkc::F1 => F1,
-            GliumVkc::F2 => F2,
-            GliumVkc::F3 => F3,
-            GliumVkc::F4 => F4,
-            GliumVkc::F5 => F5,
-            GliumVkc::F6 => F6,
-            GliumVkc::F7 => F7,
-            GliumVkc::F8 => F8,
-            GliumVkc::F9 => F9,
-            GliumVkc::F10 => F10,
-            GliumVkc::F11 => F11,
-            GliumVkc::F12 => F12,
-            GliumVkc::F13 => F13,
-            GliumVkc::F14 => F14,
-            GliumVkc::F15 => F15,
-            GliumVkc::F16 => F16,
-            GliumVkc::F17 => F17,
-            GliumVkc::F18 => F18,
-            GliumVkc::F19 => F19,
-            GliumVkc::F20 => F20,
-            GliumVkc::F21 => F21,
-            GliumVkc::F22 => F22,
-            GliumVkc::F23 => F23,
-            GliumVkc::F24 => F24,
-            GliumVkc::Snapshot => PrintScreen,
-            GliumVkc::Scroll => ScrollLock,
-            GliumVkc::Pause => Pause,
-            GliumVkc::Insert => Insert,
-            GliumVkc::Home => Home,
-            GliumVkc::Delete => Delete,
-            GliumVkc::End => End,
-            GliumVkc::PageDown => PageDown,
-            GliumVkc::PageUp => PageUp,
-            GliumVkc::Left => Left,
-            GliumVkc::Up => Up,
-            GliumVkc::Right => Right,
-            GliumVkc::Down => Down,
-            GliumVkc::Back => Backspace,
-            GliumVkc::Return => Return,
-            GliumVkc::Space => Space,
-            GliumVkc::Compose => Compose,
-            GliumVkc::Caret => Caret,
-            GliumVkc::Numlock => NumLock,
-            GliumVkc::Numpad0 => Numpad0,
-            GliumVkc::Numpad1 => Numpad1,
-            GliumVkc::Numpad2 => Numpad2,
-            GliumVkc::Numpad3 => Numpad3,
-            GliumVkc::Numpad4 => Numpad4,
-            GliumVkc::Numpad5 => Numpad5,
-            GliumVkc::Numpad6 => Numpad6,
-            GliumVkc::Numpad7 => Numpad7,
-            GliumVkc::Numpad8 => Numpad8,
-            GliumVkc::Numpad9 => Numpad9,
-            GliumVkc::AbntC1 => AbntC1,
-            GliumVkc::AbntC2 => AbntC2,
-            GliumVkc::Add => Add,
-            GliumVkc::Apostrophe => Apostrophe,
-            GliumVkc::Apps => Apps,
-            GliumVkc::At => At,
-            GliumVkc::Ax => Ax,
-            GliumVkc::Backslash => Backslash,
-            GliumVkc::Calculator => Calculator,
-            GliumVkc::Capital => Capital,
-            GliumVkc::Colon => Colon,
-            GliumVkc::Comma => Comma,
-            GliumVkc::Convert => Convert,
-            GliumVkc::Decimal => Decimal,
-            GliumVkc::Divide => Divide,
-            GliumVkc::Equals => Equals,
-            GliumVkc::Grave => Grave,
-            GliumVkc::Kana => Kana,
-            GliumVkc::Kanji => Kanji,
-            GliumVkc::LAlt => LeftAlt,
-            GliumVkc::LBracket => LeftBracket,
-            GliumVkc::LControl => LeftControl,
-            GliumVkc::LShift => LeftShift,
-            GliumVkc::LWin => LeftLogo,
-            GliumVkc::Mail => Mail,
-            GliumVkc::MediaSelect => MediaSelect,
-            GliumVkc::MediaStop => MediaStop,
-            GliumVkc::Minus => Minus,
-            GliumVkc::Multiply => Multiply,
-            GliumVkc::Mute => Mute,
-            GliumVkc::MyComputer => MyComputer,
-            GliumVkc::NavigateForward => NavigateForward,
-            GliumVkc::NavigateBackward => NavigateBackward,
-            GliumVkc::NextTrack => NextTrack,
-            GliumVkc::NoConvert => NoConvert,
-            GliumVkc::NumpadComma => NumpadComma,
-            GliumVkc::NumpadEnter => NumpadEnter,
-            GliumVkc::NumpadEquals => NumpadEquals,
-            GliumVkc::OEM102 => OEM102,
-            GliumVkc::Period => Period,
-            GliumVkc::PlayPause => PlayPause,
-            GliumVkc::Power => Power,
-            GliumVkc::PrevTrack => PrevTrack,
-            GliumVkc::RAlt => RightAlt,
-            GliumVkc::RBracket => RightBracket,
-            GliumVkc::RControl => RightControl,
-            GliumVkc::RShift => RightShift,
-            GliumVkc::RWin => RightLogo,
-            GliumVkc::Semicolon => Semicolon,
-            GliumVkc::Slash => Slash,
-            GliumVkc::Sleep => Sleep,
-            GliumVkc::Stop => Stop,
-            GliumVkc::Subtract => Subtract,
-            GliumVkc::Sysrq => SysRq,
-            GliumVkc::Tab => Tab,
-            GliumVkc::Underline => Underline,
-            GliumVkc::Unlabeled => Unlabeled,
-            GliumVkc::VolumeDown => VolumeDown,
-            GliumVkc::VolumeUp => VolumeUp,
-            GliumVkc::Wake => Wake,
-            GliumVkc::WebBack => WebBack,
-            GliumVkc::WebFavorites => WebFavorites,
-            GliumVkc::WebForward => WebForward,
-            GliumVkc::WebHome => WebHome,
-            GliumVkc::WebRefresh => WebRefresh,
-            GliumVkc::WebSearch => WebSearch,
-            GliumVkc::WebStop => WebStop,
-            GliumVkc::Yen => Yen,
-            GliumVkc::Copy => Copy,
-            GliumVkc::Paste => Paste,
-            GliumVkc::Cut => Cut,
+            WinitVirtualKeyCode::Key1 => Key1,
+            WinitVirtualKeyCode::Key2 => Key2,
+            WinitVirtualKeyCode::Key3 => Key3,
+            WinitVirtualKeyCode::Key4 => Key4,
+            WinitVirtualKeyCode::Key5 => Key5,
+            WinitVirtualKeyCode::Key6 => Key6,
+            WinitVirtualKeyCode::Key7 => Key7,
+            WinitVirtualKeyCode::Key8 => Key8,
+            WinitVirtualKeyCode::Key9 => Key9,
+            WinitVirtualKeyCode::Key0 => Key0,
+            WinitVirtualKeyCode::A => A,
+            WinitVirtualKeyCode::B => B,
+            WinitVirtualKeyCode::C => C,
+            WinitVirtualKeyCode::D => D,
+            WinitVirtualKeyCode::E => E,
+            WinitVirtualKeyCode::F => F,
+            WinitVirtualKeyCode::G => G,
+            WinitVirtualKeyCode::H => H,
+            WinitVirtualKeyCode::I => I,
+            WinitVirtualKeyCode::J => J,
+            WinitVirtualKeyCode::K => K,
+            WinitVirtualKeyCode::L => L,
+            WinitVirtualKeyCode::M => M,
+            WinitVirtualKeyCode::N => N,
+            WinitVirtualKeyCode::O => O,
+            WinitVirtualKeyCode::P => P,
+            WinitVirtualKeyCode::Q => Q,
+            WinitVirtualKeyCode::R => R,
+            WinitVirtualKeyCode::S => S,
+            WinitVirtualKeyCode::T => T,
+            WinitVirtualKeyCode::U => U,
+            WinitVirtualKeyCode::V => V,
+            WinitVirtualKeyCode::W => W,
+            WinitVirtualKeyCode::X => X,
+            WinitVirtualKeyCode::Y => Y,
+            WinitVirtualKeyCode::Z => Z,
+            WinitVirtualKeyCode::Escape => Escape,
+            WinitVirtualKeyCode::F1 => F1,
+            WinitVirtualKeyCode::F2 => F2,
+            WinitVirtualKeyCode::F3 => F3,
+            WinitVirtualKeyCode::F4 => F4,
+            WinitVirtualKeyCode::F5 => F5,
+            WinitVirtualKeyCode::F6 => F6,
+            WinitVirtualKeyCode::F7 => F7,
+            WinitVirtualKeyCode::F8 => F8,
+            WinitVirtualKeyCode::F9 => F9,
+            WinitVirtualKeyCode::F10 => F10,
+            WinitVirtualKeyCode::F11 => F11,
+            WinitVirtualKeyCode::F12 => F12,
+            WinitVirtualKeyCode::F13 => F13,
+            WinitVirtualKeyCode::F14 => F14,
+            WinitVirtualKeyCode::F15 => F15,
+            WinitVirtualKeyCode::F16 => F16,
+            WinitVirtualKeyCode::F17 => F17,
+            WinitVirtualKeyCode::F18 => F18,
+            WinitVirtualKeyCode::F19 => F19,
+            WinitVirtualKeyCode::F20 => F20,
+            WinitVirtualKeyCode::F21 => F21,
+            WinitVirtualKeyCode::F22 => F22,
+            WinitVirtualKeyCode::F23 => F23,
+            WinitVirtualKeyCode::F24 => F24,
+            WinitVirtualKeyCode::Snapshot => PrintScreen,
+            WinitVirtualKeyCode::Scroll => ScrollLock,
+            WinitVirtualKeyCode::Pause => Pause,
+            WinitVirtualKeyCode::Insert => Insert,
+            WinitVirtualKeyCode::Home => Home,
+            WinitVirtualKeyCode::Delete => Delete,
+            WinitVirtualKeyCode::End => End,
+            WinitVirtualKeyCode::PageDown => PageDown,
+            WinitVirtualKeyCode::PageUp => PageUp,
+            WinitVirtualKeyCode::Left => Left,
+            WinitVirtualKeyCode::Up => Up,
+            WinitVirtualKeyCode::Right => Right,
+            WinitVirtualKeyCode::Down => Down,
+            WinitVirtualKeyCode::Back => Backspace,
+            WinitVirtualKeyCode::Return => Return,
+            WinitVirtualKeyCode::Space => Space,
+            WinitVirtualKeyCode::Compose => Compose,
+            WinitVirtualKeyCode::Caret => Caret,
+            WinitVirtualKeyCode::Numlock => NumLock,
+            WinitVirtualKeyCode::Numpad0 => Numpad0,
+            WinitVirtualKeyCode::Numpad1 => Numpad1,
+            WinitVirtualKeyCode::Numpad2 => Numpad2,
+            WinitVirtualKeyCode::Numpad3 => Numpad3,
+            WinitVirtualKeyCode::Numpad4 => Numpad4,
+            WinitVirtualKeyCode::Numpad5 => Numpad5,
+            WinitVirtualKeyCode::Numpad6 => Numpad6,
+            WinitVirtualKeyCode::Numpad7 => Numpad7,
+            WinitVirtualKeyCode::Numpad8 => Numpad8,
+            WinitVirtualKeyCode::Numpad9 => Numpad9,
+            WinitVirtualKeyCode::AbntC1 => AbntC1,
+            WinitVirtualKeyCode::AbntC2 => AbntC2,
+            WinitVirtualKeyCode::Add => Add,
+            WinitVirtualKeyCode::Apostrophe => Apostrophe,
+            WinitVirtualKeyCode::Apps => Apps,
+            WinitVirtualKeyCode::At => At,
+            WinitVirtualKeyCode::Ax => Ax,
+            WinitVirtualKeyCode::Backslash => Backslash,
+            WinitVirtualKeyCode::Calculator => Calculator,
+            WinitVirtualKeyCode::Capital => Capital,
+            WinitVirtualKeyCode::Colon => Colon,
+            WinitVirtualKeyCode::Comma => Comma,
+            WinitVirtualKeyCode::Convert => Convert,
+            WinitVirtualKeyCode::Decimal => Decimal,
+            WinitVirtualKeyCode::Divide => Divide,
+            WinitVirtualKeyCode::Equals => Equals,
+            WinitVirtualKeyCode::Grave => Grave,
+            WinitVirtualKeyCode::Kana => Kana,
+            WinitVirtualKeyCode::Kanji => Kanji,
+            WinitVirtualKeyCode::LAlt => LeftAlt,
+            WinitVirtualKeyCode::LBracket => LeftBracket,
+            WinitVirtualKeyCode::LControl => LeftControl,
+            WinitVirtualKeyCode::LShift => LeftShift,
+            WinitVirtualKeyCode::LWin => LeftLogo,
+            WinitVirtualKeyCode::Mail => Mail,
+            WinitVirtualKeyCode::MediaSelect => MediaSelect,
+            WinitVirtualKeyCode::MediaStop => MediaStop,
+            WinitVirtualKeyCode::Minus => Minus,
+            WinitVirtualKeyCode::Multiply => Multiply,
+            WinitVirtualKeyCode::Mute => Mute,
+            WinitVirtualKeyCode::MyComputer => MyComputer,
+            WinitVirtualKeyCode::NavigateForward => NavigateForward,
+            WinitVirtualKeyCode::NavigateBackward => NavigateBackward,
+            WinitVirtualKeyCode::NextTrack => NextTrack,
+            WinitVirtualKeyCode::NoConvert => NoConvert,
+            WinitVirtualKeyCode::NumpadComma => NumpadComma,
+            WinitVirtualKeyCode::NumpadEnter => NumpadEnter,
+            WinitVirtualKeyCode::NumpadEquals => NumpadEquals,
+            WinitVirtualKeyCode::OEM102 => OEM102,
+            WinitVirtualKeyCode::Period => Period,
+            WinitVirtualKeyCode::PlayPause => PlayPause,
+            WinitVirtualKeyCode::Power => Power,
+            WinitVirtualKeyCode::PrevTrack => PrevTrack,
+            WinitVirtualKeyCode::RAlt => RightAlt,
+            WinitVirtualKeyCode::RBracket => RightBracket,
+            WinitVirtualKeyCode::RControl => RightControl,
+            WinitVirtualKeyCode::RShift => RightShift,
+            WinitVirtualKeyCode::RWin => RightLogo,
+            WinitVirtualKeyCode::Semicolon => Semicolon,
+            WinitVirtualKeyCode::Slash => Slash,
+            WinitVirtualKeyCode::Sleep => Sleep,
+            WinitVirtualKeyCode::Stop => Stop,
+            WinitVirtualKeyCode::Subtract => Subtract,
+            WinitVirtualKeyCode::Sysrq => SysRq,
+            WinitVirtualKeyCode::Tab => Tab,
+            WinitVirtualKeyCode::Underline => Underline,
+            WinitVirtualKeyCode::Unlabeled => Unlabeled,
+            WinitVirtualKeyCode::VolumeDown => VolumeDown,
+            WinitVirtualKeyCode::VolumeUp => VolumeUp,
+            WinitVirtualKeyCode::Wake => Wake,
+            WinitVirtualKeyCode::WebBack => WebBack,
+            WinitVirtualKeyCode::WebFavorites => WebFavorites,
+            WinitVirtualKeyCode::WebForward => WebForward,
+            WinitVirtualKeyCode::WebHome => WebHome,
+            WinitVirtualKeyCode::WebRefresh => WebRefresh,
+            WinitVirtualKeyCode::WebSearch => WebSearch,
+            WinitVirtualKeyCode::WebStop => WebStop,
+            WinitVirtualKeyCode::Yen => Yen,
+            WinitVirtualKeyCode::Copy => Copy,
+            WinitVirtualKeyCode::Paste => Paste,
+            WinitVirtualKeyCode::Cut => Cut,
         }
     }
 }
