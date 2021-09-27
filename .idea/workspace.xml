@@ -7,14 +7,11 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added the ability to reload the last state by Logo-R combination.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added additional Events.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/event.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/event.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/entities.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/entities.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/graphics/glium/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/graphics/glium/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/systems/camera_manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/camera_manager.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/systems/debug_interactions.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/debug_interactions.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/event_coordinator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/event_coordinator.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -158,7 +155,7 @@
       <workItem from="1632629792178" duration="6629000" />
       <workItem from="1632682414284" duration="171000" />
       <workItem from="1632682839088" duration="1957000" />
-      <workItem from="1632760601896" duration="5162000" />
+      <workItem from="1632760601896" duration="6799000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -202,7 +199,13 @@
       <option name="presentableId" value="LOCAL−00007" />
       <updated>1632767771153</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL−00008" summary="Added additional Events.">
+      <created>1632771596927</created>
+      <option name="number" value="LOCAL−00008" />
+      <option name="presentableId" value="LOCAL−00008" />
+      <updated>1632771596927</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -228,6 +231,7 @@
     <MESSAGE value="Removed one dictionary lookup from AncestorsIter::next." />
     <MESSAGE value="Added the ability to reload the last state" />
     <MESSAGE value="Added the ability to reload the last state by Logo-R combination." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added the ability to reload the last state by Logo-R combination." />
+    <MESSAGE value="Added additional Events." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added additional Events." />
   </component>
 </project>

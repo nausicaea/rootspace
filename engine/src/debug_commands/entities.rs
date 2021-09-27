@@ -175,10 +175,13 @@ impl CommandTrait for EntitiesCommand {
                         (s.enabled() || show_disabled) && (s.visible() || show_hidden)
                     })
                 {
+                    let info = infos.get(entity);
+
                     println!(
-                        "Entity {}: {}",
+                        "Entity {}: {}, {}",
                         entity,
-                        infos.get(entity).map_or("(no name)", |i| i.name())
+                        info.map_or("(no name)", |i| i.name()),
+                        info.map_or("(no description)", |i| i.description()),
                     );
                 }
             }
