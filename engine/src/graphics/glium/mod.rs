@@ -16,6 +16,7 @@ use glium::{
     Blend, BlendingFunction, Depth, Display, DrawParameters, Frame, IndexBuffer, LinearBlendingFactor, Program,
     Surface, VertexBuffer,
 };
+use log::trace;
 use winit::dpi::LogicalPosition as WinitLogicalPosition;
 use winit::ElementState as WinitElementState;
 use winit::Event as WinitEvent;
@@ -96,7 +97,7 @@ impl TryInto<EngineEvent> for GliumEvent {
                     Ok(EngineEvent::TouchpadPressure { pressure, stage })
                 }
                 e => {
-                    dbg!(&e);
+                    trace!("{:?}", &e);
                     Err(())
                 }
             }
