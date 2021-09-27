@@ -92,21 +92,21 @@ where
 
         for (cam_idx, cam) in cameras.indexed_iter() {
             // Skip any inactive cameras
-            let local_cam_status = hierarchy
+            let global_cam_status = hierarchy
                 .ancestors(cam_idx)
                 .filter_map(|aidx| statuses.get(aidx))
                 .product::<Status>();
 
-            if !local_cam_status.enabled() {
+            if !global_cam_status.enabled() {
                 continue;
             }
 
             // Obtain the model component of the camera
-            let local_cam_model = hierarchy
+            let global_cam_model = hierarchy
                 .ancestors(&cam_idx)
                 .filter_map(|aidx| models.get(aidx))
                 .product::<Model>();
-            let cam_world_matrix = cam.world_matrix() * local_cam_model.matrix();
+            let cam_world_matrix = cam.world_matrix() * global_cam_model.matrix();
             let cam_ui_matrix = cam.ui_matrix();
 
             // Render the world scene.
@@ -117,23 +117,23 @@ where
                     continue;
                 };
 
-                let local_status = hierarchy
+                let global_status = hierarchy
                     .ancestors(&idx)
                     .filter_map(|aidx| statuses.get(aidx))
                     .product::<Status>();
 
-                if !(local_status.enabled() && local_status.visible()) {
+                if !(global_status.enabled() && global_status.visible()) {
                     continue;
                 }
 
-                let local_model = hierarchy
+                let global_model = hierarchy
                     .ancestors(&idx)
                     .filter_map(|aidx| models.get(aidx))
                     .product::<Model>();
 
                 world_draw_calls += 1;
                 target
-                    .render(&(cam_world_matrix * local_model.matrix()), &factory, renderable)
+                    .render(&(cam_world_matrix * global_model.matrix()), &factory, renderable)
                     .unwrap_or_else(|e| panic!("Unable to render the world entity {}: {}", idx, e));
             }
 
@@ -145,23 +145,23 @@ where
                     continue;
                 };
 
-                let local_status = hierarchy
+                let global_status = hierarchy
                     .ancestors(&idx)
                     .filter_map(|aidx| statuses.get(aidx))
                     .product::<Status>();
 
-                if !(local_status.enabled() && local_status.visible()) {
+                if !(global_status.enabled() && global_status.visible()) {
                     continue;
                 }
 
-                let local_ui_model = hierarchy
+                let global_ui_model = hierarchy
                     .ancestors(&idx)
                     .filter_map(|aidx| ui_models.get(aidx))
                     .product::<UiModel>();
 
                 ui_draw_calls += 1;
                 target
-                    .render(&(cam_ui_matrix * local_ui_model.matrix()), &factory, renderable)
+                    .render(&(cam_ui_matrix * global_ui_model.matrix()), &factory, renderable)
                     .unwrap_or_else(|e| panic!("Unable to render the UI entity {}: {}", idx, e));
             }
         }
