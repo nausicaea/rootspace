@@ -7,18 +7,24 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Removed one dictionary lookup from AncestorsIter::next.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added the ability to reload the last state">
+      <change afterPath="$PROJECT_DIR$/engine/src/systems/debug_interactions.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/src/world/event.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/world/event.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/src/world/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/src/world/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/states.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/states.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/states.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/states.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/debug_console.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/debug_console.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/mod.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Rust File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -149,7 +155,8 @@
       <workItem from="1632508974473" duration="4466000" />
       <workItem from="1632629792178" duration="6629000" />
       <workItem from="1632682414284" duration="171000" />
-      <workItem from="1632682839088" duration="1071000" />
+      <workItem from="1632682839088" duration="1957000" />
+      <workItem from="1632760601896" duration="1701000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -181,7 +188,13 @@
       <option name="presentableId" value="LOCAL−00005" />
       <updated>1632677190686</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL−00006" summary="Added the ability to reload the last state">
+      <created>1632685509366</created>
+      <option name="number" value="LOCAL−00006" />
+      <option name="presentableId" value="LOCAL−00006" />
+      <updated>1632685509367</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -205,6 +218,7 @@
     <MESSAGE value="Preparing to remove SceneGraph" />
     <MESSAGE value="Completely replaced SceneGraph with the new implementation of Hierarchy." />
     <MESSAGE value="Removed one dictionary lookup from AncestorsIter::next." />
-    <option name="LAST_COMMIT_MESSAGE" value="Removed one dictionary lookup from AncestorsIter::next." />
+    <MESSAGE value="Added the ability to reload the last state" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added the ability to reload the last state" />
   </component>
 </project>

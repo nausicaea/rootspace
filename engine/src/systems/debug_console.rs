@@ -20,6 +20,8 @@ pub struct DebugConsole {
     worker_rx: Receiver<String>,
 }
 
+impl SerializationName for DebugConsole {}
+
 impl DebugConsole {
     pub fn send_command(&self, cmd_line: &str, res: &Resources) {
         let settings = res.borrow::<Settings>();
@@ -34,11 +36,7 @@ impl DebugConsole {
         res.borrow_mut::<EventQueue<EngineEvent>>()
             .send(EngineEvent::Command(tokens));
     }
-}
 
-impl SerializationName for DebugConsole {}
-
-impl DebugConsole {
     pub fn builder() -> DebugConsoleBuilder<std::io::Stdin> {
         DebugConsoleBuilder::default()
     }

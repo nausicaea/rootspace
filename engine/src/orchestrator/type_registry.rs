@@ -6,8 +6,8 @@ use crate::{
     event::EngineEvent,
     resources::{AssetDatabase, GraphicsBackend, Settings, Statistics},
     systems::{
-        CameraManager, DebugConsole, DebugShell, EventCoordinator, EventInterface, EventMonitor, ForceShutdown,
-        Renderer,
+        CameraManager, DebugConsole, DebugInteractions, DebugShell, EventCoordinator, EventInterface, EventMonitor,
+        ForceShutdown, Renderer,
     },
 };
 
@@ -28,6 +28,7 @@ pub type ResourceTypes<B, RR> = RegAdd![
 ];
 
 pub type UpdateSystemTypes<B, SR> = RegAdd![
+    DebugInteractions,
     DebugConsole,
     DebugShell<B>,
     ForceShutdown,
