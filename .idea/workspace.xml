@@ -7,11 +7,9 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added additional Events.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Renamed variables that were misleading">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/entities.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/entities.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/graphics/glium/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/graphics/glium/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/systems/event_coordinator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/event_coordinator.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -155,7 +153,7 @@
       <workItem from="1632629792178" duration="6629000" />
       <workItem from="1632682414284" duration="171000" />
       <workItem from="1632682839088" duration="1957000" />
-      <workItem from="1632760601896" duration="6799000" />
+      <workItem from="1632760601896" duration="7826000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -205,7 +203,31 @@
       <option name="presentableId" value="LOCAL−00008" />
       <updated>1632771596927</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL−00009" summary="Removed a temporary variable">
+      <created>1632772776554</created>
+      <option name="number" value="LOCAL−00009" />
+      <option name="presentableId" value="LOCAL−00009" />
+      <updated>1632772776554</updated>
+    </task>
+    <task id="LOCAL−00010" summary="Changed a debug call.">
+      <created>1632772792127</created>
+      <option name="number" value="LOCAL−00010" />
+      <option name="presentableId" value="LOCAL−00010" />
+      <updated>1632772792127</updated>
+    </task>
+    <task id="LOCAL−00011" summary="Added information about an entitie's description">
+      <created>1632772812275</created>
+      <option name="number" value="LOCAL−00011" />
+      <option name="presentableId" value="LOCAL−00011" />
+      <updated>1632772812275</updated>
+    </task>
+    <task id="LOCAL−00012" summary="Renamed variables that were misleading">
+      <created>1632773371388</created>
+      <option name="number" value="LOCAL−00012" />
+      <option name="presentableId" value="LOCAL−00012" />
+      <updated>1632773371388</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -232,6 +254,10 @@
     <MESSAGE value="Added the ability to reload the last state" />
     <MESSAGE value="Added the ability to reload the last state by Logo-R combination." />
     <MESSAGE value="Added additional Events." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added additional Events." />
+    <MESSAGE value="Removed a temporary variable" />
+    <MESSAGE value="Changed a debug call." />
+    <MESSAGE value="Added information about an entitie's description" />
+    <MESSAGE value="Renamed variables that were misleading" />
+    <option name="LAST_COMMIT_MESSAGE" value="Renamed variables that were misleading" />
   </component>
 </project>

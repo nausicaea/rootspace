@@ -56,13 +56,9 @@ impl CommandTrait for EntitiesCommand {
                     mc.orientation(),
                     mc.scale()
                 );
-            } else {
-                println!("No world position data found");
-            }
 
-            {
                 let models = res.borrow_components::<Model>();
-                let local_model = res
+                let global_model = res
                     .borrow::<Hierarchy<Index>>()
                     .ancestors(&entity)
                     .filter_map(|idx| models.get(idx))
@@ -70,10 +66,20 @@ impl CommandTrait for EntitiesCommand {
 
                 println!(
                     "GLOBAL - Position: {:?}, Orientation: {}, Scale: {:?}",
-                    local_model.position().coords,
-                    local_model.orientation(),
-                    local_model.scale()
+                    global_model.position().coords,
+                    global_model.orientation(),
+                    global_model.scale()
                 );
+
+                for (cam, cam_model) in res.iter_rr::<Camera, Model>() {
+                    let ndc_position = cam.world_point_to_ndc(cam_model, &global_model.position());
+                    println!("NDC - Position: {:?}", ndc_position.coords);
+
+                    let screen_position = cam.world_point_to_screen(cam_model, &global_model.position());
+                    println!("SCREEN - Position: {:?}", screen_position.coords);
+                }
+            } else {
+                println!("No world position data found");
             }
 
             if let Some(umc) = res.borrow_components::<UiModel>().get(&entity) {
@@ -83,13 +89,9 @@ impl CommandTrait for EntitiesCommand {
                     umc.depth(),
                     umc.scale()
                 );
-            } else {
-                println!("No UI position data found");
-            }
 
-            {
                 let ui_models = res.borrow_components::<UiModel>();
-                let local_ui_model = res
+                let global_ui_model = res
                     .borrow::<Hierarchy<Index>>()
                     .ancestors(&entity)
                     .filter_map(|idx| ui_models.get(idx))
@@ -97,10 +99,20 @@ impl CommandTrait for EntitiesCommand {
 
                 println!(
                     "UI GLOBAL - Position: {:?}, Depth: {}, Scale: {:?}",
-                    local_ui_model.position().coords,
-                    local_ui_model.depth(),
-                    local_ui_model.scale()
+                    global_ui_model.position().coords,
+                    global_ui_model.depth(),
+                    global_ui_model.scale()
                 );
+
+                for cam in res.iter_r::<Camera>() {
+                    let ndc_position = cam.ui_point_to_ndc(&global_ui_model.position(), global_ui_model.depth());
+                    println!("NDC - Position: {:?}", ndc_position.coords);
+
+                    let screen_position = cam.ui_point_to_screen(&global_ui_model.position(), global_ui_model.depth());
+                    println!("SCREEN - Position: {:?}", screen_position.coords);
+                }
+            } else {
+                println!("No UI position data found");
             }
 
             let mut other_components = String::new();
