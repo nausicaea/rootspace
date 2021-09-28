@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use anyhow::{Context, Result};
 use clap::{load_yaml, App};
-use ecs::{Entities, Resources, Storage};
+use ecs::{Entities, Index, Resources, Storage};
 use serde::{Deserialize, Serialize};
 
 use super::{CommandTrait, Error};
@@ -11,6 +11,7 @@ use crate::{
     graphics::BackendTrait,
     resources::{AssetDatabase, GraphicsBackend},
 };
+use rose_tree::Hierarchy;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ComponentsCommand<B>(PhantomData<B>);
@@ -104,7 +105,19 @@ impl<B> ComponentsCommand<B> {
         }
 
         if let Some(sc) = statuses.get(&entity) {
-            println!("Entity {}: {}", entity, sc);
+            println!("LOCAL - Enabled: {}, Visible: {}", sc.enabled(), sc.visible());
+
+            let global_status = res
+                .borrow::<Hierarchy<Index>>()
+                .ancestors(&entity)
+                .filter_map(|idx| statuses.get(idx))
+                .product::<Status>();
+
+            println!(
+                "GLOBAL - Enabled: {}, Visible: {}",
+                global_status.enabled(),
+                global_status.visible()
+            );
         } else {
             println!("Entity {}: (no status)", entity);
         }
@@ -132,15 +145,119 @@ impl<B> ComponentsCommand<B> {
             println!("Dimensions: {}x{}", dims.0, dims.1);
             println!("Physical dimensions: {}x{}", pdims.0, pdims.1);
             println!("DPI-factor: {}", cc.dpi_factor());
-            println!("Projection type: {}", cc.projection());
             println!(
                 "Vertical field of view: {} rad ({} deg)",
                 cc.fov_y(),
                 cc.fov_y() * 360.0 / std::f32::consts::PI
             );
             println!("Depth frustum: {:?}", cc.frustum_z());
+            println!("Projection type: {}", cc.projection());
+            println!("World matrix (dependent on projection type): {}", cc.world_matrix());
+            println!("UI matrix (always orthographic): {}", cc.ui_matrix());
         } else {
             println!("Entity {}: (no camera)", entity);
+        }
+
+        Ok(())
+    }
+
+    fn model(&self, res: &Resources, index: &str, create: bool) -> Result<()> {
+        let index: usize = index.parse()?;
+        let entity = res
+            .borrow::<Entities>()
+            .get(index)
+            .ok_or(Error::EntityNotFound(index))?;
+
+        let mut models = res.borrow_components_mut::<Model>();
+
+        if create {
+            models.entry(entity).or_default();
+        }
+
+        if let Some(mc) = models.get(entity) {
+            println!(
+                "LOCAL - Position: {:?}, Orientation: {}, Scale: {:?}",
+                mc.position().coords,
+                mc.orientation(),
+                mc.scale()
+            );
+
+            let global_model = res
+                .borrow::<Hierarchy<Index>>()
+                .ancestors(&entity)
+                .filter_map(|idx| models.get(idx))
+                .product::<Model>();
+
+            println!(
+                "GLOBAL - Position: {:?}, Orientation: {}, Scale: {:?}",
+                global_model.position().coords,
+                global_model.orientation(),
+                global_model.scale()
+            );
+
+            for (cam, cam_model) in res.iter_rr::<Camera, Model>() {
+                let ndc_position = cam.world_point_to_ndc(cam_model, &global_model.position());
+                println!("NDC - Position: {:?}", ndc_position.coords);
+
+                let screen_position = cam.world_point_to_screen(cam_model, &global_model.position());
+                println!("SCREEN - Position: {:?}", screen_position.coords);
+            }
+
+            println!("LOCAL matrix: {}", mc.matrix());
+            println!("GLOBAL matrix: {}", global_model.matrix());
+        } else {
+            println!("Entity {}: (no model)", entity);
+        }
+
+        Ok(())
+    }
+
+    fn ui(&self, res: &Resources, index: &str, create: bool) -> Result<()> {
+        let index: usize = index.parse()?;
+        let entity = res
+            .borrow::<Entities>()
+            .get(index)
+            .ok_or(Error::EntityNotFound(index))?;
+
+        let mut ui_models = res.borrow_components_mut::<UiModel>();
+
+        if create {
+            ui_models.entry(entity).or_default();
+        }
+
+        if let Some(umc) = ui_models.get(entity) {
+            println!(
+                "LOCAL - Position: {:?}, Depth: {}, Scale: {:?}",
+                umc.position().coords,
+                umc.depth(),
+                umc.scale(),
+            );
+
+            let global_ui_model = res
+                .borrow::<Hierarchy<Index>>()
+                .ancestors(&entity)
+                .filter_map(|idx| ui_models.get(idx))
+                .product::<UiModel>();
+
+            println!(
+                "GLOBAL - Position: {:?}, Depth: {}, Scale: {:?}",
+                global_ui_model.position().coords,
+                global_ui_model.depth(),
+                global_ui_model.scale()
+            );
+
+            for cam in res.iter_r::<Camera>() {
+                let ndc_position = cam.ui_point_to_ndc(&global_ui_model.position(), global_ui_model.depth());
+                println!("NDC - Position: {:?}", ndc_position.coords);
+
+                let screen_position = cam.ui_point_to_screen(&global_ui_model.position(), global_ui_model.depth());
+                println!("SCREEN - Position: {:?}", screen_position.coords);
+            }
+
+            println!("LOCAL matrix: {}", umc.matrix());
+            println!("GLOBAL matrix: {}", global_ui_model.matrix());
+        } else {
+            println!("Entity {}: (no UI model)", entity);
         }
 
         Ok(())
@@ -199,45 +316,13 @@ where
             let create = scm.is_present("create");
             let index = scm.value_of("index").ok_or(Error::NoIndexSpecified)?;
 
-            let index: usize = index.parse()?;
-            let entity = res
-                .borrow::<Entities>()
-                .get(index)
-                .ok_or(Error::EntityNotFound(index))?;
-
-            let mut models = res.borrow_components_mut::<Model>();
-
-            if create {
-                models.entry(entity).or_default();
-            }
-
-            if let Some(mc) = models.get(entity) {
-                println!("Entity {}: {}", entity, mc);
-            } else {
-                println!("Entity {}: (no model)", entity);
-            }
+            self.model(res, index, create)?;
         } else if subcommand == "ui" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("ui"))?;
             let create = scm.is_present("create");
             let index = scm.value_of("index").ok_or(Error::NoIndexSpecified)?;
 
-            let index: usize = index.parse()?;
-            let entity = res
-                .borrow::<Entities>()
-                .get(index)
-                .ok_or(Error::EntityNotFound(index))?;
-
-            let mut ui_models = res.borrow_components_mut::<UiModel>();
-
-            if create {
-                ui_models.entry(entity).or_default();
-            }
-
-            if let Some(umc) = ui_models.get(entity) {
-                println!("Entity {}: {}", entity, umc);
-            } else {
-                println!("Entity {}: (no UI model)", entity);
-            }
+            self.ui(res, index, create)?;
         } else if subcommand == "renderable" {
             let scm = scm.ok_or(Error::NoSubcommandArguments("renderable"))?;
             let create = scm.is_present("create");

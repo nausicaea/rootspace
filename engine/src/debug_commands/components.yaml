@@ -18,6 +18,8 @@ subcommands:
             help: Specify the index of the desired entity
   - ui:
       about: Provide access to ui model components
+      aliases:
+        - ui-model
       args:
         - create:
             short: c

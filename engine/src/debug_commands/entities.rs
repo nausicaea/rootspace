@@ -44,78 +44,18 @@ impl CommandTrait for EntitiesCommand {
             }
 
             if let Some(sc) = res.borrow_components::<Status>().get(&entity) {
-                println!("Enabled: {}, Visible: {}", sc.enabled(), sc.visible());
+                println!("LOCAL - Enabled: {}, Visible: {}", sc.enabled(), sc.visible());
             } else {
                 println!("No status information found");
             }
 
-            if let Some(mc) = res.borrow_components::<Model>().get(&entity) {
-                println!(
-                    "LOCAL - Position: {:?}, Orientation: {}, Scale: {:?}",
-                    mc.position().coords,
-                    mc.orientation(),
-                    mc.scale()
-                );
-
-                let models = res.borrow_components::<Model>();
-                let global_model = res
-                    .borrow::<Hierarchy<Index>>()
-                    .ancestors(&entity)
-                    .filter_map(|idx| models.get(idx))
-                    .product::<Model>();
-
-                println!(
-                    "GLOBAL - Position: {:?}, Orientation: {}, Scale: {:?}",
-                    global_model.position().coords,
-                    global_model.orientation(),
-                    global_model.scale()
-                );
-
-                for (cam, cam_model) in res.iter_rr::<Camera, Model>() {
-                    let ndc_position = cam.world_point_to_ndc(cam_model, &global_model.position());
-                    println!("NDC - Position: {:?}", ndc_position.coords);
-
-                    let screen_position = cam.world_point_to_screen(cam_model, &global_model.position());
-                    println!("SCREEN - Position: {:?}", screen_position.coords);
-                }
-            } else {
-                println!("No world position data found");
-            }
-
-            if let Some(umc) = res.borrow_components::<UiModel>().get(&entity) {
-                println!(
-                    "UI LOCAL - Position: {:?}, Depth: {}, Scale: {:?}",
-                    umc.position().coords,
-                    umc.depth(),
-                    umc.scale()
-                );
-
-                let ui_models = res.borrow_components::<UiModel>();
-                let global_ui_model = res
-                    .borrow::<Hierarchy<Index>>()
-                    .ancestors(&entity)
-                    .filter_map(|idx| ui_models.get(idx))
-                    .product::<UiModel>();
-
-                println!(
-                    "UI GLOBAL - Position: {:?}, Depth: {}, Scale: {:?}",
-                    global_ui_model.position().coords,
-                    global_ui_model.depth(),
-                    global_ui_model.scale()
-                );
-
-                for cam in res.iter_r::<Camera>() {
-                    let ndc_position = cam.ui_point_to_ndc(&global_ui_model.position(), global_ui_model.depth());
-                    println!("NDC - Position: {:?}", ndc_position.coords);
-
-                    let screen_position = cam.ui_point_to_screen(&global_ui_model.position(), global_ui_model.depth());
-                    println!("SCREEN - Position: {:?}", screen_position.coords);
-                }
-            } else {
-                println!("No UI position data found");
-            }
-
             let mut other_components = String::new();
+            if res.borrow_components::<Model>().contains(&entity) {
+                other_components.push_str(" MODEL");
+            }
+            if res.borrow_components::<UiModel>().contains(&entity) {
+                other_components.push_str(" UI-MODEL");
+            }
             if res.borrow_components::<Camera>().contains(&entity) {
                 other_components.push_str(" CAMERA");
             }
@@ -131,6 +71,7 @@ impl CommandTrait for EntitiesCommand {
             let entities = res.borrow::<Entities>();
             let statuses = res.borrow_components::<Status>();
 
+            // FIXME: This does not account for hierarchical statuses
             let total_count = entities.len();
             let ev_count = statuses.iter().filter(|s| s.enabled() && s.visible()).count();
             let eh_count = statuses.iter().filter(|s| s.enabled() && !s.visible()).count();
@@ -182,6 +123,7 @@ impl CommandTrait for EntitiesCommand {
             let statuses = res.borrow_components::<Status>();
 
             for entity in entities.iter() {
+                // FIXME: This does not account for hierarchical statuses
                 if show_all
                     || statuses.get(entity).map_or(false, |s| {
                         (s.enabled() || show_disabled) && (s.visible() || show_hidden)
