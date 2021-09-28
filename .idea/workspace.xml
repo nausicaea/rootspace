@@ -7,9 +7,8 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Renamed variables that were misleading">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added NDC and Screen position calculations for entity info">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/entities.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/entities.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,82 +55,12 @@
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager" selected="Cargo.Test">
-    <configuration name="Test assets::image::tests::from_path" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package engine --lib assets::image::tests::from_path -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test rose-tree" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package rose-tree --lib" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test tree::tests::insert_child_parent_does_not_exist" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package rose-tree --lib tree::tests::insert_child_parent_does_not_exist -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-      <option name="command" value="test --workspace" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Cargo.Run Headless">
     <list>
       <item itemvalue="Cargo.Test" />
-      <item itemvalue="Cargo.Test rose-tree" />
-      <item itemvalue="Cargo.Test assets::image::tests::from_path" />
-      <item itemvalue="Cargo.Test tree::tests::insert_child_parent_does_not_exist" />
+      <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Run Headless" />
     </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Cargo.Test rose-tree" />
-        <item itemvalue="Cargo.Test tree::tests::insert_child_parent_does_not_exist" />
-        <item itemvalue="Cargo.Test assets::image::tests::from_path" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="RustProjectSettings">
     <option name="runRustfmtOnSave" value="true" />
@@ -153,7 +82,8 @@
       <workItem from="1632629792178" duration="6629000" />
       <workItem from="1632682414284" duration="171000" />
       <workItem from="1632682839088" duration="1957000" />
-      <workItem from="1632760601896" duration="7826000" />
+      <workItem from="1632760601896" duration="8379000" />
+      <workItem from="1632828289020" duration="125000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -227,7 +157,13 @@
       <option name="presentableId" value="LOCAL−00012" />
       <updated>1632773371388</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL−00013" summary="Added NDC and Screen position calculations for entity info">
+      <created>1632774026446</created>
+      <option name="number" value="LOCAL−00013" />
+      <option name="presentableId" value="LOCAL−00013" />
+      <updated>1632774026446</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -258,6 +194,7 @@
     <MESSAGE value="Changed a debug call." />
     <MESSAGE value="Added information about an entitie's description" />
     <MESSAGE value="Renamed variables that were misleading" />
-    <option name="LAST_COMMIT_MESSAGE" value="Renamed variables that were misleading" />
+    <MESSAGE value="Added NDC and Screen position calculations for entity info" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added NDC and Screen position calculations for entity info" />
   </component>
 </project>
