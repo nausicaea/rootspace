@@ -50,9 +50,9 @@ where
     USR: SystemRegistry,
     RSR: SystemRegistry,
 {
-    pub fn new<S: AsRef<str>>(name: S) -> Result<Self> {
+    pub fn new<S: AsRef<str>>(name: S, force: bool) -> Result<Self> {
         let mut world = World::try_default()?;
-        world.get_mut::<AssetDatabase>().initialize(name.as_ref())?;
+        world.get_mut::<AssetDatabase>().initialize(name.as_ref(), force)?;
 
         Ok(Orchestrator {
             world,
@@ -86,8 +86,14 @@ where
     }
 
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        // Make sure all parent directories exist
+        let path: &Path = path.as_ref();
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
         // Create the deserializer
-        let state_path = NewOrExFilePathBuf::try_from(path.as_ref())?;
+        let state_path = NewOrExFilePathBuf::try_from(path)?;
         let mut file = File::create(state_path)?;
         let mut serializer = serde_json::Serializer::pretty(&mut file);
 

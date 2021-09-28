@@ -7,8 +7,12 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added NDC and Screen position calculations for entity info">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added configurations as project files">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/rootspace/scenes/main.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/asset_database.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/resources/asset_database.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,6 +51,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="true" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
@@ -55,10 +60,27 @@
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager" selected="Cargo.Run Headless">
+  <component name="RunManager" selected="Cargo.Initialize Force">
+    <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="run --bin rootspace -- init -f rootspace" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
     <list>
       <item itemvalue="Cargo.Test" />
       <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Initialize Force" />
       <item itemvalue="Cargo.Run Headless" />
     </list>
   </component>
@@ -83,7 +105,7 @@
       <workItem from="1632682414284" duration="171000" />
       <workItem from="1632682839088" duration="1957000" />
       <workItem from="1632760601896" duration="8379000" />
-      <workItem from="1632828289020" duration="125000" />
+      <workItem from="1632828289020" duration="1884000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -163,7 +185,13 @@
       <option name="presentableId" value="LOCAL−00013" />
       <updated>1632774026446</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL−00014" summary="Added configurations as project files">
+      <created>1632828429170</created>
+      <option name="number" value="LOCAL−00014" />
+      <option name="presentableId" value="LOCAL−00014" />
+      <updated>1632828429170</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -195,6 +223,7 @@
     <MESSAGE value="Added information about an entitie's description" />
     <MESSAGE value="Renamed variables that were misleading" />
     <MESSAGE value="Added NDC and Screen position calculations for entity info" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added NDC and Screen position calculations for entity info" />
+    <MESSAGE value="Added configurations as project files" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added configurations as project files" />
   </component>
 </project>

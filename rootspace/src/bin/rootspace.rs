@@ -44,7 +44,7 @@ fn main() -> Result<()> {
         let main_scene = scene_dir.join("main.json");
 
         if force || !asset_dir.exists() {
-            let g = Rootspace::<HeadlessBackend>::new(name).context("Could not create a new, empty game")?;
+            let g = Rootspace::<HeadlessBackend>::new(name, force).context("Could not create a new, empty game")?;
             g.save(main_scene).context("Could create the new main scene")?;
         }
     } else if subcommand == "run" {

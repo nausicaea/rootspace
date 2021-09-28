@@ -24,7 +24,7 @@ impl Resource for AssetDatabase {}
 impl SerializationName for AssetDatabase {}
 
 impl AssetDatabase {
-    pub fn initialize(&mut self, name: &str) -> Result<(), Error> {
+    pub fn initialize(&mut self, name: &str, force: bool) -> Result<(), Error> {
         let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, name.as_ref())
             .context("Could not find the project directories")?;
 
@@ -32,7 +32,7 @@ impl AssetDatabase {
         let asset_database = data_local_dir.join("assets");
         let state_database = data_local_dir.join("states");
 
-        if !asset_database.is_dir() {
+        if force || !asset_database.is_dir() {
             let source_assets = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                 .join("..")
                 .join("assets")
