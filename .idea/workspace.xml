@@ -7,12 +7,9 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added configurations as project files">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/rootspace/scenes/main.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/resources/asset_database.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/resources/asset_database.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +57,7 @@
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager" selected="Cargo.Initialize Force">
+  <component name="RunManager" selected="Cargo.Run">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -105,7 +102,7 @@
       <workItem from="1632682414284" duration="171000" />
       <workItem from="1632682839088" duration="1957000" />
       <workItem from="1632760601896" duration="8379000" />
-      <workItem from="1632828289020" duration="1884000" />
+      <workItem from="1632828289020" duration="3568000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -191,7 +188,13 @@
       <option name="presentableId" value="LOCAL−00014" />
       <updated>1632828429170</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL−00015" summary="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state.">
+      <created>1632830275073</created>
+      <option name="number" value="LOCAL−00015" />
+      <option name="presentableId" value="LOCAL−00015" />
+      <updated>1632830275073</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -224,6 +227,7 @@
     <MESSAGE value="Renamed variables that were misleading" />
     <MESSAGE value="Added NDC and Screen position calculations for entity info" />
     <MESSAGE value="Added configurations as project files" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added configurations as project files" />
+    <MESSAGE value="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state." />
+    <option name="LAST_COMMIT_MESSAGE" value="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state." />
   </component>
 </project>

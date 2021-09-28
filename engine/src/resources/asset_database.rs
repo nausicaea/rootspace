@@ -12,9 +12,44 @@ use serde::{Deserialize, Serialize};
 
 use crate::{assets::AssetError, APP_ORGANIZATION, APP_QUALIFIER};
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct AssetDatabaseSerDe {
+    game_name: String,
+}
+
+impl From<AssetDatabase> for AssetDatabaseSerDe {
+    fn from(value: AssetDatabase) -> Self {
+        AssetDatabaseSerDe {
+            game_name: value.game_name.expect("No game name was defined previously"),
+        }
+    }
+}
+
+impl TryFrom<AssetDatabaseSerDe> for AssetDatabase {
+    type Error = anyhow::Error;
+
+    fn try_from(value: AssetDatabaseSerDe) -> Result<Self, Self::Error> {
+        let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, &value.game_name)
+            .context("Could not find the project directories")?;
+
+        let data_local_dir = project_dirs.data_local_dir();
+        let asset_database = data_local_dir.join("assets");
+        let state_database = data_local_dir.join("states");
+
+        Ok(AssetDatabase {
+            game_name: Some(value.game_name),
+            project_dirs: Some(project_dirs),
+            assets: Some(DirPathBuf::try_from(asset_database)?),
+            states: Some(DirPathBuf::try_from(state_database)?),
+        })
+    }
+}
+
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[serde(into = "AssetDatabaseSerDe", try_from = "AssetDatabaseSerDe")]
 pub struct AssetDatabase {
     game_name: Option<String>,
+    project_dirs: Option<ProjectDirs>,
     assets: Option<DirPathBuf>,
     states: Option<DirPathBuf>,
 }
@@ -49,6 +84,7 @@ impl AssetDatabase {
         }
 
         self.game_name = Some(name.to_string());
+        self.project_dirs = Some(project_dirs);
         self.assets = Some(DirPathBuf::try_from(asset_database)?);
         self.states = Some(DirPathBuf::try_from(state_database)?);
 
