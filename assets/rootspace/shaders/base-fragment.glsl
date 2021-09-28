@@ -10,4 +10,5 @@ in vec2 frag_tex_coord;
 
 void main() {
     color = texture(diffuse_texture, frag_tex_coord);
+    // color = vec4(frag_tex_coord.x, frag_tex_coord.y, 1.0, 1.0);
 }

@@ -7,9 +7,10 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="The asset database serializes via a proxy format now, that omits unnecessary data.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/resources/asset_database.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/resources/asset_database.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/rootspace/meshes/quad.ply" beforeDir="false" afterPath="$PROJECT_DIR$/assets/rootspace/meshes/quad.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/rootspace/shaders/base-fragment.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/assets/rootspace/shaders/base-fragment.glsl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,7 +103,7 @@
       <workItem from="1632682414284" duration="171000" />
       <workItem from="1632682839088" duration="1957000" />
       <workItem from="1632760601896" duration="8379000" />
-      <workItem from="1632828289020" duration="3568000" />
+      <workItem from="1632828289020" duration="5103000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -194,7 +195,13 @@
       <option name="presentableId" value="LOCAL−00015" />
       <updated>1632830275073</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL−00016" summary="The asset database serializes via a proxy format now, that omits unnecessary data.">
+      <created>1632838944189</created>
+      <option name="number" value="LOCAL−00016" />
+      <option name="presentableId" value="LOCAL−00016" />
+      <updated>1632838944189</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -228,6 +235,7 @@
     <MESSAGE value="Added NDC and Screen position calculations for entity info" />
     <MESSAGE value="Added configurations as project files" />
     <MESSAGE value="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state." />
-    <option name="LAST_COMMIT_MESSAGE" value="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state." />
+    <MESSAGE value="The asset database serializes via a proxy format now, that omits unnecessary data." />
+    <option name="LAST_COMMIT_MESSAGE" value="The asset database serializes via a proxy format now, that omits unnecessary data." />
   </component>
 </project>
