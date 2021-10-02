@@ -186,41 +186,23 @@ impl Default for ModelBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_ulps_eq;
+    use nalgebra::Vector4;
 
     #[test]
-    fn default() {
+    fn implements_default() {
         let _: Model = Default::default();
     }
 
     #[test]
-    fn getters() {
-        let ident = Model::default();
-        assert_eq!(ident.position(), Point3::new(0.0, 0.0, 0.0));
-        assert_eq!(ident.orientation(), &UnitQuaternion::identity());
-        assert_eq!(ident.scale(), &Vector3::new(1.0, 1.0, 1.0));
-    }
+    fn transform_point_is_the_same_as_matrix_multiplication() {
+        let m = Model::default();
+        let p = Point3::new(-0.5f32, -0.5f32, 0.0f32);
 
-    #[test]
-    fn setters() {
-        let mut ident = Model::default();
-        ident.set_position(Point3::new(1.0, 2.0, 3.0));
-        assert_eq!(ident.position(), Point3::new(1.0, 2.0, 3.0));
-        ident.set_orientation(UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0)));
-        assert_eq!(
-            ident.orientation(),
-            &UnitQuaternion::from_scaled_axis(Vector3::new(0.0, 1.5, 0.0))
-        );
-        ident.set_scale(Vector3::new(0.9, 0.4, 1.0));
-        assert_eq!(ident.scale(), &Vector3::new(0.9, 0.4, 1.0));
-    }
+        let tpt: Point3<f32> = m.transform_point(&p);
+        let tpt: Vector4<f32> = Vector4::new(tpt.x, tpt.y, tpt.z, 1.0f32);
+        let mmul = m.matrix() * Vector4::new(p.x, p.y, p.z, 1.0f32);
 
-    #[test]
-    fn multiply() {
-        let a = Model::default();
-        let b = Model::default();
-        let expected = a.clone();
-
-        assert_eq!(&a * &b, expected);
-        assert_eq!(a * b, expected);
+        assert_ulps_eq!(tpt, mmul);
     }
 }

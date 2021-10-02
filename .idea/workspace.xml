@@ -7,11 +7,11 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Fixed a texture sampling issue due to bad texture coordinates in quad.ply">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Modified the output of the commands components and entities">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/components.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/components.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/entities.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/entities.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/camera.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/model.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,9 +59,57 @@
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager" selected="Cargo.Run">
+  <component name="RunManager" selected="Cargo.Test camera::tests">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test camera::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package engine --lib components::camera::tests" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test components::camera::tests::provides_ui_matrix_accessor_with_defaults" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package engine --lib components::camera::tests::provides_ui_matrix_accessor_with_defaults -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test model::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package engine --lib components::model::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -81,7 +129,17 @@
       <item itemvalue="Cargo.Run" />
       <item itemvalue="Cargo.Initialize Force" />
       <item itemvalue="Cargo.Run Headless" />
+      <item itemvalue="Cargo.Test components::camera::tests::provides_ui_matrix_accessor_with_defaults" />
+      <item itemvalue="Cargo.Test camera::tests" />
+      <item itemvalue="Cargo.Test model::tests" />
     </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Cargo.Test camera::tests" />
+        <item itemvalue="Cargo.Test model::tests" />
+        <item itemvalue="Cargo.Test components::camera::tests::provides_ui_matrix_accessor_with_defaults" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="RustProjectSettings">
     <option name="runRustfmtOnSave" value="true" />
@@ -105,7 +163,10 @@
       <workItem from="1632682839088" duration="1957000" />
       <workItem from="1632760601896" duration="8379000" />
       <workItem from="1632828289020" duration="7858000" />
-      <workItem from="1632866496385" duration="723000" />
+      <workItem from="1632866496385" duration="3325000" />
+      <workItem from="1632949573135" duration="2713000" />
+      <workItem from="1633028172687" duration="175000" />
+      <workItem from="1633120796125" duration="222000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -209,7 +270,13 @@
       <option name="presentableId" value="LOCAL−00017" />
       <updated>1632842799499</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL−00018" summary="Modified the output of the commands components and entities">
+      <created>1632867357366</created>
+      <option name="number" value="LOCAL−00018" />
+      <option name="presentableId" value="LOCAL−00018" />
+      <updated>1632867357366</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -245,6 +312,7 @@
     <MESSAGE value="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state." />
     <MESSAGE value="The asset database serializes via a proxy format now, that omits unnecessary data." />
     <MESSAGE value="Fixed a texture sampling issue due to bad texture coordinates in quad.ply" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed a texture sampling issue due to bad texture coordinates in quad.ply" />
+    <MESSAGE value="Modified the output of the commands components and entities" />
+    <option name="LAST_COMMIT_MESSAGE" value="Modified the output of the commands components and entities" />
   </component>
 </project>

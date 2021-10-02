@@ -210,7 +210,7 @@ mod tests {
 
     #[test]
     fn game_creation_headless() {
-        let r: Result<TestGame<HeadlessBackend>> = TestGame::new("test");
+        let r: Result<TestGame<HeadlessBackend>> = TestGame::new("test", false);
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -220,7 +220,7 @@ mod tests {
         should_panic(expected = "Windows can only be created on the main thread on macOS")
     )]
     fn game_creation_glium() {
-        let r: Result<TestGame<GliumBackend>> = TestGame::new("test");
+        let r: Result<TestGame<GliumBackend>> = TestGame::new("test", false);
         assert!(r.is_ok(), "{}", r.unwrap_err());
     }
 
@@ -228,7 +228,7 @@ mod tests {
     fn game_loading_and_saving_headless_headless() {
         let tf = NamedTempFile::new().unwrap();
 
-        let first: TestGame<HeadlessBackend> = TestGame::new("test").unwrap();
+        let first: TestGame<HeadlessBackend> = TestGame::new("test", false).unwrap();
         let r = first.save(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
@@ -244,7 +244,7 @@ mod tests {
     fn game_loading_and_saving_glium_glium() {
         let tf = NamedTempFile::new().unwrap();
 
-        let first: TestGame<GliumBackend> = TestGame::new("test").unwrap();
+        let first: TestGame<GliumBackend> = TestGame::new("test", false).unwrap();
         let r = first.save(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
@@ -260,7 +260,7 @@ mod tests {
     fn game_loading_and_saving_headless_glium() {
         let tf = NamedTempFile::new().unwrap();
 
-        let first: TestGame<HeadlessBackend> = TestGame::new("test").unwrap();
+        let first: TestGame<HeadlessBackend> = TestGame::new("test", false).unwrap();
         let r = first.save(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 
@@ -276,7 +276,7 @@ mod tests {
     fn game_loading_and_saving_glium_headless() {
         let tf = NamedTempFile::new().unwrap();
 
-        let first: TestGame<GliumBackend> = TestGame::new("test").unwrap();
+        let first: TestGame<GliumBackend> = TestGame::new("test", false).unwrap();
         let r = first.save(tf.path());
         assert!(r.is_ok(), "{}", r.unwrap_err());
 

@@ -322,130 +322,79 @@ impl From<CameraSerDe> for Camera {
 
 #[cfg(test)]
 mod tests {
-    use nalgebra::UnitQuaternion;
+    use approx::assert_ulps_eq;
+    use nalgebra::{UnitQuaternion, Vector4};
 
     use super::*;
+    use std::convert::TryFrom;
 
     #[test]
-    fn default() {
+    fn implements_default() {
         let _: Camera = Default::default();
     }
 
     #[test]
-    fn accessors() {
-        let mut c = Camera::default();
-
-        c.set_dimensions((1024, 768));
-        assert_eq!(c.dpi_factor(), 1.0);
-        assert_eq!(c.dimensions(), (1024, 768));
-        assert_eq!(c.physical_dimensions(), (1024, 768));
-
-        c.set_dpi_factor(2.0);
-        assert_eq!(c.dpi_factor(), 2.0);
-        assert_eq!(c.dimensions(), (1024, 768));
-        assert_eq!(c.physical_dimensions(), (2048, 1536));
+    fn provides_builder() {
+        let _: CameraBuilder = Camera::builder();
     }
 
     #[test]
-    fn word_vs_ndc() {
+    fn builder_provides_with_dimensions_method() {
+        let _ = Camera::builder().with_dimensions((1, 1));
+    }
+
+    #[test]
+    fn provides_dimensions_accessor_with_defaults() {
         let c = Camera::default();
-        let m = Model::builder()
-            .with_position(Point3::new(0.0, 0.0, 1.0))
+        assert_eq!(c.dimensions(), (800, 600));
+    }
+
+    #[test]
+    fn provides_dimensions_accessor() {
+        let c = Camera::builder().with_dimensions((1320, 1024)).build();
+        assert_eq!(c.dimensions(), (1320, 1024));
+    }
+
+    #[test]
+    fn provides_ui_matrix_accessor_with_defaults() {
+        let c = Camera::default();
+        assert_ulps_eq!(
+            c.ui_matrix(),
+            &Matrix4::try_from([
+                [0.0025f32, 0.0f32, 0.0f32, 0.0f32],
+                [0.0f32, 0.00333333f32, 0.0f32, 0.0f32],
+                [0.0f32, 0.0f32, -0.00200020f32, 0.0f32],
+                [0.0f32, 0.0f32, -1.00020002f32, 1.0f32],
+            ])
+            .unwrap()
+        );
+    }
+
+    #[test]
+    fn ui_point_projection_is_the_same_as_matrix_multiplication() {
+        let c = Camera::default();
+        let p = Point2::new(-0.5f32, -0.5f32);
+        let pproj: Point3<f32> = c.ui_point_to_ndc(&p, 0.0f32);
+        let pproj: Vector4<f32> = Vector4::new(pproj.x, pproj.y, pproj.z, 1.0f32);
+        let mmul: Vector4<f32> = c.ui_matrix() * Vector4::new(p.x, p.y, 0.0f32, 1.0f32);
+
+        assert_ulps_eq!(pproj, mmul);
+    }
+
+    #[test]
+    fn world_point_projection_is_the_same_as_matrix_multiplication() {
+        let c = Camera::default();
+        let p = Point3::new(-0.5f32, -0.5f32, 0.0f32);
+        let cam_mdl: Model = Model::builder()
+            .with_position(Point3::new(0.0f32, 0.0f32, -10.0f32))
+            .with_scale(Vector3::new(1.0f32, 1.0f32, 1.0f32))
             .with_orientation(UnitQuaternion::look_at_rh(&Vector3::new(0.0, 0.0, -1.0), &Vector3::y()))
-            .with_scale(Vector3::new(1.0, 1.0, 1.0))
             .build();
-        let p = Point3::new(1.0, 0.0, -5.0);
-        let q = c.perspective.project_point(&m.transform_point(&p));
-        let r = m.inverse_transform_point(&c.perspective.unproject_point(&q));
+        let pproj: Point3<f32> = c.world_point_to_ndc(&cam_mdl, &p);
+        let pproj: Vector4<f32> = Vector4::new(pproj.x, pproj.y, pproj.z, 1.0f32);
+        let mmul: Vector4<f32> = c.world_matrix() * cam_mdl.matrix() * Vector4::new(p.x, p.y, p.z, 1.0f32);
 
-        assert_eq!(c.world_point_to_ndc(&m, &p), q);
-        assert_eq!(c.ndc_point_to_world(&m, &q), r);
-    }
-
-    #[test]
-    fn ui_vs_ndc() {
-        let c = Camera::default();
-        let p = Point3::new(1.0, 0.0, -5.0);
-        let q = c.orthographic.project_point(&p);
-        let r = c.orthographic.unproject_point(&q);
-
-        assert_eq!(c.ui_point_to_ndc(&Point2::new(p.x, p.y), p.z), q);
-        assert_eq!(c.ndc_point_to_ui(&q), (Point2::new(r.x, r.y), r.z));
-    }
-
-    #[test]
-    fn world_vs_screen() {
-        let c = Camera::default();
-        let m = Model::builder()
-            .with_position(Point3::new(0.0, 0.0, 1.0))
-            .with_orientation(UnitQuaternion::look_at_rh(&Vector3::new(0.0, 0.0, -1.0), &Vector3::y()))
-            .with_scale(Vector3::new(1.0, 1.0, 1.0))
-            .build();
-        let p = Point3::new(1.0, 0.0, -5.0);
-        let q = {
-            let tmp = c.world_point_to_ndc(&m, &p);
-            let w = c.dimensions.0 as f32;
-            let h = c.dimensions.1 as f32;
-            Point2::new(
-                ((w / 2.0) * (tmp.x + 1.0)).round() as u32,
-                ((h / 2.0) * (1.0 - tmp.y)).round() as u32,
-            )
-        };
-        let r = {
-            let w = c.dimensions.0 as f32;
-            let h = c.dimensions.1 as f32;
-            let tmp = Point3::new((2.0 * q.x as f32) / w - 1.0, 1.0 - (2.0 * q.y as f32) / h, 1.0);
-            let origin = -m.position();
-            let target = c.ndc_point_to_world(&m, &tmp).coords;
-
-            Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
-        };
-
-        assert_eq!(c.world_point_to_screen(&m, &p), q);
-        assert_eq!(c.screen_point_to_world_ray(&m, &q), r);
-    }
-
-    #[test]
-    fn ui_vs_screen() {
-        let c = Camera::default();
-        let p = Point3::new(1.0, 0.0, -5.0);
-        let q = {
-            let tmp = c.ui_point_to_ndc(&Point2::new(p.x, p.y), p.z);
-            let w = c.dimensions.0 as f32;
-            let h = c.dimensions.1 as f32;
-            Point2::new(
-                ((w / 2.0) * (tmp.x + 1.0)).round() as u32,
-                ((h / 2.0) * (1.0 - tmp.y)).round() as u32,
-            )
-        };
-        let r = {
-            let w = c.dimensions.0 as f32;
-            let h = c.dimensions.1 as f32;
-            let tmp = Point3::new((2.0 * q.x as f32) / w - 1.0, 1.0 - (2.0 * q.y as f32) / h, 1.0);
-            let origin = Point3::new(0.0, 0.0, 0.0);
-            let target = {
-                let (t, d) = c.ndc_point_to_ui(&tmp);
-                Vector3::new(t.x, t.y, d)
-            };
-
-            Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
-        };
-
-        assert_eq!(c.ui_point_to_screen(&Point2::new(p.x, p.y), p.z), q);
-        assert_eq!(c.screen_point_to_ui_ray(&q), r);
-    }
-
-    #[test]
-    fn world_matrix_accessor() {
-        let c = Camera::default();
-        let m: &Matrix4<f32> = c.world_matrix();
-        assert_eq!(m, c.perspective.as_matrix());
-    }
-
-    #[test]
-    fn ui_matrix_accessor() {
-        let c = Camera::default();
-        let m: &Matrix4<f32> = c.ui_matrix();
-        assert_eq!(m, c.orthographic.as_matrix());
+        dbg!(cam_mdl.matrix());
+        assert_ulps_eq!(pproj, mmul);
     }
 }
