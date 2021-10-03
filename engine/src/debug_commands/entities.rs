@@ -3,11 +3,9 @@ use ecs::{Entities, EventQueue, Index, Resources, Storage, WorldEvent};
 use serde::{Deserialize, Serialize};
 use term_table::{row::Row, table_cell::TableCell, TableBuilder, TableStyle};
 
+use super::CommandTrait;
 use super::Error;
-use crate::{
-    components::{Camera, Info, Model, Renderable, Status, UiModel},
-    CommandTrait,
-};
+use crate::components::{Camera, Info, Model, Renderable, Status, UiModel};
 use rose_tree::Hierarchy;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]

@@ -1,7 +1,8 @@
 use ecs::Resources;
 use serde::{Deserialize, Serialize};
 
-use crate::{resources::Statistics, CommandTrait};
+use super::CommandTrait;
+use crate::resources::Statistics;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct StatisticsCommand;

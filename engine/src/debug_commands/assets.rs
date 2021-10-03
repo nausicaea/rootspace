@@ -3,7 +3,8 @@ use clap::{load_yaml, App};
 use ecs::Resources;
 use serde::{Deserialize, Serialize};
 
-use crate::{resources::AssetDatabase, CommandTrait};
+use super::CommandTrait;
+use crate::resources::AssetDatabase;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AssetsCommand;

@@ -7,15 +7,8 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Successfully updated Nalgebra to the most recent version.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/affine-transform/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/affine-transform/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/affine-transform/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/affine-transform/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/geometry/ray.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/geometry/ray.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rootspace/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rose-tree/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/Cargo.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -191,6 +184,8 @@
       <workItem from="1633210561399" duration="640000" />
       <workItem from="1633275144113" duration="608000" />
       <workItem from="1633280323456" duration="111000" />
+      <workItem from="1633280938067" duration="777000" />
+      <workItem from="1633293817290" duration="19000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -306,7 +301,13 @@
       <option name="presentableId" value="LOCAL−00019" />
       <updated>1633210826589</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL−00020" summary="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error.">
+      <created>1633281081420</created>
+      <option name="number" value="LOCAL−00020" />
+      <option name="presentableId" value="LOCAL−00020" />
+      <updated>1633281081420</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -344,6 +345,7 @@
     <MESSAGE value="Fixed a texture sampling issue due to bad texture coordinates in quad.ply" />
     <MESSAGE value="Modified the output of the commands components and entities" />
     <MESSAGE value="For some reason, I have unexpected inconsistencies with point transformations" />
-    <option name="LAST_COMMIT_MESSAGE" value="For some reason, I have unexpected inconsistencies with point transformations" />
+    <MESSAGE value="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error." />
+    <option name="LAST_COMMIT_MESSAGE" value="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error." />
   </component>
 </project>

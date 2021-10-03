@@ -1,5 +1,5 @@
+use crate::event::EngineEvent;
 use crate::event::{ElementState, ModifiersState, VirtualKeyCode};
-use crate::EngineEvent;
 use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources, WorldEvent};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;

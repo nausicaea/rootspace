@@ -18,10 +18,10 @@ use try_default::TryDefault;
 use self::type_registry::{RenderSystemTypes, ResourceTypes, UpdateSystemTypes};
 use crate::{
     components::{Camera, Info, Model, Renderable, Status, UiModel},
+    event::EngineEvent,
     graphics::BackendTrait,
     resources::{AssetDatabase, Settings, Statistics},
     text_manipulation::tokenize,
-    EngineEvent,
 };
 
 pub mod type_registry;
