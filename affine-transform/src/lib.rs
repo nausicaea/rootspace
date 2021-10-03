@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 
 use nalgebra::{
-    one, zero, Affine3, Matrix4, Point3, RealField, Rotation3, Scalar, Translation3, UnitQuaternion, Vector3, U1, U3,
+    one, zero, Affine3, Matrix4, Point3, RealField, Rotation3, Scalar, Translation3, UnitQuaternion, Vector3,
 };
 #[cfg(any(test, feature = "serde_support"))]
 use serde::{Deserialize, Serialize};
@@ -65,7 +65,7 @@ where
     /// (without shear).
     pub fn decompose(value: &Affine3<N>) -> Self {
         // Obtain the translational component.
-        let t = Translation3::from(value.matrix().fixed_slice::<U3, U1>(0, 3).into_owned());
+        let t = Translation3::from(value.matrix().fixed_slice::<3, 1>(0, 3).into_owned());
 
         // Obtain the non-uniform scaling component.
         let s = Vector3::new(
@@ -75,10 +75,10 @@ where
         );
 
         // Obtain the rotational component.
-        let mut r = value.matrix().fixed_slice::<U3, U3>(0, 0).into_owned();
+        let mut r = value.matrix().fixed_slice::<3, 3>(0, 0).into_owned();
         s.iter().enumerate().for_each(|(i, scale_component)| {
             let mut temp = r.column_mut(i);
-            temp /= *scale_component;
+            temp /= scale_component.clone();
         });
 
         let r = UnitQuaternion::from_rotation_matrix(&Rotation3::from_matrix_unchecked(r));
@@ -92,7 +92,7 @@ where
 
     /// Recomposes a TRS matrix (`AffineTransform`) into an `Affine3` matrix.
     pub fn recompose(&self) -> Affine3<N> {
-        self.translation * self.rotation * self.scale_matrix()
+        &self.translation * &self.rotation * self.scale_matrix()
     }
 
     /// Inverts the transformation
@@ -101,21 +101,21 @@ where
             translation: self.translation.inverse(),
             rotation: self.rotation.inverse(),
             scale: Vector3::new(
-                one::<N>() / self.scale.x,
-                one::<N>() / self.scale.y,
-                one::<N>() / self.scale.z,
+                one::<N>() / self.scale.x.clone(),
+                one::<N>() / self.scale.y.clone(),
+                one::<N>() / self.scale.z.clone(),
             ),
         }
     }
 
     /// Transforms the specified point.
     pub fn transform_point(&self, point: &Point3<N>) -> Point3<N> {
-        self.translation * self.rotation * Point3::from(self.scale.component_mul(&point.coords))
+        &self.translation * &self.rotation * Point3::from(self.scale.component_mul(&point.coords))
     }
 
     /// Transforms the specified vector.
     pub fn transform_vector(&self, vector: &Vector3<N>) -> Vector3<N> {
-        self.rotation * self.scale.component_mul(vector)
+        &self.rotation * self.scale.component_mul(vector)
     }
 
     /// Applies the inverse transformation to the specified point.
@@ -134,17 +134,17 @@ where
     /// Assembles the internal scale vector into an `Affine3` matrix.
     fn scale_matrix(&self) -> Affine3<N> {
         Affine3::from_matrix_unchecked(Matrix4::new(
-            self.scale.x,
+            self.scale.x.clone(),
             zero(),
             zero(),
             zero(),
             zero(),
-            self.scale.y,
+            self.scale.y.clone(),
             zero(),
             zero(),
             zero(),
             zero(),
-            self.scale.z,
+            self.scale.z.clone(),
             zero(),
             zero(),
             zero(),

@@ -9,7 +9,7 @@ wsl = []
 
 [dependencies]
 directories = "^3.0"
-approx = "^0.3.2"
+approx = "^0.5.0"
 clap = { version = "^2.0.0", features = ["yaml"] }
 ctrlc = { version = "^3.0.0", features = ["termination"] }
 anyhow = "^1.0.0"
@@ -18,7 +18,7 @@ glium = "^0.25.0"
 winit = "^0.19.5"
 image = { version = "^0.23.0", default-features = true, features = ["png"] }
 log = "^0.4.1"
-nalgebra = { version = "^0.21.0", features = ["serde-serialize"] }
+nalgebra = { version = "^0.29.0", features = ["serde-serialize"] }
 num-traits = "^0.2.6"
 rusttype = { version = "^0.8.0", features = ["gpu_cache"] }
 unicode-normalization = "^0.1.5"

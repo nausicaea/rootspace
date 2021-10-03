@@ -27,7 +27,7 @@ where
 
     /// Extends the `Ray` to the specified position and returns the resulting point.
     pub fn at(&self, position: N) -> Point3<N> {
-        self.origin + self.direction.as_ref() * position
+        &self.origin + self.direction.as_ref() * position
     }
 
     /// Transforms the `Ray` into a new coordinate system determined by an `AffineTransform`
@@ -65,8 +65,8 @@ where
         write!(
             f,
             "Ray {{origin: {}, direction: {}}}",
-            self.origin,
-            self.direction.into_inner()
+            &self.origin,
+            AsRef::<Vector3<N>>::as_ref(&self.direction)
         )
     }
 }

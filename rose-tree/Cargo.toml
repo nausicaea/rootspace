@@ -9,7 +9,6 @@ default = ["serde_support"]
 serde_support = ["serde"]
 
 [dependencies]
-nalgebra = "^0.27.1"
 serde = { version = "^1.0.0", features = ["derive"], optional = true }
 ecs = { path = "../ecs", optional = true }
 
