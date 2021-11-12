@@ -8,7 +8,7 @@ edition = "2018"
 wsl = []
 
 [dependencies]
-directories = "^3.0"
+directories = "^4.0"
 approx = "^0.5.0"
 clap = { version = "^2.0.0", features = ["yaml"] }
 ctrlc = { version = "^3.0.0", features = ["termination"] }
@@ -35,6 +35,6 @@ rose-tree = { path = "../rose-tree", features = ["ecs", "serde_support"] }
 
 [dev-dependencies]
 serde_test = { version = "^1.0.0" }
-approx = "^0.3.0"
+approx = "^0.5.0"
 tempfile = "^3.0.1"
-proptest = "^0.10.0"
+proptest = "^1.0.0"

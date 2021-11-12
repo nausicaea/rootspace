@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{load_yaml, App};
+use directories::ProjectDirs;
 use engine::{GliumBackend, HeadlessBackend};
 use fern::Dispatch;
 use log::{LevelFilter, SetLoggerError};
@@ -37,8 +38,8 @@ fn main() -> Result<()> {
         let name = scm.value_of("name").context("Missing required argument 'name'")?;
 
         // Configure the project-specific directories
-        let project_dirs = directories::ProjectDirs::from("org", "nausicaea", name)
-            .context("Could not find the project directories")?;
+        let project_dirs =
+            ProjectDirs::from("org", "nausicaea", name).context("Could not find the project directories")?;
         let asset_dir = project_dirs.data_local_dir().join("assets");
         let scene_dir = asset_dir.join("scenes");
         let main_scene = scene_dir.join("main.json");

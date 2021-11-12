@@ -9,6 +9,12 @@
   <component name="ChangeListManager">
     <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/file-manipulation/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/file-manipulation/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

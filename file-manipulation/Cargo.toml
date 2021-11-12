@@ -9,7 +9,7 @@ edition = "2018"
 serde_support = [ "serde" ]
 
 [dependencies]
-dirs = "^3.0"
+dirs = "^4.0"
 log = "^0.4.14"
 anyhow = "^1.0.40"
 thiserror = "^1.0.0"
