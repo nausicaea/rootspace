@@ -393,8 +393,8 @@ mod tests {
         let pproj: Point3<f32> = c.world_point_to_ndc(&cam_mdl, &p);
         let pproj: Vector4<f32> = Vector4::new(pproj.x, pproj.y, pproj.z, 1.0f32);
         let mmul: Vector4<f32> = c.world_matrix() * cam_mdl.matrix() * Vector4::new(p.x, p.y, p.z, 1.0f32);
+        let mmul: Vector4<f32> = mmul / mmul.w;
 
-        dbg!(cam_mdl.matrix());
         assert_ulps_eq!(pproj, mmul);
     }
 }
