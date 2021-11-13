@@ -7,12 +7,9 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Fixed an issue with a test of world_point_to_ndc">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/Cargo.toml" afterDir="false" />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Removed two unused dependencies">
+      <change beforePath="$PROJECT_DIR$/ecs/.gitignore" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/components/camera.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ply/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/ply/Cargo.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -226,6 +223,7 @@
       <workItem from="1633280323456" duration="111000" />
       <workItem from="1633280938067" duration="777000" />
       <workItem from="1633293817290" duration="19000" />
+      <workItem from="1636796744225" duration="702000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -359,7 +357,13 @@
       <option name="presentableId" value="LOCAL−00022" />
       <updated>1636753783775</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL−00023" summary="Removed two unused dependencies">
+      <created>1636796791140</created>
+      <option name="number" value="LOCAL−00023" />
+      <option name="presentableId" value="LOCAL−00023" />
+      <updated>1636796791140</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -400,6 +404,7 @@
     <MESSAGE value="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error." />
     <MESSAGE value="Updated project deps" />
     <MESSAGE value="Fixed an issue with a test of world_point_to_ndc" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed an issue with a test of world_point_to_ndc" />
+    <MESSAGE value="Removed two unused dependencies" />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed two unused dependencies" />
   </component>
 </project>

@@ -374,9 +374,9 @@ mod tests {
     fn ui_point_projection_is_the_same_as_matrix_multiplication() {
         let c = Camera::default();
         let p = Point2::new(-0.5f32, -0.5f32);
-        let pproj: Point3<f32> = c.ui_point_to_ndc(&p, 0.0f32);
+        let pproj: Point3<f32> = c.ui_point_to_ndc(&p, 2.0f32);
         let pproj: Vector4<f32> = Vector4::new(pproj.x, pproj.y, pproj.z, 1.0f32);
-        let mmul: Vector4<f32> = c.ui_matrix() * Vector4::new(p.x, p.y, 0.0f32, 1.0f32);
+        let mmul: Vector4<f32> = c.ui_matrix() * Vector4::new(p.x, p.y, 2.0f32, 1.0f32);
 
         assert_ulps_eq!(pproj, mmul);
     }
