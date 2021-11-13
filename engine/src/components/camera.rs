@@ -322,10 +322,11 @@ impl From<CameraSerDe> for Camera {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_ulps_eq;
+    use approx::{assert_ulps_eq, ulps_eq};
     use nalgebra::{UnitQuaternion, Vector4};
 
     use super::*;
+    use proptest::prelude::*;
     use std::convert::TryFrom;
 
     #[test]
@@ -370,31 +371,36 @@ mod tests {
         );
     }
 
-    #[test]
-    fn ui_point_projection_is_the_same_as_matrix_multiplication() {
-        let c = Camera::default();
-        let p = Point2::new(-0.5f32, -0.5f32);
-        let pproj: Point3<f32> = c.ui_point_to_ndc(&p, 2.0f32);
-        let pproj: Vector4<f32> = Vector4::new(pproj.x, pproj.y, pproj.z, 1.0f32);
-        let mmul: Vector4<f32> = c.ui_matrix() * Vector4::new(p.x, p.y, 2.0f32, 1.0f32);
+    proptest! {
+        #[test]
+        fn ui_point_projection_is_the_same_as_matrix_multiplication(x: f32, y: f32, d: f32) {
+            let one = 1.0f32;
+            let c = Camera::default();
+            let p = Point2::new(x, y);
+            let pproj: Point3<f32> = c.ui_point_to_ndc(&p, d);
+            let pproj: Vector4<f32> = Vector4::new(pproj.x, pproj.y, pproj.z, one);
+            let mmul: Vector4<f32> = c.ui_matrix() * Vector4::new(p.x, p.y, d, one);
 
-        assert_ulps_eq!(pproj, mmul);
-    }
+            prop_assert!(ulps_eq!(pproj, mmul));
+        }
 
-    #[test]
-    fn world_point_projection_is_the_same_as_matrix_multiplication() {
-        let c = Camera::default();
-        let p = Point3::new(-0.5f32, -0.5f32, 0.0f32);
-        let cam_mdl: Model = Model::builder()
-            .with_position(Point3::new(0.0f32, 0.0f32, -10.0f32))
-            .with_scale(Vector3::new(1.0f32, 1.0f32, 1.0f32))
-            .with_orientation(UnitQuaternion::look_at_rh(&Vector3::new(0.0, 0.0, -1.0), &Vector3::y()))
-            .build();
-        let pproj: Point3<f32> = c.world_point_to_ndc(&cam_mdl, &p);
-        let pproj: Vector4<f32> = Vector4::new(pproj.x, pproj.y, pproj.z, 1.0f32);
-        let mmul: Vector4<f32> = c.world_matrix() * cam_mdl.matrix() * Vector4::new(p.x, p.y, p.z, 1.0f32);
-        let mmul: Vector4<f32> = mmul / mmul.w;
+        #[test]
+        fn world_point_projection_is_the_same_as_matrix_multiplication(x: f32, y: f32, z: f32, cz: f32) {
+            let zero = 0.0f32;
+            let one = 1.0f32;
+            let c = Camera::default();
+            let p = Point3::new(x, y, z);
+            let cam_mdl: Model = Model::builder()
+                .with_position(Point3::new(zero, zero, cz))
+                .with_scale(Vector3::new(one, one, one))
+                .with_orientation(UnitQuaternion::look_at_rh(&Vector3::new(zero, zero, -one), &Vector3::y()))
+                .build();
+            let pproj: Point3<f32> = c.world_point_to_ndc(&cam_mdl, &p);
+            let pproj: Vector4<f32> = Vector4::new(pproj.x, pproj.y, pproj.z, one);
+            let mmul: Vector4<f32> = c.world_matrix() * cam_mdl.matrix() * Vector4::new(p.x, p.y, p.z, one);
+            let mmul: Vector4<f32> = mmul / mmul.w;
 
-        assert_ulps_eq!(pproj, mmul);
+            prop_assert!(ulps_eq!(pproj, mmul));
+        }
     }
 }

@@ -7,8 +7,8 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Removed two unused dependencies">
-      <change beforePath="$PROJECT_DIR$/ecs/.gitignore" beforeDir="false" />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Changed a value in one of the point transformation tests">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/components/camera.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -57,7 +57,7 @@
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager" selected="Cargo.Test">
+  <component name="RunManager" selected="Cargo.Test camera::tests">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -184,9 +184,9 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test camera::tests" />
         <item itemvalue="Cargo.Test components::camera::tests::ui_point_projection_is_the_same_as_matrix_multiplication" />
         <item itemvalue="Cargo.Test components::camera::tests::world_point_projection_is_the_same_as_matrix_multiplication" />
-        <item itemvalue="Cargo.Test camera::tests" />
         <item itemvalue="Cargo.Test model::tests" />
         <item itemvalue="Cargo.Test components::camera::tests::provides_ui_matrix_accessor_with_defaults" />
       </list>
@@ -223,7 +223,7 @@
       <workItem from="1633280323456" duration="111000" />
       <workItem from="1633280938067" duration="777000" />
       <workItem from="1633293817290" duration="19000" />
-      <workItem from="1636796744225" duration="702000" />
+      <workItem from="1636796744225" duration="1205000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -363,7 +363,13 @@
       <option name="presentableId" value="LOCAL−00023" />
       <updated>1636796791140</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL−00024" summary="Changed a value in one of the point transformation tests">
+      <created>1636799322593</created>
+      <option name="number" value="LOCAL−00024" />
+      <option name="presentableId" value="LOCAL−00024" />
+      <updated>1636799322593</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -405,6 +411,7 @@
     <MESSAGE value="Updated project deps" />
     <MESSAGE value="Fixed an issue with a test of world_point_to_ndc" />
     <MESSAGE value="Removed two unused dependencies" />
-    <option name="LAST_COMMIT_MESSAGE" value="Removed two unused dependencies" />
+    <MESSAGE value="Changed a value in one of the point transformation tests" />
+    <option name="LAST_COMMIT_MESSAGE" value="Changed a value in one of the point transformation tests" />
   </component>
 </project>
