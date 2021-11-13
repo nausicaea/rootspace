@@ -486,7 +486,6 @@ dependencies = [
  "log",
  "proptest",
  "regex",
- "rmp-serde",
  "serde",
  "serde_json",
  "serde_test",
@@ -1170,7 +1169,6 @@ name = "ply"
 version = "0.1.1"
 dependencies = [
  "combine",
- "log",
  "num-traits",
  "thiserror",
 ]
@@ -1399,27 +1397,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3acd125665422973a33ac9d3dd2df85edad0f4ae9b00dafb1a05e43a9f5ef8e7"
 dependencies = [
  "winapi",
-]
-
-[[package]]
-name = "rmp"
-version = "0.8.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f55e5fa1446c4d5dd1f5daeed2a4fe193071771a2636274d0d7a3b082aa7ad6"
-dependencies = [
- "byteorder",
- "num-traits",
-]
-
-[[package]]
-name = "rmp-serde"
-version = "0.14.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ce7d70c926fe472aed493b902010bccc17fa9f7284145cb8772fd22fdb052d8"
-dependencies = [
- "byteorder",
- "rmp",
- "serde",
 ]
 
 [[package]]

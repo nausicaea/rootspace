@@ -7,14 +7,12 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Fixed an issue with a test of world_point_to_ndc">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ecs/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/file-manipulation/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/file-manipulation/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rootspace/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/camera.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ply/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/ply/Cargo.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,7 +60,7 @@
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager" selected="Cargo.Test Engine Stable">
+  <component name="RunManager" selected="Cargo.Test">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -127,6 +125,38 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Test components::camera::tests::ui_point_projection_is_the_same_as_matrix_multiplication" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package engine --lib components::camera::tests::ui_point_projection_is_the_same_as_matrix_multiplication -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test components::camera::tests::world_point_projection_is_the_same_as_matrix_multiplication" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package engine --lib components::camera::tests::world_point_projection_is_the_same_as_matrix_multiplication -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Test model::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package engine --lib components::model::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -152,9 +182,13 @@
       <item itemvalue="Cargo.Test components::camera::tests::provides_ui_matrix_accessor_with_defaults" />
       <item itemvalue="Cargo.Test camera::tests" />
       <item itemvalue="Cargo.Test model::tests" />
+      <item itemvalue="Cargo.Test components::camera::tests::world_point_projection_is_the_same_as_matrix_multiplication" />
+      <item itemvalue="Cargo.Test components::camera::tests::ui_point_projection_is_the_same_as_matrix_multiplication" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test components::camera::tests::ui_point_projection_is_the_same_as_matrix_multiplication" />
+        <item itemvalue="Cargo.Test components::camera::tests::world_point_projection_is_the_same_as_matrix_multiplication" />
         <item itemvalue="Cargo.Test camera::tests" />
         <item itemvalue="Cargo.Test model::tests" />
         <item itemvalue="Cargo.Test components::camera::tests::provides_ui_matrix_accessor_with_defaults" />
@@ -313,7 +347,19 @@
       <option name="presentableId" value="LOCAL−00020" />
       <updated>1633281081420</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL−00021" summary="Updated project deps">
+      <created>1636753565515</created>
+      <option name="number" value="LOCAL−00021" />
+      <option name="presentableId" value="LOCAL−00021" />
+      <updated>1636753565515</updated>
+    </task>
+    <task id="LOCAL−00022" summary="Fixed an issue with a test of world_point_to_ndc">
+      <created>1636753783775</created>
+      <option name="number" value="LOCAL−00022" />
+      <option name="presentableId" value="LOCAL−00022" />
+      <updated>1636753783775</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -352,6 +398,8 @@
     <MESSAGE value="Modified the output of the commands components and entities" />
     <MESSAGE value="For some reason, I have unexpected inconsistencies with point transformations" />
     <MESSAGE value="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error." />
-    <option name="LAST_COMMIT_MESSAGE" value="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error." />
+    <MESSAGE value="Updated project deps" />
+    <MESSAGE value="Fixed an issue with a test of world_point_to_ndc" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed an issue with a test of world_point_to_ndc" />
   </component>
 </project>
