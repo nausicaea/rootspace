@@ -186,23 +186,27 @@ impl Default for ModelBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_ulps_eq;
+    use approx::ulps_eq;
     use nalgebra::Vector4;
+    use proptest::prelude::*;
 
     #[test]
     fn implements_default() {
         let _: Model = Default::default();
     }
 
-    #[test]
-    fn transform_point_is_the_same_as_matrix_multiplication() {
-        let m = Model::default();
-        let p = Point3::new(-0.5f32, -0.5f32, 0.0f32);
+    proptest! {
+        #[test]
+        fn transform_point_is_the_same_as_matrix_multiplication(x: f32, y: f32, z: f32) {
+            let one = 1.0f32;
+            let m = Model::default();
+            let p = Point3::new(x, y, z);
 
-        let tpt: Point3<f32> = m.transform_point(&p);
-        let tpt: Vector4<f32> = Vector4::new(tpt.x, tpt.y, tpt.z, 1.0f32);
-        let mmul = m.matrix() * Vector4::new(p.x, p.y, p.z, 1.0f32);
+            let tpt: Point3<f32> = m.transform_point(&p);
+            let tpt: Vector4<f32> = Vector4::new(tpt.x, tpt.y, tpt.z, one);
+            let mmul = m.matrix() * Vector4::new(p.x, p.y, p.z, one);
 
-        assert_ulps_eq!(tpt, mmul);
+            prop_assert!(ulps_eq!(tpt, mmul));
+        }
     }
 }
