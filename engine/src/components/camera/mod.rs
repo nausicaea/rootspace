@@ -1,3 +1,10 @@
+pub mod camera_builder;
+mod camera_ser_de;
+pub mod projection;
+
+use self::camera_builder::CameraBuilder;
+use self::camera_ser_de::CameraSerDe;
+use self::projection::Projection;
 use approx::ulps_eq;
 use ecs::{Component, VecStorage};
 use nalgebra::{Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
@@ -6,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::{components::model::Model, geometry::ray::Ray};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(into = "CameraSerDe", from = "CameraSerDe")]
+#[serde(into = "self::camera_ser_de::CameraSerDe", from = "self::camera_ser_de::CameraSerDe")]
 pub struct Camera {
     projection: Projection,
     orthographic: Orthographic3<f32>,
@@ -197,117 +204,6 @@ impl Component for Camera {
     type Storage = VecStorage<Self>;
 }
 
-#[derive(Debug)]
-pub struct CameraBuilder {
-    projection: Projection,
-    dimensions: (u32, u32),
-    fov_y: f32,
-    frustum_z: (f32, f32),
-    dpi_factor: f64,
-}
-
-impl CameraBuilder {
-    pub fn with_projection(mut self, projection: Projection) -> Self {
-        self.projection = projection;
-        self
-    }
-
-    pub fn with_dimensions(mut self, dimensions: (u32, u32)) -> Self {
-        self.dimensions = dimensions;
-        self
-    }
-
-    pub fn with_fov_y(mut self, fov_y: f32) -> Self {
-        self.fov_y = fov_y;
-        self
-    }
-
-    pub fn with_frustum_z(mut self, frustum_z: (f32, f32)) -> Self {
-        self.frustum_z = frustum_z;
-        self
-    }
-
-    pub fn with_dpi_factor(mut self, dpi_factor: f64) -> Self {
-        self.dpi_factor = dpi_factor;
-        self
-    }
-
-    pub fn build(self) -> Camera {
-        let orthographic = Orthographic3::new(
-            self.dimensions.0 as f32 / -2.0,
-            self.dimensions.0 as f32 / 2.0,
-            self.dimensions.1 as f32 / -2.0,
-            self.dimensions.1 as f32 / 2.0,
-            self.frustum_z.0,
-            self.frustum_z.1,
-        );
-        let perspective = Perspective3::new(
-            self.dimensions.0 as f32 / self.dimensions.1 as f32,
-            self.fov_y,
-            self.frustum_z.0,
-            self.frustum_z.1,
-        );
-
-        Camera {
-            projection: self.projection,
-            orthographic,
-            perspective,
-            dimensions: self.dimensions,
-            fov_y: self.fov_y,
-            frustum_z: self.frustum_z,
-            dpi_factor: self.dpi_factor,
-        }
-    }
-}
-
-impl Default for CameraBuilder {
-    fn default() -> Self {
-        CameraBuilder {
-            projection: Projection::Perspective,
-            dimensions: (800, 600),
-            fov_y: std::f32::consts::PI / 4.0,
-            frustum_z: (0.1, 1000.0),
-            dpi_factor: 1.0,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Projection {
-    Perspective,
-    Orthographic,
-}
-
-impl std::fmt::Display for Projection {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            Projection::Perspective => f.write_str("Perspective"),
-            Projection::Orthographic => f.write_str("Orthographic"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-struct CameraSerDe {
-    projection: Projection,
-    dimensions: (u32, u32),
-    fov_y: f32,
-    frustum_z: (f32, f32),
-    dpi_factor: f64,
-}
-
-impl From<Camera> for CameraSerDe {
-    fn from(value: Camera) -> Self {
-        CameraSerDe {
-            projection: value.projection,
-            dimensions: value.dimensions,
-            fov_y: value.fov_y,
-            frustum_z: value.frustum_z,
-            dpi_factor: value.dpi_factor,
-        }
-    }
-}
-
 impl From<CameraSerDe> for Camera {
     fn from(value: CameraSerDe) -> Self {
         Camera::builder()
@@ -323,7 +219,7 @@ impl From<CameraSerDe> for Camera {
 #[cfg(test)]
 mod tests {
     use approx::{assert_ulps_eq, ulps_eq};
-    use nalgebra::{UnitQuaternion, Vector4};
+    use nalgebra::Vector4;
 
     use super::*;
     use proptest::prelude::*;
@@ -373,34 +269,61 @@ mod tests {
 
     proptest! {
         #[test]
-        fn ui_point_projection_is_the_same_as_matrix_multiplication(x: f32, y: f32, d: f32) {
-            let one = 1.0f32;
-            let c = Camera::default();
+        fn ui_ndc_projection_is_the_same_as_matrix_multiplication(fovy in 0usize..1000, fnz: f32, fdist in 1usize..1000, x: f32, y: f32, d: f32) {
+            prop_assume!(fnz > -70228276000000000000000000000.0 && fnz < 21796195000000000000000.0, "Very large near frustum values will cause a panic");
+
+            let fovy = (fovy as f32 / 1000.0f32) * std::f32::consts::PI;
+            let ffz = fnz + fdist as f32;
+            let c = Camera::builder()
+                .with_projection(Projection::Orthographic)
+                .with_dimensions((800, 600))
+                .with_dpi_factor(1.0)
+                .with_fov_y(fovy)
+                .with_frustum_z((fnz, ffz))
+                .build();
             let p = Point2::new(x, y);
             let pproj: Point3<f32> = c.ui_point_to_ndc(&p, d);
-            let pproj: Vector4<f32> = Vector4::new(pproj.x, pproj.y, pproj.z, one);
-            let mmul: Vector4<f32> = c.ui_matrix() * Vector4::new(p.x, p.y, d, one);
 
-            prop_assert!(ulps_eq!(pproj, mmul));
+            let mmul: Vector4<f32> = c.ui_matrix() * Vector4::new(x, y, d, 1.0f32);
+            let mmul: Vector4<f32> = mmul / mmul.w;
+
+            let (tx, ty, tz) = (pproj.x, pproj.y, pproj.z);
+            let (mx, my, mz) = (mmul.x, mmul.y, mmul.z);
+            prop_assert!(
+                ((tx.is_nan() && mx.is_nan()) || (!tx.is_nan() && (tx == mx))) &&
+                ((ty.is_nan() && my.is_nan()) || (!ty.is_nan() && (ty == my))) &&
+                ((tz.is_nan() && mz.is_nan()) || (!tz.is_nan() && (tz == mz))),
+                "{:?} != {:?}", pproj, mmul
+            );
         }
 
         #[test]
-        fn world_point_projection_is_the_same_as_matrix_multiplication(x: f32, y: f32, z: f32, cz: f32) {
-            let zero = 0.0f32;
-            let one = 1.0f32;
-            let c = Camera::default();
-            let p = Point3::new(x, y, z);
-            let cam_mdl: Model = Model::builder()
-                .with_position(Point3::new(zero, zero, cz))
-                .with_scale(Vector3::new(one, one, one))
-                .with_orientation(UnitQuaternion::look_at_rh(&Vector3::new(zero, zero, -one), &Vector3::y()))
+        fn world_ndc_projection_is_the_same_as_matrix_multiplication(fovy in 0usize..1000, fnz: f32, fdist in 1usize..1000, x: f32, y: f32, z: f32) {
+            let fovy = (fovy as f32 / 1000.0f32) * std::f32::consts::PI;
+            let ffz = fnz + fdist as f32;
+
+            let c = Camera::builder()
+                .with_projection(Projection::Perspective)
+                .with_dimensions((800, 600))
+                .with_dpi_factor(1.0)
+                .with_fov_y(fovy)
+                .with_frustum_z((fnz, ffz))
                 .build();
+            let cam_mdl: Model = Model::default();
+            let p = Point3::new(x, y, z);
             let pproj: Point3<f32> = c.world_point_to_ndc(&cam_mdl, &p);
-            let pproj: Vector4<f32> = Vector4::new(pproj.x, pproj.y, pproj.z, one);
-            let mmul: Vector4<f32> = c.world_matrix() * cam_mdl.matrix() * Vector4::new(p.x, p.y, p.z, one);
+
+            let mmul: Vector4<f32> = c.world_matrix() * cam_mdl.matrix() * Vector4::new(x, y, z, 1.0f32);
             let mmul: Vector4<f32> = mmul / mmul.w;
 
-            prop_assert!(ulps_eq!(pproj, mmul));
+            let (tx, ty, tz) = (pproj.x, pproj.y, pproj.z);
+            let (mx, my, mz) = (mmul.x, mmul.y, mmul.z);
+            prop_assert!(
+                ((tx.is_nan() && mx.is_nan()) || (!tx.is_nan() && (tx == mx))) &&
+                ((ty.is_nan() && my.is_nan()) || (!ty.is_nan() && (ty == my))) &&
+                ((tz.is_nan() && mz.is_nan()) || (!tz.is_nan() && (tz == mz))),
+                "{:?} != {:?}", pproj, mmul
+            );
         }
     }
 }

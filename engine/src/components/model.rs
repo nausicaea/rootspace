@@ -187,7 +187,7 @@ impl Default for ModelBuilder {
 mod tests {
     use super::*;
     use approx::ulps_eq;
-    use nalgebra::Vector4;
+    use nalgebra::{Unit, Vector4};
     use proptest::prelude::*;
 
     #[test]
@@ -197,16 +197,31 @@ mod tests {
 
     proptest! {
         #[test]
-        fn transform_point_is_the_same_as_matrix_multiplication(x: f32, y: f32, z: f32) {
+        fn transform_point_is_the_same_as_matrix_multiplication(tx: f32, ty: f32, tz: f32, sx: f32, sy: f32, sz: f32, rx: f32, ry: f32, rz: f32, ra: f32, px: f32, py: f32, pz: f32) {
             let one = 1.0f32;
-            let m = Model::default();
-            let p = Point3::new(x, y, z);
+            let m = Model::builder()
+                .with_position(Point3::from([tx, ty, tz]))
+                .with_orientation(UnitQuaternion::from_axis_angle(&Unit::new_normalize(Vector3::new(rx, ry, rz)), ra))
+                .with_scale(Vector3::new(sx, sy, sz))
+                .build();
+            let p = Point3::new(px, py, pz);
 
             let tpt: Point3<f32> = m.transform_point(&p);
             let tpt: Vector4<f32> = Vector4::new(tpt.x, tpt.y, tpt.z, one);
             let mmul = m.matrix() * Vector4::new(p.x, p.y, p.z, one);
 
-            prop_assert!(ulps_eq!(tpt, mmul));
+            if tpt.x.is_nan() || tpt.y.is_nan() || tpt.z.is_nan() {
+                let (tx, ty, tz) = (tpt.x, tpt.y, tpt.z);
+                let (mx, my, mz) = (mmul.x, mmul.y, mmul.z);
+                prop_assert!(
+                    ((tx.is_nan() && mx.is_nan()) || (!tx.is_nan() && (tx == mx))) &&
+                    ((ty.is_nan() && my.is_nan()) || (!ty.is_nan() && (ty == my))) &&
+                    ((tz.is_nan() && mz.is_nan()) || (!tz.is_nan() && (tz == mz))),
+                    "{:?} != {:?}", tpt, mmul
+                );
+            } else {
+                prop_assert!(ulps_eq!(tpt, mmul), "{:?} != {:?}", tpt, mmul);
+            }
         }
     }
 }

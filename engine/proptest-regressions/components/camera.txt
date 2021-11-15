@@ -5,3 +5,5 @@
 # It is recommended to check this file in to source control so that
 # everyone who runs the test benefits from these saved cases.
 cc 1954fb76a9953db05e8c494d6a5f2975e072ec6e1357ac0696ebda931cfd5e46 # shrinks to x = 0.0, y = 0.0, z = 0.0, cz = 0.0
+cc 14ba5d3994b870b56eadccfe0fc806eae4598493c90dafe17da19715d3319cb9 # shrinks to fovy = 0.0, fnz = -0.0000000000000000000000000000000000050171217, ffz = 0.0, x = 0.0, y = 0.0, z = 0.0
+cc 0a6b09a9a634ab9e1bcf8e95de1ab20984a2b15c9aa8adb6cd81a5e3197f278d # shrinks to fovy = 0.0, fnz = 0.0, ffz = 0.000000000017394614, x = 0.0, y = 0.0, z = -0.0
