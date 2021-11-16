@@ -1,4 +1,4 @@
-use std::{f32, ops::Mul};
+use std::ops::Mul;
 
 use affine_transform::AffineTransform;
 use ecs::{Component, VecStorage};
@@ -49,12 +49,12 @@ impl Model {
         Point3::from(self.decomposed.translation.vector)
     }
 
-    pub fn orientation(&self) -> &UnitQuaternion<f32> {
-        &self.decomposed.rotation
+    pub fn orientation(&self) -> UnitQuaternion<f32> {
+        self.decomposed.rotation
     }
 
-    pub fn scale(&self) -> &Vector3<f32> {
-        &self.decomposed.scale
+    pub fn scale(&self) -> Vector3<f32> {
+        self.decomposed.scale
     }
 
     fn recalculate_matrix(&mut self) {
@@ -186,8 +186,9 @@ impl Default for ModelBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::ulps_eq;
-    use nalgebra::{Unit, Vector4};
+    use crate::utilities::validate_f32;
+    use approx::{assert_ulps_eq, ulps_eq};
+    use nalgebra::{one, zero, Point4, Quaternion, Unit, Vector4};
     use proptest::prelude::*;
 
     #[test]
@@ -195,32 +196,150 @@ mod tests {
         let _: Model = Default::default();
     }
 
+    #[test]
+    fn provides_builder() {
+        let _: ModelBuilder = Model::builder();
+    }
+
+    #[test]
+    fn blank_builder_is_the_same_as_default() {
+        let ma: Model = Model::builder().build();
+        let mb: Model = Default::default();
+
+        assert_eq!(ma, mb);
+        // TODO: assert_ulps_eq!(ma, mb);
+    }
+
+    #[test]
+    fn default_is_identity() {
+        let m: Model = Default::default();
+        assert_ulps_eq!(m.matrix(), &Matrix4::identity())
+    }
+
+    #[test]
+    fn builder_accepts_position() {
+        let _: ModelBuilder = ModelBuilder::default().with_position(Point3::from(Vector3::new(0.0, 0.0, 0.0)));
+    }
+
+    #[test]
+    fn builder_accepts_orientaton() {
+        let _: ModelBuilder =
+            ModelBuilder::default().with_orientation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
+    }
+
+    #[test]
+    fn builder_accepts_scale() {
+        let _: ModelBuilder = ModelBuilder::default().with_scale(Vector3::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn builder_complete_example() {
+        let m: Model = ModelBuilder::default()
+            .with_position(Point3::from([zero(); 3]))
+            .with_orientation(Unit::new_normalize(Quaternion::identity()))
+            .with_scale(Vector3::from([zero(); 3]))
+            .build();
+
+        assert_ulps_eq!(m.position(), Point3::from([zero(); 3]));
+        assert_ulps_eq!(m.orientation(), Unit::new_normalize(Quaternion::identity()));
+        assert_ulps_eq!(m.scale(), Vector3::from([zero(); 3]));
+    }
+
+    #[test]
+    fn transform_point_works_for_zeroes() {
+        let m: Model = ModelBuilder::default()
+            .with_position(Point3::from([zero(); 3]))
+            .with_orientation(Unit::new_normalize(Quaternion::identity()))
+            .with_scale(Vector3::from([one(); 3]))
+            .build();
+        let p: Point3<f32> = Point3::from([zero(); 3]);
+
+        let tpt: Point3<f32> = m.transform_point(&p);
+        let tpt: Vector4<f32> = Vector4::new(tpt.x, tpt.y, tpt.z, one());
+        let mmul = m.matrix() * Vector4::new(p.x, p.y, p.z, one());
+
+        assert_ulps_eq!(tpt, mmul);
+    }
+
     proptest! {
         #[test]
-        fn transform_point_is_the_same_as_matrix_multiplication(tx: f32, ty: f32, tz: f32, sx: f32, sy: f32, sz: f32, rx: f32, ry: f32, rz: f32, ra: f32, px: f32, py: f32, pz: f32) {
-            let one = 1.0f32;
-            let m = Model::builder()
-                .with_position(Point3::from([tx, ty, tz]))
-                .with_orientation(UnitQuaternion::from_axis_angle(&Unit::new_normalize(Vector3::new(rx, ry, rz)), ra))
-                .with_scale(Vector3::new(sx, sy, sz))
-                .build();
-            let p = Point3::new(px, py, pz);
+        fn position_may_be_changed(num: [f32; 3]) {
+            let mut m = Model::default();
 
-            let tpt: Point3<f32> = m.transform_point(&p);
-            let tpt: Vector4<f32> = Vector4::new(tpt.x, tpt.y, tpt.z, one);
-            let mmul = m.matrix() * Vector4::new(p.x, p.y, p.z, one);
+            let p = Point3::from_slice(&num);
+            m.set_position(p);
 
-            if tpt.x.is_nan() || tpt.y.is_nan() || tpt.z.is_nan() {
-                let (tx, ty, tz) = (tpt.x, tpt.y, tpt.z);
-                let (mx, my, mz) = (mmul.x, mmul.y, mmul.z);
-                prop_assert!(
-                    ((tx.is_nan() && mx.is_nan()) || (!tx.is_nan() && (tx == mx))) &&
-                    ((ty.is_nan() && my.is_nan()) || (!ty.is_nan() && (ty == my))) &&
-                    ((tz.is_nan() && mz.is_nan()) || (!tz.is_nan() && (tz == mz))),
-                    "{:?} != {:?}", tpt, mmul
-                );
+            if !validate_f32(&num) {
+                return Ok(());
             } else {
+                prop_assert_eq!(m.position(), p);
+            }
+        }
+
+        #[test]
+        fn orientation_may_be_changed(num: [f32; 4]) {
+            let mut m = Model::default();
+
+            let o = Unit::new_normalize(Quaternion::new(num[0], num[1], num[2], num[3]));
+            m.set_orientation(o);
+
+            if !validate_f32(&num) {
+                return Ok(());
+            } else {
+                prop_assert_eq!(m.orientation(), o);
+            }
+        }
+
+        #[test]
+        fn scale_may_be_changed(num: [f32; 3]) {
+            let mut m = Model::default();
+
+            let s = Vector3::new(num[0], num[1], num[2]);
+            m.set_scale(s);
+
+            if !validate_f32(&num) {
+                return Ok(());
+            } else {
+                prop_assert_eq!(m.scale(), s);
+            }
+        }
+
+        #[test]
+        fn transform_point_is_the_same_as_matrix_multiplication(num: [f32; 13]) {
+            let m = Model::builder()
+                .with_position(Point3::from_slice(&num[0..3]))
+                .with_orientation(Unit::new_normalize(Quaternion::from_vector(Point4::from_slice(&num[3..7]).coords)))
+                .with_scale(Point3::from_slice(&num[7..10]).coords)
+                .build();
+            let p = Point3::from_slice(&num[10..13]);
+
+            if !validate_f32(&num) {
+                return Ok(())
+            } else {
+                let tpt: Point3<f32> = m.transform_point(&p);
+                let tpt: Vector4<f32> = Vector4::new(tpt.x, tpt.y, tpt.z, one());
+                let mmul = m.matrix() * Vector4::new(p.x, p.y, p.z, one());
+
                 prop_assert!(ulps_eq!(tpt, mmul), "{:?} != {:?}", tpt, mmul);
+            }
+        }
+
+        #[test]
+        fn transformations_are_invertible(num: [f32; 13]) {
+            let m = Model::builder()
+                .with_position(Point3::from_slice(&num[0..3]))
+                .with_orientation(Unit::new_normalize(Quaternion::from_vector(Point4::from_slice(&num[3..7]).coords)))
+                .with_scale(Point3::from_slice(&num[7..10]).coords)
+                .build();
+            let p = Point3::from_slice(&num[10..13]);
+
+            if !validate_f32(&num) {
+                return Ok(())
+            } else {
+                let tpt: Point3<f32> = m.transform_point(&p);
+                let itpt: Point3<f32> = m.inverse_transform_point(&tpt);
+
+                prop_assert!(ulps_eq!(p, itpt), "{:?} != {:?}", p, itpt);
             }
         }
     }

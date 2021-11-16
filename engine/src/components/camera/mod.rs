@@ -270,10 +270,11 @@ mod tests {
     proptest! {
         #[test]
         fn ui_ndc_projection_is_the_same_as_matrix_multiplication(fovy in 0usize..1000, fnz: f32, fdist in 1usize..1000, x: f32, y: f32, d: f32) {
-            prop_assume!(fnz > -70228276000000000000000000000.0 && fnz < 21796195000000000000000.0, "Very large near frustum values will cause a panic");
-
+            prop_assume!(fnz.is_normal());
             let fovy = (fovy as f32 / 1000.0f32) * std::f32::consts::PI;
             let ffz = fnz + fdist as f32;
+            prop_assume!(ffz - fnz > f32::EPSILON);
+
             let c = Camera::builder()
                 .with_projection(Projection::Orthographic)
                 .with_dimensions((800, 600))
@@ -299,8 +300,10 @@ mod tests {
 
         #[test]
         fn world_ndc_projection_is_the_same_as_matrix_multiplication(fovy in 0usize..1000, fnz: f32, fdist in 1usize..1000, x: f32, y: f32, z: f32) {
+            prop_assume!(fnz.is_normal());
             let fovy = (fovy as f32 / 1000.0f32) * std::f32::consts::PI;
             let ffz = fnz + fdist as f32;
+            prop_assume!(ffz - fnz > f32::EPSILON);
 
             let c = Camera::builder()
                 .with_projection(Projection::Perspective)

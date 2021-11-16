@@ -7,15 +7,15 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added a property test for Model.">
-      <change afterPath="$PROJECT_DIR$/engine/src/components/camera/camera_builder.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/engine/src/components/camera/camera_ser_de.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/engine/src/components/camera/projection.rs" afterDir="false" />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Began working on the property tests for Camera transformations.">
+      <change afterPath="$PROJECT_DIR$/engine/src/utilities.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/proptest-regressions/components/camera.txt" beforeDir="false" afterPath="$PROJECT_DIR$/engine/proptest-regressions/components/camera.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/components/camera.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/components/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/proptest-regressions/components/camera.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/proptest-regressions/components/camera/mod.txt" beforeDir="false" afterPath="$PROJECT_DIR$/engine/proptest-regressions/components/camera/mod.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/proptest-regressions/components/model.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/components/model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/model.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +52,7 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
@@ -68,7 +69,12 @@
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager" selected="Cargo.Test camera::tests">
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/engine/src" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Cargo.Test components::model::tests::transform_point_works_for_zeroes">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -117,40 +123,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test components::camera::tests::provides_ui_matrix_accessor_with_defaults" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package engine --lib components::camera::tests::provides_ui_matrix_accessor_with_defaults -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test components::camera::tests::ui_point_projection_is_the_same_as_matrix_multiplication" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package engine --lib components::camera::tests::ui_point_projection_is_the_same_as_matrix_multiplication -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test components::camera::tests::world_point_projection_is_the_same_as_matrix_multiplication" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package engine --lib components::camera::tests::world_point_projection_is_the_same_as_matrix_multiplication -- --exact" />
+    <configuration name="Test components::model::tests::transform_point_works_for_zeroes" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package engine --lib components::model::tests::transform_point_works_for_zeroes -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -181,25 +155,39 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Test utilities::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package engine --lib utilities::tests" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
     <list>
-      <item itemvalue="Cargo.Test" />
-      <item itemvalue="Cargo.Run" />
       <item itemvalue="Cargo.Initialize Force" />
-      <item itemvalue="Cargo.Run Headless" />
       <item itemvalue="Cargo.Test Engine Stable" />
-      <item itemvalue="Cargo.Test components::camera::tests::provides_ui_matrix_accessor_with_defaults" />
+      <item itemvalue="Cargo.Run" />
+      <item itemvalue="Cargo.Test" />
+      <item itemvalue="Cargo.Run Headless" />
       <item itemvalue="Cargo.Test camera::tests" />
       <item itemvalue="Cargo.Test model::tests" />
-      <item itemvalue="Cargo.Test components::camera::tests::world_point_projection_is_the_same_as_matrix_multiplication" />
-      <item itemvalue="Cargo.Test components::camera::tests::ui_point_projection_is_the_same_as_matrix_multiplication" />
+      <item itemvalue="Cargo.Test utilities::tests" />
+      <item itemvalue="Cargo.Test components::model::tests::transform_point_works_for_zeroes" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test camera::tests" />
+        <item itemvalue="Cargo.Test components::model::tests::transform_point_works_for_zeroes" />
         <item itemvalue="Cargo.Test model::tests" />
-        <item itemvalue="Cargo.Test components::camera::tests::ui_point_projection_is_the_same_as_matrix_multiplication" />
-        <item itemvalue="Cargo.Test components::camera::tests::world_point_projection_is_the_same_as_matrix_multiplication" />
-        <item itemvalue="Cargo.Test components::camera::tests::provides_ui_matrix_accessor_with_defaults" />
+        <item itemvalue="Cargo.Test utilities::tests" />
+        <item itemvalue="Cargo.Test camera::tests" />
       </list>
     </recent_temporary>
   </component>
@@ -237,7 +225,13 @@
       <workItem from="1636796744225" duration="1845000" />
       <workItem from="1636800542268" duration="766000" />
       <workItem from="1636922692337" duration="3395000" />
-      <workItem from="1636960250305" duration="1574000" />
+      <workItem from="1636960250305" duration="3064000" />
+      <workItem from="1636978965275" duration="103000" />
+      <workItem from="1636986691936" duration="34000" />
+      <workItem from="1636991147800" duration="3401000" />
+      <workItem from="1637016089592" duration="5307000" />
+      <workItem from="1637072680413" duration="1044000" />
+      <workItem from="1637097340430" duration="418000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -395,7 +389,13 @@
       <option name="presentableId" value="LOCAL−00026" />
       <updated>1636923725988</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL−00027" summary="Began working on the property tests for Camera transformations.">
+      <created>1636963673290</created>
+      <option name="number" value="LOCAL−00027" />
+      <option name="presentableId" value="LOCAL−00027" />
+      <updated>1636963673290</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -414,7 +414,7 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Moved the more complex ancestors test to where it belongs." />
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="Preparing to remove SceneGraph" />
     <MESSAGE value="Completely replaced SceneGraph with the new implementation of Hierarchy." />
     <MESSAGE value="Removed one dictionary lookup from AncestorsIter::next." />
@@ -439,6 +439,7 @@
     <MESSAGE value="Changed a value in one of the point transformation tests" />
     <MESSAGE value="Migrated two camera tests to property tests, and promptly found a failure case" />
     <MESSAGE value="Added a property test for Model." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added a property test for Model." />
+    <MESSAGE value="Began working on the property tests for Camera transformations." />
+    <option name="LAST_COMMIT_MESSAGE" value="Began working on the property tests for Camera transformations." />
   </component>
 </project>
