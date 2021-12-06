@@ -222,6 +222,7 @@ mod tests {
     use nalgebra::Vector4;
 
     use super::*;
+    use crate::utilities::validate_float;
     use proptest::prelude::*;
     use std::convert::TryFrom;
 
@@ -236,8 +237,37 @@ mod tests {
     }
 
     #[test]
-    fn builder_provides_with_dimensions_method() {
-        let _ = Camera::builder().with_dimensions((1, 1));
+    fn blank_builder_is_the_same_as_default() {
+        let ca: Camera = Camera::builder().build();
+        let cb: Camera = Default::default();
+
+        assert_eq!(ca, cb);
+        // TODO: assert_ulps_eq!(ca, cb);
+    }
+
+    #[test]
+    fn builder_accepts_dimensions() {
+        let _: CameraBuilder = Camera::builder().with_dimensions((1, 1));
+    }
+
+    #[test]
+    fn builder_accepts_projection() {
+        let _: CameraBuilder = CameraBuilder::default().with_projection(Projection::Orthographic);
+    }
+
+    #[test]
+    fn builder_accepts_field_of_view() {
+        let _: CameraBuilder = CameraBuilder::default().with_fov_y(1.0);
+    }
+
+    #[test]
+    fn builder_accepts_frustum_limits() {
+        let _: CameraBuilder = CameraBuilder::default().with_frustum_z((0.1, 1020.0));
+    }
+
+    #[test]
+    fn builder_accepts_dpi_factor() {
+        let _: CameraBuilder = CameraBuilder::default().with_dpi_factor(2.0);
     }
 
     #[test]
@@ -269,64 +299,22 @@ mod tests {
 
     proptest! {
         #[test]
-        fn ui_ndc_projection_is_the_same_as_matrix_multiplication(fovy in 0usize..1000, fnz: f32, fdist in 1usize..1000, x: f32, y: f32, d: f32) {
-            prop_assume!(fnz.is_normal());
-            let fovy = (fovy as f32 / 1000.0f32) * std::f32::consts::PI;
-            let ffz = fnz + fdist as f32;
-            prop_assume!(ffz - fnz > f32::EPSILON);
-
-            let c = Camera::builder()
-                .with_projection(Projection::Orthographic)
-                .with_dimensions((800, 600))
-                .with_dpi_factor(1.0)
-                .with_fov_y(fovy)
-                .with_frustum_z((fnz, ffz))
-                .build();
-            let p = Point2::new(x, y);
-            let pproj: Point3<f32> = c.ui_point_to_ndc(&p, d);
-
-            let mmul: Vector4<f32> = c.ui_matrix() * Vector4::new(x, y, d, 1.0f32);
-            let mmul: Vector4<f32> = mmul / mmul.w;
-
-            let (tx, ty, tz) = (pproj.x, pproj.y, pproj.z);
-            let (mx, my, mz) = (mmul.x, mmul.y, mmul.z);
-            prop_assert!(
-                ((tx.is_nan() && mx.is_nan()) || (!tx.is_nan() && (tx == mx))) &&
-                ((ty.is_nan() && my.is_nan()) || (!ty.is_nan() && (ty == my))) &&
-                ((tz.is_nan() && mz.is_nan()) || (!tz.is_nan() && (tz == mz))),
-                "{:?} != {:?}", pproj, mmul
-            );
+        fn dimensions_may_be_changed(num: (u32, u32)) {
+            let mut c = Camera::default();
+            c.set_dimensions(num);
+            prop_assert_eq!(c.dimensions(), num);
         }
 
         #[test]
-        fn world_ndc_projection_is_the_same_as_matrix_multiplication(fovy in 0usize..1000, fnz: f32, fdist in 1usize..1000, x: f32, y: f32, z: f32) {
-            prop_assume!(fnz.is_normal());
-            let fovy = (fovy as f32 / 1000.0f32) * std::f32::consts::PI;
-            let ffz = fnz + fdist as f32;
-            prop_assume!(ffz - fnz > f32::EPSILON);
+        fn dpi_factor_may_be_changed(num: f64) {
+            let mut c = Camera::default();
+            c.set_dpi_factor(num);
 
-            let c = Camera::builder()
-                .with_projection(Projection::Perspective)
-                .with_dimensions((800, 600))
-                .with_dpi_factor(1.0)
-                .with_fov_y(fovy)
-                .with_frustum_z((fnz, ffz))
-                .build();
-            let cam_mdl: Model = Model::default();
-            let p = Point3::new(x, y, z);
-            let pproj: Point3<f32> = c.world_point_to_ndc(&cam_mdl, &p);
-
-            let mmul: Vector4<f32> = c.world_matrix() * cam_mdl.matrix() * Vector4::new(x, y, z, 1.0f32);
-            let mmul: Vector4<f32> = mmul / mmul.w;
-
-            let (tx, ty, tz) = (pproj.x, pproj.y, pproj.z);
-            let (mx, my, mz) = (mmul.x, mmul.y, mmul.z);
-            prop_assert!(
-                ((tx.is_nan() && mx.is_nan()) || (!tx.is_nan() && (tx == mx))) &&
-                ((ty.is_nan() && my.is_nan()) || (!ty.is_nan() && (ty == my))) &&
-                ((tz.is_nan() && mz.is_nan()) || (!tz.is_nan() && (tz == mz))),
-                "{:?} != {:?}", pproj, mmul
-            );
+            if !validate_float(&[num]) {
+                return Ok(())
+            } else {
+                prop_assert_eq!(c.dpi_factor(), num);
+            }
         }
     }
 }

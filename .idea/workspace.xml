@@ -7,15 +7,11 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Began working on the property tests for Camera transformations.">
-      <change afterPath="$PROJECT_DIR$/engine/src/utilities.rs" afterDir="false" />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="I now have a good set of tests for model.rs">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/proptest-regressions/components/camera.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/proptest-regressions/components/camera/mod.txt" beforeDir="false" afterPath="$PROJECT_DIR$/engine/proptest-regressions/components/camera/mod.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/proptest-regressions/components/model.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine/src/components/model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/model.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/utilities.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/utilities.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,6 +38,9 @@
   </component>
   <component name="MacroExpansionManager">
     <option name="directoryName" value="8vgs609l" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
     <option name="selectedIndex" value="1" />
@@ -74,7 +73,7 @@
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.Test components::model::tests::transform_point_works_for_zeroes">
+  <component name="RunManager" selected="Cargo.Test camera::tests">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -109,6 +108,22 @@
     </configuration>
     <configuration name="Test camera::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package engine --lib components::camera::tests" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test components::model::tests::default_is_identity" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package engine --lib components::model::tests::default_is_identity -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -181,13 +196,15 @@
       <item itemvalue="Cargo.Test model::tests" />
       <item itemvalue="Cargo.Test utilities::tests" />
       <item itemvalue="Cargo.Test components::model::tests::transform_point_works_for_zeroes" />
+      <item itemvalue="Cargo.Test components::model::tests::default_is_identity" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test components::model::tests::transform_point_works_for_zeroes" />
+        <item itemvalue="Cargo.Test camera::tests" />
         <item itemvalue="Cargo.Test model::tests" />
         <item itemvalue="Cargo.Test utilities::tests" />
-        <item itemvalue="Cargo.Test camera::tests" />
+        <item itemvalue="Cargo.Test components::model::tests::default_is_identity" />
+        <item itemvalue="Cargo.Test components::model::tests::transform_point_works_for_zeroes" />
       </list>
     </recent_temporary>
   </component>
@@ -231,7 +248,14 @@
       <workItem from="1636991147800" duration="3401000" />
       <workItem from="1637016089592" duration="5307000" />
       <workItem from="1637072680413" duration="1044000" />
-      <workItem from="1637097340430" duration="418000" />
+      <workItem from="1637097340430" duration="2133000" />
+      <workItem from="1637165978306" duration="1647000" />
+      <workItem from="1637228991819" duration="1241000" />
+      <workItem from="1637493594577" duration="543000" />
+      <workItem from="1637513565288" duration="198000" />
+      <workItem from="1637524315192" duration="200000" />
+      <workItem from="1638480324582" duration="289000" />
+      <workItem from="1638789328992" duration="616000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -395,7 +419,13 @@
       <option name="presentableId" value="LOCAL−00027" />
       <updated>1636963673290</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL−00028" summary="I now have a good set of tests for model.rs">
+      <created>1637098111125</created>
+      <option name="number" value="LOCAL−00028" />
+      <option name="presentableId" value="LOCAL−00028" />
+      <updated>1637098111125</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -411,11 +441,9 @@
         </entry>
       </map>
     </option>
-    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Preparing to remove SceneGraph" />
     <MESSAGE value="Completely replaced SceneGraph with the new implementation of Hierarchy." />
     <MESSAGE value="Removed one dictionary lookup from AncestorsIter::next." />
     <MESSAGE value="Added the ability to reload the last state" />
@@ -440,6 +468,7 @@
     <MESSAGE value="Migrated two camera tests to property tests, and promptly found a failure case" />
     <MESSAGE value="Added a property test for Model." />
     <MESSAGE value="Began working on the property tests for Camera transformations." />
-    <option name="LAST_COMMIT_MESSAGE" value="Began working on the property tests for Camera transformations." />
+    <MESSAGE value="I now have a good set of tests for model.rs" />
+    <option name="LAST_COMMIT_MESSAGE" value="I now have a good set of tests for model.rs" />
   </component>
 </project>

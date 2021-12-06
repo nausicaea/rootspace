@@ -186,7 +186,7 @@ impl Default for ModelBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utilities::validate_f32;
+    use crate::utilities::validate_float;
     use approx::{assert_ulps_eq, ulps_eq};
     use nalgebra::{one, zero, Point4, Quaternion, Unit, Vector4};
     use proptest::prelude::*;
@@ -269,7 +269,7 @@ mod tests {
             let p = Point3::from_slice(&num);
             m.set_position(p);
 
-            if !validate_f32(&num) {
+            if !validate_float(&num) {
                 return Ok(());
             } else {
                 prop_assert_eq!(m.position(), p);
@@ -283,7 +283,7 @@ mod tests {
             let o = Unit::new_normalize(Quaternion::new(num[0], num[1], num[2], num[3]));
             m.set_orientation(o);
 
-            if !validate_f32(&num) {
+            if !validate_float(&num) {
                 return Ok(());
             } else {
                 prop_assert_eq!(m.orientation(), o);
@@ -297,7 +297,7 @@ mod tests {
             let s = Vector3::new(num[0], num[1], num[2]);
             m.set_scale(s);
 
-            if !validate_f32(&num) {
+            if !validate_float(&num) {
                 return Ok(());
             } else {
                 prop_assert_eq!(m.scale(), s);
@@ -313,7 +313,7 @@ mod tests {
                 .build();
             let p = Point3::from_slice(&num[10..13]);
 
-            if !validate_f32(&num) {
+            if !validate_float(&num) {
                 return Ok(())
             } else {
                 let tpt: Point3<f32> = m.transform_point(&p);
@@ -333,7 +333,7 @@ mod tests {
                 .build();
             let p = Point3::from_slice(&num[10..13]);
 
-            if !validate_f32(&num) {
+            if !validate_float(&num) {
                 return Ok(())
             } else {
                 let tpt: Point3<f32> = m.transform_point(&p);
