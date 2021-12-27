@@ -2,7 +2,7 @@
 name = "engine"
 version = "0.1.2"
 authors = ["Eleanore Young"]
-edition = "2018"
+edition = "2021"
 
 [features]
 wsl = []

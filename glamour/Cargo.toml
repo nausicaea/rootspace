@@ -1,0 +1,11 @@
+[package]
+name = "glamour"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+num-traits = "^0.2.14"
+approx = "^0.5.0"
+
+[dev-dependencies]
+proptest = "^1.0.0"

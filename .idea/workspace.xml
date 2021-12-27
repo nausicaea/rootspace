@@ -7,11 +7,30 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="I now have a good set of tests for model.rs">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="I'm having serious issues getting matrix transformations to work for UI elements.">
+      <change afterPath="$PROJECT_DIR$/glamour/Cargo.toml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/glamour/src/cross.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/glamour/src/dot.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/glamour/src/lib.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/glamour/src/macros.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/glamour/src/mat.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/glamour/src/mat2.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/glamour/src/vec2.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/glamour/src/vec3.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/glamour/src/vec4.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/rootspace.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rootspace.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/components/model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/model.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/utilities.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/utilities.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/affine-transform/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/affine-transform/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/renderer.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/file-manipulation/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/file-manipulation/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ply/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/ply/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/try-default/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/try-default/Cargo.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,19 +80,23 @@
     <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/glamour/src" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
-    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+    <property name="settings.editor.selected.configurable" value="language.rust.rustfmt" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/glamour/src" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.Test camera::tests">
+  <component name="RunManager" selected="Cargo.Test glamour">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -138,8 +161,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test components::model::tests::transform_point_works_for_zeroes" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package engine --lib components::model::tests::transform_point_works_for_zeroes -- --exact" />
+    <configuration name="Test glamour" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="test --package glamour" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -192,10 +215,10 @@
       <item itemvalue="Cargo.Run" />
       <item itemvalue="Cargo.Test" />
       <item itemvalue="Cargo.Run Headless" />
+      <item itemvalue="Cargo.Test glamour" />
       <item itemvalue="Cargo.Test camera::tests" />
       <item itemvalue="Cargo.Test model::tests" />
       <item itemvalue="Cargo.Test utilities::tests" />
-      <item itemvalue="Cargo.Test components::model::tests::transform_point_works_for_zeroes" />
       <item itemvalue="Cargo.Test components::model::tests::default_is_identity" />
     </list>
     <recent_temporary>
@@ -204,12 +227,10 @@
         <item itemvalue="Cargo.Test model::tests" />
         <item itemvalue="Cargo.Test utilities::tests" />
         <item itemvalue="Cargo.Test components::model::tests::default_is_identity" />
-        <item itemvalue="Cargo.Test components::model::tests::transform_point_works_for_zeroes" />
       </list>
     </recent_temporary>
   </component>
   <component name="RustProjectSettings">
-    <option name="runRustfmtOnSave" value="true" />
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
     <option name="useRustfmt" value="true" />
     <option name="version" value="2" />
@@ -255,7 +276,23 @@
       <workItem from="1637513565288" duration="198000" />
       <workItem from="1637524315192" duration="200000" />
       <workItem from="1638480324582" duration="289000" />
-      <workItem from="1638789328992" duration="616000" />
+      <workItem from="1638789328992" duration="1600000" />
+      <workItem from="1638792155539" duration="2876000" />
+      <workItem from="1638800919131" duration="7811000" />
+      <workItem from="1638905252180" duration="436000" />
+      <workItem from="1638911933942" duration="2442000" />
+      <workItem from="1638914990396" duration="887000" />
+      <workItem from="1638951251595" duration="8243000" />
+      <workItem from="1638975296865" duration="2050000" />
+      <workItem from="1639065474376" duration="1912000" />
+      <workItem from="1639239729113" duration="584000" />
+      <workItem from="1639295119868" duration="4869000" />
+      <workItem from="1639405652725" duration="60000" />
+      <workItem from="1639410094171" duration="4328000" />
+      <workItem from="1639723896377" duration="2961000" />
+      <workItem from="1640072674493" duration="5002000" />
+      <workItem from="1640169938258" duration="133000" />
+      <workItem from="1640345264255" duration="1552000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -425,7 +462,13 @@
       <option name="presentableId" value="LOCAL−00028" />
       <updated>1637098111125</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL−00029" summary="I'm having serious issues getting matrix transformations to work for UI elements.">
+      <created>1638790448735</created>
+      <option name="number" value="LOCAL−00029" />
+      <option name="presentableId" value="LOCAL−00029" />
+      <updated>1638790448735</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -444,7 +487,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Completely replaced SceneGraph with the new implementation of Hierarchy." />
     <MESSAGE value="Removed one dictionary lookup from AncestorsIter::next." />
     <MESSAGE value="Added the ability to reload the last state" />
     <MESSAGE value="Added the ability to reload the last state by Logo-R combination." />
@@ -469,6 +511,7 @@
     <MESSAGE value="Added a property test for Model." />
     <MESSAGE value="Began working on the property tests for Camera transformations." />
     <MESSAGE value="I now have a good set of tests for model.rs" />
-    <option name="LAST_COMMIT_MESSAGE" value="I now have a good set of tests for model.rs" />
+    <MESSAGE value="I'm having serious issues getting matrix transformations to work for UI elements." />
+    <option name="LAST_COMMIT_MESSAGE" value="I'm having serious issues getting matrix transformations to work for UI elements." />
   </component>
 </project>

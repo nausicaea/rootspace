@@ -4,7 +4,7 @@ version = "0.4.1"
 authors = ["Eleanore Young"]
 description = "This crate provides a decomposed version of an affine TRS matrix, one missing in nalgebra."
 repository = "https://gitlab.com/nausicaea/affine-transform.git"
-edition = "2018"
+edition = "2021"
 
 [features]
 serde_support = ["serde", "nalgebra/serde-serialize"]

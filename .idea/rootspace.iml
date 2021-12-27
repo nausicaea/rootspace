@@ -15,6 +15,7 @@
       <sourceFolder url="file://$MODULE_DIR$/rootspace/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/rose-tree/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/try-default/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/glamour/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/affine-transform/target" />
       <excludeFolder url="file://$MODULE_DIR$/ecs/target" />

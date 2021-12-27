@@ -8,4 +8,5 @@ members = [
     "engine",
     "rootspace",
     "rose-tree",
+    "glamour",
 ]

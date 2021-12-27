@@ -93,7 +93,7 @@ where
         for (cam_idx, cam) in cameras.indexed_iter() {
             // Skip any inactive cameras
             let global_cam_status = hierarchy
-                .ancestors(cam_idx)
+                .ancestors(&cam_idx)
                 .filter_map(|aidx| statuses.get(aidx))
                 .product::<Status>();
 
