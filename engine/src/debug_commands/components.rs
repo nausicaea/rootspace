@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use anyhow::{Context, Result};
 use clap::{load_yaml, App};
 use ecs::{Entities, Index, Resources, Storage};
+use rose_tree::Hierarchy;
 use serde::{Deserialize, Serialize};
 
 use super::{CommandTrait, Error};
@@ -11,7 +12,6 @@ use crate::{
     graphics::BackendTrait,
     resources::{AssetDatabase, GraphicsBackend},
 };
-use rose_tree::Hierarchy;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ComponentsCommand<B>(PhantomData<B>);

@@ -17,24 +17,19 @@ use glium::{
     Surface, VertexBuffer,
 };
 use log::trace;
-use winit::dpi::LogicalPosition as WinitLogicalPosition;
-use winit::ElementState as WinitElementState;
-use winit::Event as WinitEvent;
-use winit::EventsLoop;
-use winit::KeyboardInput;
-use winit::ModifiersState as WinitModifierState;
-use winit::MouseButton as WinitMouseButton;
-use winit::VirtualKeyCode as WinitVirtualKeyCode;
-use winit::WindowEvent;
+use winit::{
+    dpi::LogicalPosition as WinitLogicalPosition, ElementState as WinitElementState, Event as WinitEvent, EventsLoop,
+    KeyboardInput, ModifiersState as WinitModifierState, MouseButton as WinitMouseButton,
+    VirtualKeyCode as WinitVirtualKeyCode, WindowEvent,
+};
 
 use super::{
     BackendTrait, EventTrait, FrameTrait, IndexBufferTrait, ShaderTrait, TextureTrait, Vertex, VertexBufferTrait,
 };
-use crate::event::{LogicalPosition, MouseButton};
 use crate::{
     assets::Image,
     components::Renderable,
-    event::{ElementState, EngineEvent, ModifiersState, VirtualKeyCode},
+    event::{ElementState, EngineEvent, LogicalPosition, ModifiersState, MouseButton, VirtualKeyCode},
     geometry::rect::Rect,
     resources::GraphicsBackend,
 };

@@ -1,10 +1,9 @@
-use std::ops::Mul;
+use std::{iter::Product, ops::Mul};
 
 use affine_transform::AffineTransform;
 use ecs::{Component, VecStorage};
 use nalgebra::{Affine3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3};
 use serde::{Deserialize, Serialize};
-use std::iter::Product;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "AffineTransform<f32>", from = "AffineTransform<f32>")]
@@ -185,11 +184,12 @@ impl Default for ModelBuilder {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::utilities::validate_float;
     use approx::{assert_ulps_eq, ulps_eq};
     use nalgebra::{one, zero, Point4, Quaternion, Unit, Vector4};
     use proptest::prelude::*;
+
+    use super::*;
+    use crate::utilities::validate_float;
 
     #[test]
     fn implements_default() {

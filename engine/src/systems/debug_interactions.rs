@@ -1,8 +1,9 @@
-use crate::event::EngineEvent;
-use crate::event::{ElementState, ModifiersState, VirtualKeyCode};
+use std::time::Duration;
+
 use ecs::{EventQueue, ReceiverId, Resources, SerializationName, System, WithResources, WorldEvent};
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
+
+use crate::event::{ElementState, EngineEvent, ModifiersState, VirtualKeyCode};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DebugInteractions {

@@ -1,35 +1,34 @@
-use std::marker::PhantomData;
-use std::ops::{Add, Div, Index, Mul, Sub};
-use num_traits::{Num, Zero, One};
-use crate::dot::Dot;
+use std::{
+    marker::PhantomData,
+    ops::{Add, Div, Index, Mul, Sub},
+};
 
-pub trait Dim: 'static + PartialEq + Clone + Copy {
-    const DIM: usize;
+use num_traits::{Num, One, Zero};
 
-    fn as_usize(&self) -> usize;
-}
+use crate::{
+    dim::{Dim, D1, D2, D3, D4},
+    dot::Dot,
+};
 
-macro_rules! impl_dim {
-    ($name:ident, $dim:literal) => {
-        #[derive(Debug, PartialEq, Clone, Copy)]
-        struct $name;
-
-        impl Dim for $name {
-            const DIM: usize = $dim;
-
-            fn as_usize(&self) -> usize {
-                Self::DIM
-            }
-        }
-    };
-}
-
-impl_dim!(D1, 1);
-impl_dim!(D2, 2);
-impl_dim!(D3, 3); impl_dim!(D4, 4);
+pub type Vec2<R> = Mat<R, D1, D2>;
+pub type Vec3<R> = Mat<R, D1, D3>;
+pub type Vec4<R> = Mat<R, D1, D4>;
+pub type Mat2<R> = Mat<R, D2, D2>;
+pub type Mat3<R> = Mat<R, D3, D3>;
+pub type Mat4<R> = Mat<R, D4, D4>;
 
 #[derive(Debug, PartialEq)]
 pub struct Mat<R, N, M>(pub(crate) Vec<R>, PhantomData<(N, M)>);
+
+impl<R, N, M> Mat<R, N, M>
+where
+    N: Dim,
+    M: Dim,
+{
+    pub fn t(&self) -> Mat<R, M, N> {
+        todo!()
+    }
+}
 
 impl<R, N, M> From<Vec<R>> for Mat<R, N, M>
 where
@@ -38,7 +37,11 @@ where
 {
     fn from(value: Vec<R>) -> Self {
         if value.len() != N::DIM * M::DIM {
-            panic!("Expected a vec of {} elements, got {} elements", N::DIM * M::DIM, value.len());
+            panic!(
+                "Expected a vec of {} elements, got {} elements",
+                N::DIM * M::DIM,
+                value.len()
+            );
         }
         Mat(value, PhantomData::default())
     }
@@ -93,10 +96,10 @@ impl<R, N: Dim, M: Dim> Index<(usize, usize)> for Mat<R, N, M> {
 }
 
 impl<R, N, M> Zero for Mat<R, N, M>
-    where
-        R: Num + Zero + Copy,
-        N: Dim,
-        M: Dim,
+where
+    R: Num + Zero + Copy,
+    N: Dim,
+    M: Dim,
 {
     fn zero() -> Self {
         Mat(vec![R::zero(); N::DIM * M::DIM], PhantomData::default())
@@ -107,16 +110,7 @@ impl<R, N, M> Zero for Mat<R, N, M>
     }
 }
 
-impl<R> One for Mat<R, D2, D2>
-    where
-        R: Num + One + Copy,
-{
-    fn one() -> Self {
-        Mat(vec![R::one(), R::zero(), R::zero(), R::one()], PhantomData::default())
-    }
-}
-
-macro_rules! impl_binops {
+macro_rules! impl_scalar_matops {
     ($($Op:ident, $op:ident, [$($tgt:ident),+ $(,)*]);+ $(;)*) => {
         $(
         impl<R, N: Dim, M: Dim> $Op<R> for Mat<R, N, M>
@@ -171,230 +165,237 @@ macro_rules! impl_binops {
     }
 }
 
-impl_binops!(
+impl_scalar_matops!(
     Add, add, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
     Sub, sub, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
     Mul, mul, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
     Div, div, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
 );
 
-impl<R, N: Dim, M: Dim> Add for Mat<R, N, M>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, N, M>;
+macro_rules! impl_elemwise_matops {
+    ($($Op:ident, $op:ident);+ $(;)*) => {
+        $(
+        impl<R, N: Dim, M: Dim> $Op for Mat<R, N, M>
+            where
+                R: Num + Copy,
+        {
+            type Output = Mat<R, N, M>;
 
-    fn add(self, rhs: Self) -> Self::Output {
-        (&self).add(&rhs)
-    }
-}
-
-impl<'a, R, N: Dim, M: Dim> Add for &'a Mat<R, N, M>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, N, M>;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let mut data = vec![R::zero(); N::DIM * M::DIM];
-        for i in 0..(N::DIM * M::DIM) {
-            data[i] = self[i] + rhs[i];
+            fn $op(self, rhs: Self) -> Self::Output {
+                (&self).$op(&rhs)
+            }
         }
-        Mat(data, PhantomData::default())
-    }
-}
 
-impl<R, N: Dim, M: Dim> Sub for Mat<R, N, M>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, N, M>;
+        impl<'a, R, N: Dim, M: Dim> $Op for &'a Mat<R, N, M>
+            where
+                R: Num + Copy,
+        {
+            type Output = Mat<R, N, M>;
 
-    fn sub(self, rhs: Self) -> Self::Output {
-        (&self).sub(&rhs)
-    }
-}
-
-impl<'a, R, N: Dim, M: Dim> Sub for &'a Mat<R, N, M>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, N, M>;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        let mut data = vec![R::zero(); N::DIM * M::DIM];
-        for i in 0..(N::DIM * M::DIM) {
-            data[i] = self[i] - rhs[i];
+            fn $op(self, rhs: Self) -> Self::Output {
+                let mut data = vec![R::zero(); N::DIM * M::DIM];
+                for i in 0..(N::DIM * M::DIM) {
+                    data[i] = self[i].$op(rhs[i]);
+                }
+                Mat(data, PhantomData::default())
+            }
         }
-        Mat(data, PhantomData::default())
-    }
+        )+
+    };
 }
 
-impl<'a, R> Mul<&'a Mat<R, D2, D1>> for &'a Mat<R, D1, D2>
-    where
-        R: Num + Copy,
+impl_elemwise_matops!(
+    Add, add;
+    Sub, sub;
+);
+
+impl<R> One for Mat<R, D2, D2>
+where
+    R: Num + Copy,
 {
-    type Output = R;
-
-    fn mul(self, rhs: &'a Mat<R, D2, D1>) -> Self::Output {
-        self.dot(rhs)
+    fn one() -> Self {
+        Mat(vec![R::one(), R::zero(), R::zero(), R::one()], PhantomData::default())
     }
 }
+
+impl<R> One for Mat<R, D3, D3>
+where
+    R: Num + Copy,
+{
+    fn one() -> Self {
+        Mat(
+            vec![
+                R::one(),
+                R::zero(),
+                R::zero(),
+                R::zero(),
+                R::one(),
+                R::zero(),
+                R::zero(),
+                R::zero(),
+                R::one(),
+            ],
+            PhantomData::default(),
+        )
+    }
+}
+
+impl<R> One for Mat<R, D4, D4>
+where
+    R: Num + Copy,
+{
+    fn one() -> Self {
+        Mat(
+            vec![
+                R::one(),
+                R::zero(),
+                R::zero(),
+                R::zero(),
+                R::zero(),
+                R::one(),
+                R::zero(),
+                R::zero(),
+                R::zero(),
+                R::zero(),
+                R::one(),
+                R::zero(),
+                R::zero(),
+                R::zero(),
+                R::zero(),
+                R::one(),
+            ],
+            PhantomData::default(),
+        )
+    }
+}
+
+macro_rules! impl_matmul {
+    ($dim:ty, [$((($($i:literal),+ $(,)*), ($($j:literal),+ $(,)*))),+ $(,)*]) => {
+        impl_matmul!($dim, $dim, $dim, [$((($($i),+), ($($j),+))),+]);
+    };
+    ($nl:ty, $ml:ty, $mr:ty, [$((($($i:literal),+ $(,)*), ($($j:literal),+ $(,)*))),+ $(,)*]) => {
+        impl<R> Mul<Mat<R, $ml, $mr>> for Mat<R, $nl, $ml>
+            where
+                R: Num + Copy,
+        {
+            type Output = Mat<R, $nl, $mr>;
+
+            fn mul(self, rhs: Mat<R, $ml, $mr>) -> Self::Output {
+                (&self).mul(&rhs)
+            }
+        }
+
+        impl<'a, R> Mul<&'a Mat<R, $ml, $mr>> for &'a Mat<R, $nl, $ml>
+            where
+                R: Num + Copy,
+        {
+            type Output = Mat<R, $nl, $mr>;
+
+            fn mul(self, rhs: &'a Mat<R, $ml, $mr>) -> Self::Output {
+                self.dot(rhs)
+            }
+        }
+
+        impl<R> Dot<Mat<R, $ml, $mr>> for Mat<R, $nl, $ml>
+            where
+                R: Num + Copy,
+        {
+            type Output = Mat<R, $nl, $mr>;
+
+            fn dot(self, rhs: Mat<R, $ml, $mr>) -> Self::Output {
+                (&self).dot(&rhs)
+            }
+        }
+
+        impl<'a, R> Dot<&'a Mat<R, $ml, $mr>> for &'a Mat<R, $nl, $ml>
+        where
+            R: Num + Copy,
+        {
+            type Output = Mat<R, $nl, $mr>;
+
+            fn dot(self, rhs: &'a Mat<R, $ml, $mr>) -> Self::Output {
+                let c = abop!(dot, self, rhs, [
+                    $((($($i),+), ($($j),+))),+
+                ]);
+                c.into()
+            }
+        }
+    };
+}
+
+impl_matmul!(D2, D1, D2, [(0, 0), (0, 1), (1, 0), (1, 1)]);
+impl_matmul!(
+    D2,
+    [((0, 1), (0, 2)), ((0, 1), (1, 3)), ((2, 3), (0, 2)), ((2, 3), (1, 3)),]
+);
+impl_matmul!(D1, D2, D2, [((0, 1), (0, 1)), ((0, 1), (2, 3))]);
+
+impl_matmul!(
+    D3,
+    [
+        ((0, 1, 2), (0, 3, 6)),
+        ((0, 1, 2), (1, 4, 7)),
+        ((0, 1, 2), (2, 5, 8)),
+        ((3, 4, 5), (0, 3, 6)),
+        ((3, 4, 5), (1, 4, 7)),
+        ((3, 4, 5), (2, 5, 8)),
+        ((6, 7, 8), (0, 3, 6)),
+        ((6, 7, 8), (1, 4, 7)),
+        ((6, 7, 8), (2, 5, 8)),
+    ]
+);
+
+impl_matmul!(
+    D4,
+    [
+        ((0, 1, 2, 3), (0, 4, 8, 12)),
+        ((0, 1, 2, 3), (1, 5, 9, 13)),
+        ((0, 1, 2, 3), (2, 6, 10, 14)),
+        ((0, 1, 2, 3), (3, 7, 11, 15)),
+        ((4, 5, 6, 7), (0, 4, 8, 12)),
+        ((4, 5, 6, 7), (1, 5, 9, 13)),
+        ((4, 5, 6, 7), (2, 6, 10, 14)),
+        ((4, 5, 6, 7), (3, 7, 11, 15)),
+        ((8, 9, 10, 11), (0, 4, 8, 12)),
+        ((8, 9, 10, 11), (1, 5, 9, 13)),
+        ((8, 9, 10, 11), (2, 6, 10, 14)),
+        ((8, 9, 10, 11), (3, 7, 11, 15)),
+        ((12, 13, 14, 15), (0, 4, 8, 12)),
+        ((12, 13, 14, 15), (1, 5, 9, 13)),
+        ((12, 13, 14, 15), (2, 6, 10, 14)),
+        ((12, 13, 14, 15), (3, 7, 11, 15)),
+    ]
+);
 
 impl<'a, R> Dot<&'a Mat<R, D2, D1>> for &'a Mat<R, D1, D2>
-    where
-        R: Num + Copy,
+where
+    R: Num + Copy,
 {
     type Output = R;
 
     fn dot(self, rhs: &'a Mat<R, D2, D1>) -> Self::Output {
-        self[0].mul(rhs[0]) + self[1].mul(rhs[1])
-    }
-}
-
-impl<'a, R> Mul<&'a Mat<R, D1, D2>> for &'a Mat<R, D2, D1>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, D2, D2>;
-
-    fn mul(self, rhs: &'a Mat<R, D1, D2>) -> Self::Output {
-        self.dot(rhs)
+        abop!(dot, self, rhs, [((0, 1), (0, 1))])[0]
     }
 }
 
 impl<'a, R> Dot<&'a Mat<R, D1, D2>> for &'a Mat<R, D2, D1>
-    where
-        R: Num + Copy,
+where
+    R: Num + Copy,
 {
     type Output = Mat<R, D2, D2>;
 
     fn dot(self, rhs: &'a Mat<R, D1, D2>) -> Self::Output {
-        Mat(vec![
-            self[0] * rhs[0],
-            self[0] * rhs[1],
-            self[1] * rhs[0],
-            self[1] * rhs[1],
-        ], PhantomData::default())
+        Mat(
+            vec![self[0] * rhs[0], self[0] * rhs[1], self[1] * rhs[0], self[1] * rhs[1]],
+            PhantomData::default(),
+        )
     }
 }
 
-impl<'a, R> Mul<&'a Mat<R, D2, D2>> for &'a Mat<R, D2, D2>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, D2, D2>;
-
-    fn mul(self, rhs: &'a Mat<R, D2, D2>) -> Self::Output {
-        self.dot(rhs)
-    }
-}
-
-impl<'a, R> Dot<Self> for &'a Mat<R, D2, D2>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, D2, D2>;
-
-    fn dot(self, rhs: Self) -> Self::Output {
-        let c: [R; 4] = abop!(crate::dot::Dot::dot, self, rhs, [
-            ((0, 1), (0, 2)),
-            ((0, 1), (1, 3)),
-            ((2, 3), (0, 2)),
-            ((2, 3), (1, 3)),
-        ]);
-        c.into()
-    }
-}
-
-impl<'a, R> Mul<&'a Mat<R, D3, D3>> for &'a Mat<R, D3, D3>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, D3, D3>;
-
-    fn mul(self, rhs: &'a Mat<R, D3, D3>) -> Self::Output {
-        self.dot(rhs)
-    }
-}
-
-impl<'a, R> Dot<Self> for &'a Mat<R, D3, D3>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, D3, D3>;
-
-    fn dot(self, rhs: Self) -> Self::Output {
-        let c: [R; 9] = abop!(crate::dot::Dot::dot, self, rhs, [
-            ((0, 1, 2), (0, 3, 6)),
-            ((0, 1, 2), (1, 4, 7)),
-            ((0, 1, 2), (2, 5, 8)),
-            ((3, 4, 5), (0, 3, 6)),
-            ((3, 4, 5), (1, 4, 7)),
-            ((3, 4, 5), (2, 5, 8)),
-            ((6, 7, 8), (0, 3, 6)),
-            ((6, 7, 8), (1, 4, 7)),
-            ((6, 7, 8), (2, 5, 8)),
-        ]);
-        c.into()
-    }
-}
-
-impl<'a, R> Mul<&'a Mat<R, D4, D4>> for &'a Mat<R, D4, D4>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, D4, D4>;
-
-    fn mul(self, rhs: &'a Mat<R, D4, D4>) -> Self::Output {
-        self.dot(rhs)
-    }
-}
-
-impl<'a, R> Dot<Self> for &'a Mat<R, D4, D4>
-    where
-        R: Num + Copy,
-{
-    type Output = Mat<R, D4, D4>;
-
-    fn dot(self, rhs: Self) -> Self::Output {
-        let c: [R; 16] = abop!(crate::dot::Dot::dot, self, rhs, [
-            ((0, 1, 2, 3), (0, 4, 8, 12)),
-            ((0, 1, 2, 3), (1, 5, 9, 13)),
-            ((0, 1, 2, 3), (2, 6, 10, 14)),
-            ((0, 1, 2, 3), (3, 7, 11, 15)),
-            ((4, 5, 6, 7), (0, 4, 8, 12)),
-            ((4, 5, 6, 7), (1, 5, 9, 13)),
-            ((4, 5, 6, 7), (2, 6, 10, 14)),
-            ((4, 5, 6, 7), (3, 7, 11, 15)),
-            ((8, 9, 10, 11), (0, 4, 8, 12)),
-            ((8, 9, 10, 11), (1, 5, 9, 13)),
-            ((8, 9, 10, 11), (2, 6, 10, 14)),
-            ((8, 9, 10, 11), (3, 7, 11, 15)),
-            ((12, 13, 14, 15), (0, 4, 8, 12)),
-            ((12, 13, 14, 15), (1, 5, 9, 13)),
-            ((12, 13, 14, 15), (2, 6, 10, 14)),
-            ((12, 13, 14, 15), (3, 7, 11, 15)),
-        ]);
-        c.into()
-    }
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn dx_implements_dim() {
-        assert_eq!(D1::DIM, 1usize);
-        assert_eq!(D2::DIM, 2usize);
-        assert_eq!(D3::DIM, 3usize);
-        assert_eq!(D4::DIM, 4usize);
-        assert_eq!(D1.as_usize(), 1usize);
-        assert_eq!(D2.as_usize(), 2usize);
-        assert_eq!(D3.as_usize(), 3usize);
-        assert_eq!(D4.as_usize(), 4usize);
-    }
 
     #[test]
     fn mat_implements_from_array() {
@@ -509,6 +510,14 @@ mod tests {
     }
 
     #[test]
+    fn mat_supports_dot_product_1x2_2x2() {
+        let a: Mat<f32, D1, D2> = Mat::from([2.0, 3.0]);
+        let b: Mat<f32, D2, D2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
+        let c: Mat<f32, D1, D2> = Mat::from([8.0, 18.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
     fn mat_supports_dot_product_3x3_3x3() {
         let a: Mat<f32, D3, D3> = Mat::from([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
         let b: Mat<f32, D3, D3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
@@ -518,9 +527,15 @@ mod tests {
 
     #[test]
     fn mat_supports_dot_product_4x4_4x4() {
-        let a: Mat<f32, D4, D4> = Mat::from([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]);
-        let b: Mat<f32, D4, D4> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]);
-        let c: Mat<f32, D4, D4> = Mat::from([100., 110., 120., 130., 228., 254., 280., 306., 356., 398., 440., 482., 484., 542., 600., 658.]);
+        let a: Mat<f32, D4, D4> = Mat::from([
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
+        ]);
+        let b: Mat<f32, D4, D4> = Mat::from([
+            2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
+        ]);
+        let c: Mat<f32, D4, D4> = Mat::from([
+            100., 110., 120., 130., 228., 254., 280., 306., 356., 398., 440., 482., 484., 542., 600., 658.,
+        ]);
         assert_eq!((&a).dot(&b), c);
     }
 }

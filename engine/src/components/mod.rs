@@ -5,6 +5,8 @@ pub mod renderable;
 pub mod status;
 pub mod ui_model;
 
+pub use camera::projection::Projection;
+
 pub use self::{
     camera::Camera,
     info::Info,
@@ -13,4 +15,3 @@ pub use self::{
     status::Status,
     ui_model::UiModel,
 };
-pub use camera::projection::Projection;

@@ -1,8 +1,7 @@
-use std::ops::Mul;
+use std::{iter::Product, ops::Mul};
 
 use ecs::{Component, VecStorage};
 use serde::{Deserialize, Serialize};
-use std::iter::Product;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Status {

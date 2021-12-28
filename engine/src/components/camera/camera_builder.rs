@@ -1,5 +1,6 @@
-use crate::components::{Camera, Projection};
 use nalgebra::{Orthographic3, Perspective3};
+
+use crate::components::{Camera, Projection};
 
 #[derive(Debug)]
 pub struct CameraBuilder {

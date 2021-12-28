@@ -17,7 +17,7 @@ where
     }
 }
 
-impl<'a, R> Dot for &'a [R; 2] 
+impl<'a, R> Dot for &'a [R; 2]
 where
     R: Num + Copy,
 {
@@ -39,7 +39,7 @@ where
     }
 }
 
-impl<'a, R> Dot for &'a [R; 3] 
+impl<'a, R> Dot for &'a [R; 3]
 where
     R: Num + Copy,
 {
@@ -61,7 +61,7 @@ where
     }
 }
 
-impl<'a, R> Dot for &'a [R; 4] 
+impl<'a, R> Dot for &'a [R; 4]
 where
     R: Num + Copy,
 {

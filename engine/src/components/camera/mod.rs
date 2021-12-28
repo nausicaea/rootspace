@@ -2,14 +2,12 @@ pub mod camera_builder;
 mod camera_ser_de;
 pub mod projection;
 
-use self::camera_builder::CameraBuilder;
-use self::camera_ser_de::CameraSerDe;
-use self::projection::Projection;
 use approx::ulps_eq;
 use ecs::{Component, VecStorage};
 use nalgebra::{Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
 use serde::{Deserialize, Serialize};
 
+use self::{camera_builder::CameraBuilder, camera_ser_de::CameraSerDe, projection::Projection};
 use crate::{components::model::Model, geometry::ray::Ray};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -218,13 +216,14 @@ impl From<CameraSerDe> for Camera {
 
 #[cfg(test)]
 mod tests {
+    use std::convert::TryFrom;
+
     use approx::{assert_ulps_eq, ulps_eq};
     use nalgebra::Vector4;
+    use proptest::prelude::*;
 
     use super::*;
     use crate::utilities::validate_float;
-    use proptest::prelude::*;
-    use std::convert::TryFrom;
 
     #[test]
     fn implements_default() {

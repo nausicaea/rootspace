@@ -1,5 +1,6 @@
-use crate::components::{Camera, Projection};
 use serde::{Deserialize, Serialize};
+
+use crate::components::{Camera, Projection};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CameraSerDe {

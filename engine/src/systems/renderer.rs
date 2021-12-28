@@ -8,6 +8,7 @@ use ecs::{
     Storage, System, WithResources,
 };
 use log::debug;
+use rose_tree::Hierarchy;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -15,7 +16,6 @@ use crate::{
     graphics::{BackendTrait, FrameTrait},
     resources::{GraphicsBackend, Settings, Statistics},
 };
-use rose_tree::Hierarchy;
 
 #[derive(Serialize, Deserialize)]
 pub struct Renderer<B> {

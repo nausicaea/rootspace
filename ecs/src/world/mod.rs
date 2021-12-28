@@ -1,7 +1,9 @@
 use std::{
     cell::{Ref, RefMut},
+    convert::TryFrom,
     fs::File,
     marker::PhantomData,
+    path::PathBuf,
     time::Duration,
 };
 
@@ -31,8 +33,6 @@ use crate::{
     system::System,
     systems::{typed_systems::TypedSystems, Systems},
 };
-use std::convert::TryFrom;
-use std::path::PathBuf;
 
 pub mod error;
 pub mod event;

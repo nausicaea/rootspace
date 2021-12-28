@@ -1,9 +1,8 @@
-use std::ops::Mul;
+use std::{iter::Product, ops::Mul};
 
 use ecs::{Component, VecStorage};
 use nalgebra::{zero, Affine3, Isometry3, Matrix4, Point2, Vector2, Vector3};
 use serde::{Deserialize, Serialize};
-use std::iter::Product;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "UiModelSerDe", from = "UiModelSerDe")]
