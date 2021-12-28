@@ -1,6 +1,7 @@
 use std::{
     marker::PhantomData,
     ops::{Add, Div, Index, Mul, Sub},
+    iter::Sum,
 };
 
 use num_traits::{Num, One, Zero};
@@ -8,6 +9,7 @@ use num_traits::{Num, One, Zero};
 use crate::{
     dim::{Dim, D1, D2, D3, D4},
     dot::Dot,
+    abop,
 };
 
 pub type Vec2<R> = Mat<R, D1, D2>;
@@ -20,13 +22,46 @@ pub type Mat4<R> = Mat<R, D4, D4>;
 #[derive(Debug, PartialEq)]
 pub struct Mat<R, N, M>(pub(crate) Vec<R>, PhantomData<(N, M)>);
 
+impl<R, N, M> std::fmt::Display for Mat<R, N, M>
+where
+    R: std::fmt::Display,
+    N: Dim,
+    M: Dim,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "[")?;
+        for n in 0..N::DIM {
+            write!(f, "[")?;
+            for m in 0..M::DIM {
+                write!(f, "{}", self[(n, m)])?;
+                if m < M::DIM - 1 {
+                    write!(f, ", ")?;
+                }
+            }
+            write!(f, "]")?;
+            if n < N::DIM - 1 {
+                write!(f, ", ")?;
+            }
+        }
+        write!(f, "]")
+    }
+}
+
 impl<R, N, M> Mat<R, N, M>
 where
+    R: Zero + Copy,
     N: Dim,
     M: Dim,
 {
     pub fn t(&self) -> Mat<R, M, N> {
-        todo!()
+        let mut data = vec![R::zero(); M::DIM * N::DIM];
+        for i in 0..(N::DIM * M::DIM) {
+            let n_i = i / M::DIM;
+            let m_i = i % M::DIM;
+            let j = m_i * N::DIM + n_i;
+            data[j] = self[i];
+        }
+        Mat(data, PhantomData::default())
     }
 }
 
@@ -211,7 +246,7 @@ impl_elemwise_matops!(
 
 impl<R> One for Mat<R, D2, D2>
 where
-    R: Num + Copy,
+    R: Num + Copy + Sum,
 {
     fn one() -> Self {
         Mat(vec![R::one(), R::zero(), R::zero(), R::one()], PhantomData::default())
@@ -220,7 +255,7 @@ where
 
 impl<R> One for Mat<R, D3, D3>
 where
-    R: Num + Copy,
+    R: Num + Copy + Sum,
 {
     fn one() -> Self {
         Mat(
@@ -242,7 +277,7 @@ where
 
 impl<R> One for Mat<R, D4, D4>
 where
-    R: Num + Copy,
+    R: Num + Copy + Sum,
 {
     fn one() -> Self {
         Mat(
@@ -270,13 +305,13 @@ where
 }
 
 macro_rules! impl_matmul {
-    ($dim:ty, [$((($($i:literal),+ $(,)*), ($($j:literal),+ $(,)*))),+ $(,)*]) => {
-        impl_matmul!($dim, $dim, $dim, [$((($($i),+), ($($j),+))),+]);
+    ($dim:ty, $tt:tt) => {
+        impl_matmul!($dim, $dim, $dim, $tt);
     };
-    ($nl:ty, $ml:ty, $mr:ty, [$((($($i:literal),+ $(,)*), ($($j:literal),+ $(,)*))),+ $(,)*]) => {
+    ($nl:ty, $ml:ty, $mr:ty, $tt:tt) => {
         impl<R> Mul<Mat<R, $ml, $mr>> for Mat<R, $nl, $ml>
             where
-                R: Num + Copy,
+                R: Num + Copy + Sum,
         {
             type Output = Mat<R, $nl, $mr>;
 
@@ -287,7 +322,7 @@ macro_rules! impl_matmul {
 
         impl<'a, R> Mul<&'a Mat<R, $ml, $mr>> for &'a Mat<R, $nl, $ml>
             where
-                R: Num + Copy,
+                R: Num + Copy + Sum,
         {
             type Output = Mat<R, $nl, $mr>;
 
@@ -298,7 +333,7 @@ macro_rules! impl_matmul {
 
         impl<R> Dot<Mat<R, $ml, $mr>> for Mat<R, $nl, $ml>
             where
-                R: Num + Copy,
+                R: Num + Copy + Sum,
         {
             type Output = Mat<R, $nl, $mr>;
 
@@ -309,21 +344,19 @@ macro_rules! impl_matmul {
 
         impl<'a, R> Dot<&'a Mat<R, $ml, $mr>> for &'a Mat<R, $nl, $ml>
         where
-            R: Num + Copy,
+            R: Num + Copy + Sum,
         {
             type Output = Mat<R, $nl, $mr>;
 
             fn dot(self, rhs: &'a Mat<R, $ml, $mr>) -> Self::Output {
-                let c = abop!(dot, self, rhs, [
-                    $((($($i),+), ($($j),+))),+
-                ]);
+                let c = abop!(dot, self, rhs, $tt);
                 c.into()
             }
         }
     };
 }
 
-impl_matmul!(D2, D1, D2, [(0, 0), (0, 1), (1, 0), (1, 1)]);
+impl_matmul!(D2, D1, D2, [((0), (0)), ((0), (1)), ((1), (0)), ((1), (1))]);
 impl_matmul!(
     D2,
     [((0, 1), (0, 2)), ((0, 1), (1, 3)), ((2, 3), (0, 2)), ((2, 3), (1, 3)),]
@@ -369,7 +402,7 @@ impl_matmul!(
 
 impl<'a, R> Dot<&'a Mat<R, D2, D1>> for &'a Mat<R, D1, D2>
 where
-    R: Num + Copy,
+    R: Num + Copy + Sum,
 {
     type Output = R;
 
@@ -378,24 +411,21 @@ where
     }
 }
 
-impl<'a, R> Dot<&'a Mat<R, D1, D2>> for &'a Mat<R, D2, D1>
-where
-    R: Num + Copy,
-{
-    type Output = Mat<R, D2, D2>;
-
-    fn dot(self, rhs: &'a Mat<R, D1, D2>) -> Self::Output {
-        Mat(
-            vec![self[0] * rhs[0], self[0] * rhs[1], self[1] * rhs[0], self[1] * rhs[1]],
-            PhantomData::default(),
-        )
-    }
-}
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn mat_implements_display() {
+        let a: Mat<f32, D2, D3> = Mat::from([1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        assert_eq!(format!("{}", a), "[[1, 2, 3], [4, 5, 6]]");
+
+        let a: Mat<f32, D1, D2> = Mat::from([1.0f32, 2.0]);
+        assert_eq!(format!("{}", a), "[[1, 2]]");
+
+        let a: Mat<f32, D2, D1> = Mat::from([1.0f32, 2.0]);
+        assert_eq!(format!("{}", a), "[[1], [2]]");
+    }
 
     #[test]
     fn mat_implements_from_array() {
@@ -427,6 +457,13 @@ mod tests {
     fn mat_supports_2d_indexing() {
         let m: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         assert_eq!(m[(1, 1)], 4.0f32);
+    }
+
+    #[test]
+    fn mat_supports_transposition() {
+        let a: Mat<f32, D2, D3> = Mat::from([1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b: Mat<f32, D3, D2> = a.t();
+        assert_eq!(b, Mat::<f32, D3, D2>::from([1.0f32, 4.0, 2.0, 5.0, 3.0, 6.0]));
     }
 
     #[test]

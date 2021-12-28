@@ -13,6 +13,12 @@ macro_rules! abop {
     ($op:ident, $lhs:expr, $rhs:expr, [$(($i:literal, $j:literal)),+ $(,)*]) => {
         [$($lhs[$i].$op($rhs[$j])),+]
     };
+    // Support both-sided Nx1 X 1xM binary operations
+    ($op:ident, $lhs:expr, $rhs:expr, [$((($i0:literal), ($j0:literal))),+ $(,)*]) => {
+        [$(
+            [$lhs[$i0]].$op([$rhs[$j0]])
+        ),+]
+    };
     // Support both-sided Nx2 X 2xM binary operations
     ($op:ident, $lhs:expr, $rhs:expr, [$((($i0:literal, $i1:literal), ($j0:literal, $j1:literal))),+ $(,)*]) => {
         [$(
