@@ -1,10 +1,10 @@
 use std::{
     marker::PhantomData,
-    ops::{Add, Div, Index, Mul, Sub},
+    ops::{Add, Div, Index, IndexMut, Mul, Sub},
     iter::Sum,
 };
 
-use num_traits::{Num, One, Zero};
+use num_traits::{Num, One, Zero, Float};
 
 use crate::{
     dim::{Dim, D1, D2, D3, D4},
@@ -19,8 +19,121 @@ pub type Mat2<R> = Mat<R, D2, D2>;
 pub type Mat3<R> = Mat<R, D3, D3>;
 pub type Mat4<R> = Mat<R, D4, D4>;
 
+fn as_lin_idx<N: Dim, M: Dim>(n: usize, m: usize) -> usize {
+    n * M::DIM + m
+}
+
+fn as_2d_idx<N: Dim, M: Dim>(idx: usize) -> (usize, usize) {
+    (idx / N::DIM, idx % N::DIM)
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Mat<R, N, M>(pub(crate) Vec<R>, PhantomData<(N, M)>);
+
+impl<R, N, M> Mat<R, N, M> 
+where
+    R: Copy + Zero,
+    N: Dim,
+    M: Dim,
+{
+    pub fn col(&self, m: usize) -> Mat<R, N, D1> {
+        if m >= M::DIM {
+            panic!("Expected a column index smaller than {}, got {}", M::DIM, m);
+        }
+        let mut data = vec![R::zero(); N::DIM];
+        for n in 0..N::DIM {
+            data[n] = self[(n, m)];
+        }
+        Mat(data, PhantomData::default())
+    }
+
+    pub fn row(&self, n: usize) -> Mat<R, D1, M> {
+        if n >= N::DIM {
+            panic!("Expected a row index smaller than {}, got {}", N::DIM, n);
+        }
+        let mut data = vec![R::zero(); M::DIM];
+        for m in 0..M::DIM {
+            data[m] = self[(n, m)];
+        }
+        Mat(data, PhantomData::default())
+    }
+}
+
+impl<R, N, M> Mat<R, N, M> 
+where
+    R: Float + Sum,
+{
+    pub fn norm(&self) -> R {
+        self.0.iter().map(|e| e.powi(2)).sum::<R>().sqrt()
+    }
+}
+
+impl<R, N, M> Mat<R, N, M>
+where
+    R: Zero + Copy,
+    N: Dim,
+    M: Dim,
+{
+    pub fn t(&self) -> Mat<R, M, N> {
+        let mut data = vec![R::zero(); M::DIM * N::DIM];
+        for i in 0..(N::DIM * M::DIM) {
+            let (n_i, m_i) = as_2d_idx::<N, M>(i);
+            let j = as_lin_idx::<M, N>(m_i, n_i);
+            data[j] = self[i];
+        }
+        Mat(data, PhantomData::default())
+    }
+}
+
+impl<R, N, M> Mat<R, N, M>
+where
+    R: Float,
+    N: Dim,
+    M: Dim,
+{
+    pub fn is_nan(&self) -> bool {
+        self.0.iter().any(|e| e.is_nan())
+    }
+}
+
+
+impl<R, N, M> Mat<R, N, M>
+where
+    R: Zero + Copy,
+    N: Dim,
+    M: Dim,
+{
+    pub fn zero() -> Self {
+        Mat(vec![R::zero(); N::DIM * M::DIM], PhantomData::default())
+    }
+}
+
+impl<R, N, M> Mat<R, N, M>
+where
+    R: One + Copy,
+    N: Dim,
+    M: Dim,
+{
+    pub fn one() -> Self {
+        Mat(vec![R::one(); N::DIM * M::DIM], PhantomData::default())
+    }
+}
+
+impl<R, N> Mat<R, N, N>
+where
+    R: Zero + One + Copy,
+    N: Dim,
+{
+    pub fn identity() -> Self {
+        let mut data = vec![R::zero(); N::DIM * N::DIM];
+        for n in 0..N::DIM {
+            let i = as_lin_idx::<N, N>(n, n);
+            data[i] = R::one();
+        }
+
+        Mat(data, PhantomData::default())
+    }
+}
 
 impl<R, N, M> std::fmt::Display for Mat<R, N, M>
 where
@@ -44,24 +157,6 @@ where
             }
         }
         write!(f, "]")
-    }
-}
-
-impl<R, N, M> Mat<R, N, M>
-where
-    R: Zero + Copy,
-    N: Dim,
-    M: Dim,
-{
-    pub fn t(&self) -> Mat<R, M, N> {
-        let mut data = vec![R::zero(); M::DIM * N::DIM];
-        for i in 0..(N::DIM * M::DIM) {
-            let n_i = i / M::DIM;
-            let m_i = i % M::DIM;
-            let j = m_i * N::DIM + n_i;
-            data[j] = self[i];
-        }
-        Mat(data, PhantomData::default())
     }
 }
 
@@ -121,27 +216,25 @@ impl<R, N: Dim, M: Dim> Index<usize> for Mat<R, N, M> {
     }
 }
 
+impl<R, N: Dim, M: Dim> IndexMut<usize> for Mat<R, N, M> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.0.index_mut(index)
+    }
+}
+
 impl<R, N: Dim, M: Dim> Index<(usize, usize)> for Mat<R, N, M> {
     type Output = R;
 
     fn index(&self, index: (usize, usize)) -> &Self::Output {
-        let lin_idx = M::DIM * index.0 + index.1;
-        self.0.index(lin_idx)
+        let i = as_lin_idx::<N, M>(index.0, index.1);
+        self.0.index(i)
     }
 }
 
-impl<R, N, M> Zero for Mat<R, N, M>
-where
-    R: Num + Zero + Copy,
-    N: Dim,
-    M: Dim,
-{
-    fn zero() -> Self {
-        Mat(vec![R::zero(); N::DIM * M::DIM], PhantomData::default())
-    }
-
-    fn is_zero(&self) -> bool {
-        self.0.iter().all(|r| r.is_zero())
+impl<R, N: Dim, M: Dim> IndexMut<(usize, usize)> for Mat<R, N, M> {
+    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
+        let i = as_lin_idx::<N, M>(index.0, index.1);
+        self.0.index_mut(i)
     }
 }
 
@@ -243,66 +336,6 @@ impl_elemwise_matops!(
     Add, add;
     Sub, sub;
 );
-
-impl<R> One for Mat<R, D2, D2>
-where
-    R: Num + Copy + Sum,
-{
-    fn one() -> Self {
-        Mat(vec![R::one(), R::zero(), R::zero(), R::one()], PhantomData::default())
-    }
-}
-
-impl<R> One for Mat<R, D3, D3>
-where
-    R: Num + Copy + Sum,
-{
-    fn one() -> Self {
-        Mat(
-            vec![
-                R::one(),
-                R::zero(),
-                R::zero(),
-                R::zero(),
-                R::one(),
-                R::zero(),
-                R::zero(),
-                R::zero(),
-                R::one(),
-            ],
-            PhantomData::default(),
-        )
-    }
-}
-
-impl<R> One for Mat<R, D4, D4>
-where
-    R: Num + Copy + Sum,
-{
-    fn one() -> Self {
-        Mat(
-            vec![
-                R::one(),
-                R::zero(),
-                R::zero(),
-                R::zero(),
-                R::zero(),
-                R::one(),
-                R::zero(),
-                R::zero(),
-                R::zero(),
-                R::zero(),
-                R::one(),
-                R::zero(),
-                R::zero(),
-                R::zero(),
-                R::zero(),
-                R::one(),
-            ],
-            PhantomData::default(),
-        )
-    }
-}
 
 macro_rules! impl_matmul {
     ($dim:ty, $tt:tt) => {
@@ -416,6 +449,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn as_lin_idx_works_reasonably_well() {
+        assert_eq!(as_lin_idx::<D1, D1>(0, 0), 0);
+        assert_eq!(as_lin_idx::<D2, D2>(0, 1), 1);
+        assert_eq!(as_lin_idx::<D2, D2>(1, 0), 2);
+    }
+
+    #[test]
     fn mat_implements_display() {
         let a: Mat<f32, D2, D3> = Mat::from([1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]);
         assert_eq!(format!("{}", a), "[[1, 2, 3], [4, 5, 6]]");
@@ -454,9 +494,23 @@ mod tests {
     }
 
     #[test]
+    fn mat_supports_mut_linear_indexing() {
+        let mut m: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        m[2] = 5.0f32;
+        assert_eq!(m[2], 5.0f32);
+    }
+
+    #[test]
     fn mat_supports_2d_indexing() {
         let m: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         assert_eq!(m[(1, 1)], 4.0f32);
+    }
+
+    #[test]
+    fn mat_supports_mut_2d_indexing() {
+        let mut m: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        m[(1, 1)] = 5.0f32;
+        assert_eq!(m[(1, 1)], 5.0f32);
     }
 
     #[test]
@@ -467,13 +521,27 @@ mod tests {
     }
 
     #[test]
-    fn mat_supports_additive_identity() {
+    fn mat_provides_zero_constructor() {
         let m: Mat<f32, D2, D2> = Mat::zero();
-        assert!(m.is_zero());
         assert_eq!(m, Mat::<f32, D2, D2>::from([0.0f32; 4]));
 
-        let m: Mat<f32, D2, D2> = Mat::from([1.0f32; 4]);
-        assert!(!m.is_zero());
+        let m: Mat<f32, D2, D3> = Mat::zero();
+        assert_eq!(m, Mat::<f32, D2, D3>::from([0.0f32; 6]));
+    }
+
+    #[test]
+    fn mat_supports_one_constructor() {
+        let m: Mat<f32, D2, D2> = Mat::one();
+        assert_eq!(m, Mat::<f32, D2, D2>::from([1.0f32; 4]));
+
+        let m: Mat<f32, D2, D3> = Mat::one();
+        assert_eq!(m, Mat::<f32, D2, D3>::from([1.0f32; 6]));
+    }
+
+    #[test]
+    fn mat_supports_identity_constructor() {
+        let m: Mat<f32, D2, D2> = Mat::identity();
+        assert_eq!(m, Mat::<f32, D2, D2>::from([1.0f32, 0.0, 0.0, 1.0]));
     }
 
     #[test]
@@ -574,5 +642,34 @@ mod tests {
             100., 110., 120., 130., 228., 254., 280., 306., 356., 398., 440., 482., 484., 542., 600., 658.,
         ]);
         assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_provides_is_nan() {
+        let a: Mat<f32, D2, D2> = Mat::from([f32::NAN, 1.0, 1.0, 1.0]);
+        assert!(a.is_nan());
+
+        let a: Mat<f32, D2, D2> = Mat::from([1.0f32, 1.0, 1.0, 1.0]);
+        assert!(!a.is_nan());
+    }
+
+    #[test]
+    fn mat_provides_col_method() {
+        let a: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 3.0]);
+        let b: Mat<f32, D2, D1> = a.col(0);
+        assert_eq!(b, Mat::<f32, D2, D1>::from([1.0f32, 3.0]))
+    }
+
+    #[test]
+    fn mat_provides_row_method() {
+        let a: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        let b: Mat<f32, D1, D2> = a.row(0);
+        assert_eq!(b, Mat::<f32, D1, D2>::from([2.0f32, 4.0]))
+    }
+
+    #[test]
+    fn mat_provides_norm_method() {
+        let a: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        assert_eq!(a.norm(), 5.477225575051661f32);
     }
 }
