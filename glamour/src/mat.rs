@@ -1,5 +1,4 @@
 use std::{
-    marker::PhantomData,
     ops::{Add, Div, Index, IndexMut, Mul, Sub},
     iter::Sum,
 };
@@ -7,152 +6,135 @@ use std::{
 use num_traits::{Num, One, Zero, Float};
 
 use crate::{
-    dim::{Dim, D1, D2, D3, D4},
     dot::Dot,
     abop,
 };
 
-pub type Vec2<R> = Mat<R, D1, D2>;
-pub type Vec3<R> = Mat<R, D1, D3>;
-pub type Vec4<R> = Mat<R, D1, D4>;
-pub type Mat2<R> = Mat<R, D2, D2>;
-pub type Mat3<R> = Mat<R, D3, D3>;
-pub type Mat4<R> = Mat<R, D4, D4>;
-
-fn as_lin_idx<N: Dim, M: Dim>(n: usize, m: usize) -> usize {
-    n * M::DIM + m
-}
-
-fn as_2d_idx<N: Dim, M: Dim>(idx: usize) -> (usize, usize) {
-    (idx / N::DIM, idx % N::DIM)
-}
+pub type Vec2<R> = Mat<R, 1, 2>;
+pub type Vec3<R> = Mat<R, 1, 3>;
+pub type Vec4<R> = Mat<R, 1, 4>;
+pub type Mat2<R> = Mat<R, 2, 2>;
+pub type Mat3<R> = Mat<R, 3, 3>;
+pub type Mat4<R> = Mat<R, 4, 4>;
 
 #[derive(Debug, PartialEq)]
-pub struct Mat<R, N, M>(pub(crate) Vec<R>, PhantomData<(N, M)>);
+pub struct Mat<R, const N: usize, const M: usize>([[R; M]; N]);
 
-impl<R, N, M> Mat<R, N, M> 
-where
-    R: Copy + Zero,
-    N: Dim,
-    M: Dim,
-{
-    pub fn col(&self, m: usize) -> Mat<R, N, D1> {
-        if m >= M::DIM {
-            panic!("Expected a column index smaller than {}, got {}", M::DIM, m);
-        }
-        let mut data = vec![R::zero(); N::DIM];
-        for n in 0..N::DIM {
-            data[n] = self[(n, m)];
-        }
-        Mat(data, PhantomData::default())
-    }
-
-    pub fn row(&self, n: usize) -> Mat<R, D1, M> {
-        if n >= N::DIM {
-            panic!("Expected a row index smaller than {}, got {}", N::DIM, n);
-        }
-        let mut data = vec![R::zero(); M::DIM];
-        for m in 0..M::DIM {
-            data[m] = self[(n, m)];
-        }
-        Mat(data, PhantomData::default())
+impl<R, const N: usize, const M: usize> Mat<R, N, M> {
+    fn as_2d_idx(idx: usize) -> (usize, usize) {
+        (idx / M, idx % M)
     }
 }
 
-impl<R, N, M> Mat<R, N, M> 
+impl<R, const N: usize, const M: usize> Mat<R, N, M> 
+where
+    R: Copy + Zero,
+{
+    pub fn col(&self, m: usize) -> Mat<R, N, 1> {
+        if m >= M {
+            panic!("Index m is out of bounds (max: {}, actual: {})", M, m);
+        }
+        let mut mat = Mat::<R, N, 1>::zero();
+        for n in 0..N {
+            mat[(n, 0)] = self[(n, m)];
+        }
+        mat
+    }
+
+    pub fn row(&self, n: usize) -> Mat<R, 1, M> {
+        if n >= N {
+            panic!("Index n is out of bounds (max: {}, actual: {})", N, n);
+        }
+        let mut mat = Mat::<R, 1, M>::zero();
+        for m in 0..M {
+            mat[(0, m)] = self[(n, m)];
+        }
+        mat
+    }
+}
+
+impl<R, const N: usize, const M: usize> Mat<R, N, M> 
 where
     R: Float + Sum,
 {
     pub fn norm(&self) -> R {
-        self.0.iter().map(|e| e.powi(2)).sum::<R>().sqrt()
+        self.0.iter().flatten().map(|e| e.powi(2)).sum::<R>().sqrt()
     }
 }
 
-impl<R, N, M> Mat<R, N, M>
+impl<R, const N: usize, const M: usize> Mat<R, N, M>
 where
     R: Zero + Copy,
-    N: Dim,
-    M: Dim,
 {
     pub fn t(&self) -> Mat<R, M, N> {
-        let mut data = vec![R::zero(); M::DIM * N::DIM];
-        for i in 0..(N::DIM * M::DIM) {
-            let (n_i, m_i) = as_2d_idx::<N, M>(i);
-            let j = as_lin_idx::<M, N>(m_i, n_i);
-            data[j] = self[i];
+        let mut mat = Mat::<R, M, N>::zero();
+        for n in 0..N {
+            for m in 0..M {
+                mat[(m, n)] = self[(n, m)];
+            }
         }
-        Mat(data, PhantomData::default())
+        mat
     }
 }
 
-impl<R, N, M> Mat<R, N, M>
+impl<R, const N: usize, const M: usize> Mat<R, N, M>
 where
     R: Float,
-    N: Dim,
-    M: Dim,
 {
     pub fn is_nan(&self) -> bool {
-        self.0.iter().any(|e| e.is_nan())
+        self.0.iter().flatten().any(|e| e.is_nan())
     }
 }
 
 
-impl<R, N, M> Mat<R, N, M>
+impl<R, const N: usize, const M: usize> Mat<R, N, M>
 where
     R: Zero + Copy,
-    N: Dim,
-    M: Dim,
 {
     pub fn zero() -> Self {
-        Mat(vec![R::zero(); N::DIM * M::DIM], PhantomData::default())
+        Mat([[R::zero(); M]; N])
     }
 }
 
-impl<R, N, M> Mat<R, N, M>
+impl<R, const N: usize, const M: usize> Mat<R, N, M>
 where
     R: One + Copy,
-    N: Dim,
-    M: Dim,
 {
     pub fn one() -> Self {
-        Mat(vec![R::one(); N::DIM * M::DIM], PhantomData::default())
+        Mat([[R::one(); M]; N])
     }
 }
 
-impl<R, N> Mat<R, N, N>
+impl<R, const N: usize> Mat<R, N, N>
 where
     R: Zero + One + Copy,
-    N: Dim,
 {
     pub fn identity() -> Self {
-        let mut data = vec![R::zero(); N::DIM * N::DIM];
-        for n in 0..N::DIM {
-            let i = as_lin_idx::<N, N>(n, n);
-            data[i] = R::one();
+        let mut mat = Mat::<R, N, N>::zero();
+        for n in 0..N {
+            mat[(n, n)] = R::one();
         }
 
-        Mat(data, PhantomData::default())
+        mat
     }
 }
 
-impl<R, N, M> std::fmt::Display for Mat<R, N, M>
+impl<R, const N: usize, const M: usize> std::fmt::Display for Mat<R, N, M>
 where
     R: std::fmt::Display,
-    N: Dim,
-    M: Dim,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "[")?;
-        for n in 0..N::DIM {
+        for n in 0..N {
             write!(f, "[")?;
-            for m in 0..M::DIM {
+            for m in 0..M {
                 write!(f, "{}", self[(n, m)])?;
-                if m < M::DIM - 1 {
+                if m < M - 1 {
                     write!(f, ", ")?;
                 }
             }
             write!(f, "]")?;
-            if n < N::DIM - 1 {
+            if n < N - 1 {
                 write!(f, ", ")?;
             }
         }
@@ -160,88 +142,84 @@ where
     }
 }
 
-impl<R, N, M> From<Vec<R>> for Mat<R, N, M>
-where
-    N: Dim,
-    M: Dim,
-{
-    fn from(value: Vec<R>) -> Self {
-        if value.len() != N::DIM * M::DIM {
-            panic!(
-                "Expected a vec of {} elements, got {} elements",
-                N::DIM * M::DIM,
-                value.len()
-            );
-        }
-        Mat(value, PhantomData::default())
+impl<R, const N: usize, const M: usize> From<[[R; M]; N]> for Mat<R, N, M> {
+    fn from(v: [[R; M]; N]) -> Self {
+        Mat(v)
     }
 }
 
-macro_rules! impl_from_array {
-    ($($d1:ty, $d2:ty, $total:literal);+ $(;)*) => {
-        $(
-        impl<R> From<[R; $total]> for Mat<R, $d1, $d2> {
-            fn from(value: [R; $total]) -> Self {
-                value.into_iter().collect::<Vec<_>>().into()
-            }
-        }
-        )+
-    };
+impl<R> From<R> for Mat<R, 1, 1> {
+    fn from(v: R) -> Self {
+        Mat([[v]])
+    }
 }
 
-impl_from_array!(
-    D1, D1, 1;
-    D1, D2, 2;
-    D1, D3, 3;
-    D1, D4, 4;
-    D2, D1, 2;
-    D2, D2, 4;
-    D2, D3, 6;
-    D2, D4, 8;
-    D3, D1, 3;
-    D3, D2, 6;
-    D3, D3, 9;
-    D3, D4, 12;
-    D4, D1, 4;
-    D4, D2, 8;
-    D4, D3, 12;
-    D4, D4, 16;
-);
+macro_rules! impl_from_1d_array {
+    ($N:literal, $M:literal, [$([$($i:literal),+ $(,)*]),+ $(,)*] $(,)*) => {
+        impl<R> From<[R; $N * $M]> for Mat<R, $N, $M>
+            where
+                R: Copy,
+        {
+            fn from(v: [R; $N * $M]) -> Self {
+                Mat([$(
+                    [$(v[$i]),+],
+                )+])
+            }
+        }
+    }
+}
 
-impl<R, N: Dim, M: Dim> Index<usize> for Mat<R, N, M> {
+impl_from_1d_array!(1, 1, [[0]]);
+impl_from_1d_array!(1, 2, [[0, 1]]);
+impl_from_1d_array!(1, 3, [[0, 1, 2]]);
+impl_from_1d_array!(1, 4, [[0, 1, 2, 3]]);
+impl_from_1d_array!(2, 1, [[0], [1]]);
+impl_from_1d_array!(2, 2, [[0, 1], [2, 3]]);
+impl_from_1d_array!(2, 3, [[0, 1, 2], [3, 4, 5]]);
+impl_from_1d_array!(2, 4, [[0, 1, 2, 3], [4, 5, 6, 7]]);
+impl_from_1d_array!(3, 1, [[0], [1], [2]]);
+impl_from_1d_array!(3, 2, [[0, 1], [2, 3], [4, 5]]);
+impl_from_1d_array!(3, 3, [[0, 1, 2], [3, 4, 5], [6, 7, 8]]);
+impl_from_1d_array!(3, 4, [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]]);
+impl_from_1d_array!(4, 1, [[0], [1], [2], [3]]);
+impl_from_1d_array!(4, 2, [[0, 1], [2, 3], [4, 5], [6, 7]]);
+impl_from_1d_array!(4, 3, [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11]]);
+impl_from_1d_array!(4, 4, [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]);
+
+impl<R, const N: usize, const M: usize> Index<usize> for Mat<R, N, M> {
     type Output = R;
 
     fn index(&self, index: usize) -> &Self::Output {
-        self.0.index(index)
+        let (n, m) = Self::as_2d_idx(index);
+        Index::<(usize, usize)>::index(self, (n, m))
     }
 }
 
-impl<R, N: Dim, M: Dim> IndexMut<usize> for Mat<R, N, M> {
+impl<R, const N: usize, const M: usize> IndexMut<usize> for Mat<R, N, M> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        self.0.index_mut(index)
+        let (n, m) = Self::as_2d_idx(index);
+        IndexMut::<(usize, usize)>::index_mut(self, (n, m))
     }
 }
 
-impl<R, N: Dim, M: Dim> Index<(usize, usize)> for Mat<R, N, M> {
+impl<R, const N: usize, const M: usize> Index<(usize, usize)> for Mat<R, N, M> {
     type Output = R;
 
     fn index(&self, index: (usize, usize)) -> &Self::Output {
-        let i = as_lin_idx::<N, M>(index.0, index.1);
-        self.0.index(i)
+        self.0.index(index.0).index(index.1)
     }
 }
 
-impl<R, N: Dim, M: Dim> IndexMut<(usize, usize)> for Mat<R, N, M> {
+impl<R, const N: usize, const M: usize> IndexMut<(usize, usize)> for Mat<R, N, M> {
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
-        let i = as_lin_idx::<N, M>(index.0, index.1);
-        self.0.index_mut(i)
+        self.0.index_mut(index.0).index_mut(index.1)
     }
 }
 
 macro_rules! impl_scalar_matops {
     ($($Op:ident, $op:ident, [$($tgt:ident),+ $(,)*]);+ $(;)*) => {
         $(
-        impl<R, N: Dim, M: Dim> $Op<R> for Mat<R, N, M>
+        impl<R, const N: usize, const M: usize> $Op<R> for Mat<R, N, M>
             where
                 R: Num + Copy,
         {
@@ -252,23 +230,25 @@ macro_rules! impl_scalar_matops {
             }
         }
 
-        impl<'a, R, N: Dim, M: Dim> $Op<&'a R> for &'a Mat<R, N, M>
+        impl<'a, R, const N: usize, const M: usize> $Op<&'a R> for &'a Mat<R, N, M>
             where
                 R: Num + Copy,
         {
             type Output = Mat<R, N, M>;
 
             fn $op(self, rhs: &'a R) -> Self::Output {
-                let mut data = vec![R::zero(); N::DIM * M::DIM];
-                for i in 0..(N::DIM * M::DIM) {
-                    data[i] = self[i].$op(*rhs);
+                let mut mat = Mat::<R, N, M>::zero();
+                for n in 0..N {
+                    for m in 0..M {
+                        mat[(n, m)] = self[(n, m)].$op(*rhs);
+                    }
                 }
-                Mat(data, PhantomData::default())
+                mat
             }
         }
 
         $(
-        impl<N: Dim, M: Dim> $Op<Mat<$tgt, N, M>> for $tgt {
+        impl<const N: usize, const M: usize> $Op<Mat<$tgt, N, M>> for $tgt {
             type Output = Mat<$tgt, N, M>;
 
             fn $op(self, rhs: Mat<$tgt, N, M>) -> Self::Output {
@@ -276,15 +256,17 @@ macro_rules! impl_scalar_matops {
             }
         }
 
-        impl<'a, N: Dim, M: Dim> $Op<&'a Mat<$tgt, N, M>> for &'a $tgt {
+        impl<'a, const N: usize, const M: usize> $Op<&'a Mat<$tgt, N, M>> for &'a $tgt {
             type Output = Mat<$tgt, N, M>;
 
             fn $op(self, rhs: &'a Mat<$tgt, N, M>) -> Self::Output {
-                let mut data = vec![$tgt::zero(); N::DIM * M::DIM];
-                for i in 0..(N::DIM * M::DIM) {
-                    data[i] = self.$op(rhs[i]);
+                let mut mat = Mat::<$tgt, N, M>::zero();
+                for n in 0..N {
+                    for m in 0..M {
+                        mat[(n, m)] = self.$op(rhs[(n, m)]);
+                    }
                 }
-                Mat(data, PhantomData::default())
+                mat
             }
         }
         )*
@@ -303,7 +285,7 @@ impl_scalar_matops!(
 macro_rules! impl_elemwise_matops {
     ($($Op:ident, $op:ident);+ $(;)*) => {
         $(
-        impl<R, N: Dim, M: Dim> $Op for Mat<R, N, M>
+        impl<R, const N: usize, const M: usize> $Op for Mat<R, N, M>
             where
                 R: Num + Copy,
         {
@@ -314,18 +296,20 @@ macro_rules! impl_elemwise_matops {
             }
         }
 
-        impl<'a, R, N: Dim, M: Dim> $Op for &'a Mat<R, N, M>
+        impl<'a, R, const N: usize, const M: usize> $Op for &'a Mat<R, N, M>
             where
                 R: Num + Copy,
         {
             type Output = Mat<R, N, M>;
 
             fn $op(self, rhs: Self) -> Self::Output {
-                let mut data = vec![R::zero(); N::DIM * M::DIM];
-                for i in 0..(N::DIM * M::DIM) {
-                    data[i] = self[i].$op(rhs[i]);
+                let mut mat = Mat::<R, N, M>::zero();
+                for n in 0..N {
+                    for m in 0..M {
+                        mat[(n, m)] = self[(n, m)].$op(rhs[(n, m)]);
+                    }
                 }
-                Mat(data, PhantomData::default())
+                mat
             }
         }
         )+
@@ -338,10 +322,10 @@ impl_elemwise_matops!(
 );
 
 macro_rules! impl_matmul {
-    ($dim:ty, $tt:tt) => {
+    ($dim:literal, $tt:tt) => {
         impl_matmul!($dim, $dim, $dim, $tt);
     };
-    ($nl:ty, $ml:ty, $mr:ty, $tt:tt) => {
+    ($nl:literal, $ml:literal, $mr:literal, $tt:tt) => {
         impl<R> Mul<Mat<R, $ml, $mr>> for Mat<R, $nl, $ml>
             where
                 R: Num + Copy + Sum,
@@ -389,15 +373,15 @@ macro_rules! impl_matmul {
     };
 }
 
-impl_matmul!(D2, D1, D2, [((0), (0)), ((0), (1)), ((1), (0)), ((1), (1))]);
+impl_matmul!(2, 1, 2, [((0), (0)), ((0), (1)), ((1), (0)), ((1), (1))]);
 impl_matmul!(
-    D2,
+    2,
     [((0, 1), (0, 2)), ((0, 1), (1, 3)), ((2, 3), (0, 2)), ((2, 3), (1, 3)),]
 );
-impl_matmul!(D1, D2, D2, [((0, 1), (0, 1)), ((0, 1), (2, 3))]);
+impl_matmul!(1, 2, 2, [((0, 1), (0, 1)), ((0, 1), (2, 3))]);
 
 impl_matmul!(
-    D3,
+    3,
     [
         ((0, 1, 2), (0, 3, 6)),
         ((0, 1, 2), (1, 4, 7)),
@@ -412,7 +396,7 @@ impl_matmul!(
 );
 
 impl_matmul!(
-    D4,
+    4,
     [
         ((0, 1, 2, 3), (0, 4, 8, 12)),
         ((0, 1, 2, 3), (1, 5, 9, 13)),
@@ -433,13 +417,13 @@ impl_matmul!(
     ]
 );
 
-impl<'a, R> Dot<&'a Mat<R, D2, D1>> for &'a Mat<R, D1, D2>
+impl<'a, R> Dot<&'a Mat<R, 2, 1>> for &'a Mat<R, 1, 2>
 where
     R: Num + Copy + Sum,
 {
     type Output = R;
 
-    fn dot(self, rhs: &'a Mat<R, D2, D1>) -> Self::Output {
+    fn dot(self, rhs: &'a Mat<R, 2, 1>) -> Self::Output {
         abop!(dot, self, rhs, [((0, 1), (0, 1))])[0]
     }
 }
@@ -449,196 +433,363 @@ mod tests {
     use super::*;
 
     #[test]
-    fn as_lin_idx_works_reasonably_well() {
-        assert_eq!(as_lin_idx::<D1, D1>(0, 0), 0);
-        assert_eq!(as_lin_idx::<D2, D2>(0, 1), 1);
-        assert_eq!(as_lin_idx::<D2, D2>(1, 0), 2);
+    fn a2i_1x1() {
+        assert_eq!(Mat::<f32, 1, 1>::as_2d_idx(0), (0, 0), "i=0");
+    }
+
+    #[test]
+    fn a2i_1x2() {
+        assert_eq!(Mat::<f32, 1, 2>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 1, 2>::as_2d_idx(1), (0, 1), "i=1");
+    }
+
+    #[test]
+    fn a2i_1x3() {
+        assert_eq!(Mat::<f32, 1, 3>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 1, 3>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 1, 3>::as_2d_idx(2), (0, 2), "i=2");
+    }
+
+    #[test]
+    fn a2i_1x4() {
+        assert_eq!(Mat::<f32, 1, 4>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 1, 4>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 1, 4>::as_2d_idx(2), (0, 2), "i=2");
+        assert_eq!(Mat::<f32, 1, 4>::as_2d_idx(3), (0, 3), "i=3");
+    }
+
+    #[test]
+    fn a2i_2x1() {
+        assert_eq!(Mat::<f32, 2, 1>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 2, 1>::as_2d_idx(1), (1, 0), "i=1");
+    }
+
+    #[test]
+    fn a2i_2x2() {
+        assert_eq!(Mat::<f32, 2, 2>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 2, 2>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 2, 2>::as_2d_idx(2), (1, 0), "i=2");
+        assert_eq!(Mat::<f32, 2, 2>::as_2d_idx(3), (1, 1), "i=3");
+    }
+
+    #[test]
+    fn a2i_2x3() {
+        assert_eq!(Mat::<f32, 2, 3>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 2, 3>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 2, 3>::as_2d_idx(2), (0, 2), "i=2");
+        assert_eq!(Mat::<f32, 2, 3>::as_2d_idx(3), (1, 0), "i=3");
+        assert_eq!(Mat::<f32, 2, 3>::as_2d_idx(4), (1, 1), "i=4");
+        assert_eq!(Mat::<f32, 2, 3>::as_2d_idx(5), (1, 2), "i=5");
+    }
+
+    #[test]
+    fn a2i_2x4() {
+        assert_eq!(Mat::<f32, 2, 4>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 2, 4>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 2, 4>::as_2d_idx(2), (0, 2), "i=2");
+        assert_eq!(Mat::<f32, 2, 4>::as_2d_idx(3), (0, 3), "i=3");
+        assert_eq!(Mat::<f32, 2, 4>::as_2d_idx(4), (1, 0), "i=4");
+        assert_eq!(Mat::<f32, 2, 4>::as_2d_idx(5), (1, 1), "i=5");
+        assert_eq!(Mat::<f32, 2, 4>::as_2d_idx(6), (1, 2), "i=6");
+        assert_eq!(Mat::<f32, 2, 4>::as_2d_idx(7), (1, 3), "i=7");
+    }
+
+    #[test]
+    fn a2i_3x1() {
+        assert_eq!(Mat::<f32, 3, 1>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 3, 1>::as_2d_idx(1), (1, 0), "i=1");
+        assert_eq!(Mat::<f32, 3, 1>::as_2d_idx(2), (2, 0), "i=2");
+    }
+
+    #[test]
+    fn a2i_3x2() {
+        assert_eq!(Mat::<f32, 3, 2>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 3, 2>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 3, 2>::as_2d_idx(2), (1, 0), "i=2");
+        assert_eq!(Mat::<f32, 3, 2>::as_2d_idx(3), (1, 1), "i=3");
+        assert_eq!(Mat::<f32, 3, 2>::as_2d_idx(4), (2, 0), "i=4");
+        assert_eq!(Mat::<f32, 3, 2>::as_2d_idx(5), (2, 1), "i=5");
+    }
+
+    #[test]
+    fn a2i_3x3() {
+        assert_eq!(Mat::<f32, 3, 3>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 3, 3>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 3, 3>::as_2d_idx(2), (0, 2), "i=2");
+        assert_eq!(Mat::<f32, 3, 3>::as_2d_idx(3), (1, 0), "i=3");
+        assert_eq!(Mat::<f32, 3, 3>::as_2d_idx(4), (1, 1), "i=4");
+        assert_eq!(Mat::<f32, 3, 3>::as_2d_idx(5), (1, 2), "i=5");
+        assert_eq!(Mat::<f32, 3, 3>::as_2d_idx(6), (2, 0), "i=6");
+        assert_eq!(Mat::<f32, 3, 3>::as_2d_idx(7), (2, 1), "i=7");
+        assert_eq!(Mat::<f32, 3, 3>::as_2d_idx(8), (2, 2), "i=8");
+    }
+
+    #[test]
+    fn a2i_3x4() {
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(2), (0, 2), "i=2");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(3), (0, 3), "i=3");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(4), (1, 0), "i=4");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(5), (1, 1), "i=5");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(6), (1, 2), "i=6");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(7), (1, 3), "i=7");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(8), (2, 0), "i=8");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(9), (2, 1), "i=9");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(10), (2, 2), "i=10");
+        assert_eq!(Mat::<f32, 3, 4>::as_2d_idx(11), (2, 3), "i=11");
+    }
+
+    #[test]
+    fn a2i_4x1() {
+        assert_eq!(Mat::<f32, 4, 1>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 4, 1>::as_2d_idx(1), (1, 0), "i=1");
+        assert_eq!(Mat::<f32, 4, 1>::as_2d_idx(2), (2, 0), "i=2");
+        assert_eq!(Mat::<f32, 4, 1>::as_2d_idx(3), (3, 0), "i=3");
+    }
+
+    #[test]
+    fn a2i_4x2() {
+        assert_eq!(Mat::<f32, 4, 2>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 4, 2>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 4, 2>::as_2d_idx(2), (1, 0), "i=2");
+        assert_eq!(Mat::<f32, 4, 2>::as_2d_idx(3), (1, 1), "i=3");
+        assert_eq!(Mat::<f32, 4, 2>::as_2d_idx(4), (2, 0), "i=4");
+        assert_eq!(Mat::<f32, 4, 2>::as_2d_idx(5), (2, 1), "i=5");
+        assert_eq!(Mat::<f32, 4, 2>::as_2d_idx(6), (3, 0), "i=6");
+        assert_eq!(Mat::<f32, 4, 2>::as_2d_idx(7), (3, 1), "i=7");
+    }
+
+    #[test]
+    fn a2i_4x3() {
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(2), (0, 2), "i=2");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(3), (1, 0), "i=3");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(4), (1, 1), "i=4");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(5), (1, 2), "i=5");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(6), (2, 0), "i=6");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(7), (2, 1), "i=7");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(8), (2, 2), "i=8");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(9), (3, 0), "i=9");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(10), (3, 1), "i=10");
+        assert_eq!(Mat::<f32, 4, 3>::as_2d_idx(11), (3, 2), "i=11");
+    }
+
+    #[test]
+    fn a2i_4x4() {
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(0), (0, 0), "i=0");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(1), (0, 1), "i=1");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(2), (0, 2), "i=2");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(3), (0, 3), "i=3");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(4), (1, 0), "i=4");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(5), (1, 1), "i=5");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(6), (1, 2), "i=6");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(7), (1, 3), "i=7");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(8), (2, 0), "i=8");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(9), (2, 1), "i=9");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(10), (2, 2), "i=10");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(11), (2, 3), "i=11");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(12), (3, 0), "i=12");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(13), (3, 1), "i=13");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(14), (3, 2), "i=14");
+        assert_eq!(Mat::<f32, 4, 4>::as_2d_idx(15), (3, 3), "i=15");
     }
 
     #[test]
     fn mat_implements_display() {
-        let a: Mat<f32, D2, D3> = Mat::from([1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let a: Mat<f32, 2, 3> = Mat::from([1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]);
         assert_eq!(format!("{}", a), "[[1, 2, 3], [4, 5, 6]]");
 
-        let a: Mat<f32, D1, D2> = Mat::from([1.0f32, 2.0]);
+        let a: Mat<f32, 1, 2> = Mat::from([1.0f32, 2.0]);
         assert_eq!(format!("{}", a), "[[1, 2]]");
 
-        let a: Mat<f32, D2, D1> = Mat::from([1.0f32, 2.0]);
+        let a: Mat<f32, 2, 1> = Mat::from([1.0f32, 2.0]);
         assert_eq!(format!("{}", a), "[[1], [2]]");
     }
 
     #[test]
+    fn mat_implements_from_2d_array() {
+        let _: Mat<f32, 2, 2> = Mat::from([[0.0, 1.0], [2.0, 3.0]]);
+    }
+
+    #[test]
+    fn mat_1x1_implements_from_scalar_value() {
+        let _: Mat<f32, 1, 1> = (1.0f32).into();
+    }
+
+    #[test]
     fn mat_implements_from_array() {
-        let _: Mat<f32, D1, D1> = Mat::from([0.0f32; 1]);
-        let _: Mat<f32, D1, D2> = Mat::from([0.0f32; 2]);
-        let _: Mat<f32, D1, D3> = Mat::from([0.0f32; 3]);
-        let _: Mat<f32, D1, D4> = Mat::from([0.0f32; 4]);
-        let _: Mat<f32, D2, D1> = Mat::from([0.0f32; 2]);
-        let _: Mat<f32, D2, D2> = Mat::from([0.0f32; 4]);
-        let _: Mat<f32, D2, D3> = Mat::from([0.0f32; 6]);
-        let _: Mat<f32, D2, D4> = Mat::from([0.0f32; 8]);
-        let _: Mat<f32, D3, D1> = Mat::from([0.0f32; 3]);
-        let _: Mat<f32, D3, D2> = Mat::from([0.0f32; 6]);
-        let _: Mat<f32, D3, D3> = Mat::from([0.0f32; 9]);
-        let _: Mat<f32, D3, D4> = Mat::from([0.0f32; 12]);
-        let _: Mat<f32, D4, D1> = Mat::from([0.0f32; 4]);
-        let _: Mat<f32, D4, D2> = Mat::from([0.0f32; 8]);
-        let _: Mat<f32, D4, D3> = Mat::from([0.0f32; 12]);
-        let _: Mat<f32, D4, D4> = Mat::from([0.0f32; 16]);
+        let _: Mat<f32, 1, 1> = Mat::from([0.0f32; 1]);
+        let _: Mat<f32, 1, 2> = Mat::from([0.0f32; 2]);
+        let _: Mat<f32, 1, 3> = Mat::from([0.0f32; 3]);
+        let _: Mat<f32, 1, 4> = Mat::from([0.0f32; 4]);
+        let _: Mat<f32, 2, 1> = Mat::from([0.0f32; 2]);
+        let _: Mat<f32, 2, 2> = Mat::from([0.0f32; 4]);
+        let _: Mat<f32, 2, 3> = Mat::from([0.0f32; 6]);
+        let _: Mat<f32, 2, 4> = Mat::from([0.0f32; 8]);
+        let _: Mat<f32, 3, 1> = Mat::from([0.0f32; 3]);
+        let _: Mat<f32, 3, 2> = Mat::from([0.0f32; 6]);
+        let _: Mat<f32, 3, 3> = Mat::from([0.0f32; 9]);
+        let _: Mat<f32, 3, 4> = Mat::from([0.0f32; 12]);
+        let _: Mat<f32, 4, 1> = Mat::from([0.0f32; 4]);
+        let _: Mat<f32, 4, 2> = Mat::from([0.0f32; 8]);
+        let _: Mat<f32, 4, 3> = Mat::from([0.0f32; 12]);
+        let _: Mat<f32, 4, 4> = Mat::from([0.0f32; 16]);
     }
 
     #[test]
     fn mat_supports_linear_indexing() {
-        let m: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        let m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         assert_eq!(m[2], 3.0f32);
     }
 
     #[test]
     fn mat_supports_mut_linear_indexing() {
-        let mut m: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        let mut m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         m[2] = 5.0f32;
         assert_eq!(m[2], 5.0f32);
     }
 
     #[test]
     fn mat_supports_2d_indexing() {
-        let m: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        let m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         assert_eq!(m[(1, 1)], 4.0f32);
     }
 
     #[test]
     fn mat_supports_mut_2d_indexing() {
-        let mut m: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        let mut m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         m[(1, 1)] = 5.0f32;
         assert_eq!(m[(1, 1)], 5.0f32);
     }
 
     #[test]
     fn mat_supports_transposition() {
-        let a: Mat<f32, D2, D3> = Mat::from([1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        let b: Mat<f32, D3, D2> = a.t();
-        assert_eq!(b, Mat::<f32, D3, D2>::from([1.0f32, 4.0, 2.0, 5.0, 3.0, 6.0]));
+        let a: Mat<f32, 2, 3> = Mat::from([1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b: Mat<f32, 3, 2> = a.t();
+        assert_eq!(b, Mat::<f32, 3, 2>::from([1.0f32, 4.0, 2.0, 5.0, 3.0, 6.0]));
     }
 
     #[test]
     fn mat_provides_zero_constructor() {
-        let m: Mat<f32, D2, D2> = Mat::zero();
-        assert_eq!(m, Mat::<f32, D2, D2>::from([0.0f32; 4]));
+        let m: Mat<f32, 2, 2> = Mat::zero();
+        assert_eq!(m, Mat::<f32, 2, 2>::from([0.0f32; 4]));
 
-        let m: Mat<f32, D2, D3> = Mat::zero();
-        assert_eq!(m, Mat::<f32, D2, D3>::from([0.0f32; 6]));
+        let m: Mat<f32, 2, 3> = Mat::zero();
+        assert_eq!(m, Mat::<f32, 2, 3>::from([0.0f32; 6]));
     }
 
     #[test]
     fn mat_supports_one_constructor() {
-        let m: Mat<f32, D2, D2> = Mat::one();
-        assert_eq!(m, Mat::<f32, D2, D2>::from([1.0f32; 4]));
+        let m: Mat<f32, 2, 2> = Mat::one();
+        assert_eq!(m, Mat::<f32, 2, 2>::from([1.0f32; 4]));
 
-        let m: Mat<f32, D2, D3> = Mat::one();
-        assert_eq!(m, Mat::<f32, D2, D3>::from([1.0f32; 6]));
+        let m: Mat<f32, 2, 3> = Mat::one();
+        assert_eq!(m, Mat::<f32, 2, 3>::from([1.0f32; 6]));
     }
 
     #[test]
     fn mat_supports_identity_constructor() {
-        let m: Mat<f32, D2, D2> = Mat::identity();
-        assert_eq!(m, Mat::<f32, D2, D2>::from([1.0f32, 0.0, 0.0, 1.0]));
+        let m: Mat<f32, 2, 2> = Mat::identity();
+        assert_eq!(m, Mat::<f32, 2, 2>::from([1.0f32, 0.0, 0.0, 1.0]));
     }
 
     #[test]
     fn mat_supports_scalar_addition() {
-        let a: Mat<f32, D1, D1> = Mat::from([1.0]);
+        let a: Mat<f32, 1, 1> = Mat::from([1.0]);
         let b: f32 = 2.0;
-        assert_eq!(&a + &b, Mat::<f32, D1, D1>::from([3.0]));
-        assert_eq!(&b + &a, Mat::<f32, D1, D1>::from([3.0]));
+        assert_eq!(&a + &b, Mat::<f32, 1, 1>::from([3.0]));
+        assert_eq!(&b + &a, Mat::<f32, 1, 1>::from([3.0]));
     }
 
     #[test]
     fn mat_supports_scalar_subtraction() {
-        let a: Mat<f32, D1, D1> = Mat::from([1.0]);
+        let a: Mat<f32, 1, 1> = Mat::from([1.0]);
         let b: f32 = 2.0;
-        assert_eq!(&a - &b, Mat::<f32, D1, D1>::from([-1.0]));
-        assert_eq!(&b - &a, Mat::<f32, D1, D1>::from([1.0]));
+        assert_eq!(&a - &b, Mat::<f32, 1, 1>::from([-1.0]));
+        assert_eq!(&b - &a, Mat::<f32, 1, 1>::from([1.0]));
     }
 
     #[test]
     fn mat_supports_scalar_multiplication() {
-        let a: Mat<f32, D1, D1> = Mat::from([2.0]);
+        let a: Mat<f32, 1, 1> = Mat::from([2.0]);
         let b: f32 = 2.0;
-        assert_eq!(&a * &b, Mat::<f32, D1, D1>::from([4.0]));
-        assert_eq!(&b * &a, Mat::<f32, D1, D1>::from([4.0]));
+        assert_eq!(&a * &b, Mat::<f32, 1, 1>::from([4.0]));
+        assert_eq!(&b * &a, Mat::<f32, 1, 1>::from([4.0]));
     }
 
     #[test]
     fn mat_supports_scalar_division() {
-        let a: Mat<f32, D1, D1> = Mat::from([6.0]);
+        let a: Mat<f32, 1, 1> = Mat::from([6.0]);
         let b: f32 = 2.0;
-        assert_eq!(&a / &b, Mat::<f32, D1, D1>::from([3.0]));
-        assert_eq!(&b / &a, Mat::<f32, D1, D1>::from([2.0 / 6.0]));
+        assert_eq!(&a / &b, Mat::<f32, 1, 1>::from([3.0]));
+        assert_eq!(&b / &a, Mat::<f32, 1, 1>::from([2.0 / 6.0]));
     }
 
     #[test]
     fn mat_supports_addition() {
-        let a: Mat<f32, D1, D1> = Mat::from([3.0]);
-        let b: Mat<f32, D1, D1> = Mat::from([2.0]);
-        assert_eq!(&a + &b, Mat::<f32, D1, D1>::from([5.0]));
-        assert_eq!(&b + &a, Mat::<f32, D1, D1>::from([5.0]));
+        let a: Mat<f32, 1, 1> = Mat::from([3.0]);
+        let b: Mat<f32, 1, 1> = Mat::from([2.0]);
+        assert_eq!(&a + &b, Mat::<f32, 1, 1>::from([5.0]));
+        assert_eq!(&b + &a, Mat::<f32, 1, 1>::from([5.0]));
     }
 
     #[test]
     fn mat_supports_subtraction() {
-        let a: Mat<f32, D1, D1> = Mat::from([3.0]);
-        let b: Mat<f32, D1, D1> = Mat::from([2.0]);
-        assert_eq!(&a - &b, Mat::<f32, D1, D1>::from([1.0]));
-        assert_eq!(&b - &a, Mat::<f32, D1, D1>::from([-1.0]));
+        let a: Mat<f32, 1, 1> = Mat::from([3.0]);
+        let b: Mat<f32, 1, 1> = Mat::from([2.0]);
+        assert_eq!(&a - &b, Mat::<f32, 1, 1>::from([1.0]));
+        assert_eq!(&b - &a, Mat::<f32, 1, 1>::from([-1.0]));
     }
 
     #[test]
     fn mat_supports_dot_product_2x1_1x2() {
-        let a: Mat<f32, D2, D1> = Mat::from([3.0, 2.0]);
-        let b: Mat<f32, D1, D2> = Mat::from([2.0, 1.0]);
-        assert_eq!((&a).dot(&b), Mat::<f32, D2, D2>::from([6.0, 3.0, 4.0, 2.0]));
+        let a: Mat<f32, 2, 1> = Mat::from([3.0, 2.0]);
+        let b: Mat<f32, 1, 2> = Mat::from([2.0, 1.0]);
+        assert_eq!((&a).dot(&b), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
     }
 
     #[test]
     fn mat_supports_dot_product_1x2_2x1() {
-        let a: Mat<f32, D1, D2> = Mat::from([3.0, 2.0]);
-        let b: Mat<f32, D2, D1> = Mat::from([2.0, 1.0]);
+        let a: Mat<f32, 1, 2> = Mat::from([3.0, 2.0]);
+        let b: Mat<f32, 2, 1> = Mat::from([2.0, 1.0]);
         assert_eq!((&a).dot(&b), 8.0f32);
     }
 
     #[test]
     fn mat_supports_dot_product_2x2_2x2() {
-        let a: Mat<f32, D2, D2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
-        let b: Mat<f32, D2, D2> = Mat::from([2.0, 3.0, 4.0, 5.0]);
-        let c: Mat<f32, D2, D2> = Mat::from([10.0, 13.0, 22.0, 29.0]);
+        let a: Mat<f32, 2, 2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
+        let b: Mat<f32, 2, 2> = Mat::from([2.0, 3.0, 4.0, 5.0]);
+        let c: Mat<f32, 2, 2> = Mat::from([10.0, 13.0, 22.0, 29.0]);
         assert_eq!((&a).dot(&b), c);
     }
 
     #[test]
     fn mat_supports_dot_product_1x2_2x2() {
-        let a: Mat<f32, D1, D2> = Mat::from([2.0, 3.0]);
-        let b: Mat<f32, D2, D2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
-        let c: Mat<f32, D1, D2> = Mat::from([8.0, 18.0]);
+        let a: Mat<f32, 1, 2> = Mat::from([2.0, 3.0]);
+        let b: Mat<f32, 2, 2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
+        let c: Mat<f32, 1, 2> = Mat::from([8.0, 18.0]);
         assert_eq!((&a).dot(&b), c);
     }
 
     #[test]
     fn mat_supports_dot_product_3x3_3x3() {
-        let a: Mat<f32, D3, D3> = Mat::from([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
-        let b: Mat<f32, D3, D3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
-        let c: Mat<f32, D3, D3> = Mat::from([36., 42., 48., 81., 96., 111., 126., 150., 174.]);
+        let a: Mat<f32, 3, 3> = Mat::from([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
+        let b: Mat<f32, 3, 3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
+        let c: Mat<f32, 3, 3> = Mat::from([36., 42., 48., 81., 96., 111., 126., 150., 174.]);
         assert_eq!((&a).dot(&b), c);
     }
 
     #[test]
     fn mat_supports_dot_product_4x4_4x4() {
-        let a: Mat<f32, D4, D4> = Mat::from([
+        let a: Mat<f32, 4, 4> = Mat::from([
             1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
         ]);
-        let b: Mat<f32, D4, D4> = Mat::from([
+        let b: Mat<f32, 4, 4> = Mat::from([
             2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
         ]);
-        let c: Mat<f32, D4, D4> = Mat::from([
+        let c: Mat<f32, 4, 4> = Mat::from([
             100., 110., 120., 130., 228., 254., 280., 306., 356., 398., 440., 482., 484., 542., 600., 658.,
         ]);
         assert_eq!((&a).dot(&b), c);
@@ -646,30 +797,30 @@ mod tests {
 
     #[test]
     fn mat_provides_is_nan() {
-        let a: Mat<f32, D2, D2> = Mat::from([f32::NAN, 1.0, 1.0, 1.0]);
+        let a: Mat<f32, 2, 2> = Mat::from([f32::NAN, 1.0, 1.0, 1.0]);
         assert!(a.is_nan());
 
-        let a: Mat<f32, D2, D2> = Mat::from([1.0f32, 1.0, 1.0, 1.0]);
+        let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 1.0, 1.0, 1.0]);
         assert!(!a.is_nan());
     }
 
     #[test]
     fn mat_provides_col_method() {
-        let a: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 3.0]);
-        let b: Mat<f32, D2, D1> = a.col(0);
-        assert_eq!(b, Mat::<f32, D2, D1>::from([1.0f32, 3.0]))
+        let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 3.0]);
+        let b: Mat<f32, 2, 1> = a.col(0);
+        assert_eq!(b, Mat::<f32, 2, 1>::from([1.0f32, 3.0]))
     }
 
     #[test]
     fn mat_provides_row_method() {
-        let a: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
-        let b: Mat<f32, D1, D2> = a.row(0);
-        assert_eq!(b, Mat::<f32, D1, D2>::from([2.0f32, 4.0]))
+        let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        let b: Mat<f32, 1, 2> = a.row(0);
+        assert_eq!(b, Mat::<f32, 1, 2>::from([1.0f32, 2.0]))
     }
 
     #[test]
     fn mat_provides_norm_method() {
-        let a: Mat<f32, D2, D2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         assert_eq!(a.norm(), 5.477225575051661f32);
     }
 }

@@ -44,7 +44,7 @@ impl<'a, R> From<&'a Mat4<R>> for Affine<R>
 where
     R: Copy,
 {
-    fn from(v: &'a Mat4<R>) -> Self {
+    fn from(_v: &'a Mat4<R>) -> Self {
         //let t = Vec3::from([v[(0, 3)], v[(1, 3)], v[(2, 3)]]);
         todo!()
     }
