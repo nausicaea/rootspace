@@ -11,8 +11,28 @@ use crate::{
 };
 
 pub type Vec2<R> = Mat<R, 1, 2>;
+
+impl<R> Vec2<R> {
+    pub fn new(x: R, y: R) -> Self {
+        Mat([[x, y]])
+    }
+}
+
 pub type Vec3<R> = Mat<R, 1, 3>;
+
+impl<R> Vec3<R> {
+    pub fn new(x: R, y: R, z: R) -> Self {
+        Mat([[x, y, z]])
+    }
+}
 pub type Vec4<R> = Mat<R, 1, 4>;
+
+impl<R> Vec4<R> {
+    pub fn new(x: R, y: R, z: R, w: R) -> Self {
+        Mat([[x, y, z, w]])
+    }
+}
+
 pub type Mat2<R> = Mat<R, 2, 2>;
 pub type Mat3<R> = Mat<R, 3, 3>;
 pub type Mat4<R> = Mat<R, 4, 4>;
@@ -48,6 +68,19 @@ where
         let mut mat = Mat::<R, 1, M>::zero();
         for m in 0..M {
             mat[(0, m)] = self[(n, m)];
+        }
+        mat
+    }
+
+    pub fn subset<const O: usize, const P: usize>(&self, n: usize, m: usize) -> Mat<R, O, P> {
+        debug_assert!(O <= N && P <= M);
+        debug_assert!(n + O <= N && m + P <= M);
+
+        let mut mat = Mat::<R, O, P>::zero();
+        for o in 0..O {
+            for p in 0..P {
+                mat[(o, p)] = self[(n + o, m + p)];
+            }
         }
         mat
     }
@@ -639,13 +672,13 @@ mod tests {
     }
 
     #[test]
-    fn mat_supports_linear_indexing() {
+    fn mat_supports_1d_indexing() {
         let m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         assert_eq!(m[2], 3.0f32);
     }
 
     #[test]
-    fn mat_supports_mut_linear_indexing() {
+    fn mat_supports_mut_1d_indexing() {
         let mut m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         m[2] = 5.0f32;
         assert_eq!(m[2], 5.0f32);
@@ -808,19 +841,43 @@ mod tests {
     fn mat_provides_col_method() {
         let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 3.0]);
         let b: Mat<f32, 2, 1> = a.col(0);
-        assert_eq!(b, Mat::<f32, 2, 1>::from([1.0f32, 3.0]))
+        assert_eq!(b, Mat::<f32, 2, 1>::from([1.0f32, 3.0]));
     }
 
     #[test]
     fn mat_provides_row_method() {
         let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         let b: Mat<f32, 1, 2> = a.row(0);
-        assert_eq!(b, Mat::<f32, 1, 2>::from([1.0f32, 2.0]))
+        assert_eq!(b, Mat::<f32, 1, 2>::from([1.0f32, 2.0]));
+    }
+
+    #[test]
+    fn mat_provides_subset_method() {
+        let a: Mat<f32, 4, 4> = Mat::from([
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
+        ]);
+        let b: Mat<f32, 2, 2> = a.subset::<2, 2>(0, 1);
+        assert_eq!(b, Mat::<f32, 2, 2>::from([2.0f32, 3.0, 6.0, 7.0]));
     }
 
     #[test]
     fn mat_provides_norm_method() {
         let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         assert_eq!(a.norm(), 5.477225575051661f32);
+    }
+
+    #[test]
+    fn vec2_implements_new() {
+        let _: Vec2<f32> = Vec2::new(1.0f32, 2.0f32);
+    }
+
+    #[test]
+    fn vec3_implements_new() {
+        let _: Vec3<f32> = Vec3::new(1.0f32, 2.0f32, 3.0f32);
+    }
+
+    #[test]
+    fn vec4_implements_new() {
+        let _: Vec4<f32> = Vec4::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
     }
 }
