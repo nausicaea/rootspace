@@ -366,49 +366,49 @@ impl_elemwise_matops!(
 
 macro_rules! impl_matmul {
     ($dim:literal, $tt:tt) => {
-        impl_matmul!($dim, $dim, $dim, $tt);
+        impl_matmul!($dim, $dim, $dim, $dim, $tt);
     };
-    ($nl:literal, $ml:literal, $mr:literal, $tt:tt) => {
-        impl<R> Mul<Mat<R, $ml, $mr>> for Mat<R, $nl, $ml>
+    ($nl:literal, $ml:literal, $nr:literal, $mr:literal, $tt:tt) => {
+        impl<R> Mul<Mat<R, $nr, $mr>> for Mat<R, $nl, $ml>
             where
                 R: Num + Copy + Sum,
         {
             type Output = Mat<R, $nl, $mr>;
 
-            fn mul(self, rhs: Mat<R, $ml, $mr>) -> Self::Output {
+            fn mul(self, rhs: Mat<R, $nr, $mr>) -> Self::Output {
                 (&self).mul(&rhs)
             }
         }
 
-        impl<'a, R> Mul<&'a Mat<R, $ml, $mr>> for &'a Mat<R, $nl, $ml>
+        impl<'a, R> Mul<&'a Mat<R, $nr, $mr>> for &'a Mat<R, $nl, $ml>
             where
                 R: Num + Copy + Sum,
         {
             type Output = Mat<R, $nl, $mr>;
 
-            fn mul(self, rhs: &'a Mat<R, $ml, $mr>) -> Self::Output {
+            fn mul(self, rhs: &'a Mat<R, $nr, $mr>) -> Self::Output {
                 self.dot(rhs)
             }
         }
 
-        impl<R> Dot<Mat<R, $ml, $mr>> for Mat<R, $nl, $ml>
+        impl<R> Dot<Mat<R, $nr, $mr>> for Mat<R, $nl, $ml>
             where
                 R: Num + Copy + Sum,
         {
             type Output = Mat<R, $nl, $mr>;
 
-            fn dot(self, rhs: Mat<R, $ml, $mr>) -> Self::Output {
+            fn dot(self, rhs: Mat<R, $nr, $mr>) -> Self::Output {
                 (&self).dot(&rhs)
             }
         }
 
-        impl<'a, R> Dot<&'a Mat<R, $ml, $mr>> for &'a Mat<R, $nl, $ml>
+        impl<'a, R> Dot<&'a Mat<R, $nr, $mr>> for &'a Mat<R, $nl, $ml>
         where
             R: Num + Copy + Sum,
         {
             type Output = Mat<R, $nl, $mr>;
 
-            fn dot(self, rhs: &'a Mat<R, $ml, $mr>) -> Self::Output {
+            fn dot(self, rhs: &'a Mat<R, $nr, $mr>) -> Self::Output {
                 let c = abop!(dot, self, rhs, $tt);
                 c.into()
             }
@@ -416,12 +416,14 @@ macro_rules! impl_matmul {
     };
 }
 
-impl_matmul!(2, 1, 2, [((0), (0)), ((0), (1)), ((1), (0)), ((1), (1))]);
+impl_matmul!(2, 1, 1, 2, [((0), (0)), ((0), (1)), ((1), (0)), ((1), (1))]);
+
 impl_matmul!(
     2,
     [((0, 1), (0, 2)), ((0, 1), (1, 3)), ((2, 3), (0, 2)), ((2, 3), (1, 3)),]
 );
-impl_matmul!(1, 2, 2, [((0, 1), (0, 1)), ((0, 1), (2, 3))]);
+impl_matmul!(1, 2, 2, 2, [((0, 1), (0, 2)), ((0, 1), (1, 3))]);
+impl_matmul!(2, 2, 2, 1, [((0, 1), (0, 1)), ((2, 3), (0, 1))]);
 
 impl_matmul!(
     3,
@@ -435,6 +437,22 @@ impl_matmul!(
         ((6, 7, 8), (0, 3, 6)),
         ((6, 7, 8), (1, 4, 7)),
         ((6, 7, 8), (2, 5, 8)),
+    ]
+);
+impl_matmul!(
+    1, 3, 3, 3,
+    [
+        ((0, 1, 2), (0, 3, 6)),
+        ((0, 1, 2), (1, 4, 7)),
+        ((0, 1, 2), (2, 5, 8)),
+    ]
+);
+impl_matmul!(
+    3, 3, 3, 1,
+    [
+        ((0, 1, 2), (0, 1, 2)),
+        ((3, 4, 5), (0, 1, 2)),
+        ((6, 7, 8), (0, 1, 2)),
     ]
 );
 
@@ -457,6 +475,24 @@ impl_matmul!(
         ((12, 13, 14, 15), (1, 5, 9, 13)),
         ((12, 13, 14, 15), (2, 6, 10, 14)),
         ((12, 13, 14, 15), (3, 7, 11, 15)),
+    ]
+);
+impl_matmul!(
+    1, 4, 4, 4,
+    [
+        ((0, 1, 2, 3), (0, 4, 8, 12)),
+        ((0, 1, 2, 3), (1, 5, 9, 13)),
+        ((0, 1, 2, 3), (2, 6, 10, 14)),
+        ((0, 1, 2, 3), (3, 7, 11, 15)),
+    ]
+);
+impl_matmul!(
+    4, 4, 4, 1,
+    [
+        ((0, 1, 2, 3), (0, 1, 2, 3)),
+        ((4, 5, 6, 7), (0, 1, 2, 3)),
+        ((8, 9, 10, 11), (0, 1, 2, 3)),
+        ((12, 13, 14, 15), (0, 1, 2, 3)),
     ]
 );
 
@@ -812,7 +848,15 @@ mod tests {
     fn mat_supports_dot_product_1x2_2x2() {
         let a: Mat<f32, 1, 2> = Mat::from([2.0, 3.0]);
         let b: Mat<f32, 2, 2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
-        let c: Mat<f32, 1, 2> = Mat::from([8.0, 18.0]);
+        let c: Mat<f32, 1, 2> = Mat::from([11.0, 16.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_2x2_2x1() {
+        let a: Mat<f32, 2, 2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
+        let b: Mat<f32, 2, 1> = Mat::from([2.0, 3.0]);
+        let c: Mat<f32, 2, 1> = Mat::from([8.0, 18.0]);
         assert_eq!((&a).dot(&b), c);
     }
 
@@ -821,6 +865,22 @@ mod tests {
         let a: Mat<f32, 3, 3> = Mat::from([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
         let b: Mat<f32, 3, 3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
         let c: Mat<f32, 3, 3> = Mat::from([36., 42., 48., 81., 96., 111., 126., 150., 174.]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_1x3_3x3() {
+        let a: Mat<f32, 1, 3> = Mat::from([1.0, 2.0, 3.0]);
+        let b: Mat<f32, 3, 3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
+        let c: Mat<f32, 1, 3> = Mat::from([36.0, 42.0, 48.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_3x3_3x1() {
+        let a: Mat<f32, 3, 3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
+        let b: Mat<f32, 3, 1> = Mat::from([1.0, 2.0, 3.0]);
+        let c: Mat<f32, 3, 1> = Mat::from([20.0, 38.0, 56.0]);
         assert_eq!((&a).dot(&b), c);
     }
 
@@ -836,6 +896,46 @@ mod tests {
             100., 110., 120., 130., 228., 254., 280., 306., 356., 398., 440., 482., 484., 542., 600., 658.,
         ]);
         assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_1x4_4x4() {
+        let a: Mat<f32, 1, 4> = Mat::from([1.0, 2.0, 3.0, 4.0]);
+        let b: Mat<f32, 4, 4> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]);
+        let c: Mat<f32, 1, 4> = Mat::from([100.0, 110.0, 120.0, 130.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_4x4_4x1() {
+        let a: Mat<f32, 4, 4> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]);
+        let b: Mat<f32, 4, 1> = Mat::from([1.0, 2.0, 3.0, 3.0]);
+        let c: Mat<f32, 4, 1> = Mat::from([35.0, 71.0, 107.0, 143.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat2_x_vec2_works_as_premultiplication_of_the_matrix() {
+        let m: Mat2<f32> = Mat2::identity();
+        let v: Vec2<f32> = Vec2::one();
+
+        assert_eq!(m * v, Vec2::one());
+    }
+
+    #[test]
+    fn mat3_x_vec3_works_as_premultiplication_of_the_matrix() {
+        let m: Mat3<f32> = Mat3::identity();
+        let v: Vec3<f32> = Vec3::one();
+
+        assert_eq!(m * v, Vec3::one());
+    }
+
+    #[test]
+    fn mat4_x_vec4_works_as_premultiplication_of_the_matrix() {
+        let m: Mat4<f32> = Mat4::identity();
+        let v: Vec4<f32> = Vec4::one();
+
+        assert_eq!(m * v, Vec4::one());
     }
 
     #[test]
