@@ -10,33 +10,43 @@ use crate::{
     abop,
 };
 
-pub type Vec2<R> = Mat<R, 1, 2>;
+/// Vector of 2 dimensions, interpreted as column
+pub type Vec2<R> = Mat<R, 2, 1>;
 
 impl<R> Vec2<R> {
     pub fn new(x: R, y: R) -> Self {
-        Mat([[x, y]])
+        Mat([[x], [y]])
     }
 }
 
-pub type Vec3<R> = Mat<R, 1, 3>;
+/// Vector of 3 dimensions, interpreted as column
+pub type Vec3<R> = Mat<R, 3, 1>;
 
 impl<R> Vec3<R> {
     pub fn new(x: R, y: R, z: R) -> Self {
-        Mat([[x, y, z]])
+        Mat([[x], [y], [z]])
     }
 }
-pub type Vec4<R> = Mat<R, 1, 4>;
+
+/// Vector of 4 dimensions, interpreted as column
+pub type Vec4<R> = Mat<R, 4, 1>;
 
 impl<R> Vec4<R> {
     pub fn new(x: R, y: R, z: R, w: R) -> Self {
-        Mat([[x, y, z, w]])
+        Mat([[x], [y], [z], [w]])
     }
 }
 
+/// Matrix of 2x2 dimensions
 pub type Mat2<R> = Mat<R, 2, 2>;
+
+/// Matrix of 3x3 dimensions
 pub type Mat3<R> = Mat<R, 3, 3>;
+
+/// Matrix of 4x4 dimensions
 pub type Mat4<R> = Mat<R, 4, 4>;
 
+/// Generalized matrix type, with data stored in row-major format.
 #[derive(Debug, PartialEq)]
 pub struct Mat<R, const N: usize, const M: usize>([[R; M]; N]);
 
