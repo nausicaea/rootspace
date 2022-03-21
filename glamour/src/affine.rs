@@ -1,6 +1,7 @@
 use num_traits::{Zero, One, Float, NumAssign};
-use crate::mat::{Vec3, Mat4};
+use crate::mat::{Vec3, Mat4, Mat3};
 use crate::quat::Quat;
+use std::iter::Sum;
 
 #[derive(Debug, PartialEq)]
 pub struct Affine<R> {
@@ -42,11 +43,33 @@ where
 
 impl<'a, R> From<&'a Mat4<R>> for Affine<R> 
 where
-    R: Copy,
+    R: Copy + Zero + NumAssign + Float + Sum + std::fmt::Debug,
 {
-    fn from(_v: &'a Mat4<R>) -> Self {
-        //let t = Vec3::from([v[(0, 3)], v[(1, 3)], v[(2, 3)]]);
-        todo!()
+    fn from(v: &'a Mat4<R>) -> Self {
+        let t: Vec3<R> = v.subset::<3, 1>(0, 3);
+
+        let s = Vec3::new(
+            v.col(0).norm(),
+            v.col(1).norm(),
+            v.col(2).norm(),
+        );
+
+        let mut rot_m: Mat3<R> = v.subset::<3, 3>(0, 0);
+        rot_m[(0, 0)] /= s[0];
+        rot_m[(1, 0)] /= s[0];
+        rot_m[(2, 0)] /= s[0];
+        rot_m[(0, 1)] /= s[1];
+        rot_m[(1, 1)] /= s[1];
+        rot_m[(2, 1)] /= s[1];
+        rot_m[(0, 2)] /= s[2];
+        rot_m[(1, 2)] /= s[2];
+        rot_m[(2, 2)] /= s[2];
+
+        let o = Quat::from(&rot_m);
+
+        Affine {
+            t, o, s,
+        }
     }
 }
 
@@ -133,5 +156,11 @@ mod tests {
     fn mat4_implements_from_ref_affine() {
         let a: Affine<f32> = Affine::identity();
         assert_eq!(Mat4::<f32>::from(&a), Mat4::<f32>::identity());
+    }
+
+    #[test]
+    fn affine_implements_from_ref_mat4() {
+        let m: Mat4<f32> = Mat4::identity();
+        assert_eq!(Affine::<f32>::from(&m), Affine::<f32>::identity());
     }
 }

@@ -11,7 +11,7 @@ use crate::{
 };
 
 /// Vector of 2 dimensions, interpreted as column
-pub type Vec2<R> = Mat<R, 2, 1>;
+pub type Vec2<R> = Vec<R, 2>;
 
 impl<R> Vec2<R> {
     pub fn new(x: R, y: R) -> Self {
@@ -20,7 +20,7 @@ impl<R> Vec2<R> {
 }
 
 /// Vector of 3 dimensions, interpreted as column
-pub type Vec3<R> = Mat<R, 3, 1>;
+pub type Vec3<R> = Vec<R, 3>;
 
 impl<R> Vec3<R> {
     pub fn new(x: R, y: R, z: R) -> Self {
@@ -29,13 +29,16 @@ impl<R> Vec3<R> {
 }
 
 /// Vector of 4 dimensions, interpreted as column
-pub type Vec4<R> = Mat<R, 4, 1>;
+pub type Vec4<R> = Vec<R, 4>;
 
 impl<R> Vec4<R> {
     pub fn new(x: R, y: R, z: R, w: R) -> Self {
         Mat([[x], [y], [z], [w]])
     }
 }
+
+// Generalized vector, interpreted as column
+pub type Vec<R, const I: usize> = Mat<R, I, 1>;
 
 /// Matrix of 2x2 dimensions
 pub type Mat2<R> = Mat<R, 2, 2>;
@@ -48,55 +51,55 @@ pub type Mat4<R> = Mat<R, 4, 4>;
 
 /// Generalized matrix type, with data stored in row-major format.
 #[derive(Debug, PartialEq)]
-pub struct Mat<R, const N: usize, const M: usize>([[R; M]; N]);
+pub struct Mat<R, const I: usize, const J: usize>([[R; J]; I]);
 
-impl<R, const N: usize, const M: usize> Mat<R, N, M> {
+impl<R, const I: usize, const J: usize> Mat<R, I, J> {
     fn as_2d_idx(idx: usize) -> (usize, usize) {
-        (idx / M, idx % M)
+        (idx / J, idx % J)
     }
 }
 
-impl<R, const N: usize, const M: usize> Mat<R, N, M> 
+impl<R, const I: usize, const J: usize> Mat<R, I, J> 
 where
     R: Copy + Zero,
 {
-    pub fn col(&self, m: usize) -> Mat<R, N, 1> {
-        if m >= M {
-            panic!("Index m is out of bounds (max: {}, actual: {})", M, m);
+    pub fn col(&self, j: usize) -> Mat<R, I, 1> {
+        if j >= J {
+            panic!("Index j is out of bounds (max: {}, actual: {})", J, j);
         }
-        let mut mat = Mat::<R, N, 1>::zero();
-        for n in 0..N {
-            mat[(n, 0)] = self[(n, m)];
-        }
-        mat
-    }
-
-    pub fn row(&self, n: usize) -> Mat<R, 1, M> {
-        if n >= N {
-            panic!("Index n is out of bounds (max: {}, actual: {})", N, n);
-        }
-        let mut mat = Mat::<R, 1, M>::zero();
-        for m in 0..M {
-            mat[(0, m)] = self[(n, m)];
+        let mut mat = Mat::<R, I, 1>::zero();
+        for i in 0..I {
+            mat[(i, 0)] = self[(i, j)];
         }
         mat
     }
 
-    pub fn subset<const O: usize, const P: usize>(&self, n: usize, m: usize) -> Mat<R, O, P> {
-        debug_assert!(O <= N && P <= M);
-        debug_assert!(n + O <= N && m + P <= M);
+    pub fn row(&self, i: usize) -> Mat<R, 1, J> {
+        if i >= I {
+            panic!("Index i is out of bounds (max: {}, actual: {})", I, i);
+        }
+        let mut mat = Mat::<R, 1, J>::zero();
+        for j in 0..J {
+            mat[(0, j)] = self[(i, j)];
+        }
+        mat
+    }
+
+    pub fn subset<const O: usize, const P: usize>(&self, i: usize, j: usize) -> Mat<R, O, P> {
+        debug_assert!(O <= I && P <= J);
+        debug_assert!(i + O <= I && j + P <= J);
 
         let mut mat = Mat::<R, O, P>::zero();
         for o in 0..O {
             for p in 0..P {
-                mat[(o, p)] = self[(n + o, m + p)];
+                mat[(o, p)] = self[(i + o, j + p)];
             }
         }
         mat
     }
 }
 
-impl<R, const N: usize, const M: usize> Mat<R, N, M> 
+impl<R, const I: usize, const J: usize> Mat<R, I, J> 
 where
     R: Float + Sum,
 {
@@ -105,22 +108,22 @@ where
     }
 }
 
-impl<R, const N: usize, const M: usize> Mat<R, N, M>
+impl<R, const I: usize, const J: usize> Mat<R, I, J>
 where
     R: Zero + Copy,
 {
-    pub fn t(&self) -> Mat<R, M, N> {
-        let mut mat = Mat::<R, M, N>::zero();
-        for n in 0..N {
-            for m in 0..M {
-                mat[(m, n)] = self[(n, m)];
+    pub fn t(&self) -> Mat<R, J, I> {
+        let mut mat = Mat::<R, J, I>::zero();
+        for i in 0..I {
+            for j in 0..J {
+                mat[(j, i)] = self[(i, j)];
             }
         }
         mat
     }
 }
 
-impl<R, const N: usize, const M: usize> Mat<R, N, M>
+impl<R, const I: usize, const J: usize> Mat<R, I, J>
 where
     R: Float,
 {
@@ -130,54 +133,68 @@ where
 }
 
 
-impl<R, const N: usize, const M: usize> Mat<R, N, M>
+impl<R, const I: usize, const J: usize> Mat<R, I, J>
 where
     R: Zero + Copy,
 {
     pub fn zero() -> Self {
-        Mat([[R::zero(); M]; N])
+        Mat([[R::zero(); J]; I])
     }
 }
 
-impl<R, const N: usize, const M: usize> Mat<R, N, M>
+impl<R, const I: usize, const J: usize> Mat<R, I, J>
 where
     R: One + Copy,
 {
     pub fn one() -> Self {
-        Mat([[R::one(); M]; N])
+        Mat([[R::one(); J]; I])
     }
 }
 
-impl<R, const N: usize> Mat<R, N, N>
+impl<R, const I: usize> Mat<R, I, I>
 where
     R: Zero + One + Copy,
 {
     pub fn identity() -> Self {
-        let mut mat = Mat::<R, N, N>::zero();
-        for n in 0..N {
-            mat[(n, n)] = R::one();
+        let mut mat = Mat::<R, I, I>::zero();
+        for i in 0..I {
+            mat[(i, i)] = R::one();
         }
 
         mat
     }
 }
 
-impl<R, const N: usize, const M: usize> std::fmt::Display for Mat<R, N, M>
+impl<R, const I: usize> Mat<R, I, I> 
+where
+    R: Zero + Copy,
+{
+    pub fn diag(&self) -> Vec<R, I> {
+        let mut mat = Vec::<R, I>::zero();
+        for i in 0..I {
+            mat[i] = self[(i, i)];
+        }
+
+        mat
+    }
+}
+
+impl<R, const I: usize, const J: usize> std::fmt::Display for Mat<R, I, J>
 where
     R: std::fmt::Display,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "[")?;
-        for n in 0..N {
+        for i in 0..I {
             write!(f, "[")?;
-            for m in 0..M {
-                write!(f, "{}", self[(n, m)])?;
-                if m < M - 1 {
+            for j in 0..J {
+                write!(f, "{}", self[(i, j)])?;
+                if j < J - 1 {
                     write!(f, ", ")?;
                 }
             }
             write!(f, "]")?;
-            if n < N - 1 {
+            if i < I - 1 {
                 write!(f, ", ")?;
             }
         }
@@ -185,8 +202,8 @@ where
     }
 }
 
-impl<R, const N: usize, const M: usize> From<[[R; M]; N]> for Mat<R, N, M> {
-    fn from(v: [[R; M]; N]) -> Self {
+impl<R, const I: usize, const J: usize> From<[[R; J]; I]> for Mat<R, I, J> {
+    fn from(v: [[R; J]; I]) -> Self {
         Mat(v)
     }
 }
@@ -198,12 +215,12 @@ impl<R> From<R> for Mat<R, 1, 1> {
 }
 
 macro_rules! impl_from_1d_array {
-    ($N:literal, $M:literal, [$([$($i:literal),+ $(,)*]),+ $(,)*] $(,)*) => {
-        impl<R> From<[R; $N * $M]> for Mat<R, $N, $M>
+    ($I:literal, $J:literal, [$([$($i:literal),+ $(,)*]),+ $(,)*] $(,)*) => {
+        impl<R> From<[R; $I * $J]> for Mat<R, $I, $J>
             where
                 R: Copy,
         {
-            fn from(v: [R; $N * $M]) -> Self {
+            fn from(v: [R; $I * $J]) -> Self {
                 Mat([$(
                     [$(v[$i]),+],
                 )+])
@@ -229,23 +246,23 @@ impl_from_1d_array!(4, 2, [[0, 1], [2, 3], [4, 5], [6, 7]]);
 impl_from_1d_array!(4, 3, [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11]]);
 impl_from_1d_array!(4, 4, [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]);
 
-impl<R, const N: usize, const M: usize> Index<usize> for Mat<R, N, M> {
+impl<R, const I: usize, const J: usize> Index<usize> for Mat<R, I, J> {
     type Output = R;
 
     fn index(&self, index: usize) -> &Self::Output {
-        let (n, m) = Self::as_2d_idx(index);
-        Index::<(usize, usize)>::index(self, (n, m))
+        let (i, j) = Self::as_2d_idx(index);
+        Index::<(usize, usize)>::index(self, (i, j))
     }
 }
 
-impl<R, const N: usize, const M: usize> IndexMut<usize> for Mat<R, N, M> {
+impl<R, const I: usize, const J: usize> IndexMut<usize> for Mat<R, I, J> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        let (n, m) = Self::as_2d_idx(index);
-        IndexMut::<(usize, usize)>::index_mut(self, (n, m))
+        let (i, j) = Self::as_2d_idx(index);
+        IndexMut::<(usize, usize)>::index_mut(self, (i, j))
     }
 }
 
-impl<R, const N: usize, const M: usize> Index<(usize, usize)> for Mat<R, N, M> {
+impl<R, const I: usize, const J: usize> Index<(usize, usize)> for Mat<R, I, J> {
     type Output = R;
 
     fn index(&self, index: (usize, usize)) -> &Self::Output {
@@ -253,7 +270,7 @@ impl<R, const N: usize, const M: usize> Index<(usize, usize)> for Mat<R, N, M> {
     }
 }
 
-impl<R, const N: usize, const M: usize> IndexMut<(usize, usize)> for Mat<R, N, M> {
+impl<R, const I: usize, const J: usize> IndexMut<(usize, usize)> for Mat<R, I, J> {
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         self.0.index_mut(index.0).index_mut(index.1)
     }
@@ -262,28 +279,28 @@ impl<R, const N: usize, const M: usize> IndexMut<(usize, usize)> for Mat<R, N, M
 macro_rules! impl_scalar_matops {
     ($($Op:ident, $op:ident, [$($tgt:ident),+ $(,)*]);+ $(;)*) => {
         $(
-        impl<R, const N: usize, const M: usize> $Op<R> for Mat<R, N, M>
+        impl<R, const I: usize, const J: usize> $Op<R> for Mat<R, I, J>
             where
                 R: Num + Copy,
         {
-            type Output = Mat<R, N, M>;
+            type Output = Mat<R, I, J>;
 
             fn $op(self, rhs: R) -> Self::Output {
                 (&self).$op(&rhs)
             }
         }
 
-        impl<'a, R, const N: usize, const M: usize> $Op<&'a R> for &'a Mat<R, N, M>
+        impl<'a, R, const I: usize, const J: usize> $Op<&'a R> for &'a Mat<R, I, J>
             where
                 R: Num + Copy,
         {
-            type Output = Mat<R, N, M>;
+            type Output = Mat<R, I, J>;
 
             fn $op(self, rhs: &'a R) -> Self::Output {
-                let mut mat = Mat::<R, N, M>::zero();
-                for n in 0..N {
-                    for m in 0..M {
-                        mat[(n, m)] = self[(n, m)].$op(*rhs);
+                let mut mat = Mat::<R, I, J>::zero();
+                for i in 0..I {
+                    for j in 0..J {
+                        mat[(i, j)] = self[(i, j)].$op(*rhs);
                     }
                 }
                 mat
@@ -291,22 +308,22 @@ macro_rules! impl_scalar_matops {
         }
 
         $(
-        impl<const N: usize, const M: usize> $Op<Mat<$tgt, N, M>> for $tgt {
-            type Output = Mat<$tgt, N, M>;
+        impl<const I: usize, const J: usize> $Op<Mat<$tgt, I, J>> for $tgt {
+            type Output = Mat<$tgt, I, J>;
 
-            fn $op(self, rhs: Mat<$tgt, N, M>) -> Self::Output {
+            fn $op(self, rhs: Mat<$tgt, I, J>) -> Self::Output {
                 (&self).$op(&rhs)
             }
         }
 
-        impl<'a, const N: usize, const M: usize> $Op<&'a Mat<$tgt, N, M>> for &'a $tgt {
-            type Output = Mat<$tgt, N, M>;
+        impl<'a, const I: usize, const J: usize> $Op<&'a Mat<$tgt, I, J>> for &'a $tgt {
+            type Output = Mat<$tgt, I, J>;
 
-            fn $op(self, rhs: &'a Mat<$tgt, N, M>) -> Self::Output {
-                let mut mat = Mat::<$tgt, N, M>::zero();
-                for n in 0..N {
-                    for m in 0..M {
-                        mat[(n, m)] = self.$op(rhs[(n, m)]);
+            fn $op(self, rhs: &'a Mat<$tgt, I, J>) -> Self::Output {
+                let mut mat = Mat::<$tgt, I, J>::zero();
+                for i in 0..I {
+                    for j in 0..J {
+                        mat[(i, j)] = self.$op(rhs[(i, j)]);
                     }
                 }
                 mat
@@ -328,28 +345,28 @@ impl_scalar_matops!(
 macro_rules! impl_elemwise_matops {
     ($($Op:ident, $op:ident);+ $(;)*) => {
         $(
-        impl<R, const N: usize, const M: usize> $Op for Mat<R, N, M>
+        impl<R, const I: usize, const J: usize> $Op for Mat<R, I, J>
             where
                 R: Num + Copy,
         {
-            type Output = Mat<R, N, M>;
+            type Output = Mat<R, I, J>;
 
             fn $op(self, rhs: Self) -> Self::Output {
                 (&self).$op(&rhs)
             }
         }
 
-        impl<'a, R, const N: usize, const M: usize> $Op for &'a Mat<R, N, M>
+        impl<'a, R, const I: usize, const J: usize> $Op for &'a Mat<R, I, J>
             where
                 R: Num + Copy,
         {
-            type Output = Mat<R, N, M>;
+            type Output = Mat<R, I, J>;
 
             fn $op(self, rhs: Self) -> Self::Output {
-                let mut mat = Mat::<R, N, M>::zero();
-                for n in 0..N {
-                    for m in 0..M {
-                        mat[(n, m)] = self[(n, m)].$op(rhs[(n, m)]);
+                let mut mat = Mat::<R, I, J>::zero();
+                for i in 0..I {
+                    for j in 0..J {
+                        mat[(i, j)] = self[(i, j)].$op(rhs[(i, j)]);
                     }
                 }
                 mat
@@ -974,6 +991,12 @@ mod tests {
     fn mat_provides_norm_method() {
         let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         assert_eq!(a.norm(), 5.477225575051661f32);
+    }
+
+    #[test]
+    fn mat_probides_diag_method() {
+        let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        assert_eq!(a.diag(), Vec2::new(1.0f32, 4.0f32));
     }
 
     #[test]
