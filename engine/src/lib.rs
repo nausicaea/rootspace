@@ -10,7 +10,7 @@ pub mod systems;
 pub mod text_manipulation;
 mod utilities;
 
-pub const APP_QUALIFIER: &str = "org";
+pub const APP_QUALIFIER: &str = "net";
 pub const APP_ORGANIZATION: &str = "nausicaea";
 
 pub use self::{
