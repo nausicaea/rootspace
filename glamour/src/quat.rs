@@ -1,6 +1,6 @@
-use num_traits::{Zero, One, Float, Num};
-use crate::mat::{Mat4, Mat3};
-use std::ops::Mul;
+use num_traits::{Zero, One, Float, Num, Signed};
+use crate::mat::{Mat4, Mat3, Vec4};
+use std::ops::{Div, Mul};
 
 #[derive(Debug, PartialEq)]
 pub struct Quat<R> {
@@ -18,10 +18,32 @@ impl<R> Quat<R> {
 
 impl<R> Quat<R>
 where
+    R: Num + Signed + Copy,
+{
+    pub fn c(&self) -> Self {
+        Quat::new(self.w, -self.i, -self.j, -self.k)
+    }
+}
+
+impl<R> Quat<R> 
+where
+    R: Float + Signed + Copy,
+{
+    pub fn inv(&self) -> Self {
+        self.c() / self.abssq()
+    }
+}
+
+impl<R> Quat<R>
+where
     R: Float,
 {
+    pub fn abssq(&self) -> R {
+        self.w.powi(2) + self.i.powi(2) + self.j.powi(2) + self.k.powi(2)
+    }
+
     pub fn norm(&self) -> R {
-        (self.w.powi(2) + self.i.powi(2) + self.j.powi(2) + self.k.powi(2)).sqrt()
+        self.abssq().sqrt()
     }
 }
 
@@ -97,7 +119,68 @@ macro_rules! impl_scalar_quatops {
 
 impl_scalar_quatops! (
     Mul, mul, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
+    Div, div, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
 );
+
+impl<R> Mul<Vec4<R>> for Quat<R> 
+where
+    R: Num + Copy + Zero + Signed,
+{
+    type Output = Vec4<R>;
+
+    fn mul(self, rhs: Vec4<R>) -> Self::Output {
+        (&self).mul(&rhs)
+    }
+}
+
+impl<'a, R> Mul<&'a Vec4<R>> for &'a Quat<R> 
+where
+    R: Num + Copy + Zero + Signed,
+{
+    type Output = Vec4<R>;
+
+    fn mul(self, rhs: &'a Vec4<R>) -> Self::Output {
+        let q = Quat::new(R::zero(), rhs.x(), rhs.y(), rhs.z());
+        let rhs_1 = self * &q * self.c();
+        Vec4::new(rhs_1.i, rhs_1.j, rhs_1.k, rhs.w())
+    }
+}
+
+impl<R> Mul<Quat<R>> for Quat<R> 
+where
+    R: Num + Copy,
+{
+    type Output = Quat<R>;
+
+    fn mul(self, rhs: Quat<R>) -> Self::Output {
+        (&self).mul(&rhs)
+    }
+}
+
+impl<'a, R> Mul<&'a Quat<R>> for &'a Quat<R> 
+where
+    R: Num + Copy,
+{
+    type Output = Quat<R>;
+
+    fn mul(self, rhs: &'a Quat<R>) -> Self::Output {
+        let a1 = self.w;
+        let b1 = self.i;
+        let c1 = self.j;
+        let d1 = self.k;
+        let a2 = rhs.w;
+        let b2 = rhs.i;
+        let c2 = rhs.j;
+        let d2 = rhs.k;
+
+        Quat::new(
+            a1 * a2 - b1 * b2 - c1 * c2 - d1 * d2,
+            a1 * b2 + b1 * a2 + c1 * d2 - d1 * c2,
+            a1 * c2 - b1 * d2 + c1 * a2 + d1 * b2,
+            a1 * d2 + b1 * c2 - c1 * b2 + d1 * a2,
+        )
+    }
+}
 
 impl<'a, R> From<&'a Mat3<R>> for Quat<R>
 where
@@ -227,8 +310,38 @@ mod tests {
     }
 
     #[test]
-    fn quat_implements_norm_method() {
+    fn quat_implements_abssq_and_norm_methods() {
         let q = Quat::new(1.0f32, 1.0, 1.0, 1.0);
+        assert_eq!(q.abssq(), 4.0f32);
         assert_eq!(q.norm(), 2.0f32);
+    }
+
+    #[test]
+    fn quat_implements_mul_for_vec4() {
+        let q: Quat<f32> = Quat::identity();
+        let v: Vec4<f32> = Vec4::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(&q * &v, v);
+    }
+
+    #[test]
+    fn quat_implements_conjugation() {
+        let q: Quat<f32> = Quat::new(1.0, 2.0, 3.0, 4.0);
+        let c: Quat<f32> = Quat::new(1.0, -2.0, -3.0, -4.0);
+        assert_eq!(q.c(), c);
+    }
+
+    #[test]
+    fn quat_implements_inversion() {
+        let q: Quat<f32> = Quat::new(1.0, 2.0, 3.0, 4.0);
+        let i: Quat<f32> = Quat::new(1.0, -2.0, -3.0, -4.0) / 30.0;
+        assert_eq!(q.inv(), i);
+    }
+
+    #[test]
+    fn quat_implements_mul_for_quat() {
+        let a: Quat<f32> = Quat::new(1.0, 2.0, 3.0, 4.0);
+        let b: Quat<f32> = Quat::new(5.0, 6.0, 7.0, 8.0);
+
+        assert_eq!(a * b, Quat::new(-60.0, 12.0, 30.0, 24.0))
     }
 }

@@ -1,7 +1,8 @@
-use num_traits::{Zero, One, Float, NumAssign};
-use crate::mat::{Vec3, Mat4, Mat3};
+use num_traits::{Num, Zero, One, Float, NumAssign, Signed};
+use crate::mat::{Vec3, Vec4, Mat4, Mat3};
 use crate::quat::Quat;
 use std::iter::Sum;
+use std::ops::Mul;
 
 #[derive(Debug, PartialEq)]
 pub struct Affine<R> {
@@ -22,6 +23,34 @@ where
 {
     pub fn identity() -> Self {
         AffineBuilder::default().build()
+    }
+}
+
+impl<R> Mul<Vec4<R>> for Affine<R> 
+where
+    R: Num + Copy + Sum + One + Signed,
+{
+    type Output = Vec4<R>;
+
+    fn mul(self, rhs: Vec4<R>) -> Self::Output {
+        (&self).mul(&rhs)
+    }
+}
+
+impl<'a, R> Mul<&'a Vec4<R>> for &'a Affine<R> 
+where
+    R: Num + Copy + Sum + One + Signed + Zero,
+{
+    type Output = Vec4<R>;
+
+    fn mul(self, rhs: &'a Vec4<R>) -> Self::Output {
+        let scaled: Vec3<R> = self.s.mul_elementwise(&rhs.subset::<3, 1>(0, 0));
+        let scaled: Vec4<R> = Vec4::new(scaled.x(), scaled.y(), scaled.z(), rhs.w());
+        let rotated = &self.o * &scaled;
+        let t = Vec4::new(self.t.x(), self.t.y(), self.t.z(), R::zero());
+        let translated = t + rotated;
+        
+        translated
     }
 }
 
@@ -79,9 +108,9 @@ where
 {
     fn from(v: AffineBuilder<R>) -> Self {
         Affine {
-            t: v.t.unwrap_or_else(|| Vec3::zero()),
-            o: v.o.unwrap_or_else(|| Quat::identity()),
-            s: v.s.unwrap_or_else(|| Vec3::one()),
+            t: v.t.unwrap_or_else(Vec3::zero),
+            o: v.o.unwrap_or_else(Quat::identity),
+            s: v.s.unwrap_or_else(Vec3::one),
         }
     }
 }
@@ -162,5 +191,12 @@ mod tests {
     fn affine_implements_from_ref_mat4() {
         let m: Mat4<f32> = Mat4::identity();
         assert_eq!(Affine::<f32>::from(&m), Affine::<f32>::identity());
+    }
+
+    #[test]
+    fn affine_implements_mul_for_vec4() {
+        let a: Affine<f32> = Affine::identity();
+        let b: Vec4<f32> = Vec4::new(1.0, 1.0, 1.0, 1.0);
+        assert_eq!(&a * &b, b);
     }
 }

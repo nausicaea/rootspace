@@ -19,6 +19,19 @@ impl<R> Vec2<R> {
     }
 }
 
+impl<R> Vec2<R>
+where
+    R: Copy,
+{
+    pub fn x(&self) -> R {
+        self[(0, 0)]
+    }
+
+    pub fn y(&self) -> R {
+        self[(1, 0)]
+    }
+}
+
 /// Vector of 3 dimensions, interpreted as column
 pub type Vec3<R> = Vec<R, 3>;
 
@@ -28,12 +41,50 @@ impl<R> Vec3<R> {
     }
 }
 
+impl<R> Vec3<R>
+where
+    R: Copy,
+{
+    pub fn x(&self) -> R {
+        self[(0, 0)]
+    }
+
+    pub fn y(&self) -> R {
+        self[(1, 0)]
+    }
+
+    pub fn z(&self) -> R {
+        self[(2, 0)]
+    }
+}
+
 /// Vector of 4 dimensions, interpreted as column
 pub type Vec4<R> = Vec<R, 4>;
 
 impl<R> Vec4<R> {
     pub fn new(x: R, y: R, z: R, w: R) -> Self {
         Mat([[x], [y], [z], [w]])
+    }
+}
+
+impl<R> Vec4<R>
+where
+    R: Copy,
+{
+    pub fn x(&self) -> R {
+        self[(0, 0)]
+    }
+
+    pub fn y(&self) -> R {
+        self[(1, 0)]
+    }
+
+    pub fn z(&self) -> R {
+        self[(2, 0)]
+    }
+
+    pub fn w(&self) -> R {
+        self[(3, 0)]
     }
 }
 
@@ -93,6 +144,21 @@ where
         for o in 0..O {
             for p in 0..P {
                 mat[(o, p)] = self[(i + o, j + p)];
+            }
+        }
+        mat
+    }
+}
+
+impl<R, const I: usize, const J: usize> Mat<R, I, J>
+where
+    R: Copy + Num + Zero,
+{
+    pub fn mul_elementwise(&self, rhs: &Self) -> Self {
+        let mut mat = Mat::<R, I, J>::zero();
+        for i in 0..I {
+            for j in 0..J {
+                mat[(i, j)] = self[(i, j)] * rhs[(i, j)];
             }
         }
         mat
@@ -1012,5 +1078,29 @@ mod tests {
     #[test]
     fn vec4_implements_new() {
         let _: Vec4<f32> = Vec4::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
+    }
+
+    #[test]
+    fn vec2_implements_x_and_y() {
+        let v: Vec2<f32> = Vec2::new(1.0, 2.0);
+        assert_eq!(v.x(), 1.0f32);
+        assert_eq!(v.y(), 2.0f32);
+    }
+
+    #[test]
+    fn vec3_implements_x_y_and_z() {
+        let v: Vec3<f32> = Vec3::new(1.0, 2.0, 3.0);
+        assert_eq!(v.x(), 1.0f32);
+        assert_eq!(v.y(), 2.0f32);
+        assert_eq!(v.z(), 3.0f32);
+    }
+
+    #[test]
+    fn vec4_implements_x_y_z_and_w() {
+        let v: Vec4<f32> = Vec4::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(v.x(), 1.0f32);
+        assert_eq!(v.y(), 2.0f32);
+        assert_eq!(v.z(), 3.0f32);
+        assert_eq!(v.w(), 4.0f32);
     }
 }

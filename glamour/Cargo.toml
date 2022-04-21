@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 num-traits = "^0.2.14"
+num-complex = "^0.4.0"
+num-dual = "^0.5.1"
 approx = "^0.5.0"
 
 [dev-dependencies]
