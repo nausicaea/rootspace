@@ -9,7 +9,7 @@ use std::ops::Mul;
     feature = "serde_support",
     serde(bound(
         serialize = "R: serde::Serialize",
-        deserialize = "R: Copy + Zero + for<'r> serde::Deserialize<'r>"
+        deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
     ))
 )]
 #[derive(Debug, PartialEq)]

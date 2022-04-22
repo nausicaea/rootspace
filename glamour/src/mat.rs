@@ -4,10 +4,6 @@ use std::{
 };
 
 use num_traits::{Num, One, Zero, Float};
-#[cfg(feature = "serde_support")]
-use serde::{Serialize, Serializer, Deserialize, Deserializer, ser::SerializeSeq, de, de::Visitor, de::SeqAccess};
-#[cfg(feature = "serde_support")]
-use std::marker::PhantomData;
 
 use crate::{
     dot::Dot,
@@ -600,14 +596,16 @@ where
 }
 
 #[cfg(feature = "serde_support")]
-impl<R, const I: usize, const J: usize> Serialize for Mat<R, I, J> 
+impl<R, const I: usize, const J: usize> serde::ser::Serialize for Mat<R, I, J> 
 where
-    R: Serialize,
+    R: serde::ser::Serialize,
 {
     fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error> 
     where
-        S: Serializer,
+        S: serde::ser::Serializer,
     {
+        use serde::ser::SerializeSeq;
+
         let mut state = ser.serialize_seq(Some(I * J))?;
         for row in &self.0 {
             for cell in row {
@@ -619,25 +617,25 @@ where
 }
 
 #[cfg(feature = "serde_support")]
-impl<'de, R, const I: usize, const J: usize> Deserialize<'de> for Mat<R, I, J>
+impl<'de, R, const I: usize, const J: usize> serde::de::Deserialize<'de> for Mat<R, I, J>
 where
-    R: Zero + Copy + Deserialize<'de>,
+    R: Zero + Copy + serde::de::Deserialize<'de>,
 {
     fn deserialize<D>(de: D) -> Result<Self, D::Error>
     where
-        D: Deserializer<'de>,
+        D: serde::de::Deserializer<'de>,
     {
-        struct MatVisitor<R, const I: usize, const J: usize>(PhantomData<[[R; J]; I]>);
+        struct MatVisitor<R, const I: usize, const J: usize>(std::marker::PhantomData<[[R; J]; I]>);
 
         impl<R, const I: usize, const J: usize> Default for MatVisitor<R, I, J> {
             fn default() -> Self {
-                MatVisitor(PhantomData::default())
+                MatVisitor(std::marker::PhantomData::default())
             }
         }
         
-        impl<'v, R, const I: usize, const J: usize> Visitor<'v> for MatVisitor<R, I, J> 
+        impl<'v, R, const I: usize, const J: usize> serde::de::Visitor<'v> for MatVisitor<R, I, J> 
         where
-            R: Zero + Copy + Deserialize<'v>,
+            R: Zero + Copy + serde::de::Deserialize<'v>,
         {
             type Value = Mat<R, I, J>;
 
@@ -647,15 +645,17 @@ where
 
             fn visit_seq<A>(self, mut acc: A) -> Result<Self::Value, A::Error> 
             where
-                A: SeqAccess<'v>,
+                A: serde::de::SeqAccess<'v>,
             {
+                use serde::de::Error;
+
                 match acc.size_hint() {
                     Some(sh) if sh == I * J => (),
                     Some(sh) => {
-                        return Err(de::Error::invalid_length(sh, &self));
+                        return Err(Error::invalid_length(sh, &self));
                     },
                     None => {
-                        return Err(de::Error::invalid_length(0, &self));
+                        return Err(Error::invalid_length(0, &self));
                     },
                 }
 
@@ -663,7 +663,7 @@ where
 
                 for i in 0..I {
                     for j in 0..J {
-                        mat[(i, j)] = acc.next_element()?.ok_or_else(|| de::Error::custom(format!("unexpected end of the serialized sequence of length {}", I * J)))?;
+                        mat[(i, j)] = acc.next_element()?.ok_or_else(|| Error::custom(format!("unexpected end of the serialized sequence of length {}", I * J)))?;
                     }
                 }
                 

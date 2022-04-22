@@ -3,14 +3,12 @@ use std::{iter::Product, ops::Mul};
 use affine_transform::AffineTransform;
 use ecs::{Component, VecStorage};
 use nalgebra::{Affine3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3};
+use glamour::{Affine, Mat4, Vec3, Quat};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(into = "AffineTransform<f32>", from = "AffineTransform<f32>")]
-pub struct Model {
-    model: Affine3<f32>,
-    decomposed: AffineTransform<f32>,
-}
+#[serde(transparent)]
+pub struct Model(Affine<f32>);
 
 impl Model {
     pub fn builder() -> ModelBuilder {
@@ -18,16 +16,15 @@ impl Model {
     }
 
     pub fn transform_point(&self, point: &Point3<f32>) -> Point3<f32> {
-        self.model.transform_point(point)
+        self.0.transform_point(point)
     }
 
     pub fn inverse_transform_point(&self, point: &Point3<f32>) -> Point3<f32> {
-        self.model.inverse_transform_point(point)
+        self.0.inverse_transform_point(point)
     }
 
     pub fn set_position(&mut self, value: Point3<f32>) {
-        self.decomposed.translation = Translation3::new(value.x, value.y, value.z);
-        self.recalculate_matrix();
+        self.0.t = Translation3::new(value.x, value.y, value.z);
     }
 
     pub fn set_orientation(&mut self, value: UnitQuaternion<f32>) {
