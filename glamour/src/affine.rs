@@ -1,6 +1,7 @@
 use num_traits::{Num, Zero, One, Float, NumAssign, Signed};
 use crate::mat::{Vec3, Vec4, Mat4, Mat3};
 use crate::quat::Quat;
+use crate::mul_elem::MulElem;
 use std::iter::Sum;
 use std::ops::Mul;
 
@@ -12,11 +13,11 @@ use std::ops::Mul;
         deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
     ))
 )]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Affine<R> {
-    t: Vec3<R>,
-    o: Quat<R>,
-    s: Vec3<R>,
+    pub t: Vec3<R>,
+    pub o: Quat<R>,
+    pub s: Vec3<R>,
 }
 
 impl<R> Affine<R> {
@@ -52,13 +53,41 @@ where
     type Output = Vec4<R>;
 
     fn mul(self, rhs: &'a Vec4<R>) -> Self::Output {
-        let scaled: Vec3<R> = self.s.mul_elementwise(&rhs.subset::<3, 1>(0, 0));
+        let scaled: Vec3<R> = (&self.s).mul_elementwise(&rhs.subset::<3, 1>(0, 0));
         let scaled: Vec4<R> = Vec4::new(scaled.x(), scaled.y(), scaled.z(), rhs.w());
         let rotated = &self.o * &scaled;
         let t = Vec4::new(self.t.x(), self.t.y(), self.t.z(), R::zero());
         let translated = t + rotated;
         
         translated
+    }
+}
+
+impl<R> Mul for Affine<R>
+where
+    R: Copy + Num + Zero,
+{
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        (&self).mul(&rhs)
+    }
+}
+
+impl<'a, R> Mul for &'a Affine<R>
+where
+    R: Copy + Num + Zero,
+{
+    type Output = Affine<R>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        use std::ops::Add;
+
+        Affine {
+            t: (&self.t).add(&rhs.t),
+            o: (&self.o).mul(&rhs.o),
+            s: (&self.s).mul_elementwise(&rhs.s),
+        }
     }
 }
 
@@ -123,6 +152,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct AffineBuilder<R> {
     t: Option<Vec3<R>>,
     o: Option<Quat<R>>,

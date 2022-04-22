@@ -6,6 +6,7 @@ use std::{
 use num_traits::{Num, One, Zero, Float};
 
 use crate::{
+    mul_elem::MulElem,
     dot::Dot,
     abop,
 };
@@ -101,7 +102,7 @@ pub type Mat3<R> = Mat<R, 3, 3>;
 pub type Mat4<R> = Mat<R, 4, 4>;
 
 /// Generalized matrix type, with data stored in row-major format.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Mat<R, const I: usize, const J: usize>([[R; J]; I]);
 
 impl<R, const I: usize, const J: usize> Mat<R, I, J> {
@@ -155,11 +156,24 @@ where
     }
 }
 
-impl<R, const I: usize, const J: usize> Mat<R, I, J>
+impl<R, const I: usize, const J: usize> MulElem for Mat<R, I, J>
 where
     R: Copy + Num + Zero,
 {
-    pub fn mul_elementwise(&self, rhs: &Self) -> Self {
+    type Output = Self;
+
+    fn mul_elementwise(self, rhs: Self) -> Self::Output {
+        (&self).mul_elementwise(&rhs)
+    }
+}
+
+impl<'a, R, const I: usize, const J: usize> MulElem for &'a Mat<R, I, J>
+where 
+    R: Copy + Num + Zero,
+{
+    type Output = Mat<R, I, J>;
+
+    fn mul_elementwise(self, rhs: Self) -> Self::Output {
         let mut mat = Mat::<R, I, J>::zero();
         for i in 0..I {
             for j in 0..J {
@@ -420,7 +434,7 @@ macro_rules! impl_elemwise_matops {
             where
                 R: Num + Copy,
         {
-            type Output = Mat<R, I, J>;
+            type Output = Self;
 
             fn $op(self, rhs: Self) -> Self::Output {
                 (&self).$op(&rhs)

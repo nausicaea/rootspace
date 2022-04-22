@@ -3,12 +3,21 @@ use crate::mat::{Mat4, Mat3, Vec4};
 use std::ops::{Div, Mul};
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Quat<R> {
-    w: R,
-    i: R,
-    j: R,
-    k: R,
+    pub w: R,
+    pub i: R,
+    pub j: R,
+    pub k: R,
+}
+
+impl<R> std::fmt::Display for Quat<R>
+where
+    R: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{} + i{} + j{} + k{}", self.w, self.i, self.j, self.k)
+    }
 }
 
 impl<R> Quat<R> {
@@ -147,24 +156,24 @@ where
     }
 }
 
-impl<R> Mul<Quat<R>> for Quat<R> 
+impl<R> Mul for Quat<R> 
 where
     R: Num + Copy,
 {
-    type Output = Quat<R>;
+    type Output = Self;
 
-    fn mul(self, rhs: Quat<R>) -> Self::Output {
+    fn mul(self, rhs: Self) -> Self::Output {
         (&self).mul(&rhs)
     }
 }
 
-impl<'a, R> Mul<&'a Quat<R>> for &'a Quat<R> 
+impl<'a, R> Mul for &'a Quat<R> 
 where
     R: Num + Copy,
 {
     type Output = Quat<R>;
 
-    fn mul(self, rhs: &'a Quat<R>) -> Self::Output {
+    fn mul(self, rhs: Self) -> Self::Output {
         let a1 = self.w;
         let b1 = self.i;
         let c1 = self.j;

@@ -2,8 +2,7 @@ use std::{iter::Product, ops::Mul};
 
 use affine_transform::AffineTransform;
 use ecs::{Component, VecStorage};
-use nalgebra::{Affine3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3};
-use glamour::{Affine, Mat4, Vec3, Quat};
+use glamour::{Affine, Mat4, Vec3, Quat, Point3, AffineBuilder};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -23,38 +22,32 @@ impl Model {
         self.0.inverse_transform_point(point)
     }
 
-    pub fn set_position(&mut self, value: Point3<f32>) {
-        self.0.t = Translation3::new(value.x, value.y, value.z);
+    pub fn set_translation(&mut self, value: Vec3<f32>) {
+        self.0.t = value;
     }
 
-    pub fn set_orientation(&mut self, value: UnitQuaternion<f32>) {
-        self.decomposed.rotation = value;
-        self.recalculate_matrix();
+    pub fn set_orientation(&mut self, value: Quat<f32>) {
+        self.0.o = value;
     }
 
-    pub fn set_scale(&mut self, value: Vector3<f32>) {
-        self.decomposed.scale = value;
-        self.recalculate_matrix();
+    pub fn set_scale(&mut self, value: Vec3<f32>) {
+        self.0.s = value;
     }
 
-    pub fn matrix(&self) -> &Matrix4<f32> {
-        self.model.matrix()
+    pub fn to_matrix(&self) -> Mat4<f32> {
+        (&self.0).into()
     }
 
-    pub fn position(&self) -> Point3<f32> {
-        Point3::from(self.decomposed.translation.vector)
+    pub fn translation(&self) -> &Vec3<f32> {
+        &self.0.t
     }
 
-    pub fn orientation(&self) -> UnitQuaternion<f32> {
-        self.decomposed.rotation
+    pub fn orientation(&self) -> &Quat<f32> {
+        &self.0.o
     }
 
-    pub fn scale(&self) -> Vector3<f32> {
-        self.decomposed.scale
-    }
-
-    fn recalculate_matrix(&mut self) {
-        self.model = self.decomposed.recompose();
+    pub fn scale(&self) -> &Vec3<f32> {
+        &self.0.s
     }
 }
 
@@ -72,7 +65,7 @@ impl Mul<Model> for Model {
     type Output = Model;
 
     fn mul(self, rhs: Model) -> Model {
-        &self * &rhs
+        (&self).mul(&rhs)
     }
 }
 
@@ -80,12 +73,7 @@ impl<'a, 'b> Mul<&'a Model> for &'b Model {
     type Output = Model;
 
     fn mul(self, rhs: &'a Model) -> Model {
-        let product = &self.model * &rhs.model;
-
-        Model {
-            model: product,
-            decomposed: product.into(),
-        }
+        Model((&self.0).mul(&rhs.0))
     }
 }
 
@@ -101,18 +89,15 @@ impl Product for Model {
     }
 }
 
-impl From<AffineTransform<f32>> for Model {
-    fn from(value: AffineTransform<f32>) -> Self {
-        Model {
-            model: value.recompose(),
-            decomposed: value,
-        }
+impl From<Affine<f32>> for Model {
+    fn from(value: Affine<f32>) -> Self {
+        Model(value)
     }
 }
 
-impl From<Model> for AffineTransform<f32> {
+impl From<Model> for Affine<f32> {
     fn from(value: Model) -> Self {
-        value.decomposed
+        value.0
     }
 }
 
@@ -121,61 +106,44 @@ impl std::fmt::Display for Model {
         write!(
             f,
             "position: [{}, {}, {}], orientation: {}, scale: [{}, {}, {}]",
-            self.position().x,
-            self.position().y,
-            self.position().z,
+            self.translation().x(),
+            self.translation().y(),
+            self.translation().z(),
             self.orientation(),
-            self.scale().x,
-            self.scale().y,
-            self.scale().z
+            self.scale().x(),
+            self.scale().y(),
+            self.scale().z(),
         )
     }
 }
 
 #[derive(Debug)]
-pub struct ModelBuilder {
-    position: Point3<f32>,
-    orientation: UnitQuaternion<f32>,
-    scale: Vector3<f32>,
-}
+pub struct ModelBuilder(AffineBuilder<f32>);
 
 impl ModelBuilder {
-    pub fn with_position(mut self, position: Point3<f32>) -> Self {
-        self.position = position;
+    pub fn with_translation(mut self, t: Vec3<f32>) -> Self {
+        self.0 = self.0.with_translation(t);
         self
     }
 
-    pub fn with_orientation(mut self, orientation: UnitQuaternion<f32>) -> Self {
-        self.orientation = orientation;
+    pub fn with_orientation(mut self, o: Quat<f32>) -> Self {
+        self.0 = self.0.with_orientation(o);
         self
     }
 
-    pub fn with_scale(mut self, scale: Vector3<f32>) -> Self {
-        self.scale = scale;
+    pub fn with_scale(mut self, s: Vec3<f32>) -> Self {
+        self.0 = self.0.with_scale(s);
         self
     }
 
     pub fn build(self) -> Model {
-        let at = AffineTransform::from_parts(
-            Translation3::new(self.position.x, self.position.y, self.position.z),
-            self.orientation,
-            self.scale,
-        );
-
-        Model {
-            model: at.recompose(),
-            decomposed: at,
-        }
+        Model(self.0.build())
     }
 }
 
 impl Default for ModelBuilder {
     fn default() -> Self {
-        ModelBuilder {
-            position: Point3::from([0.0; 3]),
-            orientation: UnitQuaternion::identity(),
-            scale: Vector3::new(1.0, 1.0, 1.0),
-        }
+        ModelBuilder(AffineBuilder::default())
     }
 }
 
@@ -215,7 +183,7 @@ mod tests {
 
     #[test]
     fn builder_accepts_position() {
-        let _: ModelBuilder = ModelBuilder::default().with_position(Point3::from(Vector3::new(0.0, 0.0, 0.0)));
+        let _: ModelBuilder = ModelBuilder::default().with_position(Point3::from(Vec3::new(0.0, 0.0, 0.0)));
     }
 
     #[test]
@@ -226,7 +194,7 @@ mod tests {
 
     #[test]
     fn builder_accepts_scale() {
-        let _: ModelBuilder = ModelBuilder::default().with_scale(Vector3::new(0.0, 0.0, 0.0));
+        let _: ModelBuilder = ModelBuilder::default().with_scale(Vec3::new(0.0, 0.0, 0.0));
     }
 
     #[test]
@@ -234,12 +202,12 @@ mod tests {
         let m: Model = ModelBuilder::default()
             .with_position(Point3::from([zero(); 3]))
             .with_orientation(Unit::new_normalize(Quaternion::identity()))
-            .with_scale(Vector3::from([zero(); 3]))
+            .with_scale(Vec3::from([zero(); 3]))
             .build();
 
         assert_ulps_eq!(m.position(), Point3::from([zero(); 3]));
         assert_ulps_eq!(m.orientation(), Unit::new_normalize(Quaternion::identity()));
-        assert_ulps_eq!(m.scale(), Vector3::from([zero(); 3]));
+        assert_ulps_eq!(m.scale(), Vec3::from([zero(); 3]));
     }
 
     #[test]
@@ -247,7 +215,7 @@ mod tests {
         let m: Model = ModelBuilder::default()
             .with_position(Point3::from([zero(); 3]))
             .with_orientation(Unit::new_normalize(Quaternion::identity()))
-            .with_scale(Vector3::from([one(); 3]))
+            .with_scale(Vec3::from([one(); 3]))
             .build();
         let p: Point3<f32> = Point3::from([zero(); 3]);
 
@@ -291,7 +259,7 @@ mod tests {
         fn scale_may_be_changed(num: [f32; 3]) {
             let mut m = Model::default();
 
-            let s = Vector3::new(num[0], num[1], num[2]);
+            let s = Vec3::new(num[0], num[1], num[2]);
             m.set_scale(s);
 
             if !validate_float(&num) {
