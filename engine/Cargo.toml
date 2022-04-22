@@ -32,6 +32,7 @@ ecs = { path = "../ecs" }
 file-manipulation = { path = "../file-manipulation", features = ["serde_support"] }
 term-table = "^1.3.1"
 rose-tree = { path = "../rose-tree", features = ["ecs", "serde_support"] }
+glamour = { path = "../glamour", features = ["serde_support"] }
 
 [dev-dependencies]
 serde_test = { version = "^1.0.0" }

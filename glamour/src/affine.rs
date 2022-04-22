@@ -4,6 +4,14 @@ use crate::quat::Quat;
 use std::iter::Sum;
 use std::ops::Mul;
 
+#[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "serde_support",
+    serde(bound(
+        serialize = "R: serde::Serialize",
+        deserialize = "R: Copy + Zero + for<'r> serde::Deserialize<'r>"
+    ))
+)]
 #[derive(Debug, PartialEq)]
 pub struct Affine<R> {
     t: Vec3<R>,
@@ -160,6 +168,7 @@ impl<R> Default for AffineBuilder<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn affine_provides_identity_constructor() {
@@ -198,5 +207,41 @@ mod tests {
         let a: Affine<f32> = Affine::identity();
         let b: Vec4<f32> = Vec4::new(1.0, 1.0, 1.0, 1.0);
         assert_eq!(&a * &b, b);
+    }
+
+    #[test]
+    fn affine_implements_serde() {
+        let a: Affine<f32> = Affine::identity();
+
+        assert_tokens(
+            &a,
+            &[
+                Token::Struct { name: "Affine", len: 3 },
+                Token::Str("t"),
+                Token::Seq { len: Some(3) },
+                Token::F32(0.0),
+                Token::F32(0.0),
+                Token::F32(0.0),
+                Token::SeqEnd,
+                Token::Str("o"),
+                Token::Struct { name: "Quat", len: 4 },
+                Token::Str("w"),
+                Token::F32(1.0),
+                Token::Str("i"),
+                Token::F32(0.0),
+                Token::Str("j"),
+                Token::F32(0.0),
+                Token::Str("k"),
+                Token::F32(0.0),
+                Token::StructEnd,
+                Token::Str("s"),
+                Token::Seq { len: Some(3) },
+                Token::F32(1.0),
+                Token::F32(1.0),
+                Token::F32(1.0),
+                Token::SeqEnd,
+                Token::StructEnd,
+            ],
+        );
     }
 }

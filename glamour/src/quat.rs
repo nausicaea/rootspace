@@ -2,6 +2,7 @@ use num_traits::{Zero, One, Float, Num, Signed};
 use crate::mat::{Mat4, Mat3, Vec4};
 use std::ops::{Div, Mul};
 
+#[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, PartialEq)]
 pub struct Quat<R> {
     w: R,
@@ -257,6 +258,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn quat_provides_identity_constructor() {
@@ -343,5 +345,26 @@ mod tests {
         let b: Quat<f32> = Quat::new(5.0, 6.0, 7.0, 8.0);
 
         assert_eq!(a * b, Quat::new(-60.0, 12.0, 30.0, 24.0))
+    }
+
+    #[test]
+    fn quat_implements_serde() {
+        let a: Quat<f32> = Quat::identity();
+
+        assert_tokens(
+            &a,
+            &[
+                Token::Struct { name: "Quat", len: 4 },
+                Token::Str("w"),
+                Token::F32(1.0f32),
+                Token::Str("i"),
+                Token::F32(0.0f32),
+                Token::Str("j"),
+                Token::F32(0.0f32),
+                Token::Str("k"),
+                Token::F32(0.0f32),
+                Token::StructEnd,
+            ],
+        );
     }
 }

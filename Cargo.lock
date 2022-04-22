@@ -511,6 +511,7 @@ dependencies = [
  "directories",
  "ecs",
  "file-manipulation",
+ "glamour",
  "glium",
  "image",
  "log",
@@ -659,6 +660,8 @@ dependencies = [
  "num-dual",
  "num-traits",
  "proptest",
+ "serde",
+ "serde_test",
 ]
 
 [[package]]

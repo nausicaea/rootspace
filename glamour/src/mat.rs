@@ -4,6 +4,10 @@ use std::{
 };
 
 use num_traits::{Num, One, Zero, Float};
+#[cfg(feature = "serde_support")]
+use serde::{Serialize, Serializer, Deserialize, Deserializer, ser::SerializeSeq, de, de::Visitor, de::SeqAccess};
+#[cfg(feature = "serde_support")]
+use std::marker::PhantomData;
 
 use crate::{
     dot::Dot,
@@ -105,6 +109,8 @@ pub type Mat4<R> = Mat<R, 4, 4>;
 pub struct Mat<R, const I: usize, const J: usize>([[R; J]; I]);
 
 impl<R, const I: usize, const J: usize> Mat<R, I, J> {
+    /// Given a one-dimensional array index, return the corresponding two-dimensional indices for
+    /// this particular matrix' demensions
     fn as_2d_idx(idx: usize) -> (usize, usize) {
         (idx / J, idx % J)
     }
@@ -114,6 +120,7 @@ impl<R, const I: usize, const J: usize> Mat<R, I, J>
 where
     R: Copy + Zero,
 {
+    /// Return a copy of the specified matrix column
     pub fn col(&self, j: usize) -> Mat<R, I, 1> {
         if j >= J {
             panic!("Index j is out of bounds (max: {}, actual: {})", J, j);
@@ -125,6 +132,7 @@ where
         mat
     }
 
+    /// Return a copy of the specified matrix row
     pub fn row(&self, i: usize) -> Mat<R, 1, J> {
         if i >= I {
             panic!("Index i is out of bounds (max: {}, actual: {})", I, i);
@@ -136,6 +144,7 @@ where
         mat
     }
 
+    /// Return a sub-matrix of the given size with the given starting index
     pub fn subset<const O: usize, const P: usize>(&self, i: usize, j: usize) -> Mat<R, O, P> {
         debug_assert!(O <= I && P <= J);
         debug_assert!(i + O <= I && j + P <= J);
@@ -590,9 +599,86 @@ where
     }
 }
 
+#[cfg(feature = "serde_support")]
+impl<R, const I: usize, const J: usize> Serialize for Mat<R, I, J> 
+where
+    R: Serialize,
+{
+    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error> 
+    where
+        S: Serializer,
+    {
+        let mut state = ser.serialize_seq(Some(I * J))?;
+        for row in &self.0 {
+            for cell in row {
+                state.serialize_element(cell)?;
+            }
+        }
+        state.end()
+    }
+}
+
+#[cfg(feature = "serde_support")]
+impl<'de, R, const I: usize, const J: usize> Deserialize<'de> for Mat<R, I, J>
+where
+    R: Zero + Copy + Deserialize<'de>,
+{
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct MatVisitor<R, const I: usize, const J: usize>(PhantomData<[[R; J]; I]>);
+
+        impl<R, const I: usize, const J: usize> Default for MatVisitor<R, I, J> {
+            fn default() -> Self {
+                MatVisitor(PhantomData::default())
+            }
+        }
+        
+        impl<'v, R, const I: usize, const J: usize> Visitor<'v> for MatVisitor<R, I, J> 
+        where
+            R: Zero + Copy + Deserialize<'v>,
+        {
+            type Value = Mat<R, I, J>;
+
+            fn expecting(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(fmt, "A sequence with {} elements", I * J)
+            }
+
+            fn visit_seq<A>(self, mut acc: A) -> Result<Self::Value, A::Error> 
+            where
+                A: SeqAccess<'v>,
+            {
+                match acc.size_hint() {
+                    Some(sh) if sh == I * J => (),
+                    Some(sh) => {
+                        return Err(de::Error::invalid_length(sh, &self));
+                    },
+                    None => {
+                        return Err(de::Error::invalid_length(0, &self));
+                    },
+                }
+
+                let mut mat: Mat<R, I, J> = Mat::zero();
+
+                for i in 0..I {
+                    for j in 0..J {
+                        mat[(i, j)] = acc.next_element()?.ok_or_else(|| de::Error::custom(format!("unexpected end of the serialized sequence of length {}", I * J)))?;
+                    }
+                }
+                
+                Ok(mat)
+            }
+        }
+
+        de.deserialize_seq(MatVisitor::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn a2i_1x1() {
@@ -1102,5 +1188,22 @@ mod tests {
         assert_eq!(v.y(), 2.0f32);
         assert_eq!(v.z(), 3.0f32);
         assert_eq!(v.w(), 4.0f32);
+    }
+
+    #[test]
+    fn mat_implements_serde() {
+        let a: Mat<f32, 2, 2> = Mat::identity();
+
+        assert_tokens(
+            &a,
+            &[
+                Token::Seq { len: Some(4) },
+                Token::F32(1.0),
+                Token::F32(0.0),
+                Token::F32(0.0),
+                Token::F32(1.0),
+                Token::SeqEnd,
+            ],
+        );
     }
 }
