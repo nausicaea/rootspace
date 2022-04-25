@@ -1,12 +1,13 @@
 use std::{
-    ops::{Add, Div, Index, IndexMut, Mul, Sub},
+    ops::{Add, Div, Index, IndexMut, Mul, Sub, Neg},
     iter::Sum,
 };
 
-use num_traits::{Num, One, Zero, Float};
+use num_traits::{Num, One, Zero, Float, Signed, Inv};
 
 use crate::{
     mul_elem::MulElem,
+    inv_elem::InvElem,
     dot::Dot,
     abop,
 };
@@ -358,6 +359,62 @@ impl<R, const I: usize, const J: usize> Index<(usize, usize)> for Mat<R, I, J> {
 impl<R, const I: usize, const J: usize> IndexMut<(usize, usize)> for Mat<R, I, J> {
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         self.0.index_mut(index.0).index_mut(index.1)
+    }
+}
+
+impl<R, const I: usize, const J: usize> Neg for Mat<R, I, J>
+where
+    R: Copy + Zero + Signed,
+{
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Neg::neg(&self)
+    }
+}
+
+impl<'a, R, const I: usize, const J: usize> Neg for &'a Mat<R, I, J> 
+where
+    R: Copy + Zero + Signed,
+{
+    type Output = Mat<R, I, J>;
+
+    fn neg(self) -> Self::Output {
+        let mut mat: Mat<R, I, J> = Mat::zero();
+        for i in 0..I {
+            for j in 0..J {
+                mat[(i, j)] = -self[(i, j)];
+            }
+        }
+        mat
+    }
+}
+
+impl<R, const I: usize, const J: usize> InvElem for Mat<R, I, J>
+where
+    R: Copy + Zero + Inv<Output = R>,
+{
+    type Output = Self;
+
+    fn inv_elem(self) -> Self::Output {
+        InvElem::inv_elem(&self)
+    }
+}
+
+impl<'a, R, const I: usize, const J: usize> InvElem for &'a Mat<R, I, J>
+where
+    R: Copy + Zero + Inv<Output = R>,
+{
+    type Output = Mat<R, I, J>;
+
+    fn inv_elem(self) -> Self::Output {
+        let mut mat: Mat<R, I, J> = Mat::zero();
+        for i in 0..I {
+            for j in 0..J {
+                mat[(i, j)] = self[(i, j)].inv();
+            }
+        }
+        mat
     }
 }
 

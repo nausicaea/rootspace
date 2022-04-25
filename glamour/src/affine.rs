@@ -1,7 +1,8 @@
-use num_traits::{Num, Zero, One, Float, NumAssign, Signed};
+use num_traits::{Num, Zero, One, Float, NumAssign, Signed, Inv};
 use crate::mat::{Vec3, Vec4, Mat4, Mat3};
 use crate::quat::Quat;
 use crate::mul_elem::MulElem;
+use crate::inv_elem::InvElem;
 use std::iter::Sum;
 use std::ops::Mul;
 
@@ -32,6 +33,19 @@ where
 {
     pub fn identity() -> Self {
         AffineBuilder::default().build()
+    }
+}
+
+impl<R> Affine<R>
+where
+    R: Copy + Num + Zero + Signed + Inv<Output = R>,
+{
+    pub fn inv(&self) -> Self {
+        Affine {
+            t: -self.t,
+            o: self.o.c(),
+            s: self.s.inv_elem(),
+        }
     }
 }
 
