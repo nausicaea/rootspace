@@ -1,5 +1,5 @@
 use num_traits::{Num, Zero, One, Float, NumAssign, Signed, Inv};
-use crate::mat::{Vec3, Vec4, Mat4, Mat3};
+use crate::mat::{Vec3, Vec4, Mat4};
 use crate::quat::Quat;
 use crate::dot::Dot;
 use crate::mul_elem::MulElem;
@@ -168,29 +168,29 @@ where
     }
 }
 
-impl<'a, R> From<&'a Affine<R>> for Mat4<R>
+impl<R> Affine<R>
 where
     R: Float + NumAssign,
 {
-    fn from(value: &'a Affine<R>) -> Self {
-        let mut m: Mat4<R> = (&value.o).into();
-        m[(0, 0)] *= value.s[0];
-        m[(1, 1)] *= value.s[1];
-        m[(2, 2)] *= value.s[2];
-        m[(0, 3)] = value.t[0];
-        m[(1, 3)] = value.t[1];
-        m[(2, 3)] = value.t[2];
+    pub fn to_matrix(&self) -> Mat4<R> {
+        let mut m: Mat4<R> = self.o.to_matrix();
+        m[(0, 0)] *= self.s[0];
+        m[(1, 1)] *= self.s[1];
+        m[(2, 2)] *= self.s[2];
+        m[(0, 3)] = self.t[0];
+        m[(1, 3)] = self.t[1];
+        m[(2, 3)] = self.t[2];
         m
     }
 }
 
-impl<'a, R> TryFrom<&'a Mat4<R>> for Affine<R> 
+impl<R> TryFrom<Mat4<R>> for Affine<R> 
 where
-    R: Copy + Zero + NumAssign + Float + Sum + std::fmt::Debug,
+    R: Copy + One + Zero + NumAssign + Float + Sum + std::fmt::Debug,
 {
     type Error = ();
 
-    fn try_from(v: &'a Mat4<R>) -> Result<Self, Self::Error> {
+    fn try_from(v: Mat4<R>) -> Result<Self, Self::Error> {
         let t: Vec3<R> = v.subset::<3, 1>(0, 3);
 
         let s = Vec3::new(
@@ -199,7 +199,7 @@ where
             v.col(2).norm(),
         );
 
-        let mut rot_m: Mat3<R> = v.subset::<3, 3>(0, 0);
+        let mut rot_m: Mat4<R> = v.clone();
         rot_m[(0, 0)] /= s[0];
         rot_m[(1, 0)] /= s[0];
         rot_m[(2, 0)] /= s[0];
@@ -209,8 +209,15 @@ where
         rot_m[(0, 2)] /= s[2];
         rot_m[(1, 2)] /= s[2];
         rot_m[(2, 2)] /= s[2];
+        rot_m[(0, 3)] = R::zero();
+        rot_m[(1, 3)] = R::zero();
+        rot_m[(2, 3)] = R::zero();
+        rot_m[(3, 0)] = R::zero();
+        rot_m[(3, 1)] = R::zero();
+        rot_m[(3, 2)] = R::zero();
+        rot_m[(3, 3)] = R::one();
 
-        let o = Quat::from(&rot_m);
+        let o = Quat::from(rot_m);
 
         Ok(Affine {
             t, o, s,
@@ -300,15 +307,15 @@ mod tests {
     }
 
     #[test]
-    fn mat4_implements_from_ref_affine() {
+    fn affine_provides_to_matrix_method() {
         let a: Affine<f32> = Affine::identity();
-        assert_eq!(Mat4::<f32>::from(&a), Mat4::<f32>::identity());
+        assert_eq!(a.to_matrix(), Mat4::<f32>::identity());
     }
 
     #[test]
-    fn affine_implements_try_from_ref_mat4() {
+    fn affine_implements_try_from_mat4() {
         let m: Mat4<f32> = Mat4::identity();
-        assert_eq!(Affine::<f32>::try_from(&m), Ok(Affine::<f32>::identity()));
+        assert_eq!(Affine::<f32>::try_from(m), Ok(Affine::<f32>::identity()));
     }
 
     #[test]

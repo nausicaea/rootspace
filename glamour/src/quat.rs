@@ -1,5 +1,5 @@
 use num_traits::{Zero, One, Float, Num, Signed};
-use crate::mat::{Mat4, Mat3, Vec4};
+use crate::mat::{Mat4, Vec4};
 use std::ops::{Div, Mul};
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
@@ -192,11 +192,11 @@ where
     }
 }
 
-impl<'a, R> From<&'a Mat3<R>> for Quat<R>
+impl<R> From<Mat4<R>> for Quat<R>
 where
     R: Float + One,
 {
-    fn from(v: &'a Mat3<R>) -> Self {
+    fn from(v: Mat4<R>) -> Self {
         let half: R = R::one() / (R::one() + R::one());
 
         if v[(2, 2)] < v[(0, 0)] {
@@ -240,16 +240,16 @@ where
 }
 
 /// Based on information from the [Euclidean Space Blog](https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm)
-impl<'a, R> From<&'a Quat<R>> for Mat4<R> 
+impl<R> Quat<R>
 where
     R: Float,
 {
-    fn from(v: &'a Quat<R>) -> Self {
-        let v_norm = v.norm();
-        let w = v.w / v_norm;
-        let i = v.i / v_norm;
-        let j = v.j / v_norm;
-        let k = v.k / v_norm;
+    pub fn to_matrix(&self) -> Mat4<R> {
+        let v_norm = self.norm();
+        let w = self.w / v_norm;
+        let i = self.i / v_norm;
+        let j = self.j / v_norm;
+        let k = self.k / v_norm;
 
         let z = R::zero();
         let o = R::one();
@@ -296,27 +296,27 @@ mod tests {
     }
 
     #[test]
-    fn quat_implements_from_ref_mat3() {
-        let a: Mat3<f32> = Mat3::identity();
-        assert_eq!(Quat::<f32>::from(&a), Quat::<f32>::identity());
+    fn quat_implements_from_mat4() {
+        let a: Mat4<f32> = Mat4::identity();
+        assert_eq!(Quat::<f32>::from(a), Quat::<f32>::identity());
     }
 
     #[test]
-    fn mat4_implements_from_ref_quat() {
+    fn quat_provides_to_matrix_method() {
         let q = Quat::<f32>::identity();
-        assert_eq!(Mat4::<f32>::from(&q), Mat4::<f32>::identity());
+        assert_eq!(q.to_matrix(), Mat4::<f32>::identity());
 
         let q = Quat::new(1.0f32, 1.0, 1.0, 1.0);
-        assert_eq!(Mat4::<f32>::from(&q), Mat4::<f32>::from([0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]));
+        assert_eq!(q.to_matrix(), Mat4::<f32>::from([0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]));
 
         let q = Quat::new(0.0f32, 0.0, 0.0, 0.0);
-        assert!(Mat4::<f32>::from(&q).is_nan());
+        assert!(q.to_matrix().is_nan());
     }
 
     #[test]
     fn mat4_from_quat_results_in_nan_for_zero_norm() {
         let q = Quat::new(0.0f32, 0.0, 0.0, 0.0);
-        let m = Mat4::<f32>::from(&q);
+        let m = q.to_matrix();
         assert!(m.is_nan());
     }
 
