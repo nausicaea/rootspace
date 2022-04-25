@@ -13,7 +13,7 @@ use crate::{
 };
 
 /// Vector of 2 dimensions, interpreted as column
-pub type Vec2<R> = Vec<R, 2>;
+pub type Vec2<R> = Vec_<R, 2>;
 
 impl<R> Vec2<R> {
     pub fn new(x: R, y: R) -> Self {
@@ -35,7 +35,7 @@ where
 }
 
 /// Vector of 3 dimensions, interpreted as column
-pub type Vec3<R> = Vec<R, 3>;
+pub type Vec3<R> = Vec_<R, 3>;
 
 impl<R> Vec3<R> {
     pub fn new(x: R, y: R, z: R) -> Self {
@@ -60,8 +60,17 @@ where
     }
 }
 
+impl<R> Vec3<R>
+where
+    R: Copy + Zero,
+{
+    pub fn to_vec4(&self) -> Vec4<R> {
+        Vec4::new(self.x(), self.y(), self.z(), R::zero())
+    }
+}
+
 /// Vector of 4 dimensions, interpreted as column
-pub type Vec4<R> = Vec<R, 4>;
+pub type Vec4<R> = Vec_<R, 4>;
 
 impl<R> Vec4<R> {
     pub fn new(x: R, y: R, z: R, w: R) -> Self {
@@ -91,7 +100,7 @@ where
 }
 
 // Generalized vector, interpreted as column
-pub type Vec<R, const I: usize> = Mat<R, I, 1>;
+type Vec_<R, const I: usize> = Mat<R, I, 1>;
 
 /// Matrix of 2x2 dimensions
 pub type Mat2<R> = Mat<R, 2, 2>;
@@ -255,8 +264,8 @@ impl<R, const I: usize> Mat<R, I, I>
 where
     R: Zero + Copy,
 {
-    pub fn diag(&self) -> Vec<R, I> {
-        let mut mat = Vec::<R, I>::zero();
+    pub fn diag(&self) -> Vec_<R, I> {
+        let mut mat = Vec_::<R, I>::zero();
         for i in 0..I {
             mat[i] = self[(i, i)];
         }
@@ -655,6 +664,17 @@ impl_matmul!(
     ]
 );
 
+impl<R> Dot<Mat<R, 2, 1>> for Mat<R, 1, 2>
+where
+    R: Num + Copy + Sum,
+{
+    type Output = R;
+
+    fn dot(self, rhs: Mat<R, 2, 1>) -> Self::Output {
+        (&self).dot(&rhs)
+    }
+}
+
 impl<'a, R> Dot<&'a Mat<R, 2, 1>> for &'a Mat<R, 1, 2>
 where
     R: Num + Copy + Sum,
@@ -665,6 +685,7 @@ where
         abop!(dot, self, rhs, [((0, 1), (0, 1))])[0]
     }
 }
+
 
 #[cfg(feature = "serde_support")]
 impl<R, const I: usize, const J: usize> serde::ser::Serialize for Mat<R, I, J> 

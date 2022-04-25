@@ -1,9 +1,10 @@
 use num_traits::{Num, Zero, One, Float, NumAssign, Signed, Inv};
 use crate::mat::{Vec3, Vec4, Mat4, Mat3};
 use crate::quat::Quat;
+use crate::dot::Dot;
 use crate::mul_elem::MulElem;
 use crate::inv_elem::InvElem;
-use std::iter::Sum;
+use std::iter::{Sum, Product};
 use std::ops::Mul;
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
@@ -42,9 +43,9 @@ where
 {
     pub fn inv(&self) -> Self {
         Affine {
-            t: -self.t,
+            t: -(&self.t),
             o: self.o.c(),
-            s: self.s.inv_elem(),
+            s: (&self.s).inv_elem(),
         }
     }
 }
@@ -67,6 +68,28 @@ where
     type Output = Vec4<R>;
 
     fn mul(self, rhs: &'a Vec4<R>) -> Self::Output {
+        self.dot(rhs)
+    }
+}
+
+impl<R> Dot<Vec4<R>> for Affine<R> 
+where
+    R: Num + Copy + Sum + One + Signed,
+{
+    type Output = Vec4<R>;
+
+    fn dot(self, rhs: Vec4<R>) -> Self::Output {
+        (&self).dot(&rhs)
+    }
+}
+
+impl<'a, R> Dot<&'a Vec4<R>> for &'a Affine<R> 
+where
+    R: Num + Copy + Sum + One + Signed + Zero,
+{
+    type Output = Vec4<R>;
+
+    fn dot(self, rhs: &'a Vec4<R>) -> Self::Output {
         let scaled: Vec3<R> = (&self.s).mul_elementwise(&rhs.subset::<3, 1>(0, 0));
         let scaled: Vec4<R> = Vec4::new(scaled.x(), scaled.y(), scaled.z(), rhs.w());
         let rotated = &self.o * &scaled;
@@ -95,6 +118,28 @@ where
     type Output = Affine<R>;
 
     fn mul(self, rhs: Self) -> Self::Output {
+        self.dot(rhs)
+    }
+}
+
+impl<R> Dot for Affine<R>
+where
+    R: Copy + Num + Zero,
+{
+    type Output = Self;
+
+    fn dot(self, rhs: Self) -> Self::Output {
+        (&self).dot(&rhs)
+    }
+}
+
+impl<'a, R> Dot for &'a Affine<R>
+where
+    R: Copy + Num + Zero,
+{
+    type Output = Affine<R>;
+
+    fn dot(self, rhs: Self) -> Self::Output {
         use std::ops::Add;
 
         Affine {
@@ -102,6 +147,24 @@ where
             o: (&self.o).mul(&rhs.o),
             s: (&self.s).mul_elementwise(&rhs.s),
         }
+    }
+}
+
+impl<R> Product for Affine<R> 
+where
+    R: Zero + One + Copy + Num,
+{
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Affine::identity(), |state, value| state * value)
+    }
+}
+
+impl<'a, R> Product<&'a Affine<R>> for Affine<R>
+where
+    R: Zero + One + Copy + Num,
+{
+    fn product<I: Iterator<Item = &'a Affine<R>>>(iter: I) -> Self {
+        iter.fold(Affine::identity(), |state, value| &state * value)
     }
 }
 
@@ -121,11 +184,13 @@ where
     }
 }
 
-impl<'a, R> From<&'a Mat4<R>> for Affine<R> 
+impl<'a, R> TryFrom<&'a Mat4<R>> for Affine<R> 
 where
     R: Copy + Zero + NumAssign + Float + Sum + std::fmt::Debug,
 {
-    fn from(v: &'a Mat4<R>) -> Self {
+    type Error = ();
+
+    fn try_from(v: &'a Mat4<R>) -> Result<Self, Self::Error> {
         let t: Vec3<R> = v.subset::<3, 1>(0, 3);
 
         let s = Vec3::new(
@@ -147,9 +212,9 @@ where
 
         let o = Quat::from(&rot_m);
 
-        Affine {
+        Ok(Affine {
             t, o, s,
-        }
+        })
     }
 }
 
@@ -241,9 +306,9 @@ mod tests {
     }
 
     #[test]
-    fn affine_implements_from_ref_mat4() {
+    fn affine_implements_try_from_ref_mat4() {
         let m: Mat4<f32> = Mat4::identity();
-        assert_eq!(Affine::<f32>::from(&m), Affine::<f32>::identity());
+        assert_eq!(Affine::<f32>::try_from(&m), Ok(Affine::<f32>::identity()));
     }
 
     #[test]
