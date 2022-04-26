@@ -1,4 +1,4 @@
-use num_traits::{One, Float};
+use num_traits::Float;
 use crate::mat::Mat4;
 use thiserror::Error;
 use approx::{RelativeEq, relative_eq};
@@ -10,12 +10,7 @@ impl<R> Persp<R> {
     pub fn as_matrix(&self) -> &Mat4<R> {
         self.as_ref()
     }
-}
 
-impl<R> Persp<R> 
-where
-    R: One,
-{
     pub fn builder() -> PerspBuilder<R> {
         PerspBuilder::default()
     }
