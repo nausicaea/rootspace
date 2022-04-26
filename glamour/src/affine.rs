@@ -173,13 +173,31 @@ where
     R: Float + NumAssign,
 {
     pub fn to_matrix(&self) -> Mat4<R> {
-        let mut m: Mat4<R> = self.o.to_matrix();
-        m[(0, 0)] *= self.s[0];
-        m[(1, 1)] *= self.s[1];
-        m[(2, 2)] *= self.s[2];
-        m[(0, 3)] = self.t[0];
-        m[(1, 3)] = self.t[1];
-        m[(2, 3)] = self.t[2];
+        self.into()
+    }
+}
+
+impl<R> From<Affine<R>> for Mat4<R> 
+where
+    R: Float + NumAssign,
+{
+    fn from(v: Affine<R>) -> Self {
+        From::from(&v)
+    }
+}
+
+impl<'a, R> From<&'a Affine<R>> for Mat4<R> 
+where
+    R: Float + NumAssign,
+{
+    fn from(v: &'a Affine<R>) -> Self {
+        let mut m: Mat4<R> = (&v.o).into();
+        m[(0, 0)] *= v.s[0];
+        m[(1, 1)] *= v.s[1];
+        m[(2, 2)] *= v.s[2];
+        m[(0, 3)] = v.t[0];
+        m[(1, 3)] = v.t[1];
+        m[(2, 3)] = v.t[2];
         m
     }
 }
@@ -225,19 +243,6 @@ where
     }
 }
 
-impl<R> From<AffineBuilder<R>> for Affine<R> 
-where
-    R: One + Zero + Copy,
-{
-    fn from(v: AffineBuilder<R>) -> Self {
-        Affine {
-            t: v.t.unwrap_or_else(Vec3::zero),
-            o: v.o.unwrap_or_else(Quat::identity),
-            s: v.s.unwrap_or_else(Vec3::one),
-        }
-    }
-}
-
 #[derive(Debug)]
 pub struct AffineBuilder<R> {
     t: Option<Vec3<R>>,
@@ -267,7 +272,11 @@ where
     R: One + Zero + Copy,
 {
     pub fn build(self) -> Affine<R> {
-        self.into()
+        Affine {
+            t: self.t.unwrap_or_else(Vec3::zero),
+            o: self.o.unwrap_or_else(Quat::identity),
+            s: self.s.unwrap_or_else(Vec3::one),
+        }
     }
 }
 

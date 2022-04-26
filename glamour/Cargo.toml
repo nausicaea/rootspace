@@ -8,6 +8,7 @@ default = ["serde_support"]
 serde_support = ["serde"]
 
 [dependencies]
+thiserror = "^1.0.0"
 num-traits = "^0.2.14"
 num-complex = "^0.4.0"
 num-dual = "^0.5.1"

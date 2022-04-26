@@ -662,6 +662,7 @@ dependencies = [
  "proptest",
  "serde",
  "serde_test",
+ "thiserror",
 ]
 
 [[package]]

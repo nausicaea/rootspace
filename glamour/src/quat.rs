@@ -245,11 +245,29 @@ where
     R: Float,
 {
     pub fn to_matrix(&self) -> Mat4<R> {
-        let v_norm = self.norm();
-        let w = self.w / v_norm;
-        let i = self.i / v_norm;
-        let j = self.j / v_norm;
-        let k = self.k / v_norm;
+        self.into()
+    }
+}
+
+impl<R> From<Quat<R>> for Mat4<R> 
+where
+    R: Float,
+{
+    fn from(v: Quat<R>) -> Self {
+        From::from(&v)
+    }
+}
+
+impl<'a, R> From<&'a Quat<R>> for Mat4<R> 
+where
+    R: Float,
+{
+    fn from(v: &'a Quat<R>) -> Self {
+        let v_norm = v.norm();
+        let w = v.w / v_norm;
+        let i = v.i / v_norm;
+        let j = v.j / v_norm;
+        let k = v.k / v_norm;
 
         let z = R::zero();
         let o = R::one();

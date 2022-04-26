@@ -6,6 +6,8 @@ pub mod inv_elem;
 pub mod mat;
 pub mod affine;
 pub mod ortho;
+pub mod persp;
+pub mod ray;
 //pub mod point;
 pub mod quat;
 
@@ -15,6 +17,8 @@ pub use self::mul_elem::MulElem;
 pub use self::inv_elem::InvElem;
 pub use self::affine::{Affine, AffineBuilder};
 pub use self::ortho::{Ortho, OrthoBuilder};
+pub use self::persp::{Persp, PerspBuilder};
 pub use self::quat::Quat;
+pub use self::ray::Ray;
 //pub use self::point::Point3;
 pub use self::mat::{Mat4, Mat3, Mat2, Vec4, Vec3, Vec2};

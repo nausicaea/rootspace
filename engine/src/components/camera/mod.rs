@@ -5,15 +5,18 @@ pub mod projection;
 use approx::ulps_eq;
 use ecs::{Component, VecStorage};
 use nalgebra::{Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
+use glamour::{Vec4, Vec2, Ray, Ortho, Persp};
 use serde::{Deserialize, Serialize};
 
 use self::{camera_builder::CameraBuilder, camera_ser_de::CameraSerDe, projection::Projection};
-use crate::{components::model::Model, geometry::ray::Ray};
+use crate::components::model::Model;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "self::camera_ser_de::CameraSerDe", from = "self::camera_ser_de::CameraSerDe")]
 pub struct Camera {
     projection: Projection,
+    ortho: Ortho<f32>,
+    persp: Persp<f32>,
     orthographic: Orthographic3<f32>,
     perspective: Perspective3<f32>,
     dimensions: (u32, u32),
@@ -106,53 +109,51 @@ impl Camera {
         self.dpi_factor
     }
 
-    /// Transforms a point in world-space to normalized device coordinates.
-    pub fn world_point_to_ndc(&self, model: &Model, point: &Point3<f32>) -> Point3<f32> {
+    /// Transforms a point or vector in world-space to normalized device coordinates.
+    pub fn world_to_ndc(&self, model: &Model, v: &Vec4<f32>) -> Vec4<f32> {
         match self.projection {
-            Projection::Perspective => self.perspective.project_point(&model.transform_point(point)),
-            Projection::Orthographic => self.orthographic.project_point(&model.transform_point(point)),
+            Projection::Perspective => &self.persp * model * v,
+            Projection::Orthographic => &self.ortho * model * v,
         }
     }
 
-    /// Transforms a point in normalized device coordinates to world-space.
-    pub fn ndc_point_to_world(&self, model: &Model, point: &Point3<f32>) -> Point3<f32> {
-        let cam_space = match self.projection {
-            Projection::Perspective => self.perspective.unproject_point(point),
-            Projection::Orthographic => self.orthographic.unproject_point(point),
-        };
-
-        model.inverse_transform_point(&cam_space)
+    /// Transforms a point or vector in normalized device coordinates to world-space.
+    pub fn ndc_to_world(&self, model: &Model, v: &Vec4<f32>) -> Vec4<f32> {
+        match self.projection {
+            Projection::Perspective => &model.inv() * &self.persp.inv() * v,
+            Projection::Orthographic => &model.inv() * &self.ortho.inv() * v,
+        }
     }
 
-    /// Transforms a point in ui-space to normalized device coordinates.
-    pub fn ui_point_to_ndc(&self, point: &Point2<f32>, depth: f32) -> Point3<f32> {
-        self.orthographic.project_point(&Point3::new(point.x, point.y, depth))
+    /// Transforms a point or vector in ui-space to normalized device coordinates.
+    pub fn ui_to_ndc(&self, v: &Vec2<f32>, depth: f32, w: f32) -> Vec4<f32> {
+        &self.ortho * &Vec4::new(v.x(), v.y(), depth, w)
     }
 
-    /// Transforms a point in normalized device coordinates to ui-space.
-    pub fn ndc_point_to_ui(&self, point: &Point3<f32>) -> (Point2<f32>, f32) {
-        let p = self.orthographic.unproject_point(point);
-        (Point2::new(p.x, p.y), p.z)
+    /// Transforms a point or vector in normalized device coordinates to ui-space.
+    pub fn ndc_to_ui(&self, v: &Vec4<f32>) -> (Vec2<f32>, f32, f32) {
+        let v: Vec4<f32> = &self.ortho.inv() * v;
+        (Vec2::new(v.x(), v.y()), v.z(), v.w())
     }
 
-    /// Transforms a point in world-space to a screen point.
-    pub fn world_point_to_screen(&self, model: &Model, point: &Point3<f32>) -> Point2<u32> {
-        self.ndc_point_to_screen(&self.world_point_to_ndc(model, point))
+    /// Transforms a point or vector in world-space to a screen point.
+    pub fn world_to_screen(&self, model: &Model, v: &Vec4<f32>) -> Vec2<u32> {
+        self.ndc_to_screen(&self.world_to_ndc(v))
     }
 
-    /// Transforms a screen point to world-space as a ray originating from the camera.
-    pub fn screen_point_to_world_ray(&self, model: &Model, point: &Point2<u32>) -> Option<Ray<f32>> {
-        let origin = -model.position();
-        let target = self.screen_point_to_world(model, point).coords;
+    /// Transforms a screen point or vector to world-space as a ray originating from the camera.
+    pub fn screen_to_world_ray(&self, model: &Model, v: &Vec2<u32>) -> Option<Ray<f32>> {
+        let origin = -model.translation();
+        let target = self.screen_to_world(model, v);
         Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
     }
 
-    pub fn ui_point_to_screen(&self, point: &Point2<f32>, depth: f32) -> Point2<u32> {
-        self.ndc_point_to_screen(&self.ui_point_to_ndc(point, depth))
+    pub fn ui_to_screen(&self, point: &Point2<f32>, depth: f32) -> Point2<u32> {
+        self.ndc_to_screen(&self.ui_to_ndc(point, depth))
     }
 
-    /// Transforms a screen point to ui-space as a ray originating from the camera.
-    pub fn screen_point_to_ui_ray(&self, point: &Point2<u32>) -> Option<Ray<f32>> {
+    /// Transforms a screen point or vector to ui-space as a ray originating from the camera.
+    pub fn screen_to_ui_ray(&self, point: &Point2<u32>) -> Option<Ray<f32>> {
         let origin = Point3::new(0.0, 0.0, 0.0);
         let target = {
             let (t, d) = self.screen_point_to_ui(point);
@@ -161,34 +162,39 @@ impl Camera {
         Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
     }
 
-    /// Transforms a point in normalized device coordinates to screen-space.
-    fn ndc_point_to_screen(&self, point: &Point3<f32>) -> Point2<u32> {
+    /// Transforms a point or vector in normalized device coordinates to screen-space.
+    fn ndc_to_screen(&self, v: &Vec4<f32>) -> Vec2<u32> {
         let w = self.dimensions.0 as f32;
         let h = self.dimensions.1 as f32;
 
-        Point2::new(
-            ((w / 2.0) * (point.x + 1.0)).round() as u32,
-            ((h / 2.0) * (1.0 - point.y)).round() as u32,
+        Vec2::new(
+            ((w / 2.0) * (v.x() + 1.0)).round() as u32,
+            ((h / 2.0) * (1.0 - v.y())).round() as u32,
         )
     }
 
-    /// Projects a point in screen space to the far plane of the normalized device coordinate cube.
+    /// Projects a point or vector in screen space to the far plane of the normalized device coordinate cube.
     /// Note that this assumes NDC to be a left-handed coordinate system.
-    fn screen_point_to_ndc(&self, point: &Point2<u32>) -> Point3<f32> {
+    fn screen_to_ndc(&self, v: &Vec2<u32>) -> Vec4<f32> {
         let w = self.dimensions.0 as f32;
         let h = self.dimensions.1 as f32;
 
-        Point3::new((2.0 * point.x as f32) / w - 1.0, 1.0 - (2.0 * point.y as f32) / h, 1.0)
+        Vec4::new(
+            (2.0 * v.x() as f32) / w - 1.0,
+            1.0 - (2.0 * v.y() as f32) / h, 
+            1.0,
+            1.0,
+        )
     }
 
-    /// Transforms a point in screen space to world space.
-    fn screen_point_to_world(&self, model: &Model, point: &Point2<u32>) -> Point3<f32> {
-        self.ndc_point_to_world(model, &self.screen_point_to_ndc(point))
+    /// Transforms a point or vector in screen space to world space.
+    fn screen_to_world(&self, model: &Model, v: &Vec2<u32>) -> Vec4<f32> {
+        self.ndc_to_world(model, &self.screen_to_ndc(v))
     }
 
-    /// Transforms a point in screen space to ui space.
-    fn screen_point_to_ui(&self, point: &Point2<u32>) -> (Point2<f32>, f32) {
-        self.ndc_point_to_ui(&self.screen_point_to_ndc(point))
+    /// Transforms a point or vector in screen space to ui space.
+    fn screen_to_ui(&self, v: &Vec2<u32>) -> (Vec2<f32>, f32) {
+        self.ndc_to_ui(&self.screen_to_ndc(v))
     }
 }
 

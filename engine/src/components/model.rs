@@ -1,8 +1,7 @@
-use std::{iter::Product, ops::Mul};
+use std::ops::Deref;
 
-use affine_transform::AffineTransform;
 use ecs::{Component, VecStorage};
-use glamour::{Affine, Mat4, Vec3, Quat, Point3, AffineBuilder};
+use glamour::{Affine, Mat4, Vec3, Quat, AffineBuilder, Vec4};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -14,12 +13,16 @@ impl Model {
         ModelBuilder::default()
     }
 
-    pub fn transform_point(&self, point: &Point3<f32>) -> Point3<f32> {
-        self.0.transform_point(point)
+    pub fn transform_point(&self, point: &Vec3<f32>) -> Vec3<f32> {
+        let v4 = Vec4::new(point.x(), point.y(), point.z(), 1.0);
+        let v4t = self.0 * v4;
+        Vec3::new(v4t.x(), v4t.y(), v4t.z())
     }
 
-    pub fn inverse_transform_point(&self, point: &Point3<f32>) -> Point3<f32> {
-        self.0.inverse_transform_point(point)
+    pub fn inverse_transform_point(&self, point: &Vec3<f32>) -> Vec3<f32> {
+        let v4 = Vec4::new(point.x(), point.y(), point.z(), 1.0);
+        let v4t = self.0.inv() * v4;
+        Vec3::new(v4t.x(), v4t.y(), v4t.z())
     }
 
     pub fn set_translation(&mut self, value: Vec3<f32>) {
@@ -34,8 +37,12 @@ impl Model {
         self.0.s = value;
     }
 
+    pub fn as_affine(&self) -> &Affine<f32> {
+        self.as_ref()
+    }
+
     pub fn to_matrix(&self) -> Mat4<f32> {
-        (&self.0).into()
+        self.0.to_matrix()
     }
 
     pub fn translation(&self) -> &Vec3<f32> {
@@ -61,43 +68,15 @@ impl Component for Model {
     type Storage = VecStorage<Self>;
 }
 
-impl Mul<Model> for Model {
-    type Output = Model;
-
-    fn mul(self, rhs: Model) -> Model {
-        (&self).mul(&rhs)
-    }
-}
-
-impl<'a, 'b> Mul<&'a Model> for &'b Model {
-    type Output = Model;
-
-    fn mul(self, rhs: &'a Model) -> Model {
-        Model((&self.0).mul(&rhs.0))
-    }
-}
-
-impl<'a> Product<&'a Model> for Model {
-    fn product<I: Iterator<Item = &'a Model>>(iter: I) -> Self {
-        iter.fold(Model::default(), |state, value| &state * value)
-    }
-}
-
-impl Product for Model {
-    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(Model::default(), |state, value| state * value)
-    }
-}
-
 impl From<Affine<f32>> for Model {
     fn from(value: Affine<f32>) -> Self {
         Model(value)
     }
 }
 
-impl From<Model> for Affine<f32> {
-    fn from(value: Model) -> Self {
-        value.0
+impl AsRef<Affine<f32>> for Model {
+    fn as_ref(&self) -> &Affine<f32> {
+        &self.0
     }
 }
 
@@ -150,8 +129,8 @@ impl Default for ModelBuilder {
 #[cfg(test)]
 mod tests {
     use approx::{assert_ulps_eq, ulps_eq};
-    use nalgebra::{one, zero, Point4, Quaternion, Unit, Vector4};
     use proptest::prelude::*;
+    use glamour::Vec4;
 
     use super::*;
     use crate::utilities::validate_float;
@@ -178,50 +157,50 @@ mod tests {
     #[test]
     fn default_is_identity() {
         let m: Model = Default::default();
-        assert_ulps_eq!(m.matrix(), &Matrix4::identity())
+        assert_ulps_eq!(m.to_matrix(), &Mat4::identity())
     }
 
     #[test]
     fn builder_accepts_position() {
-        let _: ModelBuilder = ModelBuilder::default().with_position(Point3::from(Vec3::new(0.0, 0.0, 0.0)));
+        let _: ModelBuilder = ModelBuilder::default().with_translation(Vec3::zero());
     }
 
     #[test]
     fn builder_accepts_orientaton() {
         let _: ModelBuilder =
-            ModelBuilder::default().with_orientation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
+            ModelBuilder::default().with_orientation(Quat::identity());
     }
 
     #[test]
     fn builder_accepts_scale() {
-        let _: ModelBuilder = ModelBuilder::default().with_scale(Vec3::new(0.0, 0.0, 0.0));
+        let _: ModelBuilder = ModelBuilder::default().with_scale(Vec3::zero());
     }
 
     #[test]
     fn builder_complete_example() {
         let m: Model = ModelBuilder::default()
-            .with_position(Point3::from([zero(); 3]))
-            .with_orientation(Unit::new_normalize(Quaternion::identity()))
-            .with_scale(Vec3::from([zero(); 3]))
+            .with_translation(Vec3::zero())
+            .with_orientation(Quat::identity())
+            .with_scale(Vec3::one())
             .build();
 
-        assert_ulps_eq!(m.position(), Point3::from([zero(); 3]));
-        assert_ulps_eq!(m.orientation(), Unit::new_normalize(Quaternion::identity()));
-        assert_ulps_eq!(m.scale(), Vec3::from([zero(); 3]));
+        assert_ulps_eq!(m.translation(), Vec3::zero());
+        assert_ulps_eq!(m.orientation(), Quat::identity());
+        assert_ulps_eq!(m.scale(), Vec3::one());
     }
 
     #[test]
     fn transform_point_works_for_zeroes() {
         let m: Model = ModelBuilder::default()
-            .with_position(Point3::from([zero(); 3]))
-            .with_orientation(Unit::new_normalize(Quaternion::identity()))
-            .with_scale(Vec3::from([one(); 3]))
+            .with_translation(Vec3::zero())
+            .with_orientation(Quat::identity())
+            .with_scale(Vec3::one())
             .build();
-        let p: Point3<f32> = Point3::from([zero(); 3]);
+        let p: Vec3<f32> = Vec3::zero();
 
-        let tpt: Point3<f32> = m.transform_point(&p);
-        let tpt: Vector4<f32> = Vector4::new(tpt.x, tpt.y, tpt.z, one());
-        let mmul = m.matrix() * Vector4::new(p.x, p.y, p.z, one());
+        let tpt: Vec3<f32> = m.transform_point(&p);
+        let tpt: Vec4<f32> = Vec4::new(tpt.x(), tpt.y(), tpt.z(), 1.0);
+        let mmul = m.to_matrix() * Vec4::new(p.x(), p.y(), p.z(), 1.0);
 
         assert_ulps_eq!(tpt, mmul);
     }
@@ -231,13 +210,13 @@ mod tests {
         fn position_may_be_changed(num: [f32; 3]) {
             let mut m = Model::default();
 
-            let p = Point3::from_slice(&num);
-            m.set_position(p);
+            let p = Vec3::new(num[0], num[1], num[2]);
+            m.set_translation(p);
 
             if !validate_float(&num) {
                 return Ok(());
             } else {
-                prop_assert_eq!(m.position(), p);
+                prop_assert_eq!(m.translation(), p);
             }
         }
 
@@ -245,7 +224,7 @@ mod tests {
         fn orientation_may_be_changed(num: [f32; 4]) {
             let mut m = Model::default();
 
-            let o = Unit::new_normalize(Quaternion::new(num[0], num[1], num[2], num[3]));
+            let o = Quat::new(num[0], num[1], num[2], num[3]);
             m.set_orientation(o);
 
             if !validate_float(&num) {
@@ -272,18 +251,18 @@ mod tests {
         #[test]
         fn transform_point_is_the_same_as_matrix_multiplication(num: [f32; 13]) {
             let m = Model::builder()
-                .with_position(Point3::from_slice(&num[0..3]))
-                .with_orientation(Unit::new_normalize(Quaternion::from_vector(Point4::from_slice(&num[3..7]).coords)))
-                .with_scale(Point3::from_slice(&num[7..10]).coords)
+                .with_translation(Vec3::new(num[0], num[1], num[2]))
+                .with_orientation(Quat::new(num[3], num[4], num[5], num[6]))
+                .with_scale(Vec3::new(num[7], num[8], num[9]))
                 .build();
-            let p = Point3::from_slice(&num[10..13]);
+            let p = Vec3::new(num[10], num[11], num[12]);
 
             if !validate_float(&num) {
                 return Ok(())
             } else {
-                let tpt: Point3<f32> = m.transform_point(&p);
-                let tpt: Vector4<f32> = Vector4::new(tpt.x, tpt.y, tpt.z, one());
-                let mmul = m.matrix() * Vector4::new(p.x, p.y, p.z, one());
+                let tpt: Vec3<f32> = m.transform_point(&p);
+                let tpt: Vec4<f32> = Vec4::new(tpt.x(), tpt.y(), tpt.z(), 1.0);
+                let mmul = m.to_matrix() * Vec4::new(p.x(), p.y(), p.z(), 1.0);
 
                 prop_assert!(ulps_eq!(tpt, mmul), "{:?} != {:?}", tpt, mmul);
             }
@@ -292,17 +271,17 @@ mod tests {
         #[test]
         fn transformations_are_invertible(num: [f32; 13]) {
             let m = Model::builder()
-                .with_position(Point3::from_slice(&num[0..3]))
-                .with_orientation(Unit::new_normalize(Quaternion::from_vector(Point4::from_slice(&num[3..7]).coords)))
-                .with_scale(Point3::from_slice(&num[7..10]).coords)
+                .with_translation(Vec3::new(num[0], num[1], num[2]))
+                .with_orientation(Quat::new(num[3], num[4], num[5], num[6]))
+                .with_scale(Vec3::new(num[7], num[8], num[9]))
                 .build();
-            let p = Point3::from_slice(&num[10..13]);
+            let p = Vec3::new(num[10], num[11], num[12]);
 
             if !validate_float(&num) {
                 return Ok(())
             } else {
-                let tpt: Point3<f32> = m.transform_point(&p);
-                let itpt: Point3<f32> = m.inverse_transform_point(&tpt);
+                let tpt: Vec3<f32> = m.transform_point(&p);
+                let itpt: Vec3<f32> = m.inverse_transform_point(&tpt);
 
                 prop_assert!(ulps_eq!(p, itpt), "{:?} != {:?}", p, itpt);
             }
