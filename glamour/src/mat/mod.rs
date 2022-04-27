@@ -3,6 +3,7 @@ use std::{
 };
 
 use num_traits::{One, Zero, Float};
+use crate::ops::norm::Norm;
 
 pub mod vec2;
 pub mod vec3;
@@ -35,7 +36,7 @@ pub struct Mat<R, const I: usize, const J: usize>([[R; J]; I]);
 
 impl<R, const I: usize, const J: usize> Mat<R, I, J> {
     /// Given a one-dimensional array index, return the corresponding two-dimensional indices for
-    /// this particular matrix' demensions
+    /// this particular matrix' dimensions
     fn as_2d_idx(idx: usize) -> (usize, usize) {
         (idx / J, idx % J)
     }
@@ -84,11 +85,13 @@ where
     }
 }
 
-impl<R, const I: usize, const J: usize> Mat<R, I, J> 
+impl<'a, R, const I: usize, const J: usize> Norm for &'a Mat<R, I, J> 
 where
     R: Float + Sum,
 {
-    pub fn norm(&self) -> R {
+    type Output = R;
+
+    fn norm(self) -> Self::Output {
         self.0.iter().flatten().map(|e| e.powi(2)).sum::<R>().sqrt()
     }
 }
@@ -190,7 +193,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dot::Dot;
+    use crate::ops::dot::Dot;
     use serde_test::{assert_tokens, Token};
 
     #[test]

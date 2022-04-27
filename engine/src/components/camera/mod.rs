@@ -88,39 +88,33 @@ impl Camera {
         let mdlm4 = model.to_matrix();
         match self.projection {
             Projection::Perspective => self.persp.as_matrix() * &mdlm4 * v,
-            Projection::Orthographic => self.ortho.as_matrix() * &(&mdlm4 * v),
+            Projection::Orthographic => self.ortho.as_matrix() * &mdlm4 * v,
         }
     }
 
     /// Transforms a point or vector in normalized device coordinates to world-space.
     pub fn ndc_to_world(&self, model: &Model, v: &Vec4<f32>) -> Vec4<f32> {
+        let mdlaffinv = model.as_affine().inv();
         match self.projection {
-            Projection::Perspective => &model.inv() * &self.persp.inv() * v,
-            Projection::Orthographic => &model.inv() * &self.ortho.inv() * v,
+            Projection::Perspective => &mdlaffinv * self.persp.inv() * v,
+            Projection::Orthographic => &mdlaffinv * self.ortho.inv() * v,
         }
     }
 
     /// Transforms a point or vector in ui-space to normalized device coordinates.
     pub fn ui_to_ndc(&self, v: &Vec2<f32>, depth: f32, w: f32) -> Vec4<f32> {
-        &self.ortho * &Vec4::new(v.x(), v.y(), depth, w)
+        self.ortho.as_matrix() * Vec4::new(v.x(), v.y(), depth, w)
     }
 
     /// Transforms a point or vector in normalized device coordinates to ui-space.
     pub fn ndc_to_ui(&self, v: &Vec4<f32>) -> (Vec2<f32>, f32, f32) {
-        let v: Vec4<f32> = &self.ortho.inv() * v;
+        let v: Vec4<f32> = self.ortho.inv() * v;
         (Vec2::new(v.x(), v.y()), v.z(), v.w())
     }
 
     /// Transforms a point or vector in world-space to a screen point.
     pub fn world_to_screen(&self, model: &Model, v: &Vec4<f32>) -> Vec2<u32> {
-        self.ndc_to_screen(&self.world_to_ndc(v))
-    }
-
-    /// Transforms a screen point or vector to world-space as a ray originating from the camera.
-    pub fn screen_to_world_ray(&self, model: &Model, v: &Vec2<u32>) -> Option<Ray<f32>> {
-        let origin = -model.translation();
-        let target = self.screen_to_world(model, v);
-        Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
+        self.ndc_to_screen(&self.world_to_ndc(model, v))
     }
 
     pub fn ui_to_screen(&self, point: &Point2<f32>, depth: f32) -> Point2<u32> {

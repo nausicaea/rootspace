@@ -1,4 +1,4 @@
-use crate::dot::Dot;
+use crate::ops::dot::Dot;
 use crate::abop;
 use super::Mat;
 use std::ops::Mul;

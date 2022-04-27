@@ -1,7 +1,8 @@
 use num_traits::{Zero, One, Float};
 use crate::mat::{Mat4, Vec4};
 use std::ops::{Div, Mul};
-use crate::forward_ref_binop;
+use crate::{forward_ref_binop, forward_ref_unop};
+use crate::ops::norm::Norm;
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, PartialEq, Clone)]
@@ -52,11 +53,20 @@ where
     pub fn abssq(&self) -> R {
         self.w.powi(2) + self.i.powi(2) + self.j.powi(2) + self.k.powi(2)
     }
+}
 
-    pub fn norm(&self) -> R {
+impl<'a, R> Norm for &'a Quat<R>
+where
+    R: Float,
+{
+    type Output = R;
+
+    fn norm(self) -> Self::Output {
         self.abssq().sqrt()
     }
 }
+
+forward_ref_unop!(impl<R: Float> Norm, norm for Quat<R>, R);
 
 impl<R> Quat<R>
 where

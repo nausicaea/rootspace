@@ -1,3 +1,50 @@
+/// Forward an implementation of a unary operator to combinations of references
+#[macro_export]
+macro_rules! forward_ref_unop {
+    (impl $Op:ident, $op:ident for $Lhs:ty, $Output:ty) => {
+        impl $Op for $Lhs {
+            type Output = $Output;
+
+            fn $op(self) -> Self::Output {
+                $Op::$op(&self)
+            }
+        }
+    };
+    (impl<$(const $N:ident: usize),+ $(,)*> $Op:ident, $op:ident for $Lhs:ty, $Output:ty) => {
+        impl<$(const $N: usize),+> $Op for $Lhs {
+            type Output = $Output;
+
+            fn $op(self) -> Self::Output {
+                $Op::$op(&self)
+            }
+        }
+    };
+    (impl<$R:ident: $Bound:ident> $Op:ident, $op:ident for $Lhs:ty, $Output:ty) => {
+        impl<$R> $Op for $Lhs 
+        where
+            $R: $Bound,
+        {
+            type Output = $Output;
+
+            fn $op(self) -> Self::Output {
+                $Op::$op(&self)
+            }
+        }
+    };
+    (impl<$R:ident: $Bound:ident, $(const $N:ident: usize),+ $(,)*> $Op:ident, $op:ident for $Lhs:ty, $Output:ty) => {
+        impl<$R, $(const $N: usize),+> $Op for $Lhs 
+        where
+            $R: $Bound,
+        {
+            type Output = $Output;
+
+            fn $op(self) -> Self::Output {
+                $Op::$op(&self)
+            }
+        }
+    };
+}
+
 /// Forward an implementation of a binary operator to combinations of references
 #[macro_export]
 macro_rules! forward_ref_binop {
@@ -6,7 +53,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: $Rhs) -> Self::Output {
-                (&self).$op(&rhs)
+                $Op::$op(&self, &rhs)
             }
         }
 
@@ -14,7 +61,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: &'b $Rhs) -> Self::Output {
-                (&self).$op(rhs)
+                $Op::$op(&self, rhs)
             }
         }
 
@@ -22,7 +69,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: $Rhs) -> Self::Output {
-                self.$op(&rhs)
+                $Op::$op(self, &rhs)
             }
         }
     };
@@ -31,7 +78,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: $Rhs) -> Self::Output {
-                (&self).$op(&rhs)
+                $Op::$op(&self, &rhs)
             }
         }
 
@@ -39,7 +86,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: &'b $Rhs) -> Self::Output {
-                (&self).$op(rhs)
+                $Op::$op(&self, rhs)
             }
         }
 
@@ -47,7 +94,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: $Rhs) -> Self::Output {
-                self.$op(&rhs)
+                $Op::$op(self, &rhs)
             }
         }
     };
@@ -56,7 +103,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: $Rhs) -> Self::Output {
-                (&self).$op(&rhs)
+                $Op::$op(&self, &rhs)
             }
         }
 
@@ -64,7 +111,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: &'b $Rhs) -> Self::Output {
-                (&self).$op(rhs)
+                $Op::$op(&self, rhs)
             }
         }
 
@@ -72,7 +119,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: $Rhs) -> Self::Output {
-                self.$op(&rhs)
+                $Op::$op(self, &rhs)
             }
         }
     };
@@ -84,7 +131,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: $Rhs) -> Self::Output {
-                (&self).$op(&rhs)
+                $Op::$op(&self, &rhs)
             }
         }
 
@@ -95,7 +142,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: &'b $Rhs) -> Self::Output {
-                (&self).$op(rhs)
+                $Op::$op(&self, rhs)
             }
         }
 
@@ -106,7 +153,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: $Rhs) -> Self::Output {
-                self.$op(&rhs)
+                $Op::$op(self, &rhs)
             }
         }
     };
@@ -118,7 +165,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: $Rhs) -> Self::Output {
-                (&self).$op(&rhs)
+                $Op::$op(&self, &rhs)
             }
         }
 
@@ -129,7 +176,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: &'b $Rhs) -> Self::Output {
-                (&self).$op(rhs)
+                $Op::$op(&self, rhs)
             }
         }
 
@@ -140,7 +187,7 @@ macro_rules! forward_ref_binop {
             type Output = $Output;
 
             fn $op(self, rhs: $Rhs) -> Self::Output {
-                self.$op(&rhs)
+                $Op::$op(self, &rhs)
             }
         }
     };
@@ -191,7 +238,7 @@ macro_rules! abop {
 mod tests {
     use std::ops::Add;
 
-    use crate::dot::Dot;
+    use crate::ops::dot::Dot;
 
     #[test]
     fn abop_operates_correctly_for_two_arrays() {

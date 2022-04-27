@@ -1,12 +1,14 @@
 use num_traits::{Zero, One, Float, NumAssign, Inv};
 use crate::mat::{Vec3, Vec4, Mat4};
 use crate::quat::Quat;
-use crate::dot::Dot;
-use crate::mul_elem::MulElem;
-use crate::inv_elem::InvElem;
+use crate::ops::dot::Dot;
+use crate::ops::norm::Norm;
+use crate::ops::mul_elem::MulElem;
+use crate::ops::inv_elem::InvElem;
 use std::iter::{Sum, Product};
 use std::ops::{Mul, Add};
 use crate::forward_ref_binop;
+use crate::unit::Unit;
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
@@ -19,7 +21,7 @@ use crate::forward_ref_binop;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Affine<R> {
     pub t: Vec3<R>,
-    pub o: Quat<R>,
+    pub o: Unit<Quat<R>>,
     pub s: Vec3<R>,
 }
 
@@ -31,7 +33,7 @@ impl<R> Affine<R> {
 
 impl<R> Affine<R> 
 where
-    R: Zero + One + Copy,
+    R: Float,
 {
     pub fn identity() -> Self {
         AffineBuilder::default().build()
@@ -45,7 +47,7 @@ where
     pub fn inv(&self) -> Self {
         Affine {
             t: -(&self.t),
-            o: self.o.c(),
+            o: self.o.as_ref().c().into(),
             s: (&self.s).inv_elem(),
         }
     }
@@ -71,7 +73,7 @@ where
     fn dot(self, rhs: &'a Vec4<R>) -> Self::Output {
         let scaled: Vec3<R> = (&self.s).mul_elem(&rhs.subset::<3, 1>(0, 0));
         let scaled: Vec4<R> = Vec4::new(scaled.x(), scaled.y(), scaled.z(), rhs.w());
-        let rotated = &self.o * &scaled;
+        let rotated = self.o.as_ref() * &scaled;
         let t = Vec4::new(self.t.x(), self.t.y(), self.t.z(), R::zero());
         let translated = t + rotated;
         
@@ -102,7 +104,7 @@ where
     fn dot(self, rhs: Self) -> Self::Output {
         Affine {
             t: (&self.t).add(&rhs.t),
-            o: (&self.o).mul(&rhs.o),
+            o: self.o.as_ref().mul(rhs.o.as_ref()).into(),
             s: (&self.s).mul_elem(&rhs.s),
         }
     }
@@ -152,7 +154,7 @@ where
     R: Float + NumAssign,
 {
     fn from(v: &'a Affine<R>) -> Self {
-        let mut m: Mat4<R> = (&v.o).into();
+        let mut m: Mat4<R> = v.o.as_ref().into();
         m[(0, 0)] *= v.s[0];
         m[(1, 1)] *= v.s[1];
         m[(2, 2)] *= v.s[2];
@@ -196,7 +198,7 @@ where
         rot_m[(3, 2)] = R::zero();
         rot_m[(3, 3)] = R::one();
 
-        let o = Quat::from(rot_m);
+        let o: Unit<Quat<R>> = Unit::from(Quat::from(rot_m));
 
         Ok(Affine {
             t, o, s,
@@ -230,12 +232,12 @@ impl<R> AffineBuilder<R> {
 
 impl<R> AffineBuilder<R> 
 where
-    R: One + Zero + Copy,
+    R: Float,
 {
     pub fn build(self) -> Affine<R> {
         Affine {
             t: self.t.unwrap_or_else(Vec3::zero),
-            o: self.o.unwrap_or_else(Quat::identity),
+            o: self.o.map(|o| Unit::from(o)).unwrap_or_else(|| Unit::from(Quat::identity())),
             s: self.s.unwrap_or_else(Vec3::one),
         }
     }
@@ -260,7 +262,7 @@ mod tests {
     fn affine_provides_identity_constructor() {
         let a: Affine<f32> = Affine::identity();
         assert_eq!(a.t, Vec3::<f32>::zero());
-        assert_eq!(a.o, Quat::<f32>::identity());
+        assert_eq!(a.o, Unit::from(Quat::<f32>::identity()));
         assert_eq!(a.s, Vec3::<f32>::one());
     }
 
