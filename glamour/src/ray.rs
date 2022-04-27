@@ -1,4 +1,4 @@
-use num_traits::Num;
+use num_traits::Float;
 use super::mat::Vec4;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -18,10 +18,10 @@ impl<R> Ray<R> {
 
 impl<R> Ray<R> 
 where
-    R: Num + Copy,
+    R: Float,
 {
     pub fn at(&self, position: &R) -> Vec4<R> {
-        &self.o + &(&self.d * position)
+        &self.o + &self.d * position
     }
 }
 

@@ -1,4 +1,4 @@
-use num_traits::{Zero, One, Float, Num, Signed};
+use num_traits::{Zero, One, Float, Num};
 use crate::mat::{Mat4, Vec4};
 use std::ops::{Div, Mul};
 
@@ -28,7 +28,7 @@ impl<R> Quat<R> {
 
 impl<R> Quat<R>
 where
-    R: Num + Signed + Copy,
+    R: Float,
 {
     pub fn c(&self) -> Self {
         Quat::new(self.w, -self.i, -self.j, -self.k)
@@ -37,7 +37,7 @@ where
 
 impl<R> Quat<R> 
 where
-    R: Float + Signed + Copy,
+    R: Float,
 {
     pub fn inv(&self) -> Self {
         self.c() / self.abssq()
@@ -134,7 +134,7 @@ impl_scalar_quatops! (
 
 impl<R> Mul<Vec4<R>> for Quat<R> 
 where
-    R: Num + Copy + Zero + Signed,
+    R: Float,
 {
     type Output = Vec4<R>;
 
@@ -145,7 +145,7 @@ where
 
 impl<'a, R> Mul<&'a Vec4<R>> for &'a Quat<R> 
 where
-    R: Num + Copy + Zero + Signed,
+    R: Float,
 {
     type Output = Vec4<R>;
 
@@ -158,7 +158,7 @@ where
 
 impl<R> Mul for Quat<R> 
 where
-    R: Num + Copy,
+    R: Float,
 {
     type Output = Self;
 
@@ -169,7 +169,7 @@ where
 
 impl<'a, R> Mul for &'a Quat<R> 
 where
-    R: Num + Copy,
+    R: Float,
 {
     type Output = Quat<R>;
 
@@ -194,7 +194,7 @@ where
 
 impl<R> From<Mat4<R>> for Quat<R>
 where
-    R: Float + One,
+    R: Float,
 {
     fn from(v: Mat4<R>) -> Self {
         let half: R = R::one() / (R::one() + R::one());

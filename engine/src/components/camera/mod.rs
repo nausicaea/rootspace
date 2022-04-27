@@ -4,8 +4,8 @@ pub mod projection;
 
 use approx::ulps_eq;
 use ecs::{Component, VecStorage};
-use nalgebra::{Matrix4, Orthographic3, Perspective3, Point2, Point3, Unit, Vector3};
-use glamour::{Vec4, Vec2, Ray, Ortho, Persp};
+use nalgebra::{Point2, Point3, Unit, Vector3};
+use glamour::{Vec4, Vec2, Ray, Ortho, Persp, Mat4};
 use serde::{Deserialize, Serialize};
 
 use self::{camera_builder::CameraBuilder, camera_ser_de::CameraSerDe, projection::Projection};
@@ -17,8 +17,6 @@ pub struct Camera {
     projection: Projection,
     ortho: Ortho<f32>,
     persp: Persp<f32>,
-    orthographic: Orthographic3<f32>,
-    perspective: Perspective3<f32>,
     dimensions: (u32, u32),
     fov_y: f32,
     frustum_z: (f32, f32),
@@ -34,16 +32,9 @@ impl Camera {
         if value == self.dimensions {
             return;
         }
-        if value.0 != self.dimensions.0 {
-            self.orthographic
-                .set_left_and_right(value.0 as f32 / -2.0, value.0 as f32 / 2.0);
-        }
-        if value.1 != self.dimensions.1 {
-            self.orthographic
-                .set_bottom_and_top(value.1 as f32 / -2.0, value.1 as f32 / 2.0);
-        }
-        self.perspective.set_aspect(value.0 as f32 / value.1 as f32);
+
         self.dimensions = value;
+        self.rebuild_projections();
     }
 
     pub fn set_dpi_factor(&mut self, value: f64) {
@@ -53,32 +44,15 @@ impl Camera {
         self.dpi_factor = value;
     }
 
-    pub fn set_fov_y(&mut self, value: f32) {
-        if ulps_eq!(value, self.fov_y) {
-            return;
-        }
-        self.perspective.set_fovy(value);
-        self.fov_y = value;
-    }
-
-    pub fn set_frustum_z(&mut self, value: (f32, f32)) {
-        if ulps_eq!(value.0, self.frustum_z.0) && ulps_eq!(value.1, self.frustum_z.1) {
-            return;
-        }
-        self.orthographic.set_znear_and_zfar(value.0, value.1);
-        self.perspective.set_znear_and_zfar(value.0, value.1);
-        self.frustum_z = value;
-    }
-
-    pub fn world_matrix(&self) -> &Matrix4<f32> {
+    pub fn world_matrix(&self) -> &Mat4<f32> {
         match self.projection {
-            Projection::Perspective => self.perspective.as_matrix(),
-            Projection::Orthographic => self.orthographic.as_matrix(),
+            Projection::Perspective => self.persp.as_matrix(),
+            Projection::Orthographic => self.ortho.as_matrix(),
         }
     }
 
-    pub fn ui_matrix(&self) -> &Matrix4<f32> {
-        self.orthographic.as_matrix()
+    pub fn ui_matrix(&self) -> &Mat4<f32> {
+        self.ortho.as_matrix()
     }
 
     pub fn projection(&self) -> Projection {
@@ -111,9 +85,10 @@ impl Camera {
 
     /// Transforms a point or vector in world-space to normalized device coordinates.
     pub fn world_to_ndc(&self, model: &Model, v: &Vec4<f32>) -> Vec4<f32> {
+        let mdlm4 = model.to_matrix();
         match self.projection {
-            Projection::Perspective => &self.persp * model * v,
-            Projection::Orthographic => &self.ortho * model * v,
+            Projection::Perspective => self.persp.as_matrix() * &mdlm4 * v,
+            Projection::Orthographic => self.ortho.as_matrix() * &(&mdlm4 * v),
         }
     }
 
@@ -195,6 +170,23 @@ impl Camera {
     /// Transforms a point or vector in screen space to ui space.
     fn screen_to_ui(&self, v: &Vec2<u32>) -> (Vec2<f32>, f32) {
         self.ndc_to_ui(&self.screen_to_ndc(v))
+    }
+
+    fn rebuild_projections(&mut self) {
+        self.ortho = Ortho::builder()
+            .with_aspect(self.dimensions.0 as f32 / self.dimensions.1 as f32)
+            .with_fov_y(self.fov_y)
+            .with_near_z(self.frustum_z.0)
+            .with_far_z(self.frustum_z.1)
+            .build()
+            .unwrap_or_else(|e| panic!("cannot update the orthographic projection matrix: {}", e));
+        self.persp = Persp::builder()
+            .with_aspect(self.dimensions.0 as f32 / self.dimensions.1 as f32)
+            .with_fov_y(self.fov_y)
+            .with_near_z(self.frustum_z.0)
+            .with_far_z(self.frustum_z.1)
+            .build()
+            .unwrap_or_else(|e| panic!("cannot update the perspective projection matrix: {}", e));
     }
 }
 

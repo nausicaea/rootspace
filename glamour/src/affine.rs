@@ -39,7 +39,7 @@ where
 
 impl<R> Affine<R>
 where
-    R: Copy + Num + Zero + Signed + Inv<Output = R>,
+    R: Float + Inv<Output = R>,
 {
     pub fn inv(&self) -> Self {
         Affine {
@@ -85,12 +85,12 @@ where
 
 impl<'a, R> Dot<&'a Vec4<R>> for &'a Affine<R> 
 where
-    R: Num + Copy + Sum + One + Signed + Zero,
+    R: Float,
 {
     type Output = Vec4<R>;
 
     fn dot(self, rhs: &'a Vec4<R>) -> Self::Output {
-        let scaled: Vec3<R> = (&self.s).mul_elementwise(&rhs.subset::<3, 1>(0, 0));
+        let scaled: Vec3<R> = (&self.s).mul_elem(&rhs.subset::<3, 1>(0, 0));
         let scaled: Vec4<R> = Vec4::new(scaled.x(), scaled.y(), scaled.z(), rhs.w());
         let rotated = &self.o * &scaled;
         let t = Vec4::new(self.t.x(), self.t.y(), self.t.z(), R::zero());

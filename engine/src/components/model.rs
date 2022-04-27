@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use ecs::{Component, VecStorage};
 use glamour::{Affine, Mat4, Vec3, Quat, AffineBuilder, Vec4};
 use serde::{Deserialize, Serialize};
