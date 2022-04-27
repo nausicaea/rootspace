@@ -3,43 +3,11 @@ use num_traits::{Float, Inv};
 use super::Mat;
 use crate::mul_elem::MulElem;
 use crate::inv_elem::InvElem;
+use crate::forward_ref_binop;
 
 macro_rules! impl_binops {
     ($($Op:ident, $op:ident, $deleg:ident);+ $(;)*) => {
         $(
-        impl<R, const I: usize, const J: usize> $Op for Mat<R, I, J>
-        where
-            R: Float,
-        {
-            type Output = Self;
-
-            fn $op(self, rhs: Self) -> Self::Output {
-                (&self).$op(&rhs)
-            }
-        }
-
-        impl<'b, R, const I: usize, const J: usize> $Op<&'b Mat<R, I, J>> for Mat<R, I, J>
-        where
-            R: Float,
-        {
-            type Output = Mat<R, I, J>;
-
-            fn $op(self, rhs: &'b Mat<R, I, J>) -> Self::Output {
-                (&self).$op(rhs)
-            }
-        }
-
-        impl<'a, R, const I: usize, const J: usize> $Op<Mat<R, I, J>> for &'a Mat<R, I, J>
-        where
-            R: Float,
-        {
-            type Output = Mat<R, I, J>;
-
-            fn $op(self, rhs: Mat<R, I, J>) -> Self::Output {
-                self.$op(&rhs)
-            }
-        }
-
         impl<'a, 'b, R, const I: usize, const J: usize> $Op<&'b Mat<R, I, J>> for &'a Mat<R, I, J>
         where
             R: Float,
@@ -56,6 +24,8 @@ macro_rules! impl_binops {
                 mat
             }
         }
+
+        forward_ref_binop!(impl<R: Float, const I: usize, const J: usize> $Op, $op for Mat<R, I, J>, Mat<R, I, J>, Mat<R, I, J>);
         )+
     };
 }
@@ -108,39 +78,6 @@ impl_unops! {
 macro_rules! impl_scalar_binops {
     ($($Op:ident, $op:ident, [$($tgt:ident),+ $(,)*]);+ $(;)*) => {
         $(
-        impl<R, const I: usize, const J: usize> $Op<R> for Mat<R, I, J>
-            where
-                R: Float,
-        {
-            type Output = Mat<R, I, J>;
-
-            fn $op(self, rhs: R) -> Self::Output {
-                (&self).$op(&rhs)
-            }
-        }
-
-        impl<'b, R, const I: usize, const J: usize> $Op<&'b R> for Mat<R, I, J>
-            where
-                R: Float,
-        {
-            type Output = Mat<R, I, J>;
-
-            fn $op(self, rhs: &'b R) -> Self::Output {
-                (&self).$op(rhs)
-            }
-        }
-
-        impl<'a, R, const I: usize, const J: usize> $Op<R> for &'a Mat<R, I, J>
-            where
-                R: Float,
-        {
-            type Output = Mat<R, I, J>;
-
-            fn $op(self, rhs: R) -> Self::Output {
-                self.$op(&rhs)
-            }
-        }
-
         impl<'a, 'b, R, const I: usize, const J: usize> $Op<&'b R> for &'a Mat<R, I, J>
             where
                 R: Float,
@@ -158,31 +95,9 @@ macro_rules! impl_scalar_binops {
             }
         }
 
+        forward_ref_binop!(impl<R: Float, const I: usize, const J: usize> $Op, $op for Mat<R, I, J>, R, Mat<R, I, J>);
+
         $(
-        impl<const I: usize, const J: usize> $Op<Mat<$tgt, I, J>> for $tgt {
-            type Output = Mat<$tgt, I, J>;
-
-            fn $op(self, rhs: Mat<$tgt, I, J>) -> Self::Output {
-                (&self).$op(&rhs)
-            }
-        }
-
-        impl<'b, const I: usize, const J: usize> $Op<&'b Mat<$tgt, I, J>> for $tgt {
-            type Output = Mat<$tgt, I, J>;
-
-            fn $op(self, rhs: &'b Mat<$tgt, I, J>) -> Self::Output {
-                (&self).$op(rhs)
-            }
-        }
-
-        impl<'a, const I: usize, const J: usize> $Op<Mat<$tgt, I, J>> for &'a $tgt {
-            type Output = Mat<$tgt, I, J>;
-
-            fn $op(self, rhs: Mat<$tgt, I, J>) -> Self::Output {
-                self.$op(&rhs)
-            }
-        }
-
         impl<'a, 'b, const I: usize, const J: usize> $Op<&'b Mat<$tgt, I, J>> for &'a $tgt {
             type Output = Mat<$tgt, I, J>;
 
@@ -196,6 +111,8 @@ macro_rules! impl_scalar_binops {
                 mat
             }
         }
+
+        forward_ref_binop!(impl<const I: usize, const J: usize> $Op, $op for $tgt, Mat<$tgt, I, J>, Mat<$tgt, I, J>);
         )*
 
         )+

@@ -6,6 +6,7 @@ use crate::mul_elem::MulElem;
 use crate::inv_elem::InvElem;
 use std::iter::{Sum, Product};
 use std::ops::{Mul, Add};
+use crate::forward_ref_binop;
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
@@ -50,17 +51,6 @@ where
     }
 }
 
-impl<R> Mul<Vec4<R>> for Affine<R> 
-where
-    R: Float,
-{
-    type Output = Vec4<R>;
-
-    fn mul(self, rhs: Vec4<R>) -> Self::Output {
-        (&self).mul(&rhs)
-    }
-}
-
 impl<'a, R> Mul<&'a Vec4<R>> for &'a Affine<R> 
 where
     R: Float,
@@ -69,17 +59,6 @@ where
 
     fn mul(self, rhs: &'a Vec4<R>) -> Self::Output {
         self.dot(rhs)
-    }
-}
-
-impl<R> Dot<Vec4<R>> for Affine<R> 
-where
-    R: Float,
-{
-    type Output = Vec4<R>;
-
-    fn dot(self, rhs: Vec4<R>) -> Self::Output {
-        (&self).dot(&rhs)
     }
 }
 
@@ -100,16 +79,8 @@ where
     }
 }
 
-impl<R> Mul for Affine<R>
-where
-    R: Float,
-{
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        (&self).mul(&rhs)
-    }
-}
+forward_ref_binop!(impl<R: Float> Dot, dot for Affine<R>, Vec4<R>, Vec4<R>);
+forward_ref_binop!(impl<R: Float> Mul, mul for Affine<R>, Vec4<R>, Vec4<R>);
 
 impl<'a, R> Mul for &'a Affine<R>
 where
@@ -119,17 +90,6 @@ where
 
     fn mul(self, rhs: Self) -> Self::Output {
         self.dot(rhs)
-    }
-}
-
-impl<R> Dot for Affine<R>
-where
-    R: Float,
-{
-    type Output = Self;
-
-    fn dot(self, rhs: Self) -> Self::Output {
-        (&self).dot(&rhs)
     }
 }
 
@@ -147,6 +107,9 @@ where
         }
     }
 }
+
+forward_ref_binop!(impl<R: Float> Dot, dot for Affine<R>, Affine<R>, Affine<R>);
+forward_ref_binop!(impl<R: Float> Mul, mul for Affine<R>, Affine<R>, Affine<R>);
 
 impl<R> Product for Affine<R> 
 where

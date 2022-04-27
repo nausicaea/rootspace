@@ -4,48 +4,24 @@ use super::Mat;
 use std::ops::Mul;
 use num_traits::Float;
 use std::iter::Sum;
+use crate::forward_ref_binop;
+
+trait FloatAndSum: Float + Sum<Self> + for<'r> Sum<&'r Self> {}
+
+impl<T> FloatAndSum for T
+where
+    T: Float + Sum<Self> + for<'r> Sum<&'r Self>,
+{
+}
 
 macro_rules! impl_matmul {
     ($dim:literal, $tt:tt) => {
         impl_matmul!($dim, $dim, $dim, $dim, $tt);
     };
     ($nl:literal, $ml:literal, $nr:literal, $mr:literal, $tt:tt) => {
-        impl<R> Mul<Mat<R, $nr, $mr>> for Mat<R, $nl, $ml>
-            where
-                R: Float + Sum,
-        {
-            type Output = Mat<R, $nl, $mr>;
-
-            fn mul(self, rhs: Mat<R, $nr, $mr>) -> Self::Output {
-                (&self).mul(&rhs)
-            }
-        }
-
-        impl<'b, R> Mul<&'b Mat<R, $nr, $mr>> for Mat<R, $nl, $ml>
-            where
-                R: Float + Sum,
-        {
-            type Output = Mat<R, $nl, $mr>;
-
-            fn mul(self, rhs: &'b Mat<R, $nr, $mr>) -> Self::Output {
-                (&self).mul(rhs)
-            }
-        }
-        
-        impl<'a, R> Mul<Mat<R, $nr, $mr>> for &'a Mat<R, $nl, $ml>
-            where
-                R: Float + Sum,
-        {
-            type Output = Mat<R, $nl, $mr>;
-
-            fn mul(self, rhs: Mat<R, $nr, $mr>) -> Self::Output {
-                self.mul(&rhs)
-            }
-        }
-
         impl<'a, 'b, R> Mul<&'b Mat<R, $nr, $mr>> for &'a Mat<R, $nl, $ml>
             where
-                R: Float + Sum,
+                R: FloatAndSum,
         {
             type Output = Mat<R, $nl, $mr>;
 
@@ -54,42 +30,11 @@ macro_rules! impl_matmul {
             }
         }
 
-        impl<R> Dot<Mat<R, $nr, $mr>> for Mat<R, $nl, $ml>
-            where
-                R: Float + Sum,
-        {
-            type Output = Mat<R, $nl, $mr>;
-
-            fn dot(self, rhs: Mat<R, $nr, $mr>) -> Self::Output {
-                (&self).dot(&rhs)
-            }
-        }
-
-        impl<'b, R> Dot<&'b Mat<R, $nr, $mr>> for Mat<R, $nl, $ml>
-            where
-                R: Float + Sum,
-        {
-            type Output = Mat<R, $nl, $mr>;
-
-            fn dot(self, rhs: &'b Mat<R, $nr, $mr>) -> Self::Output {
-                (&self).dot(rhs)
-            }
-        }
-
-        impl<'a, R> Dot<Mat<R, $nr, $mr>> for &'a Mat<R, $nl, $ml>
-            where
-                R: Float + Sum,
-        {
-            type Output = Mat<R, $nl, $mr>;
-
-            fn dot(self, rhs: Mat<R, $nr, $mr>) -> Self::Output {
-                self.dot(&rhs)
-            }
-        }
+        forward_ref_binop!(impl<R: FloatAndSum> Mul, mul for Mat<R, $nl, $ml>, Mat<R, $nr, $mr>, Mat<R, $nl, $mr>);
 
         impl<'a, 'b, R> Dot<&'b Mat<R, $nr, $mr>> for &'a Mat<R, $nl, $ml>
         where
-            R: Float + Sum,
+            R: FloatAndSum,
         {
             type Output = Mat<R, $nl, $mr>;
 
@@ -98,6 +43,8 @@ macro_rules! impl_matmul {
                 c.into()
             }
         }
+
+        forward_ref_binop!(impl<R: FloatAndSum> Dot, dot for Mat<R, $nl, $ml>, Mat<R, $nr, $mr>, Mat<R, $nl, $mr>);
     };
 }
 
@@ -181,42 +128,23 @@ impl_matmul!(
     ]
 );
 
-impl<R> Dot<Mat<R, 2, 1>> for Mat<R, 1, 2>
+impl<'a, 'b, R> Mul<&'b Mat<R, 2, 1>> for &'a Mat<R, 1, 2>
 where
-    R: Float + Sum,
+    R: FloatAndSum
 {
     type Output = R;
 
-    fn dot(self, rhs: Mat<R, 2, 1>) -> Self::Output {
-        (&self).dot(&rhs)
+    fn mul(self, rhs: &'b Mat<R, 2, 1>) -> Self::Output {
+        self.dot(rhs)
     }
 }
 
-impl<'b, R> Dot<&'b Mat<R, 2, 1>> for Mat<R, 1, 2>
-where
-    R: Float + Sum,
-{
-    type Output = R;
+forward_ref_binop!(impl<R: FloatAndSum> Mul, mul for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
 
-    fn dot(self, rhs: &'b Mat<R, 2, 1>) -> Self::Output {
-        (&self).dot(rhs)
-    }
-}
-
-impl<'a, R> Dot<Mat<R, 2, 1>> for &'a Mat<R, 1, 2>
-where
-    R: Float + Sum,
-{
-    type Output = R;
-
-    fn dot(self, rhs: Mat<R, 2, 1>) -> Self::Output {
-        self.dot(&rhs)
-    }
-}
-
+/// MARK
 impl<'a, 'b, R> Dot<&'b Mat<R, 2, 1>> for &'a Mat<R, 1, 2>
 where
-    R: Float + Sum,
+    R: FloatAndSum
 {
     type Output = R;
 
@@ -224,4 +152,6 @@ where
         abop!(dot, self, rhs, [((0, 1), (0, 1))])[0]
     }
 }
+
+forward_ref_binop!(impl<R: FloatAndSum> Dot, dot for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
 

@@ -1,3 +1,151 @@
+/// Forward an implementation of a binary operator to combinations of references
+#[macro_export]
+macro_rules! forward_ref_binop {
+    (impl $Op:ident, $op:ident for $Lhs:ty, $Rhs:ty, $Output:ty) => {
+        impl $Op<$Rhs> for $Lhs {
+            type Output = $Output;
+
+            fn $op(self, rhs: $Rhs) -> Self::Output {
+                (&self).$op(&rhs)
+            }
+        }
+
+        impl<'b> $Op<&'b $Rhs> for $Lhs {
+            type Output = $Output;
+
+            fn $op(self, rhs: &'b $Rhs) -> Self::Output {
+                (&self).$op(rhs)
+            }
+        }
+
+        impl<'a> $Op<$Rhs> for &'a $Lhs {
+            type Output = $Output;
+
+            fn $op(self, rhs: $Rhs) -> Self::Output {
+                self.$op(&rhs)
+            }
+        }
+    };
+    (impl<$(const $N:ident: usize),+ $(,)*> $Op:ident, $op:ident for $Lhs:ty, $Rhs:ty, $Output:ty) => {
+        impl<$(const $N: usize),+> $Op<$Rhs> for $Lhs {
+            type Output = $Output;
+
+            fn $op(self, rhs: $Rhs) -> Self::Output {
+                (&self).$op(&rhs)
+            }
+        }
+
+        impl<'b, $(const $N: usize),+> $Op<&'b $Rhs> for $Lhs {
+            type Output = $Output;
+
+            fn $op(self, rhs: &'b $Rhs) -> Self::Output {
+                (&self).$op(rhs)
+            }
+        }
+
+        impl<'a, $(const $N: usize),+> $Op<$Rhs> for &'a $Lhs {
+            type Output = $Output;
+
+            fn $op(self, rhs: $Rhs) -> Self::Output {
+                self.$op(&rhs)
+            }
+        }
+    };
+    (impl<$R:ident> $Op:ident, $op:ident for $Lhs:ty, $Rhs:ty, $Output:ty) => {
+        impl<$R> $Op<$Rhs> for $Lhs {
+            type Output = $Output;
+
+            fn $op(self, rhs: $Rhs) -> Self::Output {
+                (&self).$op(&rhs)
+            }
+        }
+
+        impl<'b, $R> $Op<&'b $Rhs> for $Lhs {
+            type Output = $Output;
+
+            fn $op(self, rhs: &'b $Rhs) -> Self::Output {
+                (&self).$op(rhs)
+            }
+        }
+
+        impl<'a, $R> $Op<$Rhs> for &'a $Lhs {
+            type Output = $Output;
+
+            fn $op(self, rhs: $Rhs) -> Self::Output {
+                self.$op(&rhs)
+            }
+        }
+    };
+    (impl<$R:ident: $Bound:ident> $Op:ident, $op:ident for $Lhs:ty, $Rhs:ty, $Output:ty) => {
+        impl<$R> $Op<$Rhs> for $Lhs
+        where
+            $R: $Bound,
+        {
+            type Output = $Output;
+
+            fn $op(self, rhs: $Rhs) -> Self::Output {
+                (&self).$op(&rhs)
+            }
+        }
+
+        impl<'b, $R> $Op<&'b $Rhs> for $Lhs
+        where
+            $R: $Bound,
+        {
+            type Output = $Output;
+
+            fn $op(self, rhs: &'b $Rhs) -> Self::Output {
+                (&self).$op(rhs)
+            }
+        }
+
+        impl<'a, $R> $Op<$Rhs> for &'a $Lhs
+        where
+            $R: $Bound,
+        {
+            type Output = $Output;
+
+            fn $op(self, rhs: $Rhs) -> Self::Output {
+                self.$op(&rhs)
+            }
+        }
+    };
+    (impl<$R:ident: $Bound:ident, $(const $N:ident: usize),+ $(,)*> $Op:ident, $op:ident for $Lhs:ty, $Rhs:ty, $Output:ty) => {
+        impl<$R, $(const $N: usize),+> $Op<$Rhs> for $Lhs
+        where
+            $R: $Bound,
+        {
+            type Output = $Output;
+
+            fn $op(self, rhs: $Rhs) -> Self::Output {
+                (&self).$op(&rhs)
+            }
+        }
+
+        impl<'b, $R, $(const $N: usize),+> $Op<&'b $Rhs> for $Lhs
+        where
+            $R: $Bound,
+        {
+            type Output = $Output;
+
+            fn $op(self, rhs: &'b $Rhs) -> Self::Output {
+                (&self).$op(rhs)
+            }
+        }
+
+        impl<'a, $R, $(const $N: usize),+> $Op<$Rhs> for &'a $Lhs
+        where
+            $R: $Bound,
+        {
+            type Output = $Output;
+
+            fn $op(self, rhs: $Rhs) -> Self::Output {
+                self.$op(&rhs)
+            }
+        }
+    };
+}
+
 /// Apply a binary operation to arrays (or anything indexable, really)
 #[macro_export]
 macro_rules! abop {

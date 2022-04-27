@@ -1,6 +1,7 @@
-use num_traits::{Zero, One, Float, Num};
+use num_traits::{Zero, One, Float};
 use crate::mat::{Mat4, Vec4};
 use std::ops::{Div, Mul};
+use crate::forward_ref_binop;
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, PartialEq, Clone)]
@@ -74,55 +75,40 @@ where
 macro_rules! impl_scalar_quatops {
     ($($Op:ident, $op:ident, [$($tgt:ident),+ $(,)*]);+ $(;)*) => {
         $(
-            impl<R> $Op<R> for Quat<R>
-            where
-                R: Num + Copy,
-            {
-                type Output = Quat<R>;
+        impl<'a, 'b, R> $Op<&'b R> for &'a Quat<R>
+        where
+            R: Float,
+        {
+            type Output = Quat<R>;
 
-                fn $op(self, rhs: R) -> Self::Output {
-                    (&self).$op(&rhs)
+            fn $op(self, rhs: &'b R) -> Self::Output {
+                Quat {
+                    w: self.w.$op(*rhs),
+                    i: self.i.$op(*rhs),
+                    j: self.j.$op(*rhs),
+                    k: self.k.$op(*rhs),
                 }
             }
+        }
 
-            impl<'a, R> $Op<&'a R> for &'a Quat<R>
-            where
-                R: Num + Copy,
-            {
-                type Output = Quat<R>;
+        forward_ref_binop!(impl<R: Float> $Op, $op for Quat<R>, R, Quat<R>);
 
-                fn $op(self, rhs: &'a R) -> Self::Output {
-                    Quat {
-                        w: self.w.$op(*rhs),
-                        i: self.i.$op(*rhs),
-                        j: self.j.$op(*rhs),
-                        k: self.k.$op(*rhs),
-                    }
+        $(
+        impl<'a, 'b> $Op<&'b Quat<$tgt>> for &'a $tgt {
+            type Output = Quat<$tgt>;
+
+            fn $op(self, rhs: &'b Quat<$tgt>) -> Self::Output {
+                Quat {
+                    w: self.$op(rhs.w),
+                    i: self.$op(rhs.i),
+                    j: self.$op(rhs.j),
+                    k: self.$op(rhs.k),
                 }
             }
+        }
 
-            $(
-                impl $Op<Quat<$tgt>> for $tgt {
-                    type Output = Quat<$tgt>;
-
-                    fn $op(self, rhs: Quat<$tgt>) -> Self::Output {
-                        (&self).$op(&rhs)
-                    }
-                }
-
-                impl<'a> $Op<&'a Quat<$tgt>> for &'a $tgt {
-                    type Output = Quat<$tgt>;
-
-                    fn $op(self, rhs: &'a Quat<$tgt>) -> Self::Output {
-                        Quat {
-                            w: self.$op(rhs.w),
-                            i: self.$op(rhs.i),
-                            j: self.$op(rhs.j),
-                            k: self.$op(rhs.k),
-                        }
-                    }
-                }
-            )*
+        forward_ref_binop!(impl $Op, $op for $tgt, Quat<$tgt>, Quat<$tgt>);
+        )*
         )+
     }
 }
@@ -132,48 +118,28 @@ impl_scalar_quatops! (
     Div, div, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
 );
 
-impl<R> Mul<Vec4<R>> for Quat<R> 
+impl<'a, 'b, R> Mul<&'b Vec4<R>> for &'a Quat<R> 
 where
     R: Float,
 {
     type Output = Vec4<R>;
 
-    fn mul(self, rhs: Vec4<R>) -> Self::Output {
-        (&self).mul(&rhs)
-    }
-}
-
-impl<'a, R> Mul<&'a Vec4<R>> for &'a Quat<R> 
-where
-    R: Float,
-{
-    type Output = Vec4<R>;
-
-    fn mul(self, rhs: &'a Vec4<R>) -> Self::Output {
+    fn mul(self, rhs: &'b Vec4<R>) -> Self::Output {
         let q = Quat::new(R::zero(), rhs.x(), rhs.y(), rhs.z());
         let rhs_1 = self * &q * self.c();
         Vec4::new(rhs_1.i, rhs_1.j, rhs_1.k, rhs.w())
     }
 }
 
-impl<R> Mul for Quat<R> 
-where
-    R: Float,
-{
-    type Output = Self;
+forward_ref_binop!(impl<R: Float> Mul, mul for Quat<R>, Vec4<R>, Vec4<R>);
 
-    fn mul(self, rhs: Self) -> Self::Output {
-        (&self).mul(&rhs)
-    }
-}
-
-impl<'a, R> Mul for &'a Quat<R> 
+impl<'a, 'b, R> Mul<&'b Quat<R>> for &'a Quat<R> 
 where
     R: Float,
 {
     type Output = Quat<R>;
 
-    fn mul(self, rhs: Self) -> Self::Output {
+    fn mul(self, rhs: &'b Quat<R>) -> Self::Output {
         let a1 = self.w;
         let b1 = self.i;
         let c1 = self.j;
@@ -191,6 +157,8 @@ where
         )
     }
 }
+
+forward_ref_binop!(impl<R: Float> Mul, mul for Quat<R>, Quat<R>, Quat<R>);
 
 impl<R> From<Mat4<R>> for Quat<R>
 where
