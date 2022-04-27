@@ -16,6 +16,27 @@ impl<R> Ortho<R> {
     }
 }
 
+impl<R> Ortho<R> 
+where
+    R: Float,
+{
+    pub fn inv(&self) -> Ortho<R> {
+        let z = R::zero();
+        let o = R::one();
+        let m00 = o / self.0[(0, 0)];
+        let m11 = o / self.0[(1, 1)];
+        let m22 = o / self.0[(2, 2)];
+        let m23 = -(self.0[(2, 3)] / self.0[(2, 2)]);
+
+        Ortho(Mat4::from([
+            [m00, z, z, z],
+            [z, m11, z, z],
+            [z, z, m22, m23],
+            [z, z, z, o],
+        ]))
+    }
+}
+
 impl<R> AsRef<Mat4<R>> for Ortho<R> {
     fn as_ref(&self) -> &Mat4<R> {
         &self.0
@@ -284,6 +305,37 @@ mod tests {
         assert_relative_eq!(m4[(2, 1)],  0.0);
         assert_relative_eq!(m4[(2, 2)], -0.00200020002);
         assert_relative_eq!(m4[(2, 3)], -1.00020002);
+        assert_relative_eq!(m4[(3, 0)],  0.0);
+        assert_relative_eq!(m4[(3, 1)],  0.0);
+        assert_relative_eq!(m4[(3, 2)],  0.0);
+        assert_relative_eq!(m4[(3, 3)],  1.0);
+    }
+
+    #[test]
+    fn ortho_supports_inversion() {
+        let i = Ortho::builder()
+            .with_aspect(1.5)
+            .with_fov_y(std::f32::consts::PI / 4.0)
+            .with_near_z(0.1)
+            .with_far_z(1000.0)
+            .build()
+            .unwrap()
+            .inv();
+
+        let m4: Mat4<f32> = i.0;
+
+        assert_relative_eq!(m4[(0, 0)],  207.1067772724);
+        assert_relative_eq!(m4[(0, 1)],  0.0);
+        assert_relative_eq!(m4[(0, 2)],  0.0);
+        assert_relative_eq!(m4[(0, 3)],  0.0);
+        assert_relative_eq!(m4[(1, 0)],  0.0);
+        assert_relative_eq!(m4[(1, 1)],  138.0711848483);
+        assert_relative_eq!(m4[(1, 2)],  0.0);
+        assert_relative_eq!(m4[(1, 3)],  0.0);
+        assert_relative_eq!(m4[(2, 0)],  0.0);
+        assert_relative_eq!(m4[(2, 1)],  0.0);
+        assert_relative_eq!(m4[(2, 2)], -499.9500000005);
+        assert_relative_eq!(m4[(2, 3)], -500.0499999995);
         assert_relative_eq!(m4[(3, 0)],  0.0);
         assert_relative_eq!(m4[(3, 1)],  0.0);
         assert_relative_eq!(m4[(3, 2)],  0.0);

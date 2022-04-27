@@ -16,6 +16,27 @@ impl<R> Persp<R> {
     }
 }
 
+impl<R> Persp<R> 
+where
+    R: Float,
+{
+    pub fn inv(&self) -> Persp<R> {
+        let z = R::zero();
+        let o = R::one();
+        let m00 = o / self.0[(0, 0)];
+        let m11 = o / self.0[(1, 1)];
+        let m32 = o / self.0[(2, 3)];
+        let m33 = self.0[(2, 2)] / self.0[(2, 3)];
+
+        Persp(Mat4::from([
+            [m00, z, z, z],
+            [z, m11, z, z],
+            [z, z, z, -o],
+            [z, z, m32, m33],
+        ]))
+    }
+}
+
 impl<R> AsRef<Mat4<R>> for Persp<R> {
     fn as_ref(&self) -> &Mat4<R> {
         &self.0
@@ -286,5 +307,36 @@ mod tests {
         assert_relative_eq!(m4[(3, 1)],  0.0);
         assert_relative_eq!(m4[(3, 2)], -1.0);
         assert_relative_eq!(m4[(3, 3)],  0.0);
+    }
+
+    #[test]
+    fn persp_supports_inversion() {
+        let i = Persp::builder()
+            .with_aspect(1.5)
+            .with_fov_y(std::f32::consts::PI / 4.0)
+            .with_near_z(0.1)
+            .with_far_z(1000.0)
+            .build()
+            .unwrap()
+            .inv();
+
+        let m4: Mat4<f32> = i.0;
+
+        assert_relative_eq!(m4[(0, 0)],  0.621320332);
+        assert_relative_eq!(m4[(0, 1)],  0.0);
+        assert_relative_eq!(m4[(0, 2)],  0.0);
+        assert_relative_eq!(m4[(0, 3)],  0.0);
+        assert_relative_eq!(m4[(1, 0)],  0.0);
+        assert_relative_eq!(m4[(1, 1)],  0.414213555);
+        assert_relative_eq!(m4[(1, 2)],  0.0);
+        assert_relative_eq!(m4[(1, 3)],  0.0);
+        assert_relative_eq!(m4[(2, 0)],  0.0);
+        assert_relative_eq!(m4[(2, 1)],  0.0);
+        assert_relative_eq!(m4[(2, 2)],  0.0);
+        assert_relative_eq!(m4[(2, 3)], -1.0);
+        assert_relative_eq!(m4[(3, 0)],  0.0);
+        assert_relative_eq!(m4[(3, 1)],  0.0);
+        assert_relative_eq!(m4[(3, 2)], -4.99950000);
+        assert_relative_eq!(m4[(3, 3)],  5.00050000);
     }
 }

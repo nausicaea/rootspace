@@ -42,7 +42,13 @@ impl CameraBuilder {
     }
 
     pub fn build(self) -> Camera {
-        let orthographic = Orthographic3::new(
+        let ortho = Ortho::builder()
+            .with_aspect(self.dimensions.0 as f32 / self.dimensions.1 as f32)
+            .with_fov_y(self.fov_y)
+            .with_near_z(self.frustum_z.0)
+            .with_far_z(self.frustum_z.1)
+            .build()
+        let ortho = Orthographic3::new(
             self.dimensions.0 as f32 / -2.0,
             self.dimensions.0 as f32 / 2.0,
             self.dimensions.1 as f32 / -2.0,
@@ -50,7 +56,7 @@ impl CameraBuilder {
             self.frustum_z.0,
             self.frustum_z.1,
         );
-        let perspective = Perspective3::new(
+        let persp = Perspective3::new(
             self.dimensions.0 as f32 / self.dimensions.1 as f32,
             self.fov_y,
             self.frustum_z.0,

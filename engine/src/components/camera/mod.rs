@@ -1,4 +1,3 @@
-pub mod camera_builder;
 mod camera_ser_de;
 pub mod projection;
 
@@ -8,7 +7,7 @@ use nalgebra::{Point2, Point3, Unit, Vector3};
 use glamour::{Vec4, Vec2, Ray, Ortho, Persp, Mat4};
 use serde::{Deserialize, Serialize};
 
-use self::{camera_builder::CameraBuilder, camera_ser_de::CameraSerDe, projection::Projection};
+use self::{camera_ser_de::CameraSerDe, projection::Projection};
 use crate::components::model::Model;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -24,10 +23,6 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn builder() -> CameraBuilder {
-        CameraBuilder::default()
-    }
-
     pub fn set_dimensions(&mut self, value: (u32, u32)) {
         if value == self.dimensions {
             return;
@@ -117,18 +112,18 @@ impl Camera {
         self.ndc_to_screen(&self.world_to_ndc(model, v))
     }
 
-    pub fn ui_to_screen(&self, point: &Point2<f32>, depth: f32) -> Point2<u32> {
-        self.ndc_to_screen(&self.ui_to_ndc(point, depth))
+    pub fn ui_to_screen(&self, v: &Vec2<f32>, depth: f32, w: f32) -> Vec2<u32> {
+        self.ndc_to_screen(&self.ui_to_ndc(v, depth, w))
     }
 
     /// Transforms a screen point or vector to ui-space as a ray originating from the camera.
-    pub fn screen_to_ui_ray(&self, point: &Point2<u32>) -> Option<Ray<f32>> {
-        let origin = Point3::new(0.0, 0.0, 0.0);
+    pub fn screen_to_ui_ray(&self, point: &Vec2<u32>) -> Ray<f32> {
+        let origin = Vec4::new(0.0, 0.0, 0.0, 1.0);
         let target = {
-            let (t, d) = self.screen_point_to_ui(point);
-            Vector3::new(t.x, t.y, d)
+            let (t, d) = self.screen_to_ui(point);
+            Vec4::new(t.x(), t.y(), d, 0.0)
         };
-        Unit::try_new(target, f32::EPSILON).map(|direction| Ray { origin, direction })
+        Ray::new(origin, target)
     }
 
     /// Transforms a point or vector in normalized device coordinates to screen-space.
@@ -223,42 +218,12 @@ mod tests {
     }
 
     #[test]
-    fn provides_builder() {
-        let _: CameraBuilder = Camera::builder();
-    }
-
-    #[test]
     fn blank_builder_is_the_same_as_default() {
         let ca: Camera = Camera::builder().build();
         let cb: Camera = Default::default();
 
         assert_eq!(ca, cb);
         // TODO: assert_ulps_eq!(ca, cb);
-    }
-
-    #[test]
-    fn builder_accepts_dimensions() {
-        let _: CameraBuilder = Camera::builder().with_dimensions((1, 1));
-    }
-
-    #[test]
-    fn builder_accepts_projection() {
-        let _: CameraBuilder = CameraBuilder::default().with_projection(Projection::Orthographic);
-    }
-
-    #[test]
-    fn builder_accepts_field_of_view() {
-        let _: CameraBuilder = CameraBuilder::default().with_fov_y(1.0);
-    }
-
-    #[test]
-    fn builder_accepts_frustum_limits() {
-        let _: CameraBuilder = CameraBuilder::default().with_frustum_z((0.1, 1020.0));
-    }
-
-    #[test]
-    fn builder_accepts_dpi_factor() {
-        let _: CameraBuilder = CameraBuilder::default().with_dpi_factor(2.0);
     }
 
     #[test]
