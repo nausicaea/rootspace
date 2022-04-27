@@ -1,11 +1,11 @@
-use num_traits::{Num, Zero, One, Float, NumAssign, Signed, Inv};
+use num_traits::{Zero, One, Float, NumAssign, Inv};
 use crate::mat::{Vec3, Vec4, Mat4};
 use crate::quat::Quat;
 use crate::dot::Dot;
 use crate::mul_elem::MulElem;
 use crate::inv_elem::InvElem;
 use std::iter::{Sum, Product};
-use std::ops::Mul;
+use std::ops::{Mul, Add};
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
@@ -52,7 +52,7 @@ where
 
 impl<R> Mul<Vec4<R>> for Affine<R> 
 where
-    R: Num + Copy + Sum + One + Signed,
+    R: Float,
 {
     type Output = Vec4<R>;
 
@@ -63,7 +63,7 @@ where
 
 impl<'a, R> Mul<&'a Vec4<R>> for &'a Affine<R> 
 where
-    R: Num + Copy + Sum + One + Signed + Zero,
+    R: Float,
 {
     type Output = Vec4<R>;
 
@@ -74,7 +74,7 @@ where
 
 impl<R> Dot<Vec4<R>> for Affine<R> 
 where
-    R: Num + Copy + Sum + One + Signed,
+    R: Float,
 {
     type Output = Vec4<R>;
 
@@ -102,7 +102,7 @@ where
 
 impl<R> Mul for Affine<R>
 where
-    R: Copy + Num + Zero,
+    R: Float,
 {
     type Output = Self;
 
@@ -113,7 +113,7 @@ where
 
 impl<'a, R> Mul for &'a Affine<R>
 where
-    R: Copy + Num + Zero,
+    R: Float,
 {
     type Output = Affine<R>;
 
@@ -124,7 +124,7 @@ where
 
 impl<R> Dot for Affine<R>
 where
-    R: Copy + Num + Zero,
+    R: Float,
 {
     type Output = Self;
 
@@ -135,24 +135,22 @@ where
 
 impl<'a, R> Dot for &'a Affine<R>
 where
-    R: Copy + Num + Zero,
+    R: Float,
 {
     type Output = Affine<R>;
 
     fn dot(self, rhs: Self) -> Self::Output {
-        use std::ops::Add;
-
         Affine {
             t: (&self.t).add(&rhs.t),
             o: (&self.o).mul(&rhs.o),
-            s: (&self.s).mul_elementwise(&rhs.s),
+            s: (&self.s).mul_elem(&rhs.s),
         }
     }
 }
 
 impl<R> Product for Affine<R> 
 where
-    R: Zero + One + Copy + Num,
+    R: Float,
 {
     fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
         iter.fold(Affine::identity(), |state, value| state * value)
@@ -161,7 +159,7 @@ where
 
 impl<'a, R> Product<&'a Affine<R>> for Affine<R>
 where
-    R: Zero + One + Copy + Num,
+    R: Float,
 {
     fn product<I: Iterator<Item = &'a Affine<R>>>(iter: I) -> Self {
         iter.fold(Affine::identity(), |state, value| &state * value)
