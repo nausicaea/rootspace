@@ -1,5 +1,4 @@
-use nalgebra::{Orthographic3, Perspective3};
-
+use glamour::{Ortho, Persp};
 use crate::components::{Camera, Projection};
 
 #[derive(Debug)]
@@ -48,25 +47,19 @@ impl CameraBuilder {
             .with_near_z(self.frustum_z.0)
             .with_far_z(self.frustum_z.1)
             .build()
-        let ortho = Orthographic3::new(
-            self.dimensions.0 as f32 / -2.0,
-            self.dimensions.0 as f32 / 2.0,
-            self.dimensions.1 as f32 / -2.0,
-            self.dimensions.1 as f32 / 2.0,
-            self.frustum_z.0,
-            self.frustum_z.1,
-        );
-        let persp = Perspective3::new(
-            self.dimensions.0 as f32 / self.dimensions.1 as f32,
-            self.fov_y,
-            self.frustum_z.0,
-            self.frustum_z.1,
-        );
+            .unwrap();
+        let persp = Persp::builder()
+            .with_aspect(self.dimensions.0 as f32 / self.dimensions.1 as f32)
+            .with_fov_y(self.fov_y)
+            .with_near_z(self.frustum_z.0)
+            .with_far_z(self.frustum_z.1)
+            .build()
+            .unwrap();
 
         Camera {
             projection: self.projection,
-            orthographic,
-            perspective,
+            ortho,
+            persp,
             dimensions: self.dimensions,
             fov_y: self.fov_y,
             frustum_z: self.frustum_z,

@@ -1,6 +1,9 @@
 use ecs::{Component, VecStorage};
-use glamour::{Affine, Mat4, Vec3, Quat, AffineBuilder, Vec4};
+use glamour::{Affine, Mat4, Vec3, Quat, AffineBuilder, Unit};
+use forward_ref::forward_ref_binop;
 use serde::{Deserialize, Serialize};
+use std::ops::Mul;
+use std::iter::Product;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -11,24 +14,12 @@ impl Model {
         ModelBuilder::default()
     }
 
-    pub fn transform_point(&self, point: &Vec3<f32>) -> Vec3<f32> {
-        let v4 = Vec4::new(point.x(), point.y(), point.z(), 1.0);
-        let v4t = self.0 * v4;
-        Vec3::new(v4t.x(), v4t.y(), v4t.z())
-    }
-
-    pub fn inverse_transform_point(&self, point: &Vec3<f32>) -> Vec3<f32> {
-        let v4 = Vec4::new(point.x(), point.y(), point.z(), 1.0);
-        let v4t = self.0.inv() * v4;
-        Vec3::new(v4t.x(), v4t.y(), v4t.z())
-    }
-
     pub fn set_translation(&mut self, value: Vec3<f32>) {
         self.0.t = value;
     }
 
-    pub fn set_orientation(&mut self, value: Quat<f32>) {
-        self.0.o = value;
+    pub fn set_orientation<Q: Into<Unit<Quat<f32>>>>(&mut self, value: Q) {
+        self.0.o = value.into();
     }
 
     pub fn set_scale(&mut self, value: Vec3<f32>) {
@@ -47,7 +38,7 @@ impl Model {
         &self.0.t
     }
 
-    pub fn orientation(&self) -> &Quat<f32> {
+    pub fn orientation(&self) -> &Unit<Quat<f32>> {
         &self.0.o
     }
 
@@ -94,7 +85,29 @@ impl std::fmt::Display for Model {
     }
 }
 
-#[derive(Debug)]
+impl<'a, 'b> Mul<&'b Model> for &'a Model {
+    type Output = Model;
+
+    fn mul(self, rhs: &'b Model) -> Self::Output {
+        Model(self.as_affine().mul(rhs.as_affine()))
+    }
+}
+
+forward_ref_binop!(impl Mul, mul for Model, Model, Model);
+
+impl Product for Model {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Model::default(), |state, item| state * item)
+    }
+}
+
+impl<'a> Product<&'a Model> for Model {
+    fn product<I: Iterator<Item = &'a Model>>(iter: I) -> Self {
+        iter.fold(Model::default(), |state, item| state * item)
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Clone)]
 pub struct ModelBuilder(AffineBuilder<f32>);
 
 impl ModelBuilder {
@@ -115,12 +128,6 @@ impl ModelBuilder {
 
     pub fn build(self) -> Model {
         Model(self.0.build())
-    }
-}
-
-impl Default for ModelBuilder {
-    fn default() -> Self {
-        ModelBuilder(AffineBuilder::default())
     }
 }
 

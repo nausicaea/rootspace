@@ -1,7 +1,7 @@
 use num_traits::{Zero, One, Float};
 use crate::mat::{Mat4, Vec4};
 use std::ops::{Div, Mul};
-use crate::{forward_ref_binop, forward_ref_unop};
+use forward_ref::{forward_ref_binop, forward_ref_unop};
 use crate::ops::norm::Norm;
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]

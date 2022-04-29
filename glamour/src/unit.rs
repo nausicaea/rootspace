@@ -10,6 +10,15 @@ use crate::mat::Mat;
 #[repr(transparent)]
 pub struct Unit<T>(T);
 
+impl<T> std::fmt::Display for Unit<T>
+where
+    T: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.0, f)
+    }
+}
+
 impl<T> AsRef<T> for Unit<T> {
     fn as_ref(&self) -> &T {
         &self.0

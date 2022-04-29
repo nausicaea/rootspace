@@ -7,6 +7,7 @@ pub mod persp;
 pub mod ray;
 pub mod quat;
 pub mod unit;
+mod float_and_sum;
 
 pub use self::ops::cross::Cross;
 pub use self::ops::dot::Dot;

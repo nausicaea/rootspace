@@ -3,7 +3,7 @@ use num_traits::{Float, Inv};
 use super::Mat;
 use crate::ops::mul_elem::MulElem;
 use crate::ops::inv_elem::InvElem;
-use crate::forward_ref_binop;
+use forward_ref::forward_ref_binop;
 
 macro_rules! impl_binops {
     ($($Op:ident, $op:ident, $deleg:ident);+ $(;)*) => {

@@ -511,6 +511,7 @@ dependencies = [
  "directories",
  "ecs",
  "file-manipulation",
+ "forward-ref",
  "glamour",
  "glium",
  "image",
@@ -592,6 +593,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
+name = "forward-ref"
+version = "0.1.0"
+
+[[package]]
 name = "getrandom"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -656,6 +661,7 @@ name = "glamour"
 version = "0.1.0"
 dependencies = [
  "approx 0.5.1",
+ "forward-ref",
  "num-complex",
  "num-dual",
  "num-traits",

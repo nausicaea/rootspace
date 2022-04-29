@@ -2,17 +2,8 @@ use crate::ops::dot::Dot;
 use crate::abop;
 use super::Mat;
 use std::ops::Mul;
-use num_traits::Float;
-use std::iter::Sum;
-use crate::forward_ref_binop;
-
-trait FloatAndSum: Float + Sum<Self> + for<'r> Sum<&'r Self> {}
-
-impl<T> FloatAndSum for T
-where
-    T: Float + Sum<Self> + for<'r> Sum<&'r Self>,
-{
-}
+use forward_ref::forward_ref_binop;
+use crate::float_and_sum::FloatAndSum;
 
 macro_rules! impl_matmul {
     ($dim:literal, $tt:tt) => {

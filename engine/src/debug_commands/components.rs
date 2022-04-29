@@ -152,8 +152,8 @@ impl<B> ComponentsCommand<B> {
             );
             println!("Depth frustum: {:?}", cc.frustum_z());
             println!("Projection type: {}", cc.projection());
-            println!("World matrix (dependent on projection type): {}", cc.world_matrix());
-            println!("UI matrix (always orthographic): {}", cc.ui_matrix());
+            println!("World matrix (dependent on projection type): {}", cc.as_world_matrix());
+            println!("UI matrix (always orthographic): {}", cc.as_ui_matrix());
         } else {
             println!("Entity {}: (no camera)", entity);
         }
@@ -176,8 +176,8 @@ impl<B> ComponentsCommand<B> {
 
         if let Some(mc) = models.get(entity) {
             println!(
-                "LOCAL - Position: {:?}, Orientation: {}, Scale: {:?}",
-                mc.position().coords,
+                "LOCAL - Position: {}, Orientation: {}, Scale: {}",
+                mc.translation(),
                 mc.orientation(),
                 mc.scale()
             );
@@ -189,22 +189,22 @@ impl<B> ComponentsCommand<B> {
                 .product::<Model>();
 
             println!(
-                "GLOBAL - Position: {:?}, Orientation: {}, Scale: {:?}",
-                global_model.position().coords,
+                "GLOBAL - Position: {}, Orientation: {}, Scale: {}",
+                global_model.translation(),
                 global_model.orientation(),
                 global_model.scale()
             );
 
             for (cam, cam_model) in res.iter_rr::<Camera, Model>() {
-                let ndc_position = cam.world_point_to_ndc(cam_model, &global_model.position());
-                println!("NDC - Position: {:?}", ndc_position.coords);
+                let ndc_position = cam.world_to_ndc(cam_model, &global_model.translation().to_point4());
+                println!("NDC - Position: {}", ndc_position);
 
-                let screen_position = cam.world_point_to_screen(cam_model, &global_model.position());
-                println!("SCREEN - Position: {:?}", screen_position.coords);
+                let screen_position = cam.world_to_screen(cam_model, &global_model.translation().to_point4());
+                println!("SCREEN - Position: {}", screen_position);
             }
 
-            println!("LOCAL matrix: {}", mc.matrix());
-            println!("GLOBAL matrix: {}", global_model.matrix());
+            println!("LOCAL matrix: {}", mc.to_matrix());
+            println!("GLOBAL matrix: {}", global_model.to_matrix());
         } else {
             println!("Entity {}: (no model)", entity);
         }
@@ -227,8 +227,8 @@ impl<B> ComponentsCommand<B> {
 
         if let Some(umc) = ui_models.get(entity) {
             println!(
-                "LOCAL - Position: {:?}, Depth: {}, Scale: {:?}",
-                umc.position().coords,
+                "LOCAL - Position: {}, Depth: {}, Scale: {}",
+                umc.translation(),
                 umc.depth(),
                 umc.scale(),
             );
@@ -240,22 +240,22 @@ impl<B> ComponentsCommand<B> {
                 .product::<UiModel>();
 
             println!(
-                "GLOBAL - Position: {:?}, Depth: {}, Scale: {:?}",
-                global_ui_model.position().coords,
+                "GLOBAL - Position: {}, Depth: {}, Scale: {}",
+                global_ui_model.translation(),
                 global_ui_model.depth(),
                 global_ui_model.scale()
             );
 
             for cam in res.iter_r::<Camera>() {
-                let ndc_position = cam.ui_point_to_ndc(&global_ui_model.position(), global_ui_model.depth());
-                println!("NDC - Position: {:?}", ndc_position.coords);
+                let ndc_position = cam.ui_to_ndc(&global_ui_model.translation(), global_ui_model.depth(), 1.0);
+                println!("NDC - Position: {}", ndc_position);
 
-                let screen_position = cam.ui_point_to_screen(&global_ui_model.position(), global_ui_model.depth());
-                println!("SCREEN - Position: {:?}", screen_position.coords);
+                let screen_position = cam.ui_to_screen(&global_ui_model.translation(), global_ui_model.depth(), 1.0);
+                println!("SCREEN - Position: {}", screen_position);
             }
 
-            println!("LOCAL matrix: {}", umc.matrix());
-            println!("GLOBAL matrix: {}", global_ui_model.matrix());
+            println!("LOCAL matrix: {}", umc.to_matrix());
+            println!("GLOBAL matrix: {}", global_ui_model.to_matrix());
         } else {
             println!("Entity {}: (no UI model)", entity);
         }

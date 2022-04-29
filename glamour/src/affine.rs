@@ -7,7 +7,7 @@ use crate::ops::mul_elem::MulElem;
 use crate::ops::inv_elem::InvElem;
 use std::iter::{Sum, Product};
 use std::ops::{Mul, Add};
-use crate::forward_ref_binop;
+use forward_ref::forward_ref_binop;
 use crate::unit::Unit;
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
@@ -206,7 +206,7 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct AffineBuilder<R> {
     t: Option<Vec3<R>>,
     o: Option<Quat<R>>,
