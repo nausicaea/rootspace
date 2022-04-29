@@ -8,6 +8,7 @@ pub mod orchestrator;
 pub mod resources;
 pub mod systems;
 pub mod text_manipulation;
+mod utilities;
 
 pub const APP_QUALIFIER: &str = "net";
 pub const APP_ORGANIZATION: &str = "nausicaea";

@@ -13,6 +13,7 @@ mod index;
 mod elementwise;
 mod dot;
 mod serde;
+mod approx;
 
 pub use self::vec2::Vec2;
 pub use self::vec3::Vec3;

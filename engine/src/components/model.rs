@@ -133,9 +133,8 @@ impl ModelBuilder {
 
 #[cfg(test)]
 mod tests {
-    use approx::{assert_ulps_eq, ulps_eq};
+    use approx::{assert_ulps_eq};
     use proptest::prelude::*;
-    use glamour::Vec4;
 
     use super::*;
     use crate::utilities::validate_float;
@@ -156,7 +155,6 @@ mod tests {
         let mb: Model = Default::default();
 
         assert_eq!(ma, mb);
-        // TODO: assert_ulps_eq!(ma, mb);
     }
 
     #[test]
@@ -189,25 +187,9 @@ mod tests {
             .with_scale(Vec3::one())
             .build();
 
-        assert_ulps_eq!(m.translation(), Vec3::zero());
-        assert_ulps_eq!(m.orientation(), Quat::identity());
-        assert_ulps_eq!(m.scale(), Vec3::one());
-    }
-
-    #[test]
-    fn transform_point_works_for_zeroes() {
-        let m: Model = ModelBuilder::default()
-            .with_translation(Vec3::zero())
-            .with_orientation(Quat::identity())
-            .with_scale(Vec3::one())
-            .build();
-        let p: Vec3<f32> = Vec3::zero();
-
-        let tpt: Vec3<f32> = m.transform_point(&p);
-        let tpt: Vec4<f32> = Vec4::new(tpt.x(), tpt.y(), tpt.z(), 1.0);
-        let mmul = m.to_matrix() * Vec4::new(p.x(), p.y(), p.z(), 1.0);
-
-        assert_ulps_eq!(tpt, mmul);
+        assert_ulps_eq!(m.translation(), &Vec3::zero());
+        assert_ulps_eq!(m.orientation(), &Unit::from(Quat::identity()));
+        assert_ulps_eq!(m.scale(), &Vec3::one());
     }
 
     proptest! {
@@ -216,12 +198,12 @@ mod tests {
             let mut m = Model::default();
 
             let p = Vec3::new(num[0], num[1], num[2]);
-            m.set_translation(p);
+            m.set_translation(p.clone());
 
             if !validate_float(&num) {
                 return Ok(());
             } else {
-                prop_assert_eq!(m.translation(), p);
+                prop_assert_eq!(m.translation(), &p);
             }
         }
 
@@ -229,13 +211,13 @@ mod tests {
         fn orientation_may_be_changed(num: [f32; 4]) {
             let mut m = Model::default();
 
-            let o = Quat::new(num[0], num[1], num[2], num[3]);
-            m.set_orientation(o);
+            let o = Unit::from(Quat::new(num[0], num[1], num[2], num[3]));
+            m.set_orientation(o.clone());
 
             if !validate_float(&num) {
                 return Ok(());
             } else {
-                prop_assert_eq!(m.orientation(), o);
+                prop_assert_eq!(m.orientation(), &o);
             }
         }
 
@@ -244,51 +226,12 @@ mod tests {
             let mut m = Model::default();
 
             let s = Vec3::new(num[0], num[1], num[2]);
-            m.set_scale(s);
+            m.set_scale(s.clone());
 
             if !validate_float(&num) {
                 return Ok(());
             } else {
-                prop_assert_eq!(m.scale(), s);
-            }
-        }
-
-        #[test]
-        fn transform_point_is_the_same_as_matrix_multiplication(num: [f32; 13]) {
-            let m = Model::builder()
-                .with_translation(Vec3::new(num[0], num[1], num[2]))
-                .with_orientation(Quat::new(num[3], num[4], num[5], num[6]))
-                .with_scale(Vec3::new(num[7], num[8], num[9]))
-                .build();
-            let p = Vec3::new(num[10], num[11], num[12]);
-
-            if !validate_float(&num) {
-                return Ok(())
-            } else {
-                let tpt: Vec3<f32> = m.transform_point(&p);
-                let tpt: Vec4<f32> = Vec4::new(tpt.x(), tpt.y(), tpt.z(), 1.0);
-                let mmul = m.to_matrix() * Vec4::new(p.x(), p.y(), p.z(), 1.0);
-
-                prop_assert!(ulps_eq!(tpt, mmul), "{:?} != {:?}", tpt, mmul);
-            }
-        }
-
-        #[test]
-        fn transformations_are_invertible(num: [f32; 13]) {
-            let m = Model::builder()
-                .with_translation(Vec3::new(num[0], num[1], num[2]))
-                .with_orientation(Quat::new(num[3], num[4], num[5], num[6]))
-                .with_scale(Vec3::new(num[7], num[8], num[9]))
-                .build();
-            let p = Vec3::new(num[10], num[11], num[12]);
-
-            if !validate_float(&num) {
-                return Ok(())
-            } else {
-                let tpt: Vec3<f32> = m.transform_point(&p);
-                let itpt: Vec3<f32> = m.inverse_transform_point(&tpt);
-
-                prop_assert!(ulps_eq!(p, itpt), "{:?} != {:?}", p, itpt);
+                prop_assert_eq!(m.scale(), &s);
             }
         }
     }

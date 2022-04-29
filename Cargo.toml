@@ -2,7 +2,6 @@
 members = [
     "try-default",
     "file-manipulation",
-    "affine-transform",
     "ply",
     "ecs",
     "engine",

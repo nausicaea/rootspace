@@ -1,7 +1,7 @@
 use num_traits::Float;
 use crate::mat::Mat4;
 use thiserror::Error;
-use approx::{RelativeEq, relative_eq};
+use approx::{RelativeEq, relative_eq, AbsDiffEq, UlpsEq};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Ortho<R>(Mat4<R>);
@@ -40,6 +40,50 @@ where
 impl<R> AsRef<Mat4<R>> for Ortho<R> {
     fn as_ref(&self) -> &Mat4<R> {
         &self.0
+    }
+}
+
+impl<R> AbsDiffEq for Ortho<R>
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
+{
+    type Epsilon = R::Epsilon;
+
+    fn default_epsilon() -> R::Epsilon {
+        R::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, rhs: &Self, epsilon: R::Epsilon) -> bool {
+        self.0.abs_diff_eq(&rhs.0, epsilon)
+    }
+}
+
+impl<R> RelativeEq for Ortho<R>
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
+{
+    fn default_max_relative() -> R::Epsilon {
+        R::default_max_relative()
+    }
+
+    fn relative_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
+        self.0.relative_eq(&rhs.0, epsilon, max_relative)
+    }
+}
+
+impl<R> UlpsEq for Ortho<R>
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
+{
+    fn default_max_ulps() -> u32 {
+        R::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_ulps: u32) -> bool {
+        self.0.ulps_eq(&rhs.0, epsilon, max_ulps)
     }
 }
 
