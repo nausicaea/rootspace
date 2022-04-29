@@ -10,8 +10,6 @@ serde_support = ["serde"]
 [dependencies]
 thiserror = "^1.0.0"
 num-traits = "^0.2.14"
-num-complex = "^0.4.0"
-num-dual = "^0.5.1"
 approx = "^0.5.0"
 serde = { version = "^1.0.0", features = ["derive"], optional = true }
 forward-ref = { path = "../forward-ref" }
