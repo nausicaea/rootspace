@@ -1,5 +1,11 @@
 use super::Mat;
 
+impl<R, const I: usize, const J: usize> AsRef<[[R; J]; I]> for Mat<R, I, J> {
+    fn as_ref(&self) -> &[[R; J]; I] {
+        &self.0
+    }
+}
+
 impl<R, const I: usize, const J: usize> From<[[R; J]; I]> for Mat<R, I, J> {
     fn from(v: [[R; J]; I]) -> Self {
         Mat(v)
@@ -43,4 +49,3 @@ impl_from_1d_array!(4, 1, [[0], [1], [2], [3]]);
 impl_from_1d_array!(4, 2, [[0, 1], [2, 3], [4, 5], [6, 7]]);
 impl_from_1d_array!(4, 3, [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11]]);
 impl_from_1d_array!(4, 4, [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]);
-

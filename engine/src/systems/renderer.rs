@@ -107,7 +107,7 @@ where
                 .filter_map(|aidx| models.get(aidx))
                 .product::<Model>();
             let cam_world_matrix = cam.as_world_matrix() * global_cam_model.to_matrix();
-            let cam_ui_matrix = cam.as_ui_matrix();
+            let cam_ui_matrix = cam.as_ui_matrix().clone();
 
             // Render the world scene.
             for (idx, _) in models.indexed_iter() {
@@ -133,7 +133,7 @@ where
 
                 world_draw_calls += 1;
                 target
-                    .render(&(cam_world_matrix * global_model.to_matrix()), &factory, renderable)
+                    .render(&(&cam_world_matrix * global_model.to_matrix()), &factory, renderable)
                     .unwrap_or_else(|e| panic!("Unable to render the world entity {}: {}", idx, e));
             }
 
@@ -161,7 +161,7 @@ where
 
                 ui_draw_calls += 1;
                 target
-                    .render(&(cam_ui_matrix * global_ui_model.matrix()), &factory, renderable)
+                    .render(&(&cam_ui_matrix * global_ui_model.to_matrix()), &factory, renderable)
                     .unwrap_or_else(|e| panic!("Unable to render the UI entity {}: {}", idx, e));
             }
         }

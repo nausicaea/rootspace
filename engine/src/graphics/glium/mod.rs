@@ -326,7 +326,7 @@ where
     T: AsRef<[[f32; 4]; 4]> + 'a,
 {
     fn visit_values<'f, F: FnMut(&str, UniformValue<'f>)>(&'f self, mut f: F) {
-        f("transform", UniformValue::Mat4(*self.transform.as_ref()));
+        f("transform", UniformValue::Mat4(self.transform.as_ref().clone()));
         f(
             "physical_dimensions",
             UniformValue::Vec2([self.physical_dimensions.0 as f32, self.physical_dimensions.1 as f32]),
