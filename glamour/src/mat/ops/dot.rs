@@ -1,6 +1,6 @@
 use crate::ops::dot::Dot;
 use crate::abop;
-use super::Mat;
+use super::super::Mat;
 use std::ops::Mul;
 use forward_ref::forward_ref_binop;
 use crate::float_and_sum::FloatAndSum;

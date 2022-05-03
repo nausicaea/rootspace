@@ -8,10 +8,8 @@ use crate::ops::norm::Norm;
 pub mod vec2;
 pub mod vec3;
 pub mod vec4;
+mod ops;
 mod convert;
-mod index;
-mod elementwise;
-mod dot;
 mod serde;
 mod approx;
 

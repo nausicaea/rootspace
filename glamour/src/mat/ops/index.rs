@@ -1,5 +1,5 @@
 use std::ops::{Index, IndexMut};
-use super::Mat;
+use super::super::Mat;
 
 impl<R, const I: usize, const J: usize> Index<usize> for Mat<R, I, J> {
     type Output = R;

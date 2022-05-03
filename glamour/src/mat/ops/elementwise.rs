@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub, Neg, Mul, Div};
 use num_traits::{Float, Inv};
-use super::Mat;
+use super::super::Mat;
 use crate::ops::mul_elem::MulElem;
 use crate::ops::inv_elem::InvElem;
 use forward_ref::forward_ref_binop;
