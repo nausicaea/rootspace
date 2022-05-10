@@ -3,7 +3,7 @@ use crate::abop;
 use super::super::Mat;
 use std::ops::Mul;
 use forward_ref::forward_ref_binop;
-use crate::float_and_sum::FloatAndSum;
+use crate::iter_float::IterFloat;
 
 macro_rules! impl_matmul {
     ($dim:literal, $tt:tt) => {
@@ -12,7 +12,7 @@ macro_rules! impl_matmul {
     ($nl:literal, $ml:literal, $nr:literal, $mr:literal, $tt:tt) => {
         impl<'a, 'b, R> Mul<&'b Mat<R, $nr, $mr>> for &'a Mat<R, $nl, $ml>
             where
-                R: FloatAndSum,
+                R: IterFloat,
         {
             type Output = Mat<R, $nl, $mr>;
 
@@ -21,11 +21,11 @@ macro_rules! impl_matmul {
             }
         }
 
-        forward_ref_binop!(impl<R: FloatAndSum> Mul, mul for Mat<R, $nl, $ml>, Mat<R, $nr, $mr>, Mat<R, $nl, $mr>);
+        forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat<R, $nl, $ml>, Mat<R, $nr, $mr>, Mat<R, $nl, $mr>);
 
         impl<'a, 'b, R> Dot<&'b Mat<R, $nr, $mr>> for &'a Mat<R, $nl, $ml>
         where
-            R: FloatAndSum,
+            R: IterFloat,
         {
             type Output = Mat<R, $nl, $mr>;
 
@@ -35,7 +35,7 @@ macro_rules! impl_matmul {
             }
         }
 
-        forward_ref_binop!(impl<R: FloatAndSum> Dot, dot for Mat<R, $nl, $ml>, Mat<R, $nr, $mr>, Mat<R, $nl, $mr>);
+        forward_ref_binop!(impl<R: IterFloat> Dot, dot for Mat<R, $nl, $ml>, Mat<R, $nr, $mr>, Mat<R, $nl, $mr>);
     };
 }
 
@@ -121,7 +121,7 @@ impl_matmul!(
 
 impl<'a, 'b, R> Mul<&'b Mat<R, 2, 1>> for &'a Mat<R, 1, 2>
 where
-    R: FloatAndSum
+    R: IterFloat
 {
     type Output = R;
 
@@ -130,12 +130,12 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: FloatAndSum> Mul, mul for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
+forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
 
 /// MARK
 impl<'a, 'b, R> Dot<&'b Mat<R, 2, 1>> for &'a Mat<R, 1, 2>
 where
-    R: FloatAndSum
+    R: IterFloat
 {
     type Output = R;
 
@@ -144,7 +144,7 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: FloatAndSum> Dot, dot for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
+forward_ref_binop!(impl<R: IterFloat> Dot, dot for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
 
 
 #[cfg(test)]
@@ -154,12 +154,38 @@ mod tests {
     use crate::mat::vec2::Vec2;
     use crate::mat::vec3::Vec3;
     use crate::mat::vec4::Vec4;
+    use proptest::prelude::*;
+    use proptest::collection::vec;
+    use proptest::num::f32::NORMAL;
+
+    proptest! {
+        #[test]
+        fn experiment(num in vec(NORMAL, 4)) {
+            let a: Vec2<f32> = Vec2::from([num[0], num[1]]);
+            let b: Vec2<f32> = Vec2::from([num[2], num[3]]);
+
+            prop_assert_eq!(a.t().dot(b), num[0] * num[2] + num[1] * num[3]);
+        }
+
+        #[test]
+        fn pt_mat_supports_dot_product_2x1_1x2(num in vec(NORMAL, 4)) {
+            let a: Mat<f32, 2, 1> = Mat::from([3.0, 2.0]);
+            let b: Mat<f32, 1, 2> = Mat::from([2.0, 1.0]);
+            assert_eq!((&a).dot(&b), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
+            assert_eq!(a.clone().dot(&b), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
+            assert_eq!((&a).dot(b.clone()), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
+            assert_eq!(a.clone().dot(b.clone()), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
+        }
+    }
 
     #[test]
     fn mat_supports_dot_product_2x1_1x2() {
         let a: Mat<f32, 2, 1> = Mat::from([3.0, 2.0]);
         let b: Mat<f32, 1, 2> = Mat::from([2.0, 1.0]);
         assert_eq!((&a).dot(&b), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
+        assert_eq!(a.clone().dot(&b), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
+        assert_eq!((&a).dot(b.clone()), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
+        assert_eq!(a.clone().dot(b.clone()), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
     }
 
     #[test]

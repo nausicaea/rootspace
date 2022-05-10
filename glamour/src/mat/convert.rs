@@ -1,8 +1,60 @@
 use super::Mat;
+use thiserror::Error;
+use num_traits::Zero;
 
 impl<R, const I: usize, const J: usize> AsRef<[[R; J]; I]> for Mat<R, I, J> {
     fn as_ref(&self) -> &[[R; J]; I] {
         &self.0
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Error)]
+pub enum Error {
+    #[error("Expected a sequence of length {expected}, got {found} elements instead")]
+    LengthMismatch { expected: usize, found: usize },
+}
+
+impl<R, const I: usize, const J: usize> TryFrom<Vec<R>> for Mat<R, I, J> 
+where
+    R: Copy + Zero,
+{
+    type Error = Error;
+
+    fn try_from(v: Vec<R>) -> Result<Self, Self::Error> {
+        if v.len() != I * J {
+            return Err(Error::LengthMismatch{ expected: I * J, found: v.len() });
+        }
+
+        let mut mat = Mat::zero();
+        for i in 0..I {
+            for j in 0..J {
+                mat[(i, j)] = v[i * J + j];
+            }
+        }
+
+        Ok(mat)
+    }
+}
+
+impl<R, const I: usize, const J: usize> FromIterator<R> for Mat<R, I, J> 
+where
+    R: Copy + Zero,
+{
+    fn from_iter<T: IntoIterator<Item = R>>(iter: T) -> Self {
+        let mut iter = iter.into_iter();
+        let sh = iter.size_hint();
+        if sh.0 < I * J {
+        }
+
+
+        let mut mat: Mat<R, I, J> = Mat::zero();
+        for i in 0..I {
+            for j in 0..J {
+                mat[(i, j)] = iter.next()
+                    .unwrap_or_else(|| panic!("Expected an iterator that provides exactly {} elements", I * J));
+            }
+        }
+        mat
     }
 }
 
@@ -53,6 +105,18 @@ impl_from_1d_array!(4, 4, [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn mat_implements_as_ref_for_2d_array() {
+        let a: Mat<f32, 2, 2> = Mat::identity();
+        let _: &[[f32; 2]; 2] = a.as_ref();
+    }
+
+    #[test]
+    fn mat_implements_try_from_vec() {
+        let a: Result<Mat<f32, 2, 2>, Error> = Mat::try_from(vec![0.0, 1.0, 2.0, 3.0]);
+        assert_eq!(a, Ok(Mat([[0.0, 1.0], [2.0, 3.0]])));
+    }
 
     #[test]
     fn mat_implements_from_2d_array() {
