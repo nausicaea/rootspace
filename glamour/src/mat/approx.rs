@@ -53,3 +53,33 @@ where
             .all(|(l, r)| l.ulps_eq(r, epsilon, max_ulps))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::{assert_abs_diff_eq, assert_relative_eq, assert_ulps_eq};
+
+    #[test]
+    fn mat_implements_abs_diff_eq() {
+        let a: Mat<f32, 2, 2> = Mat::identity();
+        let b: Mat<f32, 2, 2> = Mat::identity() * 2.0;
+
+        assert_abs_diff_eq!(a * 0.0, b * 0.0);
+    }
+
+    #[test]
+    fn mat_implements_relative_eq() {
+        let a: Mat<f32, 2, 2> = Mat::identity();
+        let b: Mat<f32, 2, 2> = Mat::identity() * 2.0;
+
+        assert_relative_eq!(a, b / 2.0);
+    }
+
+    #[test]
+    fn mat_implements_ulps_eq() {
+        let a: Mat<f32, 2, 2> = Mat::identity();
+        let b: Mat<f32, 2, 2> = Mat::identity() * 2.0;
+
+        assert_ulps_eq!(a, b / 2.0);
+    }
+}

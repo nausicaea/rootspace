@@ -31,3 +31,35 @@ impl<R, const I: usize, const J: usize> IndexMut<(usize, usize)> for Mat<R, I, J
     }
 }
 
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mat_supports_1d_indexing() {
+        let m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        assert_eq!(m[2], 3.0f32);
+    }
+
+    #[test]
+    fn mat_supports_mut_1d_indexing() {
+        let mut m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        m[2] = 5.0f32;
+        assert_eq!(m[2], 5.0f32);
+    }
+
+    #[test]
+    fn mat_supports_2d_indexing() {
+        let m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        assert_eq!(m[(1, 1)], 4.0f32);
+    }
+
+    #[test]
+    fn mat_supports_mut_2d_indexing() {
+        let mut m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
+        m[(1, 1)] = 5.0f32;
+        assert_eq!(m[(1, 1)], 5.0f32);
+    }
+
+}

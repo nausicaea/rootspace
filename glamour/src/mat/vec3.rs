@@ -51,7 +51,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn vec3_provides_a_constructor() {
-        let _: Vec3<f32> = Vec3::new(0.0, 1.0, 2.0);
+    fn vec3_provides_new_constructor_method() {
+        let _: Vec3<f32> = Vec3::new(1.0f32, 2.0f32, 3.0f32);
     }
+
+    #[test]
+    fn vec3_provides_x_y_and_z() {
+        let v: Vec3<f32> = Vec3::new(1.0, 2.0, 3.0);
+        assert_eq!(v.x(), 1.0f32);
+        assert_eq!(v.y(), 2.0f32);
+        assert_eq!(v.z(), 3.0f32);
+    }
+
 }

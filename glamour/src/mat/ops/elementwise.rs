@@ -126,3 +126,56 @@ impl_scalar_binops!(
     Div, div, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
 );
 
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mat_supports_scalar_addition() {
+        let a: Mat<f32, 1, 1> = Mat::from([1.0]);
+        let b: f32 = 2.0;
+        assert_eq!(&a + &b, Mat::<f32, 1, 1>::from([3.0]));
+        assert_eq!(&b + &a, Mat::<f32, 1, 1>::from([3.0]));
+    }
+
+    #[test]
+    fn mat_supports_scalar_subtraction() {
+        let a: Mat<f32, 1, 1> = Mat::from([1.0]);
+        let b: f32 = 2.0;
+        assert_eq!(&a - &b, Mat::<f32, 1, 1>::from([-1.0]));
+        assert_eq!(&b - &a, Mat::<f32, 1, 1>::from([1.0]));
+    }
+
+    #[test]
+    fn mat_supports_scalar_multiplication() {
+        let a: Mat<f32, 1, 1> = Mat::from([2.0]);
+        let b: f32 = 2.0;
+        assert_eq!(&a * &b, Mat::<f32, 1, 1>::from([4.0]));
+        assert_eq!(&b * &a, Mat::<f32, 1, 1>::from([4.0]));
+    }
+
+    #[test]
+    fn mat_supports_scalar_division() {
+        let a: Mat<f32, 1, 1> = Mat::from([6.0]);
+        let b: f32 = 2.0;
+        assert_eq!(&a / &b, Mat::<f32, 1, 1>::from([3.0]));
+        assert_eq!(&b / &a, Mat::<f32, 1, 1>::from([2.0 / 6.0]));
+    }
+
+    #[test]
+    fn mat_supports_matrix_addition() {
+        let a: Mat<f32, 1, 1> = Mat::from([3.0]);
+        let b: Mat<f32, 1, 1> = Mat::from([2.0]);
+        assert_eq!(&a + &b, Mat::<f32, 1, 1>::from([5.0]));
+        assert_eq!(&b + &a, Mat::<f32, 1, 1>::from([5.0]));
+    }
+
+    #[test]
+    fn mat_supports_matrix_subtraction() {
+        let a: Mat<f32, 1, 1> = Mat::from([3.0]);
+        let b: Mat<f32, 1, 1> = Mat::from([2.0]);
+        assert_eq!(&a - &b, Mat::<f32, 1, 1>::from([1.0]));
+        assert_eq!(&b - &a, Mat::<f32, 1, 1>::from([-1.0]));
+    }
+}

@@ -1,9 +1,4 @@
-use std::{
-    iter::Sum,
-};
-
 use num_traits::{One, Zero, Float};
-use crate::ops::norm::Norm;
 
 pub mod vec2;
 pub mod vec3;
@@ -81,17 +76,6 @@ where
             }
         }
         mat
-    }
-}
-
-impl<'a, R, const I: usize, const J: usize> Norm for &'a Mat<R, I, J> 
-where
-    R: Float + Sum,
-{
-    type Output = R;
-
-    fn norm(self) -> Self::Output {
-        self.0.iter().flatten().map(|e| e.powi(2)).sum::<R>().sqrt()
     }
 }
 
@@ -192,8 +176,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ops::dot::Dot;
-    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn a2i_1x1() {
@@ -372,62 +354,6 @@ mod tests {
     }
 
     #[test]
-    fn mat_implements_from_2d_array() {
-        let _: Mat<f32, 2, 2> = Mat::from([[0.0, 1.0], [2.0, 3.0]]);
-    }
-
-    #[test]
-    fn mat_1x1_implements_from_scalar_value() {
-        let _: Mat<f32, 1, 1> = (1.0f32).into();
-    }
-
-    #[test]
-    fn mat_implements_from_array() {
-        let _: Mat<f32, 1, 1> = Mat::from([0.0f32; 1]);
-        let _: Mat<f32, 1, 2> = Mat::from([0.0f32; 2]);
-        let _: Mat<f32, 1, 3> = Mat::from([0.0f32; 3]);
-        let _: Mat<f32, 1, 4> = Mat::from([0.0f32; 4]);
-        let _: Mat<f32, 2, 1> = Mat::from([0.0f32; 2]);
-        let _: Mat<f32, 2, 2> = Mat::from([0.0f32; 4]);
-        let _: Mat<f32, 2, 3> = Mat::from([0.0f32; 6]);
-        let _: Mat<f32, 2, 4> = Mat::from([0.0f32; 8]);
-        let _: Mat<f32, 3, 1> = Mat::from([0.0f32; 3]);
-        let _: Mat<f32, 3, 2> = Mat::from([0.0f32; 6]);
-        let _: Mat<f32, 3, 3> = Mat::from([0.0f32; 9]);
-        let _: Mat<f32, 3, 4> = Mat::from([0.0f32; 12]);
-        let _: Mat<f32, 4, 1> = Mat::from([0.0f32; 4]);
-        let _: Mat<f32, 4, 2> = Mat::from([0.0f32; 8]);
-        let _: Mat<f32, 4, 3> = Mat::from([0.0f32; 12]);
-        let _: Mat<f32, 4, 4> = Mat::from([0.0f32; 16]);
-    }
-
-    #[test]
-    fn mat_supports_1d_indexing() {
-        let m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
-        assert_eq!(m[2], 3.0f32);
-    }
-
-    #[test]
-    fn mat_supports_mut_1d_indexing() {
-        let mut m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
-        m[2] = 5.0f32;
-        assert_eq!(m[2], 5.0f32);
-    }
-
-    #[test]
-    fn mat_supports_2d_indexing() {
-        let m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
-        assert_eq!(m[(1, 1)], 4.0f32);
-    }
-
-    #[test]
-    fn mat_supports_mut_2d_indexing() {
-        let mut m: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
-        m[(1, 1)] = 5.0f32;
-        assert_eq!(m[(1, 1)], 5.0f32);
-    }
-
-    #[test]
     fn mat_supports_transposition() {
         let a: Mat<f32, 2, 3> = Mat::from([1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]);
         let b: Mat<f32, 3, 2> = a.t();
@@ -456,170 +382,6 @@ mod tests {
     fn mat_supports_identity_constructor() {
         let m: Mat<f32, 2, 2> = Mat::identity();
         assert_eq!(m, Mat::<f32, 2, 2>::from([1.0f32, 0.0, 0.0, 1.0]));
-    }
-
-    #[test]
-    fn mat_supports_scalar_addition() {
-        let a: Mat<f32, 1, 1> = Mat::from([1.0]);
-        let b: f32 = 2.0;
-        assert_eq!(&a + &b, Mat::<f32, 1, 1>::from([3.0]));
-        assert_eq!(&b + &a, Mat::<f32, 1, 1>::from([3.0]));
-    }
-
-    #[test]
-    fn mat_supports_scalar_subtraction() {
-        let a: Mat<f32, 1, 1> = Mat::from([1.0]);
-        let b: f32 = 2.0;
-        assert_eq!(&a - &b, Mat::<f32, 1, 1>::from([-1.0]));
-        assert_eq!(&b - &a, Mat::<f32, 1, 1>::from([1.0]));
-    }
-
-    #[test]
-    fn mat_supports_scalar_multiplication() {
-        let a: Mat<f32, 1, 1> = Mat::from([2.0]);
-        let b: f32 = 2.0;
-        assert_eq!(&a * &b, Mat::<f32, 1, 1>::from([4.0]));
-        assert_eq!(&b * &a, Mat::<f32, 1, 1>::from([4.0]));
-    }
-
-    #[test]
-    fn mat_supports_scalar_division() {
-        let a: Mat<f32, 1, 1> = Mat::from([6.0]);
-        let b: f32 = 2.0;
-        assert_eq!(&a / &b, Mat::<f32, 1, 1>::from([3.0]));
-        assert_eq!(&b / &a, Mat::<f32, 1, 1>::from([2.0 / 6.0]));
-    }
-
-    #[test]
-    fn mat_supports_addition() {
-        let a: Mat<f32, 1, 1> = Mat::from([3.0]);
-        let b: Mat<f32, 1, 1> = Mat::from([2.0]);
-        assert_eq!(&a + &b, Mat::<f32, 1, 1>::from([5.0]));
-        assert_eq!(&b + &a, Mat::<f32, 1, 1>::from([5.0]));
-    }
-
-    #[test]
-    fn mat_supports_subtraction() {
-        let a: Mat<f32, 1, 1> = Mat::from([3.0]);
-        let b: Mat<f32, 1, 1> = Mat::from([2.0]);
-        assert_eq!(&a - &b, Mat::<f32, 1, 1>::from([1.0]));
-        assert_eq!(&b - &a, Mat::<f32, 1, 1>::from([-1.0]));
-    }
-
-    #[test]
-    fn mat_supports_dot_product_2x1_1x2() {
-        let a: Mat<f32, 2, 1> = Mat::from([3.0, 2.0]);
-        let b: Mat<f32, 1, 2> = Mat::from([2.0, 1.0]);
-        assert_eq!((&a).dot(&b), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
-    }
-
-    #[test]
-    fn mat_supports_dot_product_1x2_2x1() {
-        let a: Mat<f32, 1, 2> = Mat::from([3.0, 2.0]);
-        let b: Mat<f32, 2, 1> = Mat::from([2.0, 1.0]);
-        assert_eq!((&a).dot(&b), 8.0f32);
-    }
-
-    #[test]
-    fn mat_supports_dot_product_2x2_2x2() {
-        let a: Mat<f32, 2, 2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
-        let b: Mat<f32, 2, 2> = Mat::from([2.0, 3.0, 4.0, 5.0]);
-        let c: Mat<f32, 2, 2> = Mat::from([10.0, 13.0, 22.0, 29.0]);
-        assert_eq!((&a).dot(&b), c);
-    }
-
-    #[test]
-    fn mat_supports_dot_product_1x2_2x2() {
-        let a: Mat<f32, 1, 2> = Mat::from([2.0, 3.0]);
-        let b: Mat<f32, 2, 2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
-        let c: Mat<f32, 1, 2> = Mat::from([11.0, 16.0]);
-        assert_eq!((&a).dot(&b), c);
-    }
-
-    #[test]
-    fn mat_supports_dot_product_2x2_2x1() {
-        let a: Mat<f32, 2, 2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
-        let b: Mat<f32, 2, 1> = Mat::from([2.0, 3.0]);
-        let c: Mat<f32, 2, 1> = Mat::from([8.0, 18.0]);
-        assert_eq!((&a).dot(&b), c);
-    }
-
-    #[test]
-    fn mat_supports_dot_product_3x3_3x3() {
-        let a: Mat<f32, 3, 3> = Mat::from([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
-        let b: Mat<f32, 3, 3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
-        let c: Mat<f32, 3, 3> = Mat::from([36., 42., 48., 81., 96., 111., 126., 150., 174.]);
-        assert_eq!((&a).dot(&b), c);
-    }
-
-    #[test]
-    fn mat_supports_dot_product_1x3_3x3() {
-        let a: Mat<f32, 1, 3> = Mat::from([1.0, 2.0, 3.0]);
-        let b: Mat<f32, 3, 3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
-        let c: Mat<f32, 1, 3> = Mat::from([36.0, 42.0, 48.0]);
-        assert_eq!((&a).dot(&b), c);
-    }
-
-    #[test]
-    fn mat_supports_dot_product_3x3_3x1() {
-        let a: Mat<f32, 3, 3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
-        let b: Mat<f32, 3, 1> = Mat::from([1.0, 2.0, 3.0]);
-        let c: Mat<f32, 3, 1> = Mat::from([20.0, 38.0, 56.0]);
-        assert_eq!((&a).dot(&b), c);
-    }
-
-    #[test]
-    fn mat_supports_dot_product_4x4_4x4() {
-        let a: Mat<f32, 4, 4> = Mat::from([
-            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
-        ]);
-        let b: Mat<f32, 4, 4> = Mat::from([
-            2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
-        ]);
-        let c: Mat<f32, 4, 4> = Mat::from([
-            100., 110., 120., 130., 228., 254., 280., 306., 356., 398., 440., 482., 484., 542., 600., 658.,
-        ]);
-        assert_eq!((&a).dot(&b), c);
-    }
-
-    #[test]
-    fn mat_supports_dot_product_1x4_4x4() {
-        let a: Mat<f32, 1, 4> = Mat::from([1.0, 2.0, 3.0, 4.0]);
-        let b: Mat<f32, 4, 4> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]);
-        let c: Mat<f32, 1, 4> = Mat::from([100.0, 110.0, 120.0, 130.0]);
-        assert_eq!((&a).dot(&b), c);
-    }
-
-    #[test]
-    fn mat_supports_dot_product_4x4_4x1() {
-        let a: Mat<f32, 4, 4> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]);
-        let b: Mat<f32, 4, 1> = Mat::from([1.0, 2.0, 3.0, 3.0]);
-        let c: Mat<f32, 4, 1> = Mat::from([35.0, 71.0, 107.0, 143.0]);
-        assert_eq!((&a).dot(&b), c);
-    }
-
-    #[test]
-    fn mat2_x_vec2_works_as_premultiplication_of_the_matrix() {
-        let m: Mat2<f32> = Mat2::identity();
-        let v: Vec2<f32> = Vec2::one();
-
-        assert_eq!(m * v, Vec2::one());
-    }
-
-    #[test]
-    fn mat3_x_vec3_works_as_premultiplication_of_the_matrix() {
-        let m: Mat3<f32> = Mat3::identity();
-        let v: Vec3<f32> = Vec3::one();
-
-        assert_eq!(m * v, Vec3::one());
-    }
-
-    #[test]
-    fn mat4_x_vec4_works_as_premultiplication_of_the_matrix() {
-        let m: Mat4<f32> = Mat4::identity();
-        let v: Vec4<f32> = Vec4::one();
-
-        assert_eq!(m * v, Vec4::one());
     }
 
     #[test]
@@ -655,70 +417,8 @@ mod tests {
     }
 
     #[test]
-    fn mat_provides_norm_method() {
-        let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
-        assert_eq!(a.norm(), 5.477225575051661f32);
-    }
-
-    #[test]
-    fn mat_probides_diag_method() {
+    fn mat_provides_diag_method() {
         let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
         assert_eq!(a.diag(), Vec2::new(1.0f32, 4.0f32));
-    }
-
-    #[test]
-    fn vec2_implements_new() {
-        let _: Vec2<f32> = Vec2::new(1.0f32, 2.0f32);
-    }
-
-    #[test]
-    fn vec3_implements_new() {
-        let _: Vec3<f32> = Vec3::new(1.0f32, 2.0f32, 3.0f32);
-    }
-
-    #[test]
-    fn vec4_implements_new() {
-        let _: Vec4<f32> = Vec4::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
-    }
-
-    #[test]
-    fn vec2_implements_x_and_y() {
-        let v: Vec2<f32> = Vec2::new(1.0, 2.0);
-        assert_eq!(v.x(), 1.0f32);
-        assert_eq!(v.y(), 2.0f32);
-    }
-
-    #[test]
-    fn vec3_implements_x_y_and_z() {
-        let v: Vec3<f32> = Vec3::new(1.0, 2.0, 3.0);
-        assert_eq!(v.x(), 1.0f32);
-        assert_eq!(v.y(), 2.0f32);
-        assert_eq!(v.z(), 3.0f32);
-    }
-
-    #[test]
-    fn vec4_implements_x_y_z_and_w() {
-        let v: Vec4<f32> = Vec4::new(1.0, 2.0, 3.0, 4.0);
-        assert_eq!(v.x(), 1.0f32);
-        assert_eq!(v.y(), 2.0f32);
-        assert_eq!(v.z(), 3.0f32);
-        assert_eq!(v.w(), 4.0f32);
-    }
-
-    #[test]
-    fn mat_implements_serde() {
-        let a: Mat<f32, 2, 2> = Mat::identity();
-
-        assert_tokens(
-            &a,
-            &[
-                Token::Seq { len: Some(4) },
-                Token::F32(1.0),
-                Token::F32(0.0),
-                Token::F32(0.0),
-                Token::F32(1.0),
-                Token::SeqEnd,
-            ],
-        );
     }
 }

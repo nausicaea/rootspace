@@ -146,3 +146,129 @@ where
 
 forward_ref_binop!(impl<R: FloatAndSum> Dot, dot for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
 
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::mat::{Mat2, Mat3, Mat4};
+    use crate::mat::vec2::Vec2;
+    use crate::mat::vec3::Vec3;
+    use crate::mat::vec4::Vec4;
+
+    #[test]
+    fn mat_supports_dot_product_2x1_1x2() {
+        let a: Mat<f32, 2, 1> = Mat::from([3.0, 2.0]);
+        let b: Mat<f32, 1, 2> = Mat::from([2.0, 1.0]);
+        assert_eq!((&a).dot(&b), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
+    }
+
+    #[test]
+    fn mat_supports_dot_product_1x2_2x1() {
+        let a: Mat<f32, 1, 2> = Mat::from([3.0, 2.0]);
+        let b: Mat<f32, 2, 1> = Mat::from([2.0, 1.0]);
+        assert_eq!((&a).dot(&b), 8.0f32);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_2x2_2x2() {
+        let a: Mat<f32, 2, 2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
+        let b: Mat<f32, 2, 2> = Mat::from([2.0, 3.0, 4.0, 5.0]);
+        let c: Mat<f32, 2, 2> = Mat::from([10.0, 13.0, 22.0, 29.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_1x2_2x2() {
+        let a: Mat<f32, 1, 2> = Mat::from([2.0, 3.0]);
+        let b: Mat<f32, 2, 2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
+        let c: Mat<f32, 1, 2> = Mat::from([11.0, 16.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_2x2_2x1() {
+        let a: Mat<f32, 2, 2> = Mat::from([1.0, 2.0, 3.0, 4.0]);
+        let b: Mat<f32, 2, 1> = Mat::from([2.0, 3.0]);
+        let c: Mat<f32, 2, 1> = Mat::from([8.0, 18.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_3x3_3x3() {
+        let a: Mat<f32, 3, 3> = Mat::from([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
+        let b: Mat<f32, 3, 3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
+        let c: Mat<f32, 3, 3> = Mat::from([36., 42., 48., 81., 96., 111., 126., 150., 174.]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_1x3_3x3() {
+        let a: Mat<f32, 1, 3> = Mat::from([1.0, 2.0, 3.0]);
+        let b: Mat<f32, 3, 3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
+        let c: Mat<f32, 1, 3> = Mat::from([36.0, 42.0, 48.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_3x3_3x1() {
+        let a: Mat<f32, 3, 3> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
+        let b: Mat<f32, 3, 1> = Mat::from([1.0, 2.0, 3.0]);
+        let c: Mat<f32, 3, 1> = Mat::from([20.0, 38.0, 56.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_4x4_4x4() {
+        let a: Mat<f32, 4, 4> = Mat::from([
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
+        ]);
+        let b: Mat<f32, 4, 4> = Mat::from([
+            2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
+        ]);
+        let c: Mat<f32, 4, 4> = Mat::from([
+            100., 110., 120., 130., 228., 254., 280., 306., 356., 398., 440., 482., 484., 542., 600., 658.,
+        ]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_1x4_4x4() {
+        let a: Mat<f32, 1, 4> = Mat::from([1.0, 2.0, 3.0, 4.0]);
+        let b: Mat<f32, 4, 4> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]);
+        let c: Mat<f32, 1, 4> = Mat::from([100.0, 110.0, 120.0, 130.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat_supports_dot_product_4x4_4x1() {
+        let a: Mat<f32, 4, 4> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]);
+        let b: Mat<f32, 4, 1> = Mat::from([1.0, 2.0, 3.0, 3.0]);
+        let c: Mat<f32, 4, 1> = Mat::from([35.0, 71.0, 107.0, 143.0]);
+        assert_eq!((&a).dot(&b), c);
+    }
+
+    #[test]
+    fn mat2_x_vec2_works_as_premultiplication_of_the_matrix() {
+        let m: Mat2<f32> = Mat2::identity();
+        let v: Vec2<f32> = Vec2::one();
+
+        assert_eq!(m * v, Vec2::one());
+    }
+
+    #[test]
+    fn mat3_x_vec3_works_as_premultiplication_of_the_matrix() {
+        let m: Mat3<f32> = Mat3::identity();
+        let v: Vec3<f32> = Vec3::one();
+
+        assert_eq!(m * v, Vec3::one());
+    }
+
+    #[test]
+    fn mat4_x_vec4_works_as_premultiplication_of_the_matrix() {
+        let m: Mat4<f32> = Mat4::identity();
+        let v: Vec4<f32> = Vec4::one();
+
+        assert_eq!(m * v, Vec4::one());
+    }
+
+}

@@ -80,3 +80,26 @@ where
         de.deserialize_seq(MatVisitor::default())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_test::{assert_tokens, Token};
+
+    #[test]
+    fn mat_implements_serde() {
+        let a: Mat<f32, 2, 2> = Mat::identity();
+
+        assert_tokens(
+            &a,
+            &[
+                Token::Seq { len: Some(4) },
+                Token::F32(1.0),
+                Token::F32(0.0),
+                Token::F32(0.0),
+                Token::F32(1.0),
+                Token::SeqEnd,
+            ],
+        );
+    }
+}

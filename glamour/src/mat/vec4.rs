@@ -30,3 +30,22 @@ where
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn vec4_implements_new() {
+        let _: Vec4<f32> = Vec4::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
+    }
+
+    #[test]
+    fn vec4_implements_x_y_z_and_w() {
+        let v: Vec4<f32> = Vec4::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(v.x(), 1.0f32);
+        assert_eq!(v.y(), 2.0f32);
+        assert_eq!(v.z(), 3.0f32);
+        assert_eq!(v.w(), 4.0f32);
+    }
+
+}

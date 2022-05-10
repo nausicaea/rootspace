@@ -22,3 +22,19 @@ where
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn vec2_implements_new() {
+        let _: Vec2<f32> = Vec2::new(1.0f32, 2.0f32);
+    }
+
+    #[test]
+    fn vec2_implements_x_and_y() {
+        let v: Vec2<f32> = Vec2::new(1.0, 2.0);
+        assert_eq!(v.x(), 1.0f32);
+        assert_eq!(v.y(), 2.0f32);
+    }
+}
