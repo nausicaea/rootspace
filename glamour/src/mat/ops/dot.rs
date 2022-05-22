@@ -154,29 +154,6 @@ mod tests {
     use crate::mat::vec2::Vec2;
     use crate::mat::vec3::Vec3;
     use crate::mat::vec4::Vec4;
-    use proptest::prelude::*;
-    use proptest::collection::vec;
-    use proptest::num::f32::NORMAL;
-
-    proptest! {
-        #[test]
-        fn experiment(num in vec(NORMAL, 4)) {
-            let a: Vec2<f32> = Vec2::from([num[0], num[1]]);
-            let b: Vec2<f32> = Vec2::from([num[2], num[3]]);
-
-            prop_assert_eq!(a.t().dot(b), num[0] * num[2] + num[1] * num[3]);
-        }
-
-        #[test]
-        fn pt_mat_supports_dot_product_2x1_1x2(num in vec(NORMAL, 4)) {
-            let a: Mat<f32, 2, 1> = Mat::from([3.0, 2.0]);
-            let b: Mat<f32, 1, 2> = Mat::from([2.0, 1.0]);
-            assert_eq!((&a).dot(&b), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
-            assert_eq!(a.clone().dot(&b), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
-            assert_eq!((&a).dot(b.clone()), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
-            assert_eq!(a.clone().dot(b.clone()), Mat::<f32, 2, 2>::from([6.0, 3.0, 4.0, 2.0]));
-        }
-    }
 
     #[test]
     fn mat_supports_dot_product_2x1_1x2() {
