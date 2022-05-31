@@ -130,22 +130,6 @@ impl_scalar_binops!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mat::tests::{mat1, mat1x2};
-    use proptest::num::f32::{NORMAL, ZERO, POSITIVE, NEGATIVE, SUBNORMAL, INFINITE}:
-
-    macro_rules! impl_sa {
-        ($name:ident, $strat_a:expr, $strat_b:expr) => {
-            proptest! {
-                #[test]
-                fn $name(a in $strat_a, b in $strat_b) {
-                    assert_eq!(&a + &b, Mat::<f32, 1, 1>::from([3.0]));
-                    assert_eq!(&b + &a, Mat::<f32, 1, 1>::from([3.0]));
-                }
-            }
-        }; 
-    }
-
-    impl_sa!(mat_ssa, mat1(NORMAL | ZERO | POSITIVE | NEGATIVE | SUBNORMAL | INFINITE), NORMAL | ZERO | POSITIVE | NEGATIVE | SUBNORMAL | INFINITE);
 
     #[test]
     fn mat_supports_scalar_addition() {

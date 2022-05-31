@@ -135,9 +135,10 @@ impl ModelBuilder {
 mod tests {
     use approx::{assert_ulps_eq};
     use proptest::prelude::*;
+    use proptest::collection::vec;
+    use proptest::num::f32::NORMAL;
 
     use super::*;
-    use crate::utilities::validate_float;
 
     #[test]
     fn implements_default() {
@@ -194,45 +195,33 @@ mod tests {
 
     proptest! {
         #[test]
-        fn position_may_be_changed(num: [f32; 3]) {
+        fn position_may_be_changed(num in vec(NORMAL, 3)) {
             let mut m = Model::default();
 
             let p = Vec3::new(num[0], num[1], num[2]);
             m.set_translation(p.clone());
 
-            if !validate_float(&num) {
-                return Ok(());
-            } else {
-                prop_assert_eq!(m.translation(), &p);
-            }
+            prop_assert_eq!(m.translation(), &p);
         }
 
         #[test]
-        fn orientation_may_be_changed(num: [f32; 4]) {
+        fn orientation_may_be_changed(num in vec(NORMAL, 4)) {
             let mut m = Model::default();
 
             let o = Unit::from(Quat::new(num[0], num[1], num[2], num[3]));
             m.set_orientation(o.clone());
 
-            if !validate_float(&num) {
-                return Ok(());
-            } else {
-                prop_assert_eq!(m.orientation(), &o);
-            }
+            prop_assert_eq!(m.orientation(), &o);
         }
 
         #[test]
-        fn scale_may_be_changed(num: [f32; 3]) {
+        fn scale_may_be_changed(num in vec(NORMAL, 3)) {
             let mut m = Model::default();
 
             let s = Vec3::new(num[0], num[1], num[2]);
             m.set_scale(s.clone());
 
-            if !validate_float(&num) {
-                return Ok(());
-            } else {
-                prop_assert_eq!(m.scale(), &s);
-            }
+            prop_assert_eq!(m.scale(), &s);
         }
     }
 }

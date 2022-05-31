@@ -211,9 +211,9 @@ impl From<CameraSerDe> for Camera {
 mod tests {
     use approx::{assert_ulps_eq};
     use proptest::prelude::*;
+    use proptest::num::f64::NORMAL;
 
     use super::*;
-    use crate::utilities::validate_float;
 
     #[test]
     fn implements_default() {
@@ -264,15 +264,11 @@ mod tests {
         }
 
         #[test]
-        fn dpi_factor_may_be_changed(num: f64) {
+        fn dpi_factor_may_be_changed(num in NORMAL) {
             let mut c = Camera::default();
             c.set_dpi_factor(num);
 
-            if !validate_float(&[num]) {
-                return Ok(())
-            } else {
-                prop_assert_eq!(c.dpi_factor(), num);
-            }
+            prop_assert_eq!(c.dpi_factor(), num);
         }
     }
 }
