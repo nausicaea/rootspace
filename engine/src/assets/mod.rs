@@ -2,6 +2,7 @@ pub mod image;
 pub mod mesh;
 
 use std::path::{Path, PathBuf};
+use std::io::Error as IoError;
 
 use anyhow::Result;
 use file_manipulation::FileError;
@@ -27,4 +28,6 @@ pub enum AssetError {
     InvalidCharacters(String),
     #[error(transparent)]
     FileError(#[from] FileError),
+    #[error(transparent)]
+    IoError(#[from] IoError),
 }

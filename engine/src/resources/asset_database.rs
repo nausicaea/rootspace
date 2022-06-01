@@ -106,7 +106,15 @@ impl AssetDatabase {
         }
 
         let states = self.states.as_ref().ok_or(AssetError::AssetTreeNotFound)?;
-        let state_path = NewOrExFilePathBuf::try_from(states.join(name_str))?;
+        let states = states.join(name_str);
+
+        let states = match states.extension() {
+            None => states.with_extension("json"),
+            Some(ext) if ext != "json" => states.with_extension("json"),
+            Some(_) => states,
+        };
+
+        let state_path = NewOrExFilePathBuf::try_from(&states)?;
 
         if !state_path.starts_with(&states) {
             return Err(AssetError::OutOfTree(state_path.into()));
@@ -133,12 +141,42 @@ impl AssetDatabase {
         }
 
         let states = self.states.as_ref().ok_or(AssetError::AssetTreeNotFound)?;
-        let state_path = FilePathBuf::try_from(states.join(name_str))?;
+        let states = states.join(name_str);
+
+        let states = match states.extension() {
+            None => states.with_extension("json"),
+            Some(ext) if ext != "json" => states.with_extension("json"),
+            Some(_) => states,
+        };
+
+        let state_path = FilePathBuf::try_from(&states)?;
 
         if !state_path.path().starts_with(&states) {
             return Err(AssetError::OutOfTree(state_path.into()));
         }
 
         Ok(state_path)
+    }
+
+    pub fn all_states(&self) -> Result<Vec<FilePathBuf>, AssetError> {
+        let states = self.states.as_ref().ok_or(AssetError::AssetTreeNotFound)?;
+        let mut data = Vec::new();
+        for dir_entry in std::fs::read_dir(states)? {
+            let dir_entry = dir_entry?;
+            let entry_path = FilePathBuf::try_from(dir_entry.path())?;
+            data.push(entry_path);
+        }
+
+        Ok(data)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn asset_database_implements_default() {
+        let _: AssetDatabase = Default::default();
     }
 }

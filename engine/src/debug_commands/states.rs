@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use clap::{load_yaml, App};
 use ecs::{EventQueue, Resources, WorldEvent};
 use serde::{Deserialize, Serialize};
@@ -42,6 +42,11 @@ impl CommandTrait for StatesCommand {
         } else if subcommand == "reload" {
             res.borrow_mut::<EventQueue<WorldEvent>>()
                 .send(WorldEvent::DeserializeLastState);
+        } else if subcommand == "list" {
+            for state_path in res.borrow::<AssetDatabase>().all_states()? {
+                let name = state_path.file_stem().and_then(|n| n.to_str()).ok_or(anyhow!("The file {} has no file name", state_path.display()))?;
+                println!("{}", name);
+            }
         }
 
         Ok(())

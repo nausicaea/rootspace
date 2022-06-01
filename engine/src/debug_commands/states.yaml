@@ -5,6 +5,8 @@ settings:
   - VersionlessSubcommands
   - SubcommandRequiredElseHelp
 subcommands:
+  - list:
+      about: Lists the available states
   - save:
       about: Saves the world state to a file
       args:
