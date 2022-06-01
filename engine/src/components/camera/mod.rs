@@ -86,10 +86,12 @@ impl Camera {
     /// Transforms a point or vector in world-space to normalized device coordinates.
     pub fn world_to_ndc(&self, model: &Model, v: &Vec4<f32>) -> Vec4<f32> {
         let mdlm4 = model.to_matrix();
-        match self.projection {
+        let vndc = match self.projection {
             Projection::Perspective => self.persp.as_matrix() * &mdlm4 * v,
             Projection::Orthographic => self.ortho.as_matrix() * &mdlm4 * v,
-        }
+        };
+
+        &vndc / vndc.w()
     }
 
     // /// Transforms a point or vector in normalized device coordinates to world-space.

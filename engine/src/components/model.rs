@@ -73,14 +73,10 @@ impl std::fmt::Display for Model {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "position: [{}, {}, {}], orientation: {}, scale: [{}, {}, {}]",
-            self.translation().x(),
-            self.translation().y(),
-            self.translation().z(),
+            "position: {}, orientation: {}, scale: {}",
+            self.translation(),
             self.orientation(),
-            self.scale().x(),
-            self.scale().y(),
-            self.scale().z(),
+            self.scale(),
         )
     }
 }
