@@ -168,11 +168,13 @@ impl<B> ComponentsCommand<B> {
             .get(index)
             .ok_or(Error::EntityNotFound(index))?;
 
-        let mut models = res.borrow_components_mut::<Model>();
-
         if create {
-            models.entry(entity).or_default();
+            res.borrow_components_mut::<Model>()
+                .entry(entity)
+                .or_default();
         }
+
+        let models = res.borrow_components::<Model>();
 
         if let Some(mc) = models.get(entity) {
             println!(

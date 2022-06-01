@@ -46,7 +46,7 @@ where
             type Value = Mat<R, I, J>;
 
             fn expecting(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-                write!(fmt, "A sequence with {} elements", I * J)
+                write!(fmt, "a sequence with {} elements", I * J)
             }
 
             fn visit_seq<A>(self, mut acc: A) -> Result<Self::Value, A::Error> 
@@ -54,16 +54,6 @@ where
                 A: serde::de::SeqAccess<'v>,
             {
                 use serde::de::Error;
-
-                match acc.size_hint() {
-                    Some(sh) if sh == I * J => (),
-                    Some(sh) => {
-                        return Err(Error::invalid_length(sh, &self));
-                    },
-                    None => {
-                        return Err(Error::invalid_length(0, &self));
-                    },
-                }
 
                 let mut mat: Mat<R, I, J> = Mat::zero();
 
