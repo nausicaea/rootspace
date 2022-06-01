@@ -6,36 +6,36 @@ use serde::{Deserialize, Serialize};
 use crate::{event::EngineEvent, graphics::BackendTrait, resources::GraphicsBackend};
 
 #[derive(Serialize, Deserialize)]
-#[serde(rename(serialize = "EventInterface", deserialize = "EventInterface"))]
-pub struct EventInterface<B> {
+#[serde(rename(serialize = "EventBridge", deserialize = "EventBridge"))]
+pub struct EventBridge<B> {
     #[serde(skip)]
     _b: PhantomData<B>,
 }
 
-impl<B> Default for EventInterface<B> {
+impl<B> Default for EventBridge<B> {
     fn default() -> Self {
-        EventInterface {
+        EventBridge {
             _b: PhantomData::default(),
         }
     }
 }
 
-impl<B> SerializationName for EventInterface<B>
+impl<B> SerializationName for EventBridge<B>
 where
     B: BackendTrait,
 {
     fn name() -> String {
-        String::from("EventInterface")
+        String::from("EventBridge")
     }
 }
 
-impl<B> std::fmt::Debug for EventInterface<B> {
+impl<B> std::fmt::Debug for EventBridge<B> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "EventInterface<{}>(PhantomData)", std::any::type_name::<B>())
+        write!(f, "EventBridge<{}>(PhantomData)", std::any::type_name::<B>())
     }
 }
 
-impl<B> System for EventInterface<B>
+impl<B> System for EventBridge<B>
 where
     B: BackendTrait,
 {
@@ -61,6 +61,6 @@ mod tests {
 
     #[test]
     fn default_headless() {
-        let _: EventInterface<HeadlessBackend> = EventInterface::default();
+        let _: EventBridge<HeadlessBackend> = EventBridge::default();
     }
 }

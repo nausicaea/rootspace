@@ -64,7 +64,7 @@ impl CommandTrait for EntitiesCommand {
             } else {
                 println!("No other components found");
             }
-        } else if subcommand == "count" {
+        } else if subcommand == "table" {
             let entities = res.borrow::<Entities>();
             let statuses = res.borrow_components::<Status>();
 

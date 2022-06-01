@@ -5,11 +5,11 @@ use super::CommandTrait;
 use crate::resources::Statistics;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct StatisticsCommand;
+pub struct PerfCommand;
 
-impl CommandTrait for StatisticsCommand {
+impl CommandTrait for PerfCommand {
     fn name(&self) -> &'static str {
-        "stats"
+        "perf"
     }
 
     fn description(&self) -> &'static str {

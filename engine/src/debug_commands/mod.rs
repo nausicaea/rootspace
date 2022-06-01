@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use ecs::{impl_registry, Resources};
+use ecs::{Resources};
 use thiserror::Error;
 
 pub use self::{
     assets::AssetsCommand, components::ComponentsCommand, entities::EntitiesCommand, exit::ExitCommand,
-    states::StatesCommand, stats::StatisticsCommand,
+    states::StatesCommand, perf::PerfCommand,
 };
 use crate::graphics::BackendTrait;
 
@@ -15,9 +15,9 @@ pub mod components;
 pub mod entities;
 pub mod exit;
 pub mod states;
-pub mod stats;
+pub mod perf;
 
-impl_registry!(CommandRegistry, where Head: CommandTrait + Clone + Copy + Default);
+//impl_registry!(CommandRegistry, where Head: CommandTrait + Clone + Copy + Default);
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -45,19 +45,19 @@ pub trait CommandTrait: 'static {
     fn run(&self, res: &Resources, args: &[String]) -> Result<()>;
 }
 
-impl CommandTrait for () {
-    fn name(&self) -> &'static str {
-        "()"
-    }
-
-    fn description(&self) -> &'static str {
-        "Empty operation (eg. a NOP)"
-    }
-
-    fn run(&self, _: &Resources, _: &[String]) -> Result<()> {
-        Ok(())
-    }
-}
+//impl CommandTrait for () {
+//    fn name(&self) -> &'static str {
+//        "()"
+//    }
+//
+//    fn description(&self) -> &'static str {
+//        "Empty operation (eg. a NOP)"
+//    }
+//
+//    fn run(&self, _: &Resources, _: &[String]) -> Result<()> {
+//        Ok(())
+//    }
+//}
 
 fn box_command<C: CommandTrait>(command: C) -> Box<dyn CommandTrait + 'static> {
     Box::new(command)
@@ -73,6 +73,6 @@ pub fn default_commands<B: BackendTrait + 'static>() -> HashMap<&'static str, Bo
         ComponentsCommand::<B>::default().name(),
         box_command(ComponentsCommand::<B>::default()),
     );
-    commands.insert(StatisticsCommand.name(), box_command(StatisticsCommand));
+    commands.insert(PerfCommand.name(), box_command(PerfCommand));
     commands
 }

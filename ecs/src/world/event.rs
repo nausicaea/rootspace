@@ -13,10 +13,12 @@ pub enum WorldEvent {
     /// Causes the World::maintain() method to serialize the entire world state to the given
     /// file.
     Serialize(NewOrExFilePathBuf),
+    /// Causes the World::maintain() method to serialized the most recently accessed world state.
+    SerializeLastState,
     /// Causes the World::maintain() method to deserialize the entire world state from the
     /// given file.
     Deserialize(FilePathBuf),
-    /// Causes the World::maintain() method to deserialize the most recently loaded world state.
+    /// Causes the World::maintain() method to deserialize the most recently accessed world state.
     DeserializeLastState,
     /// Signals the completion of deserialization.
     DeserializationComplete,

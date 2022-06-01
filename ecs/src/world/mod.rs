@@ -307,6 +307,12 @@ where
                         return LoopControl::Abort;
                     }
                     WorldEvent::Serialize(p) => self.on_serialize(&p).unwrap(),
+                    WorldEvent::SerializeLastState => {
+                        if let Some(ref ls) = self.last_state {
+                            let ls = NewOrExFilePathBuf::try_from(ls).unwrap();
+                            self.on_serialize(&ls).unwrap();
+                        }
+                    }
                     WorldEvent::Deserialize(p) => self.on_deserialize(&p).unwrap(),
                     WorldEvent::DeserializeLastState => {
                         if let Some(ref ls) = self.last_state {
