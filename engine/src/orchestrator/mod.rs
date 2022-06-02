@@ -65,6 +65,7 @@ where
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         // Create the deserializer
         let file_path = FilePathBuf::try_from(path.as_ref())?;
+        debug!("{:?}", file_path);
         let mut file = File::open(file_path)?;
         let mut deserializer = serde_json::Deserializer::from_reader(&mut file);
 

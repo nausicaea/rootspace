@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use directories::ProjectDirs;
-use engine::{GliumBackend, HeadlessBackend};
+use engine::{GliumBackend, HeadlessBackend, APP_QUALIFIER, APP_ORGANIZATION};
 use fern::Dispatch;
-use log::{LevelFilter, SetLoggerError};
+use log::{LevelFilter, SetLoggerError, debug};
 use rootspace::Rootspace;
 
 /// Encodes the command line arguments for the Rootspace binary
@@ -66,7 +66,7 @@ fn main() -> Result<()> {
         Subcommands::Initialize { force, name } => {
             // Configure the project-specific directories
             let project_dirs =
-                ProjectDirs::from("org", "nausicaea", name).context("Could not find the project directories")?;
+                ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, name).context("Could not find the project directories")?;
             let asset_dir = project_dirs.data_local_dir().join("assets");
             let scene_dir = asset_dir.join("scenes");
             let main_scene = scene_dir.join("main.json");
@@ -78,10 +78,11 @@ fn main() -> Result<()> {
         },
         Subcommands::Run { headless, command, name } => {
             // Configure the project-specific directories
-            let project_dirs = directories::ProjectDirs::from("org", "nausicaea", name)
+            let project_dirs = directories::ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, name)
                 .context("Could not find the project directories")?;
             let scene_dir = project_dirs.data_local_dir().join("assets").join("scenes");
             let main_scene = scene_dir.join("main.json");
+            debug!("Loading the main scene from {}", main_scene.display());
 
             if *headless {
                 let mut g = Rootspace::<HeadlessBackend>::load(main_scene)

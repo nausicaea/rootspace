@@ -9,6 +9,7 @@ use crate::event::{ElementState, EngineEvent, ModifiersState, VirtualKeyCode};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DebugInteractions {
     receiver: ReceiverId<EngineEvent>,
+    #[serde(skip)]
     edit_mode_enabled: bool,
 }
 

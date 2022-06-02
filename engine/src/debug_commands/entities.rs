@@ -155,11 +155,12 @@ impl CommandTrait for EntitiesCommand {
 
             if let Some(parent) = parent {
                 res.borrow_mut::<Hierarchy<Index>>().insert_child(&parent, entity);
+                println!("Created the entity {} with parent {}", entity, parent);
             } else {
                 res.borrow_mut::<Hierarchy<Index>>().insert(entity);
+                println!("Created the entity {}", entity);
             }
 
-            println!("Created the entity {}", entity);
             res.borrow_mut::<EventQueue<WorldEvent>>()
                 .send(WorldEvent::EntityCreated(entity));
         } else if subcommand == "destroy" {
