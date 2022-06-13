@@ -35,8 +35,9 @@ glamour = { path = "../glamour", features = ["serde_support"] }
 forward-ref = { path = "../forward-ref" }
 wgpu = "0.12"
 wgpu-types = { version = "0.12", features = ["trace", "replay"] }
-tokio = { version = "1.18.2", features = ["full"] }
+pollster = "0.2.5"
 bytemuck = { version = "1.4", features = [ "derive" ] }
+tobj = { version = "3.2.2", features = ["async"] }
 
 [dev-dependencies]
 serde_test = { version = "^1.0.0" }

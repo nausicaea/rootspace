@@ -1,9 +1,11 @@
+use std::borrow::Cow;
+use pollster::FutureExt;
+
 use anyhow::{anyhow, Context};
 use ecs::{Resource, SerializationName};
 use file_manipulation::{FilePathBuf, FileError};
 use try_default::TryDefault;
 
-use tokio::runtime::Runtime;
 use serde::{
     Serialize,
     Deserialize,
@@ -103,21 +105,18 @@ impl GraphicsBuilder {
             .as_ref()
             .ok_or(anyhow!("You must provide a shader with GraphicsBuilder::with_shader"))?;
 
-        // Create the runtime
-        let rt  = Runtime::new()
-            .context("Unable to create the tokio runtime")?;
-
         let instance = wgpu::Instance::new(self.backends);
 
-        let adapter = rt.block_on(instance
+        let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: self.power_preference,
                 compatible_surface: None,
                 force_fallback_adapter: false,
-            }))
+            })
+            .block_on()
             .ok_or(anyhow!("Unable to retrieve the requested adapter"))?;
 
-        let (device, queue) = rt.block_on(adapter
+        let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     features: self.features,
@@ -125,7 +124,8 @@ impl GraphicsBuilder {
                     label: Some("Device"),
                 },
                 None,
-            ))
+            )
+            .block_on()
             .context("Unable to retrieve device and queue")?;
 
         let pipeline_layout =
@@ -200,29 +200,39 @@ pub struct Shader {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ShaderSource {
+    Wgsl(FilePathBuf),
+    WgslRaw(String),
     #[cfg(feature = "spirv")]
     SpirV(FilePathBuf),
-    Wgsl(FilePathBuf),
+    #[cfg(feature = "spirv")]
+    SpirVRaw(Vec<u8>),
 }
 
 impl ShaderSource {
     pub fn to_shader_source(&self) -> Result<wgpu::ShaderSource, FileError> {
-        self.clone().try_into()
+        self.try_into()
     }
 }
 
-impl<'a> TryInto<wgpu::ShaderSource<'a>> for ShaderSource {
+impl<'a> TryInto<wgpu::ShaderSource<'a>> for &'a ShaderSource {
     type Error = FileError;
 
     fn try_into(self) -> Result<wgpu::ShaderSource<'a>, Self::Error> {
         match self {
             ShaderSource::Wgsl(fp) => {
                 let data = fp.read_to_string()?;
-                Ok(wgpu::ShaderSource::Wgsl(std::borrow::Cow::from(data)))
+                Ok(wgpu::ShaderSource::Wgsl(Cow::from(data)))
+            }
+            ShaderSource::WgslRaw(d) => {
+                Ok(wgpu::ShaderSource::Wgsl(Cow::from(d)))
             }
             #[cfg(feature = "spirv")]
             ShaderSource::SpirV(_) => {
                 todo!()
+            }
+            #[cfg(feature = "spirv")]
+            ShaderSource::SpirVRaw(ref d) => {
+                Ok(wgpu::util::make_spirv(d))
             }
         }
     }
