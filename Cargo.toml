@@ -10,5 +10,6 @@ members = [
     "rootspace",
     "rose-tree",
     "glamour",
+    "plyers",
     "forward-ref",
 ]
