@@ -56,7 +56,8 @@
 //! L -> "x" | "y" | "z" | "w" | Y
 //! 
 
-use std::num::ParseIntError;
+use std::num::{ParseIntError, ParseFloatError};
+use std::str::FromStr;
 use std::task::Poll;
 use std::{path::Path, fs::File};
 use std::io::Read;
@@ -230,6 +231,8 @@ pub enum Error {
     MissingFormatVersion,
     #[error("Unexpected byte {:#x} at offset {:#x}", .0, .1)]
     UnexpectedByte(u8, usize),
+    #[error(transparent)]
+    ParseFloatError(#[from] ParseFloatError),
     #[error(transparent)]
     ParseIntError(#[from] ParseIntError),
     #[error("The specified file ended unexpectedly at offset {:#x}", .0)]
@@ -444,6 +447,80 @@ where
     Ok(obj_info)
 }
 
+fn parse_data_point<R>(file: &mut R, offset: &mut usize, data_type: DataType, format_type: FormatType) -> Result<Vec<u8>, Error> 
+where
+    R: Read,
+{
+    match format_type {
+        FormatType::Ascii => match data_type {
+            DataType::F32 | DataType::F64 => {
+                todo!()
+            },
+            _ => {
+                let _integer: u64 = parse_integer_from_ascii(file, offset)?;
+                todo!()
+            },
+        },
+        FormatType::BinaryLittleEndian => todo!(),
+        FormatType::BinaryBigEndian => todo!(),
+    }
+}
+
+fn parse_length<R>(file: &mut R, offset: &mut usize, count_type: CountType, format_type: FormatType) -> Result<usize, Error> 
+where
+    R: Read,
+{
+    match format_type {
+        FormatType::Ascii => {
+            let count = parse_integer_from_ascii(file, offset)?;
+            Ok(count)
+        },
+        FormatType::BinaryLittleEndian => todo!(),
+        FormatType::BinaryBigEndian => todo!(),
+    }
+}
+
+fn parse_float_from_ascii<T, R>(file: &mut R, offset: &mut usize) -> Result<T, Error>
+where
+    T: FromStr<Err = ParseFloatError>,
+    R: Read,
+{
+    let mut floating = String::new();
+    parse_individual(file, offset, |b, o| {
+        match b {
+            0x0a => Poll::Ready(Ok(())),
+            b@0x30..=0x39 | b@0x2e => {
+                floating.push(char::from(b));
+                Poll::Pending
+            },
+            b => Poll::Ready(Err(Error::UnexpectedByte(b, o))),
+        }
+    })?;
+
+    let floating = floating.parse()?;
+    Ok(floating)
+}
+
+fn parse_integer_from_ascii<T, R>(file: &mut R, offset: &mut usize) -> Result<T, Error> 
+where
+    T: FromStr<Err = ParseIntError>,
+    R: Read,
+{
+    let mut integer = String::new();
+    parse_individual(file, offset, |b, o| {
+        match b {
+            0x20 => Poll::Ready(Ok(())),
+            b@0x30..=0x39 | b@0x2d => {
+                integer.push(char::from(b));
+                Poll::Pending
+            },
+            b => Poll::Ready(Err(Error::UnexpectedByte(b, o))),
+        }
+    })?;
+    let integer: T = integer.parse()?;
+    Ok(integer)
+}
+
 fn read_byte<R>(file: &mut R, offset: &mut usize) -> Result<u8, Error>
 where
     R: Read,
@@ -575,16 +652,37 @@ pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
         }
     }
 
+    let descriptor = PlyDescriptor {
+        format_type: format_type.ok_or(Error::MissingFormatType)?,
+        format_version: format_version.ok_or(Error::MissingFormatVersion)?,
+        elements,
+        comments,
+        obj_info,
+    };
+
+    let mut property_data = Vec::new();
+    let mut list_property_data = Vec::new();
+    for e in &descriptor.elements {
+        for _ in 0..e.count {
+            for p in &e.properties {
+                let d = parse_data_point(&mut file, &mut offset, p.data_type, descriptor.format_type)?;
+                property_data.extend(d);
+            }
+
+            for l in &e.list_properties {
+                let c = parse_length(&mut file, &mut offset, l.count_type, descriptor.format_type)?;
+                for _ in 0..c {
+                    let d = parse_data_point(&mut file, &mut offset, l.data_type, descriptor.format_type)?;
+                    list_property_data.extend(d);
+                }
+            }
+        }
+    }
+
     Ok(Ply {
-        descriptor: PlyDescriptor {
-            format_type: format_type.ok_or(Error::MissingFormatType)?,
-            format_version: format_version.ok_or(Error::MissingFormatVersion)?,
-            elements,
-            comments,
-            obj_info,
-        },
-        property_data: Vec::default(),
-        list_property_data: Vec::default(),
+        descriptor,
+        property_data,
+        list_property_data,
     })
 }
 
