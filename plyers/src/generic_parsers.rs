@@ -92,17 +92,6 @@ where
     }
 }
 
-pub fn parse_newline<R>(file: &mut R, offset: &mut usize) -> Result<(), Error>
-where
-    R: Read,
-{
-    let byte = read_byte(file, offset)?;
-    match byte {
-        0x0a => Ok(()),
-        b => Err(Error::UnexpectedByte(b, *offset)),
-    }
-}
-
 pub fn parse_individual<T, F, R>(file: &mut R, offset: &mut usize, mut func: F) -> Result<T, Error>
 where
     R: Read,

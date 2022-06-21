@@ -56,15 +56,14 @@
 
 use std::{
     fs::File,
-    num::{ParseFloatError, ParseIntError},
     path::Path,
 };
 
 use generic_parsers::parse_whitespace;
 use ply_parsers::parse_begin_header;
-use thiserror::Error as ThisError;
 
 use self::{
+    error::Error,
     generic_parsers::parse_from_lut,
     ply_parsers::{
         parse_comment, parse_data_point, parse_element, parse_format, parse_length, parse_list_property,
@@ -79,30 +78,9 @@ mod ply_parsers;
 mod tables;
 pub mod types;
 mod utilities;
-
-#[derive(Debug, ThisError)]
-pub enum Error {
-    #[error("Found a list property with no parent element at offset {:#x}", .0)]
-    UnexpectedListProperty(usize),
-    #[error("Found a property with no parent element at offset {:#x}", .0)]
-    UnexpectedProperty(usize),
-    #[error("Missing format type")]
-    MissingFormatType,
-    #[error("Missing format version")]
-    MissingFormatVersion,
-    #[error("Unexpected byte {:#x} at offset {:#x}", .0, .1)]
-    UnexpectedByte(u8, usize),
-    #[error(transparent)]
-    ParseFloatError(#[from] ParseFloatError),
-    #[error(transparent)]
-    ParseIntError(#[from] ParseIntError),
-    #[error("The specified file ended unexpectedly at offset {:#x}", .0)]
-    UnexpectedEndOfFile(usize),
-    #[error("The specified file is not a PLY file")]
-    NotAPlyFile,
-    #[error(transparent)]
-    IoError(#[from] std::io::Error),
-}
+mod engram;
+mod and_then;
+pub mod error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Keyword {
