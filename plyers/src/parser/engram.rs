@@ -2,6 +2,7 @@ use std::io::Read;
 use std::task::Poll;
 use crate::utilities::read_byte;
 use crate::error::Error;
+use super::Parser;
 
 pub struct Engram<'a> {
     e: &'a [u8],
@@ -9,8 +10,11 @@ pub struct Engram<'a> {
     state: Poll<Option<(u8, usize)>>,
 }
 
-impl<'a> Engram<'a> {
-    pub fn next<R: Read>(&mut self, r: &mut R, o: &mut usize) -> Poll<Result<(), Error>> {
+impl<'a> Parser for Engram<'a> {
+    type Item = ();
+    type Error = Error;
+
+    fn next<R: Read>(&mut self, r: &mut R, o: &mut usize) -> Poll<Result<(), Error>> {
         match self.state {
             Poll::Ready(Some((b, o))) => return Poll::Ready(Err(Error::UnexpectedByte(b, o))),
             Poll::Ready(None) => return Poll::Ready(Ok(())),
@@ -42,15 +46,7 @@ pub fn engram(e: &[u8]) -> Engram {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn loop_<R: Read>(p: &mut Engram, src: &mut R, o: &mut usize) -> Result<(), Error> {
-        loop {
-            match p.next(src, o) {
-                Poll::Pending => continue,
-                Poll::Ready(r) => break r,
-            }
-        }
-    }
+    use super::super::loop_;
 
     #[test]
     fn engram_parses_a_single_fixed_word() {
