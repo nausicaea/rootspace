@@ -7,21 +7,21 @@ use super::Parser;
 pub struct Engram<'a> {
     e: &'a [u8],
     idx: usize,
-    state: Poll<Option<(u8, usize)>>,
+    state: Poll<Option<u8>>,
 }
 
 impl<'a> Parser for Engram<'a> {
     type Item = ();
     type Error = Error;
 
-    fn next<R: Read>(&mut self, r: &mut R, o: &mut usize) -> Poll<Result<(), Error>> {
+    fn next<R: Read>(&mut self, r: &mut R) -> Poll<Result<(), Error>> {
         match self.state {
-            Poll::Ready(Some((b, o))) => return Poll::Ready(Err(Error::UnexpectedByte(b, o))),
+            Poll::Ready(Some(b)) => return Poll::Ready(Err(Error::UnexpectedByte(b))),
             Poll::Ready(None) => return Poll::Ready(Ok(())),
             Poll::Pending => (),
         }
 
-        let byte = read_byte(r, o)?;
+        let byte = read_byte(r)?;
 
         if byte == self.e[self.idx] {
             self.idx += 1;
@@ -31,8 +31,8 @@ impl<'a> Parser for Engram<'a> {
                 return Poll::Ready(Ok(()));
             }
         } else {
-            self.state = Poll::Ready(Some((byte, *o)));
-            return Poll::Ready(Err(Error::UnexpectedByte(byte, *o)));
+            self.state = Poll::Ready(Some(byte));
+            return Poll::Ready(Err(Error::UnexpectedByte(byte)));
         }
 
         Poll::Pending
@@ -46,17 +46,15 @@ pub fn engram(e: &[u8]) -> Engram {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::loop_;
 
     #[test]
     fn engram_parses_a_single_fixed_word() {
         let source = "hello";
         let mut stream = source.as_bytes();
-        let mut offset = 0usize;
 
         let mut p = engram(b"hello");
 
-        let r = loop_(&mut p, &mut stream, &mut offset);
+        let r = p.parse(&mut stream);
 
         assert!(r.is_ok());
     }
@@ -65,26 +63,27 @@ mod tests {
     fn engram_fails_on_the_first_wrong_byte() {
         let source = "hallo";
         let mut stream = source.as_bytes();
-        let mut offset = 0usize;
 
         let mut p = engram(b"hello");
 
-        let r = loop_(&mut p, &mut stream, &mut offset);
+        let r = p.parse(&mut stream);
 
-        assert!(r.is_err());
+        match r {
+            Err(Error::UnexpectedByte(b'a')) => (),
+            other => panic!("Expected Error::UnexpectedByte(b'a'), got: {:?}", other),
+        }
     }
 
     #[test]
     fn engram_returns_the_same_result_if_called_after_completion() {
         let source = "hello";
         let mut stream = source.as_bytes();
-        let mut offset = 0usize;
 
         let mut p = engram(b"hello");
 
-        let _ = loop_(&mut p, &mut stream, &mut offset);
+        let _ = p.parse(&mut stream);
 
-        match p.next(&mut stream, &mut offset) {
+        match p.next(&mut stream) {
             Poll::Ready(Ok(())) => (),
             r => panic!("{:?}", r),
         }

@@ -94,7 +94,6 @@ enum Keyword {
 
 pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
     let mut file = File::open(p)?;
-    let mut offset: usize = 0;
     let mut format_type: Option<FormatType> = None;
     let mut format_version: Option<String> = None;
     let mut elements: Vec<ElementDescriptor> = Vec::new();
@@ -102,10 +101,10 @@ pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
     let mut obj_info: Vec<String> = Vec::new();
 
     // Try to find the header start indicator
-    parse_begin_header(&mut file, &mut offset)?;
+    parse_begin_header(&mut file)?;
 
     loop {
-        let keyword = parse_from_lut(&mut file, &mut offset, KWD_TBL, |k| match k {
+        let keyword = parse_from_lut(&mut file, KWD_TBL, |k| match k {
             0 => Ok(Keyword::Format),
             1 => Ok(Keyword::Element),
             2 => Ok(Keyword::ListProperty),
@@ -116,16 +115,16 @@ pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
             _ => unreachable!(),
         })?;
 
-        parse_whitespace(&mut file, &mut offset)?;
+        parse_whitespace(&mut file)?;
 
         match keyword {
             Keyword::Format => {
-                let (ft, fv) = parse_format(&mut file, &mut offset)?;
+                let (ft, fv) = parse_format(&mut file)?;
                 format_type = Some(ft);
                 format_version = Some(fv);
             }
             Keyword::Element => {
-                let (en, ec) = parse_element(&mut file, &mut offset)?;
+                let (en, ec) = parse_element(&mut file)?;
                 elements.push(ElementDescriptor {
                     name: en,
                     count: ec,
@@ -134,7 +133,7 @@ pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
                 });
             }
             Keyword::Property => {
-                let (dt, pn) = parse_property(&mut file, &mut offset)?;
+                let (dt, pn) = parse_property(&mut file)?;
                 elements
                     .last_mut()
                     .map(|e| {
@@ -143,10 +142,10 @@ pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
                             data_type: dt,
                         })
                     })
-                    .ok_or(Error::UnexpectedProperty(offset))?;
+                    .ok_or(Error::UnexpectedProperty)?;
             }
             Keyword::ListProperty => {
-                let (ct, dt, pn) = parse_list_property(&mut file, &mut offset)?;
+                let (ct, dt, pn) = parse_list_property(&mut file)?;
                 elements
                     .last_mut()
                     .map(|e| {
@@ -156,14 +155,14 @@ pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
                             data_type: dt,
                         })
                     })
-                    .ok_or(Error::UnexpectedListProperty(offset))?;
+                    .ok_or(Error::UnexpectedListProperty)?;
             }
             Keyword::Comment => {
-                let cmt = parse_comment(&mut file, &mut offset)?;
+                let cmt = parse_comment(&mut file)?;
                 comments.push(cmt);
             }
             Keyword::ObjInfo => {
-                let obj = parse_obj_info(&mut file, &mut offset)?;
+                let obj = parse_obj_info(&mut file)?;
                 obj_info.push(obj);
             }
             Keyword::EndHeader => break,
@@ -183,14 +182,14 @@ pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
     for e in &descriptor.elements {
         for _ in 0..e.count {
             for p in &e.properties {
-                let d = parse_data_point(&mut file, &mut offset, p.data_type, descriptor.format_type)?;
+                let d = parse_data_point(&mut file, p.data_type, descriptor.format_type)?;
                 property_data.extend(d);
             }
 
             for l in &e.list_properties {
-                let c = parse_length(&mut file, &mut offset, l.count_type, descriptor.format_type)?;
+                let c = parse_length(&mut file, l.count_type, descriptor.format_type)?;
                 for _ in 0..c {
-                    let d = parse_data_point(&mut file, &mut offset, l.data_type, descriptor.format_type)?;
+                    let d = parse_data_point(&mut file, l.data_type, descriptor.format_type)?;
                     list_property_data.extend(d);
                 }
             }

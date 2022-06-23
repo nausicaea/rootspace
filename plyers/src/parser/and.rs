@@ -22,12 +22,12 @@ where
     type Item = ();
     type Error = Error;
 
-    fn next<R: Read>(&mut self, r: &mut R, o: &mut usize) -> Poll<Result<(), Error>> {
-        match self.first.next(r, o) {
+    fn next<R: Read>(&mut self, r: &mut R) -> Poll<Result<(), Error>> {
+        match self.first.next(r) {
             Poll::Pending => (),
             Poll::Ready(Err(e)) => return Poll::Ready(Err(e)),
             Poll::Ready(Ok(_)) => {
-                match self.second.next(r, o) {
+                match self.second.next(r) {
                     Poll::Pending => (),
                     Poll::Ready(Err(e)) => return Poll::Ready(Err(e)),
                     Poll::Ready(Ok(_)) => return Poll::Ready(Ok(())),
@@ -43,18 +43,16 @@ where
 mod tests {
     use super::*;
     use super::super::engram::engram;
-    use super::super::loop_;
 
     #[test]
     fn and_chains_two_engrams() {
         let source = "helloworld";
         let mut stream = source.as_bytes();
-        let mut offset = 0usize;
 
         let mut p = engram(b"hello")
             .and(engram(b"world"));
 
-        let r = loop_(&mut p, &mut stream, &mut offset);
+        let r = p.parse(&mut stream);
 
         assert!(r.is_ok());
     }
@@ -63,13 +61,12 @@ mod tests {
     fn and_allows_long_chains() {
         let source = "hello, world";
         let mut stream = source.as_bytes();
-        let mut offset = 0usize;
 
         let mut p = engram(b"hello")
             .and(engram(b", "))
             .and(engram(b"world"));
 
-        let r = loop_(&mut p, &mut stream, &mut offset);
+        let r = p.parse(&mut stream);
 
         assert!(r.is_ok());
     }

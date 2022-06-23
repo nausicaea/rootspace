@@ -8,18 +8,18 @@ use super::{
 };
 use crate::{generic_parsers::{parse_string_from_ascii, parse_word_from_ascii, parse_whitespace}, tables::PLY_HEADER_START};
 
-pub fn parse_begin_header<R>(file: &mut R, offset: &mut usize) -> Result<(), Error>
+pub fn parse_begin_header<R>(file: &mut R) -> Result<(), Error>
 where
     R: Read,
 {
-    parse_from_lut(file, offset, &[&PLY_HEADER_START], |_| Ok(()))
+    parse_from_lut(file, &[&PLY_HEADER_START], |_| Ok(()))
 }
 
-pub fn parse_format<R>(file: &mut R, offset: &mut usize) -> Result<(FormatType, String), Error>
+pub fn parse_format<R>(file: &mut R) -> Result<(FormatType, String), Error>
 where
     R: Read,
 {
-    let format_type = parse_from_lut(file, offset, FMT_TYP_TBL, |k| match k {
+    let format_type = parse_from_lut(file, FMT_TYP_TBL, |k| match k {
         0 => {
             return Ok(FormatType::Ascii);
         }
@@ -32,31 +32,31 @@ where
         _ => unreachable!(),
     })?;
 
-    parse_whitespace(file, offset)?;
+    parse_whitespace(file)?;
 
-    let format_version = parse_string_from_ascii(file, offset)?;
+    let format_version = parse_string_from_ascii(file)?;
 
     Ok((format_type, format_version))
 }
 
-pub fn parse_element<R>(file: &mut R, offset: &mut usize) -> Result<(String, usize), Error>
+pub fn parse_element<R>(file: &mut R) -> Result<(String, usize), Error>
 where
     R: Read,
 {
-    let name = parse_word_from_ascii(file, offset)?;
+    let name = parse_word_from_ascii(file)?;
 
-    parse_whitespace(file, offset)?;
+    parse_whitespace(file)?;
 
-    let count = parse_unsigned_from_ascii(file, offset)?;
+    let count = parse_unsigned_from_ascii(file)?;
 
     Ok((name, count))
 }
 
-pub fn parse_property<R>(file: &mut R, offset: &mut usize) -> Result<(DataType, String), Error>
+pub fn parse_property<R>(file: &mut R) -> Result<(DataType, String), Error>
 where
     R: Read,
 {
-    let data_type = parse_from_lut(file, offset, DAT_TYP_TBL, |k| match k {
+    let data_type = parse_from_lut(file, DAT_TYP_TBL, |k| match k {
         0 => Ok(DataType::I8),
         1 => Ok(DataType::U8),
         2 => Ok(DataType::I16),
@@ -76,27 +76,27 @@ where
         _ => unreachable!(),
     })?;
 
-    parse_whitespace(file, offset)?;
+    parse_whitespace(file)?;
 
-    let name = parse_word_from_ascii(file, offset)?;
+    let name = parse_word_from_ascii(file)?;
 
     Ok((data_type, name))
 }
 
-pub fn parse_list_property<R>(file: &mut R, offset: &mut usize) -> Result<(CountType, DataType, String), Error>
+pub fn parse_list_property<R>(file: &mut R) -> Result<(CountType, DataType, String), Error>
 where
     R: Read,
 {
-    let count_type = parse_from_lut(file, offset, CNT_TYP_TBL, |k| match k {
+    let count_type = parse_from_lut(file, CNT_TYP_TBL, |k| match k {
         0|3 => Ok(CountType::U8),
         2|5 => Ok(CountType::U16),
         1|4 => Ok(CountType::U32),
         _ => unreachable!(),
     })?;
 
-    parse_whitespace(file, offset)?;
+    parse_whitespace(file)?;
 
-    let data_type = parse_from_lut(file, offset, DAT_TYP_TBL, |k| match k {
+    let data_type = parse_from_lut(file, DAT_TYP_TBL, |k| match k {
         0|7 => Ok(DataType::I8),
         10|13 => Ok(DataType::U8),
         6|9 => Ok(DataType::I16),
@@ -108,34 +108,33 @@ where
         _ => unreachable!(),
     })?;
 
-    parse_whitespace(file, offset)?;
+    parse_whitespace(file)?;
 
-    let name = parse_word_from_ascii(file, offset)?;
+    let name = parse_word_from_ascii(file)?;
 
     Ok((count_type, data_type, name))
 }
 
-pub fn parse_comment<R>(file: &mut R, offset: &mut usize) -> Result<String, Error>
+pub fn parse_comment<R>(file: &mut R) -> Result<String, Error>
 where
     R: Read,
 {
-    let comment = parse_string_from_ascii(file, offset)?;
+    let comment = parse_string_from_ascii(file)?;
 
     Ok(comment)
 }
 
-pub fn parse_obj_info<R>(file: &mut R, offset: &mut usize) -> Result<String, Error>
+pub fn parse_obj_info<R>(file: &mut R) -> Result<String, Error>
 where
     R: Read,
 {
-    let obj_info = parse_string_from_ascii(file, offset)?;
+    let obj_info = parse_string_from_ascii(file)?;
 
     Ok(obj_info)
 }
 
 pub fn parse_data_point<R>(
     _file: &mut R,
-    _offset: &mut usize,
     data_type: DataType,
     format_type: FormatType,
 ) -> Result<Vec<u8>, Error>
@@ -158,7 +157,6 @@ where
 
 pub fn parse_length<R>(
     file: &mut R,
-    offset: &mut usize,
     _count_type: CountType,
     format_type: FormatType,
 ) -> Result<usize, Error>
@@ -167,7 +165,7 @@ where
 {
     match format_type {
         FormatType::Ascii => {
-            let count = parse_unsigned_from_ascii(file, offset)?;
+            let count = parse_unsigned_from_ascii(file)?;
             Ok(count)
         }
         FormatType::BinaryLittleEndian => todo!(),
@@ -185,9 +183,8 @@ mod tests {
         fn parse_obj_info_returns_a_string(source in r"[[:ascii:]]+\n") {
             let expected: String = source.chars().take_while(|c| c != &'\n').collect();
             let mut stream = source.as_bytes();
-            let mut offset = 0usize;
 
-            let r = parse_obj_info(&mut stream, &mut offset);
+            let r = parse_obj_info(&mut stream);
 
             prop_assert!(r.is_ok(), "{}", r.unwrap_err());
             prop_assert_eq!(r.unwrap(), expected);
@@ -197,9 +194,8 @@ mod tests {
         fn parse_comment_returns_a_string(source in r"[[:ascii:]]+\n") {
             let expected: String = source.chars().take_while(|c| c != &'\n').collect();
             let mut stream = source.as_bytes();
-            let mut offset = 0usize;
 
-            let r = parse_comment(&mut stream, &mut offset);
+            let r = parse_comment(&mut stream);
 
             prop_assert!(r.is_ok(), "{}", r.unwrap_err());
             prop_assert_eq!(r.unwrap(), expected);
@@ -209,9 +205,8 @@ mod tests {
         fn parse_list_property_returns_count_type_data_type_and_a_string(ct: CountType, dt: DataType, n in r"[\x00-\x09\x0b-\xff]+") {
             let source = format!("{} {} {}\n", ct, dt, &n);
             let mut stream = source.as_bytes();
-            let mut offset = 0usize;
 
-            let r = parse_list_property(&mut stream, &mut offset);
+            let r = parse_list_property(&mut stream);
 
             prop_assert!(r.is_ok(), "{}", r.unwrap_err());
             prop_assert_eq!(r.unwrap(), (ct, dt, n));

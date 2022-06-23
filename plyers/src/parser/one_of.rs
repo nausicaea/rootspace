@@ -13,8 +13,8 @@ impl<'a> Parser for OneOf<'a> {
     type Item = &'a [u8];
     type Error = Error;
 
-    fn next<R>(&mut self, r: &mut R, o: &mut usize) -> std::task::Poll<Result<Self::Item, Self::Error>> where R: std::io::Read {
-        let byte = read_byte(r, o)?;
+    fn next<R>(&mut self, r: &mut R) -> std::task::Poll<Result<Self::Item, Self::Error>> where R: std::io::Read {
+        let byte = read_byte(r)?;
 
         let mut found_match = false;
         for i in 0..self.es.len() {
@@ -31,7 +31,7 @@ impl<'a> Parser for OneOf<'a> {
 
         if !found_match {
             self.state = Poll::Ready(None);
-            return Poll::Ready(Err(Error::UnexpectedByte(byte, *o)));
+            return Poll::Ready(Err(Error::UnexpectedByte(byte)));
         }
 
         Poll::Pending
@@ -49,18 +49,34 @@ pub fn one_of<'a>(engrams: &'a [&'a [u8]]) -> OneOf<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::loop_;
 
     #[test]
     fn one_of_succeeds_on_the_first_engram_that_matches() {
         let source = "hello";
         let mut stream = source.as_bytes();
-        let mut offset = 0usize;
 
         let mut p = one_of(&[b"bye bye", b"hello"]);
 
-        let r = loop_(&mut p, &mut stream, &mut offset);
+        let r = p.parse(&mut stream);
 
-        assert!(r.is_ok());
+        match r {
+            Ok(b"hello") => (),
+            other => panic!("Expected Ok(b\"hello\"), got: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn one_of_fails_on_the_first_byte_that_does_not_match_any_engram() {
+        let source = "bald eagle";
+        let mut stream = source.as_bytes();
+
+        let mut p = one_of(&[b"bye bye", b"hello"]);
+
+        let r = p.parse(&mut stream);
+
+        match r {
+            Err(Error::UnexpectedByte(b'a')) => (),
+            other => panic!("Expected Error::UnexpectedByte(b'a'), got: {:?}", other),
+        }
     }
 }
