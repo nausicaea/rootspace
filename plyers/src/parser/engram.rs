@@ -7,17 +7,15 @@ use super::Parser;
 pub struct Engram<'a> {
     e: &'a [u8],
     idx: usize,
-    state: Poll<Option<u8>>,
+    state: Poll<()>,
 }
 
 impl<'a> Parser for Engram<'a> {
     type Item = ();
-    type Error = Error;
 
     fn next<R: Read>(&mut self, r: &mut R) -> Poll<Result<(), Error>> {
         match self.state {
-            Poll::Ready(Some(b)) => return Poll::Ready(Err(Error::UnexpectedByte(b))),
-            Poll::Ready(None) => return Poll::Ready(Ok(())),
+            Poll::Ready(()) => return Poll::Ready(Err(Error::ParsingComplete)),
             Poll::Pending => (),
         }
 
@@ -27,19 +25,23 @@ impl<'a> Parser for Engram<'a> {
             self.idx += 1;
 
             if self.idx >= self.e.len() {
-                self.state = Poll::Ready(None);
+                self.state = Poll::Ready(());
                 return Poll::Ready(Ok(()));
             }
-        } else {
-            self.state = Poll::Ready(Some(byte));
-            return Poll::Ready(Err(Error::UnexpectedByte(byte)));
-        }
 
-        Poll::Pending
+            Poll::Pending
+        } else {
+            self.state = Poll::Ready(());
+            Poll::Ready(Err(Error::UnexpectedByte(byte)))
+        }
     }
 }
 
 pub fn engram(e: &[u8]) -> Engram {
+    if e.is_empty() {
+        panic!("engram cannot match an empty pattern");
+    }
+
     Engram { e, idx: 0, state: Poll::Pending, }
 }
 
@@ -56,7 +58,10 @@ mod tests {
 
         let r = p.parse(&mut stream);
 
-        assert!(r.is_ok());
+        match r {
+            Ok(()) => (),
+            other => panic!("Expected Ok(), got: {:?}", other),
+        }
     }
 
     #[test]
@@ -75,7 +80,7 @@ mod tests {
     }
 
     #[test]
-    fn engram_returns_the_same_result_if_called_after_completion() {
+    fn engram_fails_if_called_after_completion() {
         let source = "hello";
         let mut stream = source.as_bytes();
 
@@ -84,8 +89,14 @@ mod tests {
         let _ = p.parse(&mut stream);
 
         match p.next(&mut stream) {
-            Poll::Ready(Ok(())) => (),
+            Poll::Ready(Err(Error::ParsingComplete)) => (),
             r => panic!("{:?}", r),
         }
+    }
+
+    #[test]
+    #[should_panic]
+    fn engram_panics_on_empty_pattern() {
+        let _ = engram(&[]);
     }
 }
