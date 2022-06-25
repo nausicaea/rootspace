@@ -41,7 +41,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::io::SeekFrom;
     use crate::to_reader;
 
     use super::*;
@@ -66,7 +65,7 @@ mod tests {
         let r = take_while(|_| true).parse(&mut stream);
 
         match r {
-            Err(Error::UnexpectedEndOfFile(SeekFrom::Start(20))) => (),
+            Err(Error::UnexpectedEndOfFile(20)) => (),
             other => panic!("Expected Err(, got: {:?}", other),
         }
     }

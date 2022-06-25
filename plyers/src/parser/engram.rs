@@ -39,7 +39,6 @@ pub fn engram(e: &[u8]) -> Engram {
 
 #[cfg(test)]
 mod tests {
-    use std::io::SeekFrom;
     use crate::to_reader;
     use super::*;
 
@@ -62,7 +61,7 @@ mod tests {
         let r = engram(b"hello").parse(&mut stream);
 
         match r {
-            Err(Error::UnexpectedByte(b'a', SeekFrom::Start(1))) => (),
+            Err(Error::UnexpectedByte(b'a', 1)) => (),
             other => panic!("Expected Error::UnexpectedByte(b'a'), got: {:?}", other),
         }
     }

@@ -1,6 +1,5 @@
 use thiserror::Error as ThisError;
 use std::{num::{ParseFloatError, ParseIntError}, string::FromUtf8Error as SFU8E};
-use std::io::SeekFrom;
 use crate::types::FromBytesError as FBE;
 
 #[derive(Debug, ThisError)]
@@ -13,10 +12,12 @@ pub enum Error {
     MissingFormatType,
     #[error("Missing format version")]
     MissingFormatVersion,
-    #[error("Unexpected byte {:#x} at position {:?}", .0, .1)]
-    UnexpectedByte(u8, SeekFrom),
-    #[error("The specified file ended unexpectedly at position {:?}", .0)]
-    UnexpectedEndOfFile(SeekFrom),
+    #[error("None of the supplied patterns matched")]
+    NoMatchingPatterns,
+    #[error("Unexpected byte {:#x} at position {:#x}", .0, .1)]
+    UnexpectedByte(u8, u64),
+    #[error("The specified file ended unexpectedly at position {:#x}", .0)]
+    UnexpectedEndOfFile(u64),
     #[error(transparent)]
     IoError(#[from] std::io::Error),
     #[error(transparent)]
