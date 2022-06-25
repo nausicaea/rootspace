@@ -66,20 +66,18 @@ pub fn one_of<'a>(engrams: &'a [&'a [u8]]) -> OneOf<'a> {
 #[cfg(test)]
 mod tests {
     use std::io::SeekFrom;
-    use crate::to_reader;
+    use crate::{to_reader, types::DATA_TYPES};
     use super::*;
 
     #[test]
     fn one_of_succeeds_on_the_first_engram_that_matches() {
-        let source = "hello";
-        let expected: Vec<u8> = source.as_bytes().iter().copied().collect();
-        let mut stream = to_reader(source);
+        let mut stream = to_reader("hello");
 
         let r = one_of(&[b"bye bye", b"hello"]).parse(&mut stream);
 
         match r {
-            Ok(product) if product == expected => (),
-            other => panic!("Expected Ok(b\"hello\" as Vec<u8>), got: {:?}", other),
+            Ok(b"hello") => (),
+            other => panic!("Expected Ok(b\"hello\"), got: {:?}", other),
         }
     }
 
@@ -97,15 +95,25 @@ mod tests {
 
     #[test]
     fn one_of_matches_longer_patterns_first() {
-        let source = "Hello, Samantha";
-        let expected: Vec<u8> = source.as_bytes().iter().cloned().collect();
-        let mut stream = to_reader(source);
+        let mut stream = to_reader("Hello, Samantha");
 
         let r = one_of(&[b"Hello", b"Hello, Samantha"]).parse(&mut stream);
 
         match r {
-            Ok(product) if product == expected => (),
-            other => panic!("Expected Ok(b\"Hello, Samantha\" as Vec<u8>), got: {:?}", other),
+            Ok(b"Hello, Samantha") => (),
+            other => panic!("Expected Ok(b\"Hello, Samantha\"), got: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn one_of_correctly_parses_data_type() {
+        let mut stream = to_reader("int32");
+
+        let r = one_of(DATA_TYPES).parse(&mut stream);
+
+        match r {
+            Ok(b"int32") => (),
+            other => panic!("Expected Ok(b\"int32\"), got: {:?}", other),
         }
     }
 
