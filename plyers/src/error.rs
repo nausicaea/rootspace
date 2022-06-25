@@ -1,8 +1,11 @@
 use thiserror::Error as ThisError;
 use std::{num::{ParseFloatError, ParseIntError}, string::FromUtf8Error as SFU8E};
+use crate::types::FromBytesError as FBE;
 
 #[derive(Debug, ThisError)]
 pub enum Error {
+    #[error("cannot convert data from a sequence of bytes")]
+    FromBytesError(#[from] FBE),
     #[error("the parser has been run to failure or completion already")]
     ParserExhausted,
     #[error("Found a list property with no parent element")]
@@ -23,8 +26,6 @@ pub enum Error {
     ParseIntError(#[from] ParseIntError),
     #[error("The specified file ended unexpectedly")]
     UnexpectedEndOfFile,
-    #[error("The specified file is not a PLY file")]
-    NotAPlyFile,
     #[error(transparent)]
     IoError(#[from] std::io::Error),
 }

@@ -2,7 +2,7 @@ use std::io::{Read, Seek};
 
 use super::Parser;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AndThen<P, F> {
     a: P,
     func: F,

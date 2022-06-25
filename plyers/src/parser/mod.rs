@@ -63,24 +63,10 @@ mod tests {
     use std::io::{Read, Seek};
     use crate::parser::take_while::take_while;
     use crate::parser::token::token;
-    use crate::types::{CountType, DataType, FormatType};
+    use crate::types::{COUNT_TYPES, CountType, DATA_TYPES, DataType, FORMAT_TYPES, FormatType, KEYWORDS};
 
     use super::Parser;
     use super::{engram::engram, one_of::one_of};
-
-    const KEYWORDS: &'static [&'static [u8]] = &[b"format", b"element", b"property list", b"property", b"comment", b"obj_info"];
-    const FORMAT_TYPES: &'static [&'static [u8]] = &[b"ascii", b"binary_little_endian", b"binary_big_endian"];
-    const COUNT_TYPES: &'static [&'static [u8]] = &[b"uint8", b"uint16", b"uint32", b"uchar", b"ushort", b"uint"];
-    const DATA_TYPES: &'static [&'static [u8]] = &[
-        b"uint8", b"uchar",
-        b"int8", b"char",
-        b"uint16", b"ushort",
-        b"int16", b"short",
-        b"uint32", b"uint",
-        b"int32", b"int",
-        b"float32", b"float",
-        b"float64", b"double",
-    ];
 
     #[derive(Debug)]
     enum ParserProduct {

@@ -7,21 +7,15 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Hell, yes! I can parse the entire PLY header!">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Removed the old parsing code">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/generic_parsers.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_with.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain_with.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/engram.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/engram.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/and_then.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/and_then.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/one_of.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/one_of.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/token.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/token.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/ply_parsers.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/tables.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/utilities.rs" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,6 +50,9 @@
     <option name="selectedIndex" value="1" />
   </component>
   <component name="ProjectId" id="1yZruzrKUvOTW2ObNaJrocdrnfH" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -244,7 +241,7 @@
       <workItem from="1640072674493" duration="5002000" />
       <workItem from="1640169938258" duration="133000" />
       <workItem from="1640345264255" duration="1552000" />
-      <workItem from="1656142437936" duration="5150000" />
+      <workItem from="1656142437936" duration="8503000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -427,7 +424,14 @@
       <option name="project" value="LOCAL" />
       <updated>1656146265675</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="Removed the old parsing code">
+      <created>1656148246303</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1656148246303</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -446,7 +450,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Added the ability to reload the last state" />
     <MESSAGE value="Added the ability to reload the last state by Logo-R combination." />
     <MESSAGE value="Added additional Events." />
     <MESSAGE value="Removed a temporary variable" />
@@ -471,6 +474,7 @@
     <MESSAGE value="I now have a good set of tests for model.rs" />
     <MESSAGE value="I'm having serious issues getting matrix transformations to work for UI elements." />
     <MESSAGE value="Hell, yes! I can parse the entire PLY header!" />
-    <option name="LAST_COMMIT_MESSAGE" value="Hell, yes! I can parse the entire PLY header!" />
+    <MESSAGE value="Removed the old parsing code" />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed the old parsing code" />
   </component>
 </project>

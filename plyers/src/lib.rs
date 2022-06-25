@@ -57,19 +57,98 @@
 use std::{
     path::Path,
 };
-use std::io::{Cursor, Read};
+use std::fs::File;
+use std::io::{BufReader, Cursor, Read, Seek};
+use crate::parser::engram::engram;
+use crate::parser::one_of::one_of;
+use crate::parser::Parser;
+use crate::types::{Keyword, KEYWORDS};
+use crate::ply::{ParserProduct, PlyDirective};
+use anyhow::Error;
 
 use self::{
-    error::Error,
     types::{ElementDescriptor, FormatType, ListPropertyDescriptor, Ply, PlyDescriptor, PropertyDescriptor},
 };
 
 pub mod types;
 pub mod parser;
 pub mod error;
+mod ply;
+
+pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
+    let directives = engram(b"ply\n")
+        .chain_repeat(
+            one_of(KEYWORDS)
+                .and_then(|kw| Keyword::try_from_bytes(kw).map_err(|e| e.into()))
+                .chain_with(|kw| PlyDirective::new(*kw)),
+            engram(b"end_header\n")
+        )
+        .map(|(_, pds, _)| pds.into_iter().map(|(_, pd)| pd).collect::<Vec<_>>())
+        .parse(stream)?;
+
+    let mut ft: Option<FormatType> = None;
+    let mut fv: Option<String> = None;
+    let mut elements: Vec<ElementDescriptor> = vec![];
+    let mut comments: Vec<String> = vec![];
+    let mut obj_info: Vec<String> = vec![];
+
+    for directive in directives {
+        match directive {
+            ParserProduct::Format { ft: t, v } => {
+                ft = Some(t);
+                fv = Some(v);
+            },
+            ParserProduct::Element { n, c } => {
+                elements.push(ElementDescriptor {
+                    name: n,
+                    count: c,
+                    properties: vec![],
+                    list_properties: vec![],
+                })
+            },
+            ParserProduct::Property { dt, n } => {
+                elements.last_mut()
+                    .map(|e| e.properties.push(PropertyDescriptor {
+                        name: n,
+                        data_type: dt,
+                    }))
+                    .ok_or(Error::UnexpectedProperty)?;
+            },
+            ParserProduct::ListProperty { ct, dt, n } => {
+                elements.last_mut()
+                    .map(|e| e.list_properties.push(ListPropertyDescriptor {
+                        name: n,
+                        count_type: ct,
+                        data_type: dt,
+                    }));
+            },
+            ParserProduct::Comment(s) => {
+                comments.push(s);
+            },
+            ParserProduct::ObjInfo(s) => {
+                obj_info.push(s);
+            },
+        }
+    }
+
+    Ok(Ply {
+        descriptor: PlyDescriptor {
+            format_type: ft.ok_or(Error::MissingFormatType)?,
+            format_version: fv.ok_or(Error::MissingFormatVersion)?,
+            elements,
+            comments,
+            obj_info,
+        },
+        property_data: vec![],
+        list_property_data: vec![],
+    })
+}
 
 pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
-    todo!()
+    let file = File::open(p)?;
+    let mut reader = BufReader::new(file);
+
+    parse_ply(&mut reader)
 }
 
 pub(crate) fn to_reader(source: &str) -> Cursor<&[u8]> {
