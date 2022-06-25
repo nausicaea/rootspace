@@ -8,7 +8,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added position tracking for some errors">
-      <change beforePath="$PROJECT_DIR$/plyers/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/minimal_ascii.ply" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/tests/minimal_ascii.ply" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,15 +56,16 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/young0000/Crypt/Development/rootspace&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "true",
+    "last_opened_file_path": "/Users/young0000/Crypt/Development/rootspace",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "settings.editor.selected.configurable": "reference.settingsdialog.project.grazie"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/glamour/src" />
@@ -67,7 +74,7 @@
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.Test plyers">
+  <component name="RunManager" selected="Cargo.Test parser::one_of::tests::one_of_correclty_parses_data_type">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -104,6 +111,57 @@
     </configuration>
     <configuration name="Test glamour" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="test --package glamour" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test parser::one_of::tests::one_of_correclty_parses_data_type" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package plyers --lib parser::one_of::tests::one_of_correclty_parses_data_type -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test parser::one_of::tests::one_of_matches_longer_patterns_first" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package plyers --lib parser::one_of::tests::one_of_matches_longer_patterns_first -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package plyers --lib parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -161,10 +219,16 @@
       <item itemvalue="Cargo.Run Headless" />
       <item itemvalue="Cargo.Test glamour" />
       <item itemvalue="Cargo.Test plyers" />
+      <item itemvalue="Cargo.Test parser::one_of::tests::one_of_correclty_parses_data_type" />
+      <item itemvalue="Cargo.Test parser::one_of::tests::one_of_matches_longer_patterns_first" />
+      <item itemvalue="Cargo.Test parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches" />
       <item itemvalue="Cargo.Test parser::tests::can_i_get_a_ply_parser_out_of_this" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test parser::one_of::tests::one_of_correclty_parses_data_type" />
+        <item itemvalue="Cargo.Test parser::one_of::tests::one_of_matches_longer_patterns_first" />
+        <item itemvalue="Cargo.Test parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches" />
         <item itemvalue="Cargo.Test parser::tests::can_i_get_a_ply_parser_out_of_this" />
       </list>
     </recent_temporary>
@@ -438,7 +502,14 @@
       <option name="project" value="LOCAL" />
       <updated>1656153458860</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="Added position tracking for some errors">
+      <created>1656153548153</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1656153548153</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

@@ -63,11 +63,13 @@ use crate::error::Error;
 use crate::parser::engram::engram;
 use crate::parser::one_of::one_of;
 use crate::parser::Parser;
-use crate::types::{Keyword, KEYWORDS};
+use crate::parser::empty::empty;
+use crate::parser::take_while::take_while;
+use crate::types::{DataType, Keyword, KEYWORDS};
 use crate::ply::{ParserProduct, PlyDirective};
 
 use self::{
-    types::{ElementDescriptor, FormatType, ListPropertyDescriptor, Ply, PlyDescriptor, PropertyDescriptor},
+    types::{ElementDescriptor, FormatType, Ply, PlyDescriptor, PropertyDescriptor},
 };
 
 pub mod types;
@@ -75,13 +77,68 @@ pub mod parser;
 pub mod error;
 mod ply;
 
+#[derive(Debug, Clone, Copy)]
+enum DataValue {
+    U8(u8),
+    I8(i8),
+    U16(u16),
+    I16(i16),
+    U32(u32),
+    I32(i32),
+    F32(f32),
+    F64(f64),
+}
+
+impl<'a> Into<&'a [u8]> for &'a DataValue {
+    fn into(self) -> &'a [u8] {
+        match self {
+            DataValue::U8(dv) => bytemuck::bytes_of(dv),
+            DataValue::I8(dv) => bytemuck::bytes_of(dv),
+            DataValue::U16(dv) => bytemuck::bytes_of(dv),
+            DataValue::I16(dv) => bytemuck::bytes_of(dv),
+            DataValue::U32(dv) => bytemuck::bytes_of(dv),
+            DataValue::I32(dv) => bytemuck::bytes_of(dv),
+            DataValue::F32(dv) => bytemuck::bytes_of(dv),
+            DataValue::F64(dv) => bytemuck::bytes_of(dv),
+        }
+    }
+}
+
+fn ascii_usize_parser() -> impl Parser<Item = usize> {
+    take_while(|b| b != b' ')
+        .and_then(|cd| {
+            String::from_utf8(cd)
+                .map_err(|e| e.into())
+                .and_then(|cd| cd.parse::<usize>().map_err(|e| e.into()))
+        })
+}
+
+fn ascii_number_parser(data_type: DataType) -> impl Parser<Item = DataValue> + Clone {
+    take_while(|b| b != b' ' && b != b'\n')
+        .and_then(move |pd| {
+            let pd = String::from_utf8(pd)?;
+            let pd = match data_type {
+                DataType::U8 => pd.parse::<u8>().map(|pd| DataValue::U8(pd))?,
+                DataType::I8 => pd.parse::<i8>().map(|pd| DataValue::I8(pd))?,
+                DataType::U16 => pd.parse::<u16>().map(|pd| DataValue::U16(pd))?,
+                DataType::I16 => pd.parse::<i16>().map(|pd| DataValue::I16(pd))?,
+                DataType::U32 => pd.parse::<u32>().map(|pd| DataValue::U32(pd))?,
+                DataType::I32 => pd.parse::<i32>().map(|pd| DataValue::I32(pd))?,
+                DataType::F32 => pd.parse::<f32>().map(|pd| DataValue::F32(pd))?,
+                DataType::F64 => pd.parse::<f64>().map(|pd| DataValue::F64(pd))?,
+            };
+
+            Ok(pd)
+        })
+}
+
 pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
     let directives = engram(b"ply\n")
         .chain_repeat(
+            engram(b"end_header\n"),
             one_of(KEYWORDS)
                 .and_then(|kw| Keyword::try_from_bytes(kw).map_err(|e| e.into()))
-                .chain_with(|kw| PlyDirective::new(*kw)),
-            engram(b"end_header\n")
+                .chain_with(|kw| PlyDirective::new(*kw))
         )
         .map(|(_, pds, _)| pds.into_iter().map(|(_, pd)| pd).collect::<Vec<_>>())
         .parse(stream)?;
@@ -103,12 +160,11 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
                     name: n,
                     count: c,
                     properties: vec![],
-                    list_properties: vec![],
                 })
             },
             ParserProduct::Property { dt, n } => {
                 elements.last_mut()
-                    .map(|e| e.properties.push(PropertyDescriptor {
+                    .map(|e| e.properties.push(PropertyDescriptor::Property {
                         name: n,
                         data_type: dt,
                     }))
@@ -116,11 +172,12 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
             },
             ParserProduct::ListProperty { ct, dt, n } => {
                 elements.last_mut()
-                    .map(|e| e.list_properties.push(ListPropertyDescriptor {
+                    .map(|e| e.properties.push(PropertyDescriptor::ListProperty {
                         name: n,
                         count_type: ct,
                         data_type: dt,
-                    }));
+                    }))
+                    .ok_or(Error::UnexpectedListProperty)?;
             },
             ParserProduct::Comment(s) => {
                 comments.push(s);
@@ -131,16 +188,63 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
         }
     }
 
+    let descriptor = PlyDescriptor {
+        format_type: ft.ok_or(Error::MissingFormatType)?,
+        format_version: fv.ok_or(Error::MissingFormatVersion)?,
+        elements,
+        comments,
+        obj_info,
+    };
+
+    let mut property_data: Vec<u8> = vec![];
+    let mut list_property_data: Vec<u8> = vec![];
+
+    let ft = descriptor.format_type;
+    for element in &descriptor.elements {
+        for property in &element.properties {
+            match property {
+                PropertyDescriptor::Property { data_type: dt, .. } => {
+                    match ft {
+                        FormatType::Ascii => {
+                            let pd = ascii_number_parser(*dt)
+                                .parse(stream)?;
+
+                            dbg!(pd);
+
+                            property_data.extend_from_slice((&pd).into());
+                        },
+                        _ => todo!(),
+                    }
+                },
+                PropertyDescriptor::ListProperty { data_type: dt, .. } => {
+                    match ft {
+                        FormatType::Ascii => {
+                            let cd = ascii_usize_parser()
+                                .parse(stream)?;
+
+                            let pds = empty()
+                                .chain_exact(
+                                    cd,
+                                    ascii_number_parser(*dt),
+                                )
+                                .map(|(_, pds)| pds)
+                                .parse(stream)?;
+
+                            for pd in pds {
+                                list_property_data.extend_from_slice((&pd).into());
+                            }
+                        },
+                        _ => todo!(),
+                    }
+                },
+            }
+        }
+    }
+
     Ok(Ply {
-        descriptor: PlyDescriptor {
-            format_type: ft.ok_or(Error::MissingFormatType)?,
-            format_version: fv.ok_or(Error::MissingFormatVersion)?,
-            elements,
-            comments,
-            obj_info,
-        },
-        property_data: vec![],
-        list_property_data: vec![],
+        descriptor,
+        property_data,
+        list_property_data,
     })
 }
 
@@ -234,12 +338,6 @@ mod tests {
                     1,
                     "Number of element properties is not one, but {}",
                     ed.properties.len()
-                );
-                assert_eq!(
-                    ed.list_properties.len(),
-                    0,
-                    "Number of element list properties is not zero, but {}",
-                    ed.list_properties.len()
                 );
 
                 assert_eq!(

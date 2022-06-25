@@ -10,6 +10,8 @@ pub mod token;
 pub mod map;
 pub mod and_then;
 pub mod chain_repeat;
+pub mod empty;
+pub mod chain_exact;
 
 pub trait Parser {
     type Item;
@@ -32,6 +34,14 @@ pub trait Parser {
         chain_with::ChainWith::new(self, func)
     }
 
+    fn chain_exact<Q>(self, n: usize, repeated: Q) -> chain_exact::ChainExact<Self, Q>
+    where
+        Self: Sized,
+        Q: Parser + Clone,
+    {
+        chain_exact::ChainExact::new(self, repeated, n)
+    }
+
     fn map<J, F>(self, func: F) -> map::Map<Self, F>
     where
         Self: Sized,
@@ -48,11 +58,11 @@ pub trait Parser {
         and_then::AndThen::new(self, func)
     }
 
-    fn chain_repeat<Q, R>(self, at_least_once: Q, until: R) -> chain_repeat::ChainRepeat<Self, Q, R>
+    fn chain_repeat<Q, R>(self, until: R, at_least_once: Q) -> chain_repeat::ChainRepeat<Self, Q, R>
     where
         Self: Sized,
-        Q: Parser,
-        R: Parser,
+        Q: Parser + Clone,
+        R: Parser + Clone,
     {
         chain_repeat::ChainRepeat::new(self, at_least_once, until)
     }
@@ -214,15 +224,17 @@ mod tests {
 
         let r = engram(b"ply\n")
             .chain_repeat(
+                engram(b"end_header\n"),
                 one_of(KEYWORDS)
                     .chain_with(|p| PlyDirectiveParser::new(p))
-                    .map(|(_, pd)| pd),
-                engram(b"end_header\n")
+                    .map(|(_, pd)| pd)
             )
             .map(|(_, pds, _)| pds)
-            .parse(&mut stream)
-            .unwrap();
+            .parse(&mut stream);
 
-        dbg!(r);
+        match r {
+            Ok(_) => (),
+            Err(e) => panic!("{}", e),
+        }
     }
 }

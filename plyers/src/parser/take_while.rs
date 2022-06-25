@@ -4,7 +4,7 @@ use crate::{error::Error, read_byte};
 
 use super::Parser;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TakeWhile<F> {
     func: F,
 }

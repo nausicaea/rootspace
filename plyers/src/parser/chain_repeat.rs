@@ -31,7 +31,7 @@ where
     fn parse<S>(self, r: &mut S) -> Result<Self::Item, Error> where Self:Sized, S: Read + Seek, {
         let tail_p = self.tail.parse(r)?;
 
-        let mut at_least_once_ps = Vec::new();
+        let mut at_least_once_ps = vec![];
 
         let until_p = loop {
             at_least_once_ps.push(self.at_least_once.clone().parse(r)?);
