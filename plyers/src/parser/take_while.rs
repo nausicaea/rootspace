@@ -6,8 +6,7 @@ use super::Parser;
 
 #[derive(Debug)]
 pub struct TakeWhile<F> {
-    func: Option<F>,
-    buffer: Vec<u8>,
+    func: F,
 }
 
 pub fn take_while<F>(predicate: F) -> TakeWhile<F>
@@ -15,8 +14,7 @@ where
     F: FnMut(u8) -> bool,
 {
     TakeWhile {
-        func: Some(predicate),
-        buffer: Vec::new(),
+        func: predicate,
     }
 }
 
@@ -28,25 +26,22 @@ where
     type Item = Vec<u8>;
 
     fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
-        if let Some(ref mut func) = self.func {
-            loop {
-                let byte = read_byte(r)?;
+        let mut buffer = vec![];
+        loop {
+            let (byte, _) = read_byte(r)?;
 
-                if !(func)(byte) {
-                    self.func = None;
-                    return Ok(self.buffer.clone());
-                } else {
-                    self.buffer.push(byte);
-                }
+            if !(self.func)(byte) {
+                return Ok(buffer);
+            } else {
+                buffer.push(byte);
             }
         }
-
-        Err(Error::ParserExhausted)
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::io::SeekFrom;
     use crate::to_reader;
 
     use super::*;
@@ -71,7 +66,7 @@ mod tests {
         let r = take_while(|_| true).parse(&mut stream);
 
         match r {
-            Err(Error::UnexpectedEndOfFile) => (),
+            Err(Error::UnexpectedEndOfFile(SeekFrom::Start(20))) => (),
             other => panic!("Expected Err(, got: {:?}", other),
         }
     }

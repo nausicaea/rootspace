@@ -7,11 +7,8 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Removed the old parsing code">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added position tracking for some errors">
+      <change beforePath="$PROJECT_DIR$/plyers/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/error.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -427,7 +424,21 @@
       <option name="project" value="LOCAL" />
       <updated>1656148246303</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="Nope. Anyhow not suitable here">
+      <created>1656152541638</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1656152541638</updated>
+    </task>
+    <task id="LOCAL-00033" summary="Added position tracking for some errors">
+      <created>1656153458860</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1656153458860</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -446,8 +457,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Added the ability to reload the last state by Logo-R combination." />
-    <MESSAGE value="Added additional Events." />
     <MESSAGE value="Removed a temporary variable" />
     <MESSAGE value="Changed a debug call." />
     <MESSAGE value="Added information about an entitie's description" />
@@ -471,6 +480,8 @@
     <MESSAGE value="I'm having serious issues getting matrix transformations to work for UI elements." />
     <MESSAGE value="Hell, yes! I can parse the entire PLY header!" />
     <MESSAGE value="Removed the old parsing code" />
-    <option name="LAST_COMMIT_MESSAGE" value="Removed the old parsing code" />
+    <MESSAGE value="Nope. Anyhow not suitable here" />
+    <MESSAGE value="Added position tracking for some errors" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added position tracking for some errors" />
   </component>
 </project>

@@ -6,33 +6,26 @@ use super::Parser;
 #[derive(Debug, Clone)]
 pub struct Engram<'a> {
     pattern: &'a [u8],
-    exhausted: bool,
 }
 
 impl<'a> Parser for Engram<'a> {
     type Item = ();
 
-    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
-        if !self.exhausted {
-            let mut index: usize = 0;
-            loop {
-                let byte = read_byte(r)?;
+    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
+        let mut index: usize = 0;
+        loop {
+            let (byte, position) = read_byte(r)?;
 
-                if byte != self.pattern[index] {
-                    self.exhausted = true;
-                    return Err(Error::UnexpectedByte(byte));
-                }
+            if byte != self.pattern[index] {
+                return Err(Error::UnexpectedByte(byte, position));
+            }
 
-                index += 1;
+            index += 1;
 
-                if index >= self.pattern.len() {
-                    self.exhausted = true;
-                    return Ok(());
-                }
+            if index >= self.pattern.len() {
+                return Ok(());
             }
         }
-
-        Err(Error::ParserExhausted)
     }
 }
 
@@ -41,11 +34,12 @@ pub fn engram(e: &[u8]) -> Engram {
         panic!("engram cannot match an empty pattern");
     }
 
-    Engram { pattern: e, exhausted: false }
+    Engram { pattern: e }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::io::SeekFrom;
     use crate::to_reader;
     use super::*;
 
@@ -68,7 +62,7 @@ mod tests {
         let r = engram(b"hello").parse(&mut stream);
 
         match r {
-            Err(Error::UnexpectedByte(b'a')) => (),
+            Err(Error::UnexpectedByte(b'a', SeekFrom::Start(1))) => (),
             other => panic!("Expected Error::UnexpectedByte(b'a'), got: {:?}", other),
         }
     }

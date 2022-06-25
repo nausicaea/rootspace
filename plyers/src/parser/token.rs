@@ -8,33 +8,25 @@ use super::Parser;
 #[derive(Debug)]
 pub struct Token {
     token: u8,
-    exhausted: bool,
 }
 
 impl Parser for Token {
     type Item = ();
 
-    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, crate::error::Error> where Self:Sized, R: Read + Seek {
-        if !self.exhausted {
-            let byte = read_byte(r)?;
+    fn parse<R>(self, r: &mut R) -> Result<Self::Item, crate::error::Error> where Self:Sized, R: Read + Seek {
+        let (byte, position) = read_byte(r)?;
 
-            if byte != self.token {
-                self.exhausted = true;
-                return Err(Error::UnexpectedByte(byte));
-            } else {
-                self.exhausted = true;
-                return Ok(());
-            }
+        if byte != self.token {
+            return Err(Error::UnexpectedByte(byte, position));
+        } else {
+            return Ok(());
         }
-
-        Err(Error::ParserExhausted)
     }
 }
 
 pub fn token(t: u8) -> Token {
     Token {
         token: t,
-        exhausted: false,
     }
 }
  

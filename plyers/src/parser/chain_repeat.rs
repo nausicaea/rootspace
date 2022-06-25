@@ -41,7 +41,7 @@ where
             let until_r = self.until.clone().parse(r);
             match until_r {
                 Ok(until_p) => break until_p,
-                Err(Error::UnexpectedByte(_)) => {
+                Err(Error::UnexpectedByte(_, _)) => {
                     let _ = r.seek(SeekFrom::Start(position))?;
                 },
                 Err(e) => return Err(e),

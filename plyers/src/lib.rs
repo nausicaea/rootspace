@@ -58,7 +58,7 @@ use std::{
     path::Path,
 };
 use std::fs::File;
-use std::io::{BufReader, Read, Seek};
+use std::io::{BufReader, Read, Seek, SeekFrom};
 use crate::error::Error;
 use crate::parser::engram::engram;
 use crate::parser::one_of::one_of;
@@ -156,16 +156,17 @@ pub(crate) fn to_reader(source: &str) -> std::io::Cursor<&[u8]> {
     std::io::Cursor::new(source.as_bytes())
 }
 
-pub(crate) fn read_byte<R>(file: &mut R) -> Result<u8, Error>
+pub(crate) fn read_byte<R>(file: &mut R) -> Result<(u8, SeekFrom), Error>
     where
-        R: Read,
+        R: Read + Seek,
 {
     let mut byte_buf = [0u8; 1];
+    let position = SeekFrom::Start(file.stream_position()?);
     let n = file.read(&mut byte_buf)?;
     if n == 0 {
-        return Err(Error::UnexpectedEndOfFile);
+        return Err(Error::UnexpectedEndOfFile(position));
     }
-    Ok(byte_buf[0])
+    Ok((byte_buf[0], position))
 }
 
 #[cfg(test)]

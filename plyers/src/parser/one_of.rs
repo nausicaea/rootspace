@@ -7,56 +7,49 @@ use crate::error::Error;
 #[derive(Debug, Clone)]
 pub struct OneOf<'a> {
     patterns: &'a [&'a [u8]],
-    exhausted: bool,
 }
 
 impl<'a> Parser for OneOf<'a> {
     type Item = &'a [u8];
 
-    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
-        if !self.exhausted {
-            let mut indices: Vec<usize> = vec![0; self.patterns.len()];
-            loop {
-                let byte = read_byte(r)?;
+    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
+        let mut indices: Vec<usize> = vec![0; self.patterns.len()];
+        loop {
+            let (byte, position) = read_byte(r)?;
 
-                // Search for the byte in the available patterns
-                for c in 0..self.patterns.len() {
-                    if indices[c] >= self.patterns[c].len() {
-                        continue;
-                    }
-
-                    if byte == self.patterns[c][indices[c]] {
-                        indices[c] += 1;
-                    } else {
-                        indices[c] = std::usize::MAX;
-                    }
+            // Search for the byte in the available patterns
+            for c in 0..self.patterns.len() {
+                if indices[c] >= self.patterns[c].len() {
+                    continue;
                 }
 
-                // Abort if none of the patterns match
-                if indices.iter().all(|i| i == &std::usize::MAX) {
-                    self.exhausted = true;
-                    return Err(Error::UnexpectedByte(byte));
-                }
-
-                // If at least one of the patterns matches, find the longest
-                let matching_indices: Vec<(usize, usize)> = indices.iter()
-                    .enumerate()
-                    .filter(|(_, i)| i < &&std::usize::MAX)
-                    .map(|(c, i)| (c, *i))
-                    .collect();
-                if matching_indices.iter().any(|(c, i)| i >= &self.patterns[*c].len()) {
-                    let target = matching_indices.iter()
-                        .max_by_key(|(_, i)| *i)
-                        .map(|(c, _)| *c)
-                        .ok_or(Error::UnexpectedByte(byte))?;
-
-                    self.exhausted = true;
-                    return Ok(self.patterns[target])
+                if byte == self.patterns[c][indices[c]] {
+                    indices[c] += 1;
+                } else {
+                    indices[c] = usize::MAX;
                 }
             }
-        }
 
-        Err(Error::ParserExhausted)
+            // Abort if none of the patterns match
+            if indices.iter().all(|i| i == &usize::MAX) {
+                return Err(Error::UnexpectedByte(byte, position));
+            }
+
+            // If at least one of the patterns matches, find the longest
+            let matching_indices: Vec<(usize, usize)> = indices.iter()
+                .enumerate()
+                .filter(|(_, i)| i < &&usize::MAX)
+                .map(|(c, i)| (c, *i))
+                .collect();
+            if matching_indices.iter().any(|(c, i)| i >= &self.patterns[*c].len()) {
+                let target = matching_indices.iter()
+                    .max_by_key(|(_, i)| *i)
+                    .map(|(c, _)| *c)
+                    .ok_or(Error::UnexpectedByte(byte, position))?;
+
+                return Ok(self.patterns[target])
+            }
+        }
     }
 }
 
@@ -67,12 +60,12 @@ pub fn one_of<'a>(engrams: &'a [&'a [u8]]) -> OneOf<'a> {
 
     OneOf {
         patterns: engrams,
-        exhausted: false,
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::io::SeekFrom;
     use crate::to_reader;
     use super::*;
 
@@ -97,7 +90,7 @@ mod tests {
         let r = one_of(&[b"bye bye", b"hello"]).parse(&mut stream);
 
         match r {
-            Err(Error::UnexpectedByte(b'a')) => (),
+            Err(Error::UnexpectedByte(b'a', SeekFrom::Start(1))) => (),
             other => panic!("Expected Error::UnexpectedByte(b'a'), got: {:?}", other),
         }
     }
