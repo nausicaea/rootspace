@@ -8,29 +8,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="I'm having serious issues getting matrix transformations to work for UI elements.">
-      <change afterPath="$PROJECT_DIR$/glamour/Cargo.toml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/glamour/src/cross.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/glamour/src/dot.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/glamour/src/lib.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/glamour/src/macros.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/glamour/src/mat.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/glamour/src/mat2.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/glamour/src/vec2.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/glamour/src/vec3.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/glamour/src/vec4.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/rootspace.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rootspace.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/affine-transform/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/affine-transform/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ecs/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/ecs/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/renderer.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/file-manipulation/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/file-manipulation/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ply/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/ply/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rootspace/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rose-tree/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/rose-tree/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/try-default/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/try-default/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/and_then.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/and_then.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_with.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain_with.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/engram.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/engram.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/map.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/map.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/one_of.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/one_of.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/token.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/token.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,25 +59,15 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="true" />
-    <property name="WebServerToolWindowPanel.toolwindow.highlight.mappings" value="true" />
-    <property name="WebServerToolWindowPanel.toolwindow.highlight.symlinks" value="true" />
-    <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
-    <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
-    <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/glamour/src" />
-    <property name="node.js.detected.package.eslint" value="true" />
-    <property name="node.js.detected.package.tslint" value="true" />
-    <property name="node.js.selected.package.eslint" value="(autodetect)" />
-    <property name="node.js.selected.package.tslint" value="(autodetect)" />
-    <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
-    <property name="settings.editor.selected.configurable" value="language.rust.rustfmt" />
-  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "true",
+    "last_opened_file_path": "/Users/young0000/Crypt/Development/rootspace",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true"
+  }
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/glamour/src" />
@@ -96,7 +76,7 @@
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.Test glamour">
+  <component name="RunManager" selected="Cargo.Test parser::tests::can_i_get_a_ply_parser_out_of_this">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -105,6 +85,7 @@
       <option name="allFeatures" value="false" />
       <option name="emulateTerminal" value="false" />
       <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
       <envs />
       <option name="isRedirectInput" value="false" />
@@ -121,38 +102,7 @@
       <option name="allFeatures" value="false" />
       <option name="emulateTerminal" value="false" />
       <option name="withSudo" value="false" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test camera::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package engine --lib components::camera::tests" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test components::model::tests::default_is_identity" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package engine --lib components::model::tests::default_is_identity -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
       <envs />
       <option name="isRedirectInput" value="false" />
@@ -169,6 +119,7 @@
       <option name="allFeatures" value="false" />
       <option name="emulateTerminal" value="false" />
       <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
       <envs />
       <option name="isRedirectInput" value="false" />
@@ -177,14 +128,15 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test model::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package engine --lib components::model::tests" />
+    <configuration name="Test parser::tests::can_i_get_a_ply_parser_out_of_this" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package plyers --lib parser::tests::can_i_get_a_ply_parser_out_of_this -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="false" />
       <option name="emulateTerminal" value="false" />
       <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
       <envs />
       <option name="isRedirectInput" value="false" />
@@ -193,14 +145,15 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test utilities::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package engine --lib utilities::tests" />
+    <configuration name="Test plyers" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="test --package plyers" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="false" />
       <option name="emulateTerminal" value="false" />
       <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
       <envs />
       <option name="isRedirectInput" value="false" />
@@ -216,24 +169,21 @@
       <item itemvalue="Cargo.Test" />
       <item itemvalue="Cargo.Run Headless" />
       <item itemvalue="Cargo.Test glamour" />
-      <item itemvalue="Cargo.Test camera::tests" />
-      <item itemvalue="Cargo.Test model::tests" />
-      <item itemvalue="Cargo.Test utilities::tests" />
-      <item itemvalue="Cargo.Test components::model::tests::default_is_identity" />
+      <item itemvalue="Cargo.Test plyers" />
+      <item itemvalue="Cargo.Test parser::tests::can_i_get_a_ply_parser_out_of_this" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test camera::tests" />
-        <item itemvalue="Cargo.Test model::tests" />
-        <item itemvalue="Cargo.Test utilities::tests" />
-        <item itemvalue="Cargo.Test components::model::tests::default_is_identity" />
+        <item itemvalue="Cargo.Test parser::tests::can_i_get_a_ply_parser_out_of_this" />
       </list>
     </recent_temporary>
   </component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
-    <option name="useRustfmt" value="true" />
     <option name="version" value="2" />
+  </component>
+  <component name="RustfmtProjectSettings">
+    <option name="useRustfmt" value="true" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -293,6 +243,7 @@
       <workItem from="1640072674493" duration="5002000" />
       <workItem from="1640169938258" duration="133000" />
       <workItem from="1640345264255" duration="1552000" />
+      <workItem from="1656142437936" duration="3094000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>

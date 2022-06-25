@@ -1,3 +1,5 @@
+use std::io::{Read, Seek};
+
 use super::Parser;
 
 #[derive(Debug)]
@@ -6,11 +8,7 @@ pub struct AndThen<P, F> {
     func: F,
 }
 
-impl<P, J, F> AndThen<P, F> 
-where
-    P: Parser,
-    F: FnMut(P::Item) -> Result<J, crate::error::Error>,
-{
+impl<P, F> AndThen<P, F> {
     pub fn new(a: P, func: F) -> Self {
         AndThen {
             a,
@@ -26,7 +24,7 @@ where
 {
     type Item = J;
 
-    fn parse<R>(&mut self, r: &mut R) -> Result<Self::Item, crate::error::Error> where Self:Sized, R: std::io::Read {
+    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, crate::error::Error> where Self:Sized, R: Read + Seek {
         let product = self.a.parse(r)?;
         (self.func)(product)
     }

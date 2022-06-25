@@ -1,8 +1,10 @@
+use std::io::{Read, Seek};
+
 use super::Parser;
 use crate::utilities::read_byte;
 use crate::error::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct OneOf<'a> {
     patterns: &'a [&'a [u8]],
     exhausted: bool,
@@ -11,7 +13,7 @@ pub struct OneOf<'a> {
 impl<'a> Parser for OneOf<'a> {
     type Item = &'a [u8];
 
-    fn parse<R>(&mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: std::io::Read {
+    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
         if !self.exhausted {
             let mut indices: Vec<usize> = vec![0; self.patterns.len()];
             loop {
@@ -71,17 +73,16 @@ pub fn one_of<'a>(engrams: &'a [&'a [u8]]) -> OneOf<'a> {
 
 #[cfg(test)]
 mod tests {
+    use crate::parser::to_reader;
     use super::*;
 
     #[test]
     fn one_of_succeeds_on_the_first_engram_that_matches() {
         let source = "hello";
         let expected: Vec<u8> = source.as_bytes().iter().copied().collect();
-        let mut stream = source.as_bytes();
+        let mut stream = to_reader(source);
 
-        let mut p = one_of(&[b"bye bye", b"hello"]);
-
-        let r = p.parse(&mut stream);
+        let r = one_of(&[b"bye bye", b"hello"]).parse(&mut stream);
 
         match r {
             Ok(product) if product == expected => (),
@@ -91,12 +92,9 @@ mod tests {
 
     #[test]
     fn one_of_fails_on_the_first_byte_that_does_not_match_any_engram() {
-        let source = "bald eagle";
-        let mut stream = source.as_bytes();
+        let mut stream = to_reader("bald eagle");
 
-        let mut p = one_of(&[b"bye bye", b"hello"]);
-
-        let r = p.parse(&mut stream);
+        let r = one_of(&[b"bye bye", b"hello"]).parse(&mut stream);
 
         match r {
             Err(Error::UnexpectedByte(b'a')) => (),
@@ -105,30 +103,12 @@ mod tests {
     }
 
     #[test]
-    fn one_of_fails_when_called_after_completion() {
-        let source = "hello";
-        let mut stream = source.as_bytes();
-
-        let mut p = one_of(&[b"bye bye", b"hello"]);
-
-        let _ = p.parse(&mut stream);
-
-        let r = p.parse(&mut stream);
-
-        match r {
-            Err(Error::ParserExhausted) => (),
-            other => panic!("Expected Err(Error::ParserExhausted), got: {:?}", other),
-        }
-    }
-
-    #[test]
     fn one_of_matches_longer_patterns_first() {
         let source = "Hello, Samantha";
         let expected: Vec<u8> = source.as_bytes().iter().cloned().collect();
-        let mut stream = source.as_bytes();
+        let mut stream = to_reader(source);
 
-        let mut p = one_of(&[b"Hello", b"Hello, Samantha"]);
-        let r = p.parse(&mut stream);
+        let r = one_of(&[b"Hello", b"Hello, Samantha"]).parse(&mut stream);
 
         match r {
             Ok(product) if product == expected => (),

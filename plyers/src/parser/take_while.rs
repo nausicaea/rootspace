@@ -1,3 +1,5 @@
+use std::io::{Read, Seek};
+
 use crate::{error::Error, utilities::read_byte};
 
 use super::Parser;
@@ -25,7 +27,7 @@ where
 {
     type Item = Vec<u8>;
 
-    fn parse<R>(&mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: std::io::Read {
+    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
         if let Some(ref mut func) = self.func {
             loop {
                 let byte = read_byte(r)?;
@@ -45,18 +47,16 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::parser::to_reader;
+
     use super::*;
 
     #[test]
     fn take_while_returns_everything_until_a_predicate_returns_false() {
-        let source = b"Hello, World!\nBlabla";
-        let expected: Vec<u8> = source.iter().take_while(|b| b != &&b'\n').copied().collect();
-        let mut stream = source.as_slice();
+        let expected: Vec<u8> = b"Hello, World!".iter().copied().collect();
+        let mut stream = to_reader("Hello, World!\nBlabla");
 
-        let mut p = take_while(|b| b != b'\n');
-
-        let r = p.parse(&mut stream);
-
+        let r = take_while(|b| b != b'\n').parse(&mut stream);
 
         match r {
             Ok(d) if d == expected => (),
@@ -66,28 +66,22 @@ mod tests {
 
     #[test]
     fn take_while_throws_an_error_when_the_predicate_always_returns_true() {
-        let source = b"Hello, World!\nBlabla";
-        let mut stream = source.as_slice();
+        let mut stream = to_reader("Hello, World!\nBlabla");
 
-        let mut p = take_while(|_| true);
-
-        let r = p.parse(&mut stream);
+        let r = take_while(|_| true).parse(&mut stream);
 
         match r {
             Err(Error::UnexpectedEndOfFile) => (),
-            other => panic!("Expected Ok(b\"Hello, World!\nBlabla\" as Vec<u8>), got: {:?}", other),
+            other => panic!("Expected Err(, got: {:?}", other),
         }
     }
 
     #[test]
     fn take_while_returns_nothing_if_the_predicate_is_always_false() {
-        let source = b"Hello, World!\nBlabla";
         let expected: Vec<u8> = Vec::new();
-        let mut stream = source.as_slice();
+        let mut stream = to_reader("Hello, World!\nBlabla");
 
-        let mut p = take_while(|_| false);
-
-        let r = p.parse(&mut stream);
+        let r = take_while(|_| false).parse(&mut stream);
 
         match r {
             Ok(d) if d == expected => (),

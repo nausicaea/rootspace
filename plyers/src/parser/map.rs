@@ -1,16 +1,14 @@
+use std::io::{Seek, Read};
+
 use super::Parser;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Map<P, F> {
     a: P,
     func: F,
 }
 
-impl<P, J, F> Map<P, F> 
-where
-    P: Parser,
-    F: FnMut(P::Item) -> J,
-{
+impl<P, F> Map<P, F> {
     pub fn new(a: P, func: F) -> Self {
         Map {
             a,
@@ -26,7 +24,7 @@ where
 {
     type Item = J;
 
-    fn parse<R>(&mut self, r: &mut R) -> Result<Self::Item, crate::error::Error> where Self:Sized, R: std::io::Read {
+    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, crate::error::Error> where Self:Sized, R: Read + Seek {
         let product = self.a.parse(r)?;
         Ok((self.func)(product))
     }

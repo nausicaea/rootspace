@@ -1,9 +1,9 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 use crate::utilities::read_byte;
 use crate::error::Error;
 use super::Parser;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Engram<'a> {
     pattern: &'a [u8],
     exhausted: bool,
@@ -12,7 +12,7 @@ pub struct Engram<'a> {
 impl<'a> Parser for Engram<'a> {
     type Item = ();
 
-    fn parse<R>(&mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read {
+    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
         if !self.exhausted {
             let mut index: usize = 0;
             loop {
@@ -46,16 +46,14 @@ pub fn engram(e: &[u8]) -> Engram {
 
 #[cfg(test)]
 mod tests {
+    use crate::parser::to_reader;
     use super::*;
 
     #[test]
     fn engram_parses_a_single_fixed_word() {
-        let source = "hello";
-        let mut stream = source.as_bytes();
+        let mut stream = to_reader("hello");
 
-        let mut p = engram(b"hello");
-
-        let r = p.parse(&mut stream);
+        let r = engram(b"hello").parse(&mut stream);
 
         match r {
             Ok(()) => (),
@@ -65,31 +63,13 @@ mod tests {
 
     #[test]
     fn engram_fails_on_the_first_wrong_byte() {
-        let source = "hallo";
-        let mut stream = source.as_bytes();
+        let mut stream = to_reader("hallo");
 
-        let mut p = engram(b"hello");
-
-        let r = p.parse(&mut stream);
+        let r = engram(b"hello").parse(&mut stream);
 
         match r {
             Err(Error::UnexpectedByte(b'a')) => (),
             other => panic!("Expected Error::UnexpectedByte(b'a'), got: {:?}", other),
-        }
-    }
-
-    #[test]
-    fn engram_fails_if_called_after_completion() {
-        let source = "hello";
-        let mut stream = source.as_bytes();
-
-        let mut p = engram(b"hello");
-
-        let _ = p.parse(&mut stream);
-
-        match p.parse(&mut stream) {
-            Err(Error::ParserExhausted) => (),
-            r => panic!("{:?}", r),
         }
     }
 

@@ -78,7 +78,7 @@ mod ply_parsers;
 mod tables;
 pub mod types;
 mod utilities;
-mod parser;
+pub mod parser;
 pub mod error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

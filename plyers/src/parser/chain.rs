@@ -1,47 +1,19 @@
-use std::io::Read;
+use std::io::{Read, Seek};
 use super::Parser;
 use crate::error::Error;
 
 #[derive(Debug)]
 pub struct Chain<P, Q> {
-    a: Option<P>,
-    b: Option<Q>,
+    a: P,
+    b: Q,
 }
 
 impl<P, Q> Chain<P, Q> {
     pub(crate) fn new(a: P, b: Q) -> Self {
         Chain { 
-            a: Some(a), 
-            b: Some(b), 
+            a, b
         }
     }
-}
-
-macro_rules! fuse {
-    ($self:ident . $parser:ident . $($call:tt)+) => {
-        match $self.$parser {
-            Some(ref mut parser) => match parser.$($call)+ {
-                Ok(product) => {
-                    $self.$parser = None;
-                    Ok(product)
-                },
-                Err(e) => {
-                    $self.$parser = None;
-                    Err(e)
-                },
-            },
-            None => Err(Error::ParserExhausted),
-        }
-    };
-}
-
-macro_rules! maybe {
-    ($self:ident . $parser:ident . $($call:tt)+) => {
-        match $self.$parser {
-            Some(ref mut parser) => parser.$($call)+,
-            None => Err(Error::ParserExhausted),
-        }
-    };
 }
 
 impl<P, Q> Parser for Chain<P, Q> 
@@ -51,10 +23,10 @@ where
 {
     type Item = (P::Item, Q::Item);
 
-    fn parse<R>(&mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read {
-        let ap = fuse!(self.a.parse(r))?;
+    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
+        let ap = self.a.parse(r)?;
 
-        let bp = maybe!(self.b.parse(r))?;
+        let bp = self.b.parse(r)?;
 
         Ok((ap, bp))
     }
@@ -62,18 +34,18 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::parser::to_reader;
+
     use super::*;
     use super::super::engram::engram;
 
     #[test]
     fn chain_chains_two_parsers() {
-        let source = "helloworld";
-        let mut stream = source.as_bytes();
+        let mut stream = to_reader("helloworld");
 
-        let mut p = engram(b"hello")
-            .chain(engram(b"world"));
-
-        let r = p.parse(&mut stream);
+        let r = engram(b"hello")
+            .chain(engram(b"world"))
+            .parse(&mut stream);
 
         match r {
             Ok(((), ())) => (),
@@ -83,14 +55,12 @@ mod tests {
 
     #[test]
     fn chain_allows_long_chains() {
-        let source = "hello, world";
-        let mut stream = source.as_bytes();
+        let mut stream = to_reader("hello, world");
 
-        let mut p = engram(b"hello")
+        let r = engram(b"hello")
             .chain(engram(b", "))
-            .chain(engram(b"world"));
-
-        let r = p.parse(&mut stream);
+            .chain(engram(b"world"))
+            .parse(&mut stream);
 
         match r {
             Ok((((), ()), ())) => (),
@@ -106,15 +76,14 @@ mod tests {
         impl Parser for P {
             type Item = ();
             
-             fn parse<R>(&mut self, _r: &mut R) -> Result<Self::Item, Error> where R: Read {
+             fn parse<R>(mut self, _r: &mut R) -> Result<Self::Item, Error> where R: Read {
                 assert!(!self.0, "A::parse() was called more than once");
                 self.0 = true;
                 Ok(())
              }
         }
 
-        let data = "A, b, C";
-        let mut stream = data.as_bytes();
+        let mut stream = to_reader("A, b, C");
         let r = P::default()
             .chain(P::default())
             .parse(&mut stream);

@@ -1,3 +1,5 @@
+use std::io::{Read, Seek};
+
 use crate::utilities::read_byte;
 use crate::error::Error;
 
@@ -12,7 +14,7 @@ pub struct Token {
 impl Parser for Token {
     type Item = ();
 
-    fn parse<R>(&mut self, r: &mut R) -> Result<Self::Item, crate::error::Error> where Self:Sized, R: std::io::Read {
+    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, crate::error::Error> where Self:Sized, R: Read + Seek {
         if !self.exhausted {
             let byte = read_byte(r)?;
 
@@ -38,12 +40,12 @@ pub fn token(t: u8) -> Token {
  
 #[cfg(test)]
 mod tests {
+    use crate::parser::to_reader;
     use super::*;
 
     #[test]
     fn token_parses_a_single_fixed_byte() {
-        let source = "hello";
-        let mut stream = source.as_bytes();
+        let mut stream = to_reader("hello");
 
         let mut p = token(b'h');
 
