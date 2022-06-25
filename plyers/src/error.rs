@@ -1,10 +1,10 @@
 use thiserror::Error as ThisError;
-use std::num::{ParseFloatError, ParseIntError};
+use std::{num::{ParseFloatError, ParseIntError}, string::FromUtf8Error as SFU8E};
 
 #[derive(Debug, ThisError)]
 pub enum Error {
-    #[error("parsing is complete")]
-    ParsingComplete,
+    #[error("the parser has been run to failure or completion already")]
+    ParserExhausted,
     #[error("Found a list property with no parent element")]
     UnexpectedListProperty,
     #[error("Found a property with no parent element")]
@@ -15,6 +15,8 @@ pub enum Error {
     MissingFormatVersion,
     #[error("Unexpected byte {:#x}", .0)]
     UnexpectedByte(u8),
+    #[error(transparent)]
+    FromUtf8Error(#[from] SFU8E),
     #[error(transparent)]
     ParseFloatError(#[from] ParseFloatError),
     #[error(transparent)]

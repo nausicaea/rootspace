@@ -1,19 +1,19 @@
-use std::task::Poll;
 use crate::{error::Error, utilities::read_byte};
 
 use super::Parser;
 
+#[derive(Debug)]
 pub struct TakeWhile<F> {
-    func: F,
+    func: Option<F>,
     buffer: Vec<u8>,
 }
 
 pub fn take_while<F>(predicate: F) -> TakeWhile<F>
 where
-    F: Fn(u8) -> bool,
+    F: FnMut(u8) -> bool,
 {
     TakeWhile {
-        func: predicate,
+        func: Some(predicate),
         buffer: Vec::new(),
     }
 }
@@ -21,19 +21,25 @@ where
 
 impl<F> Parser for TakeWhile<F> 
 where
-    F: Fn(u8) -> bool,
+    F: FnMut(u8) -> bool,
 {
     type Item = Vec<u8>;
 
-    fn next<R>(&mut self, r: &mut R) -> std::task::Poll<Result<Self::Item, Error>> where R: std::io::Read {
-        let byte = read_byte(r)?;
+    fn parse<R>(&mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: std::io::Read {
+        if let Some(ref mut func) = self.func {
+            loop {
+                let byte = read_byte(r)?;
 
-        if (self.func)(byte) {
-            self.buffer.push(byte);
-            Poll::Pending
-        } else {
-            Poll::Ready(Ok(self.buffer.clone()))
+                if !(func)(byte) {
+                    self.func = None;
+                    return Ok(self.buffer.clone());
+                } else {
+                    self.buffer.push(byte);
+                }
+            }
         }
+
+        Err(Error::ParserExhausted)
     }
 }
 

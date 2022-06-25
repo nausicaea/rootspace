@@ -1,8 +1,8 @@
 use std::io::Read;
-use std::task::Poll;
 use super::Parser;
 use crate::error::Error;
 
+#[derive(Debug)]
 pub struct Chain<P, Q> {
     a: Option<P>,
     b: Option<Q>,
@@ -21,17 +21,16 @@ macro_rules! fuse {
     ($self:ident . $parser:ident . $($call:tt)+) => {
         match $self.$parser {
             Some(ref mut parser) => match parser.$($call)+ {
-                std::task::Poll::Ready(Ok(_)) => {
+                Ok(product) => {
                     $self.$parser = None;
-                    std::task::Poll::Pending
+                    Ok(product)
                 },
-                std::task::Poll::Ready(Err(e)) => {
+                Err(e) => {
                     $self.$parser = None;
-                    std::task::Poll::Ready(Err(e))
-                }
-                pending => pending,
+                    Err(e)
+                },
             },
-            None => std::task::Poll::Pending,
+            None => Err(Error::ParserExhausted),
         }
     };
 }
@@ -40,7 +39,7 @@ macro_rules! maybe {
     ($self:ident . $parser:ident . $($call:tt)+) => {
         match $self.$parser {
             Some(ref mut parser) => parser.$($call)+,
-            None => std::task::Poll::Pending,
+            None => Err(Error::ParserExhausted),
         }
     };
 }
@@ -50,14 +49,14 @@ where
     P: Parser,
     Q: Parser,
 {
-    type Item = Q::Item;
+    type Item = (P::Item, Q::Item);
 
-    fn next<R: Read>(&mut self, r: &mut R) -> Poll<Result<Q::Item, Error>> {
-        match fuse!(self.a.next(r)) {
-            Poll::Ready(Ok(_)) => maybe!(self.b.next(r)),
-            Poll::Ready(Err(e)) => Poll::Ready(Err(e)),
-            Poll::Pending => Poll::Pending,
-        }
+    fn parse<R>(&mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read {
+        let ap = fuse!(self.a.parse(r))?;
+
+        let bp = maybe!(self.b.parse(r))?;
+
+        Ok((ap, bp))
     }
 }
 
@@ -77,8 +76,8 @@ mod tests {
         let r = p.parse(&mut stream);
 
         match r {
-            Ok(()) => (),
-            other => panic!("Expected Ok(()), got: {:?}", other),
+            Ok(((), ())) => (),
+            other => panic!("Expected Ok(((), ())), got: {:?}", other),
         }
     }
 
@@ -94,8 +93,8 @@ mod tests {
         let r = p.parse(&mut stream);
 
         match r {
-            Ok(()) => (),
-            other => panic!("Expected Ok(()), got: {:?}", other),
+            Ok((((), ()), ())) => (),
+            other => panic!("Expected Ok((((), ()), ())), got: {:?}", other),
         }
     }
 
@@ -107,10 +106,10 @@ mod tests {
         impl Parser for P {
             type Item = ();
             
-             fn next<R>(&mut self, r: &mut R) -> Poll<Result<Self::Item, Error>> where R: Read {
-                assert!(!self.0, "A::next() was called more than once");
+             fn parse<R>(&mut self, _r: &mut R) -> Result<Self::Item, Error> where R: Read {
+                assert!(!self.0, "A::parse() was called more than once");
                 self.0 = true;
-                Poll::Ready(Ok(()))
+                Ok(())
              }
         }
 
@@ -121,8 +120,8 @@ mod tests {
             .parse(&mut stream);
 
         match r {
-            Ok(()) => (),
-            other => panic!("Expected Ok(()), got: {:?}", other),
+            Ok(((), ())) => (),
+            other => panic!("Expected Ok(((), ())), got: {:?}", other),
         }
     }
 }
