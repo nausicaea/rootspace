@@ -1,6 +1,6 @@
 use std::io::{Read, Seek};
 
-use crate::{error::Error, utilities::read_byte};
+use crate::{error::Error, read_byte};
 
 use super::Parser;
 
@@ -47,7 +47,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::to_reader;
+    use crate::to_reader;
 
     use super::*;
 

@@ -36,7 +36,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::{one_of::one_of, engram::engram, to_reader};
+    use crate::parser::{engram::engram, one_of::one_of};
+    use crate::to_reader;
     use super::*;
 
     #[test]

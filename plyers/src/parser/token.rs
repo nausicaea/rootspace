@@ -1,6 +1,6 @@
 use std::io::{Read, Seek};
 
-use crate::utilities::read_byte;
+use crate::read_byte;
 use crate::error::Error;
 
 use super::Parser;
@@ -40,16 +40,14 @@ pub fn token(t: u8) -> Token {
  
 #[cfg(test)]
 mod tests {
-    use crate::parser::to_reader;
+    use crate::to_reader;
     use super::*;
 
     #[test]
     fn token_parses_a_single_fixed_byte() {
         let mut stream = to_reader("hello");
 
-        let mut p = token(b'h');
-
-        let r = p.parse(&mut stream);
+        let r = token(b'h').parse(&mut stream);
 
         match r {
             Ok(()) => (),

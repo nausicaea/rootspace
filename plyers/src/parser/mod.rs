@@ -1,4 +1,4 @@
-use std::io::{Read, Seek, Cursor};
+use std::io::{Read, Seek};
 use crate::error::Error;
 
 pub mod chain;
@@ -56,10 +56,6 @@ pub trait Parser {
     {
         chain_repeat::ChainRepeat::new(self, at_least_once, until)
     }
-}
-
-pub(crate) fn to_reader(source: &str) -> Cursor<&[u8]> {
-    Cursor::new(source.as_bytes())
 }
 
 #[cfg(test)]

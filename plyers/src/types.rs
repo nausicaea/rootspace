@@ -1,3 +1,6 @@
+#[derive(Debug, Clone, Copy)]
+pub struct FromBytesError;
+
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FormatType {
@@ -6,18 +9,41 @@ pub enum FormatType {
     BinaryBigEndian,
 }
 
+impl FormatType {
+    pub fn to_bytes(&self) -> &'static [u8] {
+        Into::<&'static [u8]>::into(*self)
+    }
+
+    pub fn try_from_bytes(s: &[u8]) -> Result<Self, FromBytesError> {
+        TryFrom::<&[u8]>::try_from(s)
+    }
+}
+
 impl Default for FormatType {
     fn default() -> Self {
         FormatType::Ascii
     }
 }
 
-impl std::fmt::Display for FormatType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Into<&'static [u8]> for FormatType {
+    fn into(self) -> &'static [u8] {
         match self {
-            Self::Ascii => write!(f, "ascii"),
-            Self::BinaryLittleEndian => write!(f, "binary_little_endian"),
-            Self::BinaryBigEndian => write!(f, "binary_big_endian"),
+            Self::Ascii => b"ascii",
+            Self::BinaryLittleEndian => b"binary_little_endian",
+            Self::BinaryBigEndian => b"binary_big_endian",
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for FormatType {
+    type Error = FromBytesError;
+
+    fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
+        match value {
+            b"ascii" => Ok(FormatType::Ascii),
+            b"binary_little_endian" => Ok(FormatType::BinaryLittleEndian),
+            b"binary_big_endian" => Ok(FormatType::BinaryBigEndian),
+            _ => Err(FromBytesError),
         }
     }
 }
@@ -30,12 +56,35 @@ pub enum CountType {
     U32,
 }
 
-impl std::fmt::Display for CountType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl CountType {
+    pub fn to_bytes(&self) -> &'static [u8] {
+        Into::<&'static [u8]>::into(*self)
+    }
+
+    pub fn try_from_bytes(s: &[u8]) -> Result<Self, FromBytesError> {
+        TryFrom::<&[u8]>::try_from(s)
+    }
+}
+
+impl Into<&'static [u8]> for CountType {
+    fn into(self) -> &'static [u8] {
         match self {
-            Self::U8 => write!(f, "uint8"),
-            Self::U16 => write!(f, "uint16"),
-            Self::U32 => write!(f, "uint32"),
+            CountType::U8 => b"uint8",
+            CountType::U16 => b"uint16",
+            CountType::U32 => b"uint32",
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for CountType {
+    type Error = FromBytesError;
+
+    fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
+        match value {
+            b"uint8" | b"uchar" => Ok(CountType::U8),
+            b"uint16" | b"ushort" => Ok(CountType::U16),
+            b"uint32" | b"uint" => Ok(CountType::U32),
+            _ => Err(FromBytesError)
         }
     }
 }
@@ -53,17 +102,45 @@ pub enum DataType {
     F64,
 }
 
-impl std::fmt::Display for DataType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl DataType {
+    pub fn to_bytes(&self) -> &'static [u8] {
+        Into::<&'static [u8]>::into(*self)
+    }
+
+    pub fn try_from_bytes(s: &[u8]) -> Result<Self, FromBytesError> {
+        TryFrom::<&[u8]>::try_from(s)
+    }
+}
+
+impl Into<&'static [u8]> for DataType {
+    fn into(self) -> &'static [u8] {
         match self {
-            Self::I8 => write!(f, "int8"),
-            Self::U8 => write!(f, "uint8"),
-            Self::I16 => write!(f, "int16"),
-            Self::U16 => write!(f, "uint16"),
-            Self::I32 => write!(f, "int32"),
-            Self::U32 => write!(f, "uint32"),
-            Self::F32 => write!(f, "float32"),
-            Self::F64 => write!(f, "float64"),
+            DataType::U8 => b"uint8",
+            DataType::I8 => b"int8",
+            DataType::U16 => b"uint16",
+            DataType::I16 => b"int16",
+            DataType::U32 => b"uint32",
+            DataType::I32 => b"int32",
+            DataType::F32 => b"float32",
+            DataType::F64 => b"float64",
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a [u8]> for DataType {
+    type Error = FromBytesError;
+
+    fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
+        match value {
+            b"uint8" | b"uchar" => Ok(DataType::U8),
+            b"int8" | b"char" => Ok(DataType::I8),
+            b"uint16" | b"ushort" => Ok(DataType::U16),
+            b"int16" | b"short" => Ok(DataType::I16),
+            b"uint32" | b"uint" => Ok(DataType::U32),
+            b"int32" | b"int" => Ok(DataType::I32),
+            b"float32" | b"float" => Ok(DataType::F32),
+            b"float64" | b"double" => Ok(DataType::F64),
+            _ => Err(FromBytesError)
         }
     }
 }

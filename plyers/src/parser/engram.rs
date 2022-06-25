@@ -1,5 +1,5 @@
 use std::io::{Read, Seek};
-use crate::utilities::read_byte;
+use crate::read_byte;
 use crate::error::Error;
 use super::Parser;
 
@@ -46,7 +46,7 @@ pub fn engram(e: &[u8]) -> Engram {
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::to_reader;
+    use crate::to_reader;
     use super::*;
 
     #[test]

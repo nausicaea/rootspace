@@ -7,20 +7,21 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="I'm having serious issues getting matrix transformations to work for UI elements.">
-      <change beforePath="$PROJECT_DIR$/.idea/rootspace.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rootspace.iml" afterDir="false" />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Hell, yes! I can parse the entire PLY header!">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/generic_parsers.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/and_then.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/and_then.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_with.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain_with.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/engram.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/engram.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/map.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/map.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/one_of.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/one_of.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/token.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/token.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/ply_parsers.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/tables.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/utilities.rs" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,7 +77,7 @@
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.Test parser::tests::can_i_get_a_ply_parser_out_of_this">
+  <component name="RunManager" selected="Cargo.Test plyers">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -243,7 +244,7 @@
       <workItem from="1640072674493" duration="5002000" />
       <workItem from="1640169938258" duration="133000" />
       <workItem from="1640345264255" duration="1552000" />
-      <workItem from="1656142437936" duration="3094000" />
+      <workItem from="1656142437936" duration="5150000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -419,7 +420,14 @@
       <option name="presentableId" value="LOCAL−00029" />
       <updated>1638790448735</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="Hell, yes! I can parse the entire PLY header!">
+      <created>1656146265675</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1656146265675</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -438,7 +446,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Removed one dictionary lookup from AncestorsIter::next." />
     <MESSAGE value="Added the ability to reload the last state" />
     <MESSAGE value="Added the ability to reload the last state by Logo-R combination." />
     <MESSAGE value="Added additional Events." />
@@ -463,6 +470,7 @@
     <MESSAGE value="Began working on the property tests for Camera transformations." />
     <MESSAGE value="I now have a good set of tests for model.rs" />
     <MESSAGE value="I'm having serious issues getting matrix transformations to work for UI elements." />
-    <option name="LAST_COMMIT_MESSAGE" value="I'm having serious issues getting matrix transformations to work for UI elements." />
+    <MESSAGE value="Hell, yes! I can parse the entire PLY header!" />
+    <option name="LAST_COMMIT_MESSAGE" value="Hell, yes! I can parse the entire PLY header!" />
   </component>
 </project>

@@ -1,7 +1,7 @@
 use std::io::{Read, Seek};
 
 use super::Parser;
-use crate::utilities::read_byte;
+use crate::read_byte;
 use crate::error::Error;
 
 #[derive(Debug, Clone)]
@@ -73,7 +73,7 @@ pub fn one_of<'a>(engrams: &'a [&'a [u8]]) -> OneOf<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::to_reader;
+    use crate::to_reader;
     use super::*;
 
     #[test]

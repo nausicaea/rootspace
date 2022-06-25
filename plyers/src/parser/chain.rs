@@ -34,7 +34,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::to_reader;
+    use crate::to_reader;
 
     use super::*;
     use super::super::engram::engram;
