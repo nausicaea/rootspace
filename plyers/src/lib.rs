@@ -58,13 +58,13 @@ use std::{
     path::Path,
 };
 use std::fs::File;
-use std::io::{BufReader, Cursor, Read, Seek};
+use std::io::{BufReader, Read, Seek};
+use crate::error::Error;
 use crate::parser::engram::engram;
 use crate::parser::one_of::one_of;
 use crate::parser::Parser;
 use crate::types::{Keyword, KEYWORDS};
 use crate::ply::{ParserProduct, PlyDirective};
-use anyhow::Error;
 
 use self::{
     types::{ElementDescriptor, FormatType, ListPropertyDescriptor, Ply, PlyDescriptor, PropertyDescriptor},
@@ -151,8 +151,9 @@ pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
     parse_ply(&mut reader)
 }
 
-pub(crate) fn to_reader(source: &str) -> Cursor<&[u8]> {
-    Cursor::new(source.as_bytes())
+#[cfg(test)]
+pub(crate) fn to_reader(source: &str) -> std::io::Cursor<&[u8]> {
+    std::io::Cursor::new(source.as_bytes())
 }
 
 pub(crate) fn read_byte<R>(file: &mut R) -> Result<u8, Error>

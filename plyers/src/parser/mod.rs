@@ -68,6 +68,7 @@ mod tests {
     use super::Parser;
     use super::{engram::engram, one_of::one_of};
 
+    #[allow(dead_code)]
     #[derive(Debug)]
     enum ParserProduct {
         Format { ft: FormatType, v: String },

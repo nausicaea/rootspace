@@ -11,11 +11,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/and_then.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/and_then.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,15 +53,15 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "true",
-    "last_opened_file_path": "/Users/young0000/Crypt/Development/rootspace",
-    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/young0000/Crypt/Development/rootspace&quot;,
+    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/glamour/src" />
