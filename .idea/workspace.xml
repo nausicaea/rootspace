@@ -10,11 +10,6 @@
     <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added position tracking for some errors">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/tests/minimal_ascii.ply" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/tests/minimal_ascii.ply" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,7 +58,7 @@
     "WebServerToolWindowFactoryState": "true",
     "last_opened_file_path": "/Users/young0000/Crypt/Development/rootspace",
     "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "settings.editor.selected.configurable": "reference.settingsdialog.project.grazie"
+    "settings.editor.selected.configurable": "language.rust.cargo.check"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -74,7 +69,7 @@
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.Test parser::one_of::tests::one_of_correclty_parses_data_type">
+  <component name="RunManager" selected="Cargo.Test plyers">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -234,10 +229,12 @@
     </recent_temporary>
   </component>
   <component name="RustProjectSettings">
+    <option name="runExternalLinterOnTheFly" value="true" />
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
     <option name="version" value="2" />
   </component>
   <component name="RustfmtProjectSettings">
+    <option name="channel" value="nightly" />
     <option name="useRustfmt" value="true" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -299,6 +296,8 @@
       <workItem from="1640169938258" duration="133000" />
       <workItem from="1640345264255" duration="1552000" />
       <workItem from="1656142437936" duration="8503000" />
+      <workItem from="1656164197250" duration="1424000" />
+      <workItem from="1656194028126" duration="2146000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>

@@ -5,49 +5,33 @@
 //! S: Start symbol
 //! A: Header
 //! B: Body
-//! C: Declaration
 //! D: Format declaration
 //! E: Element declaration
-//! F: Comment
+//! F: Comment or Object Info declaration
 //! G: Property declaration
 //! H: Format type
 //! J: Data type
 //! K: Count type
-//! M: Object Info declaration
 //! W: any integral or floating point number
 //! X: any integral number larger than zero
 //! Y: any word (non-space, non-linebreak)
 //! Z: any string (non-linebreak)
 //!
 //! S -> A B
-//! A -> "ply" C "end_header"
-//! B -> W
-//! B -> W B
-//! C -> D E
+//! A -> "ply" D E "end_header"
+//! B -> W | W B
 //! D' -> "format" H Z
-//! D -> D'
-//! D -> F D'
+//! D -> D' | F D'
 //! E' -> "element" Y X
-//! E -> E' G
-//! E -> F E' G
-//! E -> E' G E
-//! E -> F E' G E
+//! E -> E' G | F E' G | E' G E | F E' G E
 //! F' -> "comment" Z
 //! M' -> "obj_info" Z
-//! F -> F'
-//! F -> M'
-//! F -> F' F
-//! F -> M' F
+//! F -> F' | M' | F' F | M' F
 //! G' -> "property" J Y
 //! G'' -> "property" "list" K J Y
-//! G -> G'
-//! G -> G' G
-//! G -> G''
-//! G -> G'' G
-//! G -> F G'
-//! G -> F G' G
-//! G -> F G''
-//! G -> F G'' G
+//! Ga -> G' | F G' | G' Ga | F G' Ga
+//! Gb -> G'' | F G'' | G'' Gb | F G'' Gb
+//! G -> Ga | Gb
 //! H -> "ascii" | "binary_little_endian" | "binary_big_endian"
 //! J -> "char" | "uchar" | "short" | "ushort" | "int" | "uint" | "float" | "double" | "int8" |
 //! "uint8" | "int16" | "uint16" | "int32" | "uint32" | "float32" | "float64"
