@@ -48,7 +48,7 @@ use crate::parser::engram::engram;
 use crate::parser::lookahead::lookahead;
 use crate::parser::Parser;
 use crate::parser::take_while::take_while;
-use crate::types::{CountType, DataType, ElementDescriptor, ListPropertyDescriptor, PlyDescriptor, PropertyDescriptor};
+use crate::types::{CommentDescriptor, CountType, DataType, ElementDescriptor, ListPropertyDescriptor, ObjInfoDescriptor, PlyDescriptor, PropertyDescriptor};
 
 use self::{
     types::{FormatType, Ply},
@@ -118,14 +118,16 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
         .chain(take_while(|b| b != b'\n'))
         .and_then(|(_, c)| {
             let c = String::from_utf8(c)?;
-            Ok(c)
+            Ok(CommentDescriptor(c))
         });
     let obj_info = engram(b"obj_info ")
         .chain(take_while(|b| b != b'\n'))
         .and_then(|(_, o)| {
             let o = String::from_utf8(o)?;
-            Ok(o)
+            Ok(ObjInfoDescriptor(o))
         });
+    let comment_or_obj_info = empty()
+        .chain_either(comment, obj_info);
     let format = engram(b"format ")
         .chain(take_while(|b| b != b' '))
         .and_then(|(_, ft)| {
@@ -138,7 +140,9 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
             Ok((ft, fv))
         });
 
-    let normal_property = engram(b"property ")
+    let normal_property = empty()
+        .chain_optional(comment_or_obj_info.clone())
+        .chain(engram(b"property "))
         .chain(take_while(|b| b != b' '))
         .and_then(|(_, dt)| {
             let dt = DataType::try_from_bytes(&dt)?;
@@ -152,7 +156,9 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
                 name: n,
             })
         });
-    let list_property = engram(b"property list ")
+    let list_property = empty()
+        .chain_optional(comment_or_obj_info.clone())
+        .chain(engram(b"property list "))
         .chain(take_while(|b| b != b' '))
         .and_then(|(_, ct)| {
             let ct = CountType::try_from_bytes(&ct)?;
@@ -182,7 +188,9 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
         .chain_either(normal_properties, list_properties)
         .map(|(_, p)| p);
 
-    let element = engram(b"element ")
+    let element = empty()
+        .chain_optional(comment_or_obj_info.clone())
+        .chain(engram(b"element "))
         .chain(take_while(|b| b != b' '))
         .and_then(|(_, en)| {
             let en = String::from_utf8(en)?;
@@ -211,6 +219,7 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
         });
 
     let header = engram(b"ply\n")
+        .chain_optional(comment_or_obj_info.clone())
         .chain(format)
         .map(|(_, (ft, fv))| (ft, fv))
         .chain_repeat(element, engram(b"end_header\n"))

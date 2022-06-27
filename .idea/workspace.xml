@@ -7,13 +7,9 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Getting somewhere">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="By making the parser stricter, it was much easier to write one. No I need to add in the obj_info and comments">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/lookahead.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/lookahead.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
     </list>
@@ -323,7 +319,7 @@
       <workItem from="1656142437936" duration="8503000" />
       <workItem from="1656164197250" duration="1424000" />
       <workItem from="1656194028126" duration="8427000" />
-      <workItem from="1656324208398" duration="6009000" />
+      <workItem from="1656324208398" duration="7458000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -548,7 +544,14 @@
       <option name="project" value="LOCAL" />
       <updated>1656324276062</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="By making the parser stricter, it was much easier to write one. No I need to add in the obj_info and comments">
+      <created>1656353482183</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1656353482183</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -567,7 +570,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Added information about an entitie's description" />
     <MESSAGE value="Renamed variables that were misleading" />
     <MESSAGE value="Added NDC and Screen position calculations for entity info" />
     <MESSAGE value="Added configurations as project files" />
@@ -592,6 +594,7 @@
     <MESSAGE value="Added position tracking for some errors" />
     <MESSAGE value="Made the grammar more strict" />
     <MESSAGE value="Getting somewhere" />
-    <option name="LAST_COMMIT_MESSAGE" value="Getting somewhere" />
+    <MESSAGE value="By making the parser stricter, it was much easier to write one. No I need to add in the obj_info and comments" />
+    <option name="LAST_COMMIT_MESSAGE" value="By making the parser stricter, it was much easier to write one. No I need to add in the obj_info and comments" />
   </component>
 </project>

@@ -13,6 +13,7 @@ pub mod empty;
 pub mod chain_exact;
 pub mod lookahead;
 pub mod chain_either;
+pub mod chain_optional;
 
 pub trait Parser {
     type Item;
@@ -50,6 +51,14 @@ pub trait Parser {
         R: Parser,
     {
         chain_either::ChainEither::new(self, a, b)
+    }
+
+    fn chain_optional<Q>(self, a: Q) -> chain_optional::ChainOptional<Self, Q>
+    where
+        Self: Sized,
+        Q: Parser,
+    {
+        chain_optional::ChainOptional::new(self, a)
     }
 
     fn map<J, F>(self, func: F) -> map::Map<Self, F>

@@ -235,13 +235,21 @@ pub struct ElementDescriptor {
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone)]
+pub struct CommentDescriptor(pub String);
+
+#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+#[derive(Debug, Clone)]
+pub struct ObjInfoDescriptor(pub String);
+
+#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+#[derive(Debug, Clone)]
 pub struct PlyDescriptor {
     pub format_type: FormatType,
     #[cfg_attr(test, proptest(regex = r"1\.0"))]
     pub format_version: String,
     pub elements: Vec<ElementDescriptor>,
-    pub comments: Vec<String>,
-    pub obj_info: Vec<String>,
+    pub comments: Vec<CommentDescriptor>,
+    pub obj_info: Vec<ObjInfoDescriptor>,
 }
 
 impl Default for PlyDescriptor {
@@ -308,8 +316,8 @@ mod tests {
             format_type: FormatType::Ascii,
             format_version: String::from("1.0"),
             elements: Vec::<ElementDescriptor>::new(),
-            comments: Vec::<String>::new(),
-            obj_info: Vec::<String>::new(),
+            comments: Vec::<CommentDescriptor>::new(),
+            obj_info: Vec::<ObjInfoDescriptor>::new(),
         };
     }
 
