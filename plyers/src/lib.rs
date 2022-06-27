@@ -38,17 +38,17 @@
 //! K -> "uchar" | "ushort" | "uint" | "uint8" | "uint16" | "uint32"
 //!
 
-use std::{
-    path::Path,
-};
+use std::path::Path;
 use std::fs::File;
 use std::io::{BufReader, Read, Seek};
+use either::{Either, Left, Right};
 use crate::error::Error;
+use crate::parser::empty::empty;
 use crate::parser::engram::engram;
 use crate::parser::lookahead::lookahead;
 use crate::parser::Parser;
 use crate::parser::take_while::take_while;
-use crate::types::{DataType};
+use crate::types::{CountType, DataType, ElementDescriptor, ListPropertyDescriptor, PlyDescriptor, PropertyDescriptor};
 
 use self::{
     types::{FormatType, Ply},
@@ -114,28 +114,115 @@ fn ascii_number_parser(data_type: DataType) -> impl Parser<Item = DataValue> + C
 }
 
 pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
+    let comment = engram(b"comment ")
+        .chain(take_while(|b| b != b'\n'))
+        .and_then(|(_, c)| {
+            let c = String::from_utf8(c)?;
+            Ok(c)
+        });
+    let obj_info = engram(b"obj_info ")
+        .chain(take_while(|b| b != b'\n'))
+        .and_then(|(_, o)| {
+            let o = String::from_utf8(o)?;
+            Ok(o)
+        });
     let format = engram(b"format ")
         .chain(take_while(|b| b != b' '))
-        .and_then(|(_, ft)| FormatType::try_from_bytes(&ft).map_err(|e| e.into()))
+        .and_then(|(_, ft)| {
+            let ft = FormatType::try_from_bytes(&ft)?;
+            Ok(ft)
+        })
         .chain(take_while(|b| b != b'\n'))
-        .and_then(|(ft, fv)| String::from_utf8(fv).map(|fv| (ft, fv)).map_err(|e| e.into()));
+        .and_then(|(ft, fv)| {
+            let fv = String::from_utf8(fv)?;
+            Ok((ft, fv))
+        });
 
-    let property = engram(b"property ");
+    let normal_property = engram(b"property ")
+        .chain(take_while(|b| b != b' '))
+        .and_then(|(_, dt)| {
+            let dt = DataType::try_from_bytes(&dt)?;
+            Ok(dt)
+        })
+        .chain(take_while(|b| b != b'\n'))
+        .and_then(|(dt, n)| {
+            let n = String::from_utf8(n)?;
+            Ok(PropertyDescriptor {
+                data_type: dt,
+                name: n,
+            })
+        });
+    let list_property = engram(b"property list ")
+        .chain(take_while(|b| b != b' '))
+        .and_then(|(_, ct)| {
+            let ct = CountType::try_from_bytes(&ct)?;
+            Ok(ct)
+        })
+        .chain(take_while(|b| b != b' '))
+        .and_then(|(ct, dt)| {
+            let dt = DataType::try_from_bytes(&dt)?;
+            Ok((ct, dt))
+        })
+        .chain(take_while(|b| b != b'\n'))
+        .and_then(|((ct, dt), n)| {
+            let n = String::from_utf8(n)?;
+            Ok(ListPropertyDescriptor {
+                count_type: ct,
+                data_type: dt,
+                name: n,
+            })
+        });
+    let normal_properties = empty()
+        .chain_repeat(normal_property, lookahead(b'e'))
+        .map(|(_, np, _)| np);
+    let list_properties = empty()
+        .chain_repeat(list_property, lookahead(b'e'))
+        .map(|(_, lp, _)| lp);
+    let properties = empty()
+        .chain_either(normal_properties, list_properties)
+        .map(|(_, p)| p);
 
     let element = engram(b"element ")
         .chain(take_while(|b| b != b' '))
-        .and_then(|(_, en)| String::from_utf8(en).map_err(|e| e.into()))
+        .and_then(|(_, en)| {
+            let en = String::from_utf8(en)?;
+            Ok(en)
+        })
         .chain(take_while(|b| b != b'\n'))
         .and_then(|(en, ec)| {
             let ec = String::from_utf8(ec)?;
             let ec = ec.parse::<usize>()?;
             Ok((en, ec))
         })
-        .chain_repeat(lookahead(b'e'), property);
+        .chain(properties)
+        .map(|((en, ec), p)| match p {
+            Left(p) => ElementDescriptor {
+                name: en,
+                count: ec,
+                properties: p,
+                list_properties: vec![]
+            },
+            Right(lp) => ElementDescriptor {
+                name: en,
+                count: ec,
+                properties: vec![],
+                list_properties: lp,
+            },
+        });
 
     let header = engram(b"ply\n")
         .chain(format)
-        .chain_repeat( engram(b"end_header\n"), element);
+        .map(|(_, (ft, fv))| (ft, fv))
+        .chain_repeat(element, engram(b"end_header\n"))
+        .map(|((ft, fv), e, _)| PlyDescriptor {
+            format_type: ft,
+            format_version: fv,
+            elements: e,
+            comments: vec![],
+            obj_info: vec![]
+        });
+
+    let r = header.parse(stream)?;
 
     todo!()
 }

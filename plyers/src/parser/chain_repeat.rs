@@ -3,7 +3,7 @@ use std::io::{Read, Seek, SeekFrom};
 use super::Parser;
 use crate::error::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ChainRepeat<P, Q, R> {
     tail: P,
     at_least_once: Q,

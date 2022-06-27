@@ -12,6 +12,7 @@ pub mod chain_repeat;
 pub mod empty;
 pub mod chain_exact;
 pub mod lookahead;
+pub mod chain_either;
 
 pub trait Parser {
     type Item;
@@ -42,6 +43,15 @@ pub trait Parser {
         chain_exact::ChainExact::new(self, repeated, n)
     }
 
+    fn chain_either<Q, R>(self, a: Q, b: R) -> chain_either::ChainEither<Self, Q, R>
+    where
+        Self: Sized,
+        Q: Parser,
+        R: Parser,
+    {
+        chain_either::ChainEither::new(self, a, b)
+    }
+
     fn map<J, F>(self, func: F) -> map::Map<Self, F>
     where
         Self: Sized,
@@ -58,7 +68,7 @@ pub trait Parser {
         and_then::AndThen::new(self, func)
     }
 
-    fn chain_repeat<Q, R>(self, until: R, at_least_once: Q) -> chain_repeat::ChainRepeat<Self, Q, R>
+    fn chain_repeat<Q, R>(self, at_least_once: Q, until: R) -> chain_repeat::ChainRepeat<Self, Q, R>
     where
         Self: Sized,
         Q: Parser + Clone,

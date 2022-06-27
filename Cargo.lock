@@ -1525,8 +1525,8 @@ dependencies = [
 name = "plyers"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "bytemuck",
+ "either",
  "proptest",
  "proptest-derive",
  "thiserror",

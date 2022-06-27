@@ -211,9 +211,17 @@ impl<'a> TryFrom<&'a [u8]> for DataType {
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone)]
-pub enum PropertyDescriptor {
-    Property { data_type: DataType, name: String },
-    ListProperty { count_type: CountType, data_type: DataType, name: String },
+pub struct PropertyDescriptor {
+    pub data_type: DataType,
+    pub name: String,
+}
+
+#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+#[derive(Debug, Clone)]
+pub struct ListPropertyDescriptor {
+    pub count_type: CountType,
+    pub data_type: DataType,
+    pub name: String,
 }
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
@@ -222,6 +230,7 @@ pub struct ElementDescriptor {
     pub name: String,
     pub count: usize,
     pub properties: Vec<PropertyDescriptor>,
+    pub list_properties: Vec<ListPropertyDescriptor>,
 }
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
@@ -310,16 +319,21 @@ mod tests {
             name: String::from("vertex"),
             count: 0usize,
             properties: Vec::<PropertyDescriptor>::new(),
+            list_properties: Vec::<ListPropertyDescriptor>::new(),
         };
     }
 
     #[test]
     fn property_descriptor_has_the_following_structure() {
-        let _ = PropertyDescriptor::Property {
+        let _ = PropertyDescriptor {
             name: String::from("x"),
             data_type: DataType::F32,
         };
-        let _ = PropertyDescriptor::ListProperty {
+    }
+
+    #[test]
+    fn list_property_descriptor_has_the_following_structure() {
+        let _ = ListPropertyDescriptor {
             name: String::from("i"),
             count_type: CountType::U16,
             data_type: DataType::F32,

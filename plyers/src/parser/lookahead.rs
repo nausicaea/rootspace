@@ -1,6 +1,7 @@
 use std::io::{Read, Seek, SeekFrom};
 use crate::{Error, Parser, read_byte};
 
+#[derive(Debug, Clone)]
 pub struct Lookahead {
     token: u8,
 }
