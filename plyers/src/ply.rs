@@ -1,6 +1,5 @@
 use std::io::{Read, Seek};
 use crate::FormatType;
-use crate::parser::one_of::one_of;
 use crate::parser::Parser;
 use crate::parser::take_while::take_while;
 use crate::parser::token::token;

@@ -36,7 +36,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::{engram::engram, one_of::one_of};
+    use crate::parser::{engram::engram};
     use crate::to_reader;
     use super::*;
 
@@ -44,13 +44,13 @@ mod tests {
     fn chain_with_chains_two_parsers() {
         let mut stream = to_reader("hellohello");
 
-        let r = one_of(&[b"goodbye", b"hello"])
+        let r = engram(b"hello")
             .chain_with(|p| engram(p))
             .parse(&mut stream);
 
         match r {
-            Ok((b"hello", ())) => (),
-            other => panic!("Expected Ok((b\"hello\", ())), got: {:?}", other),
+            Ok((b"hello", b"hello")) => (),
+            other => panic!("Expected Ok((b\"hello\", b\"hello\")), got: {:?}", other),
         }
     }
 }

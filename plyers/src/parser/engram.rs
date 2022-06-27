@@ -9,7 +9,7 @@ pub struct Engram<'a> {
 }
 
 impl<'a> Parser for Engram<'a> {
-    type Item = ();
+    type Item = &'a [u8];
 
     fn parse<R>(self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
         let mut index: usize = 0;
@@ -23,7 +23,7 @@ impl<'a> Parser for Engram<'a> {
             index += 1;
 
             if index >= self.pattern.len() {
-                return Ok(());
+                return Ok(self.pattern);
             }
         }
     }
@@ -49,8 +49,8 @@ mod tests {
         let r = engram(b"hello").parse(&mut stream);
 
         match r {
-            Ok(()) => (),
-            other => panic!("Expected Ok(), got: {:?}", other),
+            Ok(b"hello") => (),
+            other => panic!("Expected Ok(b\"hello\"), got: {:?}", other),
         }
     }
 

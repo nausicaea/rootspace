@@ -2,7 +2,7 @@ use std::io::{Read, Seek};
 use super::Parser;
 use crate::error::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Chain<P, Q> {
     a: P,
     b: Q,
@@ -48,8 +48,8 @@ mod tests {
             .parse(&mut stream);
 
         match r {
-            Ok(((), ())) => (),
-            other => panic!("Expected Ok(((), ())), got: {:?}", other),
+            Ok((b"hello", b"world")) => (),
+            other => panic!("Expected Ok((b\"hello\", b\"world\")), got: {:?}", other),
         }
     }
 
@@ -63,8 +63,8 @@ mod tests {
             .parse(&mut stream);
 
         match r {
-            Ok((((), ()), ())) => (),
-            other => panic!("Expected Ok((((), ()), ())), got: {:?}", other),
+            Ok(((b"hello", b", "), b"world")) => (),
+            other => panic!("Expected Ok(((b\"hello\", b\", \"), b\"world\")), got: {:?}", other),
         }
     }
 

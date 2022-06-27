@@ -7,9 +7,15 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added position tracking for some errors">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Made the grammar more strict">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_with.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/chain_with.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/engram.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/engram.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/one_of.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/ply.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/ply.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,7 +75,7 @@
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.Test plyers">
+  <component name="RunManager" selected="Cargo.Test lookahead::tests">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -106,6 +112,23 @@
     </configuration>
     <configuration name="Test glamour" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="test --package glamour" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test lookahead::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package plyers --lib parser::lookahead::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -214,6 +237,7 @@
       <item itemvalue="Cargo.Run Headless" />
       <item itemvalue="Cargo.Test glamour" />
       <item itemvalue="Cargo.Test plyers" />
+      <item itemvalue="Cargo.Test lookahead::tests" />
       <item itemvalue="Cargo.Test parser::one_of::tests::one_of_correclty_parses_data_type" />
       <item itemvalue="Cargo.Test parser::one_of::tests::one_of_matches_longer_patterns_first" />
       <item itemvalue="Cargo.Test parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches" />
@@ -221,6 +245,7 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test lookahead::tests" />
         <item itemvalue="Cargo.Test parser::one_of::tests::one_of_correclty_parses_data_type" />
         <item itemvalue="Cargo.Test parser::one_of::tests::one_of_matches_longer_patterns_first" />
         <item itemvalue="Cargo.Test parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches" />
@@ -229,7 +254,6 @@
     </recent_temporary>
   </component>
   <component name="RustProjectSettings">
-    <option name="runExternalLinterOnTheFly" value="true" />
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
     <option name="version" value="2" />
   </component>
@@ -297,7 +321,7 @@
       <workItem from="1640345264255" duration="1552000" />
       <workItem from="1656142437936" duration="8503000" />
       <workItem from="1656164197250" duration="1424000" />
-      <workItem from="1656194028126" duration="2146000" />
+      <workItem from="1656194028126" duration="8427000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -508,7 +532,14 @@
       <option name="project" value="LOCAL" />
       <updated>1656153548153</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="Made the grammar more strict">
+      <created>1656284066521</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1656284066521</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -527,7 +558,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Removed a temporary variable" />
     <MESSAGE value="Changed a debug call." />
     <MESSAGE value="Added information about an entitie's description" />
     <MESSAGE value="Renamed variables that were misleading" />
@@ -552,6 +582,7 @@
     <MESSAGE value="Removed the old parsing code" />
     <MESSAGE value="Nope. Anyhow not suitable here" />
     <MESSAGE value="Added position tracking for some errors" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added position tracking for some errors" />
+    <MESSAGE value="Made the grammar more strict" />
+    <option name="LAST_COMMIT_MESSAGE" value="Made the grammar more strict" />
   </component>
 </project>

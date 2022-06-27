@@ -45,21 +45,18 @@ use std::fs::File;
 use std::io::{BufReader, Read, Seek};
 use crate::error::Error;
 use crate::parser::engram::engram;
-use crate::parser::one_of::one_of;
+use crate::parser::lookahead::lookahead;
 use crate::parser::Parser;
-use crate::parser::empty::empty;
 use crate::parser::take_while::take_while;
-use crate::types::{DataType, Keyword, KEYWORDS};
-use crate::ply::{ParserProduct, PlyDirective};
+use crate::types::{DataType};
 
 use self::{
-    types::{ElementDescriptor, FormatType, Ply, PlyDescriptor, PropertyDescriptor},
+    types::{FormatType, Ply},
 };
 
 pub mod types;
 pub mod parser;
 pub mod error;
-mod ply;
 
 #[derive(Debug, Clone, Copy)]
 enum DataValue {
@@ -117,119 +114,30 @@ fn ascii_number_parser(data_type: DataType) -> impl Parser<Item = DataValue> + C
 }
 
 pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
-    let directives = engram(b"ply\n")
-        .chain_repeat(
-            engram(b"end_header\n"),
-            one_of(KEYWORDS)
-                .and_then(|kw| Keyword::try_from_bytes(kw).map_err(|e| e.into()))
-                .chain_with(|kw| PlyDirective::new(*kw))
-        )
-        .map(|(_, pds, _)| pds.into_iter().map(|(_, pd)| pd).collect::<Vec<_>>())
-        .parse(stream)?;
+    let format = engram(b"format ")
+        .chain(take_while(|b| b != b' '))
+        .and_then(|(_, ft)| FormatType::try_from_bytes(&ft).map_err(|e| e.into()))
+        .chain(take_while(|b| b != b'\n'))
+        .and_then(|(ft, fv)| String::from_utf8(fv).map(|fv| (ft, fv)).map_err(|e| e.into()));
 
-    let mut ft: Option<FormatType> = None;
-    let mut fv: Option<String> = None;
-    let mut elements: Vec<ElementDescriptor> = vec![];
-    let mut comments: Vec<String> = vec![];
-    let mut obj_info: Vec<String> = vec![];
+    let property = engram(b"property ");
 
-    for directive in directives {
-        match directive {
-            ParserProduct::Format { ft: t, v } => {
-                ft = Some(t);
-                fv = Some(v);
-            },
-            ParserProduct::Element { n, c } => {
-                elements.push(ElementDescriptor {
-                    name: n,
-                    count: c,
-                    properties: vec![],
-                })
-            },
-            ParserProduct::Property { dt, n } => {
-                elements.last_mut()
-                    .map(|e| e.properties.push(PropertyDescriptor::Property {
-                        name: n,
-                        data_type: dt,
-                    }))
-                    .ok_or(Error::UnexpectedProperty)?;
-            },
-            ParserProduct::ListProperty { ct, dt, n } => {
-                elements.last_mut()
-                    .map(|e| e.properties.push(PropertyDescriptor::ListProperty {
-                        name: n,
-                        count_type: ct,
-                        data_type: dt,
-                    }))
-                    .ok_or(Error::UnexpectedListProperty)?;
-            },
-            ParserProduct::Comment(s) => {
-                comments.push(s);
-            },
-            ParserProduct::ObjInfo(s) => {
-                obj_info.push(s);
-            },
-        }
-    }
+    let element = engram(b"element ")
+        .chain(take_while(|b| b != b' '))
+        .and_then(|(_, en)| String::from_utf8(en).map_err(|e| e.into()))
+        .chain(take_while(|b| b != b'\n'))
+        .and_then(|(en, ec)| {
+            let ec = String::from_utf8(ec)?;
+            let ec = ec.parse::<usize>()?;
+            Ok((en, ec))
+        })
+        .chain_repeat(lookahead(b'e'), property);
 
-    let descriptor = PlyDescriptor {
-        format_type: ft.ok_or(Error::MissingFormatType)?,
-        format_version: fv.ok_or(Error::MissingFormatVersion)?,
-        elements,
-        comments,
-        obj_info,
-    };
+    let header = engram(b"ply\n")
+        .chain(format)
+        .chain_repeat( engram(b"end_header\n"), element);
 
-    let mut property_data: Vec<u8> = vec![];
-    let mut list_property_data: Vec<u8> = vec![];
-
-    let ft = descriptor.format_type;
-    for element in &descriptor.elements {
-        for property in &element.properties {
-            match property {
-                PropertyDescriptor::Property { data_type: dt, .. } => {
-                    match ft {
-                        FormatType::Ascii => {
-                            let pd = ascii_number_parser(*dt)
-                                .parse(stream)?;
-
-                            dbg!(pd);
-
-                            property_data.extend_from_slice((&pd).into());
-                        },
-                        _ => todo!(),
-                    }
-                },
-                PropertyDescriptor::ListProperty { data_type: dt, .. } => {
-                    match ft {
-                        FormatType::Ascii => {
-                            let cd = ascii_usize_parser()
-                                .parse(stream)?;
-
-                            let pds = empty()
-                                .chain_exact(
-                                    cd,
-                                    ascii_number_parser(*dt),
-                                )
-                                .map(|(_, pds)| pds)
-                                .parse(stream)?;
-
-                            for pd in pds {
-                                list_property_data.extend_from_slice((&pd).into());
-                            }
-                        },
-                        _ => todo!(),
-                    }
-                },
-            }
-        }
-    }
-
-    Ok(Ply {
-        descriptor,
-        property_data,
-        list_property_data,
-    })
+    todo!()
 }
 
 pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
