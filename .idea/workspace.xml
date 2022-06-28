@@ -7,7 +7,7 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added a repeat parser that repeats by trying without a terminator">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="The parser is now complete, but error handling is bad">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/Cargo.toml" afterDir="false" />
@@ -67,7 +67,7 @@
     "WebServerToolWindowFactoryState": "true",
     "last_opened_file_path": "/Users/young0000/Crypt/Development/rootspace/plyers/tests",
     "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "settings.editor.selected.configurable": "vcs.Git"
+    "settings.editor.selected.configurable": "preferences.keymap"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -330,7 +330,7 @@
       <workItem from="1656194028126" duration="8427000" />
       <workItem from="1656324208398" duration="8733000" />
       <workItem from="1656394949728" duration="7823000" />
-      <workItem from="1656448015908" duration="4421000" />
+      <workItem from="1656448015908" duration="4549000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
