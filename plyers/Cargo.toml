@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0"
 either = "1.0"
-bytemuck = "1.9.1"
 
 [dev-dependencies]
 proptest = "1.0.0"

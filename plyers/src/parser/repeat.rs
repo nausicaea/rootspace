@@ -4,30 +4,23 @@ use super::Parser;
 use crate::error::Error;
 
 #[derive(Debug, Clone)]
-pub struct Repeat<P, Q> {
-    tail: P,
-    at_least_once: Q,
+pub struct Repeat<P> {
+    at_least_once: P,
 }
 
-impl<P, Q> Repeat<P, Q> {
-    pub fn new(tail: P, at_least_once: Q) -> Self {
-        Repeat {
-            tail,
-            at_least_once, 
-        }
+pub fn repeat<P>(at_least_once: P) -> Repeat<P> {
+    Repeat {
+        at_least_once,
     }
 }
 
-impl<P, Q> Parser for Repeat<P, Q>
+impl<P> Parser for Repeat<P>
 where
-    P: Parser,
-    Q: Parser + Clone,
+    P: Parser + Clone,
 {
-    type Item = (P::Item, Vec<Q::Item>);
+    type Item = Vec<P::Item>;
 
     fn parse<S>(self, r: &mut S) -> Result<Self::Item, Error> where Self:Sized, S: Read + Seek, {
-        let tail_p = self.tail.parse(r)?;
-
         let mut at_least_once_ps = vec![];
 
         loop {
@@ -39,7 +32,7 @@ where
                 },
                 Err(_) => {
                     let _ = r.seek(SeekFrom::Start(position))?;
-                    return Ok((tail_p, at_least_once_ps));
+                    return Ok(at_least_once_ps);
                 },
             }
         }

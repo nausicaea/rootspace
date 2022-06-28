@@ -41,13 +41,15 @@
 use std::path::Path;
 use std::fs::File;
 use std::io::{BufReader, Read, Seek};
-use either::{Either, Left, Right};
+use parser::bytes::Bytes;
+use parser::{be_count, be_number, le_count, le_number};
 use crate::error::Error;
 use crate::parser::empty::empty;
 use crate::parser::engram::engram;
 use crate::parser::lookahead::lookahead;
-use crate::parser::optional::optional;
 use crate::parser::Parser;
+use crate::parser::repeat_exact::repeat_exact;
+use crate::parser::repeat_until::repeat_until;
 use crate::parser::take_while::take_while;
 use crate::types::{CommentDescriptor, CountType, DataType, ElementDescriptor, ListPropertyDescriptor, ObjInfoDescriptor, PlyDescriptor, PropertyDescriptor};
 
@@ -58,184 +60,69 @@ use self::{
 pub mod types;
 pub mod parser;
 pub mod error;
-
-#[derive(Debug, Clone, Copy)]
-enum DataValue {
-    U8(u8),
-    I8(i8),
-    U16(u16),
-    I16(i16),
-    U32(u32),
-    I32(i32),
-    F32(f32),
-    F64(f64),
-}
-
-impl<'a> Into<&'a [u8]> for &'a DataValue {
-    fn into(self) -> &'a [u8] {
-        match self {
-            DataValue::U8(dv) => bytemuck::bytes_of(dv),
-            DataValue::I8(dv) => bytemuck::bytes_of(dv),
-            DataValue::U16(dv) => bytemuck::bytes_of(dv),
-            DataValue::I16(dv) => bytemuck::bytes_of(dv),
-            DataValue::U32(dv) => bytemuck::bytes_of(dv),
-            DataValue::I32(dv) => bytemuck::bytes_of(dv),
-            DataValue::F32(dv) => bytemuck::bytes_of(dv),
-            DataValue::F64(dv) => bytemuck::bytes_of(dv),
-        }
-    }
-}
-
-fn ascii_usize_parser() -> impl Parser<Item = usize> {
-    take_while(|b| b != b' ')
-        .and_then(|cd| {
-            String::from_utf8(cd)
-                .map_err(|e| e.into())
-                .and_then(|cd| cd.parse::<usize>().map_err(|e| e.into()))
-        })
-}
-
-fn ascii_number_parser(data_type: DataType) -> impl Parser<Item = DataValue> + Clone {
-    take_while(|b| b != b' ' && b != b'\n')
-        .and_then(move |pd| {
-            let pd = String::from_utf8(pd)?;
-            let pd = match data_type {
-                DataType::U8 => pd.parse::<u8>().map(|pd| DataValue::U8(pd))?,
-                DataType::I8 => pd.parse::<i8>().map(|pd| DataValue::I8(pd))?,
-                DataType::U16 => pd.parse::<u16>().map(|pd| DataValue::U16(pd))?,
-                DataType::I16 => pd.parse::<i16>().map(|pd| DataValue::I16(pd))?,
-                DataType::U32 => pd.parse::<u32>().map(|pd| DataValue::U32(pd))?,
-                DataType::I32 => pd.parse::<i32>().map(|pd| DataValue::I32(pd))?,
-                DataType::F32 => pd.parse::<f32>().map(|pd| DataValue::F32(pd))?,
-                DataType::F64 => pd.parse::<f64>().map(|pd| DataValue::F64(pd))?,
-            };
-
-            Ok(pd)
-        })
-}
+pub mod ply;
 
 pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
-    let comment = engram(b"comment ")
-        .chain(take_while(|b| b != b'\n'))
-        .and_then(|(_, c)| {
-            let c = String::from_utf8(c)?;
-            Ok(CommentDescriptor(c))
-        });
-    let obj_info = engram(b"obj_info ")
-        .chain(take_while(|b| b != b'\n'))
-        .and_then(|(_, o)| {
-            let o = String::from_utf8(o)?;
-            Ok(ObjInfoDescriptor(o))
-        });
-    let comment_or_obj_info = empty()
-        .chain_either(comment, obj_info);
-    let format = empty()
-        .chain(optional(comment_or_obj_info.clone()))
-        .chain(engram(b"format "))
-        .chain(take_while(|b| b != b' '))
-        .and_then(|(_, ft)| {
-            let ft = FormatType::try_from_bytes(&ft)?;
-            Ok(ft)
-        })
-        .chain(take_while(|b| b != b'\n'))
-        .and_then(|(ft, fv)| {
-            let fv = String::from_utf8(fv)?;
-            Ok((ft, fv))
-        });
+    let descriptor = ply::header().parse(stream)?;
+    let mut property_data: Vec<u8> = Vec::new();
+    let mut list_property_data: Vec<u8> = Vec::new();
 
-    let normal_property = empty()
-        .chain(optional(comment_or_obj_info.clone()))
-        .chain(engram(b"property "))
-        .chain(take_while(|b| b != b' '))
-        .and_then(|(_, dt)| {
-            let dt = DataType::try_from_bytes(&dt)?;
-            Ok(dt)
-        })
-        .chain(take_while(|b| b != b'\n'))
-        .and_then(|(dt, n)| {
-            let n = String::from_utf8(n)?;
-            Ok(PropertyDescriptor {
-                data_type: dt,
-                name: n,
-            })
-        });
-    let list_property = empty()
-        .chain(optional(comment_or_obj_info.clone()))
-        .chain(engram(b"property list "))
-        .chain(take_while(|b| b != b' '))
-        .and_then(|(_, ct)| {
-            let ct = CountType::try_from_bytes(&ct)?;
-            Ok(ct)
-        })
-        .chain(take_while(|b| b != b' '))
-        .and_then(|(ct, dt)| {
-            let dt = DataType::try_from_bytes(&dt)?;
-            Ok((ct, dt))
-        })
-        .chain(take_while(|b| b != b'\n'))
-        .and_then(|((ct, dt), n)| {
-            let n = String::from_utf8(n)?;
-            Ok(ListPropertyDescriptor {
-                count_type: ct,
-                data_type: dt,
-                name: n,
-            })
-        });
-    let normal_properties = empty()
-        .repeat_until(normal_property, lookahead(b'e'))
-        .map(|(_, np, _)| np);
-    let list_properties = empty()
-        .repeat_until(list_property, lookahead(b'e'))
-        .map(|(_, lp, _)| lp);
-    let properties = empty()
-        .chain_either(normal_properties, list_properties)
-        .map(|(_, p)| p);
+    match descriptor.format_type {
+        FormatType::Ascii => {
+            for element in &descriptor.elements {
+                for property in &element.properties {
+                    let property_value = ply::ascii_number_parser(property.data_type).parse(stream)?;
+                    property_data.extend(property_value);
+                }
 
-    let element = empty()
-        .chain(optional(comment_or_obj_info.clone()))
-        .chain(engram(b"element "))
-        .chain(take_while(|b| b != b' '))
-        .and_then(|(_, en)| {
-            let en = String::from_utf8(en)?;
-            Ok(en)
-        })
-        .chain(take_while(|b| b != b'\n'))
-        .and_then(|(en, ec)| {
-            let ec = String::from_utf8(ec)?;
-            let ec = ec.parse::<usize>()?;
-            Ok((en, ec))
-        })
-        .chain(properties)
-        .map(|((en, ec), p)| match p {
-            Left(p) => ElementDescriptor {
-                name: en,
-                count: ec,
-                properties: p,
-                list_properties: vec![]
-            },
-            Right(lp) => ElementDescriptor {
-                name: en,
-                count: ec,
-                properties: vec![],
-                list_properties: lp,
-            },
-        });
+                for list_property in &element.list_properties {
+                    let count = ply::ascii_usize_parser().parse(stream)?;
+                    let property_values = repeat_exact(ply::ascii_number_parser(list_property.data_type), count).parse(stream)?;
+                    for property_value in property_values {
+                        list_property_data.extend(property_value);
+                    }
+                }
+            }
+        },
+        FormatType::BinaryLittleEndian => {
+            for element in &descriptor.elements {
+                for property in &element.properties {
+                    let property_value = le_number::le_number(property.data_type).parse(stream)?;
+                    property_data.extend(property_value);
+                }
 
-    let header = engram(b"ply\n")
-        .chain(format)
-        .map(|(_, (ft, fv))| (ft, fv))
-        .repeat_until(element, engram(b"end_header\n"))
-        .map(|((ft, fv), e, _)| PlyDescriptor {
-            format_type: ft,
-            format_version: fv,
-            elements: e,
-            comments: vec![],
-            obj_info: vec![]
-        });
+                for list_property in &element.list_properties {
+                    let count = le_count::le_count(list_property.count_type).parse(stream)?;
+                    let property_values = repeat_exact(le_number::le_number(list_property.data_type), count).parse(stream)?;
+                    for property_value in property_values {
+                        list_property_data.extend(property_value);
+                    }
+                }
+            }
+        },
+        FormatType::BinaryBigEndian => {
+            for element in &descriptor.elements {
+                for property in &element.properties {
+                    let property_value = be_number::be_number(property.data_type).parse(stream)?;
+                    property_data.extend(property_value);
+                }
 
-    let r = header.parse(stream)?;
+                for list_property in &element.list_properties {
+                    let count = be_count::be_count(list_property.count_type).parse(stream)?;
+                    let property_values = repeat_exact(be_number::be_number(list_property.data_type), count).parse(stream)?;
+                    for property_value in property_values {
+                        list_property_data.extend(property_value);
+                    }
+                }
+            }
+        },
+    }
 
-    todo!()
+    Ok(Ply {
+        descriptor,
+        property_data,
+        list_property_data,
+    })
 }
 
 pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
@@ -332,7 +219,7 @@ mod tests {
 
                 assert_eq!(
                     p.property_data.len(),
-                    3,
+                    4,
                     "Property data length is not three, but {}",
                     p.property_data.len()
                 );
@@ -343,9 +230,28 @@ mod tests {
                     p.list_property_data.len()
                 );
 
-                let pdat = std::str::from_utf8(&p.property_data).unwrap();
-                assert_eq!(pdat, "1.0");
+                let pdat = f32::from_ne_bytes(p.property_data.try_into().unwrap());
+                assert_eq!(pdat, 1.0f32);
             }
         }
+    }
+
+    #[test]
+    fn load_ply_accepts_comments_and_obj_info_almost_anywhere_in_the_header() {
+        let p: Ply = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/heavy_comments_ascii.ply")).unwrap();
+        dbg!(&p.descriptor.comments);
+        assert_eq!(p.descriptor.comments.len(), 6);
+        dbg!(&p.descriptor.obj_info);
+        assert_eq!(p.descriptor.obj_info.len(), 4);
+    }
+
+    #[test]
+    fn load_ply_succeeds_in_loading_a_large_ascii_file() {
+        let p: Ply = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/bun_zipper.ply")).unwrap();
+    }
+
+    #[test]
+    fn load_ply_succeeds_in_loading_a_large_binary_file() {
+        let p: Ply = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/surfaceAB.ply")).unwrap();
     }
 }

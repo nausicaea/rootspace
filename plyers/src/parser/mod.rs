@@ -14,25 +14,37 @@ pub mod lookahead;
 pub mod chain_either;
 pub mod optional;
 pub mod repeat;
+pub mod bytes;
+pub mod le_count;
+pub mod be_count;
+pub mod le_number;
+pub mod be_number;
 
 pub trait Parser {
     type Item;
 
     fn parse<R>(self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek;
 
+    fn repeated(self) -> repeat::Repeat<Self>
+    where
+        Self: Sized,
+    {
+        repeat::repeat(self)
+    }
+
+    fn optional(self) -> optional::Optional<Self>
+    where
+        Self: Sized,
+    {
+        optional::optional(self)
+    }
+
     fn chain<P>(self, second: P) -> chain::Chain<Self, P>
     where
         Self: Sized,
+        P: Parser,
     {
         chain::Chain::new(self, second)
-    }
-
-    fn repeat_exact<Q>(self, n: usize, repeated: Q) -> repeat_exact::RepeatExact<Self, Q>
-    where
-        Self: Sized,
-        Q: Parser + Clone,
-    {
-        repeat_exact::RepeatExact::new(self, repeated, n)
     }
 
     fn chain_either<Q, R>(self, a: Q, b: R) -> chain_either::ChainEither<Self, Q, R>
@@ -58,14 +70,5 @@ pub trait Parser {
         F: Fn(Self::Item) -> Result<J, Error>,
     {
         and_then::AndThen::new(self, func)
-    }
-
-    fn repeat_until<Q, R>(self, at_least_once: Q, until: R) -> repeat_until::RepeatUntil<Self, Q, R>
-    where
-        Self: Sized,
-        Q: Parser + Clone,
-        R: Parser + Clone,
-    {
-        repeat_until::RepeatUntil::new(self, at_least_once, until)
     }
 }

@@ -248,8 +248,8 @@ pub struct PlyDescriptor {
     #[cfg_attr(test, proptest(regex = r"1\.0"))]
     pub format_version: String,
     pub elements: Vec<ElementDescriptor>,
-    pub comments: Vec<CommentDescriptor>,
-    pub obj_info: Vec<ObjInfoDescriptor>,
+    pub comments: Vec<String>,
+    pub obj_info: Vec<String>,
 }
 
 impl Default for PlyDescriptor {
@@ -316,8 +316,8 @@ mod tests {
             format_type: FormatType::Ascii,
             format_version: String::from("1.0"),
             elements: Vec::<ElementDescriptor>::new(),
-            comments: Vec::<CommentDescriptor>::new(),
-            obj_info: Vec::<ObjInfoDescriptor>::new(),
+            comments: Vec::<String>::new(),
+            obj_info: Vec::<String>::new(),
         };
     }
 

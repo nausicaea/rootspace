@@ -7,14 +7,18 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="I am getting somewhere, but now there are too many chains">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added a repeat parser that repeats by trying without a terminator">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_exact.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/repeat_exact.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_optional.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/repeat_until.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_with.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/repeat.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat_exact.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/repeat_exact.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat_until.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/repeat_until.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/ply.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/ply.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/minimal_ascii.ply" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/tests/minimal_ascii.ply" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,18 +60,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/young0000/Crypt/Development/rootspace/plyers/src/parser&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;language.rust.cargo.check&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "true",
+    "last_opened_file_path": "/Users/young0000/Crypt/Development/rootspace/plyers/tests",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "settings.editor.selected.configurable": "vcs.Git"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/plyers/tests" />
       <recent name="$PROJECT_DIR$/plyers/src/parser" />
       <recent name="$PROJECT_DIR$/glamour/src" />
     </key>
@@ -75,7 +80,7 @@
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.Test lookahead::tests">
+  <component name="RunManager" selected="Cargo.Test plyers">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -324,6 +329,8 @@
       <workItem from="1656164197250" duration="1424000" />
       <workItem from="1656194028126" duration="8427000" />
       <workItem from="1656324208398" duration="8733000" />
+      <workItem from="1656394949728" duration="7823000" />
+      <workItem from="1656448015908" duration="4421000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -562,7 +569,14 @@
       <option name="project" value="LOCAL" />
       <updated>1656362946482</updated>
     </task>
-    <option name="localTasksCounter" value="39" />
+    <task id="LOCAL-00039" summary="Added a repeat parser that repeats by trying without a terminator">
+      <created>1656395041799</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1656395041799</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -581,7 +595,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Added NDC and Screen position calculations for entity info" />
     <MESSAGE value="Added configurations as project files" />
     <MESSAGE value="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state." />
     <MESSAGE value="The asset database serializes via a proxy format now, that omits unnecessary data." />
@@ -606,6 +619,7 @@
     <MESSAGE value="Getting somewhere" />
     <MESSAGE value="By making the parser stricter, it was much easier to write one. No I need to add in the obj_info and comments" />
     <MESSAGE value="I am getting somewhere, but now there are too many chains" />
-    <option name="LAST_COMMIT_MESSAGE" value="I am getting somewhere, but now there are too many chains" />
+    <MESSAGE value="Added a repeat parser that repeats by trying without a terminator" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added a repeat parser that repeats by trying without a terminator" />
   </component>
 </project>
