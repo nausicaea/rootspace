@@ -7,11 +7,14 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="By making the parser stricter, it was much easier to write one. No I need to add in the obj_info and comments">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="I am getting somewhere, but now there are too many chains">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_exact.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/repeat_exact.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_optional.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/repeat_until.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_with.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,13 +61,14 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/young0000/Crypt/Development/rootspace&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/young0000/Crypt/Development/rootspace/plyers/src/parser&quot;,
     &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;language.rust.cargo.check&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/plyers/src/parser" />
       <recent name="$PROJECT_DIR$/glamour/src" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
@@ -319,7 +323,7 @@
       <workItem from="1656142437936" duration="8503000" />
       <workItem from="1656164197250" duration="1424000" />
       <workItem from="1656194028126" duration="8427000" />
-      <workItem from="1656324208398" duration="7458000" />
+      <workItem from="1656324208398" duration="8733000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -551,7 +555,14 @@
       <option name="project" value="LOCAL" />
       <updated>1656353482183</updated>
     </task>
-    <option name="localTasksCounter" value="38" />
+    <task id="LOCAL-00038" summary="I am getting somewhere, but now there are too many chains">
+      <created>1656362946482</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1656362946482</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -570,7 +581,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Renamed variables that were misleading" />
     <MESSAGE value="Added NDC and Screen position calculations for entity info" />
     <MESSAGE value="Added configurations as project files" />
     <MESSAGE value="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state." />
@@ -595,6 +605,7 @@
     <MESSAGE value="Made the grammar more strict" />
     <MESSAGE value="Getting somewhere" />
     <MESSAGE value="By making the parser stricter, it was much easier to write one. No I need to add in the obj_info and comments" />
-    <option name="LAST_COMMIT_MESSAGE" value="By making the parser stricter, it was much easier to write one. No I need to add in the obj_info and comments" />
+    <MESSAGE value="I am getting somewhere, but now there are too many chains" />
+    <option name="LAST_COMMIT_MESSAGE" value="I am getting somewhere, but now there are too many chains" />
   </component>
 </project>

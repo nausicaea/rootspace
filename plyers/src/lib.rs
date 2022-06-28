@@ -46,6 +46,7 @@ use crate::error::Error;
 use crate::parser::empty::empty;
 use crate::parser::engram::engram;
 use crate::parser::lookahead::lookahead;
+use crate::parser::optional::optional;
 use crate::parser::Parser;
 use crate::parser::take_while::take_while;
 use crate::types::{CommentDescriptor, CountType, DataType, ElementDescriptor, ListPropertyDescriptor, ObjInfoDescriptor, PlyDescriptor, PropertyDescriptor};
@@ -128,7 +129,9 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
         });
     let comment_or_obj_info = empty()
         .chain_either(comment, obj_info);
-    let format = engram(b"format ")
+    let format = empty()
+        .chain(optional(comment_or_obj_info.clone()))
+        .chain(engram(b"format "))
         .chain(take_while(|b| b != b' '))
         .and_then(|(_, ft)| {
             let ft = FormatType::try_from_bytes(&ft)?;
@@ -141,7 +144,7 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
         });
 
     let normal_property = empty()
-        .chain_optional(comment_or_obj_info.clone())
+        .chain(optional(comment_or_obj_info.clone()))
         .chain(engram(b"property "))
         .chain(take_while(|b| b != b' '))
         .and_then(|(_, dt)| {
@@ -157,7 +160,7 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
             })
         });
     let list_property = empty()
-        .chain_optional(comment_or_obj_info.clone())
+        .chain(optional(comment_or_obj_info.clone()))
         .chain(engram(b"property list "))
         .chain(take_while(|b| b != b' '))
         .and_then(|(_, ct)| {
@@ -179,17 +182,17 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
             })
         });
     let normal_properties = empty()
-        .chain_repeat(normal_property, lookahead(b'e'))
+        .repeat_until(normal_property, lookahead(b'e'))
         .map(|(_, np, _)| np);
     let list_properties = empty()
-        .chain_repeat(list_property, lookahead(b'e'))
+        .repeat_until(list_property, lookahead(b'e'))
         .map(|(_, lp, _)| lp);
     let properties = empty()
         .chain_either(normal_properties, list_properties)
         .map(|(_, p)| p);
 
     let element = empty()
-        .chain_optional(comment_or_obj_info.clone())
+        .chain(optional(comment_or_obj_info.clone()))
         .chain(engram(b"element "))
         .chain(take_while(|b| b != b' '))
         .and_then(|(_, en)| {
@@ -219,10 +222,9 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
         });
 
     let header = engram(b"ply\n")
-        .chain_optional(comment_or_obj_info.clone())
         .chain(format)
         .map(|(_, (ft, fv))| (ft, fv))
-        .chain_repeat(element, engram(b"end_header\n"))
+        .repeat_until(element, engram(b"end_header\n"))
         .map(|((ft, fv), e, _)| PlyDescriptor {
             format_type: ft,
             format_version: fv,

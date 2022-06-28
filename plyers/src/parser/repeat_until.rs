@@ -4,15 +4,15 @@ use super::Parser;
 use crate::error::Error;
 
 #[derive(Debug, Clone)]
-pub struct ChainRepeat<P, Q, R> {
+pub struct RepeatUntil<P, Q, R> {
     tail: P,
     at_least_once: Q,
     until: R,
 }
 
-impl<P, Q, R> ChainRepeat<P, Q, R> {
+impl<P, Q, R> RepeatUntil<P, Q, R> {
     pub fn new(tail: P, at_least_once: Q, until: R) -> Self {
-        ChainRepeat { 
+        RepeatUntil {
             tail,
             at_least_once, 
             until,
@@ -20,7 +20,7 @@ impl<P, Q, R> ChainRepeat<P, Q, R> {
     }
 }
 
-impl<P, Q, R> Parser for ChainRepeat<P, Q, R>
+impl<P, Q, R> Parser for RepeatUntil<P, Q, R>
 where
     P: Parser,
     Q: Parser + Clone,
@@ -34,7 +34,8 @@ where
         let mut at_least_once_ps = vec![];
 
         let until_p = loop {
-            at_least_once_ps.push(self.at_least_once.clone().parse(r)?);
+            let alop = self.at_least_once.clone().parse(r)?;
+            at_least_once_ps.push(alop);
 
             let position = r.stream_position()?;
 

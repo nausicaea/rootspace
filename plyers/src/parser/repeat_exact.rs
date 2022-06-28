@@ -1,19 +1,19 @@
 use std::io::{Read, Seek};
 use crate::{Error, Parser};
 
-pub struct ChainExact<P, Q> {
+pub struct RepeatExact<P, Q> {
     tail: P,
     repeated: Q,
     n: usize,
 }
 
-impl<P, Q> ChainExact<P, Q> {
+impl<P, Q> RepeatExact<P, Q> {
     pub fn new(tail: P, repeated: Q, n: usize) -> Self {
-        ChainExact { tail, repeated, n }
+        RepeatExact { tail, repeated, n }
     }
 }
 
-impl<P, Q> Parser for ChainExact<P, Q>
+impl<P, Q> Parser for RepeatExact<P, Q>
 where
     P: Parser,
     Q: Parser + Clone,
