@@ -13,7 +13,7 @@ pub const DATA_TYPES: &'static [&'static [u8]] = &[
 ];
 
 #[derive(Debug, Clone, thiserror::Error)]
-#[error("expected one byte sequence of {}, but received {}", .expected, .received)]
+#[error("expected one byte sequence of {:?}, but received {:?}", .expected, .received)]
 pub struct FromBytesError {
     received: Vec<u8>,
     expected: &'static [&'static [u8]],
