@@ -1,18 +1,15 @@
 use std::borrow::Cow;
-use pollster::FutureExt;
 
 use anyhow::{anyhow, Context};
 use ecs::{Resource, SerializationName};
-use file_manipulation::{FilePathBuf, FileError};
-use try_default::TryDefault;
-
+use file_manipulation::{FileError, FilePathBuf};
+use pollster::FutureExt;
 use serde::{
-    Serialize,
-    Deserialize,
+    de::{Deserializer, Error as DeError},
     ser::Serializer,
-    de::{Error as DeError, Deserializer},
+    Deserialize, Serialize,
 };
-
+use try_default::TryDefault;
 use wgpu;
 
 #[derive(Debug)]
@@ -42,7 +39,7 @@ impl SerializationName for Graphics {}
 impl Serialize for Graphics {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer 
+        S: Serializer,
     {
         self.builder.serialize(serializer)
     }
@@ -101,7 +98,8 @@ impl GraphicsBuilder {
     }
 
     pub fn build(self) -> Result<Graphics, anyhow::Error> {
-        let shader_data = self.shader
+        let shader_data = self
+            .shader
             .as_ref()
             .ok_or(anyhow!("You must provide a shader with GraphicsBuilder::with_shader"))?;
 
@@ -128,16 +126,18 @@ impl GraphicsBuilder {
             .block_on()
             .context("Unable to retrieve device and queue")?;
 
-        let pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Pipeline Layout"),
-                bind_group_layouts: &[todo!()],
-                push_constant_ranges: &[],
-            });
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("Pipeline Layout"),
+            bind_group_layouts: &[todo!()],
+            push_constant_ranges: &[],
+        });
 
         let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
-            source: shader_data.source.to_shader_source().context("Cannot load shader data")?,
+            source: shader_data
+                .source
+                .to_shader_source()
+                .context("Cannot load shader data")?,
         });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -172,7 +172,10 @@ impl GraphicsBuilder {
         });
 
         Ok(Graphics {
-            builder: self, device, queue, render_pipeline,
+            builder: self,
+            device,
+            queue,
+            render_pipeline,
         })
     }
 }
@@ -223,17 +226,13 @@ impl<'a> TryInto<wgpu::ShaderSource<'a>> for &'a ShaderSource {
                 let data = fp.read_to_string()?;
                 Ok(wgpu::ShaderSource::Wgsl(Cow::from(data)))
             }
-            ShaderSource::WgslRaw(d) => {
-                Ok(wgpu::ShaderSource::Wgsl(Cow::from(d)))
-            }
+            ShaderSource::WgslRaw(d) => Ok(wgpu::ShaderSource::Wgsl(Cow::from(d))),
             #[cfg(feature = "spirv")]
             ShaderSource::SpirV(_) => {
                 todo!()
             }
             #[cfg(feature = "spirv")]
-            ShaderSource::SpirVRaw(ref d) => {
-                Ok(wgpu::util::make_spirv(d))
-            }
+            ShaderSource::SpirVRaw(ref d) => Ok(wgpu::util::make_spirv(d)),
         }
     }
 }

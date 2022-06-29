@@ -169,9 +169,7 @@ impl<B> ComponentsCommand<B> {
             .ok_or(Error::EntityNotFound(index))?;
 
         if create {
-            res.borrow_components_mut::<Model>()
-                .entry(entity)
-                .or_default();
+            res.borrow_components_mut::<Model>().entry(entity).or_default();
         }
 
         let models = res.borrow_components::<Model>();

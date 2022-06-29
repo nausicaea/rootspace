@@ -1,6 +1,6 @@
-use num_traits::{Zero, One};
-use super::{Mat, Vec_};
-use super::vec4::Vec4;
+use num_traits::{One, Zero};
+
+use super::{vec4::Vec4, Mat, Vec_};
 
 /// Vector of 3 dimensions, interpreted as column
 pub type Vec3<R> = Vec_<R, 3>;
@@ -62,5 +62,4 @@ mod tests {
         assert_eq!(v.y(), 2.0f32);
         assert_eq!(v.z(), 3.0f32);
     }
-
 }

@@ -1,15 +1,18 @@
-use num_traits::{Zero, One, Float, NumAssign, Inv};
-use crate::mat::{Vec3, Vec4, Mat4};
-use crate::quat::Quat;
-use crate::ops::dot::Dot;
-use crate::ops::norm::Norm;
-use crate::ops::mul_elem::MulElem;
-use crate::ops::inv_elem::InvElem;
-use std::iter::{Sum, Product};
-use std::ops::{Mul, Add};
-use forward_ref::forward_ref_binop;
-use crate::unit::Unit;
+use std::{
+    iter::{Product, Sum},
+    ops::{Add, Mul},
+};
+
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use forward_ref::forward_ref_binop;
+use num_traits::{Float, Inv, NumAssign, One, Zero};
+
+use crate::{
+    mat::{Mat4, Vec3, Vec4},
+    ops::{dot::Dot, inv_elem::InvElem, mul_elem::MulElem, norm::Norm},
+    quat::Quat,
+    unit::Unit,
+};
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
@@ -32,7 +35,7 @@ impl<R> Affine<R> {
     }
 }
 
-impl<R> Affine<R> 
+impl<R> Affine<R>
 where
     R: Float,
 {
@@ -54,7 +57,7 @@ where
     }
 }
 
-impl<'a, R> Mul<&'a Vec4<R>> for &'a Affine<R> 
+impl<'a, R> Mul<&'a Vec4<R>> for &'a Affine<R>
 where
     R: Float,
 {
@@ -65,7 +68,7 @@ where
     }
 }
 
-impl<'a, R> Dot<&'a Vec4<R>> for &'a Affine<R> 
+impl<'a, R> Dot<&'a Vec4<R>> for &'a Affine<R>
 where
     R: Float,
 {
@@ -77,7 +80,7 @@ where
         let rotated = self.o.as_ref() * &scaled;
         let t = Vec4::new(self.t.x(), self.t.y(), self.t.z(), R::zero());
         let translated = t + rotated;
-        
+
         translated
     }
 }
@@ -114,7 +117,7 @@ where
 forward_ref_binop!(impl<R: Float> Dot, dot for Affine<R>, Affine<R>, Affine<R>);
 forward_ref_binop!(impl<R: Float> Mul, mul for Affine<R>, Affine<R>, Affine<R>);
 
-impl<R> Product for Affine<R> 
+impl<R> Product for Affine<R>
 where
     R: Float,
 {
@@ -141,7 +144,7 @@ where
     }
 }
 
-impl<R> From<Affine<R>> for Mat4<R> 
+impl<R> From<Affine<R>> for Mat4<R>
 where
     R: Float + NumAssign,
 {
@@ -150,7 +153,7 @@ where
     }
 }
 
-impl<'a, R> From<&'a Affine<R>> for Mat4<R> 
+impl<'a, R> From<&'a Affine<R>> for Mat4<R>
 where
     R: Float + NumAssign,
 {
@@ -166,7 +169,7 @@ where
     }
 }
 
-impl<R> TryFrom<Mat4<R>> for Affine<R> 
+impl<R> TryFrom<Mat4<R>> for Affine<R>
 where
     R: Copy + One + Zero + NumAssign + Float + Sum + std::fmt::Debug,
 {
@@ -175,11 +178,7 @@ where
     fn try_from(v: Mat4<R>) -> Result<Self, Self::Error> {
         let t: Vec3<R> = v.subset::<3, 1>(0, 3);
 
-        let s = Vec3::new(
-            v.col(0).norm(),
-            v.col(1).norm(),
-            v.col(2).norm(),
-        );
+        let s = Vec3::new(v.col(0).norm(), v.col(1).norm(), v.col(2).norm());
 
         let mut rot_m: Mat4<R> = v.clone();
         rot_m[(0, 0)] /= s[0];
@@ -201,9 +200,7 @@ where
 
         let o: Unit<Quat<R>> = Unit::from(Quat::from(rot_m));
 
-        Ok(Affine {
-            t, o, s,
-        })
+        Ok(Affine { t, o, s })
     }
 }
 
@@ -231,14 +228,17 @@ impl<R> AffineBuilder<R> {
     }
 }
 
-impl<R> AffineBuilder<R> 
+impl<R> AffineBuilder<R>
 where
     R: Float,
 {
     pub fn build(self) -> Affine<R> {
         Affine {
             t: self.t.unwrap_or_else(Vec3::zero),
-            o: self.o.map(|o| Unit::from(o)).unwrap_or_else(|| Unit::from(Quat::identity())),
+            o: self
+                .o
+                .map(|o| Unit::from(o))
+                .unwrap_or_else(|| Unit::from(Quat::identity())),
             s: self.s.unwrap_or_else(Vec3::one),
         }
     }
@@ -266,9 +266,9 @@ where
     }
 
     fn abs_diff_eq(&self, rhs: &Self, epsilon: R::Epsilon) -> bool {
-        self.t.abs_diff_eq(&rhs.t, epsilon) &&
-            self.o.abs_diff_eq(&rhs.o, epsilon) &&
-            self.s.abs_diff_eq(&rhs.s, epsilon)
+        self.t.abs_diff_eq(&rhs.t, epsilon)
+            && self.o.abs_diff_eq(&rhs.o, epsilon)
+            && self.s.abs_diff_eq(&rhs.s, epsilon)
     }
 }
 
@@ -282,9 +282,9 @@ where
     }
 
     fn relative_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
-        self.t.relative_eq(&rhs.t, epsilon, max_relative) &&
-            self.o.relative_eq(&rhs.o, epsilon, max_relative) &&
-            self.s.relative_eq(&rhs.s, epsilon, max_relative)
+        self.t.relative_eq(&rhs.t, epsilon, max_relative)
+            && self.o.relative_eq(&rhs.o, epsilon, max_relative)
+            && self.s.relative_eq(&rhs.s, epsilon, max_relative)
     }
 }
 
@@ -298,16 +298,17 @@ where
     }
 
     fn ulps_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_ulps: u32) -> bool {
-        self.t.ulps_eq(&rhs.t, epsilon, max_ulps) &&
-            self.o.ulps_eq(&rhs.o, epsilon, max_ulps) &&
-            self.s.ulps_eq(&rhs.s, epsilon, max_ulps)
+        self.t.ulps_eq(&rhs.t, epsilon, max_ulps)
+            && self.o.ulps_eq(&rhs.o, epsilon, max_ulps)
+            && self.s.ulps_eq(&rhs.s, epsilon, max_ulps)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use serde_test::{assert_tokens, Token};
+
+    use super::*;
 
     #[test]
     fn affine_provides_identity_constructor() {
@@ -322,9 +323,7 @@ mod tests {
         let a: Affine<f32> = Affine::builder().build();
         assert_eq!(a, Affine::<f32>::identity());
 
-        let a: Affine<f32> = Affine::builder()
-            .with_scale(Vec3::from([1.0, 2.0, 3.0]))
-            .build();
+        let a: Affine<f32> = Affine::builder().with_scale(Vec3::from([1.0, 2.0, 3.0])).build();
 
         assert_eq!(a.s, Vec3::from([1.0, 2.0, 3.0]));
     }

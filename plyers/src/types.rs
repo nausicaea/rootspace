@@ -1,79 +1,12 @@
-pub const KEYWORDS: &'static [&'static [u8]] = &[b"format", b"element", b"property list", b"property", b"comment", b"obj_info"];
+use crate::error::OneOfManyError;
+
 pub const FORMAT_TYPES: &'static [&'static [u8]] = &[b"ascii", b"binary_little_endian", b"binary_big_endian"];
 pub const COUNT_TYPES: &'static [&'static [u8]] = &[b"uint8", b"uint16", b"uint32", b"uchar", b"ushort", b"uint"];
 pub const DATA_TYPES: &'static [&'static [u8]] = &[
-    b"uint8", b"uchar",
-    b"int8", b"char",
-    b"uint16", b"ushort",
-    b"int16", b"short",
-    b"uint32", b"uint",
-    b"int32", b"int",
-    b"float32", b"float",
-    b"float64", b"double",
+    b"uint8", b"uchar", b"int8", b"char", b"uint16", b"ushort", b"int16", b"short", b"uint32", b"uint", b"int32",
+    b"int", b"float32", b"float", b"float64", b"double",
 ];
 
-#[derive(Debug, Clone, thiserror::Error)]
-#[error("expected one byte sequence of {:?}, but received {:?}", .expected, .received)]
-pub struct FromBytesError {
-    received: Vec<u8>,
-    expected: &'static [&'static [u8]],
-}
-
-impl FromBytesError {
-    fn new(received: Vec<u8>, expected: &'static [&'static [u8]]) -> Self {
-        FromBytesError { received, expected }
-    }
-}
-
-#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Keyword {
-    Format,
-    Element,
-    Property,
-    ListProperty,
-    Comment,
-    ObjInfo,
-}
-
-impl Keyword {
-    pub fn to_bytes(&self) -> &'static [u8] {
-        Into::<&'static [u8]>::into(*self)
-    }
-
-    pub fn try_from_bytes(s: &[u8]) -> Result<Self, FromBytesError> {
-        TryFrom::<&[u8]>::try_from(s)
-    }
-}
-
-impl Into<&'static [u8]> for Keyword {
-    fn into(self) -> &'static [u8] {
-        match self {
-            Keyword::Format => b"format",
-            Keyword::Element => b"element",
-            Keyword::Property => b"property",
-            Keyword::ListProperty => b"property list",
-            Keyword::Comment => b"comment",
-            Keyword::ObjInfo => b"obj_info",
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a [u8]> for Keyword {
-    type Error = FromBytesError;
-
-    fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
-        match value {
-            b"format" => Ok(Keyword::Format),
-            b"element" => Ok(Keyword::Element),
-            b"property" => Ok(Keyword::Property),
-            b"property list" => Ok(Keyword::ListProperty),
-            b"comment" => Ok(Keyword::Comment),
-            b"obj_info" => Ok(Keyword::ObjInfo),
-            b => Err(FromBytesError::new(b.iter().copied().collect(), KEYWORDS)),
-        }
-    }
-}
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FormatType {
@@ -87,7 +20,7 @@ impl FormatType {
         Into::<&'static [u8]>::into(*self)
     }
 
-    pub fn try_from_bytes(s: &[u8]) -> Result<Self, FromBytesError> {
+    pub fn try_from_bytes(s: &[u8]) -> Result<Self, OneOfManyError> {
         TryFrom::<&[u8]>::try_from(s)
     }
 }
@@ -109,14 +42,14 @@ impl Into<&'static [u8]> for FormatType {
 }
 
 impl<'a> TryFrom<&'a [u8]> for FormatType {
-    type Error = FromBytesError;
+    type Error = OneOfManyError;
 
     fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
         match value {
             b"ascii" => Ok(FormatType::Ascii),
             b"binary_little_endian" => Ok(FormatType::BinaryLittleEndian),
             b"binary_big_endian" => Ok(FormatType::BinaryBigEndian),
-            b => Err(FromBytesError::new(b.iter().copied().collect(), FORMAT_TYPES)),
+            b => Err(OneOfManyError::new(b.iter().copied().collect(), FORMAT_TYPES)),
         }
     }
 }
@@ -134,7 +67,7 @@ impl CountType {
         Into::<&'static [u8]>::into(*self)
     }
 
-    pub fn try_from_bytes(s: &[u8]) -> Result<Self, FromBytesError> {
+    pub fn try_from_bytes(s: &[u8]) -> Result<Self, OneOfManyError> {
         TryFrom::<&[u8]>::try_from(s)
     }
 }
@@ -150,14 +83,14 @@ impl Into<&'static [u8]> for CountType {
 }
 
 impl<'a> TryFrom<&'a [u8]> for CountType {
-    type Error = FromBytesError;
+    type Error = OneOfManyError;
 
     fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
         match value {
             b"uint8" | b"uchar" => Ok(CountType::U8),
             b"uint16" | b"ushort" => Ok(CountType::U16),
             b"uint32" | b"uint" => Ok(CountType::U32),
-            b => Err(FromBytesError::new(b.iter().copied().collect(), COUNT_TYPES)),
+            b => Err(OneOfManyError::new(b.iter().copied().collect(), COUNT_TYPES)),
         }
     }
 }
@@ -180,7 +113,7 @@ impl DataType {
         Into::<&'static [u8]>::into(*self)
     }
 
-    pub fn try_from_bytes(s: &[u8]) -> Result<Self, FromBytesError> {
+    pub fn try_from_bytes(s: &[u8]) -> Result<Self, OneOfManyError> {
         TryFrom::<&[u8]>::try_from(s)
     }
 }
@@ -201,7 +134,7 @@ impl Into<&'static [u8]> for DataType {
 }
 
 impl<'a> TryFrom<&'a [u8]> for DataType {
-    type Error = FromBytesError;
+    type Error = OneOfManyError;
 
     fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
         match value {
@@ -213,7 +146,7 @@ impl<'a> TryFrom<&'a [u8]> for DataType {
             b"int32" | b"int" => Ok(DataType::I32),
             b"float32" | b"float" => Ok(DataType::F32),
             b"float64" | b"double" => Ok(DataType::F64),
-            b => Err(FromBytesError::new(b.iter().copied().collect(), DATA_TYPES)),
+            b => Err(OneOfManyError::new(b.iter().copied().collect(), DATA_TYPES)),
         }
     }
 }

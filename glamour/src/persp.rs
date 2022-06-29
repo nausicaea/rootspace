@@ -1,7 +1,8 @@
+use approx::{relative_eq, AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::Float;
-use crate::mat::Mat4;
 use thiserror::Error;
-use approx::{RelativeEq, relative_eq, AbsDiffEq, UlpsEq};
+
+use crate::mat::Mat4;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Persp<R>(Mat4<R>);
@@ -16,7 +17,7 @@ impl<R> Persp<R> {
     }
 }
 
-impl<R> Persp<R> 
+impl<R> Persp<R>
 where
     R: Float,
 {
@@ -117,7 +118,7 @@ impl<R> PerspBuilder<R> {
     }
 }
 
-impl<R> PerspBuilder<R> 
+impl<R> PerspBuilder<R>
 where
     R: Float + RelativeEq,
 {
@@ -190,8 +191,9 @@ pub enum Error {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
+
+    use super::*;
 
     fn testing_persp() -> Persp<f32> {
         Persp::builder()
@@ -320,7 +322,10 @@ mod tests {
     fn persp_builder_fails_when_near_z_and_far_z_are_equal() {
         let pb = testing_complete_persp_builder();
 
-        assert_eq!(pb.with_near_z(2.0).with_far_z(2.0).build(), Err(Error::FrustumZPlanesMustNotSuperimpose));
+        assert_eq!(
+            pb.with_near_z(2.0).with_far_z(2.0).build(),
+            Err(Error::FrustumZPlanesMustNotSuperimpose)
+        );
     }
 
     #[test]
@@ -335,22 +340,22 @@ mod tests {
 
         let m4: Mat4<f32> = p.0;
 
-        assert_relative_eq!(m4[(0, 0)],  1.6094757387);
-        assert_relative_eq!(m4[(0, 1)],  0.0);
-        assert_relative_eq!(m4[(0, 2)],  0.0);
-        assert_relative_eq!(m4[(0, 3)],  0.0);
-        assert_relative_eq!(m4[(1, 0)],  0.0);
-        assert_relative_eq!(m4[(1, 1)],  2.4142136081);
-        assert_relative_eq!(m4[(1, 2)],  0.0);
-        assert_relative_eq!(m4[(1, 3)],  0.0);
-        assert_relative_eq!(m4[(2, 0)],  0.0);
-        assert_relative_eq!(m4[(2, 1)],  0.0);
+        assert_relative_eq!(m4[(0, 0)], 1.6094757387);
+        assert_relative_eq!(m4[(0, 1)], 0.0);
+        assert_relative_eq!(m4[(0, 2)], 0.0);
+        assert_relative_eq!(m4[(0, 3)], 0.0);
+        assert_relative_eq!(m4[(1, 0)], 0.0);
+        assert_relative_eq!(m4[(1, 1)], 2.4142136081);
+        assert_relative_eq!(m4[(1, 2)], 0.0);
+        assert_relative_eq!(m4[(1, 3)], 0.0);
+        assert_relative_eq!(m4[(2, 0)], 0.0);
+        assert_relative_eq!(m4[(2, 1)], 0.0);
         assert_relative_eq!(m4[(2, 2)], -1.00020002);
         assert_relative_eq!(m4[(2, 3)], -0.200020002);
-        assert_relative_eq!(m4[(3, 0)],  0.0);
-        assert_relative_eq!(m4[(3, 1)],  0.0);
+        assert_relative_eq!(m4[(3, 0)], 0.0);
+        assert_relative_eq!(m4[(3, 1)], 0.0);
         assert_relative_eq!(m4[(3, 2)], -1.0);
-        assert_relative_eq!(m4[(3, 3)],  0.0);
+        assert_relative_eq!(m4[(3, 3)], 0.0);
     }
 
     #[test]
@@ -366,21 +371,21 @@ mod tests {
 
         let m4: Mat4<f32> = i.0;
 
-        assert_relative_eq!(m4[(0, 0)],  0.621320332);
-        assert_relative_eq!(m4[(0, 1)],  0.0);
-        assert_relative_eq!(m4[(0, 2)],  0.0);
-        assert_relative_eq!(m4[(0, 3)],  0.0);
-        assert_relative_eq!(m4[(1, 0)],  0.0);
-        assert_relative_eq!(m4[(1, 1)],  0.414213555);
-        assert_relative_eq!(m4[(1, 2)],  0.0);
-        assert_relative_eq!(m4[(1, 3)],  0.0);
-        assert_relative_eq!(m4[(2, 0)],  0.0);
-        assert_relative_eq!(m4[(2, 1)],  0.0);
-        assert_relative_eq!(m4[(2, 2)],  0.0);
+        assert_relative_eq!(m4[(0, 0)], 0.621320332);
+        assert_relative_eq!(m4[(0, 1)], 0.0);
+        assert_relative_eq!(m4[(0, 2)], 0.0);
+        assert_relative_eq!(m4[(0, 3)], 0.0);
+        assert_relative_eq!(m4[(1, 0)], 0.0);
+        assert_relative_eq!(m4[(1, 1)], 0.414213555);
+        assert_relative_eq!(m4[(1, 2)], 0.0);
+        assert_relative_eq!(m4[(1, 3)], 0.0);
+        assert_relative_eq!(m4[(2, 0)], 0.0);
+        assert_relative_eq!(m4[(2, 1)], 0.0);
+        assert_relative_eq!(m4[(2, 2)], 0.0);
         assert_relative_eq!(m4[(2, 3)], -1.0);
-        assert_relative_eq!(m4[(3, 0)],  0.0);
-        assert_relative_eq!(m4[(3, 1)],  0.0);
+        assert_relative_eq!(m4[(3, 0)], 0.0);
+        assert_relative_eq!(m4[(3, 1)], 0.0);
         assert_relative_eq!(m4[(3, 2)], -4.99950000);
-        assert_relative_eq!(m4[(3, 3)],  5.00050000);
+        assert_relative_eq!(m4[(3, 3)], 5.00050000);
     }
 }

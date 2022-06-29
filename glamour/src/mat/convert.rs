@@ -1,6 +1,7 @@
-use super::Mat;
-use thiserror::Error;
 use num_traits::Zero;
+use thiserror::Error;
+
+use super::Mat;
 
 impl<R, const I: usize, const J: usize> AsRef<[[R; J]; I]> for Mat<R, I, J> {
     fn as_ref(&self) -> &[[R; J]; I] {
@@ -14,7 +15,7 @@ pub enum Error {
     LengthMismatch { expected: usize, found: usize },
 }
 
-impl<R, const I: usize, const J: usize> TryFrom<Vec<R>> for Mat<R, I, J> 
+impl<R, const I: usize, const J: usize> TryFrom<Vec<R>> for Mat<R, I, J>
 where
     R: Copy + Zero,
 {
@@ -22,7 +23,10 @@ where
 
     fn try_from(v: Vec<R>) -> Result<Self, Self::Error> {
         if v.len() != I * J {
-            return Err(Error::LengthMismatch{ expected: I * J, found: v.len() });
+            return Err(Error::LengthMismatch {
+                expected: I * J,
+                found: v.len(),
+            });
         }
 
         let mut mat = Mat::zero();
@@ -36,21 +40,20 @@ where
     }
 }
 
-impl<R, const I: usize, const J: usize> FromIterator<R> for Mat<R, I, J> 
+impl<R, const I: usize, const J: usize> FromIterator<R> for Mat<R, I, J>
 where
     R: Copy + Zero,
 {
     fn from_iter<T: IntoIterator<Item = R>>(iter: T) -> Self {
         let mut iter = iter.into_iter();
         let sh = iter.size_hint();
-        if sh.0 < I * J {
-        }
-
+        if sh.0 < I * J {}
 
         let mut mat: Mat<R, I, J> = Mat::zero();
         for i in 0..I {
             for j in 0..J {
-                mat[(i, j)] = iter.next()
+                mat[(i, j)] = iter
+                    .next()
                     .unwrap_or_else(|| panic!("Expected an iterator that provides exactly {} elements", I * J));
             }
         }
@@ -147,6 +150,4 @@ mod tests {
         let _: Mat<f32, 4, 3> = Mat::from([0.0f32; 12]);
         let _: Mat<f32, 4, 4> = Mat::from([0.0f32; 16]);
     }
-
-
 }

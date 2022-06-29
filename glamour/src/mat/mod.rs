@@ -1,16 +1,14 @@
-use num_traits::{One, Zero, Float};
+use num_traits::{Float, One, Zero};
 
+mod approx;
+mod convert;
+mod ops;
+mod serde;
 pub mod vec2;
 pub mod vec3;
 pub mod vec4;
-mod ops;
-mod convert;
-mod serde;
-mod approx;
 
-pub use self::vec2::Vec2;
-pub use self::vec3::Vec3;
-pub use self::vec4::Vec4;
+pub use self::{vec2::Vec2, vec3::Vec3, vec4::Vec4};
 
 // Generalized vector, interpreted as column
 type Vec_<R, const I: usize> = Mat<R, I, 1>;
@@ -36,7 +34,7 @@ impl<R, const I: usize, const J: usize> Mat<R, I, J> {
     }
 }
 
-impl<R, const I: usize, const J: usize> Mat<R, I, J> 
+impl<R, const I: usize, const J: usize> Mat<R, I, J>
 where
     R: Copy + Zero,
 {
@@ -103,7 +101,6 @@ where
     }
 }
 
-
 impl<R, const I: usize, const J: usize> Mat<R, I, J>
 where
     R: Zero + Copy,
@@ -136,7 +133,7 @@ where
     }
 }
 
-impl<R, const I: usize> Mat<R, I, I> 
+impl<R, const I: usize> Mat<R, I, I>
 where
     R: Zero + Copy,
 {
@@ -175,8 +172,13 @@ where
 
 #[cfg(test)]
 pub(crate) mod tests {
+    use proptest::{
+        collection::vec,
+        num::f32::{Any, INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
+        prop_assert, prop_assert_eq, prop_compose, proptest,
+    };
+
     use super::*;
-    use proptest::{proptest, prop_compose, prop_assert_eq, prop_assert, collection::vec, num::f32::{Any, NORMAL, POSITIVE, NEGATIVE, ZERO, QUIET_NAN as NAN, INFINITE, SUBNORMAL}};
 
     macro_rules! impl_mat_strategy {
         ($name:ident, $I:literal, $J:literal) => {
@@ -220,22 +222,102 @@ pub(crate) mod tests {
             };
         }
 
-        impl_row_test!(mat1_row_returns_a_1x1_matrix,   mat1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),   1, [0]);
-        impl_row_test!(mat1x2_row_returns_a_1x2_matrix, mat1x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 1, [0, 1]);
-        impl_row_test!(mat1x3_row_returns_a_1x3_matrix, mat1x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 1, [0, 1, 2]);
-        impl_row_test!(mat1x4_row_returns_a_1x4_matrix, mat1x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 1, [0, 1, 2, 3]);
-        impl_row_test!(mat2x1_row_returns_a_1x1_matrix, mat2x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 2, [0]);
-        impl_row_test!(mat2_row_returns_a_1x2_matrix,   mat2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),   2, [0, 1]);
-        impl_row_test!(mat2x3_row_returns_a_1x3_matrix, mat2x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 2, [0, 1, 2]);
-        impl_row_test!(mat2x4_row_returns_a_1x4_matrix, mat2x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 2, [0, 1, 2, 3]);
-        impl_row_test!(mat3x1_row_returns_a_1x1_matrix, mat3x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 3, [0]);
-        impl_row_test!(mat3x2_row_returns_a_1x2_matrix, mat3x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 3, [0, 1]);
-        impl_row_test!(mat3_row_returns_a_1x3_matrix,   mat3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),   3, [0, 1, 2]);
-        impl_row_test!(mat3x4_row_returns_a_1x4_matrix, mat3x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 3, [0, 1, 2, 3]);
-        impl_row_test!(mat4x1_row_returns_a_1x1_matrix, mat4x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 4, [0]);
-        impl_row_test!(mat4x2_row_returns_a_1x2_matrix, mat4x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 4, [0, 1]);
-        impl_row_test!(mat4x3_row_returns_a_1x3_matrix, mat4x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 4, [0, 1, 2]);
-        impl_row_test!(mat4_row_returns_a_1x4_matrix,   mat4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),   4, [0, 1, 2, 3]);
+        impl_row_test!(
+            mat1_row_returns_a_1x1_matrix,
+            mat1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            1,
+            [0]
+        );
+        impl_row_test!(
+            mat1x2_row_returns_a_1x2_matrix,
+            mat1x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            1,
+            [0, 1]
+        );
+        impl_row_test!(
+            mat1x3_row_returns_a_1x3_matrix,
+            mat1x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            1,
+            [0, 1, 2]
+        );
+        impl_row_test!(
+            mat1x4_row_returns_a_1x4_matrix,
+            mat1x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            1,
+            [0, 1, 2, 3]
+        );
+        impl_row_test!(
+            mat2x1_row_returns_a_1x1_matrix,
+            mat2x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            2,
+            [0]
+        );
+        impl_row_test!(
+            mat2_row_returns_a_1x2_matrix,
+            mat2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            2,
+            [0, 1]
+        );
+        impl_row_test!(
+            mat2x3_row_returns_a_1x3_matrix,
+            mat2x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            2,
+            [0, 1, 2]
+        );
+        impl_row_test!(
+            mat2x4_row_returns_a_1x4_matrix,
+            mat2x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            2,
+            [0, 1, 2, 3]
+        );
+        impl_row_test!(
+            mat3x1_row_returns_a_1x1_matrix,
+            mat3x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            3,
+            [0]
+        );
+        impl_row_test!(
+            mat3x2_row_returns_a_1x2_matrix,
+            mat3x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            3,
+            [0, 1]
+        );
+        impl_row_test!(
+            mat3_row_returns_a_1x3_matrix,
+            mat3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            3,
+            [0, 1, 2]
+        );
+        impl_row_test!(
+            mat3x4_row_returns_a_1x4_matrix,
+            mat3x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            3,
+            [0, 1, 2, 3]
+        );
+        impl_row_test!(
+            mat4x1_row_returns_a_1x1_matrix,
+            mat4x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            4,
+            [0]
+        );
+        impl_row_test!(
+            mat4x2_row_returns_a_1x2_matrix,
+            mat4x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            4,
+            [0, 1]
+        );
+        impl_row_test!(
+            mat4x3_row_returns_a_1x3_matrix,
+            mat4x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            4,
+            [0, 1, 2]
+        );
+        impl_row_test!(
+            mat4_row_returns_a_1x4_matrix,
+            mat4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            4,
+            [0, 1, 2, 3]
+        );
     }
 
     /// [Column](crate::mat::Mat::col) Tests
@@ -253,22 +335,102 @@ pub(crate) mod tests {
             };
         }
 
-        impl_col_test!(mat1_col_returns_a_1x1_matrix,   mat1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),   1, [0]);
-        impl_col_test!(mat1x2_col_returns_a_1x1_matrix, mat1x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 2, [0]);
-        impl_col_test!(mat1x3_col_returns_a_1x1_matrix, mat1x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 3, [0]);
-        impl_col_test!(mat1x4_col_returns_a_1x1_matrix, mat1x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 4, [0]);
-        impl_col_test!(mat2x1_col_returns_a_2x1_matrix, mat2x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 1, [0, 1]);
-        impl_col_test!(mat2_col_returns_a_2x1_matrix,   mat2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),   2, [0, 1]);
-        impl_col_test!(mat2x3_col_returns_a_2x1_matrix, mat2x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 3, [0, 1]);
-        impl_col_test!(mat2x4_col_returns_a_2x1_matrix, mat2x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 4, [0, 1]);
-        impl_col_test!(mat3x1_col_returns_a_3x1_matrix, mat3x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 1, [0, 1, 2]);
-        impl_col_test!(mat3x2_col_returns_a_3x1_matrix, mat3x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 2, [0, 1, 2]);
-        impl_col_test!(mat3_col_returns_a_3x1_matrix,   mat3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),   3, [0, 1, 2]);
-        impl_col_test!(mat3x4_col_returns_a_3x1_matrix, mat3x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 4, [0, 1, 2]);
-        impl_col_test!(mat4x1_col_returns_a_4x1_matrix, mat4x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 1, [0, 1, 2, 3]);
-        impl_col_test!(mat4x2_col_returns_a_4x1_matrix, mat4x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 2, [0, 1, 2, 3]);
-        impl_col_test!(mat4x3_col_returns_a_4x1_matrix, mat4x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL), 3, [0, 1, 2, 3]);
-        impl_col_test!(mat4_col_returns_a_4x1_matrix,   mat4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),   4, [0, 1, 2, 3]);
+        impl_col_test!(
+            mat1_col_returns_a_1x1_matrix,
+            mat1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            1,
+            [0]
+        );
+        impl_col_test!(
+            mat1x2_col_returns_a_1x1_matrix,
+            mat1x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            2,
+            [0]
+        );
+        impl_col_test!(
+            mat1x3_col_returns_a_1x1_matrix,
+            mat1x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            3,
+            [0]
+        );
+        impl_col_test!(
+            mat1x4_col_returns_a_1x1_matrix,
+            mat1x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            4,
+            [0]
+        );
+        impl_col_test!(
+            mat2x1_col_returns_a_2x1_matrix,
+            mat2x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            1,
+            [0, 1]
+        );
+        impl_col_test!(
+            mat2_col_returns_a_2x1_matrix,
+            mat2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            2,
+            [0, 1]
+        );
+        impl_col_test!(
+            mat2x3_col_returns_a_2x1_matrix,
+            mat2x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            3,
+            [0, 1]
+        );
+        impl_col_test!(
+            mat2x4_col_returns_a_2x1_matrix,
+            mat2x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            4,
+            [0, 1]
+        );
+        impl_col_test!(
+            mat3x1_col_returns_a_3x1_matrix,
+            mat3x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            1,
+            [0, 1, 2]
+        );
+        impl_col_test!(
+            mat3x2_col_returns_a_3x1_matrix,
+            mat3x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            2,
+            [0, 1, 2]
+        );
+        impl_col_test!(
+            mat3_col_returns_a_3x1_matrix,
+            mat3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            3,
+            [0, 1, 2]
+        );
+        impl_col_test!(
+            mat3x4_col_returns_a_3x1_matrix,
+            mat3x4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            4,
+            [0, 1, 2]
+        );
+        impl_col_test!(
+            mat4x1_col_returns_a_4x1_matrix,
+            mat4x1(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            1,
+            [0, 1, 2, 3]
+        );
+        impl_col_test!(
+            mat4x2_col_returns_a_4x1_matrix,
+            mat4x2(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            2,
+            [0, 1, 2, 3]
+        );
+        impl_col_test!(
+            mat4x3_col_returns_a_4x1_matrix,
+            mat4x3(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            3,
+            [0, 1, 2, 3]
+        );
+        impl_col_test!(
+            mat4_col_returns_a_4x1_matrix,
+            mat4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL),
+            4,
+            [0, 1, 2, 3]
+        );
     }
 
     proptest! {
@@ -306,22 +468,102 @@ pub(crate) mod tests {
             };
         }
 
-        impl_t_inverse_test!(mat1_transposition_is_its_own_inverse_operation,   mat1(NORMAL | POSITIVE | NEGATIVE | ZERO), 1, 1);
-        impl_t_inverse_test!(mat1x2_transposition_is_its_own_inverse_operation, mat1x2(NORMAL | POSITIVE | NEGATIVE | ZERO), 1, 2);
-        impl_t_inverse_test!(mat1x3_transposition_is_its_own_inverse_operation, mat1x3(NORMAL | POSITIVE | NEGATIVE | ZERO), 1, 3);
-        impl_t_inverse_test!(mat1x4_transposition_is_its_own_inverse_operation, mat1x4(NORMAL | POSITIVE | NEGATIVE | ZERO), 1, 4);
-        impl_t_inverse_test!(mat2x1_transposition_is_its_own_inverse_operation, mat2x1(NORMAL | POSITIVE | NEGATIVE | ZERO), 2, 1);
-        impl_t_inverse_test!(mat2_transposition_is_its_own_inverse_operation,   mat2(NORMAL | POSITIVE | NEGATIVE | ZERO), 2, 2);
-        impl_t_inverse_test!(mat2x3_transposition_is_its_own_inverse_operation, mat2x3(NORMAL | POSITIVE | NEGATIVE | ZERO), 2, 3);
-        impl_t_inverse_test!(mat2x4_transposition_is_its_own_inverse_operation, mat2x4(NORMAL | POSITIVE | NEGATIVE | ZERO), 2, 4);
-        impl_t_inverse_test!(mat3x1_transposition_is_its_own_inverse_operation, mat3x1(NORMAL | POSITIVE | NEGATIVE | ZERO), 3, 1);
-        impl_t_inverse_test!(mat3x2_transposition_is_its_own_inverse_operation, mat3x2(NORMAL | POSITIVE | NEGATIVE | ZERO), 3, 2);
-        impl_t_inverse_test!(mat3_transposition_is_its_own_inverse_operation,   mat3(NORMAL | POSITIVE | NEGATIVE | ZERO), 3, 3);
-        impl_t_inverse_test!(mat3x4_transposition_is_its_own_inverse_operation, mat3x4(NORMAL | POSITIVE | NEGATIVE | ZERO), 3, 4);
-        impl_t_inverse_test!(mat4x1_transposition_is_its_own_inverse_operation, mat4x1(NORMAL | POSITIVE | NEGATIVE | ZERO), 4, 1);
-        impl_t_inverse_test!(mat4x2_transposition_is_its_own_inverse_operation, mat4x2(NORMAL | POSITIVE | NEGATIVE | ZERO), 4, 2);
-        impl_t_inverse_test!(mat4x3_transposition_is_its_own_inverse_operation, mat4x3(NORMAL | POSITIVE | NEGATIVE | ZERO), 4, 3);
-        impl_t_inverse_test!(mat4_transposition_is_its_own_inverse_operation,   mat4(NORMAL | POSITIVE | NEGATIVE | ZERO), 4, 4);
+        impl_t_inverse_test!(
+            mat1_transposition_is_its_own_inverse_operation,
+            mat1(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            1,
+            1
+        );
+        impl_t_inverse_test!(
+            mat1x2_transposition_is_its_own_inverse_operation,
+            mat1x2(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            1,
+            2
+        );
+        impl_t_inverse_test!(
+            mat1x3_transposition_is_its_own_inverse_operation,
+            mat1x3(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            1,
+            3
+        );
+        impl_t_inverse_test!(
+            mat1x4_transposition_is_its_own_inverse_operation,
+            mat1x4(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            1,
+            4
+        );
+        impl_t_inverse_test!(
+            mat2x1_transposition_is_its_own_inverse_operation,
+            mat2x1(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            2,
+            1
+        );
+        impl_t_inverse_test!(
+            mat2_transposition_is_its_own_inverse_operation,
+            mat2(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            2,
+            2
+        );
+        impl_t_inverse_test!(
+            mat2x3_transposition_is_its_own_inverse_operation,
+            mat2x3(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            2,
+            3
+        );
+        impl_t_inverse_test!(
+            mat2x4_transposition_is_its_own_inverse_operation,
+            mat2x4(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            2,
+            4
+        );
+        impl_t_inverse_test!(
+            mat3x1_transposition_is_its_own_inverse_operation,
+            mat3x1(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            3,
+            1
+        );
+        impl_t_inverse_test!(
+            mat3x2_transposition_is_its_own_inverse_operation,
+            mat3x2(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            3,
+            2
+        );
+        impl_t_inverse_test!(
+            mat3_transposition_is_its_own_inverse_operation,
+            mat3(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            3,
+            3
+        );
+        impl_t_inverse_test!(
+            mat3x4_transposition_is_its_own_inverse_operation,
+            mat3x4(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            3,
+            4
+        );
+        impl_t_inverse_test!(
+            mat4x1_transposition_is_its_own_inverse_operation,
+            mat4x1(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            4,
+            1
+        );
+        impl_t_inverse_test!(
+            mat4x2_transposition_is_its_own_inverse_operation,
+            mat4x2(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            4,
+            2
+        );
+        impl_t_inverse_test!(
+            mat4x3_transposition_is_its_own_inverse_operation,
+            mat4x3(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            4,
+            3
+        );
+        impl_t_inverse_test!(
+            mat4_transposition_is_its_own_inverse_operation,
+            mat4(NORMAL | POSITIVE | NEGATIVE | ZERO),
+            4,
+            4
+        );
 
         proptest! {
             #[test]

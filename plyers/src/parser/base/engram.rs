@@ -1,7 +1,8 @@
 use std::io::{Read, Seek};
-use crate::read_byte;
-use crate::error::Error;
-use super::Parser;
+use anyhow::Context;
+
+use crate::Parser;
+use crate::{error::Error as EError, read_byte};
 
 #[derive(Debug, Clone)]
 pub struct Engram<'a> {
@@ -11,13 +12,18 @@ pub struct Engram<'a> {
 impl<'a> Parser for Engram<'a> {
     type Item = &'a [u8];
 
-    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
+    fn parse<R>(self, r: &mut R) -> anyhow::Result<Self::Item>
+    where
+        Self: Sized,
+        R: Read + Seek,
+    {
         let mut index: usize = 0;
         loop {
-            let (byte, position) = read_byte(r)?;
+            let (byte, position) = read_byte(r)
+                .context("when searching for a fixed byte pattern (i.e. engram)")?;
 
             if byte != self.pattern[index] {
-                return Err(Error::UnexpectedByte(byte, position));
+                anyhow::bail!(EError::UnexpectedByte(byte, position));
             }
 
             index += 1;
@@ -39,8 +45,8 @@ pub fn engram(e: &[u8]) -> Engram {
 
 #[cfg(test)]
 mod tests {
-    use crate::to_reader;
     use super::*;
+    use crate::to_reader;
 
     #[test]
     fn engram_parses_a_single_fixed_word() {
@@ -59,11 +65,7 @@ mod tests {
         let mut stream = to_reader("hallo");
 
         let r = engram(b"hello").parse(&mut stream);
-
-        match r {
-            Err(Error::UnexpectedByte(b'a', 1)) => (),
-            other => panic!("Expected Error::UnexpectedByte(b'a'), got: {:?}", other),
-        }
+        assert!(r.is_err(), "{:?}", r.unwrap());
     }
 
     #[test]

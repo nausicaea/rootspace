@@ -1,9 +1,9 @@
 use std::iter::Sum;
-use crate::ops::norm::Norm;
-use num_traits::Float;
-use crate::quat::Quat;
-use crate::mat::Mat;
+
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use num_traits::Float;
+
+use crate::{mat::Mat, ops::norm::Norm, quat::Quat};
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde_support", serde(transparent))]

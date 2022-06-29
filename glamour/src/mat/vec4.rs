@@ -47,5 +47,4 @@ mod tests {
         assert_eq!(v.z(), 3.0f32);
         assert_eq!(v.w(), 4.0f32);
     }
-
 }

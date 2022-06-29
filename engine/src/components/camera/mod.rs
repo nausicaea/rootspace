@@ -2,13 +2,12 @@ mod camera_builder;
 mod camera_ser_de;
 pub mod projection;
 
-use self::camera_builder::CameraBuilder;
 use approx::ulps_eq;
 use ecs::{Component, VecStorage};
-use glamour::{Vec4, Vec2, Ortho, Persp, Mat4};
+use glamour::{Mat4, Ortho, Persp, Vec2, Vec4};
 use serde::{Deserialize, Serialize};
 
-use self::{camera_ser_de::CameraSerDe, projection::Projection};
+use self::{camera_builder::CameraBuilder, camera_ser_de::CameraSerDe, projection::Projection};
 use crate::components::model::Model;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -153,7 +152,7 @@ impl Camera {
 
     //     Vec4::new(
     //         (2.0 * v.x() as f32) / w - 1.0,
-    //         1.0 - (2.0 * v.y() as f32) / h, 
+    //         1.0 - (2.0 * v.y() as f32) / h,
     //         1.0,
     //         1.0,
     //     )
@@ -211,9 +210,8 @@ impl From<CameraSerDe> for Camera {
 
 #[cfg(test)]
 mod tests {
-    use approx::{assert_ulps_eq};
-    use proptest::prelude::*;
-    use proptest::num::f64::NORMAL;
+    use approx::assert_ulps_eq;
+    use proptest::{num::f64::NORMAL, prelude::*};
 
     use super::*;
 

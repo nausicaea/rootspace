@@ -7,18 +7,71 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="The parser is now complete, but error handling is bad">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Display or Debug, that is the question">
+      <change afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/and_then.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/either.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/assets/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/assets/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/camera/camera_builder.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera/camera_builder.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/model.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/ui_model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/ui_model.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/states.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/states.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/graphics.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/resources/graphics.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/resources/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/debug_interactions.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/debug_interactions.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/forward-ref/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/forward-ref/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/affine/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/affine/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/iter_float.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/iter_float.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/approx.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/approx.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/convert.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/convert.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/dot.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/ops/dot.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/elementwise.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/ops/elementwise.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/index.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/ops/index.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/norm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/ops/norm.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/serde.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/serde.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/vec3.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/vec3.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/vec4.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/vec4.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ops/dot.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/ops/dot.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ops/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/ops/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ortho.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/ortho.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/persp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/persp.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/quat/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/quat/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ray.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/ray.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/unit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/unit.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/and_then.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/be_count.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/be_count.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/be_number.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/be_number.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/bytes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/bytes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/chain.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_either.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/empty.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/empty.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/engram.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/engram.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/le_count.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/le_count.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/le_number.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/le_number.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/lookahead.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/lookahead.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/map.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/map.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/repeat.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat_exact.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/repeat_exact.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat_until.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/repeat_until.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/optional.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/optional.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat_exact.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_exact.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat_until.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_until.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/take_while.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/token.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/token.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/ply.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/ply.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/tests/minimal_ascii.ply" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/tests/minimal_ascii.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/debug_commands.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/src/debug_commands.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,7 +103,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedIndex" value="1" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectId" id="1yZruzrKUvOTW2ObNaJrocdrnfH" />
   <component name="ProjectLevelVcsManager">
@@ -60,16 +113,16 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "true",
-    "last_opened_file_path": "/Users/young0000/Crypt/Development/rootspace/plyers/tests",
-    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "settings.editor.selected.configurable": "preferences.keymap"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/young0000/Crypt/Development/rootspace/plyers/tests&quot;,
+    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;language.rust.cargo.check&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/plyers/tests" />
@@ -77,6 +130,8 @@
       <recent name="$PROJECT_DIR$/glamour/src" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/plyers/src/parser/base" />
+      <recent name="$PROJECT_DIR$/plyers/src/parser/combinator" />
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
@@ -331,6 +386,8 @@
       <workItem from="1656324208398" duration="8733000" />
       <workItem from="1656394949728" duration="7823000" />
       <workItem from="1656448015908" duration="4549000" />
+      <workItem from="1656452994402" duration="10757000" />
+      <workItem from="1656513879626" duration="3229000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -576,7 +633,28 @@
       <option name="project" value="LOCAL" />
       <updated>1656395041799</updated>
     </task>
-    <option name="localTasksCounter" value="40" />
+    <task id="LOCAL-00040" summary="Changed the error handling in RepeatUntil">
+      <created>1656453197401</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1656453197401</updated>
+    </task>
+    <task id="LOCAL-00041" summary="Improved error communication in types.rs">
+      <created>1656486326409</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1656486326409</updated>
+    </task>
+    <task id="LOCAL-00042" summary="Display or Debug, that is the question">
+      <created>1656486388843</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1656486388843</updated>
+    </task>
+    <option name="localTasksCounter" value="43" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -595,9 +673,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Added configurations as project files" />
-    <MESSAGE value="The initialize force flag now also recreates the app data asset directory, and missing directories are created when serializing a state." />
-    <MESSAGE value="The asset database serializes via a proxy format now, that omits unnecessary data." />
     <MESSAGE value="Fixed a texture sampling issue due to bad texture coordinates in quad.ply" />
     <MESSAGE value="Modified the output of the commands components and entities" />
     <MESSAGE value="For some reason, I have unexpected inconsistencies with point transformations" />
@@ -620,6 +695,9 @@
     <MESSAGE value="By making the parser stricter, it was much easier to write one. No I need to add in the obj_info and comments" />
     <MESSAGE value="I am getting somewhere, but now there are too many chains" />
     <MESSAGE value="Added a repeat parser that repeats by trying without a terminator" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added a repeat parser that repeats by trying without a terminator" />
+    <MESSAGE value="Changed the error handling in RepeatUntil" />
+    <MESSAGE value="Improved error communication in types.rs" />
+    <MESSAGE value="Display or Debug, that is the question" />
+    <option name="LAST_COMMIT_MESSAGE" value="Display or Debug, that is the question" />
   </component>
 </project>

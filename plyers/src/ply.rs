@@ -1,33 +1,57 @@
 use either::{Either, Left, Right};
-use crate::{CommentDescriptor, CountType, DataType, ElementDescriptor, empty, engram, FormatType, ListPropertyDescriptor, lookahead, ObjInfoDescriptor, Parser, PlyDescriptor, PropertyDescriptor, repeat_until, take_while};
+use crate::{
+    types::CommentDescriptor, types::CountType, types::ElementDescriptor, types::FormatType, types::ListPropertyDescriptor, types::ObjInfoDescriptor, types::PlyDescriptor, types::PropertyDescriptor
+};
+use crate::parser::base::empty::empty;
+use crate::parser::base::engram::engram;
+use crate::parser::base::lookahead::lookahead;
+use crate::parser::combinator::either::either;
+use crate::parser::combinator::repeat_until::repeat_until;
+use crate::types::DataType;
+use crate::parser::Parser;
+use crate::parser::base::take_while::take_while;
 
 pub fn ascii_usize_parser() -> impl Parser<Item = usize> {
-    take_while(|b| b != b' ')
-        .and_then(|cd| {
-            String::from_utf8(cd)
-                .map_err(|e| e.into())
-                .and_then(|cd| cd.parse::<usize>().map_err(|e| e.into()))
-        })
+    take_while(|b| b != b' ').and_then(|cd| {
+        String::from_utf8(cd)
+            .map_err(|e| e.into())
+            .and_then(|cd| cd.parse::<usize>().map_err(|e| e.into()))
+    })
 }
 
 pub fn ascii_number_parser(data_type: DataType) -> impl Parser<Item = Vec<u8>> + Clone {
-    take_while(|b| b != b' ' && b != b'\n')
-        .and_then(move |pd| {
-            dbg!(&pd);
-            let pd = String::from_utf8(pd)?;
-            let pd = match data_type {
-                DataType::U8 => pd.parse::<u8>().map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
-                DataType::I8 => pd.parse::<i8>().map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
-                DataType::U16 => pd.parse::<u16>().map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
-                DataType::I16 => pd.parse::<i16>().map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
-                DataType::U32 => pd.parse::<u32>().map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
-                DataType::I32 => pd.parse::<i32>().map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
-                DataType::F32 => pd.parse::<f32>().map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
-                DataType::F64 => pd.parse::<f64>().map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
-            };
+    take_while(|b| b != b' ' && b != b'\n').and_then(move |pd| {
+        dbg!(&pd);
+        let pd = String::from_utf8(pd)?;
+        let pd = match data_type {
+            DataType::U8 => pd
+                .parse::<u8>()
+                .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+            DataType::I8 => pd
+                .parse::<i8>()
+                .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+            DataType::U16 => pd
+                .parse::<u16>()
+                .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+            DataType::I16 => pd
+                .parse::<i16>()
+                .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+            DataType::U32 => pd
+                .parse::<u32>()
+                .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+            DataType::I32 => pd
+                .parse::<i32>()
+                .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+            DataType::F32 => pd
+                .parse::<f32>()
+                .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+            DataType::F64 => pd
+                .parse::<f64>()
+                .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+        };
 
-            Ok(pd)
-        })
+        Ok(pd)
+    })
 }
 
 pub fn comment() -> impl Parser<Item = CommentDescriptor> + Clone {
@@ -50,7 +74,7 @@ pub fn obj_info() -> impl Parser<Item = ObjInfoDescriptor> + Clone {
 
 pub fn comment_or_obj_info() -> impl Parser<Item = Vec<Either<CommentDescriptor, ObjInfoDescriptor>>> + Clone {
     empty()
-        .chain_either(comment(), obj_info())
+        .chain(either(comment(), obj_info()))
         .map(|(_, co)| co)
         .repeated()
         .optional()
@@ -73,7 +97,8 @@ pub fn format() -> impl Parser<Item = (Vec<Either<CommentDescriptor, ObjInfoDesc
         })
 }
 
-pub fn property() -> impl Parser<Item = (Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, PropertyDescriptor)> + Clone {
+pub fn property() -> impl Parser<Item = (Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, PropertyDescriptor)> + Clone
+{
     empty()
         .chain(comment_or_obj_info())
         .chain(engram(b"property "))
@@ -85,14 +110,16 @@ pub fn property() -> impl Parser<Item = (Vec<Either<CommentDescriptor, ObjInfoDe
         .chain(take_while(|b| b != b'\n'))
         .and_then(|((co, dt), n)| {
             let n = String::from_utf8(n)?;
-            Ok((co, PropertyDescriptor {
-                data_type: dt,
-                name: n,
-            }))
+            Ok((co, PropertyDescriptor { data_type: dt, name: n }))
         })
 }
 
-pub fn list_property() -> impl Parser<Item = (Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, ListPropertyDescriptor)> + Clone {
+pub fn list_property() -> impl Parser<
+    Item = (
+        Vec<Either<CommentDescriptor, ObjInfoDescriptor>>,
+        ListPropertyDescriptor,
+    ),
+> + Clone {
     empty()
         .chain(comment_or_obj_info())
         .chain(engram(b"property list "))
@@ -109,11 +136,14 @@ pub fn list_property() -> impl Parser<Item = (Vec<Either<CommentDescriptor, ObjI
         .chain(take_while(|b| b != b'\n'))
         .and_then(|((co, ct, dt), n)| {
             let n = String::from_utf8(n)?;
-            Ok((co, ListPropertyDescriptor {
-                count_type: ct,
-                data_type: dt,
-                name: n,
-            }))
+            Ok((
+                co,
+                ListPropertyDescriptor {
+                    count_type: ct,
+                    data_type: dt,
+                    name: n,
+                },
+            ))
         })
 }
 
@@ -124,9 +154,7 @@ pub fn element() -> impl Parser<Item = (Vec<Either<CommentDescriptor, ObjInfoDes
     let list_properties = empty()
         .chain(repeat_until(list_property(), lookahead(b'e')))
         .map(|(_, (lp, _))| lp);
-    let properties = empty()
-        .chain_either(normal_properties, list_properties)
-        .map(|(_, p)| p);
+    let properties = empty().chain(either(normal_properties, list_properties)).map(|(_, p)| p);
 
     empty()
         .chain(comment_or_obj_info())
@@ -150,26 +178,32 @@ pub fn element() -> impl Parser<Item = (Vec<Either<CommentDescriptor, ObjInfoDes
                     eco.extend(pco);
                     ps.push(prop);
                 }
-                (eco, ElementDescriptor {
-                    name: en,
-                    count: ec,
-                    properties: ps,
-                    list_properties: vec![]
-                })
-            },
+                (
+                    eco,
+                    ElementDescriptor {
+                        name: en,
+                        count: ec,
+                        properties: ps,
+                        list_properties: vec![],
+                    },
+                )
+            }
             Right(rhead) => {
                 let mut ps = Vec::new();
                 for (pco, prop) in rhead {
                     eco.extend(pco);
                     ps.push(prop);
                 }
-                (eco, ElementDescriptor {
-                    name: en,
-                    count: ec,
-                    properties: vec![],
-                    list_properties: ps,
-                })
-            },
+                (
+                    eco,
+                    ElementDescriptor {
+                        name: en,
+                        count: ec,
+                        properties: vec![],
+                        list_properties: ps,
+                    },
+                )
+            }
         })
 }
 

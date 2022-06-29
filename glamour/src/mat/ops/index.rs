@@ -1,4 +1,5 @@
 use std::ops::{Index, IndexMut};
+
 use super::super::Mat;
 
 impl<R, const I: usize, const J: usize> Index<usize> for Mat<R, I, J> {
@@ -31,7 +32,6 @@ impl<R, const I: usize, const J: usize> IndexMut<(usize, usize)> for Mat<R, I, J
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -61,5 +61,4 @@ mod tests {
         m[(1, 1)] = 5.0f32;
         assert_eq!(m[(1, 1)], 5.0f32);
     }
-
 }

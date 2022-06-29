@@ -1,9 +1,13 @@
-use num_traits::{Zero, One, Float};
-use crate::mat::{Mat4, Vec4};
 use std::ops::{Div, Mul};
-use forward_ref::{forward_ref_binop, forward_ref_unop};
-use crate::ops::norm::Norm;
+
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use forward_ref::{forward_ref_binop, forward_ref_unop};
+use num_traits::{Float, One, Zero};
+
+use crate::{
+    mat::{Mat4, Vec4},
+    ops::norm::Norm,
+};
 
 #[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, PartialEq, Clone)]
@@ -38,7 +42,7 @@ where
     }
 }
 
-impl<R> Quat<R> 
+impl<R> Quat<R>
 where
     R: Float,
 {
@@ -129,7 +133,7 @@ impl_scalar_quatops! (
     Div, div, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
 );
 
-impl<'a, 'b, R> Mul<&'b Vec4<R>> for &'a Quat<R> 
+impl<'a, 'b, R> Mul<&'b Vec4<R>> for &'a Quat<R>
 where
     R: Float,
 {
@@ -144,7 +148,7 @@ where
 
 forward_ref_binop!(impl<R: Float> Mul, mul for Quat<R>, Vec4<R>, Vec4<R>);
 
-impl<'a, 'b, R> Mul<&'b Quat<R>> for &'a Quat<R> 
+impl<'a, 'b, R> Mul<&'b Quat<R>> for &'a Quat<R>
 where
     R: Float,
 {
@@ -181,38 +185,18 @@ where
         if v[(2, 2)] < v[(0, 0)] {
             if v[(0, 0)] > v[(1, 1)] {
                 let t = R::one() + v[(0, 0)] - v[(1, 1)] - v[(2, 2)];
-                Quat::new(
-                    v[(1, 2)] - v[(2, 1)],
-                    t, 
-                    v[(0, 1)] + v[(1, 0)], 
-                    v[(2, 0)] + v[(0, 2)], 
-                ) * (half / t.sqrt())
+                Quat::new(v[(1, 2)] - v[(2, 1)], t, v[(0, 1)] + v[(1, 0)], v[(2, 0)] + v[(0, 2)]) * (half / t.sqrt())
             } else {
                 let t = R::one() - v[(0, 0)] + v[(1, 1)] - v[(2, 2)];
-                Quat::new(
-                    v[(2, 0)] - v[(0, 2)],
-                    v[(0, 1)] + v[(1, 0)], 
-                    t, 
-                    v[(1, 2)] + v[(2, 1)], 
-                ) * (half / t.sqrt())
+                Quat::new(v[(2, 0)] - v[(0, 2)], v[(0, 1)] + v[(1, 0)], t, v[(1, 2)] + v[(2, 1)]) * (half / t.sqrt())
             }
         } else {
             if v[(0, 0)] < -v[(1, 1)] {
                 let t = R::one() - v[(0, 0)] - v[(1, 1)] + v[(2, 2)];
-                Quat::new( 
-                    v[(0, 1)] - v[(1, 0)],
-                    v[(2, 0)] + v[(0, 2)], 
-                    v[(1, 2)] + v[(2, 1)], 
-                    t, 
-                ) * (half / t.sqrt())
+                Quat::new(v[(0, 1)] - v[(1, 0)], v[(2, 0)] + v[(0, 2)], v[(1, 2)] + v[(2, 1)], t) * (half / t.sqrt())
             } else {
                 let t = R::one() + v[(0, 0)] + v[(1, 1)] + v[(2, 2)];
-                Quat::new(
-                    t,
-                    v[(1, 2)] - v[(2, 1)], 
-                    v[(2, 0)] - v[(0, 2)], 
-                    v[(0, 1)] - v[(1, 0)], 
-                ) * (half / t.sqrt())
+                Quat::new(t, v[(1, 2)] - v[(2, 1)], v[(2, 0)] - v[(0, 2)], v[(0, 1)] - v[(1, 0)]) * (half / t.sqrt())
             }
         }
     }
@@ -228,7 +212,7 @@ where
     }
 }
 
-impl<R> From<Quat<R>> for Mat4<R> 
+impl<R> From<Quat<R>> for Mat4<R>
 where
     R: Float,
 {
@@ -237,7 +221,7 @@ where
     }
 }
 
-impl<'a, R> From<&'a Quat<R>> for Mat4<R> 
+impl<'a, R> From<&'a Quat<R>> for Mat4<R>
 where
     R: Float,
 {
@@ -253,10 +237,22 @@ where
         let t = o + o;
 
         Mat4::from([
-            o - t*j*j - t*k*k, t*i*j - t*k*w, t*i*k + t*j*w, z,
-            t*i*j + t*k*w, o - t*i*i - t*k*k, t*j*k - t*i*w, z,
-            t*i*k - t*j*w, t*j*k + t*i*w, o - t*i*i - t*j*j, z,
-            z, z, z, o,
+            o - t * j * j - t * k * k,
+            t * i * j - t * k * w,
+            t * i * k + t * j * w,
+            z,
+            t * i * j + t * k * w,
+            o - t * i * i - t * k * k,
+            t * j * k - t * i * w,
+            z,
+            t * i * k - t * j * w,
+            t * j * k + t * i * w,
+            o - t * i * i - t * j * j,
+            z,
+            z,
+            z,
+            z,
+            o,
         ])
     }
 }
@@ -273,10 +269,10 @@ where
     }
 
     fn abs_diff_eq(&self, rhs: &Self, epsilon: R::Epsilon) -> bool {
-        self.w.abs_diff_eq(&rhs.w, epsilon) &&
-            self.i.abs_diff_eq(&rhs.i, epsilon) &&
-            self.j.abs_diff_eq(&rhs.j, epsilon) &&
-            self.k.abs_diff_eq(&rhs.k, epsilon)
+        self.w.abs_diff_eq(&rhs.w, epsilon)
+            && self.i.abs_diff_eq(&rhs.i, epsilon)
+            && self.j.abs_diff_eq(&rhs.j, epsilon)
+            && self.k.abs_diff_eq(&rhs.k, epsilon)
     }
 }
 
@@ -290,10 +286,10 @@ where
     }
 
     fn relative_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
-        self.w.relative_eq(&rhs.w, epsilon, max_relative) &&
-            self.i.relative_eq(&rhs.i, epsilon, max_relative) &&
-            self.j.relative_eq(&rhs.j, epsilon, max_relative) &&
-            self.k.relative_eq(&rhs.k, epsilon, max_relative)
+        self.w.relative_eq(&rhs.w, epsilon, max_relative)
+            && self.i.relative_eq(&rhs.i, epsilon, max_relative)
+            && self.j.relative_eq(&rhs.j, epsilon, max_relative)
+            && self.k.relative_eq(&rhs.k, epsilon, max_relative)
     }
 }
 
@@ -307,17 +303,18 @@ where
     }
 
     fn ulps_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_ulps: u32) -> bool {
-        self.w.ulps_eq(&rhs.w, epsilon, max_ulps) &&
-            self.i.ulps_eq(&rhs.i, epsilon, max_ulps) &&
-            self.j.ulps_eq(&rhs.j, epsilon, max_ulps) &&
-            self.k.ulps_eq(&rhs.k, epsilon, max_ulps)
+        self.w.ulps_eq(&rhs.w, epsilon, max_ulps)
+            && self.i.ulps_eq(&rhs.i, epsilon, max_ulps)
+            && self.j.ulps_eq(&rhs.j, epsilon, max_ulps)
+            && self.k.ulps_eq(&rhs.k, epsilon, max_ulps)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use serde_test::{assert_tokens, Token};
+
+    use super::*;
 
     #[test]
     fn quat_provides_identity_constructor() {
@@ -357,7 +354,10 @@ mod tests {
         assert_eq!(q.to_matrix(), Mat4::<f32>::identity());
 
         let q = Quat::new(1.0f32, 1.0, 1.0, 1.0);
-        assert_eq!(q.to_matrix(), Mat4::<f32>::from([0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]));
+        assert_eq!(
+            q.to_matrix(),
+            Mat4::<f32>::from([0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+        );
 
         let q = Quat::new(0.0f32, 0.0, 0.0, 0.0);
         assert!(q.to_matrix().is_nan());

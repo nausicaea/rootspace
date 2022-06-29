@@ -38,31 +38,37 @@
 //! K -> "uchar" | "ushort" | "uint" | "uint8" | "uint16" | "uint32"
 //!
 
-use std::path::Path;
-use std::fs::File;
-use std::io::{BufReader, Read, Seek};
-use parser::bytes::Bytes;
-use parser::{be_count, be_number, le_count, le_number};
-use crate::error::Error;
-use crate::parser::empty::empty;
-use crate::parser::engram::engram;
-use crate::parser::lookahead::lookahead;
-use crate::parser::Parser;
-use crate::parser::repeat_exact::repeat_exact;
-use crate::parser::repeat_until::repeat_until;
-use crate::parser::take_while::take_while;
-use crate::types::{CommentDescriptor, CountType, DataType, ElementDescriptor, ListPropertyDescriptor, ObjInfoDescriptor, PlyDescriptor, PropertyDescriptor};
-
-use self::{
-    types::{FormatType, Ply},
+use std::{
+    fs::File,
+    io::{BufReader, Read, Seek},
+    path::Path,
 };
 
-pub mod types;
-pub mod parser;
-pub mod error;
-pub mod ply;
+use parser::{be_count, be_number, le_count, le_number};
+use parser::base::bytes::Bytes;
+use parser::base::empty::empty;
+use parser::base::engram::engram;
+use parser::base::lookahead::lookahead;
+use parser::base::take_while::take_while;
+use parser::combinator::repeat_exact::repeat_exact;
+use parser::combinator::repeat_until::repeat_until;
 
-pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
+use self::types::{FormatType, Ply};
+use crate::{
+    error::Error,
+    parser::Parser,
+    types::{
+        CommentDescriptor, CountType, DataType, ElementDescriptor, ListPropertyDescriptor, ObjInfoDescriptor,
+        PlyDescriptor, PropertyDescriptor,
+    },
+};
+
+pub mod error;
+pub mod parser;
+pub mod ply;
+pub mod types;
+
+pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> anyhow::Result<Ply> {
     let descriptor = ply::header().parse(stream)?;
     let mut property_data: Vec<u8> = Vec::new();
     let mut list_property_data: Vec<u8> = Vec::new();
@@ -77,13 +83,14 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
 
                 for list_property in &element.list_properties {
                     let count = ply::ascii_usize_parser().parse(stream)?;
-                    let property_values = repeat_exact(ply::ascii_number_parser(list_property.data_type), count).parse(stream)?;
+                    let property_values =
+                        repeat_exact(ply::ascii_number_parser(list_property.data_type), count).parse(stream)?;
                     for property_value in property_values {
                         list_property_data.extend(property_value);
                     }
                 }
             }
-        },
+        }
         FormatType::BinaryLittleEndian => {
             for element in &descriptor.elements {
                 for property in &element.properties {
@@ -93,13 +100,14 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
 
                 for list_property in &element.list_properties {
                     let count = le_count::le_count(list_property.count_type).parse(stream)?;
-                    let property_values = repeat_exact(le_number::le_number(list_property.data_type), count).parse(stream)?;
+                    let property_values =
+                        repeat_exact(le_number::le_number(list_property.data_type), count).parse(stream)?;
                     for property_value in property_values {
                         list_property_data.extend(property_value);
                     }
                 }
             }
-        },
+        }
         FormatType::BinaryBigEndian => {
             for element in &descriptor.elements {
                 for property in &element.properties {
@@ -109,13 +117,14 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
 
                 for list_property in &element.list_properties {
                     let count = be_count::be_count(list_property.count_type).parse(stream)?;
-                    let property_values = repeat_exact(be_number::be_number(list_property.data_type), count).parse(stream)?;
+                    let property_values =
+                        repeat_exact(be_number::be_number(list_property.data_type), count).parse(stream)?;
                     for property_value in property_values {
                         list_property_data.extend(property_value);
                     }
                 }
             }
-        },
+        }
     }
 
     Ok(Ply {
@@ -125,7 +134,7 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> Result<Ply, Error> {
     })
 }
 
-pub fn load_ply<P: AsRef<Path>>(p: P) -> Result<Ply, Error> {
+pub fn load_ply<P: AsRef<Path>>(p: P) -> anyhow::Result<Ply> {
     let file = File::open(p)?;
     let mut reader = BufReader::new(file);
 
@@ -138,8 +147,8 @@ pub(crate) fn to_reader(source: &str) -> std::io::Cursor<&[u8]> {
 }
 
 pub(crate) fn read_byte<R>(file: &mut R) -> Result<(u8, u64), Error>
-    where
-        R: Read + Seek,
+where
+    R: Read + Seek,
 {
     let mut byte_buf = [0u8; 1];
     let position = file.stream_position()?;
@@ -156,19 +165,19 @@ mod tests {
 
     #[test]
     fn load_ply_fails_if_the_file_does_not_begin_with_a_magic_string() {
-        let p: Result<Ply, Error> = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/garbage.ply"));
+        let p: anyhow::Result<Ply> = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/garbage.ply"));
         assert!(p.is_err());
     }
 
     #[test]
     fn load_ply_fails_if_the_file_does_not_have_a_header_terminator() {
-        let p: Result<Ply, Error> = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/incomplete_header.ply"));
+        let p: anyhow::Result<Ply> = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/incomplete_header.ply"));
         assert!(p.is_err());
     }
 
     #[test]
     fn load_ply_successfully_loads_minimal_ascii_ply_file() {
-        let p: Result<Ply, Error> = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
+        let p: anyhow::Result<Ply> = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
         match p {
             Err(e) => panic!("{:?}", e),
             Ok(p) => {

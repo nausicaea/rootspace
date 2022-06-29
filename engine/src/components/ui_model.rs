@@ -1,9 +1,9 @@
 use std::{iter::Product, ops::Mul};
 
 use ecs::{Component, VecStorage};
-use serde::{Deserialize, Serialize};
-use glamour::{Affine, Vec3, Vec2, AffineBuilder, Mat4};
 use forward_ref::forward_ref_binop;
+use glamour::{Affine, AffineBuilder, Mat4, Vec2, Vec3};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -128,14 +128,12 @@ impl UiModelBuilder {
     }
 
     pub fn build(self) -> UiModel {
-        let t: Vec3<f32> = self.t.zip(self.d)
+        let t: Vec3<f32> = self
+            .t
+            .zip(self.d)
             .map(|(t, d)| Vec3::new(t.x(), t.y(), d))
             .unwrap_or_else(Vec3::zero);
-        let s: Vec3<f32> = self.s.map(|s| Vec3::new(s.x(), s.y(), 1.0))
-            .unwrap_or_else(Vec3::one);
-        UiModel(AffineBuilder::default()
-            .with_translation(t)
-            .with_scale(s)
-            .build())
+        let s: Vec3<f32> = self.s.map(|s| Vec3::new(s.x(), s.y(), 1.0)).unwrap_or_else(Vec3::one);
+        UiModel(AffineBuilder::default().with_translation(t).with_scale(s).build())
     }
 }

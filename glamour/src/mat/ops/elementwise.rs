@@ -1,9 +1,10 @@
-use std::ops::{Add, Sub, Neg, Mul, Div};
-use num_traits::{Float, Inv};
-use super::super::Mat;
-use crate::ops::mul_elem::MulElem;
-use crate::ops::inv_elem::InvElem;
+use std::ops::{Add, Div, Mul, Neg, Sub};
+
 use forward_ref::forward_ref_binop;
+use num_traits::{Float, Inv};
+
+use super::super::Mat;
+use crate::ops::{inv_elem::InvElem, mul_elem::MulElem};
 
 macro_rules! impl_binops {
     ($($Op:ident, $op:ident, $deleg:ident);+ $(;)*) => {
@@ -125,7 +126,6 @@ impl_scalar_binops!(
     Mul, mul, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
     Div, div, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
 );
-
 
 #[cfg(test)]
 mod tests {

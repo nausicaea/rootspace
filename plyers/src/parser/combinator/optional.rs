@@ -1,4 +1,5 @@
 use std::io::{Read, Seek, SeekFrom};
+
 use crate::{Error, Parser};
 
 #[derive(Debug, Clone)]
@@ -14,7 +15,11 @@ where
 {
     type Item = Option<P::Item>;
 
-    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Error> where Self: Sized, R: Read + Seek {
+    fn parse<R>(self, r: &mut R) -> anyhow::Result<Self::Item>
+    where
+        Self: Sized,
+        R: Read + Seek,
+    {
         let position = r.stream_position()?;
         match self.0.parse(r) {
             Ok(p) => Ok(Some(p)),

@@ -1,8 +1,7 @@
 use std::io::{Read, Seek};
 
+use crate::Parser;
 use crate::{error::Error, read_byte};
-
-use super::Parser;
 
 #[derive(Debug, Clone)]
 pub struct TakeWhile<F> {
@@ -13,19 +12,20 @@ pub fn take_while<F>(predicate: F) -> TakeWhile<F>
 where
     F: FnMut(u8) -> bool,
 {
-    TakeWhile {
-        func: predicate,
-    }
+    TakeWhile { func: predicate }
 }
 
-
-impl<F> Parser for TakeWhile<F> 
+impl<F> Parser for TakeWhile<F>
 where
     F: FnMut(u8) -> bool,
 {
     type Item = Vec<u8>;
 
-    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
+    fn parse<R>(mut self, r: &mut R) -> anyhow::Result<Self::Item>
+    where
+        Self: Sized,
+        R: Read + Seek,
+    {
         let mut buffer = vec![];
         loop {
             let (byte, _) = read_byte(r)?;
@@ -41,9 +41,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::to_reader;
-
     use super::*;
+    use crate::to_reader;
 
     #[test]
     fn take_while_returns_everything_until_a_predicate_returns_false() {
@@ -63,11 +62,7 @@ mod tests {
         let mut stream = to_reader("Hello, World!\nBlabla");
 
         let r = take_while(|_| true).parse(&mut stream);
-
-        match r {
-            Err(Error::UnexpectedEndOfFile(20)) => (),
-            other => panic!("Expected Err(, got: {:?}", other),
-        }
+        assert!(r.is_err(), "{:?}", r.unwrap());
     }
 
     #[test]

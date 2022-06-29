@@ -20,7 +20,7 @@ macro_rules! forward_ref_unop {
         }
     };
     (impl<$R:ident: $Bound:ident> $Op:ident, $op:ident for $Lhs:ty, $Output:ty) => {
-        impl<$R> $Op for $Lhs 
+        impl<$R> $Op for $Lhs
         where
             $R: $Bound,
         {
@@ -32,7 +32,7 @@ macro_rules! forward_ref_unop {
         }
     };
     (impl<$R:ident: $Bound:ident, $(const $N:ident: usize),+ $(,)*> $Op:ident, $op:ident for $Lhs:ty, $Output:ty) => {
-        impl<$R, $(const $N: usize),+> $Op for $Lhs 
+        impl<$R, $(const $N: usize),+> $Op for $Lhs
         where
             $R: $Bound,
         {
@@ -192,4 +192,3 @@ macro_rules! forward_ref_binop {
         }
     };
 }
-

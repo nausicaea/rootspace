@@ -1,23 +1,21 @@
-mod macros;
-pub mod ops;
-pub mod mat;
 pub mod affine;
+mod iter_float;
+mod macros;
+pub mod mat;
+pub mod ops;
 pub mod ortho;
 pub mod persp;
-pub mod ray;
 pub mod quat;
+pub mod ray;
 pub mod unit;
-mod iter_float;
 
-pub use self::ops::cross::Cross;
-pub use self::ops::dot::Dot;
-pub use self::ops::mul_elem::MulElem;
-pub use self::ops::inv_elem::InvElem;
-pub use self::ops::norm::Norm;
-pub use self::affine::{Affine, AffineBuilder};
-pub use self::ortho::{Ortho, OrthoBuilder};
-pub use self::persp::{Persp, PerspBuilder};
-pub use self::quat::Quat;
-pub use self::ray::Ray;
-pub use self::mat::{Mat4, Mat3, Mat2, Vec4, Vec3, Vec2};
-pub use self::unit::Unit;
+pub use self::{
+    affine::{Affine, AffineBuilder},
+    mat::{Mat2, Mat3, Mat4, Vec2, Vec3, Vec4},
+    ops::{cross::Cross, dot::Dot, inv_elem::InvElem, mul_elem::MulElem, norm::Norm},
+    ortho::{Ortho, OrthoBuilder},
+    persp::{Persp, PerspBuilder},
+    quat::Quat,
+    ray::Ray,
+    unit::Unit,
+};

@@ -1,12 +1,13 @@
 use num_traits::Zero;
+
 use super::Mat;
 
 #[cfg(feature = "serde_support")]
-impl<R, const I: usize, const J: usize> serde::ser::Serialize for Mat<R, I, J> 
+impl<R, const I: usize, const J: usize> serde::ser::Serialize for Mat<R, I, J>
 where
     R: serde::ser::Serialize,
 {
-    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error> 
+    fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
     where
         S: serde::ser::Serializer,
     {
@@ -38,8 +39,8 @@ where
                 MatVisitor(std::marker::PhantomData::default())
             }
         }
-        
-        impl<'v, R, const I: usize, const J: usize> serde::de::Visitor<'v> for MatVisitor<R, I, J> 
+
+        impl<'v, R, const I: usize, const J: usize> serde::de::Visitor<'v> for MatVisitor<R, I, J>
         where
             R: Zero + Copy + serde::de::Deserialize<'v>,
         {
@@ -49,7 +50,7 @@ where
                 write!(fmt, "a sequence with {} elements", I * J)
             }
 
-            fn visit_seq<A>(self, mut acc: A) -> Result<Self::Value, A::Error> 
+            fn visit_seq<A>(self, mut acc: A) -> Result<Self::Value, A::Error>
             where
                 A: serde::de::SeqAccess<'v>,
             {
@@ -59,10 +60,12 @@ where
 
                 for i in 0..I {
                     for j in 0..J {
-                        mat[(i, j)] = acc.next_element()?.ok_or_else(|| Error::custom(format!("unexpected end of the serialized sequence of length {}", I * J)))?;
+                        mat[(i, j)] = acc.next_element()?.ok_or_else(|| {
+                            Error::custom(format!("unexpected end of the serialized sequence of length {}", I * J))
+                        })?;
                     }
                 }
-                
+
                 Ok(mat)
             }
         }
@@ -73,8 +76,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use serde_test::{assert_tokens, Token};
+
+    use super::*;
 
     #[test]
     fn mat_implements_serde() {

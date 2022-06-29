@@ -1,5 +1,7 @@
 use std::io::{Read, Seek};
-use super::Parser;
+use anyhow::Context;
+
+use crate::Parser;
 use crate::error::Error;
 
 #[derive(Debug, Clone)]
@@ -10,23 +12,27 @@ pub struct Chain<P, Q> {
 
 impl<P, Q> Chain<P, Q> {
     pub(crate) fn new(a: P, b: Q) -> Self {
-        Chain { 
-            a, b
-        }
+        Chain { a, b }
     }
 }
 
-impl<P, Q> Parser for Chain<P, Q> 
+impl<P, Q> Parser for Chain<P, Q>
 where
     P: Parser,
     Q: Parser,
 {
     type Item = (P::Item, Q::Item);
 
-    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Error> where Self:Sized, R: Read + Seek {
-        let ap = self.a.parse(r)?;
+    fn parse<R>(self, r: &mut R) -> anyhow::Result<Self::Item>
+    where
+        Self: Sized,
+        R: Read + Seek,
+    {
+        let ap = self.a.parse(r)
+            .context("when parsing the chain tail")?;
 
-        let bp = self.b.parse(r)?;
+        let bp = self.b.parse(r)
+            .context("when parsing the chain head")?;
 
         Ok((ap, bp))
     }
@@ -34,18 +40,15 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::parser::base::engram::engram;
+    use super::{*};
     use crate::to_reader;
-
-    use super::*;
-    use super::super::engram::engram;
 
     #[test]
     fn chain_chains_two_parsers() {
         let mut stream = to_reader("helloworld");
 
-        let r = engram(b"hello")
-            .chain(engram(b"world"))
-            .parse(&mut stream);
+        let r = engram(b"hello").chain(engram(b"world")).parse(&mut stream);
 
         match r {
             Ok((b"hello", b"world")) => (),
@@ -75,18 +78,19 @@ mod tests {
 
         impl Parser for P {
             type Item = ();
-            
-             fn parse<R>(mut self, _r: &mut R) -> Result<Self::Item, Error> where R: Read {
+
+            fn parse<R>(mut self, r: &mut R) -> anyhow::Result<Self::Item>
+            where
+                R: Read,
+            {
                 assert!(!self.0, "A::parse() was called more than once");
                 self.0 = true;
                 Ok(())
-             }
+            }
         }
 
         let mut stream = to_reader("A, b, C");
-        let r = P::default()
-            .chain(P::default())
-            .parse(&mut stream);
+        let r = P::default().chain(P::default()).parse(&mut stream);
 
         match r {
             Ok(((), ())) => (),

@@ -42,7 +42,7 @@ impl CommandTrait for FileSystemCommand {
         match &matches.subcommand {
             Subcommands::New { path } => {
                 FileSystem::default().to_path(path)?;
-            },
+            }
         }
 
         Ok(())

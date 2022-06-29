@@ -1,4 +1,5 @@
 use std::io::{Read, Seek};
+
 use crate::{Error, Parser};
 
 #[derive(Debug, Clone)]
@@ -11,7 +12,11 @@ pub fn empty() -> Empty {
 impl Parser for Empty {
     type Item = ();
 
-    fn parse<R>(self, _r: &mut R) -> Result<Self::Item, Error> where Self: Sized, R: Read + Seek {
+    fn parse<R>(self, _r: &mut R) -> anyhow::Result<Self::Item>
+    where
+        Self: Sized,
+        R: Read + Seek,
+    {
         Ok(())
     }
 }

@@ -1,8 +1,10 @@
-use num_traits::Float;
 use std::iter::Sum;
+
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use num_traits::Float;
+
 use super::mat::Vec4;
 use crate::unit::Unit;
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Ray<R> {
@@ -10,11 +12,11 @@ pub struct Ray<R> {
     pub d: Unit<Vec4<R>>,
 }
 
-impl<R> Ray<R> 
+impl<R> Ray<R>
 where
     R: Float + Sum,
 {
-    pub fn new<D>(origin: Vec4<R>, direction: D) -> Self 
+    pub fn new<D>(origin: Vec4<R>, direction: D) -> Self
     where
         D: Into<Unit<Vec4<R>>>,
     {
@@ -25,7 +27,7 @@ where
     }
 }
 
-impl<R> Ray<R> 
+impl<R> Ray<R>
 where
     R: Float,
 {
@@ -46,8 +48,7 @@ where
     }
 
     fn abs_diff_eq(&self, rhs: &Self, epsilon: R::Epsilon) -> bool {
-        self.o.abs_diff_eq(&rhs.o, epsilon) &&
-            self.d.abs_diff_eq(&rhs.d, epsilon)
+        self.o.abs_diff_eq(&rhs.o, epsilon) && self.d.abs_diff_eq(&rhs.d, epsilon)
     }
 }
 
@@ -61,8 +62,7 @@ where
     }
 
     fn relative_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
-        self.o.relative_eq(&rhs.o, epsilon, max_relative) &&
-            self.d.relative_eq(&rhs.d, epsilon, max_relative)
+        self.o.relative_eq(&rhs.o, epsilon, max_relative) && self.d.relative_eq(&rhs.d, epsilon, max_relative)
     }
 }
 
@@ -76,8 +76,6 @@ where
     }
 
     fn ulps_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_ulps: u32) -> bool {
-        self.o.ulps_eq(&rhs.o, epsilon, max_ulps) &&
-            self.d.ulps_eq(&rhs.d, epsilon, max_ulps)
+        self.o.ulps_eq(&rhs.o, epsilon, max_ulps) && self.d.ulps_eq(&rhs.d, epsilon, max_ulps)
     }
 }
-

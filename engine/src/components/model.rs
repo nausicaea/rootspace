@@ -1,9 +1,9 @@
+use std::{iter::Product, ops::Mul};
+
 use ecs::{Component, VecStorage};
-use glamour::{Affine, Mat4, Vec3, Quat, AffineBuilder, Unit};
 use forward_ref::forward_ref_binop;
+use glamour::{Affine, AffineBuilder, Mat4, Quat, Unit, Vec3};
 use serde::{Deserialize, Serialize};
-use std::ops::Mul;
-use std::iter::Product;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -129,10 +129,8 @@ impl ModelBuilder {
 
 #[cfg(test)]
 mod tests {
-    use approx::{assert_ulps_eq};
-    use proptest::prelude::*;
-    use proptest::collection::vec;
-    use proptest::num::f32::NORMAL;
+    use approx::assert_ulps_eq;
+    use proptest::{collection::vec, num::f32::NORMAL, prelude::*};
 
     use super::*;
 
@@ -167,8 +165,7 @@ mod tests {
 
     #[test]
     fn builder_accepts_orientaton() {
-        let _: ModelBuilder =
-            ModelBuilder::default().with_orientation(Quat::identity());
+        let _: ModelBuilder = ModelBuilder::default().with_orientation(Quat::identity());
     }
 
     #[test]

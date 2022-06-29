@@ -1,4 +1,5 @@
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+
 use super::Mat;
 
 impl<R, const I: usize, const J: usize> AbsDiffEq for Mat<R, I, J>
@@ -13,7 +14,8 @@ where
     }
 
     fn abs_diff_eq(&self, rhs: &Self, epsilon: R::Epsilon) -> bool {
-        self.0.iter()
+        self.0
+            .iter()
             .flatten()
             .zip(rhs.0.iter().flatten())
             .all(|(l, r)| l.abs_diff_eq(r, epsilon))
@@ -30,7 +32,8 @@ where
     }
 
     fn relative_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
-        self.0.iter()
+        self.0
+            .iter()
             .flatten()
             .zip(rhs.0.iter().flatten())
             .all(|(l, r)| l.relative_eq(r, epsilon, max_relative))
@@ -47,7 +50,8 @@ where
     }
 
     fn ulps_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_ulps: u32) -> bool {
-        self.0.iter()
+        self.0
+            .iter()
             .flatten()
             .zip(rhs.0.iter().flatten())
             .all(|(l, r)| l.ulps_eq(r, epsilon, max_ulps))
@@ -56,8 +60,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::{assert_abs_diff_eq, assert_relative_eq, assert_ulps_eq};
+
+    use super::*;
 
     #[test]
     fn mat_implements_abs_diff_eq() {

@@ -1,9 +1,11 @@
-use crate::ops::norm::Norm;
-use num_traits::Float;
-use super::super::Mat;
 use std::iter::Sum;
 
-impl<'a, R, const I: usize, const J: usize> Norm for &'a Mat<R, I, J> 
+use num_traits::Float;
+
+use super::super::Mat;
+use crate::ops::norm::Norm;
+
+impl<'a, R, const I: usize, const J: usize> Norm for &'a Mat<R, I, J>
 where
     R: Float + Sum,
 {
@@ -16,8 +18,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_ulps_eq;
+
+    use super::*;
 
     #[test]
     fn mat_provides_norm_method() {

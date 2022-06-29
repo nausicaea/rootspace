@@ -1,9 +1,9 @@
-use crate::ops::dot::Dot;
-use crate::abop;
-use super::super::Mat;
 use std::ops::Mul;
+
 use forward_ref::forward_ref_binop;
-use crate::iter_float::IterFloat;
+
+use super::super::Mat;
+use crate::{abop, iter_float::IterFloat, ops::dot::Dot};
 
 macro_rules! impl_matmul {
     ($dim:literal, $tt:tt) => {
@@ -63,20 +63,18 @@ impl_matmul!(
     ]
 );
 impl_matmul!(
-    1, 3, 3, 3,
-    [
-        ((0, 1, 2), (0, 3, 6)),
-        ((0, 1, 2), (1, 4, 7)),
-        ((0, 1, 2), (2, 5, 8)),
-    ]
+    1,
+    3,
+    3,
+    3,
+    [((0, 1, 2), (0, 3, 6)), ((0, 1, 2), (1, 4, 7)), ((0, 1, 2), (2, 5, 8)),]
 );
 impl_matmul!(
-    3, 3, 3, 1,
-    [
-        ((0, 1, 2), (0, 1, 2)),
-        ((3, 4, 5), (0, 1, 2)),
-        ((6, 7, 8), (0, 1, 2)),
-    ]
+    3,
+    3,
+    3,
+    1,
+    [((0, 1, 2), (0, 1, 2)), ((3, 4, 5), (0, 1, 2)), ((6, 7, 8), (0, 1, 2)),]
 );
 
 impl_matmul!(
@@ -101,7 +99,10 @@ impl_matmul!(
     ]
 );
 impl_matmul!(
-    1, 4, 4, 4,
+    1,
+    4,
+    4,
+    4,
     [
         ((0, 1, 2, 3), (0, 4, 8, 12)),
         ((0, 1, 2, 3), (1, 5, 9, 13)),
@@ -110,7 +111,10 @@ impl_matmul!(
     ]
 );
 impl_matmul!(
-    4, 4, 4, 1,
+    4,
+    4,
+    4,
+    1,
     [
         ((0, 1, 2, 3), (0, 1, 2, 3)),
         ((4, 5, 6, 7), (0, 1, 2, 3)),
@@ -121,7 +125,7 @@ impl_matmul!(
 
 impl<'a, 'b, R> Mul<&'b Mat<R, 2, 1>> for &'a Mat<R, 1, 2>
 where
-    R: IterFloat
+    R: IterFloat,
 {
     type Output = R;
 
@@ -135,7 +139,7 @@ forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat<R, 1, 2>, Mat<R, 2, 1>, R
 /// MARK
 impl<'a, 'b, R> Dot<&'b Mat<R, 2, 1>> for &'a Mat<R, 1, 2>
 where
-    R: IterFloat
+    R: IterFloat,
 {
     type Output = R;
 
@@ -146,14 +150,10 @@ where
 
 forward_ref_binop!(impl<R: IterFloat> Dot, dot for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mat::{Mat2, Mat3, Mat4};
-    use crate::mat::vec2::Vec2;
-    use crate::mat::vec3::Vec3;
-    use crate::mat::vec4::Vec4;
+    use crate::mat::{vec2::Vec2, vec3::Vec3, vec4::Vec4, Mat2, Mat3, Mat4};
 
     #[test]
     fn mat_supports_dot_product_2x1_1x2() {
@@ -237,14 +237,18 @@ mod tests {
     #[test]
     fn mat_supports_dot_product_1x4_4x4() {
         let a: Mat<f32, 1, 4> = Mat::from([1.0, 2.0, 3.0, 4.0]);
-        let b: Mat<f32, 4, 4> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]);
+        let b: Mat<f32, 4, 4> = Mat::from([
+            2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
+        ]);
         let c: Mat<f32, 1, 4> = Mat::from([100.0, 110.0, 120.0, 130.0]);
         assert_eq!((&a).dot(&b), c);
     }
 
     #[test]
     fn mat_supports_dot_product_4x4_4x1() {
-        let a: Mat<f32, 4, 4> = Mat::from([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]);
+        let a: Mat<f32, 4, 4> = Mat::from([
+            2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
+        ]);
         let b: Mat<f32, 4, 1> = Mat::from([1.0, 2.0, 3.0, 3.0]);
         let c: Mat<f32, 4, 1> = Mat::from([35.0, 71.0, 107.0, 143.0]);
         assert_eq!((&a).dot(&b), c);
@@ -273,5 +277,4 @@ mod tests {
 
         assert_eq!(m * v, Vec4::one());
     }
-
 }

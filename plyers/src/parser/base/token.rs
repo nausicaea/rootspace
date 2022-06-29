@@ -1,9 +1,7 @@
 use std::io::{Read, Seek};
 
-use crate::read_byte;
-use crate::error::Error;
-
-use super::Parser;
+use crate::Parser;
+use crate::{error::Error, read_byte};
 
 #[derive(Debug)]
 pub struct Token {
@@ -13,11 +11,15 @@ pub struct Token {
 impl Parser for Token {
     type Item = ();
 
-    fn parse<R>(self, r: &mut R) -> Result<Self::Item, crate::error::Error> where Self:Sized, R: Read + Seek {
+    fn parse<R>(self, r: &mut R) -> anyhow::Result<Self::Item>
+    where
+        Self: Sized,
+        R: Read + Seek,
+    {
         let (byte, position) = read_byte(r)?;
 
         if byte != self.token {
-            return Err(Error::UnexpectedByte(byte, position));
+            anyhow::bail!(Error::UnexpectedByte(byte, position));
         } else {
             return Ok(());
         }
@@ -25,15 +27,13 @@ impl Parser for Token {
 }
 
 pub fn token(t: u8) -> Token {
-    Token {
-        token: t,
-    }
+    Token { token: t }
 }
- 
+
 #[cfg(test)]
 mod tests {
-    use crate::to_reader;
     use super::*;
+    use crate::to_reader;
 
     #[test]
     fn token_parses_a_single_fixed_byte() {

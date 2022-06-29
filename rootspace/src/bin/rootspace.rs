@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use directories::ProjectDirs;
-use engine::{GliumBackend, HeadlessBackend, APP_QUALIFIER, APP_ORGANIZATION};
+use engine::{GliumBackend, HeadlessBackend, APP_ORGANIZATION, APP_QUALIFIER};
 use fern::Dispatch;
-use log::{LevelFilter, SetLoggerError, debug};
+use log::{debug, LevelFilter, SetLoggerError};
 use rootspace::Rootspace;
 
 /// Encodes the command line arguments for the Rootspace binary
@@ -21,7 +21,12 @@ struct Args {
 enum Subcommands {
     #[clap(about = "Create a new game")]
     Initialize {
-        #[clap(short, long, help = "Instruct the initializer to overwrite all data at the local data assets directory", parse(from_flag))]
+        #[clap(
+            short,
+            long,
+            help = "Instruct the initializer to overwrite all data at the local data assets directory",
+            parse(from_flag)
+        )]
         force: bool,
         #[clap(help = "Specify the name of the game")]
         name: String,
@@ -35,7 +40,7 @@ enum Subcommands {
         command: Option<String>,
         #[clap(help = "Specify the name of the game")]
         name: String,
-    }
+    },
 }
 
 fn setup_logger(verbosity: u64) -> Result<(), SetLoggerError> {
@@ -65,18 +70,23 @@ fn main() -> Result<()> {
     match &matches.subcommand {
         Subcommands::Initialize { force, name } => {
             // Configure the project-specific directories
-            let project_dirs =
-                ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, name).context("Could not find the project directories")?;
+            let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, name)
+                .context("Could not find the project directories")?;
             let asset_dir = project_dirs.data_local_dir().join("assets");
             let scene_dir = asset_dir.join("scenes");
             let main_scene = scene_dir.join("main.json");
 
             if *force || !asset_dir.exists() {
-                let g = Rootspace::<HeadlessBackend>::new(name, *force).context("Could not create a new, empty game")?;
+                let g =
+                    Rootspace::<HeadlessBackend>::new(name, *force).context("Could not create a new, empty game")?;
                 g.save(main_scene).context("Could create the new main scene")?;
             }
-        },
-        Subcommands::Run { headless, command, name } => {
+        }
+        Subcommands::Run {
+            headless,
+            command,
+            name,
+        } => {
             // Configure the project-specific directories
             let project_dirs = directories::ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, name)
                 .context("Could not find the project directories")?;
@@ -92,14 +102,14 @@ fn main() -> Result<()> {
                 }
                 g.run();
             } else {
-                let mut g =
-                    Rootspace::<GliumBackend>::load(main_scene).context("Could not load a game from an existing state")?;
+                let mut g = Rootspace::<GliumBackend>::load(main_scene)
+                    .context("Could not load a game from an existing state")?;
                 if let Some(cmd) = command {
                     g.with_command(cmd);
                 }
                 g.run();
             }
-        },
+        }
     }
 
     Ok(())

@@ -1,4 +1,5 @@
 use num_traits::Num;
+
 use crate::abop;
 
 pub trait Dot<Rhs = Self> {
@@ -20,9 +21,9 @@ macro_rules! impl_dot_product {
             }
         }
 
-        impl<'a, R> Dot for &'a $tgt 
-            where
-                R: Num + Copy + std::iter::Sum,
+        impl<'a, R> Dot for &'a $tgt
+        where
+            R: Num + Copy + std::iter::Sum,
         {
             type Output = R;
 

@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use ecs::{Resources};
+use ecs::Resources;
 use thiserror::Error;
 
 pub use self::{
     assets::AssetsCommand, components::ComponentsCommand, entities::EntitiesCommand, exit::ExitCommand,
-    states::StatesCommand, perf::PerfCommand,
+    perf::PerfCommand, states::StatesCommand,
 };
 use crate::graphics::BackendTrait;
 
@@ -14,8 +14,8 @@ pub mod assets;
 pub mod components;
 pub mod entities;
 pub mod exit;
-pub mod states;
 pub mod perf;
+pub mod states;
 
 //impl_registry!(CommandRegistry, where Head: CommandTrait + Clone + Copy + Default);
 

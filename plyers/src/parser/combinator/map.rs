@@ -1,6 +1,6 @@
-use std::io::{Seek, Read};
+use std::io::{Read, Seek};
 
-use super::Parser;
+use crate::Parser;
 
 #[derive(Debug, Clone)]
 pub struct Map<P, F> {
@@ -10,10 +10,7 @@ pub struct Map<P, F> {
 
 impl<P, F> Map<P, F> {
     pub fn new(a: P, func: F) -> Self {
-        Map {
-            a,
-            func,
-        }
+        Map { a, func }
     }
 }
 
@@ -24,7 +21,11 @@ where
 {
     type Item = J;
 
-    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, crate::error::Error> where Self:Sized, R: Read + Seek {
+    fn parse<R>(mut self, r: &mut R) -> anyhow::Result<Self::Item>
+    where
+        Self: Sized,
+        R: Read + Seek,
+    {
         let product = self.a.parse(r)?;
         Ok((self.func)(product))
     }
