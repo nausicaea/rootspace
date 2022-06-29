@@ -12,9 +12,18 @@ pub const DATA_TYPES: &'static [&'static [u8]] = &[
     b"float64", b"double",
 ];
 
-#[derive(Debug, Clone, Copy, thiserror::Error)]
-#[error("cannot convert from a sequence of bytes")]
-pub struct FromBytesError;
+#[derive(Debug, Clone, thiserror::Error)]
+#[error("expected one byte sequence of {}, but received {}", .expected, .received)]
+pub struct FromBytesError {
+    received: Vec<u8>,
+    expected: &'static [&'static [u8]],
+}
+
+impl FromBytesError {
+    fn new(received: Vec<u8>, expected: &'static [&'static [u8]]) -> Self {
+        FromBytesError { received, expected }
+    }
+}
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -61,7 +70,7 @@ impl<'a> TryFrom<&'a [u8]> for Keyword {
             b"property list" => Ok(Keyword::ListProperty),
             b"comment" => Ok(Keyword::Comment),
             b"obj_info" => Ok(Keyword::ObjInfo),
-            _ => Err(FromBytesError),
+            b => Err(FromBytesError::new(b.iter().copied().collect(), KEYWORDS)),
         }
     }
 }
@@ -107,7 +116,7 @@ impl<'a> TryFrom<&'a [u8]> for FormatType {
             b"ascii" => Ok(FormatType::Ascii),
             b"binary_little_endian" => Ok(FormatType::BinaryLittleEndian),
             b"binary_big_endian" => Ok(FormatType::BinaryBigEndian),
-            _ => Err(FromBytesError),
+            b => Err(FromBytesError::new(b.iter().copied().collect(), FORMAT_TYPES)),
         }
     }
 }
@@ -148,7 +157,7 @@ impl<'a> TryFrom<&'a [u8]> for CountType {
             b"uint8" | b"uchar" => Ok(CountType::U8),
             b"uint16" | b"ushort" => Ok(CountType::U16),
             b"uint32" | b"uint" => Ok(CountType::U32),
-            _ => Err(FromBytesError)
+            b => Err(FromBytesError::new(b.iter().copied().collect(), COUNT_TYPES)),
         }
     }
 }
@@ -204,7 +213,7 @@ impl<'a> TryFrom<&'a [u8]> for DataType {
             b"int32" | b"int" => Ok(DataType::I32),
             b"float32" | b"float" => Ok(DataType::F32),
             b"float64" | b"double" => Ok(DataType::F64),
-            _ => Err(FromBytesError)
+            b => Err(FromBytesError::new(b.iter().copied().collect(), DATA_TYPES)),
         }
     }
 }
