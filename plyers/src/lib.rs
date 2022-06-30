@@ -62,6 +62,7 @@ use crate::{
         PlyDescriptor, PropertyDescriptor,
     },
 };
+use crate::parser::error::FileWrapper;
 
 pub mod error;
 pub mod parser;
@@ -135,10 +136,15 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> anyhow::Result<Ply> {
 }
 
 pub fn load_ply<P: AsRef<Path>>(p: P) -> anyhow::Result<Ply> {
-    let file = File::open(p)?;
+    let p = p.as_ref().to_path_buf();
+    let file = File::open(&p)
+        .map_err(|e| FileWrapper::new(e, p.clone()))?;
     let mut reader = BufReader::new(file);
 
-    parse_ply(&mut reader)
+    let ply = parse_ply(&mut reader)
+        .map_err(|e| FileWrapper::new(e, p.clone()))?;
+
+    Ok(ply)
 }
 
 #[cfg(test)]

@@ -7,71 +7,21 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Display or Debug, that is the question">
-      <change afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/and_then.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/either.rs" afterDir="false" />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Began working on better error handling.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/assets/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/assets/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/components/camera/camera_builder.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera/camera_builder.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/components/model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/model.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/components/ui_model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/components/ui_model.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/states.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/debug_commands/states.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/resources/graphics.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/resources/graphics.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/resources/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/resources/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/systems/debug_interactions.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/debug_interactions.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine/src/systems/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine/src/systems/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/forward-ref/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/forward-ref/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/affine/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/affine/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/iter_float.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/iter_float.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/mat/approx.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/approx.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/mat/convert.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/convert.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/mat/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/dot.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/ops/dot.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/elementwise.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/ops/elementwise.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/index.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/ops/index.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/norm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/ops/norm.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/mat/serde.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/serde.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/mat/vec3.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/vec3.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/mat/vec4.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/mat/vec4.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/ops/dot.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/ops/dot.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/ops/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/ops/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/ortho.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/ortho.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/persp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/persp.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/quat/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/quat/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/ray.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/ray.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glamour/src/unit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/glamour/src/unit.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/and_then.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/bytes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/bytes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/engram.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/engram.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/lookahead.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/lookahead.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/take_while.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/take_while.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/token.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/token.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/be_count.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/be_count.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/be_number.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/be_number.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/bytes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/bytes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/chain.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/chain_either.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/empty.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/empty.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/engram.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/engram.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/le_count.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/le_count.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/le_number.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/le_number.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/lookahead.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/lookahead.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/map.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/map.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/and_then.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/and_then.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/chain.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/chain.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/either.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/either.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/optional.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/optional.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat_exact.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_exact.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/repeat_until.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_until.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/take_while.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/take_while.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/token.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/token.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/ply.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/ply.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rootspace/src/debug_commands.rs" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace/src/debug_commands.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -135,7 +85,7 @@
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.Test plyers">
+  <component name="RunManager" selected="Cargo.Test engram::tests">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -155,6 +105,23 @@
     </configuration>
     <configuration name="Test Engine Stable" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="test -p engine" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test engram::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package plyers --lib parser::base::engram::tests" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -255,23 +222,6 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test parser::tests::can_i_get_a_ply_parser_out_of_this" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package plyers --lib parser::tests::can_i_get_a_ply_parser_out_of_this -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Test plyers" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="test --package plyers" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -297,24 +247,23 @@
       <item itemvalue="Cargo.Run Headless" />
       <item itemvalue="Cargo.Test glamour" />
       <item itemvalue="Cargo.Test plyers" />
+      <item itemvalue="Cargo.Test engram::tests" />
       <item itemvalue="Cargo.Test lookahead::tests" />
       <item itemvalue="Cargo.Test parser::one_of::tests::one_of_correclty_parses_data_type" />
       <item itemvalue="Cargo.Test parser::one_of::tests::one_of_matches_longer_patterns_first" />
       <item itemvalue="Cargo.Test parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches" />
-      <item itemvalue="Cargo.Test parser::tests::can_i_get_a_ply_parser_out_of_this" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test engram::tests" />
         <item itemvalue="Cargo.Test lookahead::tests" />
         <item itemvalue="Cargo.Test parser::one_of::tests::one_of_correclty_parses_data_type" />
         <item itemvalue="Cargo.Test parser::one_of::tests::one_of_matches_longer_patterns_first" />
         <item itemvalue="Cargo.Test parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches" />
-        <item itemvalue="Cargo.Test parser::tests::can_i_get_a_ply_parser_out_of_this" />
       </list>
     </recent_temporary>
   </component>
   <component name="RustProjectSettings">
-    <option name="runExternalLinterOnTheFly" value="true" />
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
     <option name="version" value="2" />
   </component>
@@ -388,6 +337,7 @@
       <workItem from="1656448015908" duration="4549000" />
       <workItem from="1656452994402" duration="10757000" />
       <workItem from="1656513879626" duration="3229000" />
+      <workItem from="1656568302918" duration="1169000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>

@@ -2,6 +2,7 @@ use std::io::{Read, Seek};
 
 use crate::Parser;
 use crate::{error::Error, read_byte};
+use crate::parser::read_byte::ReadByte;
 
 #[derive(Debug, Clone)]
 pub struct TakeWhile<F> {
@@ -28,7 +29,7 @@ where
     {
         let mut buffer = vec![];
         loop {
-            let (byte, _) = read_byte(r)?;
+            let (byte, _) = r.read_byte()?;
 
             if !(self.func)(byte) {
                 return Ok(buffer);

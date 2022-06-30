@@ -27,18 +27,15 @@ where
         Self: Sized,
         S: Read + Seek,
     {
-        let position = r.stream_position()
-            .context("when reading the stream position in Either")?;
+        let position = r.stream_position()?;
 
         match self.a.parse(r) {
             Ok(a) => Ok(Left(a)),
             Err(e) => {
-                let _ = r.seek(SeekFrom::Start(position))
-                    .with_context(|| format!("when setting the stream position in Either after parser a has failed with: {}", e))?;
+                let _ = r.seek(SeekFrom::Start(position))?;
 
                 self.b.parse(r)
                     .map(|b| Right(b))
-                    .context("when applying parser b in Either")
             }
         }
     }

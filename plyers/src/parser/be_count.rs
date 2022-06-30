@@ -24,16 +24,13 @@ impl Parser for BeCount {
         match self.count_type {
             CountType::U8 => Bytes::<1>
                 .map(|n| u8::from_be_bytes(n) as usize)
-                .parse(r)
-                .context("when parsing and converting a big-endian u8 to a usize"),
+                .parse(r),
             CountType::U16 => Bytes::<2>
                 .map(|n| u16::from_be_bytes(n) as usize)
-                .parse(r)
-                .context("when parsing and converting a big-endian u16 to a usize"),
+                .parse(r),
             CountType::U32 => Bytes::<4>
                 .map(|n| u32::from_be_bytes(n) as usize)
-                .parse(r)
-                .context("when parsing and converting a big-endian u32 to a usize"),
+                .parse(r),
         }
     }
 }

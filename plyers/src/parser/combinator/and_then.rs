@@ -28,7 +28,7 @@ where
         Self: Sized,
         R: Read + Seek,
     {
-        let product = self.a.parse(r).context("before applying the AndThen mapping closure")?;
-        (self.func)(product).context("when applying the AndThen mapping closure")
+        let product = self.a.parse(r)?;
+        (self.func)(product)
     }
 }

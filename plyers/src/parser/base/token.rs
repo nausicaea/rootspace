@@ -2,6 +2,7 @@ use std::io::{Read, Seek};
 
 use crate::Parser;
 use crate::{error::Error, read_byte};
+use crate::parser::read_byte::ReadByte;
 
 #[derive(Debug)]
 pub struct Token {
@@ -16,7 +17,7 @@ impl Parser for Token {
         Self: Sized,
         R: Read + Seek,
     {
-        let (byte, position) = read_byte(r)?;
+        let (byte, position) = r.read_byte()?;
 
         if byte != self.token {
             anyhow::bail!(Error::UnexpectedByte(byte, position));

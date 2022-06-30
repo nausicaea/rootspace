@@ -2,6 +2,7 @@ use std::io::{Read, Seek};
 use anyhow::Context;
 
 use crate::{Error, Parser};
+use crate::parser::read_byte::ReadByte;
 
 #[derive(Debug, Clone, Default)]
 pub struct Bytes<const N: usize>;
@@ -16,8 +17,7 @@ impl<const N: usize> Parser for Bytes<N> {
     {
         let mut p = [0; N];
         for i in 0..N {
-            let (b, _) = crate::read_byte(r)
-                .with_context(|| format!("when parsing a sequence of {} bytes into an array", N))?;
+            let (b, _) = r.read_byte()?;
             p[i] = b;
         }
         Ok(p)

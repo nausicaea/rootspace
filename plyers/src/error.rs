@@ -50,46 +50,11 @@ impl OneOfManyError {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum ParserError {
-    #[error("received byte {received:#x}, but expected byte {expected:#x} in engram {engram:?}")]
-    Engram { received: u8, expected: u8, engram: &'static [u8] },
-    #[error("received byte {received:#x}, but expected byte {expected:#x}")]
-    Lookahead { received: u8, expected: u8 },
-    #[error("received byte {received:#x}, but expected byte {expected:#x}")]
-    Token { received: u8, expected: u8 },
+pub enum PlyError {
     #[error("received byte sequence {received:?}, but expected one of {:?}", FORMAT_TYPES)]
     FormatType { received: Vec<u8> },
     #[error("received byte sequence {received:?}, but expected one of {:?}", COUNT_TYPES)]
     CountType { received: Vec<u8> },
     #[error("received byte sequence {received:?}, but expected one of {:?}", DATA_TYPES)]
     DataType { received: Vec<u8> },
-    #[error("unable to read the stream position")]
-    StreamPositionRead(#[source] std::io::Error),
-    #[error("unable to seek within the stream")]
-    StreamPositionWrite(#[source] std::io::Error),
-    #[error("unable to read a byte from the stream")]
-    StreamRead(#[source] std::io::Error),
-    #[error("byte stream ended unexpectedly")]
-    EndOfStream,
-}
-
-#[derive(Debug, Clone, thiserror::Error)]
-#[error("{source} in file {}", .path.display())]
-pub struct File<E: std::error::Error> {
-    pub source: E,
-    pub path: std::path::PathBuf,
-}
-
-#[derive(Debug, Clone, thiserror::Error)]
-#[error("{source} with surrounding bytes {context:?}")]
-pub struct Context<E: std::error::Error> {
-    pub source: E,
-    pub context: [u8; 32],
-}
-
-#[derive(Debug, Clone, thiserror::Error)]
-#[error("{source} at address {address:#x} (dec. {address})")]
-pub struct Address<E: std::error::Error> {
-    pub source: E,
-    pub address: u64,
 }

@@ -28,11 +28,9 @@ where
         Self: Sized,
         R: Read + Seek,
     {
-        let ap = self.a.parse(r)
-            .context("when parsing the chain tail")?;
+        let ap = self.a.parse(r)?;
 
-        let bp = self.b.parse(r)
-            .context("when parsing the chain head")?;
+        let bp = self.b.parse(r)?;
 
         Ok((ap, bp))
     }

@@ -1,6 +1,9 @@
 use std::io::{Read, Seek, SeekFrom};
+use anyhow::Context;
 
 use crate::{read_byte, Error, Parser};
+use crate::parser::error::{LookaheadError, AddressWrapper};
+use crate::parser::read_byte::ReadByte;
 
 #[derive(Debug, Clone)]
 pub struct Lookahead {
@@ -15,12 +18,12 @@ impl Parser for Lookahead {
         Self: Sized,
         R: Read + Seek,
     {
-        let (byte, position) = read_byte(r)?;
+        let (byte, position) = r.read_byte()?;
 
         let _ = r.seek(SeekFrom::Start(position))?;
 
         if byte != self.token {
-            anyhow::bail!(Error::UnexpectedByte(byte, position));
+            anyhow::bail!(AddressWrapper::new(LookaheadError::new(byte, self.token), position));
         } else {
             return Ok(());
         }

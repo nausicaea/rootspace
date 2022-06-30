@@ -1,41 +1,37 @@
 use std::io::{Read, Seek};
-use anyhow::Context;
+use anyhow::{bail, Context};
 
 use crate::Parser;
 use crate::{error::Error as EError, read_byte};
+use crate::parser::error::{EngramError, AddressWrapper};
+use crate::parser::read_byte::ReadByte;
 
 #[derive(Debug, Clone)]
-pub struct Engram<'a> {
-    pattern: &'a [u8],
+pub struct Engram {
+    pattern: &'static [u8],
 }
 
-impl<'a> Parser for Engram<'a> {
-    type Item = &'a [u8];
+impl Parser for Engram {
+    type Item = &'static [u8];
 
     fn parse<R>(self, r: &mut R) -> anyhow::Result<Self::Item>
     where
         Self: Sized,
         R: Read + Seek,
     {
-        let mut index: usize = 0;
-        loop {
-            let (byte, position) = read_byte(r)
-                .context("when searching for a fixed byte pattern (i.e. engram)")?;
+        for t in self.pattern {
+            let (byte, position) = r.read_byte()?;
 
-            if byte != self.pattern[index] {
-                anyhow::bail!(EError::UnexpectedByte(byte, position));
-            }
-
-            index += 1;
-
-            if index >= self.pattern.len() {
-                return Ok(self.pattern);
+            if byte != *t {
+                bail!(AddressWrapper::new(EngramError::new(byte, *t, self.pattern), position));
             }
         }
+
+        Ok(self.pattern)
     }
 }
 
-pub fn engram(e: &[u8]) -> Engram {
+pub fn engram(e: &'static [u8]) -> Engram {
     if e.is_empty() {
         panic!("engram cannot match an empty pattern");
     }

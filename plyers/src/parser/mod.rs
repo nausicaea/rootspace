@@ -2,6 +2,7 @@ use std::io::{Read, Seek};
 use combinator::{and_then, chain, map, optional, repeat};
 
 use crate::error::Error;
+use crate::parser::error::{AddressWrapper, StreamError};
 
 pub mod be_count;
 pub mod be_number;
@@ -9,6 +10,8 @@ pub mod le_count;
 pub mod le_number;
 pub mod combinator;
 pub mod base;
+pub mod error;
+pub mod read_byte;
 
 pub trait Parser {
     type Item;
