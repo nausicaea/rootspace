@@ -1,10 +1,44 @@
 use std::io::{Read, Seek};
-use anyhow::{bail, Context};
 
-use crate::Parser;
-use crate::{error::Error as EError, read_byte};
-use crate::parser::error::{EngramError, AddressWrapper};
-use crate::parser::read_byte::ReadByte;
+
+use crate::{
+    parser::{
+        error::{AddressWrapper, StreamError},
+        read_byte::ReadByte,
+    },
+    Parser,
+};
+
+#[derive(Debug, thiserror::Error)]
+#[error("received byte {received:#x}, but expected byte {expected:#x} in engram {engram:?}")]
+pub struct UnexpectedByte {
+    received: u8,
+    expected: u8,
+    engram: &'static [u8],
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum EngramError {
+    #[error(transparent)]
+    UnexpectedByte(AddressWrapper<UnexpectedByte>),
+    #[error(transparent)]
+    Se(#[from] AddressWrapper<StreamError>),
+}
+
+impl EngramError {
+    fn unexpected_byte(received: u8, expected: u8, engram: &'static [u8], position: u64) -> Self {
+        Self::UnexpectedByte(
+            AddressWrapper::new(
+                UnexpectedByte {
+                    received,
+                    expected,
+                    engram,
+                },
+                position,
+            )
+        )
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Engram {
@@ -12,9 +46,10 @@ pub struct Engram {
 }
 
 impl Parser for Engram {
+    type Error = EngramError;
     type Item = &'static [u8];
 
-    fn parse<R>(self, r: &mut R) -> anyhow::Result<Self::Item>
+    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Self::Error>
     where
         Self: Sized,
         R: Read + Seek,
@@ -23,7 +58,7 @@ impl Parser for Engram {
             let (byte, position) = r.read_byte()?;
 
             if byte != *t {
-                bail!(AddressWrapper::new(EngramError::new(byte, *t, self.pattern), position));
+                return Err(EngramError::unexpected_byte(byte, *t, self.pattern, position));
             }
         }
 

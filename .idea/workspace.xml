@@ -7,11 +7,13 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Began working on better error handling.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Uuuugh, errors!!!">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/bytes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/bytes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/empty.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/empty.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/engram.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/engram.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/lookahead.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/lookahead.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/take_while.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/take_while.rs" afterDir="false" />
@@ -21,7 +23,18 @@
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/and_then.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/and_then.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/chain.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/chain.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/either.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/either.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/map.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/map.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/optional.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/optional.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_exact.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_exact.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_until.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_until.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/le_count.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/le_count.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/le_number.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/le_number.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/read_byte.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/read_byte.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/ply.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/ply.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,6 +82,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/young0000/Crypt/Development/rootspace/plyers/tests&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;language.rust.cargo.check&quot;
   }
@@ -85,7 +99,12 @@
       <recent name="$PROJECT_DIR$/engine/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Cargo.Test engram::tests">
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="cargo +nightly fmt" />
+    </option>
+  </component>
+  <component name="RunManager" selected="Cargo.Test plyers">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -120,93 +139,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test engram::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package plyers --lib parser::base::engram::tests" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Test glamour" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="test --package glamour" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test lookahead::tests" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package plyers --lib parser::lookahead::tests" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test parser::one_of::tests::one_of_correclty_parses_data_type" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package plyers --lib parser::one_of::tests::one_of_correclty_parses_data_type -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test parser::one_of::tests::one_of_matches_longer_patterns_first" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package plyers --lib parser::one_of::tests::one_of_matches_longer_patterns_first -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package plyers --lib parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -247,23 +181,10 @@
       <item itemvalue="Cargo.Run Headless" />
       <item itemvalue="Cargo.Test glamour" />
       <item itemvalue="Cargo.Test plyers" />
-      <item itemvalue="Cargo.Test engram::tests" />
-      <item itemvalue="Cargo.Test lookahead::tests" />
-      <item itemvalue="Cargo.Test parser::one_of::tests::one_of_correclty_parses_data_type" />
-      <item itemvalue="Cargo.Test parser::one_of::tests::one_of_matches_longer_patterns_first" />
-      <item itemvalue="Cargo.Test parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches" />
     </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Cargo.Test engram::tests" />
-        <item itemvalue="Cargo.Test lookahead::tests" />
-        <item itemvalue="Cargo.Test parser::one_of::tests::one_of_correclty_parses_data_type" />
-        <item itemvalue="Cargo.Test parser::one_of::tests::one_of_matches_longer_patterns_first" />
-        <item itemvalue="Cargo.Test parser::one_of::tests::one_of_succeeds_on_the_first_engram_that_matches" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="RustProjectSettings">
+    <option name="externalLinter" value="Clippy" />
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
     <option name="version" value="2" />
   </component>
@@ -337,7 +258,12 @@
       <workItem from="1656448015908" duration="4549000" />
       <workItem from="1656452994402" duration="10757000" />
       <workItem from="1656513879626" duration="3229000" />
-      <workItem from="1656568302918" duration="1169000" />
+      <workItem from="1656568302918" duration="3214000" />
+      <workItem from="1656870612943" duration="641000" />
+      <workItem from="1656885378963" duration="709000" />
+      <workItem from="1656925359752" duration="155000" />
+      <workItem from="1657013318869" duration="3764000" />
+      <workItem from="1657044391802" duration="59000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -604,7 +530,14 @@
       <option name="project" value="LOCAL" />
       <updated>1656486388843</updated>
     </task>
-    <option name="localTasksCounter" value="43" />
+    <task id="LOCAL-00043" summary="Uuuugh, errors!!!">
+      <created>1656585002003</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1656585002003</updated>
+    </task>
+    <option name="localTasksCounter" value="44" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -623,7 +556,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Fixed a texture sampling issue due to bad texture coordinates in quad.ply" />
     <MESSAGE value="Modified the output of the commands components and entities" />
     <MESSAGE value="For some reason, I have unexpected inconsistencies with point transformations" />
     <MESSAGE value="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error." />
@@ -648,6 +580,7 @@
     <MESSAGE value="Changed the error handling in RepeatUntil" />
     <MESSAGE value="Improved error communication in types.rs" />
     <MESSAGE value="Display or Debug, that is the question" />
-    <option name="LAST_COMMIT_MESSAGE" value="Display or Debug, that is the question" />
+    <MESSAGE value="Uuuugh, errors!!!" />
+    <option name="LAST_COMMIT_MESSAGE" value="Uuuugh, errors!!!" />
   </component>
 </project>

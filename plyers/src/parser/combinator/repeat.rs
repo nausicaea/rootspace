@@ -1,7 +1,6 @@
 use std::io::{Read, Seek, SeekFrom};
 
 use crate::Parser;
-use crate::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct Repeat<P> {
@@ -17,8 +16,9 @@ where
     P: Parser + Clone,
 {
     type Item = Vec<P::Item>;
+    type Error = Box<dyn std::error::Error + 'static>;
 
-    fn parse<S>(self, r: &mut S) -> anyhow::Result<Self::Item>
+    fn parse<S>(self, r: &mut S) -> Result<Self::Item, Self::Error>
     where
         Self: Sized,
         S: Read + Seek,
@@ -33,7 +33,8 @@ where
                     at_least_once_ps.push(alop);
                 }
                 Err(_) => {
-                    let _ = r.seek(SeekFrom::Start(position))?;
+                    r.seek(SeekFrom::Start(position))?;
+
                     return Ok(at_least_once_ps);
                 }
             }

@@ -1,8 +1,6 @@
 use std::io::{Read, Seek};
-use anyhow::Context;
 
 use crate::Parser;
-use crate::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct Chain<P, Q> {
@@ -19,11 +17,14 @@ impl<P, Q> Chain<P, Q> {
 impl<P, Q> Parser for Chain<P, Q>
 where
     P: Parser,
+    P::Error: std::error::Error + 'static,
     Q: Parser,
+    Q::Error: std::error::Error + 'static,
 {
     type Item = (P::Item, Q::Item);
+    type Error = Box<dyn std::error::Error + 'static>;
 
-    fn parse<R>(self, r: &mut R) -> anyhow::Result<Self::Item>
+    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Self::Error>
     where
         Self: Sized,
         R: Read + Seek,
@@ -38,9 +39,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::base::engram::engram;
-    use super::{*};
-    use crate::to_reader;
+    use super::*;
+    use crate::{parser::base::engram::engram, to_reader};
 
     #[test]
     fn chain_chains_two_parsers() {
@@ -74,10 +74,15 @@ mod tests {
         #[derive(Default)]
         struct P(bool);
 
+        #[derive(Debug, thiserror::Error)]
+        #[error("error in tests")]
+        struct PError;
+
         impl Parser for P {
             type Item = ();
+            type Error = PError;
 
-            fn parse<R>(mut self, r: &mut R) -> anyhow::Result<Self::Item>
+            fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Self::Error>
             where
                 R: Read,
             {

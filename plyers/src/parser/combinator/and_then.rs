@@ -1,7 +1,5 @@
 use std::io::{Read, Seek};
 
-use anyhow::Context;
-
 use crate::Parser;
 
 #[derive(Debug, Clone)]
@@ -16,19 +14,23 @@ impl<P, F> AndThen<P, F> {
     }
 }
 
-impl<P, J, F> Parser for AndThen<P, F>
+impl<P, J, K, F> Parser for AndThen<P, F>
 where
     P: Parser,
-    F: FnMut(P::Item) -> anyhow::Result<J>,
+    P::Error: std::error::Error + 'static,
+    K: std::error::Error + 'static,
+    F: FnMut(P::Item) -> Result<J, K>,
 {
+    type Error = Box<dyn std::error::Error + 'static>;
     type Item = J;
 
-    fn parse<R>(mut self, r: &mut R) -> anyhow::Result<Self::Item>
+    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Self::Error>
     where
         Self: Sized,
         R: Read + Seek,
     {
         let product = self.a.parse(r)?;
-        (self.func)(product)
+        let product = (self.func)(product)?;
+        Ok(product)
     }
 }

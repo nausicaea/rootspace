@@ -1,9 +1,37 @@
 use std::io::{Read, Seek, SeekFrom};
-use anyhow::Context;
 
-use crate::{read_byte, Error, Parser};
-use crate::parser::error::{LookaheadError, AddressWrapper};
-use crate::parser::read_byte::ReadByte;
+
+use crate::{
+    parser::{
+        error::{AddressWrapper, StreamError},
+        read_byte::ReadByte,
+    },
+    Parser,
+};
+
+#[derive(Debug, thiserror::Error)]
+#[error("received byte {received:#x}, but expected byte {expected:#x}")]
+pub struct UnexpectedByte { 
+    received: u8, 
+    expected: u8,
+}
+
+
+#[derive(Debug, thiserror::Error)]
+pub enum LookaheadError {
+    #[error(transparent)]
+    UnexpectedByte(AddressWrapper<UnexpectedByte>),
+    #[error(transparent)]
+    Se(#[from] AddressWrapper<StreamError>),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+}
+
+impl LookaheadError {
+    fn unexpected_byte(received: u8, expected: u8, position: u64) -> Self {
+        LookaheadError::UnexpectedByte(AddressWrapper::new(UnexpectedByte { received, expected }, position))
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Lookahead {
@@ -11,19 +39,21 @@ pub struct Lookahead {
 }
 
 impl Parser for Lookahead {
+    type Error = LookaheadError;
     type Item = ();
 
-    fn parse<R>(self, r: &mut R) -> anyhow::Result<Self::Item>
+    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Self::Error>
     where
         Self: Sized,
         R: Read + Seek,
     {
         let (byte, position) = r.read_byte()?;
 
-        let _ = r.seek(SeekFrom::Start(position))?;
+        let _ = r.seek(SeekFrom::Start(position))
+            .map_err(|e| LookaheadError::Io(e))?;
 
         if byte != self.token {
-            anyhow::bail!(AddressWrapper::new(LookaheadError::new(byte, self.token), position));
+            return Err(LookaheadError::unexpected_byte(byte, self.token, position));
         } else {
             return Ok(());
         }

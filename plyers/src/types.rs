@@ -72,6 +72,16 @@ impl CountType {
     }
 }
 
+impl std::fmt::Display for CountType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            CountType::U8 => write!(f, "u8"),
+            CountType::U16 => write!(f, "u16"),
+            CountType::U32 => write!(f, "u32"),
+        }
+    }
+}
+
 impl Into<&'static [u8]> for CountType {
     fn into(self) -> &'static [u8] {
         match self {
@@ -118,6 +128,20 @@ impl DataType {
     }
 }
 
+impl std::fmt::Display for DataType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            DataType::U8 => write!(f, "u8"),
+            DataType::I8 => write!(f, "i8"),
+            DataType::U16 => write!(f, "u16"),
+            DataType::I16 => write!(f, "i16"),
+            DataType::U32 => write!(f, "u32"),
+            DataType::I32 => write!(f, "i32"),
+            DataType::F32 => write!(f, "f32"),
+            DataType::F64 => write!(f, "f64"),
+        }
+    }
+}
 impl Into<&'static [u8]> for DataType {
     fn into(self) -> &'static [u8] {
         match self {

@@ -2,11 +2,10 @@ use std::{
     num::{ParseFloatError, ParseIntError},
     string::FromUtf8Error as SFU8E,
 };
-use std::ops::Range;
-
-use crate::types::{FORMAT_TYPES, COUNT_TYPES, DATA_TYPES};
 
 use thiserror::Error as ThisError;
+
+use crate::types::{COUNT_TYPES, DATA_TYPES, FORMAT_TYPES};
 
 #[derive(Debug, ThisError)]
 pub enum Error {

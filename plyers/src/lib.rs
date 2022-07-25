@@ -44,25 +44,20 @@ use std::{
     path::Path,
 };
 
-use parser::{be_count, be_number, le_count, le_number};
-use parser::base::bytes::Bytes;
-use parser::base::empty::empty;
-use parser::base::engram::engram;
-use parser::base::lookahead::lookahead;
-use parser::base::take_while::take_while;
-use parser::combinator::repeat_exact::repeat_exact;
-use parser::combinator::repeat_until::repeat_until;
+use parser::{
+    base::bytes::Bytes,
+    be_count, be_number,
+    combinator::repeat_exact::repeat_exact,
+    le_count, le_number,
+};
 
 use self::types::{FormatType, Ply};
 use crate::{
-    error::Error,
-    parser::Parser,
+    parser::{error::FileWrapper, Parser},
     types::{
-        CommentDescriptor, CountType, DataType, ElementDescriptor, ListPropertyDescriptor, ObjInfoDescriptor,
-        PlyDescriptor, PropertyDescriptor,
+        CountType, DataType,
     },
 };
-use crate::parser::error::FileWrapper;
 
 pub mod error;
 pub mod parser;
@@ -137,12 +132,10 @@ pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> anyhow::Result<Ply> {
 
 pub fn load_ply<P: AsRef<Path>>(p: P) -> anyhow::Result<Ply> {
     let p = p.as_ref().to_path_buf();
-    let file = File::open(&p)
-        .map_err(|e| FileWrapper::new(e, p.clone()))?;
+    let file = File::open(&p).map_err(|e| FileWrapper::new(e, p.clone()))?;
     let mut reader = BufReader::new(file);
 
-    let ply = parse_ply(&mut reader)
-        .map_err(|e| FileWrapper::new(e, p.clone()))?;
+    let ply = parse_ply(&mut reader).map_err(|e| FileWrapper::new(e, p.clone()))?;
 
     Ok(ply)
 }
@@ -152,18 +145,6 @@ pub(crate) fn to_reader(source: &str) -> std::io::Cursor<&[u8]> {
     std::io::Cursor::new(source.as_bytes())
 }
 
-pub(crate) fn read_byte<R>(file: &mut R) -> Result<(u8, u64), Error>
-where
-    R: Read + Seek,
-{
-    let mut byte_buf = [0u8; 1];
-    let position = file.stream_position()?;
-    let n = file.read(&mut byte_buf)?;
-    if n == 0 {
-        return Err(Error::UnexpectedEndOfFile(position));
-    }
-    Ok((byte_buf[0], position))
-}
 
 #[cfg(test)]
 mod tests {

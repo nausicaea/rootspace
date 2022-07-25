@@ -1,7 +1,6 @@
 use std::io::{Read, Seek, SeekFrom};
 
 use crate::Parser;
-use crate::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct RepeatUntil<Q, R> {
@@ -16,11 +15,13 @@ pub fn repeat_until<Q, R>(at_least_once: Q, until: R) -> RepeatUntil<Q, R> {
 impl<Q, R> Parser for RepeatUntil<Q, R>
 where
     Q: Parser + Clone,
+    Q::Error: std::error::Error + 'static,
     R: Parser + Clone,
 {
     type Item = (Vec<Q::Item>, R::Item);
+    type Error = Box<dyn std::error::Error + 'static>;
 
-    fn parse<S>(self, r: &mut S) -> anyhow::Result<Self::Item>
+    fn parse<S>(self, r: &mut S) -> Result<Self::Item, Self::Error>
     where
         Self: Sized,
         S: Read + Seek,
@@ -33,11 +34,10 @@ where
 
             let position = r.stream_position()?;
 
-            let until_r = self.until.clone().parse(r);
-            match until_r {
+            match self.until.clone().parse(r) {
                 Ok(until_p) => break until_p,
                 Err(_) => {
-                    let _ = r.seek(SeekFrom::Start(position))?;
+                    r.seek(SeekFrom::Start(position))?;
                 }
             }
         };

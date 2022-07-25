@@ -1,9 +1,8 @@
 use std::io::{Read, Seek, SeekFrom};
-use anyhow::Context;
 
 use either::{Either as EEither, Left, Right};
 
-use crate::{Error, Parser};
+use crate::Parser;
 
 #[derive(Debug, Clone)]
 pub struct Either<Q, R> {
@@ -12,17 +11,20 @@ pub struct Either<Q, R> {
 }
 
 pub fn either<Q, R>(a: Q, b: R) -> Either<Q, R> {
-        Either { a, b }
-    }
+    Either { a, b }
+}
 
 impl<Q, R> Parser for Either<Q, R>
 where
     Q: Parser,
+    Q::Error: std::error::Error + 'static,
     R: Parser,
+    R::Error: std::error::Error + 'static,
 {
     type Item = EEither<Q::Item, R::Item>;
+    type Error = Box<dyn std::error::Error + 'static>;
 
-    fn parse<S>(self, r: &mut S) -> anyhow::Result<Self::Item>
+    fn parse<S>(self, r: &mut S) -> Result<Self::Item, Self::Error>
     where
         Self: Sized,
         S: Read + Seek,
@@ -34,8 +36,10 @@ where
             Err(e) => {
                 let _ = r.seek(SeekFrom::Start(position))?;
 
-                self.b.parse(r)
-                    .map(|b| Right(b))
+                let b = self.b.parse(r)
+                    .map(|b| Right(b))?;
+
+                Ok(b)
             }
         }
     }

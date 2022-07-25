@@ -1,44 +1,4 @@
 #[derive(Debug, thiserror::Error)]
-#[error("received byte {received:#x}, but expected byte {expected:#x} in engram {engram:?}")]
-pub struct EngramError {
-    pub received: u8,
-    pub expected: u8,
-    pub engram: &'static [u8],
-}
-
-impl EngramError {
-    pub fn new(received: u8, expected: u8, engram: &'static [u8]) -> Self {
-        EngramError { received, expected, engram }
-    }
-}
-
-#[derive(Debug, thiserror::Error)]
-#[error("received byte {received:#x}, but expected byte {expected:#x}")]
-pub struct LookaheadError {
-    received: u8,
-    expected: u8,
-}
-
-impl LookaheadError {
-    pub fn new(received: u8, expected: u8) -> Self {
-        LookaheadError { received, expected }
-    }
-}
-
-#[derive(Debug, thiserror::Error)]
-#[error("received byte {received:#x}, but expected byte {expected:#x}")]
-pub struct TokenError {
-    received: u8,
-    expected: u8,
-}
-
-impl TokenError {
-    pub fn new(received: u8, expected: u8) -> Self {
-        TokenError { received, expected }
-    }
-}
-
-#[derive(Debug, thiserror::Error)]
 pub enum StreamError {
     #[error("unable to read the stream position")]
     PositionRead(#[source] std::io::Error),

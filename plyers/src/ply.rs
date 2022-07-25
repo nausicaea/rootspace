@@ -1,15 +1,16 @@
 use either::{Either, Left, Right};
+
 use crate::{
-    types::CommentDescriptor, types::CountType, types::ElementDescriptor, types::FormatType, types::ListPropertyDescriptor, types::ObjInfoDescriptor, types::PlyDescriptor, types::PropertyDescriptor
+    parser::{
+        base::{empty::empty, engram::engram, lookahead::lookahead, take_while::take_while},
+        combinator::{either::either, repeat_until::repeat_until},
+        Parser,
+    },
+    types::{
+        CommentDescriptor, CountType, DataType, ElementDescriptor, FormatType, ListPropertyDescriptor,
+        ObjInfoDescriptor, PlyDescriptor, PropertyDescriptor,
+    },
 };
-use crate::parser::base::empty::empty;
-use crate::parser::base::engram::engram;
-use crate::parser::base::lookahead::lookahead;
-use crate::parser::combinator::either::either;
-use crate::parser::combinator::repeat_until::repeat_until;
-use crate::types::DataType;
-use crate::parser::Parser;
-use crate::parser::base::take_while::take_while;
 
 pub fn ascii_usize_parser() -> impl Parser<Item = usize> {
     take_while(|b| b != b' ').and_then(|cd| {
@@ -154,7 +155,9 @@ pub fn element() -> impl Parser<Item = (Vec<Either<CommentDescriptor, ObjInfoDes
     let list_properties = empty()
         .chain(repeat_until(list_property(), lookahead(b'e')))
         .map(|(_, (lp, _))| lp);
-    let properties = empty().chain(either(normal_properties, list_properties)).map(|(_, p)| p);
+    let properties = empty()
+        .chain(either(normal_properties, list_properties))
+        .map(|(_, p)| p);
 
     empty()
         .chain(comment_or_obj_info())

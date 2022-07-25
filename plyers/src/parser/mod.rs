@@ -1,22 +1,21 @@
 use std::io::{Read, Seek};
+
 use combinator::{and_then, chain, map, optional, repeat};
 
-use crate::error::Error;
-use crate::parser::error::{AddressWrapper, StreamError};
-
+pub mod base;
 pub mod be_count;
 pub mod be_number;
+pub mod combinator;
+pub mod error;
 pub mod le_count;
 pub mod le_number;
-pub mod combinator;
-pub mod base;
-pub mod error;
 pub mod read_byte;
 
 pub trait Parser {
+    type Error;
     type Item;
 
-    fn parse<R>(self, r: &mut R) -> anyhow::Result<Self::Item>
+    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Self::Error>
     where
         Self: Sized,
         R: Read + Seek;

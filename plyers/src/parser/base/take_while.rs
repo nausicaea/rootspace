@@ -1,8 +1,13 @@
 use std::io::{Read, Seek};
 
-use crate::Parser;
-use crate::{error::Error, read_byte};
-use crate::parser::read_byte::ReadByte;
+use crate::{
+    parser::{error::{StreamError, AddressWrapper}, read_byte::ReadByte},
+    Parser,
+};
+
+#[derive(Debug, thiserror::Error)]
+#[error(transparent)]
+pub struct TakeWhileError(#[from] AddressWrapper<StreamError>);
 
 #[derive(Debug, Clone)]
 pub struct TakeWhile<F> {
@@ -20,9 +25,10 @@ impl<F> Parser for TakeWhile<F>
 where
     F: FnMut(u8) -> bool,
 {
+    type Error = TakeWhileError;
     type Item = Vec<u8>;
 
-    fn parse<R>(mut self, r: &mut R) -> anyhow::Result<Self::Item>
+    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Self::Error>
     where
         Self: Sized,
         R: Read + Seek,

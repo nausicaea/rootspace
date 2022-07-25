@@ -17,16 +17,19 @@ impl<P, F> Map<P, F> {
 impl<P, J, F> Parser for Map<P, F>
 where
     P: Parser,
+    P::Error: std::error::Error + 'static,
     F: FnMut(P::Item) -> J,
 {
     type Item = J;
+    type Error = Box<dyn std::error::Error + 'static>;
 
-    fn parse<R>(mut self, r: &mut R) -> anyhow::Result<Self::Item>
+    fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Self::Error>
     where
         Self: Sized,
         R: Read + Seek,
     {
         let product = self.a.parse(r)?;
+
         Ok((self.func)(product))
     }
 }
