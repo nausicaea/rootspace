@@ -20,7 +20,7 @@
 //! S -> A B
 //! A -> "ply" D E "end_header"
 //! B -> W | W B
-//! D' -> "format" H Z
+//! D' -> "format" H "1.0"
 //! D -> D' | F D'
 //! E' -> "element" Y X
 //! E -> E' G | F E' G | E' G E | F E' G E
