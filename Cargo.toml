@@ -3,12 +3,13 @@ resolver = "2"
 members = [
     "try-default",
     "file-manipulation",
-    "ply",
     "ecs",
     "engine",
     "rootspace",
     "rose-tree",
     "glamour",
+    #"ply",
     "plyers",
+    "plynth",
     "forward-ref",
 ]

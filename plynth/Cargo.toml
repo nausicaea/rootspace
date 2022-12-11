@@ -1,0 +1,14 @@
+[package]
+name = "plynth"
+version = "0.1.0"
+edition = "2021"
+description = "The ply crate provides facilities to read from Stanford PLY 3d-data files."
+
+[dependencies]
+combine = "^4.6.6"
+thiserror = "^1.0.0"
+num-traits = "^0.2.5"
+
+[dev-dependencies]
+proptest = "1.0.0"
+proptest-derive = "0.3.0"

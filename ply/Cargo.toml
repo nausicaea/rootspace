@@ -7,6 +7,6 @@ repository = "https://gitlab.com/nausicaea/ply.git"
 edition = "2021"
 
 [dependencies]
-combine = "^3.5.1"
+combine = "^4.6.6"
 thiserror = "^1.0.0"
 num-traits = "^0.2.5"

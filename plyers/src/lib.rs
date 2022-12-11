@@ -152,19 +152,19 @@ mod tests {
 
     #[test]
     fn load_ply_fails_if_the_file_does_not_begin_with_a_magic_string() {
-        let p: anyhow::Result<Ply> = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/garbage.ply"));
+        let p = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/garbage.ply"));
         assert!(p.is_err());
     }
 
     #[test]
     fn load_ply_fails_if_the_file_does_not_have_a_header_terminator() {
-        let p: anyhow::Result<Ply> = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/incomplete_header.ply"));
+        let p = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/incomplete_header.ply"));
         assert!(p.is_err());
     }
 
     #[test]
     fn load_ply_successfully_loads_minimal_ascii_ply_file() {
-        let p: anyhow::Result<Ply> = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
+        let p = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
         match p {
             Err(e) => panic!("{:?}", e),
             Ok(p) => {
