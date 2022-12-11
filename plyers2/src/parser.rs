@@ -1,4 +1,4 @@
-use nom::{bytes::complete::{tag, take_while1, take_till1}, IResult, branch::alt, sequence::{pair, delimited, separated_pair, terminated}, character::{is_space, is_newline}};
+use nom::{bytes::complete::{tag, take_while1, take_till1}, IResult, branch::alt, sequence::{pair, delimited, separated_pair, terminated, tuple}, character::{is_space, is_newline, complete::{alphanumeric1, alpha1}}, combinator::recognize, multi::many0_count};
 
 const PLY: &'static [u8] = b"ply";
 const END_HEADER: &'static [u8] = b"end_header";
@@ -11,22 +11,27 @@ const LIST: &'static [u8] = b"list";
 const ASCII: &'static [u8] = b"ascii";
 const BINARY_LITTLE_ENDIAN: &'static [u8] = b"binary_little_endian";
 const BINARY_BIG_ENDIAN: &'static [u8] = b"binary_big_endian";
-const CHAR: &'static [u8] = b"char";
+
+const FLOAT64: &'static [u8] = b"float64";
+const FLOAT32: &'static [u8] = b"float32";
+
+const USHORT: &'static [u8] = b"ushort";
+const UINT32: &'static [u8] = b"uint32";
+const UINT16: &'static [u8] = b"uint16";
+const DOUBLE: &'static [u8] = b"double";
+
+const UINT8: &'static [u8] = b"uint8";
 const UCHAR: &'static [u8] = b"uchar";
 const SHORT: &'static [u8] = b"short";
-const USHORT: &'static [u8] = b"ushort";
-const INT: &'static [u8] = b"int";
-const UINT: &'static [u8] = b"uint";
-const FLOAT: &'static [u8] = b"float";
-const DOUBLE: &'static [u8] = b"double";
-const INT8: &'static [u8] = b"int8";
-const UINT8: &'static [u8] = b"uint8";
-const INT16: &'static [u8] = b"int16";
-const UINT16: &'static [u8] = b"uint16";
 const INT32: &'static [u8] = b"int32";
-const UINT32: &'static [u8] = b"uint32";
-const FLOAT32: &'static [u8] = b"float32";
-const FLOAT64: &'static [u8] = b"float64";
+const INT16: &'static [u8] = b"int16";
+const FLOAT: &'static [u8] = b"float";
+
+const UINT: &'static [u8] = b"uint";
+const INT8: &'static [u8] = b"int8";
+const CHAR: &'static [u8] = b"char";
+
+const INT: &'static [u8] = b"int";
 
 fn space(input: &[u8]) -> IResult<&[u8], &[u8]> {
     take_while1(is_space)(input)
@@ -38,6 +43,15 @@ fn newline(input: &[u8]) -> IResult<&[u8], &[u8]> {
 
 fn single_line_text(input: &[u8]) -> IResult<&[u8], &[u8]> {
     take_till1(is_newline)(input)
+}
+
+fn identifier(input: &[u8]) -> IResult<&[u8], &[u8]> {
+    recognize(
+        pair(
+            alt((alpha1, tag(b"_"))),
+            many0_count(alt((alphanumeric1, tag(b"_"))))
+        )
+    )(input)
 }
 
 fn ply_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
@@ -94,12 +108,39 @@ fn list_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
 
 fn data_type(input: &[u8]) -> IResult<&[u8], &[u8]> {
     alt((
-        tag(CHAR),
+        tag(FLOAT64),
+        tag(FLOAT32),
+        tag(USHORT),
+        tag(UINT32),
+        tag(UINT16),
+        tag(DOUBLE),
+        tag(UINT8),
         tag(UCHAR),
-        
-    ))
+        tag(SHORT),
+        tag(INT32),
+        tag(INT16),
+        tag(FLOAT),
+        tag(UINT),
+        tag(INT8),
+        tag(CHAR),
+        tag(INT),
+    ))(input)
 }
 
+fn count_type(input: &[u8]) -> IResult<&[u8], &[u8]> {
+    alt((
+        tag(USHORT),
+        tag(UINT32),
+        tag(UINT16),
+        tag(UINT8),
+        tag(UCHAR),
+        tag(UINT),
+    ))(input)
+}
+
+fn property_stmt(input: &[u8]) -> IResult<&[u8], (&[u8], &[u8], &[u8])> {
+    todo!()
+}
 
 #[cfg(test)]
 mod tests {
