@@ -84,6 +84,22 @@ fn obj_info_stmt(input: &[u8]) -> IResult<&[u8], (&[u8], &[u8])> {
     terminated(separated_pair(obj_info_kwd, space, single_line_text), newline)(input)
 }
 
+fn property_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+    tag(PROPERTY)(input)
+}
+
+fn list_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+    tag(LIST)(input)
+}
+
+fn data_type(input: &[u8]) -> IResult<&[u8], &[u8]> {
+    alt((
+        tag(CHAR),
+        tag(UCHAR),
+        
+    ))
+}
+
 
 #[cfg(test)]
 mod tests {
