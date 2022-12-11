@@ -26,7 +26,6 @@ snowflake = "^1.2.0"
 serde = { version = "^1.0.0", features = ["derive"] }
 serde_json = "^1.0.0"
 try-default = { path = "../try-default" }
-ply = { path = "../ply" }
 ecs = { path = "../ecs" }
 file-manipulation = { path = "../file-manipulation", features = ["serde_support"] }
 term-table = "^1.3.1"

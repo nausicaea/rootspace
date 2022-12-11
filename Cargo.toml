@@ -8,8 +8,7 @@ members = [
     "rootspace",
     "rose-tree",
     "glamour",
-    #"ply",
     "plyers",
-    "plynth",
+    "plyers2",
     "forward-ref",
 ]
