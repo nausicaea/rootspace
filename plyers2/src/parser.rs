@@ -328,7 +328,7 @@ fn header(input: &[u8]) -> IResult<&[u8], PlyDescriptor> {
 
 #[cfg(test)]
 mod tests {
-    use nom::error::dbg_dmp;
+    use nom::{error::dbg_dmp, bytes::complete::take, number::streaming::le_i8};
     use proptest::{prop_assert_eq, proptest, string::bytes_regex};
 
     use super::*;
@@ -370,5 +370,15 @@ mod tests {
         let r = end_header_kwd(input.as_slice());
 
         assert_eq!(r, Ok((rest.as_slice(), END_HEADER)))
+    }
+
+    #[test]
+    fn header_minimal_ascii_parses_correctly() {
+        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
+        assert_eq!(header(&input[..]), Ok((&b"1.0\n"[..], PlyDescriptor { format_type: FormatType::Ascii, elements: vec![ElementDescriptor { name: String::from("vertex"), count: 1usize, properties: vec![PropertyDescriptor { data_type: DataType::F32, name: String::from("x"), comments: Vec::new(), obj_info: Vec::new() }], list_properties: Vec::new(), comments: Vec::new(), obj_info: Vec::new() }], comments: Vec::new(), obj_info: Vec::new() })));
+    }
+
+    #[test]
+    fn playground() {
     }
 }

@@ -27,7 +27,7 @@ pub enum DataType {
     F64,
 }
 
-#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
 pub struct PropertyDescriptor {
     pub data_type: DataType,
@@ -36,7 +36,7 @@ pub struct PropertyDescriptor {
     pub obj_info: Vec<ObjInfoDescriptor>,
 }
 
-#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
 pub struct ListPropertyDescriptor {
     pub count_type: CountType,
@@ -46,7 +46,7 @@ pub struct ListPropertyDescriptor {
     pub obj_info: Vec<ObjInfoDescriptor>,
 }
 
-#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
 pub struct ElementDescriptor {
     pub name: String,
@@ -57,15 +57,15 @@ pub struct ElementDescriptor {
     pub obj_info: Vec<ObjInfoDescriptor>,
 }
 
-#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
 pub struct CommentDescriptor(pub String);
 
-#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
 pub struct ObjInfoDescriptor(pub String);
 
-#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
 pub struct PlyDescriptor {
     pub format_type: FormatType,
