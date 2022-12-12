@@ -25,8 +25,8 @@ pub fn le_number(data_type: DataType) -> LeNumber {
 }
 
 impl Parser for LeNumber {
-    type Item = Vec<u8>;
     type Error = LeNumberError;
+    type Item = Vec<u8>;
 
     fn parse<R>(self, r: &mut R) -> Result<Self::Item, Self::Error>
     where

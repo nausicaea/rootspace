@@ -20,8 +20,8 @@ where
     P::Error: std::error::Error + 'static,
     F: FnMut(P::Item) -> J,
 {
-    type Item = J;
     type Error = Box<dyn std::error::Error + 'static>;
+    type Item = J;
 
     fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Self::Error>
     where

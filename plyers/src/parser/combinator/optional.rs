@@ -13,8 +13,8 @@ impl<P> Parser for Optional<P>
 where
     P: Parser,
 {
-    type Item = Option<P::Item>;
     type Error = Box<dyn std::error::Error + 'static>;
+    type Item = Option<P::Item>;
 
     fn parse<R>(self, r: &mut R) -> Result<Self::Item, Self::Error>
     where

@@ -25,8 +25,8 @@ pub fn le_count(count_type: CountType) -> LeCount {
 }
 
 impl Parser for LeCount {
-    type Item = usize;
     type Error = LeCountError;
+    type Item = usize;
 
     fn parse<R>(self, r: &mut R) -> Result<Self::Item, Self::Error>
     where

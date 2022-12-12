@@ -1,6 +1,5 @@
 use std::io::{Read, Seek};
 
-
 use crate::{
     parser::{
         error::{AddressWrapper, StreamError},
@@ -27,16 +26,14 @@ pub enum EngramError {
 
 impl EngramError {
     fn unexpected_byte(received: u8, expected: u8, engram: &'static [u8], position: u64) -> Self {
-        Self::UnexpectedByte(
-            AddressWrapper::new(
-                UnexpectedByte {
-                    received,
-                    expected,
-                    engram,
-                },
-                position,
-            )
-        )
+        Self::UnexpectedByte(AddressWrapper::new(
+            UnexpectedByte {
+                received,
+                expected,
+                engram,
+            },
+            position,
+        ))
     }
 }
 

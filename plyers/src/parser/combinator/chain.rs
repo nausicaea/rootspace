@@ -21,8 +21,8 @@ where
     Q: Parser,
     Q::Error: std::error::Error + 'static,
 {
-    type Item = (P::Item, Q::Item);
     type Error = Box<dyn std::error::Error + 'static>;
+    type Item = (P::Item, Q::Item);
 
     fn parse<R>(self, r: &mut R) -> Result<Self::Item, Self::Error>
     where
@@ -79,8 +79,8 @@ mod tests {
         struct PError;
 
         impl Parser for P {
-            type Item = ();
             type Error = PError;
+            type Item = ();
 
             fn parse<R>(mut self, r: &mut R) -> Result<Self::Item, Self::Error>
             where

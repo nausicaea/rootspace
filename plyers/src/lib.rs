@@ -44,19 +44,12 @@ use std::{
     path::Path,
 };
 
-use parser::{
-    base::bytes::Bytes,
-    be_count, be_number,
-    combinator::repeat_exact::repeat_exact,
-    le_count, le_number,
-};
+use parser::{base::bytes::Bytes, be_count, be_number, combinator::repeat_exact::repeat_exact, le_count, le_number};
 
 use self::types::{FormatType, Ply};
 use crate::{
     parser::{error::FileWrapper, Parser},
-    types::{
-        CountType, DataType,
-    },
+    types::{CountType, DataType},
 };
 
 pub mod error;
@@ -144,7 +137,6 @@ pub fn load_ply<P: AsRef<Path>>(p: P) -> anyhow::Result<Ply> {
 pub(crate) fn to_reader(source: &str) -> std::io::Cursor<&[u8]> {
     std::io::Cursor::new(source.as_bytes())
 }
-
 
 #[cfg(test)]
 mod tests {

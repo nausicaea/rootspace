@@ -19,24 +19,32 @@
 //! Y: any word (non-space, non-linebreak)
 //! Z: any string (non-linebreak)
 //!
-//! S -> A B
-//! A -> "ply" ; D E "end_header" ;
-//! B -> W | W B
-//! D' -> "format" - H - "1.0" ;
-//! D -> D' | F D'
-//! E' -> "element" - Y - X ;
-//! E -> E' G | F E' G | E' G E | F E' G E
-//! F' -> "comment" - Z ;
-//! M' -> "obj_info" - Z ;
-//! F -> F' | M' | F' F | M' F
-//! G' -> "property" - J - Y ;
-//! G'' -> "property" - "list" - K - J - Y ;
-//! Ga -> G' | F G' | G' Ga | F G' Ga
-//! Gb -> G'' | F G'' | G'' Gb | F G'' Gb
-//! G -> Ga | Gb
+//! Data Types:
 //! H -> "ascii" | "binary_little_endian" | "binary_big_endian"
 //! J -> "char" | "uchar" | "short" | "ushort" | "int" | "uint" | "float" | "double" | "int8" |
 //! "uint8" | "int16" | "uint16" | "int32" | "uint32" | "float32" | "float64"
 //! K -> "uchar" | "ushort" | "uint" | "uint8" | "uint16" | "uint32"
+//!
+//! Declarations:
+//! A' -> "ply" ;
+//! A'' -> "end_header" ;
+//! D' -> "format" - H - "1.0" ;
+//! E' -> "element" - Y - X ;
+//! F' -> "comment" - Z ;
+//! M' -> "obj_info" - Z ;
+//! G' -> "property" - J - Y ;
+//! G'' -> "property" - "list" - K - J - Y ;
+//!
+//! Grammar:
+//! S -> A B
+//! A -> A' D E A''
+//! B -> W | W B
+//! D -> D' | F D'
+//! E -> E' G | F E' G | E' G E | F E' G E
+//! F -> F' | M' | F' F | M' F
+//! Ga -> G' | F G' | G' Ga | F G' Ga
+//! Gb -> G'' | F G'' | G'' Gb | F G'' Gb
+//! G -> Ga | Gb
 
 pub mod parser;
+pub mod types;

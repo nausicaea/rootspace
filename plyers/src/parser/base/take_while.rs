@@ -1,7 +1,10 @@
 use std::io::{Read, Seek};
 
 use crate::{
-    parser::{error::{StreamError, AddressWrapper}, read_byte::ReadByte},
+    parser::{
+        error::{AddressWrapper, StreamError},
+        read_byte::ReadByte,
+    },
     Parser,
 };
 

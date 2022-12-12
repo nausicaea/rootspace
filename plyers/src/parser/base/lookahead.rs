@@ -1,6 +1,5 @@
 use std::io::{Read, Seek, SeekFrom};
 
-
 use crate::{
     parser::{
         error::{AddressWrapper, StreamError},
@@ -11,11 +10,10 @@ use crate::{
 
 #[derive(Debug, thiserror::Error)]
 #[error("received byte {received:#x}, but expected byte {expected:#x}")]
-pub struct UnexpectedByte { 
-    received: u8, 
+pub struct UnexpectedByte {
+    received: u8,
     expected: u8,
 }
-
 
 #[derive(Debug, thiserror::Error)]
 pub enum LookaheadError {
@@ -49,8 +47,7 @@ impl Parser for Lookahead {
     {
         let (byte, position) = r.read_byte()?;
 
-        let _ = r.seek(SeekFrom::Start(position))
-            .map_err(|e| LookaheadError::Io(e))?;
+        let _ = r.seek(SeekFrom::Start(position)).map_err(|e| LookaheadError::Io(e))?;
 
         if byte != self.token {
             return Err(LookaheadError::unexpected_byte(byte, self.token, position));

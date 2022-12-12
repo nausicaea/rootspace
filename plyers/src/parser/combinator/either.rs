@@ -21,8 +21,8 @@ where
     R: Parser,
     R::Error: std::error::Error + 'static,
 {
-    type Item = EEither<Q::Item, R::Item>;
     type Error = Box<dyn std::error::Error + 'static>;
+    type Item = EEither<Q::Item, R::Item>;
 
     fn parse<S>(self, r: &mut S) -> Result<Self::Item, Self::Error>
     where
@@ -36,8 +36,7 @@ where
             Err(e) => {
                 let _ = r.seek(SeekFrom::Start(position))?;
 
-                let b = self.b.parse(r)
-                    .map(|b| Right(b))?;
+                let b = self.b.parse(r).map(|b| Right(b))?;
 
                 Ok(b)
             }

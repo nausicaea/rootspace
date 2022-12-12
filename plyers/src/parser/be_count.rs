@@ -1,6 +1,5 @@
 use std::io::{Read, Seek};
 
-
 use crate::{Bytes, CountType, Parser};
 
 #[derive(Debug, thiserror::Error)]

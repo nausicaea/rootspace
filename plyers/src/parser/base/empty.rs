@@ -1,6 +1,6 @@
 use std::io::{Read, Seek};
 
-use crate::{Parser};
+use crate::Parser;
 
 #[derive(Debug, thiserror::Error)]
 #[error("error in Empty parser that should never occur")]

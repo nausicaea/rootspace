@@ -15,8 +15,8 @@ impl<P> Parser for Repeat<P>
 where
     P: Parser + Clone,
 {
-    type Item = Vec<P::Item>;
     type Error = Box<dyn std::error::Error + 'static>;
+    type Item = Vec<P::Item>;
 
     fn parse<S>(self, r: &mut S) -> Result<Self::Item, Self::Error>
     where

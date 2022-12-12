@@ -18,8 +18,8 @@ where
     Q::Error: std::error::Error + 'static,
     R: Parser + Clone,
 {
-    type Item = (Vec<Q::Item>, R::Item);
     type Error = Box<dyn std::error::Error + 'static>;
+    type Item = (Vec<Q::Item>, R::Item);
 
     fn parse<S>(self, r: &mut S) -> Result<Self::Item, Self::Error>
     where

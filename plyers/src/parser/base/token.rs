@@ -10,7 +10,10 @@ use crate::{
 
 #[derive(Debug, thiserror::Error)]
 #[error("received byte {received:#x}, but expected byte {expected:#x}")]
-pub struct UnexpectedByte { received: u8, expected: u8 }
+pub struct UnexpectedByte {
+    received: u8,
+    expected: u8,
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum TokenError {

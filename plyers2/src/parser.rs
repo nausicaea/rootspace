@@ -1,4 +1,21 @@
-use nom::{bytes::complete::{tag, take_while1, take_till1}, IResult, branch::alt, sequence::{pair, delimited, separated_pair, terminated, tuple}, character::{is_space, is_newline, complete::{alphanumeric1, alpha1}}, combinator::recognize, multi::many0_count};
+use std::num::ParseIntError;
+use either::{Either, Left, Right};
+use nom::{
+    branch::alt,
+    bytes::complete::{tag, take_till1, take_while1},
+    character::{
+        complete::{alpha1, alphanumeric1, digit1},
+        is_newline, is_space,
+    },
+    combinator::{map, recognize, value, map_res},
+    multi::{many0_count, many0, many1},
+    sequence::{pair, tuple},
+    IResult,
+};
+
+use crate::types::{
+    CommentDescriptor, CountType, DataType, FormatType, ListPropertyDescriptor, ObjInfoDescriptor, PropertyDescriptor, ElementDescriptor, PlyDescriptor, Ply,
+};
 
 const PLY: &'static [u8] = b"ply";
 const END_HEADER: &'static [u8] = b"end_header";
@@ -33,6 +50,19 @@ const CHAR: &'static [u8] = b"char";
 
 const INT: &'static [u8] = b"int";
 
+fn split_vecs_of_either<L, R>(mut input: Vec<Either<L, R>>) -> (Vec<L>, Vec<R>) {
+    let mut left = Vec::new();
+    let mut right = Vec::new();
+    for left_right in input.drain(..) {
+        match left_right {
+            Left(l) => left.push(l),
+            Right(r) => right.push(r),
+        }
+    }
+
+    (left, right)
+}
+
 fn space(input: &[u8]) -> IResult<&[u8], &[u8]> {
     take_while1(is_space)(input)
 }
@@ -46,12 +76,10 @@ fn single_line_text(input: &[u8]) -> IResult<&[u8], &[u8]> {
 }
 
 fn identifier(input: &[u8]) -> IResult<&[u8], &[u8]> {
-    recognize(
-        pair(
-            alt((alpha1, tag(b"_"))),
-            many0_count(alt((alphanumeric1, tag(b"_"))))
-        )
-    )(input)
+    recognize(pair(
+        alt((alpha1, tag(b"_"))),
+        many0_count(alt((alphanumeric1, tag(b"_")))),
+    ))(input)
 }
 
 fn ply_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
@@ -66,11 +94,11 @@ fn format_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
     tag(FORMAT)(input)
 }
 
-fn format_type(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn format_type(input: &[u8]) -> IResult<&[u8], FormatType> {
     alt((
-        tag(ASCII),
-        tag(BINARY_BIG_ENDIAN),
-        tag(BINARY_LITTLE_ENDIAN),
+        value(FormatType::Ascii, tag(ASCII)),
+        value(FormatType::BinaryBigEndian, tag(BINARY_BIG_ENDIAN)),
+        value(FormatType::BinaryLittleEndian, tag(BINARY_LITTLE_ENDIAN)),
     ))(input)
 }
 
@@ -78,24 +106,50 @@ fn format_version(input: &[u8]) -> IResult<&[u8], &[u8]> {
     tag(b"1.0")(input)
 }
 
-fn format_stmt(input: &[u8]) -> IResult<&[u8], &[u8]> {
-    terminated(delimited(pair(format_kwd, space), format_type, pair(space, format_version)), newline)(input)
+fn format_decl(input: &[u8]) -> IResult<&[u8], FormatType> {
+    map(
+        tuple((format_kwd, space, format_type, space, format_version, newline)),
+        |(_, _, ft, _, _, _)| ft,
+    )(input)
 }
 
 fn comment_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
     tag(COMMENT)(input)
 }
 
-fn comment_stmt(input: &[u8]) -> IResult<&[u8], (&[u8], &[u8])> {
-    terminated(separated_pair(comment_kwd, space, single_line_text), newline)(input)
+fn comment_decl(input: &[u8]) -> IResult<&[u8], CommentDescriptor> {
+    map(
+        tuple((comment_kwd, space, single_line_text, newline)),
+        |(_, _, c, _)| CommentDescriptor(String::from_utf8_lossy(c).to_string()),
+    )(input)
 }
 
 fn obj_info_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
     tag(OBJ_INFO)(input)
 }
 
-fn obj_info_stmt(input: &[u8]) -> IResult<&[u8], (&[u8], &[u8])> {
-    terminated(separated_pair(obj_info_kwd, space, single_line_text), newline)(input)
+fn obj_info_decl(input: &[u8]) -> IResult<&[u8], ObjInfoDescriptor> {
+    map(
+        tuple((obj_info_kwd, space, single_line_text, newline)),
+        |(_, _, c, _)| ObjInfoDescriptor(String::from_utf8_lossy(c).to_string()),
+    )(input)
+}
+
+fn element_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+    tag(ELEMENT)(input)
+}
+
+fn element_decl(input: &[u8]) -> IResult<&[u8], (String, usize)> {
+    map_res(
+        tuple((element_kwd, space, identifier, space, digit1, newline)),
+        |(_, _, nm, _, cnt, _)| {
+            let nm = String::from_utf8_lossy(nm).to_string();
+            let cnt = String::from_utf8_lossy(cnt);
+            let cnt: usize = usize::from_str_radix(&cnt, 10)?;
+
+            Result::<_, ParseIntError>::Ok((nm, cnt))
+        },
+    )(input)
 }
 
 fn property_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
@@ -106,52 +160,182 @@ fn list_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
     tag(LIST)(input)
 }
 
-fn data_type(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn data_type(input: &[u8]) -> IResult<&[u8], DataType> {
     alt((
-        tag(FLOAT64),
-        tag(FLOAT32),
-        tag(USHORT),
-        tag(UINT32),
-        tag(UINT16),
-        tag(DOUBLE),
-        tag(UINT8),
-        tag(UCHAR),
-        tag(SHORT),
-        tag(INT32),
-        tag(INT16),
-        tag(FLOAT),
-        tag(UINT),
-        tag(INT8),
-        tag(CHAR),
-        tag(INT),
+        value(DataType::F64, tag(FLOAT64)),
+        value(DataType::F32, tag(FLOAT32)),
+        value(DataType::U16, tag(USHORT)),
+        value(DataType::U32, tag(UINT32)),
+        value(DataType::U16, tag(UINT16)),
+        value(DataType::F64, tag(DOUBLE)),
+        value(DataType::U8, tag(UINT8)),
+        value(DataType::U8, tag(UCHAR)),
+        value(DataType::I16, tag(SHORT)),
+        value(DataType::I32, tag(INT32)),
+        value(DataType::I16, tag(INT16)),
+        value(DataType::F32, tag(FLOAT)),
+        value(DataType::U32, tag(UINT)),
+        value(DataType::I8, tag(INT8)),
+        value(DataType::I8, tag(CHAR)),
+        value(DataType::I32, tag(INT)),
     ))(input)
 }
 
-fn count_type(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn count_type(input: &[u8]) -> IResult<&[u8], CountType> {
     alt((
-        tag(USHORT),
-        tag(UINT32),
-        tag(UINT16),
-        tag(UINT8),
-        tag(UCHAR),
-        tag(UINT),
+        value(CountType::U16, tag(USHORT)),
+        value(CountType::U32, tag(UINT32)),
+        value(CountType::U16, tag(UINT16)),
+        value(CountType::U8, tag(UINT8)),
+        value(CountType::U8, tag(UCHAR)),
+        value(CountType::U32, tag(UINT)),
     ))(input)
 }
 
-fn property_stmt(input: &[u8]) -> IResult<&[u8], (&[u8], &[u8], &[u8])> {
-    todo!()
+fn property_scalar_decl(input: &[u8]) -> IResult<&[u8], (DataType, String)> {
+    map(
+        tuple((property_kwd, space, data_type, space, identifier, newline)),
+        |(_, _, dt, _, nm, _)| (dt, String::from_utf8_lossy(nm).to_string()),
+    )(input)
+}
+
+fn property_list_decl(input: &[u8]) -> IResult<&[u8], (CountType, DataType, String)> {
+    map(
+        tuple((
+            property_kwd,
+            space,
+            list_kwd,
+            space,
+            count_type,
+            space,
+            data_type,
+            space,
+            identifier,
+            newline,
+        )),
+        |(_, _, _, _, ct, _, dt, _, nm, _)| (ct, dt, String::from_utf8_lossy(nm).to_string()),
+    )(input)
+}
+
+fn comment_blk(input: &[u8]) -> IResult<&[u8], Vec<Either<CommentDescriptor, ObjInfoDescriptor>>> {
+    many0(alt((map(comment_decl, Left), map(obj_info_decl, Right))))(input)
+}
+
+fn format_blk(input: &[u8]) -> IResult<&[u8], (Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, FormatType)> {
+    tuple((comment_blk, format_decl))(input)
+}
+
+fn property_scalar_rpt(input: &[u8]) -> IResult<&[u8], PropertyDescriptor> {
+    map(tuple((comment_blk, property_scalar_decl)), |(cmt, (data_type, name))| {
+        let (comments, obj_info) = split_vecs_of_either(cmt);
+
+        PropertyDescriptor {
+            data_type,
+            name,
+            comments,
+            obj_info,
+        }
+    })(input)
+}
+
+fn property_scalar_blk(input: &[u8]) -> IResult<&[u8], Vec<PropertyDescriptor>> {
+    many1(property_scalar_rpt)(input)
+} 
+
+fn property_list_rpt(input: &[u8]) -> IResult<&[u8], ListPropertyDescriptor> {
+    map(tuple((comment_blk, property_list_decl)), |(cmt, (count_type, data_type, name))| {
+        let (comments, obj_info) = split_vecs_of_either(cmt);
+
+        ListPropertyDescriptor { 
+            count_type,
+            data_type,
+            name,
+            comments,
+            obj_info,
+        }
+    })(input)
+} 
+
+fn property_list_blk(input: &[u8]) -> IResult<&[u8], Vec<ListPropertyDescriptor>> {
+    many1(property_list_rpt)(input)
+} 
+
+fn property_blk(input: &[u8]) -> IResult<&[u8], Either<Vec<PropertyDescriptor>, Vec<ListPropertyDescriptor>>> {
+    alt((
+        map(property_list_blk, Right), 
+        map(property_scalar_blk, Left),
+    ))(input)
+}
+
+fn element_rpt(input: &[u8]) -> IResult<&[u8], ElementDescriptor> {
+    map(
+        tuple((
+            comment_blk,
+            element_decl,
+            property_blk,
+        )),
+        |(cmt, (name, count), prp)| {
+            let (comments, obj_info) = split_vecs_of_either(cmt);
+
+            match prp {
+                Left(properties) => ElementDescriptor {
+                    name,
+                    count,
+                    properties,
+                    list_properties: Vec::new(),
+                    comments,
+                    obj_info,
+                },
+                Right(list_properties) => ElementDescriptor { 
+                    name, 
+                    count, 
+                    properties: Vec::new(), 
+                    list_properties, 
+                    comments, 
+                    obj_info,
+                },
+            }
+        }
+    )(input)
+}
+
+fn element_blk(input: &[u8]) -> IResult<&[u8], Vec<ElementDescriptor>> {
+    many1(element_rpt)(input)
+}
+
+fn header(input: &[u8]) -> IResult<&[u8], PlyDescriptor> {
+    map(
+        tuple((
+            ply_kwd,
+            newline,
+            format_blk,
+            element_blk,
+            end_header_kwd,
+            newline,
+        )),
+        |(_, _, (cmt, format_type), elements, _, _)| {
+            let (comments, obj_info) = split_vecs_of_either(cmt);
+
+            PlyDescriptor {
+                format_type,
+                elements,
+                comments,
+                obj_info,
+            }
+        },
+    )(input)
 }
 
 #[cfg(test)]
 mod tests {
-    use proptest::{proptest, prop_assert_eq, string::bytes_regex};
     use nom::error::dbg_dmp;
+    use proptest::{prop_assert_eq, proptest, string::bytes_regex};
 
     use super::*;
 
     const EMPTY: &'static [u8] = b"";
 
-    proptest!{
+    proptest! {
         #[test]
         fn space_matches_x09_and_x20(ref input in bytes_regex(r"[\x09\x20]+").unwrap()) {
             prop_assert_eq!(dbg_dmp(space, "proptest_space")(&input[..]), Ok((EMPTY, &input[..])))
@@ -165,21 +349,6 @@ mod tests {
         #[test]
         fn single_line_text_matches_anything_till_exclusive_x0a(ref input in bytes_regex(r"[\w]+\x0a").unwrap()) {
             prop_assert_eq!(dbg_dmp(single_line_text, "proptest_single_line_text")(&input[..]), Ok((&b"\n"[..], &input[..input.len()-1])))
-        }
-
-        #[test]
-        fn format_stmt_matches_keyword_type_version_and_a_newline_returns_only_type(ref input in bytes_regex(r"format[\x09\x20](ascii|binary_big_endian|binary_little_endian)[\x09\x20]1\.0\x0a").unwrap()) {
-            assert_eq!(format_stmt(&input[..]), Ok((EMPTY, &input[7..input.len()-5])))
-        }
-
-        #[test]
-        fn comment_stmt_matches_keyword_freetext_and_a_newline_returns_everything(ref input in bytes_regex(r"comment[\x09\x20][\w]+\x0a").unwrap()) {
-            prop_assert_eq!(dbg_dmp(comment_stmt, "proptest_comment")(&input[..]), Ok((EMPTY, (COMMENT, &input[8..input.len()-1]))))
-        }
-
-        #[test]
-        fn obj_info_stmt_matches_keyword_freetext_and_a_newline_returns_everything(ref input in bytes_regex(r"obj_info[\x09\x20][\w]+\x0a").unwrap()) {
-            prop_assert_eq!(dbg_dmp(obj_info_stmt, "proptest_obj_info")(&input[..]), Ok((EMPTY, (OBJ_INFO, &input[9..input.len()-1]))))
         }
     }
 
