@@ -1614,6 +1614,7 @@ dependencies = [
  "nom",
  "proptest",
  "proptest-derive",
+ "thiserror",
 ]
 
 [[package]]

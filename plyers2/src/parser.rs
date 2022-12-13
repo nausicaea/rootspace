@@ -1,4 +1,5 @@
-use std::num::ParseIntError;
+use std::num::{ParseIntError, ParseFloatError};
+
 use either::{Either, Left, Right};
 use nom::{
     branch::alt,
@@ -7,14 +8,15 @@ use nom::{
         complete::{alpha1, alphanumeric1, digit1},
         is_newline, is_space,
     },
-    combinator::{map, recognize, value, map_res},
-    multi::{many0_count, many0, many1},
+    combinator::{map, map_res, recognize, value},
+    multi::{many0, many0_count, many1},
     sequence::{pair, tuple},
-    IResult,
+    IResult, error::FromExternalError,
 };
 
 use crate::types::{
-    CommentDescriptor, CountType, DataType, FormatType, ListPropertyDescriptor, ObjInfoDescriptor, PropertyDescriptor, ElementDescriptor, PlyDescriptor, Ply,
+    CommentDescriptor, CountType, DataType, ElementDescriptor, FormatType, ListPropertyDescriptor, ObjInfoDescriptor,
+    Ply, PlyDescriptor, PropertyDescriptor,
 };
 
 const PLY: &'static [u8] = b"ply";
@@ -50,6 +52,16 @@ const CHAR: &'static [u8] = b"char";
 
 const INT: &'static [u8] = b"int";
 
+#[derive(Debug, thiserror::Error)]
+pub enum ParseNumError {
+    #[error(transparent)]
+    Utf8Error(#[from] std::str::Utf8Error),
+    #[error(transparent)]
+    ParseIntError(#[from] ParseIntError),
+    #[error(transparent)]
+    ParseFloatError(#[from] ParseFloatError),
+}
+
 fn split_vecs_of_either<L, R>(mut input: Vec<Either<L, R>>) -> (Vec<L>, Vec<R>) {
     let mut left = Vec::new();
     let mut right = Vec::new();
@@ -61,6 +73,14 @@ fn split_vecs_of_either<L, R>(mut input: Vec<Either<L, R>>) -> (Vec<L>, Vec<R>) 
     }
 
     (left, right)
+}
+
+fn is_whitespace(b: u8) -> bool {
+    (b >= 0x09 && b <= 0x0d) || (b == 0x20)
+}
+
+fn whitespace(input: &[u8]) -> IResult<&[u8], &[u8]> {
+    take_while1(is_whitespace)(input)
 }
 
 fn space(input: &[u8]) -> IResult<&[u8], &[u8]> {
@@ -143,11 +163,11 @@ fn element_decl(input: &[u8]) -> IResult<&[u8], (String, usize)> {
     map_res(
         tuple((element_kwd, space, identifier, space, digit1, newline)),
         |(_, _, nm, _, cnt, _)| {
-            let nm = String::from_utf8_lossy(nm).to_string();
-            let cnt = String::from_utf8_lossy(cnt);
-            let cnt: usize = usize::from_str_radix(&cnt, 10)?;
+            let nm = std::str::from_utf8(nm)?.to_string();
+            let cnt = std::str::from_utf8(cnt)?;
+            let cnt: usize = usize::from_str_radix(cnt, 10)?;
 
-            Result::<_, ParseIntError>::Ok((nm, cnt))
+            Result::<_, ParseNumError>::Ok((nm, cnt))
         },
     )(input)
 }
@@ -226,54 +246,53 @@ fn format_blk(input: &[u8]) -> IResult<&[u8], (Vec<Either<CommentDescriptor, Obj
 }
 
 fn property_scalar_rpt(input: &[u8]) -> IResult<&[u8], PropertyDescriptor> {
-    map(tuple((comment_blk, property_scalar_decl)), |(cmt, (data_type, name))| {
-        let (comments, obj_info) = split_vecs_of_either(cmt);
+    map(
+        tuple((comment_blk, property_scalar_decl)),
+        |(cmt, (data_type, name))| {
+            let (comments, obj_info) = split_vecs_of_either(cmt);
 
-        PropertyDescriptor {
-            data_type,
-            name,
-            comments,
-            obj_info,
-        }
-    })(input)
+            PropertyDescriptor {
+                data_type,
+                name,
+                comments,
+                obj_info,
+            }
+        },
+    )(input)
 }
 
 fn property_scalar_blk(input: &[u8]) -> IResult<&[u8], Vec<PropertyDescriptor>> {
     many1(property_scalar_rpt)(input)
-} 
+}
 
 fn property_list_rpt(input: &[u8]) -> IResult<&[u8], ListPropertyDescriptor> {
-    map(tuple((comment_blk, property_list_decl)), |(cmt, (count_type, data_type, name))| {
-        let (comments, obj_info) = split_vecs_of_either(cmt);
+    map(
+        tuple((comment_blk, property_list_decl)),
+        |(cmt, (count_type, data_type, name))| {
+            let (comments, obj_info) = split_vecs_of_either(cmt);
 
-        ListPropertyDescriptor { 
-            count_type,
-            data_type,
-            name,
-            comments,
-            obj_info,
-        }
-    })(input)
-} 
+            ListPropertyDescriptor {
+                count_type,
+                data_type,
+                name,
+                comments,
+                obj_info,
+            }
+        },
+    )(input)
+}
 
 fn property_list_blk(input: &[u8]) -> IResult<&[u8], Vec<ListPropertyDescriptor>> {
     many1(property_list_rpt)(input)
-} 
+}
 
 fn property_blk(input: &[u8]) -> IResult<&[u8], Either<Vec<PropertyDescriptor>, Vec<ListPropertyDescriptor>>> {
-    alt((
-        map(property_list_blk, Right), 
-        map(property_scalar_blk, Left),
-    ))(input)
+    alt((map(property_list_blk, Right), map(property_scalar_blk, Left)))(input)
 }
 
 fn element_rpt(input: &[u8]) -> IResult<&[u8], ElementDescriptor> {
     map(
-        tuple((
-            comment_blk,
-            element_decl,
-            property_blk,
-        )),
+        tuple((comment_blk, element_decl, property_blk)),
         |(cmt, (name, count), prp)| {
             let (comments, obj_info) = split_vecs_of_either(cmt);
 
@@ -286,16 +305,16 @@ fn element_rpt(input: &[u8]) -> IResult<&[u8], ElementDescriptor> {
                     comments,
                     obj_info,
                 },
-                Right(list_properties) => ElementDescriptor { 
-                    name, 
-                    count, 
-                    properties: Vec::new(), 
-                    list_properties, 
-                    comments, 
+                Right(list_properties) => ElementDescriptor {
+                    name,
+                    count,
+                    properties: Vec::new(),
+                    list_properties,
+                    comments,
                     obj_info,
                 },
             }
-        }
+        },
     )(input)
 }
 
@@ -305,14 +324,7 @@ fn element_blk(input: &[u8]) -> IResult<&[u8], Vec<ElementDescriptor>> {
 
 fn header(input: &[u8]) -> IResult<&[u8], PlyDescriptor> {
     map(
-        tuple((
-            ply_kwd,
-            newline,
-            format_blk,
-            element_blk,
-            end_header_kwd,
-            newline,
-        )),
+        tuple((ply_kwd, newline, format_blk, element_blk, end_header_kwd, newline)),
         |(_, _, (cmt, format_type), elements, _, _)| {
             let (comments, obj_info) = split_vecs_of_either(cmt);
 
@@ -328,7 +340,14 @@ fn header(input: &[u8]) -> IResult<&[u8], PlyDescriptor> {
 
 #[cfg(test)]
 mod tests {
-    use nom::{error::{dbg_dmp, ParseError}, bytes::complete::take, number::streaming::le_i8, combinator::{flat_map, all_consuming}};
+    use std::num::ParseFloatError;
+
+    use nom::{
+        bytes::complete::take,
+        combinator::{all_consuming, flat_map},
+        error::{dbg_dmp, ParseError, FromExternalError},
+        number::streaming::le_i8, sequence::terminated, multi::{many_m_n, fold_many_m_n},
+    };
     use proptest::{prop_assert_eq, proptest, string::bytes_regex};
 
     use super::*;
@@ -375,7 +394,30 @@ mod tests {
     #[test]
     fn header_minimal_ascii_parses_correctly() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
-        assert_eq!(header(&input[..]), Ok((&b"1.0\n"[..], PlyDescriptor { format_type: FormatType::Ascii, elements: vec![ElementDescriptor { name: String::from("vertex"), count: 1usize, properties: vec![PropertyDescriptor { data_type: DataType::F32, name: String::from("x"), comments: Vec::new(), obj_info: Vec::new() }], list_properties: Vec::new(), comments: Vec::new(), obj_info: Vec::new() }], comments: Vec::new(), obj_info: Vec::new() })));
+        assert_eq!(
+            header(&input[..]),
+            Ok((
+                &b"1.0\n"[..],
+                PlyDescriptor {
+                    format_type: FormatType::Ascii,
+                    elements: vec![ElementDescriptor {
+                        name: String::from("vertex"),
+                        count: 1usize,
+                        properties: vec![PropertyDescriptor {
+                            data_type: DataType::F32,
+                            name: String::from("x"),
+                            comments: Vec::new(),
+                            obj_info: Vec::new()
+                        }],
+                        list_properties: Vec::new(),
+                        comments: Vec::new(),
+                        obj_info: Vec::new()
+                    }],
+                    comments: Vec::new(),
+                    obj_info: Vec::new()
+                }
+            ))
+        );
     }
 
     #[test]
@@ -383,12 +425,75 @@ mod tests {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
         let (rest, descriptor) = header(&input[..]).unwrap();
 
-        fn body_factory<'a, E: ParseError<&'a [u8]>>(format_type: FormatType, elements: &[ElementDescriptor]) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], (Vec<u8>, Vec<u8>), E> {
+        fn ascii_usize(input: &[u8]) -> IResult<&[u8], usize> {
+            map_res(
+                terminated(take_till1(is_whitespace), whitespace),
+                |cd| {
+                    let cd = std::str::from_utf8(cd)?;
+                    let cd = cd.parse::<usize>()?;
+                    Result::<_, ParseNumError>::Ok(cd)
+                },
+            )(input)
+        }
+
+        fn ascii_number_factory<'a>(data_type: DataType) -> impl FnOnce(&'a [u8]) -> IResult<&'a [u8], Vec<u8>> {
+            map_res(
+                terminated(take_till1(is_whitespace), whitespace),
+                move |pd| {
+                    let pd = std::str::from_utf8(pd)?;
+                    let pd = match data_type {
+                        DataType::U8 => pd
+                            .parse::<u8>()
+                            .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+                        DataType::I8 => pd
+                            .parse::<i8>()
+                            .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+                        DataType::U16 => pd
+                            .parse::<u16>()
+                            .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+                        DataType::I16 => pd
+                            .parse::<i16>()
+                            .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+                        DataType::U32 => pd
+                            .parse::<u32>()
+                            .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+                        DataType::I32 => pd
+                            .parse::<i32>()
+                            .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+                        DataType::F32 => pd
+                            .parse::<f32>()
+                            .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+                        DataType::F64 => pd
+                            .parse::<f64>()
+                            .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+                    };
+
+                    Result::<_, ParseNumError>::Ok(pd)
+                },
+            )
+        }
+
+        fn properties_data_factory<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(data_types: &[DataType]) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E> {
+            let mut i = 0;
+            let m = data_types.len();
+            fold_many_m_n(m, m, |input| {
+                let r = ascii_number_factory(data_types[i])(input);
+                i += 1;
+                r
+            }, Vec::new, |mut state, output| {state.extend(output); state},
+            )
+        }
+
+        fn body_factory<'a, E: ParseError<&'a [u8]>>(
+            format_type: FormatType,
+            elements: &[ElementDescriptor],
+        ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], (Vec<u8>, Vec<u8>), E> {
             let mut property_data: Vec<u8> = Vec::new();
             let mut list_property_data: Vec<u8> = Vec::new();
 
             match format_type {
                 FormatType::Ascii => {
+                    let mut ascii_parsers = Vec::new();
                     for element in elements {
                         for property in &element.properties {
                             let property_value = ply::ascii_number_parser(property.data_type).parse(stream)?;
@@ -443,11 +548,16 @@ mod tests {
         }
 
         fn all_of_it(input: &[u8]) -> IResult<&[u8], Ply> {
-            all_consuming(flat_map(
-                header, 
-                |descriptor| map(body_factory(descriptor.format_type, &descriptor.elements), |(property_data, list_property_data)| Ply { descriptor, property_data, list_property_data }),
-            ))(input)
+            all_consuming(flat_map(header, |descriptor| {
+                map(
+                    body_factory(descriptor.format_type, &descriptor.elements),
+                    |(property_data, list_property_data)| Ply {
+                        descriptor,
+                        property_data,
+                        list_property_data,
+                    },
+                )
+            }))(input)
         }
-
     }
 }
