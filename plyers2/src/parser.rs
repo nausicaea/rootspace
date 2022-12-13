@@ -344,9 +344,9 @@ mod tests {
 
     use nom::{
         bytes::complete::take,
-        combinator::{all_consuming, flat_map},
+        combinator::{all_consuming, flat_map, success},
         error::{dbg_dmp, ParseError, FromExternalError},
-        number::streaming::le_i8, sequence::terminated, multi::{many_m_n, fold_many_m_n},
+        number::streaming::le_i8, sequence::terminated, multi::{many_m_n, fold_many_m_n, length_count},
     };
     use proptest::{prop_assert_eq, proptest, string::bytes_regex};
 
@@ -436,7 +436,7 @@ mod tests {
             )(input)
         }
 
-        fn ascii_number_factory<'a>(data_type: DataType) -> impl FnOnce(&'a [u8]) -> IResult<&'a [u8], Vec<u8>> {
+        fn ascii_number_fct<'a>(data_type: DataType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>> {
             map_res(
                 terminated(take_till1(is_whitespace), whitespace),
                 move |pd| {
@@ -473,15 +473,37 @@ mod tests {
             )
         }
 
-        fn properties_data_factory<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(data_types: &[DataType]) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E> {
-            let mut i = 0;
+        fn ascii_properties_fct<'a>(data_types: Vec<DataType>) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>> {
             let m = data_types.len();
-            fold_many_m_n(m, m, |input| {
-                let r = ascii_number_factory(data_types[i])(input);
-                i += 1;
-                r
-            }, Vec::new, |mut state, output| {state.extend(output); state},
+            let mut i = 0;
+
+            map(
+                many_m_n(m, m, move |input| {
+                    let r = ascii_number_fct(data_types[i])(input);
+                    i += 1;
+                    r
+                }),
+                |o| o.into_iter().flatten().collect::<Vec<_>>(),
             )
+        }
+
+        fn ascii_list_properties_fct<'a>(data_types: Vec<DataType>) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>> {
+            let m = data_types.len();
+            let mut i = 0;
+
+            map(
+                many_m_n(m, m, move |input| {
+                    let r = length_count(ascii_usize, ascii_number_fct(data_types[i]))(input);
+                    i += 1;
+                    r
+                }),
+                |o| o.into_iter().flatten().flatten().collect::<Vec<_>>()
+            )
+        }
+
+        fn ascii_element_fct<'a>(elements: &ElementDescriptor) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], (Vec<u8>, Vec<u8>)> {
+            let m = elements.len();
+            many_m_n(m, m, || {})
         }
 
         fn body_factory<'a, E: ParseError<&'a [u8]>>(
