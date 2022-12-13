@@ -328,7 +328,7 @@ fn header(input: &[u8]) -> IResult<&[u8], PlyDescriptor> {
 
 #[cfg(test)]
 mod tests {
-    use nom::{error::dbg_dmp, bytes::complete::take, number::streaming::le_i8};
+    use nom::{error::{dbg_dmp, ParseError}, bytes::complete::take, number::streaming::le_i8, combinator::{flat_map, all_consuming}};
     use proptest::{prop_assert_eq, proptest, string::bytes_regex};
 
     use super::*;
@@ -380,5 +380,74 @@ mod tests {
 
     #[test]
     fn playground() {
+        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
+        let (rest, descriptor) = header(&input[..]).unwrap();
+
+        fn body_factory<'a, E: ParseError<&'a [u8]>>(format_type: FormatType, elements: &[ElementDescriptor]) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], (Vec<u8>, Vec<u8>), E> {
+            let mut property_data: Vec<u8> = Vec::new();
+            let mut list_property_data: Vec<u8> = Vec::new();
+
+            match format_type {
+                FormatType::Ascii => {
+                    for element in elements {
+                        for property in &element.properties {
+                            let property_value = ply::ascii_number_parser(property.data_type).parse(stream)?;
+                            property_data.extend(property_value);
+                        }
+
+                        for list_property in &element.list_properties {
+                            let count = ply::ascii_usize_parser().parse(stream)?;
+                            let property_values =
+                                repeat_exact(ply::ascii_number_parser(list_property.data_type), count).parse(stream)?;
+                            for property_value in property_values {
+                                list_property_data.extend(property_value);
+                            }
+                        }
+                    }
+                }
+                FormatType::BinaryLittleEndian => {
+                    for element in elements {
+                        for property in &element.properties {
+                            let property_value = le_number::le_number(property.data_type).parse(stream)?;
+                            property_data.extend(property_value);
+                        }
+
+                        for list_property in &element.list_properties {
+                            let count = le_count::le_count(list_property.count_type).parse(stream)?;
+                            let property_values =
+                                repeat_exact(le_number::le_number(list_property.data_type), count).parse(stream)?;
+                            for property_value in property_values {
+                                list_property_data.extend(property_value);
+                            }
+                        }
+                    }
+                }
+                FormatType::BinaryBigEndian => {
+                    for element in elements {
+                        for property in &element.properties {
+                            let property_value = be_number::be_number(property.data_type).parse(stream)?;
+                            property_data.extend(property_value);
+                        }
+
+                        for list_property in &element.list_properties {
+                            let count = be_count::be_count(list_property.count_type).parse(stream)?;
+                            let property_values =
+                                repeat_exact(be_number::be_number(list_property.data_type), count).parse(stream)?;
+                            for property_value in property_values {
+                                list_property_data.extend(property_value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        fn all_of_it(input: &[u8]) -> IResult<&[u8], Ply> {
+            all_consuming(flat_map(
+                header, 
+                |descriptor| map(body_factory(descriptor.format_type, &descriptor.elements), |(property_data, list_property_data)| Ply { descriptor, property_data, list_property_data }),
+            ))(input)
+        }
+
     }
 }
