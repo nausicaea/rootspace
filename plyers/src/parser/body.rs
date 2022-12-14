@@ -1,6 +1,6 @@
 use nom::{
     bytes::complete::take_till1,
-    combinator::{map, map_res, cond},
+    combinator::{cond, map, map_res},
     error::{FromExternalError, ParseError},
     multi::{fold_many_m_n, length_count},
     number::complete::{
@@ -194,15 +194,24 @@ where
         m,
         move |input: &'a [u8]| {
             let el = &elements[i];
-            let r = map(pair(
-                cond(!el.properties.is_empty(), properties_fct(num_fn, el.properties.iter().map(|p| p.data_type).collect(), el.count)),
-                cond(!el.list_properties.is_empty(), list_properties_fct(
-                    cnt_fn,
-                    num_fn,
-                    el.list_properties.iter().map(|p| (p.count_type, p.data_type)).collect(),
-                    el.count,
-                )),
-            ), |(p, pl)| (p.unwrap_or_else(Vec::new), pl.unwrap_or_else(Vec::new)))(input);
+            let r = map(
+                pair(
+                    cond(
+                        !el.properties.is_empty(),
+                        properties_fct(num_fn, el.properties.iter().map(|p| p.data_type).collect(), el.count),
+                    ),
+                    cond(
+                        !el.list_properties.is_empty(),
+                        list_properties_fct(
+                            cnt_fn,
+                            num_fn,
+                            el.list_properties.iter().map(|p| (p.count_type, p.data_type)).collect(),
+                            el.count,
+                        ),
+                    ),
+                ),
+                |(p, pl)| (p.unwrap_or_else(Vec::new), pl.unwrap_or_else(Vec::new)),
+            )(input);
             i += 1;
             r
         },
@@ -232,11 +241,11 @@ pub fn body_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseN
 #[cfg(test)]
 mod tests {
     use nom::number::complete::recognize_float;
-    use proptest::{proptest, string::bytes_regex, prop_assert_eq};
+    use proptest::{prop_assert_eq, proptest, string::bytes_regex};
 
     const EMPTY: &'static [u8] = b"";
 
-    proptest!{
+    proptest! {
         #[test]
         fn recognize_float_behaves_as_expected(ref input in bytes_regex(r"[-+]?([0-9]*[.])?[0-9]+([eE][-+]?[0-9]+)?").unwrap()) {
             prop_assert_eq!(recognize_float::<_, nom::error::Error<&[u8]>>(&input[..]), Ok((EMPTY, &input[..])))

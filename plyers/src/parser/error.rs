@@ -62,60 +62,59 @@ pub fn convert_error(input: &[u8], e: VerboseError<&[u8]>) -> String {
                             {line}\n\
                                  {caret:>column$}\n\
                                  expected '{expected}', found {actual}\n\n",
-                                 i = i,
-                                 line_number = line_number,
-                                 line = line_str,
-                                 caret = '^',
-                                 column = column_number,
-                                 expected = c,
-                                 actual = actual,
+                            i = i,
+                            line_number = line_number,
+                            line = line_str,
+                            caret = '^',
+                            column = column_number,
+                            expected = c,
+                            actual = actual,
                         )
                     } else {
-                            write!(
-                                &mut result,
-                                "{i}: at line {line_number}:\n\
+                        write!(
+                            &mut result,
+                            "{i}: at line {line_number}:\n\
                                 {line}\n\
                                 {caret:>column$}\n\
                                 expected '{expected}', got end of input\n\n",
-                                i = i,
-                                line_number = line_number,
-                                line = line_str,
-                                caret = '^',
-                                column = column_number,
-                                expected = c,
-                            )
-                        }
+                            i = i,
+                            line_number = line_number,
+                            line = line_str,
+                            caret = '^',
+                            column = column_number,
+                            expected = c,
+                        )
                     }
-                    VerboseErrorKind::Context(s) => write!(
-                        &mut result,
-                        "{i}: at line {line_number}, in {context}:\n\
-                        {line}\n\
-                        {caret:>column$}\n\n",
-                        i = i,
-                        line_number = line_number,
-                        context = s,
-                        line = line_str,
-                        caret = '^',
-                        column = column_number,
-                    ),
-                    VerboseErrorKind::Nom(e) => write!(
-                        &mut result,
-                        "{i}: at line {line_number}, in {nom_err:?}:\n\
-                        {line}\n\
-                        {caret:>column$}\n\n",
-                        i = i,
-                        line_number = line_number,
-                        nom_err = e,
-                        line = line_str,
-                        caret = '^',
-                        column = column_number,
-                    ),
                 }
+                VerboseErrorKind::Context(s) => write!(
+                    &mut result,
+                    "{i}: at line {line_number}, in {context}:\n\
+                        {line}\n\
+                        {caret:>column$}\n\n",
+                    i = i,
+                    line_number = line_number,
+                    context = s,
+                    line = line_str,
+                    caret = '^',
+                    column = column_number,
+                ),
+                VerboseErrorKind::Nom(e) => write!(
+                    &mut result,
+                    "{i}: at line {line_number}, in {nom_err:?}:\n\
+                        {line}\n\
+                        {caret:>column$}\n\n",
+                    i = i,
+                    line_number = line_number,
+                    nom_err = e,
+                    line = line_str,
+                    caret = '^',
+                    column = column_number,
+                ),
             }
-            // Because `write!` to a `String` is infallible, this `unwrap` is fine.
-            .unwrap();
         }
-
-        result
+        // Because `write!` to a `String` is infallible, this `unwrap` is fine.
+        .unwrap();
     }
 
+    result
+}

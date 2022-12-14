@@ -9,9 +9,9 @@ use nom::{
 use self::{body::body_fct, header::header};
 use crate::types::Ply;
 
-mod error;
 mod body;
 mod common;
+mod error;
 mod header;
 
 #[derive(Debug, thiserror::Error)]
