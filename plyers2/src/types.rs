@@ -85,6 +85,7 @@ impl Default for PlyDescriptor {
     }
 }
 
+#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug)]
 pub struct Ply {
     pub descriptor: PlyDescriptor,

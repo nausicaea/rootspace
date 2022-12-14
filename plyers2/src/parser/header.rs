@@ -289,8 +289,6 @@ pub fn header(input: &[u8]) -> IResult<&[u8], PlyDescriptor> {
 mod tests {
     use super::*;
 
-    const EMPTY: &'static [u8] = b"";
-
     #[test]
     fn ply_kwd_detects_ply_byte_sequence() {
         let input = &b"ply\nformat ascii 1.0\nend_header\n"[..];
