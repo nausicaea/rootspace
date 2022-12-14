@@ -77,5 +77,10 @@ mod tests {
         fn single_line_text_matches_anything_till_exclusive_x0a(ref input in bytes_regex(r"[\w]+\x0a").unwrap()) {
             prop_assert_eq!(dbg_dmp(single_line_text::<nom::error::Error<_>>, "proptest_single_line_text")(&input[..]), Ok((&b"\n"[..], &input[..input.len()-1])))
         }
+
+        #[test]
+        fn whitespace_matches_all_ascii_whitespace(ref input in bytes_regex(r"[\x09-\x0d\x20]+").unwrap()) {
+            prop_assert_eq!(dbg_dmp(whitespace::<nom::error::Error<_>>, "proptest_whitespace")(&input[..]), Ok((EMPTY, &input[..])))
+        }
     }
 }

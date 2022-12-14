@@ -1,11 +1,11 @@
 use nom::{
     bytes::complete::take_till1,
-    combinator::{map, map_res},
+    combinator::{map, map_res, cond},
     error::{FromExternalError, ParseError},
     multi::{fold_many_m_n, length_count},
     number::complete::{
         be_f32, be_f64, be_i16, be_i32, be_i8, be_u16, be_u32, be_u8, le_f32, le_f64, le_i16, le_i32, le_i8, le_u16,
-        le_u32, le_u8,
+        le_u32, le_u8, recognize_float,
     },
     sequence::{pair, terminated},
     IResult,
@@ -30,7 +30,7 @@ fn ascii_count_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], Par
 fn ascii_number_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
     data_type: DataType,
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E> {
-    map_res(terminated(take_till1(is_whitespace), whitespace), move |pd| {
+    map_res(terminated(recognize_float, whitespace), move |pd| {
         let pd = std::str::from_utf8(pd)?;
         let pd = match data_type {
             DataType::U8 => pd
@@ -116,20 +116,21 @@ fn be_number_fct<'a, E: ParseError<&'a [u8]>>(
 fn properties_fct<'a, F, P, E>(
     num_fn: &'a F,
     types: Vec<DataType>,
+    repetitions: usize,
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E>
 where
     P: FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E>,
     F: Fn(DataType) -> P,
     E: ParseError<&'a [u8]>,
 {
-    let m = types.len();
+    let m = types.len() * repetitions;
     let mut i = 0;
 
     fold_many_m_n(
         m,
         m,
         move |input| {
-            let r = num_fn(types[i])(input);
+            let r = num_fn(types[i % types.len()])(input);
             i += 1;
             r
         },
@@ -145,6 +146,7 @@ fn list_properties_fct<'a, F1, F2, P1, P2, E>(
     cnt_fn: &'a F1,
     num_fn: &'a F2,
     types: Vec<(CountType, DataType)>,
+    repetitions: usize,
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E>
 where
     P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
@@ -153,14 +155,14 @@ where
     F2: Fn(DataType) -> P2,
     E: ParseError<&'a [u8]>,
 {
-    let m = types.len();
+    let m = types.len() * repetitions;
     let mut i = 0;
 
     fold_many_m_n(
         m,
         m,
         move |input| {
-            let r = length_count(cnt_fn(types[i].0), num_fn(types[i].1))(input);
+            let r = length_count(cnt_fn(types[i % types.len()].0), num_fn(types[i % types.len()].1))(input);
             i += 1;
             r
         },
@@ -190,16 +192,17 @@ where
     fold_many_m_n(
         m,
         m,
-        move |input| {
+        move |input: &'a [u8]| {
             let el = &elements[i];
-            let r = pair(
-                properties_fct(num_fn, el.properties.iter().map(|p| p.data_type).collect()),
-                list_properties_fct(
+            let r = map(pair(
+                cond(!el.properties.is_empty(), properties_fct(num_fn, el.properties.iter().map(|p| p.data_type).collect(), el.count)),
+                cond(!el.list_properties.is_empty(), list_properties_fct(
                     cnt_fn,
                     num_fn,
                     el.list_properties.iter().map(|p| (p.count_type, p.data_type)).collect(),
-                ),
-            )(input);
+                    el.count,
+                )),
+            ), |(p, pl)| (p.unwrap_or_else(Vec::new), pl.unwrap_or_else(Vec::new)))(input);
             i += 1;
             r
         },
@@ -222,6 +225,21 @@ pub fn body_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseN
             FormatType::Ascii => elements_fct(&ascii_count_fct, &ascii_number_fct, elements)(input),
             FormatType::BinaryLittleEndian => elements_fct(&le_count_fct, &le_number_fct, elements)(input),
             FormatType::BinaryBigEndian => elements_fct(&be_count_fct, &be_number_fct, elements)(input),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use nom::number::complete::recognize_float;
+    use proptest::{proptest, string::bytes_regex, prop_assert_eq};
+
+    const EMPTY: &'static [u8] = b"";
+
+    proptest!{
+        #[test]
+        fn recognize_float_behaves_as_expected(ref input in bytes_regex(r"[-+]?([0-9]*[.])?[0-9]+([eE][-+]?[0-9]+)?").unwrap()) {
+            prop_assert_eq!(recognize_float::<_, nom::error::Error<&[u8]>>(&input[..]), Ok((EMPTY, &input[..])))
         }
     }
 }
