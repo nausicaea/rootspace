@@ -2,18 +2,21 @@ use either::{Either, Left, Right};
 use nom::{
     branch::alt,
     bytes::complete::tag,
+    character::complete::digit1,
     combinator::{map, map_res, value},
     multi::{many0, many1},
     sequence::tuple,
-    IResult, character::complete::digit1,
+    IResult,
 };
 
+use super::{
+    common::{identifier, newline, single_line_text, space, split_vecs_of_either},
+    ParseNumError,
+};
 use crate::types::{
     CommentDescriptor, CountType, DataType, ElementDescriptor, FormatType, ListPropertyDescriptor, ObjInfoDescriptor,
     PlyDescriptor, PropertyDescriptor,
 };
-use super::common::{space, newline, split_vecs_of_either, single_line_text, identifier};
-use super::ParseNumError;
 
 const PLY: &'static [u8] = b"ply";
 const END_HEADER: &'static [u8] = b"end_header";
@@ -62,9 +65,9 @@ fn format_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
 
 fn format_type(input: &[u8]) -> IResult<&[u8], FormatType> {
     alt((
-            value(FormatType::Ascii, tag(ASCII)),
-            value(FormatType::BinaryBigEndian, tag(BINARY_BIG_ENDIAN)),
-            value(FormatType::BinaryLittleEndian, tag(BINARY_LITTLE_ENDIAN)),
+        value(FormatType::Ascii, tag(ASCII)),
+        value(FormatType::BinaryBigEndian, tag(BINARY_BIG_ENDIAN)),
+        value(FormatType::BinaryLittleEndian, tag(BINARY_LITTLE_ENDIAN)),
     ))(input)
 }
 
@@ -128,33 +131,33 @@ fn list_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
 
 fn data_type(input: &[u8]) -> IResult<&[u8], DataType> {
     alt((
-            value(DataType::F64, tag(FLOAT64)),
-            value(DataType::F32, tag(FLOAT32)),
-            value(DataType::U16, tag(USHORT)),
-            value(DataType::U32, tag(UINT32)),
-            value(DataType::U16, tag(UINT16)),
-            value(DataType::F64, tag(DOUBLE)),
-            value(DataType::U8, tag(UINT8)),
-            value(DataType::U8, tag(UCHAR)),
-            value(DataType::I16, tag(SHORT)),
-            value(DataType::I32, tag(INT32)),
-            value(DataType::I16, tag(INT16)),
-            value(DataType::F32, tag(FLOAT)),
-            value(DataType::U32, tag(UINT)),
-            value(DataType::I8, tag(INT8)),
-            value(DataType::I8, tag(CHAR)),
-            value(DataType::I32, tag(INT)),
+        value(DataType::F64, tag(FLOAT64)),
+        value(DataType::F32, tag(FLOAT32)),
+        value(DataType::U16, tag(USHORT)),
+        value(DataType::U32, tag(UINT32)),
+        value(DataType::U16, tag(UINT16)),
+        value(DataType::F64, tag(DOUBLE)),
+        value(DataType::U8, tag(UINT8)),
+        value(DataType::U8, tag(UCHAR)),
+        value(DataType::I16, tag(SHORT)),
+        value(DataType::I32, tag(INT32)),
+        value(DataType::I16, tag(INT16)),
+        value(DataType::F32, tag(FLOAT)),
+        value(DataType::U32, tag(UINT)),
+        value(DataType::I8, tag(INT8)),
+        value(DataType::I8, tag(CHAR)),
+        value(DataType::I32, tag(INT)),
     ))(input)
 }
 
 fn count_type(input: &[u8]) -> IResult<&[u8], CountType> {
     alt((
-            value(CountType::U16, tag(USHORT)),
-            value(CountType::U32, tag(UINT32)),
-            value(CountType::U16, tag(UINT16)),
-            value(CountType::U8, tag(UINT8)),
-            value(CountType::U8, tag(UCHAR)),
-            value(CountType::U32, tag(UINT)),
+        value(CountType::U16, tag(USHORT)),
+        value(CountType::U32, tag(UINT32)),
+        value(CountType::U16, tag(UINT16)),
+        value(CountType::U8, tag(UINT8)),
+        value(CountType::U8, tag(UCHAR)),
+        value(CountType::U32, tag(UINT)),
     ))(input)
 }
 
@@ -168,16 +171,16 @@ fn property_scalar_decl(input: &[u8]) -> IResult<&[u8], (DataType, String)> {
 fn property_list_decl(input: &[u8]) -> IResult<&[u8], (CountType, DataType, String)> {
     map(
         tuple((
-                property_kwd,
-                space,
-                list_kwd,
-                space,
-                count_type,
-                space,
-                data_type,
-                space,
-                identifier,
-                newline,
+            property_kwd,
+            space,
+            list_kwd,
+            space,
+            count_type,
+            space,
+            data_type,
+            space,
+            identifier,
+            newline,
         )),
         |(_, _, _, _, ct, _, dt, _, nm, _)| (ct, dt, String::from_utf8_lossy(nm).to_string()),
     )(input)
@@ -261,7 +264,7 @@ fn element_rpt(input: &[u8]) -> IResult<&[u8], ElementDescriptor> {
                 },
             }
         },
-        )(input)
+    )(input)
 }
 
 fn element_blk(input: &[u8]) -> IResult<&[u8], Vec<ElementDescriptor>> {
@@ -283,7 +286,6 @@ pub fn header(input: &[u8]) -> IResult<&[u8], PlyDescriptor> {
         },
     )(input)
 }
-
 
 #[cfg(test)]
 mod tests {

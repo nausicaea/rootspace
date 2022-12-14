@@ -47,8 +47,8 @@ pub fn single_line_text(input: &[u8]) -> IResult<&[u8], &[u8]> {
 
 pub fn identifier(input: &[u8]) -> IResult<&[u8], &[u8]> {
     recognize(pair(
-            alt((alpha1, tag(b"_"))),
-            many0_count(alt((alphanumeric1, tag(b"_")))),
+        alt((alpha1, tag(b"_"))),
+        many0_count(alt((alphanumeric1, tag(b"_")))),
     ))(input)
 }
 
@@ -77,5 +77,4 @@ mod tests {
             prop_assert_eq!(dbg_dmp(single_line_text, "proptest_single_line_text")(&input[..]), Ok((&b"\n"[..], &input[..input.len()-1])))
         }
     }
-
 }
