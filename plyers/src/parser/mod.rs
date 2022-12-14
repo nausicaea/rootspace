@@ -1,60 +1,170 @@
-use std::io::{Read, Seek};
+use std::num::{ParseFloatError, ParseIntError};
 
-use combinator::{and_then, chain, map, optional, repeat};
+use nom::{
+    combinator::{all_consuming, flat_map, map},
+    error::{FromExternalError, ParseError},
+    IResult,
+};
 
-pub mod base;
-pub mod be_count;
-pub mod be_number;
-pub mod combinator;
-pub mod error;
-pub mod le_count;
-pub mod le_number;
-pub mod read_byte;
+use self::{body::body_fct, header::header};
+use crate::types::Ply;
 
-pub trait Parser {
-    type Error;
-    type Item;
+mod error;
+mod body;
+mod common;
+mod header;
 
-    fn parse<R>(self, r: &mut R) -> Result<Self::Item, Self::Error>
-    where
-        Self: Sized,
-        R: Read + Seek;
+#[derive(Debug, thiserror::Error)]
+pub enum ParseNumError {
+    #[error(transparent)]
+    Utf8Error(#[from] std::str::Utf8Error),
+    #[error(transparent)]
+    ParseIntError(#[from] ParseIntError),
+    #[error(transparent)]
+    ParseFloatError(#[from] ParseFloatError),
+}
 
-    fn repeated(self) -> repeat::Repeat<Self>
-    where
-        Self: Sized,
-    {
-        repeat::repeat(self)
+pub fn parse_ply<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'static>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], Ply, E> {
+    all_consuming(flat_map(header, |descriptor| {
+        map(
+            body_fct(descriptor.clone()),
+            move |(property_data, list_property_data)| Ply {
+                descriptor: descriptor.clone(),
+                property_data,
+                list_property_data,
+            },
+        )
+    }))(input)
+}
+
+#[cfg(test)]
+mod tests {
+    use nom::error::dbg_dmp;
+
+    use super::*;
+    use crate::types::{
+        CommentDescriptor, DataType, ElementDescriptor, FormatType, ObjInfoDescriptor, PlyDescriptor,
+        PropertyDescriptor,
+    };
+
+    const EMPTY: &'static [u8] = b"";
+
+    #[test]
+    fn parse_ply_minimal_ascii_parses_correctly() {
+        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
+        assert_eq!(
+            parse_ply::<nom::error::Error<_>>(&input[..]),
+            Ok((
+                EMPTY,
+                Ply {
+                    descriptor: PlyDescriptor {
+                        format_type: FormatType::Ascii,
+                        elements: vec![ElementDescriptor {
+                            name: String::from("vertex"),
+                            count: 1usize,
+                            properties: vec![PropertyDescriptor {
+                                data_type: DataType::F32,
+                                name: String::from("x"),
+                                comments: Vec::new(),
+                                obj_info: Vec::new()
+                            }],
+                            list_properties: Vec::new(),
+                            comments: Vec::new(),
+                            obj_info: Vec::new()
+                        }],
+                        comments: Vec::new(),
+                        obj_info: Vec::new()
+                    },
+                    property_data: vec![0x00, 0x00, 0x80, 0x3f],
+                    list_property_data: Vec::new(),
+                }
+            ))
+        );
     }
 
-    fn optional(self) -> optional::Optional<Self>
-    where
-        Self: Sized,
-    {
-        optional::optional(self)
+    #[test]
+    fn parse_ply_fails_with_garbage() {
+        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/garbage.ply"));
+        let r = dbg_dmp(parse_ply::<nom::error::Error<_>>, "GARBAGE")(&input[..]);
+        assert!(r.is_err(), "{:?}", r.unwrap());
+        print!("{:?}", r.unwrap_err())
     }
 
-    fn chain<P>(self, second: P) -> chain::Chain<Self, P>
-    where
-        Self: Sized,
-        P: Parser,
-    {
-        chain::Chain::new(self, second)
+    #[test]
+    fn parse_ply_fails_with_incomplete_header() {
+        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/incomplete_header.ply"));
+        let r = nom::error::dbg_dmp(parse_ply::<nom::error::Error<_>>, "INCOMPLETE HEADER")(&input[..]);
+        assert!(r.is_err(), "{:?}", r.unwrap());
+        print!("{:?}", r.unwrap_err())
     }
 
-    fn map<J, F>(self, func: F) -> map::Map<Self, F>
-    where
-        Self: Sized,
-        F: Fn(Self::Item) -> J,
-    {
-        map::Map::new(self, func)
+    #[test]
+    fn parse_ply_has_no_errors_for_ascii_with_heavy_comments() {
+        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/heavy_comments_ascii.ply"));
+        assert_eq!(
+            parse_ply::<nom::error::Error<_>>(&input[..]),
+            Ok((
+                EMPTY,
+                Ply {
+                    descriptor: PlyDescriptor {
+                        format_type: FormatType::Ascii,
+                        elements: vec![ElementDescriptor {
+                            name: String::from("vertex"),
+                            count: 1,
+                            properties: vec![PropertyDescriptor {
+                                data_type: DataType::F32,
+                                name: String::from("x"),
+                                comments: vec![
+                                    CommentDescriptor(String::from("5. Comments are allowed here")),
+                                    CommentDescriptor(String::from("6. Comments are allowed here"))
+                                ],
+                                obj_info: vec![ObjInfoDescriptor(String::from("4. ObjInfo are allowed here"))]
+                            }],
+                            list_properties: Vec::new(),
+                            comments: vec![
+                                CommentDescriptor(String::from("3. Comments are allowed here")),
+                                CommentDescriptor(String::from("4. Comments are allowed here"))
+                            ],
+                            obj_info: vec![
+                                ObjInfoDescriptor(String::from("2. ObjInfo are allowed here")),
+                                ObjInfoDescriptor(String::from("3. ObjInfo are allowed here"))
+                            ]
+                        }],
+                        comments: vec![
+                            CommentDescriptor(String::from("1. Comments are allowed here")),
+                            CommentDescriptor(String::from("2. Comments are allowed here"))
+                        ],
+                        obj_info: vec![ObjInfoDescriptor(String::from("1. ObjInfo are allowed here"))]
+                    },
+                    property_data: vec![0, 0, 128, 63],
+                    list_property_data: vec![]
+                }
+            ))
+        );
     }
 
-    fn and_then<J, F>(self, func: F) -> and_then::AndThen<Self, F>
-    where
-        Self: Sized,
-        F: Fn(Self::Item) -> anyhow::Result<J>,
-    {
-        and_then::AndThen::new(self, func)
+    #[test]
+    fn parse_ply_succeeds_for_ascii_cube() {
+        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"));
+        let r = parse_ply::<nom::error::VerboseError<_>>(&input[..]);
+        if let Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) = r {
+            panic!("ASCII CUBE error:\n{}", super::error::convert_error(input, e));
+        }
+    }
+
+    #[test]
+    fn parse_ply_succeeds_for_large_ascii_file() {
+        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/bun_zipper.ply"));
+        let r = dbg_dmp(parse_ply::<nom::error::Error<_>>, "ASCII BUN ZIPPER")(&input[..]);
+        assert!(r.is_ok(), "{:?}", r.unwrap_err());
+    }
+
+    #[test]
+    fn parse_ply_succeeds_for_large_binary_little_endian_file() {
+        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/surfaceAB.ply"));
+        let r = dbg_dmp(parse_ply::<nom::error::Error<_>>, "LE FILE")(&input[..]);
+        assert!(r.is_ok(), "{:?}", r.unwrap_err());
     }
 }

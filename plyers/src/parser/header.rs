@@ -4,6 +4,7 @@ use nom::{
     bytes::complete::tag,
     character::complete::digit1,
     combinator::{map, map_res, value},
+    error::{FromExternalError, ParseError},
     multi::{many0, many1},
     sequence::tuple,
     IResult,
@@ -51,19 +52,19 @@ const CHAR: &'static [u8] = b"char";
 
 const INT: &'static [u8] = b"int";
 
-fn ply_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn ply_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
     tag(PLY)(input)
 }
 
-fn end_header_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn end_header_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
     tag(END_HEADER)(input)
 }
 
-fn format_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn format_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
     tag(FORMAT)(input)
 }
 
-fn format_type(input: &[u8]) -> IResult<&[u8], FormatType> {
+fn format_type<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], FormatType, E> {
     alt((
         value(FormatType::Ascii, tag(ASCII)),
         value(FormatType::BinaryBigEndian, tag(BINARY_BIG_ENDIAN)),
@@ -71,44 +72,46 @@ fn format_type(input: &[u8]) -> IResult<&[u8], FormatType> {
     ))(input)
 }
 
-fn format_version(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn format_version<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
     tag(b"1.0")(input)
 }
 
-fn format_decl(input: &[u8]) -> IResult<&[u8], FormatType> {
+fn format_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], FormatType, E> {
     map(
         tuple((format_kwd, space, format_type, space, format_version, newline)),
         |(_, _, ft, _, _, _)| ft,
     )(input)
 }
 
-fn comment_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn comment_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
     tag(COMMENT)(input)
 }
 
-fn comment_decl(input: &[u8]) -> IResult<&[u8], CommentDescriptor> {
+fn comment_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], CommentDescriptor, E> {
     map(
         tuple((comment_kwd, space, single_line_text, newline)),
         |(_, _, c, _)| CommentDescriptor(String::from_utf8_lossy(c).to_string()),
     )(input)
 }
 
-fn obj_info_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn obj_info_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
     tag(OBJ_INFO)(input)
 }
 
-fn obj_info_decl(input: &[u8]) -> IResult<&[u8], ObjInfoDescriptor> {
+fn obj_info_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], ObjInfoDescriptor, E> {
     map(
         tuple((obj_info_kwd, space, single_line_text, newline)),
         |(_, _, c, _)| ObjInfoDescriptor(String::from_utf8_lossy(c).to_string()),
     )(input)
 }
 
-fn element_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn element_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
     tag(ELEMENT)(input)
 }
 
-fn element_decl(input: &[u8]) -> IResult<&[u8], (String, usize)> {
+fn element_decl<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], (String, usize), E> {
     map_res(
         tuple((element_kwd, space, identifier, space, digit1, newline)),
         |(_, _, nm, _, cnt, _)| {
@@ -121,15 +124,15 @@ fn element_decl(input: &[u8]) -> IResult<&[u8], (String, usize)> {
     )(input)
 }
 
-fn property_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn property_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
     tag(PROPERTY)(input)
 }
 
-fn list_kwd(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn list_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
     tag(LIST)(input)
 }
 
-fn data_type(input: &[u8]) -> IResult<&[u8], DataType> {
+fn data_type<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], DataType, E> {
     alt((
         value(DataType::F64, tag(FLOAT64)),
         value(DataType::F32, tag(FLOAT32)),
@@ -150,7 +153,7 @@ fn data_type(input: &[u8]) -> IResult<&[u8], DataType> {
     ))(input)
 }
 
-fn count_type(input: &[u8]) -> IResult<&[u8], CountType> {
+fn count_type<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], CountType, E> {
     alt((
         value(CountType::U16, tag(USHORT)),
         value(CountType::U32, tag(UINT32)),
@@ -161,14 +164,16 @@ fn count_type(input: &[u8]) -> IResult<&[u8], CountType> {
     ))(input)
 }
 
-fn property_scalar_decl(input: &[u8]) -> IResult<&[u8], (DataType, String)> {
+fn property_scalar_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], (DataType, String), E> {
     map(
         tuple((property_kwd, space, data_type, space, identifier, newline)),
         |(_, _, dt, _, nm, _)| (dt, String::from_utf8_lossy(nm).to_string()),
     )(input)
 }
 
-fn property_list_decl(input: &[u8]) -> IResult<&[u8], (CountType, DataType, String)> {
+fn property_list_decl<'a, E: ParseError<&'a [u8]>>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], (CountType, DataType, String), E> {
     map(
         tuple((
             property_kwd,
@@ -186,15 +191,19 @@ fn property_list_decl(input: &[u8]) -> IResult<&[u8], (CountType, DataType, Stri
     )(input)
 }
 
-fn comment_blk(input: &[u8]) -> IResult<&[u8], Vec<Either<CommentDescriptor, ObjInfoDescriptor>>> {
+fn comment_blk<'a, E: ParseError<&'a [u8]>>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, E> {
     many0(alt((map(comment_decl, Left), map(obj_info_decl, Right))))(input)
 }
 
-fn format_blk(input: &[u8]) -> IResult<&[u8], (Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, FormatType)> {
+fn format_blk<'a, E: ParseError<&'a [u8]>>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], (Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, FormatType), E> {
     tuple((comment_blk, format_decl))(input)
 }
 
-fn property_scalar_rpt(input: &[u8]) -> IResult<&[u8], PropertyDescriptor> {
+fn property_scalar_rpt<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E> {
     map(
         tuple((comment_blk, property_scalar_decl)),
         |(cmt, (data_type, name))| {
@@ -210,11 +219,11 @@ fn property_scalar_rpt(input: &[u8]) -> IResult<&[u8], PropertyDescriptor> {
     )(input)
 }
 
-fn property_scalar_blk(input: &[u8]) -> IResult<&[u8], Vec<PropertyDescriptor>> {
+fn property_scalar_blk<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], Vec<PropertyDescriptor>, E> {
     many1(property_scalar_rpt)(input)
 }
 
-fn property_list_rpt(input: &[u8]) -> IResult<&[u8], ListPropertyDescriptor> {
+fn property_list_rpt<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], ListPropertyDescriptor, E> {
     map(
         tuple((comment_blk, property_list_decl)),
         |(cmt, (count_type, data_type, name))| {
@@ -231,15 +240,21 @@ fn property_list_rpt(input: &[u8]) -> IResult<&[u8], ListPropertyDescriptor> {
     )(input)
 }
 
-fn property_list_blk(input: &[u8]) -> IResult<&[u8], Vec<ListPropertyDescriptor>> {
+fn property_list_blk<'a, E: ParseError<&'a [u8]>>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], Vec<ListPropertyDescriptor>, E> {
     many1(property_list_rpt)(input)
 }
 
-fn property_blk(input: &[u8]) -> IResult<&[u8], Either<Vec<PropertyDescriptor>, Vec<ListPropertyDescriptor>>> {
+fn property_blk<'a, E: ParseError<&'a [u8]>>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], Either<Vec<PropertyDescriptor>, Vec<ListPropertyDescriptor>>, E> {
     alt((map(property_list_blk, Right), map(property_scalar_blk, Left)))(input)
 }
 
-fn element_rpt(input: &[u8]) -> IResult<&[u8], ElementDescriptor> {
+fn element_rpt<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], ElementDescriptor, E> {
     map(
         tuple((comment_blk, element_decl, property_blk)),
         |(cmt, (name, count), prp)| {
@@ -267,11 +282,15 @@ fn element_rpt(input: &[u8]) -> IResult<&[u8], ElementDescriptor> {
     )(input)
 }
 
-fn element_blk(input: &[u8]) -> IResult<&[u8], Vec<ElementDescriptor>> {
+fn element_blk<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], Vec<ElementDescriptor>, E> {
     many1(element_rpt)(input)
 }
 
-pub fn header(input: &[u8]) -> IResult<&[u8], PlyDescriptor> {
+pub fn header<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], PlyDescriptor, E> {
     map(
         tuple((ply_kwd, newline, format_blk, element_blk, end_header_kwd, newline)),
         |(_, _, (cmt, format_type), elements, _, _)| {
@@ -296,7 +315,7 @@ mod tests {
         let input = &b"ply\nformat ascii 1.0\nend_header\n"[..];
         let rest = &b"\nformat ascii 1.0\nend_header\n"[..];
 
-        let r = ply_kwd(input);
+        let r = ply_kwd::<nom::error::Error<_>>(input);
 
         assert_eq!(r, Ok((rest, PLY)))
     }
@@ -306,7 +325,7 @@ mod tests {
         let input = b"end_header\n1234\n";
         let rest = b"\n1234\n";
 
-        let r = end_header_kwd(input.as_slice());
+        let r = end_header_kwd::<nom::error::Error<_>>(input.as_slice());
 
         assert_eq!(r, Ok((rest.as_slice(), END_HEADER)))
     }
@@ -315,7 +334,7 @@ mod tests {
     fn header_minimal_ascii_parses_correctly() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
         assert_eq!(
-            header(&input[..]),
+            header::<nom::error::Error<_>>(&input[..]),
             Ok((
                 &b"1.0\n"[..],
                 PlyDescriptor {

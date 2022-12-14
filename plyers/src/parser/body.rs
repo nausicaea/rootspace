@@ -1,6 +1,7 @@
 use nom::{
     bytes::complete::take_till1,
     combinator::{map, map_res},
+    error::{FromExternalError, ParseError},
     multi::{fold_many_m_n, length_count},
     number::complete::{
         be_f32, be_f64, be_i16, be_i32, be_i8, be_u16, be_u32, be_u8, le_f32, le_f64, le_i16, le_i32, le_i8, le_u16,
@@ -16,7 +17,9 @@ use super::{
 };
 use crate::types::{CountType, DataType, ElementDescriptor, FormatType, PlyDescriptor};
 
-fn ascii_count_fct<'a>(_count_type: CountType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], usize> {
+fn ascii_count_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
+    _count_type: CountType,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E> {
     map_res(terminated(take_till1(is_whitespace), whitespace), |cd| {
         let cd = std::str::from_utf8(cd)?;
         let cd = cd.parse::<usize>()?;
@@ -24,7 +27,9 @@ fn ascii_count_fct<'a>(_count_type: CountType) -> impl FnMut(&'a [u8]) -> IResul
     })
 }
 
-fn ascii_number_fct<'a>(data_type: DataType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>> {
+fn ascii_number_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
+    data_type: DataType,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E> {
     map_res(terminated(take_till1(is_whitespace), whitespace), move |pd| {
         let pd = std::str::from_utf8(pd)?;
         let pd = match data_type {
@@ -58,7 +63,9 @@ fn ascii_number_fct<'a>(data_type: DataType) -> impl FnMut(&'a [u8]) -> IResult<
     })
 }
 
-fn le_count_fct<'a>(count_type: CountType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], usize> {
+fn le_count_fct<'a, E: ParseError<&'a [u8]>>(
+    count_type: CountType,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E> {
     move |input| match count_type {
         CountType::U8 => map(le_u8, |n| n as usize)(input),
         CountType::U16 => map(le_u16, |n| n as usize)(input),
@@ -66,7 +73,9 @@ fn le_count_fct<'a>(count_type: CountType) -> impl FnMut(&'a [u8]) -> IResult<&'
     }
 }
 
-fn le_number_fct<'a>(data_type: DataType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>> {
+fn le_number_fct<'a, E: ParseError<&'a [u8]>>(
+    data_type: DataType,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E> {
     move |input| match data_type {
         DataType::U8 => map(le_u8, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
         DataType::I8 => map(le_i8, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
@@ -79,7 +88,9 @@ fn le_number_fct<'a>(data_type: DataType) -> impl FnMut(&'a [u8]) -> IResult<&'a
     }
 }
 
-fn be_count_fct<'a>(count_type: CountType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], usize> {
+fn be_count_fct<'a, E: ParseError<&'a [u8]>>(
+    count_type: CountType,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E> {
     move |input| match count_type {
         CountType::U8 => map(be_u8, |n| n as usize)(input),
         CountType::U16 => map(be_u16, |n| n as usize)(input),
@@ -87,7 +98,9 @@ fn be_count_fct<'a>(count_type: CountType) -> impl FnMut(&'a [u8]) -> IResult<&'
     }
 }
 
-fn be_number_fct<'a>(data_type: DataType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>> {
+fn be_number_fct<'a, E: ParseError<&'a [u8]>>(
+    data_type: DataType,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E> {
     move |input| match data_type {
         DataType::U8 => map(be_u8, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
         DataType::I8 => map(be_i8, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
@@ -100,10 +113,14 @@ fn be_number_fct<'a>(data_type: DataType) -> impl FnMut(&'a [u8]) -> IResult<&'a
     }
 }
 
-fn properties_fct<'a, F, P>(num_fn: &'a F, types: Vec<DataType>) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>>
+fn properties_fct<'a, F, P, E>(
+    num_fn: &'a F,
+    types: Vec<DataType>,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E>
 where
-    P: FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>>,
+    P: FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E>,
     F: Fn(DataType) -> P,
+    E: ParseError<&'a [u8]>,
 {
     let m = types.len();
     let mut i = 0;
@@ -124,16 +141,17 @@ where
     )
 }
 
-fn list_properties_fct<'a, F1, F2, P1, P2>(
+fn list_properties_fct<'a, F1, F2, P1, P2, E>(
     cnt_fn: &'a F1,
     num_fn: &'a F2,
     types: Vec<(CountType, DataType)>,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E>
 where
-    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize>,
-    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>>,
+    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
+    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E>,
     F1: Fn(CountType) -> P1,
     F2: Fn(DataType) -> P2,
+    E: ParseError<&'a [u8]>,
 {
     let m = types.len();
     let mut i = 0;
@@ -154,16 +172,17 @@ where
     )
 }
 
-fn elements_fct<'a, F1, F2, P1, P2>(
+fn elements_fct<'a, F1, F2, P1, P2, E>(
     cnt_fn: &'a F1,
     num_fn: &'a F2,
     elements: Vec<ElementDescriptor>,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], (Vec<u8>, Vec<u8>)>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], (Vec<u8>, Vec<u8>), E>
 where
-    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize>,
-    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>>,
+    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
+    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E>,
     F1: Fn(CountType) -> P1,
     F2: Fn(DataType) -> P2,
+    E: ParseError<&'a [u8]>,
 {
     let m = elements.len();
     let mut i = 0;
@@ -194,7 +213,9 @@ where
     )
 }
 
-pub fn body_fct<'a>(ply: PlyDescriptor) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], (Vec<u8>, Vec<u8>)> {
+pub fn body_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'static>(
+    ply: PlyDescriptor,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], (Vec<u8>, Vec<u8>), E> {
     move |input| {
         let elements = ply.elements.iter().cloned().collect();
         match ply.format_type {

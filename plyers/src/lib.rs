@@ -12,234 +12,39 @@
 //! H: Format type
 //! J: Data type
 //! K: Count type
+//! ;: one or more newline characters (0x0a)
+//! -: one or more space or tab characters (0x09 or 0x20)
 //! W: any integral or floating point number
 //! X: any integral number larger than zero
 //! Y: any word (non-space, non-linebreak)
 //! Z: any string (non-linebreak)
 //!
-//! S -> A B
-//! A -> "ply" D E "end_header"
-//! B -> W | W B
-//! D' -> "format" H Z
-//! D -> D' | F D'
-//! E' -> "element" Y X
-//! E -> E' G | F E' G | E' G E | F E' G E
-//! F' -> "comment" Z
-//! M' -> "obj_info" Z
-//! F -> F' | M' | F' F | M' F
-//! G' -> "property" J Y
-//! G'' -> "property" "list" K J Y
-//! Ga -> G' | F G' | G' Ga | F G' Ga
-//! Gb -> G'' | F G'' | G'' Gb | F G'' Gb
-//! G -> Ga | Gb
+//! Data Types:
 //! H -> "ascii" | "binary_little_endian" | "binary_big_endian"
 //! J -> "char" | "uchar" | "short" | "ushort" | "int" | "uint" | "float" | "double" | "int8" |
 //! "uint8" | "int16" | "uint16" | "int32" | "uint32" | "float32" | "float64"
 //! K -> "uchar" | "ushort" | "uint" | "uint8" | "uint16" | "uint32"
 //!
+//! Declarations:
+//! A' -> "ply" ;
+//! A'' -> "end_header" ;
+//! D' -> "format" - H - "1.0" ;
+//! E' -> "element" - Y - X ;
+//! F' -> "comment" - Z ;
+//! M' -> "obj_info" - Z ;
+//! G' -> "property" - J - Y ;
+//! G'' -> "property" - "list" - K - J - Y ;
+//!
+//! Grammar:
+//! S -> A B
+//! A -> A' D E A''
+//! B -> W | W B
+//! D -> D' | F D'
+//! E -> E' G | F E' G | E' G E | F E' G E
+//! F -> F' | M' | F' F | M' F
+//! Ga -> G' | F G' | G' Ga | F G' Ga
+//! Gb -> G'' | F G'' | G'' Gb | F G'' Gb
+//! G -> Ga | Gb
 
-use std::{
-    fs::File,
-    io::{BufReader, Read, Seek},
-    path::Path,
-};
-
-use parser::{base::bytes::Bytes, be_count, be_number, combinator::repeat_exact::repeat_exact, le_count, le_number};
-
-use self::types::{FormatType, Ply};
-use crate::{
-    parser::{error::FileWrapper, Parser},
-    types::{CountType, DataType},
-};
-
-pub mod error;
 pub mod parser;
-pub mod ply;
 pub mod types;
-
-pub fn parse_ply<S: Read + Seek>(stream: &mut S) -> anyhow::Result<Ply> {
-    let descriptor = ply::header().parse(stream)?;
-    let mut property_data: Vec<u8> = Vec::new();
-    let mut list_property_data: Vec<u8> = Vec::new();
-
-    match descriptor.format_type {
-        FormatType::Ascii => {
-            for element in &descriptor.elements {
-                for property in &element.properties {
-                    let property_value = ply::ascii_number_parser(property.data_type).parse(stream)?;
-                    property_data.extend(property_value);
-                }
-
-                for list_property in &element.list_properties {
-                    let count = ply::ascii_usize_parser().parse(stream)?;
-                    let property_values =
-                        repeat_exact(ply::ascii_number_parser(list_property.data_type), count).parse(stream)?;
-                    for property_value in property_values {
-                        list_property_data.extend(property_value);
-                    }
-                }
-            }
-        }
-        FormatType::BinaryLittleEndian => {
-            for element in &descriptor.elements {
-                for property in &element.properties {
-                    let property_value = le_number::le_number(property.data_type).parse(stream)?;
-                    property_data.extend(property_value);
-                }
-
-                for list_property in &element.list_properties {
-                    let count = le_count::le_count(list_property.count_type).parse(stream)?;
-                    let property_values =
-                        repeat_exact(le_number::le_number(list_property.data_type), count).parse(stream)?;
-                    for property_value in property_values {
-                        list_property_data.extend(property_value);
-                    }
-                }
-            }
-        }
-        FormatType::BinaryBigEndian => {
-            for element in &descriptor.elements {
-                for property in &element.properties {
-                    let property_value = be_number::be_number(property.data_type).parse(stream)?;
-                    property_data.extend(property_value);
-                }
-
-                for list_property in &element.list_properties {
-                    let count = be_count::be_count(list_property.count_type).parse(stream)?;
-                    let property_values =
-                        repeat_exact(be_number::be_number(list_property.data_type), count).parse(stream)?;
-                    for property_value in property_values {
-                        list_property_data.extend(property_value);
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(Ply {
-        descriptor,
-        property_data,
-        list_property_data,
-    })
-}
-
-pub fn load_ply<P: AsRef<Path>>(p: P) -> anyhow::Result<Ply> {
-    let p = p.as_ref().to_path_buf();
-    let file = File::open(&p).map_err(|e| FileWrapper::new(e, p.clone()))?;
-    let mut reader = BufReader::new(file);
-
-    let ply = parse_ply(&mut reader).map_err(|e| FileWrapper::new(e, p.clone()))?;
-
-    Ok(ply)
-}
-
-#[cfg(test)]
-pub(crate) fn to_reader(source: &str) -> std::io::Cursor<&[u8]> {
-    std::io::Cursor::new(source.as_bytes())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn load_ply_fails_if_the_file_does_not_begin_with_a_magic_string() {
-        let p = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/garbage.ply"));
-        assert!(p.is_err());
-    }
-
-    #[test]
-    fn load_ply_fails_if_the_file_does_not_have_a_header_terminator() {
-        let p = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/incomplete_header.ply"));
-        assert!(p.is_err());
-    }
-
-    #[test]
-    fn load_ply_successfully_loads_minimal_ascii_ply_file() {
-        let p = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
-        match p {
-            Err(e) => panic!("{:?}", e),
-            Ok(p) => {
-                let pd = &p.descriptor;
-                assert_eq!(
-                    pd.format_type,
-                    FormatType::Ascii,
-                    "File format is not ASCII, but {:?}",
-                    &pd.format_type
-                );
-                assert_eq!(
-                    pd.format_version, "1.0",
-                    "File version is not 1.0, but {}",
-                    &pd.format_version
-                );
-                assert_eq!(
-                    pd.elements.len(),
-                    1,
-                    "Number of element descriptors is not one, but {}",
-                    pd.elements.len()
-                );
-                assert_eq!(
-                    pd.comments.len(),
-                    0,
-                    "Number of comments is not zero, but {}",
-                    pd.comments.len()
-                );
-                assert_eq!(
-                    pd.obj_info.len(),
-                    0,
-                    "Number of obj_info is not zero, but {}",
-                    pd.obj_info.len()
-                );
-
-                let ed = &pd.elements[0];
-                assert_eq!(
-                    ed.name, "vertex",
-                    "Name of element descriptor is not vertex, but {}",
-                    &ed.name
-                );
-                assert_eq!(ed.count, 1, "Number of element instances is not one, but {}", ed.count);
-                assert_eq!(
-                    ed.properties.len(),
-                    1,
-                    "Number of element properties is not one, but {}",
-                    ed.properties.len()
-                );
-
-                assert_eq!(
-                    p.property_data.len(),
-                    4,
-                    "Property data length is not three, but {}",
-                    p.property_data.len()
-                );
-                assert_eq!(
-                    p.list_property_data.len(),
-                    0,
-                    "List property data length is not zero, but {}",
-                    p.list_property_data.len()
-                );
-
-                let pdat = f32::from_ne_bytes(p.property_data.try_into().unwrap());
-                assert_eq!(pdat, 1.0f32);
-            }
-        }
-    }
-
-    #[test]
-    fn load_ply_accepts_comments_and_obj_info_almost_anywhere_in_the_header() {
-        let p: Ply = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/heavy_comments_ascii.ply")).unwrap();
-        dbg!(&p.descriptor.comments);
-        assert_eq!(p.descriptor.comments.len(), 6);
-        dbg!(&p.descriptor.obj_info);
-        assert_eq!(p.descriptor.obj_info.len(), 4);
-    }
-
-    #[test]
-    fn load_ply_succeeds_in_loading_a_large_ascii_file() {
-        let p: Ply = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/bun_zipper.ply")).unwrap();
-    }
-
-    #[test]
-    fn load_ply_succeeds_in_loading_a_large_binary_file() {
-        let p: Ply = load_ply(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/surfaceAB.ply")).unwrap();
-    }
-}

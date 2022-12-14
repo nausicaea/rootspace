@@ -9,6 +9,5 @@ members = [
     "rose-tree",
     "glamour",
     "plyers",
-    "plyers2",
     "forward-ref",
 ]
