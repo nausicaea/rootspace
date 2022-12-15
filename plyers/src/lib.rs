@@ -49,25 +49,44 @@
 pub mod parser;
 pub mod types;
 
+use std::io::Read;
 use std::path::Path;
 use std::fs::File;
+use file_manipulation::FilePathBuf;
+use nom::error::VerboseError;
+
 pub use crate::parser::parse_ply;
+use crate::parser::error::convert_error;
 use crate::types::Ply;
 
-// pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, Error<()>> {
-//     let file = File::open(path)?;
-//     let mut buf = BufReader::new(file);
-//     buf.parse(parse_ply)
-// }
+#[derive(Debug, thiserror::Error)]
+pub enum PlyError {
+    #[error(transparent)]
+    FileError(#[from] file_manipulation::FileError),
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+    #[error("{}", .0)]
+    NomError(String),
+}
+
+pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
+    let path = FilePathBuf::try_from(path.as_ref())?;
+    let mut file = File::open(path)?;
+    let mut input = Vec::new();
+    file.read_to_end(&mut input)?;
+    
+    let r = parse_ply::<VerboseError<_>>(&input)
+        .map(|(_, p)| p)
+        .map_err(|e| match e {
+            nom::Err::Error(e) | nom::Err::Failure(e) => PlyError::NomError(convert_error(&input, e)),
+            e @ nom::Err::Incomplete(_) => PlyError::NomError(format!("{}", e)),
+        })?;
+
+    Ok(r)
+}
 
 #[cfg(test)]
 mod tests {
-    use std::io::Read;
-
-    use crate::parser::error::convert_error;
-    use nom::error::VerboseError;
-    use file_manipulation::FilePathBuf;
-
     use super::*;
 
     const TEST_FILES: &'static [&'static str] = &[
@@ -83,15 +102,9 @@ mod tests {
     #[test]
     fn load_ply_succeeds_for_test_files() {
         for &p in TEST_FILES {
-            let path = FilePathBuf::try_from(p).unwrap();
-            let mut file = File::open(path).unwrap();
-            let mut input = Vec::<u8>::new();
-            file.read_to_end(&mut input).unwrap();
-
-            match parse_ply::<VerboseError<_>>(&input) {
-                Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) => panic!("{}: {}", p, convert_error(&input, e)),
-                Err(e @ nom::Err::Incomplete(_)) => panic!("{}: {}", p, e),
-                Ok(_) => (),
+            let r = load_ply(p);
+            if let Err(e) = r {
+                panic!("{}", e)
             }
         }
     }
