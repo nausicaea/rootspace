@@ -6,7 +6,7 @@ edition = "2021"
 
 [features]
 wsl = []
-spirv = ["wgpu/spirv"]
+# spirv = ["wgpu/spirv"]
 
 [dependencies]
 directories = "^4.0"
@@ -32,11 +32,13 @@ term-table = "^1.3.1"
 rose-tree = { path = "../rose-tree", features = ["ecs", "serde_support"] }
 glamour = { path = "../glamour", features = ["serde_support"] }
 forward-ref = { path = "../forward-ref" }
-wgpu = "0.12"
-wgpu-types = { version = "0.12", features = ["trace", "replay"] }
-pollster = "0.2.5"
-bytemuck = { version = "1.4", features = [ "derive" ] }
-tobj = { version = "3.2.2", features = ["async"] }
+plyers = { path = "../plyers" }
+
+# wgpu = "0.12"
+# wgpu-types = { version = "0.12", features = ["trace", "replay"] }
+# pollster = "0.2.5"
+# bytemuck = { version = "1.4", features = [ "derive" ] }
+# tobj = { version = "3.2.2", features = ["async"] }
 
 [dev-dependencies]
 serde_test = { version = "^1.0.0" }
