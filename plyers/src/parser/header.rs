@@ -3,7 +3,7 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::digit1,
-    combinator::{map, map_res, value},
+    combinator::{map, map_res, value, opt},
     error::{FromExternalError, ParseError},
     multi::{many0, many1},
     sequence::tuple,
@@ -11,7 +11,7 @@ use nom::{
 };
 
 use super::{
-    common::{identifier, newline, single_line_text, space, split_vecs_of_either},
+    common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace},
     ParseNumError,
 };
 use crate::types::{
@@ -19,14 +19,14 @@ use crate::types::{
     PlyDescriptor, PropertyDescriptor,
 };
 
-const PLY: &'static [u8] = b"ply";
-const END_HEADER: &'static [u8] = b"end_header";
+const PLY: &'static [u8] = b"ply\n";
+const END_HEADER: &'static [u8] = b"end_header\n";
 const FORMAT: &'static [u8] = b"format";
 const ELEMENT: &'static [u8] = b"element";
 const COMMENT: &'static [u8] = b"comment";
 const OBJ_INFO: &'static [u8] = b"obj_info";
 const PROPERTY: &'static [u8] = b"property";
-const LIST: &'static [u8] = b"list";
+const PROPERTY_LIST: &'static [u8] = b"property list";
 const ASCII: &'static [u8] = b"ascii";
 const BINARY_LITTLE_ENDIAN: &'static [u8] = b"binary_little_endian";
 const BINARY_BIG_ENDIAN: &'static [u8] = b"binary_big_endian";
@@ -52,18 +52,6 @@ const CHAR: &'static [u8] = b"char";
 
 const INT: &'static [u8] = b"int";
 
-fn ply_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
-    tag(PLY)(input)
-}
-
-fn end_header_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
-    tag(END_HEADER)(input)
-}
-
-fn format_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
-    tag(FORMAT)(input)
-}
-
 fn format_type<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], FormatType, E> {
     alt((
         value(FormatType::Ascii, tag(ASCII)),
@@ -78,42 +66,30 @@ fn format_version<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [
 
 fn format_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], FormatType, E> {
     map(
-        tuple((format_kwd, space, format_type, space, format_version, newline)),
+        tuple((tag(FORMAT), space, format_type, space, format_version, newline)),
         |(_, _, ft, _, _, _)| ft,
     )(input)
 }
 
-fn comment_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
-    tag(COMMENT)(input)
-}
-
 fn comment_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], CommentDescriptor, E> {
     map(
-        tuple((comment_kwd, space, single_line_text, newline)),
+        tuple((tag(COMMENT), space, single_line_text, newline)),
         |(_, _, c, _)| CommentDescriptor(String::from_utf8_lossy(c).to_string()),
     )(input)
 }
 
-fn obj_info_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
-    tag(OBJ_INFO)(input)
-}
-
 fn obj_info_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], ObjInfoDescriptor, E> {
     map(
-        tuple((obj_info_kwd, space, single_line_text, newline)),
+        tuple((tag(OBJ_INFO), space, single_line_text, newline)),
         |(_, _, c, _)| ObjInfoDescriptor(String::from_utf8_lossy(c).to_string()),
     )(input)
-}
-
-fn element_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
-    tag(ELEMENT)(input)
 }
 
 fn element_decl<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
     input: &'a [u8],
 ) -> IResult<&'a [u8], (String, usize), E> {
     map_res(
-        tuple((element_kwd, space, identifier, space, digit1, newline)),
+        tuple((tag(ELEMENT), space, identifier, space, digit1, newline)),
         |(_, _, nm, _, cnt, _)| {
             let nm = std::str::from_utf8(nm)?.to_string();
             let cnt = std::str::from_utf8(cnt)?;
@@ -122,14 +98,6 @@ fn element_decl<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseN
             Result::<_, ParseNumError>::Ok((nm, cnt))
         },
     )(input)
-}
-
-fn property_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
-    tag(PROPERTY)(input)
-}
-
-fn list_kwd<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
-    tag(LIST)(input)
 }
 
 fn data_type<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], DataType, E> {
@@ -166,7 +134,7 @@ fn count_type<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8],
 
 fn property_scalar_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], (DataType, String), E> {
     map(
-        tuple((property_kwd, space, data_type, space, identifier, newline)),
+        tuple((tag(PROPERTY), space, data_type, space, identifier, newline)),
         |(_, _, dt, _, nm, _)| (dt, String::from_utf8_lossy(nm).to_string()),
     )(input)
 }
@@ -176,9 +144,7 @@ fn property_list_decl<'a, E: ParseError<&'a [u8]>>(
 ) -> IResult<&'a [u8], (CountType, DataType, String), E> {
     map(
         tuple((
-            property_kwd,
-            space,
-            list_kwd,
+            tag(PROPERTY_LIST),
             space,
             count_type,
             space,
@@ -187,7 +153,7 @@ fn property_list_decl<'a, E: ParseError<&'a [u8]>>(
             identifier,
             newline,
         )),
-        |(_, _, _, _, ct, _, dt, _, nm, _)| (ct, dt, String::from_utf8_lossy(nm).to_string()),
+        |(_, _, ct, _, dt, _, nm, _)| (ct, dt, String::from_utf8_lossy(nm).to_string()),
     )(input)
 }
 
@@ -292,8 +258,8 @@ pub fn header<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNum
     input: &'a [u8],
 ) -> IResult<&'a [u8], PlyDescriptor, E> {
     map(
-        tuple((ply_kwd, newline, format_blk, element_blk, end_header_kwd, newline)),
-        |(_, _, (cmt, format_type), elements, _, _)| {
+        tuple((opt(whitespace), tag(PLY), format_blk, element_blk, tag(END_HEADER))),
+        |(_, _, (cmt, format_type), elements, _)| {
             let (comments, obj_info) = split_vecs_of_either(cmt);
 
             PlyDescriptor {
@@ -309,26 +275,6 @@ pub fn header<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNum
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn ply_kwd_detects_ply_byte_sequence() {
-        let input = &b"ply\nformat ascii 1.0\nend_header\n"[..];
-        let rest = &b"\nformat ascii 1.0\nend_header\n"[..];
-
-        let r = ply_kwd::<nom::error::Error<_>>(input);
-
-        assert_eq!(r, Ok((rest, PLY)))
-    }
-
-    #[test]
-    fn end_header_kwd_detects_end_header_byte_sequence() {
-        let input = b"end_header\n1234\n";
-        let rest = b"\n1234\n";
-
-        let r = end_header_kwd::<nom::error::Error<_>>(input.as_slice());
-
-        assert_eq!(r, Ok((rest.as_slice(), END_HEADER)))
-    }
 
     #[test]
     fn header_minimal_ascii_parses_correctly() {

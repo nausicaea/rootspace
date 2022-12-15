@@ -11,7 +11,7 @@ use crate::types::Ply;
 
 mod body;
 mod common;
-mod error;
+pub mod error;
 mod header;
 
 #[derive(Debug, thiserror::Error)]
@@ -24,7 +24,7 @@ pub enum ParseNumError {
     ParseFloatError(#[from] ParseFloatError),
 }
 
-pub fn parse_ply<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'static>(
+pub fn parse_ply<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a>(
     input: &'a [u8],
 ) -> IResult<&'a [u8], Ply, E> {
     all_consuming(flat_map(header, |descriptor| {
@@ -143,28 +143,5 @@ mod tests {
                 }
             ))
         );
-    }
-
-    #[test]
-    fn parse_ply_succeeds_for_ascii_cube() {
-        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"));
-        let r = parse_ply::<nom::error::VerboseError<_>>(&input[..]);
-        if let Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) = r {
-            panic!("ASCII CUBE error:\n{}", super::error::convert_error(input, e));
-        }
-    }
-
-    #[test]
-    fn parse_ply_succeeds_for_large_ascii_file() {
-        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/bun_zipper.ply"));
-        let r = dbg_dmp(parse_ply::<nom::error::Error<_>>, "ASCII BUN ZIPPER")(&input[..]);
-        assert!(r.is_ok(), "{:?}", r.unwrap_err());
-    }
-
-    #[test]
-    fn parse_ply_succeeds_for_large_binary_little_endian_file() {
-        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/surfaceAB.ply"));
-        let r = dbg_dmp(parse_ply::<nom::error::Error<_>>, "LE FILE")(&input[..]);
-        assert!(r.is_ok(), "{:?}", r.unwrap_err());
     }
 }

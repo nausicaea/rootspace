@@ -48,3 +48,51 @@
 
 pub mod parser;
 pub mod types;
+
+use std::path::Path;
+use std::fs::File;
+pub use crate::parser::parse_ply;
+use crate::types::Ply;
+
+// pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, Error<()>> {
+//     let file = File::open(path)?;
+//     let mut buf = BufReader::new(file);
+//     buf.parse(parse_ply)
+// }
+
+#[cfg(test)]
+mod tests {
+    use std::io::Read;
+
+    use crate::parser::error::convert_error;
+    use nom::error::VerboseError;
+    use file_manipulation::FilePathBuf;
+
+    use super::*;
+
+    const TEST_FILES: &'static [&'static str] = &[
+        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"), // Ascii Cube
+        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/bun_zipper.ply"), // Large Ascii File
+        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/surfaceAB.ply"), // Large Little Endian File
+        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/Baby_Kinect.ply"), // Large Big Endian File
+        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/db_tall_obstacle_0.ply"), // VTK generated
+        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/saved_terrain.ply"), // VCGLIB generated
+        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/pasillo_1.ply"), // Large Ascii File
+    ];
+
+    #[test]
+    fn load_ply_succeeds_for_test_files() {
+        for &p in TEST_FILES {
+            let path = FilePathBuf::try_from(p).unwrap();
+            let mut file = File::open(path).unwrap();
+            let mut input = Vec::<u8>::new();
+            file.read_to_end(&mut input).unwrap();
+
+            match parse_ply::<VerboseError<_>>(&input) {
+                Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) => panic!("{}: {}", p, convert_error(&input, e)),
+                Err(e @ nom::Err::Incomplete(_)) => panic!("{}: {}", p, e),
+                Ok(_) => (),
+            }
+        }
+    }
+}
