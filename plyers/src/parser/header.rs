@@ -19,8 +19,8 @@ use crate::types::{
     PlyDescriptor, PropertyDescriptor,
 };
 
-const PLY: &'static [u8] = b"ply\n";
-const END_HEADER: &'static [u8] = b"end_header\n";
+const PLY: &'static [u8] = b"ply";
+const END_HEADER: &'static [u8] = b"end_header";
 const FORMAT: &'static [u8] = b"format";
 const ELEMENT: &'static [u8] = b"element";
 const COMMENT: &'static [u8] = b"comment";
@@ -258,8 +258,8 @@ pub fn header<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNum
     input: &'a [u8],
 ) -> IResult<&'a [u8], PlyDescriptor, E> {
     map(
-        tuple((opt(whitespace), tag(PLY), format_blk, element_blk, tag(END_HEADER))),
-        |(_, _, (cmt, format_type), elements, _)| {
+        tuple((opt(whitespace), tag(PLY), newline, format_blk, element_blk, tag(END_HEADER), newline)),
+        |(_, _, _, (cmt, format_type), elements, _, _)| {
             let (comments, obj_info) = split_vecs_of_either(cmt);
 
             PlyDescriptor {

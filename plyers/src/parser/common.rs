@@ -4,7 +4,7 @@ branch::alt,
 bytes::complete::{tag, take_till1, take_while1},
 character::{
     complete::{alpha1, alphanumeric1},
-    is_newline, is_space,
+    is_space,
 },
 combinator::recognize,
 error::ParseError,
@@ -28,6 +28,10 @@ pub fn split_vecs_of_either<L, R>(mut input: Vec<Either<L, R>>) -> (Vec<L>, Vec<
 
 pub fn is_whitespace(b: u8) -> bool {
     (b >= 0x09 && b <= 0x0d) || (b == 0x20)
+}
+
+pub fn is_newline(b: u8) -> bool {
+    b == 0x0a || b == 0x0d
 }
 
 pub fn whitespace<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], &'a [u8], E> {
@@ -69,7 +73,7 @@ mod tests {
         }
 
         #[test]
-        fn newline_matches_x0a(ref input in bytes_regex(r"\x0a+").unwrap()) {
+        fn newline_matches_x0a_and_0x0d(ref input in bytes_regex(r"[\x0a\x0d]+").unwrap()) {
             prop_assert_eq!(dbg_dmp(newline::<nom::error::Error<_>>, "proptest_newline")(&input[..]), Ok((EMPTY, &input[..])))
         }
 
