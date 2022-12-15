@@ -3,7 +3,7 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::digit1,
-    combinator::{map, map_res, value, opt},
+    combinator::{map, map_res, opt, value},
     error::{FromExternalError, ParseError},
     multi::{many0, many1},
     sequence::tuple,
@@ -258,7 +258,15 @@ pub fn header<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNum
     input: &'a [u8],
 ) -> IResult<&'a [u8], PlyDescriptor, E> {
     map(
-        tuple((opt(whitespace), tag(PLY), newline, format_blk, element_blk, tag(END_HEADER), newline)),
+        tuple((
+            opt(whitespace),
+            tag(PLY),
+            newline,
+            format_blk,
+            element_blk,
+            tag(END_HEADER),
+            newline,
+        )),
         |(_, _, _, (cmt, format_type), elements, _, _)| {
             let (comments, obj_info) = split_vecs_of_either(cmt);
 

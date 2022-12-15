@@ -49,15 +49,13 @@
 pub mod parser;
 pub mod types;
 
-use std::io::Read;
-use std::path::Path;
-use std::fs::File;
+use std::{fs::File, io::Read, path::Path};
+
 use file_manipulation::FilePathBuf;
 use nom::error::VerboseError;
 
-pub use crate::parser::parse_ply;
 use crate::parser::error::convert_error;
-use crate::types::Ply;
+pub use crate::{parser::parse_ply, types::Ply};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PlyError {
@@ -74,7 +72,7 @@ pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
     let mut file = File::open(path)?;
     let mut input = Vec::new();
     file.read_to_end(&mut input)?;
-    
+
     let r = parse_ply::<VerboseError<_>>(&input)
         .map(|(_, p)| p)
         .map_err(|e| match e {

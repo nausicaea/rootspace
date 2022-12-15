@@ -1,16 +1,16 @@
 use either::{Either, Left, Right};
 use nom::{
-branch::alt,
-bytes::complete::{tag, take_till1, take_while1},
-character::{
-    complete::{alpha1, alphanumeric1},
-    is_space,
-},
-combinator::recognize,
-error::ParseError,
-multi::many0_count,
-sequence::pair,
-IResult,
+    branch::alt,
+    bytes::complete::{tag, take_till1, take_while1},
+    character::{
+        complete::{alpha1, alphanumeric1},
+        is_space,
+    },
+    combinator::recognize,
+    error::ParseError,
+    multi::many0_count,
+    sequence::pair,
+    IResult,
 };
 
 pub fn split_vecs_of_either<L, R>(mut input: Vec<Either<L, R>>) -> (Vec<L>, Vec<R>) {
