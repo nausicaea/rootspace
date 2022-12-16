@@ -1,8 +1,4 @@
-use std::{
-    convert::{TryFrom, TryInto},
-    path::Path,
-};
-
+use std::path::Path;
 use anyhow::Result;
 use thiserror::Error;
 
@@ -16,13 +12,13 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn from_ply(data: plyers::Ply) -> Result<Self, MeshError> {
+    pub fn from_ply(_data: plyers::Ply) -> Result<Self, MeshError> {
         todo!()
     }
 }
 
 impl AssetTrait for Mesh {
-    fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
+    fn from_path<P: AsRef<Path>>(_path: P) -> Result<Self> {
         todo!()
     }
 }
