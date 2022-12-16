@@ -1,0 +1,23 @@
+[package]
+name = "engine2"
+version = "0.1.0"
+edition = "2021"
+
+# [features]
+# spirv = ["wgpu/spirv"]
+
+[dependencies]
+env_logger = "0.9" # Only used for wgpu.rs
+log = "0.4"
+winit = "0.27"
+wgpu = "0.14"
+pollster = "0.2.5"
+
+anyhow = "1.0.66"
+
+ecs = { path = "../ecs" }
+try-default = { path = "../try-default" }
+
+# wgpu-types = { version = "0.12", features = ["trace", "replay"] }
+# bytemuck = { version = "1.4", features = [ "derive" ] }
+# tobj = { version = "3.2.2", features = ["async"] }

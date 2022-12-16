@@ -5,6 +5,7 @@ members = [
     "file-manipulation",
     "ecs",
     "engine",
+    "engine2",
     "rootspace",
     "rose-tree",
     "glamour",
