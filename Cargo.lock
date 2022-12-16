@@ -867,10 +867,15 @@ name = "engine2"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "directories",
  "ecs",
  "env_logger",
+ "file-manipulation",
  "log",
  "pollster",
+ "serde",
+ "serde_json",
+ "thiserror",
  "try-default",
  "wgpu",
  "winit 0.27.5",

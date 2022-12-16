@@ -14,8 +14,13 @@ wgpu = "0.14"
 pollster = "0.2.5"
 
 anyhow = "1.0.66"
+directories = "^4.0"
+serde = { version = "^1.0.0", features = ["derive"] }
+serde_json = "^1.0.0"
+thiserror = "^1.0.0"
 
 ecs = { path = "../ecs" }
+file-manipulation = { path = "../file-manipulation", features = ["serde_support"] }
 try-default = { path = "../try-default" }
 
 # wgpu-types = { version = "0.12", features = ["trace", "replay"] }
