@@ -16,7 +16,7 @@ fn main() {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
-    let state: State<Reg![], Reg![], Reg![], Reg![]> = State::new(window, "wgpu", false).unwrap();
+    let state: Orchestrator<Reg![], Reg![], Reg![], Reg![]> = Orchestrator::new(window, "wgpu", false).unwrap();
 
     event_loop.run(state.event_handler_factory())
 }
@@ -25,12 +25,12 @@ type Resources<S> = RegAdd![AssetDatabase, S];
 
 type World<S, F, D, R> = ecs::World<Resources<S>, F, D, R>;
 
-struct State<S, F, D, R> {
+struct Orchestrator<S, F, D, R> {
     world: World<S, F, D, R>,
     window: Window,
 }
 
-impl<S, F, D, R> State<S, F, D, R>
+impl<S, F, D, R> Orchestrator<S, F, D, R>
 where
     S: 'static + ResourceRegistry,
     F: 'static + SystemRegistry,
@@ -43,7 +43,7 @@ where
         let mut world = World::try_default()?;
         world.get_mut::<AssetDatabase>().initialize(name.as_ref(), force_init)?;
 
-        Ok(State { world, window })
+        Ok(Orchestrator { world, window })
     }
 
     pub fn load<P: AsRef<Path>>(window: Window, path: P) -> anyhow::Result<Self> {
@@ -63,7 +63,7 @@ where
         //     .get_system_mut::<DebugShell>(LoopStage::Update)
         //     .add_command(FileSystemCommand);
 
-        Ok(State { world, window })
+        Ok(Orchestrator { world, window })
     }
 
     async fn init(&mut self) {

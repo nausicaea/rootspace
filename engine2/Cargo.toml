@@ -12,6 +12,7 @@ log = "0.4"
 winit = "0.27"
 wgpu = "0.14"
 pollster = "0.2.5"
+tokio = "1.23.0"
 
 anyhow = "1.0.66"
 directories = "^4.0"
