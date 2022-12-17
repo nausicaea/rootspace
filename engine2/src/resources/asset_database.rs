@@ -10,7 +10,7 @@ use ecs::{Resource, SerializationName};
 use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf, NewOrExFilePathBuf, ValidatedPath};
 use serde::{Deserialize, Serialize};
 
-use crate::{assets::AssetError, APP_ORGANIZATION, APP_QUALIFIER};
+use crate::{APP_ORGANIZATION, APP_QUALIFIER};
 
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 #[serde(into = "AssetDatabaseSerDe", try_from = "AssetDatabaseSerDe")]
@@ -169,6 +169,20 @@ impl TryFrom<AssetDatabaseSerDe> for AssetDatabase {
             states: Some(DirPathBuf::try_from(state_database)?),
         })
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum AssetError {
+    #[error("The asset tree was not found")]
+    AssetTreeNotFound,
+    #[error("Is not within the asset tree: {}", .0.display())]
+    OutOfTree(PathBuf),
+    #[error("The asset name {:?} contains path separators", .0)]
+    InvalidCharacters(String),
+    #[error(transparent)]
+    FileError(#[from] file_manipulation::FileError),
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
 }
 
 #[cfg(test)]
