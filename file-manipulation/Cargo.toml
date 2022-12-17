@@ -1,6 +1,6 @@
 [package]
 name = "file-manipulation"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Eleanore Young <developer@nausicaea.net>"]
 description = "This crate provides path abstractions that provide type-level guarantees about the contents of the path"
 edition = "2021"

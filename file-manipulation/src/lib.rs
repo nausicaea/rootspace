@@ -111,35 +111,10 @@ pub fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow:
     Ok(())
 }
 
-pub trait ValidatedPath:
-    Debug
-    + Clone
-    + PartialEq
-    + Eq
-    + Hash
-    + Deref<Target = PathBuf>
-    + AsRef<PathBuf>
-    + AsRef<Path>
-    + AsRef<OsStr>
-    + Into<PathBuf>
-    + for<'r> TryFrom<&'r str>
-    + for<'r> TryFrom<&'r PathBuf>
-    + TryFrom<PathBuf>
-    + for<'r> TryFrom<&'r Path>
-    + TryFrom<OsString>
-    + for<'r> TryFrom<&'r OsStr>
-{
-    fn path(&self) -> &Path {
-        AsRef::<Path>::as_ref(self)
-    }
-}
-
 #[cfg_attr(any(test, feature = "serde_support"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct NewOrExFilePathBuf(PathBuf);
-
-impl ValidatedPath for NewOrExFilePathBuf {}
 
 impl Deref for NewOrExFilePathBuf {
     type Target = PathBuf;
@@ -267,8 +242,6 @@ impl FilePathBuf {
     }
 }
 
-impl ValidatedPath for FilePathBuf {}
-
 impl Deref for FilePathBuf {
     type Target = PathBuf;
 
@@ -362,8 +335,6 @@ impl TryFrom<&PathBuf> for FilePathBuf {
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct DirPathBuf(PathBuf);
-
-impl ValidatedPath for DirPathBuf {}
 
 impl Deref for DirPathBuf {
     type Target = PathBuf;

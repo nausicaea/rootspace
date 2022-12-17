@@ -7,7 +7,7 @@ use std::{
 use anyhow::{Context, Error};
 use directories::ProjectDirs;
 use ecs::{Resource, SerializationName};
-use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf, NewOrExFilePathBuf, ValidatedPath};
+use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf, NewOrExFilePathBuf};
 use serde::{Deserialize, Serialize};
 
 use crate::{APP_ORGANIZATION, APP_QUALIFIER};
@@ -20,10 +20,6 @@ pub struct AssetDatabase {
     assets: Option<DirPathBuf>,
     states: Option<DirPathBuf>,
 }
-
-impl Resource for AssetDatabase {}
-
-impl SerializationName for AssetDatabase {}
 
 impl AssetDatabase {
     pub fn initialize(&mut self, name: &str, force: bool) -> Result<(), Error> {
@@ -94,7 +90,7 @@ impl AssetDatabase {
         let assets = self.assets.as_ref().ok_or(AssetError::AssetTreeNotFound)?;
         let asset_path = FilePathBuf::try_from(assets.join(path))?;
 
-        if !asset_path.path().starts_with(&assets) {
+        if !asset_path.as_path().starts_with(&assets) {
             return Err(AssetError::OutOfTree(asset_path.into()));
         }
 
@@ -118,7 +114,7 @@ impl AssetDatabase {
 
         let state_path = FilePathBuf::try_from(&states)?;
 
-        if !state_path.path().starts_with(&states) {
+        if !state_path.as_path().starts_with(&states) {
             return Err(AssetError::OutOfTree(state_path.into()));
         }
 
@@ -137,6 +133,10 @@ impl AssetDatabase {
         Ok(data)
     }
 }
+
+impl Resource for AssetDatabase {}
+
+impl SerializationName for AssetDatabase {}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct AssetDatabaseSerDe {

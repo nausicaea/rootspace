@@ -925,7 +925,7 @@ dependencies = [
 
 [[package]]
 name = "file-manipulation"
-version = "0.1.2"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "dirs",
