@@ -11,6 +11,7 @@ env_logger = "0.9" # Only used for wgpu.rs
 log = "0.4"
 winit = "0.27"
 wgpu = "0.14"
+wgpu-types = { version = "0.14", features = ["trace", "replay"] }
 pollster = "0.2.5"
 tokio = "1.23.0"
 
@@ -24,6 +25,5 @@ ecs = { path = "../ecs" }
 file-manipulation = { path = "../file-manipulation", features = ["serde_support"] }
 try-default = { path = "../try-default" }
 
-# wgpu-types = { version = "0.12", features = ["trace", "replay"] }
 # bytemuck = { version = "1.4", features = [ "derive" ] }
 # tobj = { version = "3.2.2", features = ["async"] }

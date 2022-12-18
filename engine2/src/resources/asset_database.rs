@@ -10,14 +10,17 @@ use ecs::{Resource, SerializationName};
 use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf, NewOrExFilePathBuf};
 use serde::{Deserialize, Serialize};
 
-use crate::{APP_ORGANIZATION, APP_QUALIFIER};
+const APP_QUALIFIER: &str = "net";
+const APP_ORGANIZATION: &str = "nausicaea";
 
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
-#[serde(into = "AssetDatabaseSerDe", try_from = "AssetDatabaseSerDe")]
 pub struct AssetDatabase {
     game_name: Option<String>,
+    #[serde(skip)]
     project_dirs: Option<ProjectDirs>,
+    #[serde(skip)]
     assets: Option<DirPathBuf>,
+    #[serde(skip)]
     states: Option<DirPathBuf>,
 }
 
@@ -137,39 +140,6 @@ impl AssetDatabase {
 impl Resource for AssetDatabase {}
 
 impl SerializationName for AssetDatabase {}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct AssetDatabaseSerDe {
-    game_name: String,
-}
-
-impl From<AssetDatabase> for AssetDatabaseSerDe {
-    fn from(value: AssetDatabase) -> Self {
-        AssetDatabaseSerDe {
-            game_name: value.game_name.expect("No game name was defined previously"),
-        }
-    }
-}
-
-impl TryFrom<AssetDatabaseSerDe> for AssetDatabase {
-    type Error = anyhow::Error;
-
-    fn try_from(value: AssetDatabaseSerDe) -> Result<Self, Self::Error> {
-        let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, &value.game_name)
-            .context("Could not find the project directories")?;
-
-        let data_local_dir = project_dirs.data_local_dir();
-        let asset_database = data_local_dir.join("assets");
-        let state_database = data_local_dir.join("states");
-
-        Ok(AssetDatabase {
-            game_name: Some(value.game_name),
-            project_dirs: Some(project_dirs),
-            assets: Some(DirPathBuf::try_from(asset_database)?),
-            states: Some(DirPathBuf::try_from(state_database)?),
-        })
-    }
-}
 
 #[derive(Debug, thiserror::Error)]
 pub enum AssetError {

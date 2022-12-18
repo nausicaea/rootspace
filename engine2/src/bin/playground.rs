@@ -1,6 +1,13 @@
-use winit::{event_loop::{EventLoop, EventLoopWindowTarget, ControlFlow}, window::{WindowBuilder, Window}, event::{Event, StartCause}};
-use wgpu::{Instance, Backends, RequestAdapterOptions, PowerPreference, Limits, Features, DeviceDescriptor, SurfaceConfiguration, TextureUsages, PresentMode, CompositeAlphaMode, Surface, Device, Queue};
 use log::debug;
+use wgpu::{
+    Backends, CompositeAlphaMode, Device, DeviceDescriptor, Features, Instance, Limits, PowerPreference, PresentMode,
+    Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, TextureUsages,
+};
+use winit::{
+    event::{Event, StartCause},
+    event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
+    window::{Window, WindowBuilder},
+};
 
 fn main() {
     use pollster::FutureExt;
@@ -11,20 +18,17 @@ fn main() {
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     let state = State::new(window).block_on();
-    
+
     event_loop.run(run(state))
 }
 
 fn run<T>(mut state: State) -> impl 'static + FnMut(Event<T>, &EventLoopWindowTarget<T>, &mut ControlFlow) {
-    move |event, _event_loop, control_flow| {
-
-        match event {
-            Event::NewEvents(StartCause::Init) => {
-                state.init();
-                *control_flow = ControlFlow::Exit;
-            },
-            _ => (),
+    move |event, _event_loop, control_flow| match event {
+        Event::NewEvents(StartCause::Init) => {
+            state.init();
+            *control_flow = ControlFlow::Exit;
         }
+        _ => (),
     }
 }
 
@@ -48,18 +52,21 @@ impl State {
                 compatible_surface: Some(&surface),
                 force_fallback_adapter: false,
             })
-        .await
+            .await
             .unwrap();
         debug!("Supported adapter features: {:?}", adapter.features());
 
-        let (device, queue) = adapter.request_device(
-            &DeviceDescriptor {
-                features: Features::empty(),
-                limits: Limits::default(),
-                label: Some("No features, default limits"),
-            },
-            None, // Trace path
-        ).await.unwrap();
+        let (device, queue) = adapter
+            .request_device(
+                &DeviceDescriptor {
+                    features: Features::empty(),
+                    limits: Limits::default(),
+                    label: Some("No features, default limits"),
+                },
+                None, // Trace path
+            )
+            .await
+            .unwrap();
 
         let size = window.inner_size();
         debug!("Physical window size: {:?}", &size);
@@ -83,8 +90,8 @@ impl State {
         };
         surface.configure(&device, &surface_config);
 
-        State { 
-            window, 
+        State {
+            window,
             surface,
             device,
             queue,
@@ -92,7 +99,5 @@ impl State {
         }
     }
 
-    fn init(&mut self) {
-    }
+    fn init(&mut self) {}
 }
-
