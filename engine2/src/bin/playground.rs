@@ -1,5 +1,5 @@
-use winit::{event_loop::{EventLoop, EventLoopWindowTarget, ControlFlow}, window::{WindowBuilder, Window}, event::{Event, StartCause, WindowEvent, KeyboardInput, ElementState, VirtualKeyCode}};
-use wgpu::{Instance, Backends, RequestAdapterOptions, PowerPreference, Limits, Features, DeviceDescriptor, SurfaceConfiguration, TextureUsages, PresentMode, CompositeAlphaMode, Surface, Device, Queue, QueueWriteBufferView};
+use winit::{event_loop::{EventLoop, EventLoopWindowTarget, ControlFlow}, window::{WindowBuilder, Window}, event::{Event, StartCause}};
+use wgpu::{Instance, Backends, RequestAdapterOptions, PowerPreference, Limits, Features, DeviceDescriptor, SurfaceConfiguration, TextureUsages, PresentMode, CompositeAlphaMode, Surface, Device, Queue};
 use log::debug;
 
 fn main() {

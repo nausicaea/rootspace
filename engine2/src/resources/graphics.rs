@@ -6,7 +6,7 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub async fn initialize(&mut self, window: Window) {
+    pub async fn initialize(&mut self, _window: Window) {
     }
 }
 

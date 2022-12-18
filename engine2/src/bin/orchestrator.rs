@@ -67,13 +67,13 @@ where
     }
 
     async fn init(&mut self) {
-        let size = self.window.inner_size();
+        let _size = self.window.inner_size();
 
         // The instance is a handle to our GPU
         // Backends::all => Vulkan + Metal + DX12 + Browser WebGPU
         let instance = wgpu::Instance::new(wgpu::Backends::all());
         let surface = unsafe { instance.create_surface(&self.window) };
-        let adapter = instance
+        let _adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
                 compatible_surface: Some(&surface),
