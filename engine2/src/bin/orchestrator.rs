@@ -1,7 +1,7 @@
 use std::{fs::File, path::Path};
 
 use ecs::{Reg, RegAdd, ResourceRegistry, SystemRegistry};
-use engine2::resources::asset_database::AssetDatabase;
+use engine2::resources::{asset_database::AssetDatabase, graphics::Graphics};
 use file_manipulation::FilePathBuf;
 use log::trace;
 use winit::{
@@ -14,20 +14,18 @@ fn main() {
     env_logger::init();
 
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
 
-    let state: Orchestrator<Reg![], Reg![], Reg![], Reg![]> = Orchestrator::new(window, "wgpu", false).unwrap();
+    let state: Orchestrator<Reg![], Reg![], Reg![], Reg![]> = Orchestrator::new().unwrap();
 
-    event_loop.run(state.event_handler_factory())
+    event_loop.run(state.run(String::from("test"), false))
 }
 
-type Resources<S> = RegAdd![AssetDatabase, S];
+type Resources<S> = RegAdd![AssetDatabase, Graphics, S];
 
 type World<S, F, D, R> = ecs::World<Resources<S>, F, D, R>;
 
 struct Orchestrator<S, F, D, R> {
     world: World<S, F, D, R>,
-    window: Window,
 }
 
 impl<S, F, D, R> Orchestrator<S, F, D, R>
@@ -37,16 +35,15 @@ where
     D: 'static + SystemRegistry,
     R: 'static + SystemRegistry,
 {
-    fn new<N: AsRef<str>>(window: Window, name: N, force_init: bool) -> anyhow::Result<Self> {
+    fn new() -> anyhow::Result<Self> {
         use try_default::TryDefault;
 
-        let mut world = World::try_default()?;
-        world.get_mut::<AssetDatabase>().initialize(name.as_ref(), force_init)?;
+        let world = World::try_default()?;
 
-        Ok(Orchestrator { world, window })
+        Ok(Orchestrator { world })
     }
 
-    pub fn load<P: AsRef<Path>>(window: Window, path: P) -> anyhow::Result<Self> {
+    fn load<P: AsRef<Path>>(path: P) -> anyhow::Result<Self> {
         use serde::Deserialize;
 
         // Create the deserializer
@@ -63,39 +60,27 @@ where
         //     .get_system_mut::<DebugShell>(LoopStage::Update)
         //     .add_command(FileSystemCommand);
 
-        Ok(Orchestrator { world, window })
+        Ok(Orchestrator { world })
     }
 
-    async fn init(&mut self) {
-        let _size = self.window.inner_size();
+    fn init<T>(&mut self, event_loop: &EventLoopWindowTarget<T>, name: &str, force_init: bool) {
+        use pollster::FutureExt;
 
-        // The instance is a handle to our GPU
-        // Backends::all => Vulkan + Metal + DX12 + Browser WebGPU
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
-        let surface = unsafe { instance.create_surface(&self.window) };
-        let _adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::default(),
-                compatible_surface: Some(&surface),
-                force_fallback_adapter: false,
-            })
-            .await
-            .unwrap();
+        self.world.get_mut::<AssetDatabase>().initialize(name, force_init).unwrap();
+        self.world.get_mut::<Graphics>().initialize(event_loop).block_on();
     }
 
-    fn event_handler_factory(
-        mut self,
+    fn run(
+        mut self, name: String, force_init: bool,
     ) -> impl 'static + FnMut(Event<'_, ()>, &EventLoopWindowTarget<()>, &mut ControlFlow) {
-        move |event, _event_loop, control_flow| {
-            use pollster::FutureExt;
-
+        move |event, event_loop, control_flow| {
             trace!("{:?}", &event);
             match event {
-                Event::NewEvents(StartCause::Init) => self.init().block_on(),
+                Event::NewEvents(StartCause::Init) => self.init(event_loop, &name, force_init),
                 Event::WindowEvent {
-                    window_id,
                     event: ref e,
-                } if window_id == self.window.id() => match e {
+                    ..
+                } => match e {
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     WindowEvent::KeyboardInput {
                         input:

@@ -1,7 +1,7 @@
 use ecs::{Resource, SerializationName};
 use log::debug;
 use wgpu::{RequestAdapterOptions, Instance, DeviceDescriptor, TextureUsages};
-use winit::window::Window;
+use winit::{window::{Window, WindowBuilder}, event_loop::EventLoopWindowTarget};
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -12,7 +12,9 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub async fn initialize(&mut self, window: Window) {
+    pub async fn initialize<T>(&mut self, event_loop: &EventLoopWindowTarget<T>) {
+        let window = WindowBuilder::new().build(event_loop).unwrap();
+
         let instance = Instance::new(self.settings.backends);
         let surface = unsafe { instance.create_surface(&window) };
 
