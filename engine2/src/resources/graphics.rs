@@ -70,6 +70,10 @@ impl Graphics {
             config,
         });
     }
+
+    pub fn request_redraw(&self) {
+        self.runtime.as_ref().map(|rt| rt.window.request_redraw());
+    }
 }
 
 impl Resource for Graphics {}
