@@ -4,7 +4,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use ecs::{EventQueue, Reg, RegAdd, ResourceRegistry, SystemRegistry, LoopControl};
+use ecs::{EventQueue, Reg, RegAdd, ResourceRegistry, SystemRegistry, LoopControl, ReceiverId};
 use engine2::{
     events::winit_mappings::WindowEvent,
     resources::{asset_database::AssetDatabase, graphics::Graphics, statistics::Statistics},
@@ -12,7 +12,7 @@ use engine2::{
 use file_manipulation::FilePathBuf;
 use log::trace;
 use winit::{
-    event::{ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode},
+    event::{ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode, ModifiersState},
     event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
     window::{Window, WindowBuilder},
 };
@@ -38,6 +38,7 @@ type World<S, F, D, R> = ecs::World<Resources<S>, F, D, R>;
 pub struct Orchestrator<S, F, D, R> {
     world: World<S, F, D, R>,
     timers: Timers,
+    window_event_receiver: ReceiverId<WindowEvent>,
 }
 
 impl<S, F, D, R> Orchestrator<S, F, D, R>
@@ -50,9 +51,13 @@ where
     pub fn new() -> anyhow::Result<Self> {
         use try_default::TryDefault;
 
+        let mut world = World::try_default()?;
+        let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<WindowEvent>();
+
         Ok(Orchestrator {
-            world: World::try_default()?,
+            world,
             timers: Timers::default(),
+            window_event_receiver,
         })
     }
 
@@ -75,7 +80,7 @@ where
                 }
                 Event::MainEventsCleared => self.request_redraw(),
                 Event::RedrawRequested(_) => self.redraw(),
-                Event::RedrawEventsCleared => *control_flow = self.maintain(),
+                Event::RedrawEventsCleared => self.maintain(control_flow),
                 _ => (),
             }
         }
@@ -134,20 +139,28 @@ where
     }
 
     /// Perform maintenance tasks necessary in each game loop iteration
-    fn maintain(&mut self) -> ControlFlow {
+    fn maintain(&mut self, control_flow: &mut ControlFlow) {
         // Determine if the event loop needs to sleep to prolong the frame
-        let mut control_flow = if let Some(sleep_time) = self.timers.sleep_time.take() {
-            ControlFlow::WaitUntil(sleep_time)
+        if let Some(sleep_time) = self.timers.sleep_time.take() {
+            *control_flow = ControlFlow::WaitUntil(sleep_time);
         } else {
-            ControlFlow::Poll
-        };
+            *control_flow = ControlFlow::Poll;
+        }
 
         // Call the maintenance method of [`World`](ecs::World)
         if let LoopControl::Abort = self.world.maintain() {
-            control_flow = ControlFlow::Exit;
+            *control_flow = ControlFlow::Exit;
         }
 
-        control_flow
+        // Process window events
+        let events = self.world.get_mut::<EventQueue<WindowEvent>>().receive(&self.window_event_receiver);
+        for event in events {
+            match event {
+                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                WindowEvent::KeyboardInput { input: KeyboardInput { state: ElementState::Released, virtual_keycode: Some(VirtualKeyCode::Q), .. }, .. } => *control_flow = ControlFlow::Exit,
+                _ => (),
+            }
+        }
     }
 }
 
