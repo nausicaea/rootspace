@@ -1,11 +1,11 @@
-use std::{fs::File, path::Path};
+use std::{fs::File, path::Path, time::{Instant, Duration}};
 
-use ecs::{Reg, RegAdd, ResourceRegistry, SystemRegistry};
-use engine2::resources::{asset_database::AssetDatabase, graphics::Graphics};
+use ecs::{Reg, RegAdd, ResourceRegistry, SystemRegistry, EventQueue};
+use engine2::{resources::{asset_database::AssetDatabase, graphics::Graphics}, events::winit_mappings::WindowEvent};
 use file_manipulation::FilePathBuf;
 use log::trace;
 use winit::{
-    event::{ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode, WindowEvent},
+    event::{ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode},
     event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
     window::{Window, WindowBuilder},
 };
@@ -20,7 +20,8 @@ fn main() {
     event_loop.run(state.run(String::from("test"), false))
 }
 
-type Resources<S> = RegAdd![AssetDatabase, Graphics, S];
+// FIXME: WindowEvent<'_> is not serializable
+type Resources<S> = RegAdd![AssetDatabase, Graphics, EventQueue<WindowEvent>, S];
 
 type World<S, F, D, R> = ecs::World<Resources<S>, F, D, R>;
 
@@ -50,7 +51,7 @@ where
             trace!("{:?}", &event);
             match event {
                 Event::NewEvents(StartCause::Init) => self.init(event_loop, &name, force_init),
-                Event::WindowEvent { event: window_event, .. } => self.input(window_event),
+                Event::WindowEvent { event: window_event, .. } => if let Ok(window_event) = window_event.try_into() { self.input(window_event) },
                 Event::MainEventsCleared => self.request_redraw(),
                 Event::RedrawRequested(_) => self.redraw(),
                 Event::RedrawEventsCleared => *control_flow = self.maintain(),
@@ -67,6 +68,7 @@ where
     }
 
     fn input(&mut self, window_event: WindowEvent) {
+        self.world.get_mut::<EventQueue<WindowEvent>>().send(window_event)
     }
 
     fn request_redraw(&mut self) {
@@ -80,4 +82,12 @@ where
         todo!()
     }
 
+}
+
+#[derive(Debug)]
+struct Timing {
+    loop_time: Instant,
+    accumulator: Duration,
+    dynamic_game_time: Duration,
+    fixed_game_time: Duration,
 }

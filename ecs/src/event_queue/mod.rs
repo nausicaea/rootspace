@@ -16,7 +16,8 @@ pub mod receiver_id;
 pub mod receiver_state;
 
 /// An `EventQueue` contains a queue of events and provides rudimentary facilities of retrieving
-/// those events.
+/// those events. The transmitted event `E` must be `Clone` because of the one-to-many
+/// relationships (i.e. single sender, multiple receivers).
 #[derive(PartialEq, Serialize, Deserialize)]
 pub struct EventQueue<E> {
     #[serde(default = "VecDeque::default", skip_serializing_if = "VecDeque::is_empty")]

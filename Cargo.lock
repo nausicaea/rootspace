@@ -812,7 +812,7 @@ dependencies = [
 
 [[package]]
 name = "ecs"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "downcast-rs",
@@ -3405,6 +3405,7 @@ dependencies = [
  "raw-window-handle 0.4.3",
  "raw-window-handle 0.5.0",
  "sctk-adwaita",
+ "serde",
  "smithay-client-toolkit 0.16.0",
  "wasm-bindgen",
  "wayland-client 0.29.5",

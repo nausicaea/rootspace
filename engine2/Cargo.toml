@@ -9,7 +9,7 @@ edition = "2021"
 [dependencies]
 env_logger = "0.9" # Only used for wgpu.rs
 log = "0.4"
-winit = "0.27"
+winit = { version = "0.27", features = ["serde"] }
 wgpu = "0.14"
 wgpu-types = { version = "0.14", features = ["trace", "replay"] }
 pollster = "0.2.5"
