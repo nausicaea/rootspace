@@ -330,6 +330,13 @@ where
         LoopControl::Continue
     }
 
+    pub fn clear(&mut self) {
+        self.render_systems.clear();
+        self.update_systems.clear();
+        self.fixed_update_systems.clear();
+        self.resources.clear();
+    }
+
     fn on_serialize(&mut self, path: &NewOrExFilePathBuf) -> Result<(), WorldError> {
         // Create the serializer
         // FIXME: Find a solution not to hard-code the Serializer type

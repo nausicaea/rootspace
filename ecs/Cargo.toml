@@ -1,6 +1,6 @@
 [package]
 name = "ecs"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Eleanore Young"]
 description = "The ecs library provides facilities to build an Entity-Component-System architecture"
 edition = "2021"

@@ -27,9 +27,8 @@ fn main() {
     event_loop.run(state.run(String::from("test"), false))
 }
 
-const DELTA_TIME: u64 = 50;
-const MIN_FRAME_DURATION: u64 = 15625;
-const MAX_FRAME_DURATION: u64 = 250;
+const DELTA_TIME: u64 = 50; // milliseconds
+const MAX_FRAME_DURATION: u64 = 250; // milliseconds
 
 type Resources<S> = RegAdd![AssetDatabase, Graphics, EventQueue<WindowEvent>, Statistics, S];
 
@@ -67,7 +66,17 @@ where
         force_init: bool,
     ) -> impl 'static + FnMut(Event<'_, ()>, &EventLoopWindowTarget<()>, &mut ControlFlow) {
         move |event, event_loop, control_flow| {
-            trace!("Event trace: {:?}", &event);
+            #[cfg(feature = "loopdbg")]
+            let mut draw_bottom = false;
+            #[cfg(feature = "loopdbg")]
+            {
+                match &event {
+                    Event::NewEvents(_) => trace!("⬇"),
+                    Event::RedrawEventsCleared | Event::LoopDestroyed => draw_bottom = true,
+                    _ => (),
+                }
+                trace!("Event trace: {:?}", &event);
+            }
 
             match event {
                 Event::NewEvents(StartCause::Init) => self.init(event_loop, &name, force_init),
@@ -78,10 +87,15 @@ where
                         self.input(window_event)
                     }
                 }
-                Event::MainEventsCleared => self.request_redraw(),
-                Event::RedrawRequested(_) => self.redraw(),
+                Event::MainEventsCleared => self.redraw(),
                 Event::RedrawEventsCleared => self.maintain(control_flow),
+                Event::LoopDestroyed => self.cleanup(),
                 _ => (),
+            }
+
+            #[cfg(feature = "loopdbg")]
+            if draw_bottom {
+                trace!("⬆\n\n");
             }
         }
     }
@@ -99,12 +113,6 @@ where
     /// Send the `winit` event to the internal event queue for further processing.
     fn input(&mut self, window_event: WindowEvent) {
         self.world.get_mut::<EventQueue<WindowEvent>>().send(window_event)
-    }
-
-    /// Implementation detail of the `winit` event loop architecture: this will cause the
-    /// `Orchestrator::redraw` method to be called.
-    fn request_redraw(&mut self) {
-        self.world.get_mut::<Graphics>().request_redraw();
     }
 
     /// Update the game state (using [`World::update`](ecs::world::World::update) and
@@ -129,23 +137,14 @@ where
         self.world.update(&self.timers.dynamic_game_time, &frame_time);
         self.world.render(&self.timers.dynamic_game_time, &frame_time);
 
-        // Artificially prolong the frame if it was too short
-        if frame_time < self.timers.min_frame_duration {
-            self.timers.sleep_time = Some(Instant::now() + (self.timers.min_frame_duration - frame_time));
-        }
-
         // Update the frame time statistics
         self.world.get_mut::<Statistics>().update_loop_times(frame_time);
     }
 
     /// Perform maintenance tasks necessary in each game loop iteration
     fn maintain(&mut self, control_flow: &mut ControlFlow) {
-        // Determine if the event loop needs to sleep to prolong the frame
-        if let Some(sleep_time) = self.timers.sleep_time.take() {
-            *control_flow = ControlFlow::WaitUntil(sleep_time);
-        } else {
-            *control_flow = ControlFlow::Poll;
-        }
+        // The standard action is to Poll
+        *control_flow = ControlFlow::Poll;
 
         // Call the maintenance method of [`World`](ecs::World)
         if let LoopControl::Abort = self.world.maintain() {
@@ -161,6 +160,13 @@ where
                 _ => (),
             }
         }
+
+        #[cfg(feature = "loopdbg")]
+        trace!("Control flow: {:?}", control_flow);
+    }
+
+    fn cleanup(&mut self) {
+        self.world.clear();
     }
 }
 
@@ -171,9 +177,7 @@ struct Timers {
     dynamic_game_time: Duration,
     fixed_game_time: Duration,
     delta_time: Duration,
-    min_frame_duration: Duration,
     max_frame_duration: Duration,
-    sleep_time: Option<Instant>,
 }
 
 impl Default for Timers {
@@ -184,9 +188,7 @@ impl Default for Timers {
             dynamic_game_time: Duration::default(),
             fixed_game_time: Duration::default(),
             delta_time: Duration::from_millis(DELTA_TIME),
-            min_frame_duration: Duration::from_millis(MIN_FRAME_DURATION),
             max_frame_duration: Duration::from_millis(MAX_FRAME_DURATION),
-            sleep_time: None,
         }
     }
 }
