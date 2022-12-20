@@ -11,12 +11,10 @@ use winit::{
     event_loop::{ControlFlow, EventLoopWindowTarget},
 };
 
-mod registry;
-
 const DELTA_TIME: u64 = 50; // milliseconds
 const MAX_FRAME_DURATION: u64 = 250; // milliseconds
 
-type World<S, F, D, R> = ecs::World<registry::Resources<S>, F, D, R>;
+type World<S, F, D, R> = ecs::World<crate::registry::Resources<S>, F, D, R>;
 
 pub struct Orchestrator<S, F, D, R> {
     world: World<S, F, D, R>,
