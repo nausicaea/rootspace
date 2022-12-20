@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use wgpu::{DeviceDescriptor, Instance, RequestAdapterOptions, TextureUsages};
 use winit::{
     event_loop::EventLoopWindowTarget,
-    window::{Window, WindowBuilder},
+    window::{Window, WindowBuilder, WindowId},
 };
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -72,6 +72,10 @@ impl Graphics {
             queue,
             config,
         });
+    }
+
+    pub fn window_id(&self) -> Option<WindowId> {
+        self.runtime.as_ref().map(|rt| rt.window.id())
     }
 }
 

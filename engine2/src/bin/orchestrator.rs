@@ -81,8 +81,9 @@ where
             match event {
                 Event::NewEvents(StartCause::Init) => self.init(event_loop, &name, force_init),
                 Event::WindowEvent {
-                    event: window_event, ..
-                } => {
+                    window_id,
+                    event: window_event,
+                } if self.world.borrow::<Graphics>().window_id().map_or(false, |wid| wid == window_id) => {
                     if let Ok(window_event) = window_event.try_into() {
                         self.input(window_event)
                     }
