@@ -10,7 +10,6 @@ pub use crate::{
     entities::Entities,
     entity::{Entity, Generation, Index},
     event_queue::EventQueue,
-    events::EventTrait,
     loop_control::LoopControl,
     loop_stage::LoopStage,
     registry::{Element, End, ResourceRegistry, SystemRegistry},
@@ -29,7 +28,6 @@ pub mod component;
 pub mod entities;
 pub mod entity;
 pub mod event_queue;
-pub mod events;
 pub mod loop_control;
 pub mod loop_stage;
 pub mod macros;
