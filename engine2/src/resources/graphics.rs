@@ -1,8 +1,11 @@
 use ecs::{Resource, SerializationName};
 use log::debug;
-use wgpu::{RequestAdapterOptions, Instance, DeviceDescriptor, TextureUsages};
-use winit::{window::{Window, WindowBuilder}, event_loop::EventLoopWindowTarget};
 use serde::{Deserialize, Serialize};
+use wgpu::{DeviceDescriptor, Instance, RequestAdapterOptions, TextureUsages};
+use winit::{
+    event_loop::EventLoopWindowTarget,
+    window::{Window, WindowBuilder},
+};
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Graphics {
@@ -63,8 +66,8 @@ impl Graphics {
         surface.configure(&device, &config);
 
         self.runtime = Some(Runtime {
-            window, 
-            surface, 
+            window,
+            surface,
             device,
             queue,
             config,
