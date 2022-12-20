@@ -877,6 +877,7 @@ name = "engine2"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "ctrlc",
  "directories",
  "ecs",
  "env_logger",

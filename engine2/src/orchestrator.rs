@@ -1,8 +1,8 @@
 use std::time::{Duration, Instant};
 
-use ecs::{EventQueue, ResourceRegistry, SystemRegistry, LoopControl, ReceiverId};
+use ecs::{EventQueue, ResourceRegistry, SystemRegistry, LoopControl, ReceiverId, WorldEvent};
 use crate::{
-    events::winit_mappings::WindowEvent,
+    events::{window_event::WindowEvent, engine_event::EngineEvent},
     resources::{asset_database::AssetDatabase, graphics::Graphics, statistics::Statistics},
 };
 use log::trace;
@@ -14,12 +14,13 @@ use winit::{
 const DELTA_TIME: u64 = 50; // milliseconds
 const MAX_FRAME_DURATION: u64 = 250; // milliseconds
 
-type World<S, F, D, R> = ecs::World<crate::registry::Resources<S>, F, D, R>;
+type World<S, F, D, R> = ecs::World<crate::registry::Resources<S>, F, crate::registry::DynamicSystems<D>, R>;
 
 pub struct Orchestrator<S, F, D, R> {
     world: World<S, F, D, R>,
     timers: Timers,
     window_event_receiver: ReceiverId<WindowEvent>,
+    engine_event_receiver: ReceiverId<EngineEvent>,
 }
 
 impl<S, F, D, R> Orchestrator<S, F, D, R>
@@ -33,12 +34,14 @@ where
         use try_default::TryDefault;
 
         let mut world = World::try_default()?;
-        let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<WindowEvent>();
+        let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
+        let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
         Ok(Orchestrator {
             world,
             timers: Timers::default(),
             window_event_receiver,
+            engine_event_receiver,
         })
     }
 
@@ -140,6 +143,15 @@ where
             match event {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                 WindowEvent::KeyboardInput { input: KeyboardInput { state: ElementState::Released, virtual_keycode: Some(VirtualKeyCode::Q), .. }, .. } => *control_flow = ControlFlow::Exit,
+                _ => (),
+            }
+        }
+
+        // Process engine events
+        let events = self.world.get_mut::<EventQueue<EngineEvent>>().receive(&self.engine_event_receiver);
+        for event in events {
+            match event {
+                EngineEvent::AboutToAbort => self.world.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Abort),
                 _ => (),
             }
         }
