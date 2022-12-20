@@ -1,38 +1,22 @@
-use std::{
-    fs::File,
-    path::Path,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
-use ecs::{EventQueue, Reg, RegAdd, ResourceRegistry, SystemRegistry, LoopControl, ReceiverId};
-use engine2::{
+use ecs::{EventQueue, ResourceRegistry, SystemRegistry, LoopControl, ReceiverId};
+use crate::{
     events::winit_mappings::WindowEvent,
     resources::{asset_database::AssetDatabase, graphics::Graphics, statistics::Statistics},
 };
-use file_manipulation::FilePathBuf;
 use log::trace;
 use winit::{
-    event::{ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode, ModifiersState},
-    event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
-    window::{Window, WindowBuilder},
+    event::{ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode},
+    event_loop::{ControlFlow, EventLoopWindowTarget},
 };
 
-fn main() {
-    env_logger::init();
-
-    let event_loop = EventLoop::new();
-
-    let state: Orchestrator<Reg![], Reg![], Reg![], Reg![]> = Orchestrator::new().unwrap();
-
-    event_loop.run(state.run(String::from("test"), false))
-}
+mod registry;
 
 const DELTA_TIME: u64 = 50; // milliseconds
 const MAX_FRAME_DURATION: u64 = 250; // milliseconds
 
-type Resources<S> = RegAdd![AssetDatabase, Graphics, EventQueue<WindowEvent>, Statistics, S];
-
-type World<S, F, D, R> = ecs::World<Resources<S>, F, D, R>;
+type World<S, F, D, R> = ecs::World<registry::Resources<S>, F, D, R>;
 
 pub struct Orchestrator<S, F, D, R> {
     world: World<S, F, D, R>,
