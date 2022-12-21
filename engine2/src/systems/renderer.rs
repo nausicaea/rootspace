@@ -1,6 +1,6 @@
 use ecs::{System, SerializationName};
 
-use crate::resources::statistics::Statistics;
+use crate::resources::{statistics::Statistics, graphics::Graphics};
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Renderer;
@@ -12,6 +12,10 @@ impl System for Renderer {
         let start_mark = std::time::Instant::now();
         let mut world_draw_calls: usize = 0;
         let mut ui_draw_calls: usize = 0;
+
+        let gfx = res.borrow::<Graphics>();
+
+        gfx.render().unwrap();
 
         let mut stats = res.borrow_mut::<Statistics>();
         stats.update_draw_calls(world_draw_calls, ui_draw_calls);
