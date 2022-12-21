@@ -49,7 +49,11 @@ impl Graphics {
         let texture_formats = surface.get_supported_formats(&adapter);
         debug!("Supported texture formats: {:?}", &texture_formats);
 
-        let texture_format = texture_formats[0];
+        let texture_format = *texture_formats
+            .iter()
+            .filter(|&tf| tf == &self.settings.preferred_texture_format)
+            .next()
+            .unwrap_or(&texture_formats[0]);
         debug!("Choosing texture format: {:?}", &texture_format);
 
         let present_modes = surface.get_supported_present_modes(&adapter);

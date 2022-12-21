@@ -1,14 +1,15 @@
 use std::time::{Duration, Instant};
 
-use ecs::{EventQueue, ResourceRegistry, SystemRegistry, LoopControl, ReceiverId, WorldEvent};
-use crate::{
-    events::{window_event::WindowEvent, engine_event::EngineEvent},
-    resources::{asset_database::AssetDatabase, graphics::Graphics, statistics::Statistics},
-};
+use ecs::{EventQueue, LoopControl, ReceiverId, ResourceRegistry, SystemRegistry, WorldEvent};
 use log::trace;
 use winit::{
     event::{ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode},
     event_loop::{ControlFlow, EventLoopWindowTarget},
+};
+
+use crate::{
+    events::{engine_event::EngineEvent, window_event::WindowEvent},
+    resources::{asset_database::AssetDatabase, graphics::Graphics, statistics::Statistics},
 };
 
 const DELTA_TIME: u64 = 50; // milliseconds
@@ -68,7 +69,12 @@ where
                 Event::WindowEvent {
                     window_id,
                     event: window_event,
-                } if self.world.borrow::<Graphics>().window_id().map_or(false, |wid| wid == window_id) => {
+                } if self
+                    .world
+                    .borrow::<Graphics>()
+                    .window_id()
+                    .map_or(false, |wid| wid == window_id) =>
+                {
                     if let Ok(window_event) = window_event.try_into() {
                         self.input(window_event)
                     }
@@ -138,17 +144,31 @@ where
         }
 
         // Process window events
-        let events = self.world.get_mut::<EventQueue<WindowEvent>>().receive(&self.window_event_receiver);
+        let events = self
+            .world
+            .get_mut::<EventQueue<WindowEvent>>()
+            .receive(&self.window_event_receiver);
         for event in events {
             match event {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                WindowEvent::KeyboardInput { input: KeyboardInput { state: ElementState::Released, virtual_keycode: Some(VirtualKeyCode::Q), .. }, .. } => *control_flow = ControlFlow::Exit,
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            state: ElementState::Released,
+                            virtual_keycode: Some(VirtualKeyCode::Q),
+                            ..
+                        },
+                    ..
+                } => *control_flow = ControlFlow::Exit,
                 _ => (),
             }
         }
 
         // Process engine events
-        let events = self.world.get_mut::<EventQueue<EngineEvent>>().receive(&self.engine_event_receiver);
+        let events = self
+            .world
+            .get_mut::<EventQueue<EngineEvent>>()
+            .receive(&self.engine_event_receiver);
         for event in events {
             match event {
                 EngineEvent::AboutToAbort => self.world.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Abort),

@@ -3,4 +3,3 @@ pub enum EngineEvent {
     Command(Vec<String>),
     AboutToAbort,
 }
-
