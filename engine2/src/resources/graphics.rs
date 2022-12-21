@@ -75,7 +75,19 @@ impl Graphics {
             device,
             queue,
             config,
+            size,
         });
+    }
+
+    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+        if let Some(ref mut rt) = self.runtime {
+            if new_size.width > 0 && new_size.height > 0 {
+                rt.size = new_size;
+                rt.config.width = new_size.width;
+                rt.config.height = new_size.height;
+                rt.surface.configure(&rt.device, &rt.config);
+            }
+        }
     }
 
     pub fn render(&self) -> Result<(), wgpu::SurfaceError> {
@@ -155,4 +167,5 @@ struct Runtime {
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
+    size: winit::dpi::PhysicalSize<u32>,
 }
