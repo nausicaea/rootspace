@@ -128,6 +128,7 @@ where
         // Call the dynamic update and render functions
         self.world.update(&self.timers.dynamic_game_time, &frame_time);
         self.world.render(&self.timers.dynamic_game_time, &frame_time);
+        // self.world.borrow::<Graphics>().render().unwrap();
 
         // Update the frame time statistics
         self.world.get_mut::<Statistics>().update_loop_times(frame_time);
