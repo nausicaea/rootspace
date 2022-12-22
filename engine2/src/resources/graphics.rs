@@ -7,6 +7,57 @@ use winit::{
     window::{Window, WindowBuilder, WindowId},
 };
 
+fn crp<'a, S: Into<std::borrow::Cow<'a, str>>>(device: &wgpu::Device, texture_format: wgpu::TextureFormat, shader_source: S, vertex_entry_point: &str, fragment_entry_point: &str) -> wgpu::RenderPipeline {
+    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: Some("Shader"),
+        source: wgpu::ShaderSource::Wgsl(shader_source.into()),
+    });
+
+    let render_pipeline_layout =
+        device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("Render Pipeline Layout"),
+            bind_group_layouts: &[],
+            push_constant_ranges: &[],
+        });
+
+    let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        label: Some("Render Pipeline"),
+        layout: Some(&render_pipeline_layout),
+        vertex: wgpu::VertexState {
+            module: &shader,
+            entry_point: vertex_entry_point,
+            buffers: &[],
+        },
+        fragment: Some(wgpu::FragmentState {
+            module: &shader,
+            entry_point: fragment_entry_point,
+            targets: &[Some(wgpu::ColorTargetState {
+                format: texture_format,
+                blend: Some(wgpu::BlendState::REPLACE),
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
+        }),
+        primitive: wgpu::PrimitiveState {
+            topology: wgpu::PrimitiveTopology::TriangleList,
+            strip_index_format: None,
+            front_face: wgpu::FrontFace::Ccw,
+            cull_mode: Some(wgpu::Face::Back),
+            polygon_mode: wgpu::PolygonMode::Fill,
+            unclipped_depth: false,
+            conservative: false,
+        },
+        depth_stencil: None,
+        multisample: wgpu::MultisampleState {
+            count: 1,
+            mask: !0,
+            alpha_to_coverage_enabled: false,
+        },
+        multiview: None,
+    });
+
+    render_pipeline
+}
+
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct Graphics {
     settings: Settings,
@@ -69,52 +120,8 @@ impl Graphics {
         };
         surface.configure(&device, &config);
 
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("triangle.wgsl").into()),
-        });
-
-        let render_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[],
-                push_constant_ranges: &[],
-            });
-
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: "vs_main",
-                buffers: &[],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &shader,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false,
-            },
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
-        });
+        let rp1 = crp(&device, config.format, include_str!("triangle.wgsl"), "vs_main", "fs_main");
+        let rp2 = crp(&device, config.format, include_str!("triangle2.wgsl"), "vs_main", "fs_main");
 
         self.runtime = Some(Runtime {
             window,
@@ -123,7 +130,8 @@ impl Graphics {
             queue,
             config,
             size,
-            render_pipeline,
+            render_pipelines: vec![rp1, rp2],
+            rp_index: 0,
         });
     }
 
@@ -135,6 +143,16 @@ impl Graphics {
                 rt.config.height = new_size.height;
                 rt.surface.configure(&rt.device, &rt.config);
             }
+        }
+    }
+
+    pub fn set_rp(&mut self, idx: usize) {
+        if let Some(ref mut rt) = self.runtime {
+            if idx >= rt.render_pipelines.len() {
+                return;
+            }
+
+            rt.rp_index = idx;
         }
     }
 
@@ -160,7 +178,7 @@ impl Graphics {
                     depth_stencil_attachment: None,
                 });
 
-                render_pass.set_pipeline(&rt.render_pipeline);
+                render_pass.set_pipeline(&rt.render_pipelines[rt.rp_index]);
                 render_pass.draw(0..3, 0..1);
             }
 
@@ -216,5 +234,6 @@ struct Runtime {
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
-    render_pipeline: wgpu::RenderPipeline,
+    render_pipelines: Vec<wgpu::RenderPipeline>,
+    rp_index: usize,
 }
