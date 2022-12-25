@@ -30,10 +30,9 @@ pub fn parse_ply<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], Parse
     all_consuming(flat_map(header, |descriptor| {
         map(
             body_fct(descriptor.clone()),
-            move |(property_data, list_property_data)| Ply {
+            move |data| Ply {
                 descriptor: descriptor.clone(),
-                property_data,
-                list_property_data,
+                data,
             },
         )
     }))(input)
@@ -77,8 +76,7 @@ mod tests {
                         comments: Vec::new(),
                         obj_info: Vec::new()
                     },
-                    property_data: vec![0x00, 0x00, 0x80, 0x3f],
-                    list_property_data: Vec::new(),
+                    data: vec![vec![0x00, 0x00, 0x80, 0x3f]],
                 }
             ))
         );
@@ -138,8 +136,7 @@ mod tests {
                         ],
                         obj_info: vec![ObjInfoDescriptor(String::from("1. ObjInfo are allowed here"))]
                     },
-                    property_data: vec![0, 0, 128, 63],
-                    list_property_data: vec![]
+                    data: vec![vec![0, 0, 128, 63]],
                 }
             ))
         );

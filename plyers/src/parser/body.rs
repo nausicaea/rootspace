@@ -178,7 +178,7 @@ fn elements_fct<'a, F1, F2, P1, P2, E>(
     cnt_fn: &'a F1,
     num_fn: &'a F2,
     elements: Vec<ElementDescriptor>,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], (Vec<u8>, Vec<u8>), E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<Vec<u8>>, E>
 where
     P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
     P2: FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<u8>, E>,
@@ -215,19 +215,23 @@ where
             i += 1;
             r
         },
-        || (Vec::new(), Vec::new()),
-        |(mut p_acc, mut pl_acc), (p, pl)| {
-            p_acc.extend(p);
-            pl_acc.extend(pl);
+        Vec::new,
+        |mut p_acc, (p, pl)| {
+            if !p.is_empty() {
+                p_acc.push(p);
+            }
+            if !pl.is_empty() {
+                p_acc.push(pl);
+            }
 
-            (p_acc, pl_acc)
+            p_acc
         },
     )
 }
 
 pub fn body_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a>(
     ply: PlyDescriptor,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], (Vec<u8>, Vec<u8>), E> {
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<Vec<u8>>, E> {
     move |input| {
         let elements = ply.elements.iter().cloned().collect();
         match ply.format_type {

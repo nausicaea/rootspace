@@ -89,8 +89,7 @@ impl Default for PlyDescriptor {
 #[derive(Debug)]
 pub struct Ply {
     pub descriptor: PlyDescriptor,
-    pub property_data: Vec<u8>,
-    pub list_property_data: Vec<u8>,
+    pub data: Vec<Vec<u8>>,
 }
 
 #[cfg(test)]
@@ -127,8 +126,7 @@ mod tests {
     fn ply_data_container_has_the_following_structure() {
         let _ = Ply {
             descriptor: PlyDescriptor::default(),
-            property_data: Vec::<u8>::new(),
-            list_property_data: Vec::<u8>::new(),
+            data: Vec::<Vec<u8>>::new(),
         };
     }
 
