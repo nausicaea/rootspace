@@ -95,6 +95,7 @@ mod tests {
         concat!(env!("CARGO_MANIFEST_DIR"), "/tests/db_tall_obstacle_0.ply"), // VTK generated
         concat!(env!("CARGO_MANIFEST_DIR"), "/tests/saved_terrain.ply"), // VCGLIB generated
         concat!(env!("CARGO_MANIFEST_DIR"), "/tests/pasillo_1.ply"), // Large Ascii File
+        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/changing_dtypes.ply"), // Large Ascii File
     ];
 
     #[test]
