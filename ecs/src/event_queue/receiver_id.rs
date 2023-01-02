@@ -17,6 +17,14 @@ impl<E> PartialEq<ReceiverId<E>> for ReceiverId<E> {
     }
 }
 
+impl<E> Eq for ReceiverId<E> {}
+
+impl<E> std::hash::Hash for ReceiverId<E> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state)
+    }
+}
+
 impl<E> std::fmt::Debug for ReceiverId<E> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "ReceiverId {{ id: {:?} }}", self.id)
