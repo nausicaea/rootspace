@@ -877,13 +877,17 @@ name = "engine2"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "approx 0.5.1",
  "ctrlc",
  "directories",
  "ecs",
  "env_logger",
  "file-manipulation",
+ "forward-ref",
+ "glamour",
  "log",
  "pollster",
+ "proptest",
  "rose-tree",
  "serde",
  "serde_json",

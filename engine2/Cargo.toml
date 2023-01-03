@@ -27,6 +27,12 @@ ecs = { path = "../ecs" }
 file-manipulation = { path = "../file-manipulation", features = ["serde_support"] }
 try-default = { path = "../try-default" }
 rose-tree = { path = "../rose-tree", features = ["ecs", "serde_support"] }
+glamour = { path = "../glamour", features = ["serde_support"] }
+forward-ref = { path = "../forward-ref" }
 
 # bytemuck = { version = "1.4", features = [ "derive" ] }
 # tobj = { version = "3.2.2", features = ["async"] }
+
+[dev-dependencies]
+approx = "^0.5.0"
+proptest = "^1.0.0"
