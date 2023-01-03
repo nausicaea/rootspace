@@ -1,0 +1,53 @@
+use std::time::Duration;
+
+use ecs::{event_queue::receiver_id::ReceiverId, EventQueue, Resources, SerializationName, System, WithResources};
+use log::debug;
+use serde::{Deserialize, Serialize};
+
+use crate::{components::camera::Camera, events::window_event::WindowEvent};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CameraManager {
+    receiver: ReceiverId<WindowEvent>,
+}
+
+impl WithResources for CameraManager {
+    fn with_resources(res: &Resources) -> Self {
+        let receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
+
+        CameraManager { receiver }
+    }
+}
+
+impl CameraManager {
+    fn on_resize(&self, res: &Resources, dims: (u32, u32)) {
+        debug!("Updating the camera dimensions (dims={:?})", dims);
+
+        res.borrow_components_mut::<Camera>()
+            .iter_mut()
+            .for_each(|c| c.set_dimensions(dims));
+    }
+
+    fn on_change_dpi(&self, res: &Resources, factor: f64) {
+        debug!("Updating the camera dpi factor (factor={:?})", factor);
+
+        res.borrow_components_mut::<Camera>()
+            .iter_mut()
+            .for_each(|c| c.set_dpi_factor(factor));
+    }
+}
+
+impl SerializationName for CameraManager {}
+
+impl System for CameraManager {
+    fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
+        let events = res.borrow_mut::<EventQueue<WindowEvent>>().receive(&self.receiver);
+        for event in events {
+            match event {
+                WindowEvent::Resized(dims) => self.on_resize(res, (dims.width, dims.height)),
+                WindowEvent::ScaleFactorChanged { scale_factor } => self.on_change_dpi(res, scale_factor),
+                _ => (),
+            }
+        }
+    }
+}
