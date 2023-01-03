@@ -812,7 +812,7 @@ dependencies = [
 
 [[package]]
 name = "ecs"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "anyhow",
  "downcast-rs",
@@ -884,6 +884,7 @@ dependencies = [
  "file-manipulation",
  "log",
  "pollster",
+ "rose-tree",
  "serde",
  "serde_json",
  "thiserror",

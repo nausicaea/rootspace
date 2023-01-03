@@ -1,6 +1,12 @@
 use std::{fmt, time::Duration};
 
-use ecs::{event_queue::receiver_id::ReceiverId, EventQueue, Resources, SerializationName, System, WithResources};
+use crate::{
+    event_queue::{EventQueue, receiver_id::ReceiverId}, 
+    resources::Resources, 
+    serialization_name::SerializationName, 
+    system::System, 
+    with_resources::WithResources,
+};
 use log::trace;
 use serde::{Deserialize, Serialize};
 

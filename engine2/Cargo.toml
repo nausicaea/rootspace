@@ -26,6 +26,7 @@ thiserror = "^1.0.0"
 ecs = { path = "../ecs" }
 file-manipulation = { path = "../file-manipulation", features = ["serde_support"] }
 try-default = { path = "../try-default" }
+rose-tree = { path = "../rose-tree" }
 
 # bytemuck = { version = "1.4", features = [ "derive" ] }
 # tobj = { version = "3.2.2", features = ["async"] }

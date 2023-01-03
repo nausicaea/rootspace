@@ -9,6 +9,7 @@ pub use crate::{
     component::Component,
     entities::Entities,
     entity::{Entity, Generation, Index},
+    event_monitor::EventMonitor,
     event_queue::EventQueue,
     loop_control::LoopControl,
     loop_stage::LoopStage,
@@ -27,6 +28,7 @@ pub use crate::{
 pub mod component;
 pub mod entities;
 pub mod entity;
+pub mod event_monitor;
 pub mod event_queue;
 pub mod loop_control;
 pub mod loop_stage;
