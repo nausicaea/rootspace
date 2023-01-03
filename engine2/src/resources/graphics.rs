@@ -146,17 +146,10 @@ impl Graphics {
         }
     }
 
-    pub fn set_rp(&mut self, idx: usize) {
-        if let Some(ref mut rt) = self.runtime {
-            if idx >= rt.render_pipelines.len() {
-                return;
-            }
-
-            rt.rp_index = idx;
-        }
-    }
-
-    pub fn render(&self) -> Result<(), wgpu::SurfaceError> {
+    pub fn render<F>(&self, mut rdr: F) -> Result<(), wgpu::SurfaceError> 
+    where
+        F: FnMut(&mut wgpu::RenderPass),
+    {
         if let Some(ref rt) = self.runtime {
             let output = rt.surface.get_current_texture()?;
             let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
@@ -178,8 +171,7 @@ impl Graphics {
                     depth_stencil_attachment: None,
                 });
 
-                render_pass.set_pipeline(&rt.render_pipelines[rt.rp_index]);
-                render_pass.draw(0..3, 0..1);
+                rdr(&mut render_pass);
             }
 
             // submit will accept anything that implements IntoIter
