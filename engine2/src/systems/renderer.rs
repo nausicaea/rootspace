@@ -30,8 +30,9 @@ impl WithResources for Renderer {
 impl SerializationName for Renderer {}
 
 impl System for Renderer {
-    fn run(&mut self, res: &ecs::Resources, t: &std::time::Duration, dt: &std::time::Duration) {
+    fn run(&mut self, res: &ecs::Resources, _t: &std::time::Duration, _dt: &std::time::Duration) {
         self.handle_events(res);
-        // TODO
+        
+        res.borrow::<Graphics>().render(|_rp| ()).unwrap();
     }
 }

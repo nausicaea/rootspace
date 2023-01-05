@@ -44,9 +44,9 @@ impl Graphics {
     where
         F: FnMut(&mut wgpu::RenderPass),
     {
-        if let Some(ref rt) = self.runtime {
-            rt.render(self.settings.clear_color, rdr)?;
-        }
+        let rt = self.runtime.as_ref().unwrap();
+
+        rt.render(self.settings.clear_color, rdr)?;
 
         Ok(())
     }
