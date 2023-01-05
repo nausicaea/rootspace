@@ -2,11 +2,11 @@ use ecs::{EventQueue, ReceiverId, SerializationName, System, WithResources};
 
 use crate::{
     events::window_event::WindowEvent,
-    resources::{graphics::Graphics, statistics::Statistics},
+    resources::{graphics::{Graphics, ids::PipelineId}, statistics::Statistics},
 };
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct Renderer(ReceiverId<WindowEvent>);
+pub struct Renderer(ReceiverId<WindowEvent>, #[serde(skip)] Option<PipelineId>);
 
 impl Renderer {
     fn handle_events(&self, res: &ecs::Resources) {
@@ -23,7 +23,7 @@ impl Renderer {
 impl WithResources for Renderer {
     fn with_resources(res: &ecs::Resources) -> Self {
         let receiver_id = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
-        Renderer(receiver_id)
+        Renderer(receiver_id, None)
     }
 }
 

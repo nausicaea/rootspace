@@ -2,6 +2,7 @@ use std::time::{Duration, Instant};
 
 use ecs::{EventQueue, LoopControl, ReceiverId, ResourceRegistry, SystemRegistry, WorldEvent};
 use log::trace;
+use try_default::TryDefault;
 use winit::{
     event::{ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode},
     event_loop::{ControlFlow, EventLoopWindowTarget},
@@ -32,21 +33,6 @@ where
     D: 'static + SystemRegistry,
     R: 'static + SystemRegistry,
 {
-    pub fn new() -> anyhow::Result<Self> {
-        use try_default::TryDefault;
-
-        let mut world = World::try_default()?;
-        let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
-        let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
-
-        Ok(Orchestrator {
-            world,
-            timers: Timers::default(),
-            window_event_receiver,
-            engine_event_receiver,
-        })
-    }
-
     pub fn run(
         mut self,
         name: String,
@@ -184,6 +170,27 @@ where
 
     fn cleanup(&mut self) {
         self.world.clear();
+    }
+}
+
+impl<S, F, D, R> TryDefault for Orchestrator<S, F, D, R>
+where
+    S: 'static + ResourceRegistry,
+    F: 'static + SystemRegistry,
+    D: 'static + SystemRegistry,
+    R: 'static + SystemRegistry,
+{
+    fn try_default() -> anyhow::Result<Self> {
+        let mut world = World::try_default()?;
+        let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
+        let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
+
+        Ok(Orchestrator {
+            world,
+            timers: Timers::default(),
+            window_event_receiver,
+            engine_event_receiver,
+        })
     }
 }
 
