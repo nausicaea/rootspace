@@ -1,6 +1,9 @@
-use ecs::{System, SerializationName, EventQueue, ReceiverId, WithResources};
+use ecs::{EventQueue, ReceiverId, SerializationName, System, WithResources};
 
-use crate::{resources::{statistics::Statistics, graphics::Graphics}, events::window_event::WindowEvent};
+use crate::{
+    events::window_event::WindowEvent,
+    resources::{graphics::Graphics, statistics::Statistics},
+};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Renderer(ReceiverId<WindowEvent>);

@@ -28,13 +28,10 @@ pub fn parse_ply<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], Parse
     input: &'a [u8],
 ) -> IResult<&'a [u8], Ply, E> {
     all_consuming(flat_map(header, |descriptor| {
-        map(
-            body_fct(descriptor.clone()),
-            move |data| Ply {
-                descriptor: descriptor.clone(),
-                data,
-            },
-        )
+        map(body_fct(descriptor.clone()), move |data| Ply {
+            descriptor: descriptor.clone(),
+            data,
+        })
     }))(input)
 }
 

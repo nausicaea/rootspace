@@ -15,7 +15,8 @@ use crate::{
 const DELTA_TIME: u64 = 50; // milliseconds
 const MAX_FRAME_DURATION: u64 = 250; // milliseconds
 
-type World<S, F, D, R> = ecs::World<crate::registry::Resources<S>, F, crate::registry::DynamicSystems<D>, crate::registry::RenderSystems<R>>;
+type World<S, F, D, R> =
+    ecs::World<crate::registry::Resources<S>, F, crate::registry::DynamicSystems<D>, crate::registry::RenderSystems<R>>;
 
 pub struct Orchestrator<S, F, D, R> {
     world: World<S, F, D, R>,

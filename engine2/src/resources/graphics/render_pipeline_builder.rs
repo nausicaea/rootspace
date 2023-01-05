@@ -1,0 +1,120 @@
+use super::{runtime::Runtime, ids::PipelineId};
+
+#[derive(Debug)]
+pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
+    runtime: &'rt mut Runtime,
+    shader_module: Option<wgpu::ShaderModule>,
+    vertex_entry_point: Option<&'l str>,
+    fragment_entry_point: Option<&'l str>,
+    bind_group_layouts: Vec<&'bgl wgpu::BindGroupLayout>,
+    vertex_buffer_layouts: Vec<wgpu::VertexBufferLayout<'vbl>>,
+}
+
+impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
+    pub(super) fn new(rt: &'rt mut Runtime) -> Self {
+        RenderPipelineBuilder {
+            runtime: rt,
+            shader_module: None,
+            vertex_entry_point: None,
+            fragment_entry_point: None,
+            bind_group_layouts: Vec::new(),
+            vertex_buffer_layouts: Vec::new(),
+        }
+    }
+
+    pub fn with_shader_module<'s, S: Into<std::borrow::Cow<'s, str>>>(
+        mut self,
+        label: Option<&str>,
+        source: S,
+        vertex_entry_point: &'l str,
+        fragment_entry_point: Option<&'l str>,
+    ) -> Self {
+        let sm = self.runtime.device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label,
+            source: wgpu::ShaderSource::Wgsl(source.into()),
+        });
+
+        self.shader_module = Some(sm);
+        self.vertex_entry_point = Some(vertex_entry_point);
+        self.fragment_entry_point = fragment_entry_point;
+        self
+    }
+
+    pub fn add_bind_group_layout(mut self, bgl: &'bgl wgpu::BindGroupLayout) -> Self {
+        self.bind_group_layouts.push(bgl);
+        self
+    }
+
+    pub fn add_vertex_buffer_layout<T>(
+        mut self,
+        step_mode: wgpu::VertexStepMode,
+        attributes: &'vbl [wgpu::VertexAttribute],
+    ) -> Self {
+        let vbl = wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<T>() as wgpu::BufferAddress,
+            step_mode,
+            attributes,
+        };
+        self.vertex_buffer_layouts.push(vbl);
+        self
+    }
+
+    pub fn complete(self, label: Option<&str>) -> PipelineId {
+        // Required parameters
+        let shader_module = self.shader_module.unwrap();
+        let vertex_entry_point = self.vertex_entry_point.unwrap();
+
+        // Helper variables
+        let cts = [Some(wgpu::ColorTargetState {
+            format: self.runtime.config.format,
+            blend: Some(wgpu::BlendState::REPLACE),
+            write_mask: wgpu::ColorWrites::ALL,
+        })];
+        let pipeline_layout = self
+            .runtime
+            .device
+            .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: None,
+                bind_group_layouts: self.bind_group_layouts.as_slice(),
+                push_constant_ranges: &[],
+            });
+
+        let pipeline = self
+            .runtime
+            .device
+            .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label,
+                layout: Some(&pipeline_layout),
+                vertex: wgpu::VertexState {
+                    module: &shader_module,
+                    entry_point: vertex_entry_point,
+                    buffers: self.vertex_buffer_layouts.as_slice(),
+                },
+                fragment: self.fragment_entry_point.map(|fep| wgpu::FragmentState {
+                    module: &shader_module,
+                    entry_point: fep,
+                    targets: &cts,
+                }),
+                primitive: wgpu::PrimitiveState {
+                    topology: wgpu::PrimitiveTopology::TriangleList,
+                    strip_index_format: None,
+                    front_face: wgpu::FrontFace::Ccw,
+                    cull_mode: Some(wgpu::Face::Back),
+                    polygon_mode: wgpu::PolygonMode::Fill,
+                    unclipped_depth: false,
+                    conservative: false,
+                },
+                depth_stencil: None,
+                multisample: wgpu::MultisampleState {
+                    count: 1,
+                    mask: !0,
+                    alpha_to_coverage_enabled: false,
+                },
+                multiview: None,
+            });
+
+        let id = self.runtime.indexes.render_pipelines.take();
+        self.runtime.tables.render_pipelines.insert(id, pipeline);
+        id
+    }
+}

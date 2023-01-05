@@ -1,10 +1,11 @@
-use ecs::{EventQueue, RegAdd, WorldEvent, EventMonitor};
+use ecs::{EventMonitor, EventQueue, RegAdd, WorldEvent};
 use rose_tree::Hierarchy;
 
 use crate::{
+    components::{camera::Camera, info::Info, model::Model, renderable::Renderable, status::Status, ui_model::UiModel},
     events::{engine_event::EngineEvent, window_event::WindowEvent},
     resources::{asset_database::AssetDatabase, graphics::Graphics, statistics::Statistics},
-    systems::{force_shutdown::ForceShutdown, renderer::Renderer, camera_manager::CameraManager}, components::{info::Info, status::Status, camera::Camera, model::Model, ui_model::UiModel, renderable::Renderable},
+    systems::{camera_manager::CameraManager, force_shutdown::ForceShutdown, renderer::Renderer},
 };
 
 pub type Resources<S> = RegAdd![
@@ -32,7 +33,4 @@ pub type DynamicSystems<D> = RegAdd![
     D
 ];
 
-pub type RenderSystems<R> = RegAdd![
-    Renderer,
-    R
-];
+pub type RenderSystems<R> = RegAdd![Renderer, R];

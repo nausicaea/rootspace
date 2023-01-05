@@ -1,6 +1,6 @@
 use glamour::{Ortho, Persp};
 
-use super::{Camera, projection::Projection};
+use super::{projection::Projection, Camera};
 
 #[derive(Debug)]
 pub struct CameraBuilder {

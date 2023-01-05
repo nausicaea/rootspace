@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Camera, projection::Projection};
+use super::{projection::Projection, Camera};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CameraSerDe {

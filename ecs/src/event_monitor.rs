@@ -1,14 +1,15 @@
 use std::{fmt, time::Duration};
 
-use crate::{
-    event_queue::{EventQueue, receiver_id::ReceiverId}, 
-    resources::Resources, 
-    serialization_name::SerializationName, 
-    system::System, 
-    with_resources::WithResources,
-};
 use log::trace;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    event_queue::{receiver_id::ReceiverId, EventQueue},
+    resources::Resources,
+    serialization_name::SerializationName,
+    system::System,
+    with_resources::WithResources,
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EventMonitor<E> {
