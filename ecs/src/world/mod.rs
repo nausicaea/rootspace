@@ -34,7 +34,7 @@ pub struct World {
     fixed_update_systems: Systems,
     update_systems: Systems,
     render_systems: Systems,
-    receiver: Option<ReceiverId<WorldEvent>>,
+    receiver: ReceiverId<WorldEvent>,
 }
 
 impl World {
@@ -51,7 +51,7 @@ impl World {
         let update_systems = Systems::with_resources::<USR>(&resources)?;
         let render_systems = Systems::with_resources::<RSR>(&resources)?;
 
-        let receiver = Some(resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>());
+        let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
         Ok(World {
             resources,
@@ -60,16 +60,6 @@ impl World {
             render_systems,
             receiver,
         })
-    }
-
-    pub fn empty() -> Self {
-        World {
-            resources: Resources::default(),
-            fixed_update_systems: Systems::default(),
-            update_systems: Systems::default(),
-            render_systems: Systems::default(),
-            receiver: None,
-        }
     }
 
     pub fn resources(&self) -> &Resources {
@@ -253,20 +243,18 @@ impl World {
     /// [`LoopControl::Continue`](crate::loop_control::LoopControl), the execution of the
     /// main loop shall continue, otherwise it shall abort.
     pub fn maintain(&mut self) -> LoopControl {
-        if let Some(ref receiver) = self.receiver {
-            // Receive all pending events
-            let events = self.resources.get_mut::<EventQueue<WorldEvent>>().receive(receiver);
+        // Receive all pending events
+        let events = self.resources.get_mut::<EventQueue<WorldEvent>>().receive(&self.receiver);
 
-            // Process all pending events
-            for e in events {
-                match e {
-                    WorldEvent::Abort => {
-                        return LoopControl::Abort;
-                    }
-                    WorldEvent::CreateEntity => self.on_create_entity(),
-                    WorldEvent::DestroyEntity(e) => self.on_destroy_entity(e),
-                    _ => (),
+        // Process all pending events
+        for e in events {
+            match e {
+                WorldEvent::Abort => {
+                    return LoopControl::Abort;
                 }
+                WorldEvent::CreateEntity => self.on_create_entity(),
+                WorldEvent::DestroyEntity(e) => self.on_destroy_entity(e),
+                _ => (),
             }
         }
 
