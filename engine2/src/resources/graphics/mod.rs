@@ -1,6 +1,6 @@
-use ecs::Resource;
-use serde::{Deserialize, Serialize};
-use winit::{event_loop::EventLoopWindowTarget, window::WindowId};
+use ecs::{Resource, with_dependencies::WithDependencies};
+use pollster::FutureExt;
+use winit::event_loop::EventLoopWindowTarget;
 
 use self::{render_pipeline_builder::RenderPipelineBuilder, runtime::Runtime, settings::Settings};
 
@@ -10,55 +10,68 @@ mod runtime;
 mod settings;
 mod urn;
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+pub trait GraphicsDeps {
+    type CustomEvent: 'static;
+
+    fn event_loop(&self) -> &EventLoopWindowTarget<Self::CustomEvent>;
+}
+
+#[derive(Debug)]
 pub struct Graphics {
     settings: Settings,
-    #[serde(skip)]
-    runtime: Option<Runtime>,
+    runtime: Runtime,
 }
 
 impl Graphics {
-    pub async fn initialize<T>(&mut self, event_loop: &EventLoopWindowTarget<T>) {
-        self.runtime = Some(
-            Runtime::new(
-                event_loop,
-                self.settings.backends,
-                self.settings.power_preference,
-                self.settings.features,
-                self.settings.limits.clone(),
-                &self.settings.preferred_texture_format,
-                self.settings.present_mode,
-                self.settings.alpha_mode,
-            )
-            .await,
-        );
-    }
-
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        if let Some(ref mut rt) = self.runtime {
-            rt.resize(new_size)
-        }
+        self.runtime.resize(new_size)
     }
 
     pub fn render<F>(&self, rdr: F) -> Result<(), wgpu::SurfaceError>
     where
         F: FnMut(&mut wgpu::RenderPass),
     {
-        let rt = self.runtime.as_ref().unwrap();
-
-        rt.render(self.settings.clear_color, rdr)?;
-
-        Ok(())
+        self.runtime.render(self.settings.clear_color, rdr)
     }
 
-    pub fn window_id(&self) -> Option<WindowId> {
-        self.runtime.as_ref().map(|rt| rt.window.id())
+    pub fn window_id(&self) -> winit::window::WindowId {
+        self.runtime.window.id()
     }
 
     pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {
-        let rt = self.runtime.as_mut().unwrap();
-        rt.create_render_pipeline()
+        self.runtime.create_render_pipeline()
     }
 }
 
 impl Resource for Graphics {}
+
+impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
+    fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
+        let settings = Settings::default();
+        let runtime = Runtime::new(
+            deps.event_loop(),
+            settings.backends,
+            settings.power_preference,
+            settings.features,
+            settings.limits.clone(),
+            &settings.preferred_texture_format,
+            settings.present_mode,
+            settings.alpha_mode,
+        )
+        .block_on();
+
+        Ok(Graphics { settings, runtime })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ecs::Reg;
+
+    use super::*;
+
+    #[test]
+    fn graphics_reg_macro() {
+        type _RR = Reg![Graphics];
+    }
+}

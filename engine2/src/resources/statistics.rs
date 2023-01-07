@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, time::Duration};
 
-use ecs::Resource;
+use ecs::{Resource, with_dependencies::WithDependencies};
 use serde::{Deserialize, Serialize};
 
 const DRAW_CALL_WINDOW: usize = 10;
@@ -16,18 +16,6 @@ pub struct Statistics {
     #[serde(skip)]
     loop_times: VecDeque<Duration>,
 }
-
-impl Default for Statistics {
-    fn default() -> Self {
-        Statistics {
-            draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
-            frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
-            loop_times: VecDeque::with_capacity(LOOP_TIME_WINDOW),
-        }
-    }
-}
-
-impl Resource for Statistics {}
 
 impl Statistics {
     pub fn average_world_draw_calls(&self) -> f32 {
@@ -66,4 +54,45 @@ impl Statistics {
             self.loop_times.truncate(LOOP_TIME_WINDOW);
         }
     }
+}
+
+impl Default for Statistics {
+    fn default() -> Self {
+        Statistics {
+            draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
+            frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
+            loop_times: VecDeque::with_capacity(LOOP_TIME_WINDOW),
+        }
+    }
+}
+
+impl Resource for Statistics {}
+
+impl<D> WithDependencies<D> for Statistics {
+    fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+        Ok(Statistics::default())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ecs::{Reg, ResourceRegistry, End, World};
+
+    use super::*;
+
+    #[test]
+    fn statistics_reg_macro() {
+        type _RR = Reg![Statistics];
+    }
+
+    #[test]
+    fn statistics_resource_registry() {
+        let _rr = ResourceRegistry::push(End, Statistics::default());
+    }
+
+    #[test]
+    fn statistics_world() {
+        let _w = World::with_dependencies::<Reg![Statistics], Reg![], Reg![], Reg![], _>(&()).unwrap();
+    }
+
 }

@@ -158,10 +158,27 @@ impl<E> Default for EventQueue<E> {
 mod tests {
     use serde_test::{assert_tokens, Token};
 
+    use crate::{Reg, ResourceRegistry, World, End};
+
     use super::*;
 
     #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
     struct TestEvent(usize);
+
+    #[test]
+    fn event_queue_reg_macro() {
+        type _RR = Reg![EventQueue<usize>];
+    }
+
+    #[test]
+    fn event_queue_resource_registry() {
+        let _rr = ResourceRegistry::push(End, EventQueue::<usize>::default());
+    }
+
+    #[test]
+    fn event_queue_world() {
+        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![], Reg![], _>(&()).unwrap();
+    }
 
     #[test]
     fn default_event_queue() {

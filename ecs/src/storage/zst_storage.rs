@@ -10,7 +10,7 @@ use super::{
     iterators::{IndexedRIter, RIter, WIter},
     Storage,
 };
-use crate::{entity::index::Index, resource::Resource};
+use crate::{entity::index::Index, resource::Resource, with_dependencies::WithDependencies};
 
 /// Implements component storage for zero-sized types.
 pub struct ZstStorage<T> {
@@ -121,6 +121,12 @@ where
     }
 }
 
+impl<D, T: Default> WithDependencies<D> for ZstStorage<T> {
+    fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+        Ok(ZstStorage::default())
+    }
+}
+
 impl<'a, T> IntoIterator for &'a ZstStorage<T> {
     type IntoIter = RIter<'a, ZstStorage<T>>;
     type Item = &'a T;
@@ -206,4 +212,26 @@ where
 
         de.deserialize_seq(ZstStorageVisitor::<T>::default())
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{Reg, ResourceRegistry, End, World};
+
+    #[test]
+    fn zst_storage_reg_macro() {
+        type _RR = Reg![ZstStorage<u32>];
+    }
+
+    #[test]
+    fn zst_storage_resource_registry() {
+        let _rr = ResourceRegistry::push(End, ZstStorage::<usize>::default());
+    }
+
+    #[test]
+    fn zst_storage_world() {
+        let _w = World::with_dependencies::<Reg![ZstStorage<usize>], Reg![], Reg![], Reg![], _>(&()).unwrap();
+    }
+
 }

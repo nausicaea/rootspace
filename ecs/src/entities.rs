@@ -138,7 +138,24 @@ impl<'a> FusedIterator for Iter<'a> {}
 mod tests {
     use serde_test::{assert_tokens, Token};
 
+    use crate::{Reg, ResourceRegistry, End, World};
+
     use super::*;
+
+    #[test]
+    fn entities_reg_macro() {
+        type _RR = Reg![Entities];
+    }
+
+    #[test]
+    fn entities_resource_registry() {
+        let _rr = ResourceRegistry::push(End, Entities::default());
+    }
+
+    #[test]
+    fn entities_world() {
+        let _w = World::with_dependencies::<Reg![Entities], Reg![], Reg![], Reg![], _>(&()).unwrap();
+    }
 
     #[test]
     fn entities_default() {

@@ -25,7 +25,7 @@ pub struct ForceShutdown {
 }
 
 impl WithResources for ForceShutdown {
-    fn with_resources(_: &Resources) -> Self {
+    fn with_res(_res: &Resources) -> Result<Self, anyhow::Error> {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
         #[cfg(not(test))]
         {
@@ -42,7 +42,7 @@ impl WithResources for ForceShutdown {
             }
         }
 
-        ForceShutdown { ctrlc_triggered }
+        Ok(ForceShutdown { ctrlc_triggered })
     }
 }
 
@@ -54,5 +54,28 @@ impl System for ForceShutdown {
                 .send(EngineEvent::AboutToAbort);
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ecs::{SystemRegistry, Reg, End, World};
+
+    use super::*;
+
+    #[test]
+    fn force_shutdown_reg_macro() {
+        type _SR = Reg![ForceShutdown];
+    }
+
+    #[test]
+    fn force_shutdown_system_registry() {
+        let res = Resources::with_dependencies::<Reg![], _>(&()).unwrap();
+        let _rr = SystemRegistry::push(End, ForceShutdown::with_res(&res).unwrap());
+    }
+
+    #[test]
+    fn force_shutdown_world() {
+        let _w = World::with_dependencies::<Reg![], Reg![], Reg![ForceShutdown], Reg![], _>(&()).unwrap();
     }
 }

@@ -8,7 +8,7 @@ use crate::{
     systems::{camera_manager::CameraManager, force_shutdown::ForceShutdown, renderer::Renderer},
 };
 
-pub type Resources<S> = RegAdd![
+pub type RRegistry<S> = RegAdd![
     <Camera as ecs::Component>::Storage,
     <Info as ecs::Component>::Storage,
     <Model as ecs::Component>::Storage,
@@ -24,7 +24,7 @@ pub type Resources<S> = RegAdd![
     S
 ];
 
-pub type DynamicSystems<D> = RegAdd![
+pub type USRegistry<D> = RegAdd![
     CameraManager,
     ForceShutdown,
     EventMonitor<WindowEvent>,
@@ -33,4 +33,4 @@ pub type DynamicSystems<D> = RegAdd![
     D
 ];
 
-pub type RenderSystems<R> = RegAdd![Renderer, R];
+pub type RSRegistry<R> = RegAdd![Renderer, R];

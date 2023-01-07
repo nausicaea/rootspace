@@ -106,6 +106,13 @@ where
 #[cfg(any(test, feature = "ecs"))]
 impl<K> Resource for Hierarchy<K> where K: 'static {}
 
+#[cfg(any(test, feature = "ecs"))]
+impl<D, K: Ord> ecs::with_dependencies::WithDependencies<D> for Hierarchy<K> {
+    fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+        Ok(Hierarchy::default())
+    }
+}
+
 pub struct AncestorsIter<'a, K> {
     key: Option<K>,
     hier: &'a Hierarchy<K>,
@@ -243,7 +250,7 @@ where
 mod tests {
     use std::{iter::Product, ops::Mul};
 
-    use ecs::{Component, Entities, Index, Storage, VecStorage};
+    use ecs::{Component, Entities, Index, Storage, VecStorage, Reg, ResourceRegistry, End, World};
     use serde::{Deserialize, Serialize};
 
     use super::*;
@@ -290,6 +297,21 @@ mod tests {
         fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
             iter.fold(Tc(1), |state, value| state * value)
         }
+    }
+
+    #[test]
+    fn hierarchy_reg_macro() {
+        type _RR = Reg![Hierarchy<Tk>];
+    }
+
+    #[test]
+    fn hierarchy_resource_registry() {
+        let _rr = ResourceRegistry::push(End, Hierarchy::<Tk>::default());
+    }
+
+    #[test]
+    fn hierarchy_world() {
+        let _w = World::with_dependencies::<Reg![Hierarchy<Tk>], Reg![], Reg![], Reg![], _>(&()).unwrap();
     }
 
     #[test]
@@ -443,20 +465,20 @@ mod tests {
 
     #[test]
     fn ancestor_and_ecs_usage() {
-        let mut entities = Entities::default();
+        let mut hierarchy = Entities::default();
         let mut s = <Tc as Component>::Storage::default();
         let mut rt: Hierarchy<Index> = Hierarchy::default();
 
-        let e1 = entities.create();
+        let e1 = hierarchy.create();
         s.insert(e1, Tc(2));
         rt.insert(e1);
-        let e2 = entities.create();
+        let e2 = hierarchy.create();
         s.insert(e2, Tc(3));
         rt.insert(e2);
-        let e3 = entities.create();
+        let e3 = hierarchy.create();
         s.insert(e3, Tc(5));
         rt.insert_child(e1, e3);
-        let e4 = entities.create();
+        let e4 = hierarchy.create();
         s.insert(e4, Tc(7));
         rt.insert_child(e3, e4);
 

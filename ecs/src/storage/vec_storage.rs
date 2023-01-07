@@ -10,7 +10,7 @@ use super::{
     iterators::{IndexedRIter, RIter, WIter},
     Storage,
 };
-use crate::{entity::index::Index, resource::Resource, storage::entry::Entry};
+use crate::{entity::index::Index, resource::Resource, storage::entry::Entry, with_dependencies::WithDependencies};
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
@@ -207,6 +207,12 @@ impl<T> Default for VecStorage<T> {
     }
 }
 
+impl<D, T> WithDependencies<D> for VecStorage<T> {
+    fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+        Ok(VecStorage::default())
+    }
+}
+
 impl<T> PartialEq<VecStorage<T>> for VecStorage<T>
 where
     T: PartialEq<T>,
@@ -296,7 +302,7 @@ mod tests {
     use serde_test::{assert_tokens, Token};
 
     use super::*;
-    use crate::{component::Component, entities::Entities, entity::Entity};
+    use crate::{component::Component, entities::Entities, entity::Entity, Reg, ResourceRegistry, End, World};
 
     struct DropCounter<'a> {
         count: &'a mut usize,
@@ -341,6 +347,21 @@ mod tests {
         fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
             iter.fold(Tc(0), |state, value| state + value)
         }
+    }
+
+    #[test]
+    fn vec_storage_reg_macro() {
+        type _RR = Reg![VecStorage<u32>];
+    }
+
+    #[test]
+    fn vec_storage_resource_registry() {
+        let _rr = ResourceRegistry::push(End, VecStorage::<usize>::default());
+    }
+
+    #[test]
+    fn vec_storage_world() {
+        let _w = World::with_dependencies::<Reg![VecStorage<usize>], Reg![], Reg![], Reg![], _>(&()).unwrap();
     }
 
     #[test]

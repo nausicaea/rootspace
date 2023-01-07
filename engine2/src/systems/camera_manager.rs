@@ -12,10 +12,10 @@ pub struct CameraManager {
 }
 
 impl WithResources for CameraManager {
-    fn with_resources(res: &Resources) -> Self {
+    fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
         let receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
 
-        CameraManager { receiver }
+        Ok(CameraManager { receiver })
     }
 }
 
@@ -47,5 +47,28 @@ impl System for CameraManager {
                 _ => (),
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ecs::{SystemRegistry, Reg, End, World};
+
+    use super::*;
+
+    #[test]
+    fn camera_manager_reg_macro() {
+        type _SR = Reg![CameraManager];
+    }
+
+    #[test]
+    fn camera_manager_system_registry() {
+        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&()).unwrap();
+        let _rr = SystemRegistry::push(End, CameraManager::with_res(&res).unwrap());
+    }
+
+    #[test]
+    fn camera_manager_world() {
+        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![CameraManager], Reg![], _>(&()).unwrap();
     }
 }

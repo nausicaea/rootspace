@@ -37,3 +37,26 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{SystemRegistry, Reg, End, World};
+
+    use super::*;
+
+    #[test]
+    fn event_monitor_reg_macro() {
+        type _SR = Reg![EventMonitor<u32>];
+    }
+
+    #[test]
+    fn event_monitor_system_registry() {
+        let res = Resources::with_dependencies::<Reg![EventQueue<usize>], _>(&()).unwrap();
+        let _rr = SystemRegistry::push(End, EventMonitor::<usize>::with_res(&res).unwrap());
+    }
+
+    #[test]
+    fn event_monitor_world() {
+        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![EventMonitor<usize>], Reg![], _>(&()).unwrap();
+    }
+}

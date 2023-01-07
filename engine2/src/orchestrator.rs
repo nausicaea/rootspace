@@ -1,43 +1,49 @@
 use std::time::{Duration, Instant};
 
-use ecs::{EventQueue, LoopControl, ReceiverId, ResourceRegistry, SystemRegistry, WorldEvent};
-use try_default::TryDefault;
+use ecs::{EventQueue, LoopControl, ReceiverId, ResourceRegistry, SystemRegistry, WorldEvent, with_dependencies::WithDependencies, WithResources};
 use winit::{
-    event::{ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode},
+    event::{ElementState, Event, KeyboardInput, VirtualKeyCode},
     event_loop::{ControlFlow, EventLoopWindowTarget},
 };
 
 use crate::{
     events::{engine_event::EngineEvent, window_event::WindowEvent},
-    resources::{asset_database::AssetDatabase, graphics::Graphics, statistics::Statistics},
+    resources::{graphics::{Graphics, GraphicsDeps}, statistics::Statistics, asset_database::AssetDatabaseDeps}, registry::{RRegistry, USRegistry, RSRegistry},
 };
 
 const DELTA_TIME: u64 = 50; // milliseconds
 const MAX_FRAME_DURATION: u64 = 250; // milliseconds
 
-type World<S, F, D, R> =
-    ecs::World<crate::registry::Resources<S>, F, crate::registry::DynamicSystems<D>, crate::registry::RenderSystems<R>>;
-
-pub struct Orchestrator<S, F, D, R> {
-    world: World<S, F, D, R>,
+pub struct Orchestrator {
+    world: ecs::World,
     timers: Timers,
     window_event_receiver: ReceiverId<WindowEvent>,
     engine_event_receiver: ReceiverId<EngineEvent>,
 }
 
-impl<S, F, D, R> Orchestrator<S, F, D, R>
-where
-    S: 'static + ResourceRegistry,
-    F: 'static + SystemRegistry,
-    D: 'static + SystemRegistry,
-    R: 'static + SystemRegistry,
-{
-    pub fn run(
-        mut self,
-        name: String,
-        force_init: bool,
-    ) -> impl 'static + FnMut(Event<'_, ()>, &EventLoopWindowTarget<()>, &mut ControlFlow) {
-        move |event, event_loop, control_flow| {
+impl Orchestrator {
+    pub fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error> 
+    where
+        RR: ResourceRegistry + WithDependencies<D>,
+        FUSR: SystemRegistry + WithResources,
+        USR: SystemRegistry + WithResources,
+        RSR: SystemRegistry + WithResources,
+        D: GraphicsDeps + AssetDatabaseDeps,
+    {
+        let mut world = ecs::World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, RSRegistry<RSR>, _>(deps)?;
+        let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
+        let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
+
+        Ok(Orchestrator {
+            world,
+            timers: Timers::default(),
+            window_event_receiver,
+            engine_event_receiver,
+        })
+    }
+
+    pub fn run(mut self) -> impl 'static + FnMut(Event<'_, ()>, &EventLoopWindowTarget<()>, &mut ControlFlow) {
+        move |event, _event_loop, control_flow| {
             #[cfg(feature = "loopdbg")]
             let mut draw_bottom = false;
             #[cfg(feature = "loopdbg")]
@@ -51,15 +57,13 @@ where
             }
 
             match event {
-                Event::NewEvents(StartCause::Init) => self.init(event_loop, &name, force_init),
                 Event::WindowEvent {
                     window_id,
                     event: window_event,
                 } if self
                     .world
                     .borrow::<Graphics>()
-                    .window_id()
-                    .map_or(false, |wid| wid == window_id) =>
+                    .window_id() == window_id =>
                 {
                     if let Ok(window_event) = window_event.try_into() {
                         self.input(window_event)
@@ -76,16 +80,6 @@ where
                 log::trace!("⬆\n\n");
             }
         }
-    }
-
-    fn init<T>(&mut self, event_loop: &EventLoopWindowTarget<T>, name: &str, force_init: bool) {
-        use pollster::FutureExt;
-
-        self.world
-            .get_mut::<AssetDatabase>()
-            .initialize(name, force_init)
-            .unwrap();
-        self.world.get_mut::<Graphics>().initialize(event_loop).block_on();
     }
 
     /// Send the `winit` event to the internal event queue for further processing.
@@ -169,27 +163,6 @@ where
 
     fn cleanup(&mut self) {
         self.world.clear();
-    }
-}
-
-impl<S, F, D, R> TryDefault for Orchestrator<S, F, D, R>
-where
-    S: 'static + ResourceRegistry,
-    F: 'static + SystemRegistry,
-    D: 'static + SystemRegistry,
-    R: 'static + SystemRegistry,
-{
-    fn try_default() -> anyhow::Result<Self> {
-        let mut world = World::try_default()?;
-        let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
-        let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
-
-        Ok(Orchestrator {
-            world,
-            timers: Timers::default(),
-            window_event_receiver,
-            engine_event_receiver,
-        })
     }
 }
 
