@@ -4,7 +4,10 @@ use winit::dpi::PhysicalSize;
 
 use crate::{
     events::{engine_event::EngineEvent, window_event::WindowEvent},
-    resources::{graphics::{ids::PipelineId, Graphics}, asset_database::AssetDatabase},
+    resources::{
+        asset_database::AssetDatabase,
+        graphics::{ids::PipelineId, Graphics},
+    },
 };
 
 #[derive(Debug)]
@@ -52,7 +55,8 @@ impl Renderer {
 
     fn on_out_of_memory(&self, res: &Resources) {
         log::error!("WGPU surface is out of memory");
-        res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::AbortRequested)
+        res.borrow_mut::<EventQueue<EngineEvent>>()
+            .send(EngineEvent::AbortRequested)
     }
 
     fn on_timeout(&self) {
@@ -65,11 +69,11 @@ impl WithResources for Renderer {
         let window_receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let engine_receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        let shader_path = res.borrow::<AssetDatabase>()
-            .find_asset("shaders/triangle.wgsl")?;
+        let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders/triangle.wgsl")?;
         let shader_data = shader_path.read_to_string()?;
 
-        let pipeline = res.borrow_mut::<Graphics>()
+        let pipeline = res
+            .borrow_mut::<Graphics>()
             .create_render_pipeline()
             .with_shader_module(None, &shader_data, "vs_main", Some("fs_main"))
             .submit(None)?;
@@ -91,7 +95,9 @@ impl System for Renderer {
             return;
         }
 
-        let r = res.borrow::<Graphics>().create_render_pass()
+        let r = res
+            .borrow::<Graphics>()
+            .create_render_pass()
             .with_pipeline(&self.pipeline)
             .submit(None, None);
 

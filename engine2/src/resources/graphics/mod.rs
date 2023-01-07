@@ -2,7 +2,10 @@ use ecs::{with_dependencies::WithDependencies, Resource};
 use pollster::FutureExt;
 use winit::event_loop::EventLoopWindowTarget;
 
-use self::{render_pass_builder::RenderPassBuilder, render_pipeline_builder::RenderPipelineBuilder, runtime::Runtime, settings::Settings};
+use self::{
+    render_pass_builder::RenderPassBuilder, render_pipeline_builder::RenderPipelineBuilder, runtime::Runtime,
+    settings::Settings,
+};
 
 pub mod ids;
 pub mod render_pass_builder;
@@ -16,7 +19,6 @@ pub trait GraphicsDeps {
 
     fn event_loop(&self) -> &EventLoopWindowTarget<Self::CustomEvent>;
     fn settings(&self) -> &Settings;
-
 }
 
 #[derive(Debug)]
@@ -64,7 +66,10 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
         )
         .block_on();
 
-        Ok(Graphics { settings: settings.clone(), runtime })
+        Ok(Graphics {
+            settings: settings.clone(),
+            runtime,
+        })
     }
 }
 

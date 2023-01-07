@@ -3,7 +3,10 @@ use std::ops::Deref;
 use ecs::Reg;
 use engine2::{
     orchestrator::Orchestrator,
-    resources::{asset_database::AssetDatabaseDeps, graphics::{GraphicsDeps, settings::Settings}},
+    resources::{
+        asset_database::AssetDatabaseDeps,
+        graphics::{settings::Settings, GraphicsDeps},
+    },
 };
 use winit::event_loop::EventLoop;
 

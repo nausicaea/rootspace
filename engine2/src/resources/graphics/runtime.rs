@@ -8,7 +8,8 @@ use super::{
     ids::{BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, TextureId},
     render_pass_builder::RenderPassBuilder,
     render_pipeline_builder::RenderPipelineBuilder,
-    urn::Urn, settings::Settings,
+    settings::Settings,
+    urn::Urn,
 };
 
 #[derive(Debug)]

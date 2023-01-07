@@ -1,4 +1,4 @@
-use super::{runtime::Runtime, settings::Settings, ids::PipelineId};
+use super::{ids::PipelineId, runtime::Runtime, settings::Settings};
 
 #[derive(Debug)]
 pub struct RenderPassBuilder<'rt> {
@@ -9,8 +9,8 @@ pub struct RenderPassBuilder<'rt> {
 
 impl<'rt> RenderPassBuilder<'rt> {
     pub(super) fn new(runtime: &'rt Runtime, settings: &'rt Settings) -> Self {
-        RenderPassBuilder { 
-            runtime, 
+        RenderPassBuilder {
+            runtime,
             settings,
             pipeline: None,
         }
@@ -24,9 +24,10 @@ impl<'rt> RenderPassBuilder<'rt> {
     pub fn submit(self, encoder_label: Option<&str>, pass_label: Option<&str>) -> Result<(), wgpu::SurfaceError> {
         let output = self.runtime.surface.get_current_texture()?;
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self.runtime.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: encoder_label,
-        });
+        let mut encoder = self
+            .runtime
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: encoder_label });
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
