@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use crate::{
     entity::{generation::Generation, index::Index, Entity},
     resource::Resource,
-    SerializationName,
 };
 
 /// The `Entities` resource keeps track of all entities.
@@ -76,8 +75,6 @@ impl Entities {
 }
 
 impl Resource for Entities {}
-
-impl SerializationName for Entities {}
 
 impl<'a> IntoIterator for &'a Entities {
     type IntoIter = Iter<'a>;

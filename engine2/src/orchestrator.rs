@@ -1,7 +1,6 @@
 use std::time::{Duration, Instant};
 
 use ecs::{EventQueue, LoopControl, ReceiverId, ResourceRegistry, SystemRegistry, WorldEvent};
-use log::trace;
 use try_default::TryDefault;
 use winit::{
     event::{ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode},
@@ -44,11 +43,11 @@ where
             #[cfg(feature = "loopdbg")]
             {
                 match &event {
-                    Event::NewEvents(_) => trace!("⬇"),
+                    Event::NewEvents(_) => log::trace!("⬇"),
                     Event::RedrawEventsCleared | Event::LoopDestroyed => draw_bottom = true,
                     _ => (),
                 }
-                trace!("Event trace: {:?}", &event);
+                log::trace!("Event trace: {:?}", &event);
             }
 
             match event {
@@ -74,7 +73,7 @@ where
 
             #[cfg(feature = "loopdbg")]
             if draw_bottom {
-                trace!("⬆\n\n");
+                log::trace!("⬆\n\n");
             }
         }
     }
@@ -165,7 +164,7 @@ where
         }
 
         #[cfg(feature = "loopdbg")]
-        trace!("Control flow: {:?}", control_flow);
+        log::trace!("Control flow: {:?}", control_flow);
     }
 
     fn cleanup(&mut self) {

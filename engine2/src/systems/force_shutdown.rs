@@ -8,7 +8,7 @@ use std::{
     time::Duration,
 };
 
-use ecs::{EventQueue, Resources, SerializationName, System, WithResources};
+use ecs::{EventQueue, Resources, System, WithResources};
 use log::debug;
 #[cfg(not(test))]
 use log::error;
@@ -45,8 +45,6 @@ impl WithResources for ForceShutdown {
         ForceShutdown { ctrlc_triggered }
     }
 }
-
-impl SerializationName for ForceShutdown {}
 
 impl System for ForceShutdown {
     fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {

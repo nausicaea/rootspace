@@ -1,12 +1,13 @@
 [package]
 name = "rose-tree"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Eleanore Young"]
 edition = "2021"
 
 [features]
 default = ["serde_support"]
-serde_support = ["serde"]
+serde_support = ["dep:serde"]
+ecs = ["dep:ecs"]
 
 [dependencies]
 serde = { version = "^1.0.0", features = ["derive"], optional = true }

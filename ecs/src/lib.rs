@@ -16,8 +16,6 @@ pub use crate::{
     registry::{Element, End, ResourceRegistry, SystemRegistry},
     resource::Resource,
     resources::Resources,
-    serialization_name::SerializationName,
-    short_type_name::short_type_name,
     storage::{vec_storage::VecStorage, zst_storage::ZstStorage, Storage},
     system::System,
     systems::Systems,
@@ -36,8 +34,6 @@ pub mod macros;
 pub mod registry;
 pub mod resource;
 pub mod resources;
-pub mod serialization_name;
-pub mod short_type_name;
 pub mod storage;
 pub mod system;
 pub mod systems;

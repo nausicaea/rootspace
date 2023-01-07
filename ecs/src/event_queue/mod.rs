@@ -1,6 +1,7 @@
 //! Provides facilities to define and manage events.
 
 use std::{
+    any::type_name,
     collections::{HashMap, VecDeque},
     fmt,
 };
@@ -10,7 +11,7 @@ use receiver_state::ReceiverState;
 use serde::{Deserialize, Serialize};
 
 use self::receiver_id::ReceiverId;
-use crate::{resource::Resource, short_type_name::short_type_name, SerializationName};
+use crate::resource::Resource;
 
 pub mod receiver_id;
 pub mod receiver_state;
@@ -58,8 +59,8 @@ where
 
         self.receivers.insert(id, ReceiverState::new(id));
 
-        let stnt = short_type_name::<T>();
-        let stns = short_type_name::<Self>();
+        let stnt = type_name::<T>();
+        let stns = type_name::<Self>();
         debug!("Adding subscriber {} to queue {}", stnt, stns);
         ReceiverId::new(id)
     }
@@ -135,8 +136,6 @@ where
 }
 
 impl<E> Resource for EventQueue<E> where E: fmt::Debug + 'static {}
-
-impl<E> SerializationName for EventQueue<E> {}
 
 impl<E> Default for EventQueue<E> {
     fn default() -> Self {

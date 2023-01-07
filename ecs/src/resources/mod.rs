@@ -2,17 +2,16 @@
 #![allow(non_snake_case)]
 
 use std::{
-    any::TypeId,
+    any::{type_name, TypeId},
     cell::{Ref, RefCell, RefMut},
     collections::{HashMap, HashSet},
 };
 
 use anyhow::Error;
-use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use try_default::TryDefault;
 
 use self::typed_resources::TypedResources;
-use crate::{component::Component, registry::ResourceRegistry, resource::Resource, short_type_name::short_type_name};
+use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
 
 mod recursors;
 pub(crate) mod typed_resources;
@@ -97,28 +96,6 @@ impl Resources {
         Ok(Resources::from(helper))
     }
 
-    /// Deserialize [`Resources`](Self) with the supplied
-    /// [`ResourceRegistry`](crate::registry::ResourceRegistry). Here, the registry determines the types that are
-    pub fn deserialize_with<'de, RR, D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        RR: ResourceRegistry,
-        D: Deserializer<'de>,
-    {
-        let helper = TypedResources::<RR>::deserialize(deserializer)?;
-        Ok(Resources::from(helper))
-    }
-
-    /// Serialize [`Resources`](Self) with the supplied
-    /// [`ResourceRegistry`](crate::registry::ResourceRegistry).
-    pub fn serialize_with<RR, S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        RR: ResourceRegistry,
-        S: Serializer,
-    {
-        let status = TypedResources::<RR>::from(self).serialize(serializer)?;
-        Ok(status)
-    }
-
     /// Clears the resources container.
     pub fn clear(&mut self) {
         self.0.clear();
@@ -166,14 +143,11 @@ impl Resources {
             .map(|r| {
                 Ref::map(r.borrow(), |i| {
                     i.downcast_ref::<R>().unwrap_or_else(|| {
-                        panic!(
-                            "Could not downcast the requested resource to type {}",
-                            short_type_name::<R>()
-                        )
+                        panic!("Could not downcast the requested resource to type {}", type_name::<R>())
                     })
                 })
             })
-            .unwrap_or_else(|| panic!("Could not find any resource of type {}", short_type_name::<R>()))
+            .unwrap_or_else(|| panic!("Could not find any resource of type {}", type_name::<R>()))
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
@@ -186,14 +160,11 @@ impl Resources {
             .map(|r| {
                 RefMut::map(r.borrow_mut(), |i| {
                     i.downcast_mut::<R>().unwrap_or_else(|| {
-                        panic!(
-                            "Could not downcast the requested resource to type {}",
-                            short_type_name::<R>()
-                        )
+                        panic!("Could not downcast the requested resource to type {}", type_name::<R>())
                     })
                 })
             })
-            .unwrap_or_else(|| panic!("Could not find any resource of type {}", short_type_name::<R>()))
+            .unwrap_or_else(|| panic!("Could not find any resource of type {}", type_name::<R>()))
     }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
@@ -204,14 +175,11 @@ impl Resources {
         self.0
             .get_mut(&TypeId::of::<R>())
             .map(|r| {
-                r.get_mut().downcast_mut::<R>().unwrap_or_else(|| {
-                    panic!(
-                        "Could not downcast the requested resource to type {}",
-                        short_type_name::<R>()
-                    )
-                })
+                r.get_mut()
+                    .downcast_mut::<R>()
+                    .unwrap_or_else(|| panic!("Could not downcast the requested resource to type {}", type_name::<R>()))
             })
-            .unwrap_or_else(|| panic!("Could not find any resource of type {}", short_type_name::<R>()))
+            .unwrap_or_else(|| panic!("Could not find any resource of type {}", type_name::<R>()))
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
@@ -256,33 +224,29 @@ impl PartialEq for Resources {
 #[cfg(test)]
 mod tests {
     use serde::{Deserialize, Serialize};
-    use serde_json;
 
     use super::*;
-    use crate::{world::event::WorldEvent, Entities, EventQueue, Reg, SerializationName};
+    use crate::Reg;
 
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceA(usize);
 
     impl Resource for TestResourceA {}
 
-    impl SerializationName for TestResourceA {}
-
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceB(Vec<usize>);
 
     impl Resource for TestResourceB {}
-
-    impl SerializationName for TestResourceB {}
 
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceC(String);
 
     impl Resource for TestResourceC {}
 
-    impl SerializationName for TestResourceC {}
-
-    type TestRegistry = Reg![TestResourceA, TestResourceB, TestResourceC,];
+    #[test]
+    fn test_registry() {
+        type _TestRegistry = Reg![TestResourceA, TestResourceB, TestResourceC,];
+    }
 
     #[test]
     fn default() {
@@ -301,56 +265,5 @@ mod tests {
         resources.insert(TestResourceA::default());
 
         let _: Ref<TestResourceA> = resources.borrow();
-    }
-
-    #[test]
-    fn serialize_with() {
-        let mut resources = Resources::default();
-        resources.insert(TestResourceA(25));
-        resources.insert(TestResourceB(Vec::new()));
-        resources.insert(TestResourceC(String::from("Bye")));
-
-        let mut writer: Vec<u8> = Vec::with_capacity(128);
-        let mut s = serde_json::Serializer::new(&mut writer);
-        assert!(resources.serialize_with::<TestRegistry, _>(&mut s).is_ok());
-        assert_eq!(
-            unsafe { String::from_utf8_unchecked(writer) },
-            "{\"TestResourceA\":25,\"TestResourceB\":[],\"TestResourceC\":\"Bye\"}"
-        );
-    }
-
-    #[test]
-    fn deserialize_with() {
-        let mut d = serde_json::Deserializer::from_slice(
-            b"{\"TestResourceA\":25,\"TestResourceB\":[0,1],\"TestResourceC\":\"Bye\"}",
-        );
-        let resources = Resources::deserialize_with::<TestRegistry, _>(&mut d).unwrap();
-        assert!(d.end().is_ok());
-        assert_eq!(*resources.borrow::<TestResourceA>(), TestResourceA(25));
-        assert_eq!(*resources.borrow::<TestResourceB>(), TestResourceB(vec![0, 1]));
-        assert_eq!(*resources.borrow::<TestResourceC>(), TestResourceC(String::from("Bye")));
-    }
-
-    #[test]
-    fn deserialize_with_complex() {
-        let mut d =
-            serde_json::Deserializer::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/ok.json")));
-        let r = Resources::deserialize_with::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
-        let dr = d.end();
-        assert!(r.is_ok(), "{:?}", r.unwrap_err());
-        assert!(dr.is_ok(), "{:?}", dr.unwrap_err());
-    }
-
-    #[test]
-    #[should_panic(expected = "Error(\"Unknown resource SceneGraph<Model>\", line: 1, column: 262)")]
-    fn deserialize_with_extraneous_types() {
-        let mut d = serde_json::Deserializer::from_str(include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/tests/extraneous-types.json"
-        )));
-        let r = Resources::deserialize_with::<Reg![Entities, EventQueue<WorldEvent>], _>(&mut d);
-        let dr = d.end();
-        assert!(r.is_ok(), "{:?}", r.unwrap_err());
-        assert!(dr.is_ok(), "{:?}", dr.unwrap_err());
     }
 }

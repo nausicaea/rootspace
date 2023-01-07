@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 #[cfg(any(test, feature = "ecs"))]
-use ecs::{Resource, SerializationName};
+use ecs::Resource;
 
 use crate::tree::Tree;
 
@@ -105,9 +105,6 @@ where
 
 #[cfg(any(test, feature = "ecs"))]
 impl<K> Resource for Hierarchy<K> where K: 'static {}
-
-#[cfg(any(test, feature = "ecs"))]
-impl<K> SerializationName for Hierarchy<K> {}
 
 pub struct AncestorsIter<'a, K> {
     key: Option<K>,

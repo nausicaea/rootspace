@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use crate::{
     event_queue::{receiver_id::ReceiverId, EventQueue},
     resources::Resources,
-    serialization_name::SerializationName,
     system::System,
     with_resources::WithResources,
 };
@@ -26,8 +25,6 @@ where
         EventMonitor { receiver }
     }
 }
-
-impl<E> SerializationName for EventMonitor<E> {}
 
 impl<E> System for EventMonitor<E>
 where

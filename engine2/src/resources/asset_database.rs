@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::{Context, Error};
 use directories::ProjectDirs;
-use ecs::{Resource, SerializationName};
+use ecs::Resource;
 use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf, NewOrExFilePathBuf};
 use serde::{Deserialize, Serialize};
 
@@ -138,8 +138,6 @@ impl AssetDatabase {
 }
 
 impl Resource for AssetDatabase {}
-
-impl SerializationName for AssetDatabase {}
 
 #[derive(Debug, thiserror::Error)]
 pub enum AssetError {

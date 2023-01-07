@@ -4,8 +4,6 @@ pub(crate) mod typed_systems;
 
 use std::slice::{Iter, IterMut};
 
-use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
-
 use self::typed_systems::TypedSystems;
 use crate::{registry::SystemRegistry, resources::Resources, system::System, with_resources::WithResources};
 
@@ -29,24 +27,6 @@ impl Systems {
     {
         let helper = TypedSystems::<SR>::with_resources(res);
         Systems::from(helper)
-    }
-
-    pub fn deserialize_with<'de, SR, D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        SR: SystemRegistry,
-        D: Deserializer<'de>,
-    {
-        let helper = TypedSystems::<SR>::deserialize(deserializer)?;
-        Ok(Systems::from(helper))
-    }
-
-    pub fn serialize_with<SR, S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        SR: SystemRegistry,
-        S: Serializer,
-    {
-        let status = TypedSystems::<SR>::from(self).serialize(serializer)?;
-        Ok(status)
     }
 
     pub fn len(&self) -> usize {

@@ -10,7 +10,7 @@ use super::{
     iterators::{IndexedRIter, RIter, WIter},
     Storage,
 };
-use crate::{entity::index::Index, resource::Resource, storage::entry::Entry, SerializationName};
+use crate::{entity::index::Index, resource::Resource, storage::entry::Entry};
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
@@ -173,8 +173,6 @@ impl<T> Storage for VecStorage<T> {
 }
 
 impl<T> Resource for VecStorage<T> where T: 'static {}
-
-impl<T> SerializationName for VecStorage<T> {}
 
 impl<T> Drop for VecStorage<T> {
     fn drop(&mut self) {

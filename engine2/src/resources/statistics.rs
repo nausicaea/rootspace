@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, time::Duration};
 
-use ecs::{Resource, SerializationName};
+use ecs::Resource;
 use serde::{Deserialize, Serialize};
 
 const DRAW_CALL_WINDOW: usize = 10;
@@ -28,8 +28,6 @@ impl Default for Statistics {
 }
 
 impl Resource for Statistics {}
-
-impl SerializationName for Statistics {}
 
 impl Statistics {
     pub fn average_world_draw_calls(&self) -> f32 {

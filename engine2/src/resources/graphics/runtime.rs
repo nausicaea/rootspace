@@ -2,10 +2,7 @@ use std::collections::HashMap;
 
 use log::debug;
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
-use winit::{
-    event_loop::EventLoopWindowTarget,
-    window::{WindowBuilder, WindowId},
-};
+use winit::event_loop::EventLoopWindowTarget;
 
 use super::{
     ids::{BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, TextureId},

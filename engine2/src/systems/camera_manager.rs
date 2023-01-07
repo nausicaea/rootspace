@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use ecs::{event_queue::receiver_id::ReceiverId, EventQueue, Resources, SerializationName, System, WithResources};
+use ecs::{event_queue::receiver_id::ReceiverId, EventQueue, Resources, System, WithResources};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
@@ -36,8 +36,6 @@ impl CameraManager {
             .for_each(|c| c.set_dpi_factor(factor));
     }
 }
-
-impl SerializationName for CameraManager {}
 
 impl System for CameraManager {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {

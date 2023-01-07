@@ -1,12 +1,11 @@
 use std::fmt::Debug;
 
-use serde::{Deserialize, Serialize};
 use try_default::TryDefault;
 
-use crate::{resource::Resource, serialization_name::SerializationName, system::System, with_resources::WithResources};
+use crate::{resource::Resource, system::System, with_resources::WithResources};
 
 /// An element within the heterogeneous list.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub struct Element<H, T> {
     pub head: H,
     pub tail: T,
@@ -20,7 +19,7 @@ impl<H, T> Element<H, T> {
 }
 
 /// The end of the heterogeneous list;
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub struct End;
 
 #[macro_export]
@@ -31,7 +30,7 @@ macro_rules! impl_registry {
             const LEN: usize;
 
             /// Refers to the type associated with the head element of the list.
-            type Head: $bound $(+ $others)* + serde::Serialize + for<'de> serde::Deserialize<'de>;
+            type Head: $bound $(+ $others)*;
             /// Refers to the type of the tail of the list.
             type Tail: $name;
 
@@ -44,7 +43,7 @@ macro_rules! impl_registry {
             /// Push a new element onto the head of the heterogeneous list.
             fn push<E>(self, element: E) -> $crate::registry::Element<E, Self>
             where
-                E: $bound $(+ $others)* + serde::Serialize + for<'de> serde::Deserialize<'de>,
+                E: $bound $(+ $others)*,
             {
                 $crate::registry::Element::new(element, self)
             }
@@ -63,7 +62,7 @@ macro_rules! impl_registry {
 
         impl<H, T> $name for $crate::registry::Element<H, T>
         where
-            H: $bound $(+ $others)* + serde::Serialize + for<'de> serde::Deserialize<'de>,
+            H: $bound $(+ $others)*,
             T: $name,
         {
             type Head = H;
@@ -109,29 +108,24 @@ macro_rules! impl_registry {
     };
 }
 
-impl_registry!(ResourceRegistry, where Head: Resource + TryDefault + Debug + SerializationName);
-impl_registry!(SystemRegistry, where Head: System + WithResources + Debug + SerializationName);
+impl_registry!(ResourceRegistry, where Head: Resource + TryDefault);
+impl_registry!(SystemRegistry, where Head: System + WithResources);
 
 #[cfg(test)]
 mod tests {
     use proptest::prelude::*;
-    use serde_test::{assert_tokens, Token};
 
     use super::*;
 
-    #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Default, Debug, PartialEq)]
     struct TestElementA(usize);
 
     impl Resource for TestElementA {}
 
-    impl SerializationName for TestElementA {}
-
-    #[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Default, Debug, PartialEq)]
     struct TestElementB(String);
 
     impl Resource for TestElementB {}
-
-    impl SerializationName for TestElementB {}
 
     #[test]
     fn end() {
@@ -193,64 +187,6 @@ mod tests {
         let h = ResourceRegistry::push(End, TestElementA::default()).push(TestElementB::default());
 
         assert_eq!(ResourceRegistry::len(&h), 2);
-    }
-
-    #[test]
-    fn serde_empty() {
-        let h = End;
-
-        assert_tokens(&h, &[Token::UnitStruct { name: "End" }]);
-    }
-
-    #[test]
-    fn serde_one() {
-        let h = ResourceRegistry::push(End, TestElementA::default());
-
-        assert_tokens(
-            &h,
-            &[
-                Token::Struct {
-                    name: "Element",
-                    len: 2,
-                },
-                Token::Str("head"),
-                Token::NewtypeStruct { name: "TestElementA" },
-                Token::U64(0),
-                Token::Str("tail"),
-                Token::UnitStruct { name: "End" },
-                Token::StructEnd,
-            ],
-        );
-    }
-
-    #[test]
-    fn serde_two() {
-        let h = ResourceRegistry::push(End, TestElementA::default()).push(TestElementB::default());
-
-        assert_tokens(
-            &h,
-            &[
-                Token::Struct {
-                    name: "Element",
-                    len: 2,
-                },
-                Token::Str("head"),
-                Token::NewtypeStruct { name: "TestElementB" },
-                Token::Str(""),
-                Token::Str("tail"),
-                Token::Struct {
-                    name: "Element",
-                    len: 2,
-                },
-                Token::Str("head"),
-                Token::NewtypeStruct { name: "TestElementA" },
-                Token::U64(0),
-                Token::Str("tail"),
-                Token::UnitStruct { name: "End" },
-                Token::StructEnd,
-                Token::StructEnd,
-            ],
-        );
     }
 
     proptest! {

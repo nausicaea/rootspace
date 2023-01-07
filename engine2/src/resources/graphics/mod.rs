@@ -1,8 +1,8 @@
-use ecs::{Resource, SerializationName};
+use ecs::Resource;
 use serde::{Deserialize, Serialize};
 use winit::{event_loop::EventLoopWindowTarget, window::WindowId};
 
-use self::{runtime::Runtime, settings::Settings, render_pipeline_builder::RenderPipelineBuilder};
+use self::{render_pipeline_builder::RenderPipelineBuilder, runtime::Runtime, settings::Settings};
 
 pub mod ids;
 pub mod render_pipeline_builder;
@@ -62,5 +62,3 @@ impl Graphics {
 }
 
 impl Resource for Graphics {}
-
-impl SerializationName for Graphics {}

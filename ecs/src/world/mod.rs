@@ -1,24 +1,14 @@
 use std::{
     cell::{Ref, RefMut},
-    convert::TryFrom,
-    fs::File,
     marker::PhantomData,
-    path::PathBuf,
     time::Duration,
 };
 
 use anyhow::Error;
-use file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use log::debug;
-use serde::{
-    de,
-    de::{MapAccess, Visitor},
-    ser::{self, SerializeStruct},
-    Deserialize, Serialize,
-};
 use try_default::TryDefault;
 
-use self::{error::WorldError, event::WorldEvent, type_registry::ResourceTypes};
+use self::{event::WorldEvent, type_registry::ResourceTypes};
 use crate::{
     component::Component,
     entities::Entities,
@@ -28,10 +18,10 @@ use crate::{
     loop_stage::LoopStage,
     registry::{ResourceRegistry, SystemRegistry},
     resource::Resource,
-    resources::{typed_resources::TypedResources, Resources},
+    resources::Resources,
     storage::Storage,
     system::System,
-    systems::{typed_systems::TypedSystems, Systems},
+    systems::Systems,
 };
 
 pub mod error;
@@ -46,8 +36,6 @@ pub struct World<RR, FUSR, USR, RSR> {
     update_systems: Systems,
     render_systems: Systems,
     receiver: Option<ReceiverId<WorldEvent>>,
-    foreign_receiver: Option<ReceiverId<WorldEvent>>,
-    last_state: Option<PathBuf>,
     _rr: PhantomData<RR>,
     _sr1: PhantomData<FUSR>,
     _sr2: PhantomData<USR>,
@@ -69,7 +57,6 @@ where
         let render_systems = Systems::with_registry::<RSR>(&resources);
 
         let receiver = Some(resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>());
-        let foreign_receiver = Some(resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>());
 
         Ok(World {
             resources,
@@ -77,8 +64,6 @@ where
             update_systems,
             render_systems,
             receiver,
-            foreign_receiver,
-            last_state: None,
             _rr: PhantomData::default(),
             _sr1: PhantomData::default(),
             _sr2: PhantomData::default(),
@@ -101,8 +86,6 @@ where
             update_systems: Systems::default(),
             render_systems: Systems::default(),
             receiver: None,
-            foreign_receiver: None,
-            last_state: None,
             _rr: PhantomData::default(),
             _sr1: PhantomData::default(),
             _sr2: PhantomData::default(),
@@ -112,11 +95,6 @@ where
 
     pub fn resources(&self) -> &Resources {
         &self.resources
-    }
-
-    /// Provides access to a second event queue receiver for WorldEvents that is not used by World itself
-    pub fn foreign_receiver(&self) -> Option<ReceiverId<WorldEvent>> {
-        self.foreign_receiver
     }
 
     /// Insert a new resource.
@@ -306,20 +284,6 @@ where
                     WorldEvent::Abort => {
                         return LoopControl::Abort;
                     }
-                    WorldEvent::Serialize(p) => self.on_serialize(&p).unwrap(),
-                    WorldEvent::SerializeLastState => {
-                        if let Some(ref ls) = self.last_state {
-                            let ls = NewOrExFilePathBuf::try_from(ls).unwrap();
-                            self.on_serialize(&ls).unwrap();
-                        }
-                    }
-                    WorldEvent::Deserialize(p) => self.on_deserialize(&p).unwrap(),
-                    WorldEvent::DeserializeLastState => {
-                        if let Some(ref ls) = self.last_state {
-                            let ls = FilePathBuf::try_from(ls).unwrap();
-                            self.on_deserialize(&ls).unwrap();
-                        }
-                    }
                     WorldEvent::CreateEntity => self.on_create_entity(),
                     WorldEvent::DestroyEntity(e) => self.on_destroy_entity(e),
                     _ => (),
@@ -335,42 +299,6 @@ where
         self.update_systems.clear();
         self.fixed_update_systems.clear();
         self.resources.clear();
-    }
-
-    fn on_serialize(&mut self, path: &NewOrExFilePathBuf) -> Result<(), WorldError> {
-        // Create the serializer
-        // FIXME: Find a solution not to hard-code the Serializer type
-        let mut file = File::create(path).map_err(|e| WorldError::IoError(path.into(), e))?;
-        let mut s = serde_json::Serializer::pretty(&mut file);
-
-        // Serialize the entire World
-        self.serialize(&mut s)
-            .map_err(|e| WorldError::JsonError(path.into(), e))?;
-
-        self.last_state = Some(path.into());
-
-        Ok(())
-    }
-
-    fn on_deserialize(&mut self, path: &FilePathBuf) -> Result<(), WorldError> {
-        // Create the deserializer
-        // FIXME: Find a solution not to hard-code the Deserializer type
-        let mut file = File::open(path).map_err(|e| WorldError::IoError(path.into(), e))?;
-        let mut d = serde_json::Deserializer::from_reader(&mut file);
-
-        // Deserialize the entire world
-        let world: World<RR, FUSR, USR, RSR> =
-            World::deserialize(&mut d).map_err(|e| WorldError::JsonError(path.into(), e))?;
-
-        // Assign its parts to the current instance
-        self.resources = world.resources;
-        self.fixed_update_systems = world.fixed_update_systems;
-        self.update_systems = world.update_systems;
-        self.render_systems = world.render_systems;
-        self.receiver = world.receiver;
-        self.last_state = Some(path.into());
-
-        Ok(())
     }
 
     fn on_create_entity(&mut self) {
@@ -401,254 +329,5 @@ impl<RR, FUSR, USR, RSR> std::fmt::Debug for World<RR, FUSR, USR, RSR> {
             self.render_systems,
             self.receiver,
         )
-    }
-}
-
-impl<RR, FUSR, USR, RSR> Serialize for World<RR, FUSR, USR, RSR>
-where
-    RR: ResourceRegistry,
-    FUSR: SystemRegistry,
-    USR: SystemRegistry,
-    RSR: SystemRegistry,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: ser::Serializer,
-    {
-        let tr: TypedResources<'_, ResourceTypes<RR>> = (&self.resources).into();
-        let ts1: TypedSystems<'_, FUSR> = (&self.fixed_update_systems).into();
-        let ts2: TypedSystems<'_, USR> = (&self.update_systems).into();
-        let ts3: TypedSystems<'_, RSR> = (&self.render_systems).into();
-
-        let mut state = serializer.serialize_struct("World", WORLD_FIELDS.len())?;
-        state.serialize_field("resources", &tr)?;
-        state.serialize_field("fixed_update_systems", &ts1)?;
-        state.serialize_field("update_systems", &ts2)?;
-        state.serialize_field("render_systems", &ts3)?;
-        state.serialize_field("receiver", &self.receiver)?;
-        state.serialize_field("foreign_receiver", &self.foreign_receiver)?;
-        state.skip_field("last_state")?;
-        state.skip_field("_rr")?;
-        state.skip_field("_sr1")?;
-        state.skip_field("_sr2")?;
-        state.skip_field("_sr3")?;
-        state.end()
-    }
-}
-
-impl<'de, RR, FUSR, USR, RSR> Deserialize<'de> for World<RR, FUSR, USR, RSR>
-where
-    RR: ResourceRegistry,
-    FUSR: SystemRegistry,
-    USR: SystemRegistry,
-    RSR: SystemRegistry,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: de::Deserializer<'de>,
-    {
-        deserializer.deserialize_struct("World", WORLD_FIELDS, WorldVisitor::<RR, FUSR, USR, RSR>::default())
-    }
-}
-
-#[derive(Deserialize)]
-#[serde(field_identifier, rename_all = "snake_case")]
-enum WorldField {
-    Resources,
-    FixedUpdateSystems,
-    UpdateSystems,
-    RenderSystems,
-    Receiver,
-    ForeignReceiver,
-}
-
-const WORLD_FIELDS: &[&str] = &[
-    "resources",
-    "fixed_update_systems",
-    "update_systems",
-    "render_systems",
-    "receiver",
-    "foreign_receiver",
-];
-
-struct WorldVisitor<RR, FUSR, USR, RSR>(PhantomData<RR>, PhantomData<FUSR>, PhantomData<USR>, PhantomData<RSR>);
-
-impl<RR, FUSR, USR, RSR> Default for WorldVisitor<RR, FUSR, USR, RSR> {
-    fn default() -> Self {
-        WorldVisitor(
-            PhantomData::default(),
-            PhantomData::default(),
-            PhantomData::default(),
-            PhantomData::default(),
-        )
-    }
-}
-
-impl<'de, RR, FUSR, USR, RSR> Visitor<'de> for WorldVisitor<RR, FUSR, USR, RSR>
-where
-    RR: ResourceRegistry,
-    FUSR: SystemRegistry,
-    USR: SystemRegistry,
-    RSR: SystemRegistry,
-{
-    type Value = World<RR, FUSR, USR, RSR>;
-
-    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "a serialized World struct")
-    }
-
-    fn visit_map<A>(self, mut map_access: A) -> Result<Self::Value, A::Error>
-    where
-        A: MapAccess<'de>,
-    {
-        let mut typed_resources: Option<TypedResources<ResourceTypes<RR>>> = None;
-        let mut fixed_update_systems: Option<TypedSystems<FUSR>> = None;
-        let mut update_systems: Option<TypedSystems<USR>> = None;
-        let mut render_systems: Option<TypedSystems<RSR>> = None;
-        let mut receiver: Option<Option<ReceiverId<WorldEvent>>> = None;
-        let mut foreign_receiver: Option<Option<ReceiverId<WorldEvent>>> = None;
-
-        while let Some(field_name) = map_access.next_key()? {
-            match field_name {
-                WorldField::Resources => {
-                    if typed_resources.is_some() {
-                        return Err(de::Error::duplicate_field("resources"));
-                    }
-                    typed_resources = Some(map_access.next_value::<TypedResources<ResourceTypes<RR>>>()?);
-                }
-                WorldField::FixedUpdateSystems => {
-                    if fixed_update_systems.is_some() {
-                        return Err(de::Error::duplicate_field("fixed_update_systems"));
-                    }
-                    fixed_update_systems = Some(map_access.next_value::<TypedSystems<FUSR>>()?);
-                }
-                WorldField::UpdateSystems => {
-                    if update_systems.is_some() {
-                        return Err(de::Error::duplicate_field("update_systems"));
-                    }
-                    update_systems = Some(map_access.next_value::<TypedSystems<USR>>()?);
-                }
-                WorldField::RenderSystems => {
-                    if render_systems.is_some() {
-                        return Err(de::Error::duplicate_field("render_systems"));
-                    }
-                    render_systems = Some(map_access.next_value::<TypedSystems<RSR>>()?);
-                }
-                WorldField::Receiver => {
-                    if receiver.is_some() {
-                        return Err(de::Error::duplicate_field("receiver"));
-                    }
-                    receiver = Some(map_access.next_value::<Option<ReceiverId<WorldEvent>>>()?);
-                }
-                WorldField::ForeignReceiver => {
-                    if foreign_receiver.is_some() {
-                        return Err(de::Error::duplicate_field("foreign_receiver"));
-                    }
-                    foreign_receiver = Some(map_access.next_value::<Option<ReceiverId<WorldEvent>>>()?);
-                }
-            }
-        }
-
-        let typed_resources = typed_resources.ok_or_else(|| de::Error::missing_field("resources"))?;
-        let fixed_update_systems =
-            fixed_update_systems.ok_or_else(|| de::Error::missing_field("fixed_update_systems"))?;
-        let update_systems = update_systems.ok_or_else(|| de::Error::missing_field("update_systems"))?;
-        let render_systems = render_systems.ok_or_else(|| de::Error::missing_field("render_systems"))?;
-        let receiver = receiver.flatten();
-        let foreign_receiver = foreign_receiver.flatten();
-
-        // De-type the resources, and notify the world of completed deserialization
-        let mut resources: Resources = typed_resources.into();
-        resources
-            .get_mut::<EventQueue<WorldEvent>>()
-            .send(WorldEvent::DeserializationComplete);
-
-        Ok(World {
-            resources,
-            fixed_update_systems: fixed_update_systems.into(),
-            update_systems: update_systems.into(),
-            render_systems: render_systems.into(),
-            receiver,
-            foreign_receiver,
-            last_state: None,
-            _rr: PhantomData::default(),
-            _sr1: PhantomData::default(),
-            _sr2: PhantomData::default(),
-            _sr3: PhantomData::default(),
-        })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use serde_test::{assert_ser_tokens, Token};
-
-    use super::*;
-    use crate::{Reg, VecStorage};
-
-    pub type Trreg = Reg![VecStorage<usize>,];
-
-    #[test]
-    #[ignore]
-    fn serde() {
-        let world = World::<Trreg, Reg![], Reg![], Reg![]>::try_default().unwrap();
-
-        assert_ser_tokens(
-            &world,
-            &[
-                Token::Struct { name: "World", len: 6 },
-                Token::Str("resources"),
-                Token::Map { len: Some(3) },
-                Token::Str("Entities"),
-                Token::Struct {
-                    name: "Entities",
-                    len: 1,
-                },
-                Token::Str("max_idx"),
-                Token::U32(0),
-                Token::StructEnd,
-                Token::Str("EventQueue<WorldEvent>"),
-                Token::Struct {
-                    name: "EventQueue",
-                    len: 2,
-                },
-                Token::Str("receivers"),
-                Token::Map { len: Some(2) },
-                Token::U64(0),
-                Token::Tuple { len: 2 },
-                Token::U64(0),
-                Token::U64(0),
-                Token::TupleEnd,
-                Token::U64(1),
-                Token::Tuple { len: 2 },
-                Token::U64(0),
-                Token::U64(0),
-                Token::TupleEnd,
-                Token::MapEnd,
-                Token::Str("max_id"),
-                Token::U64(2),
-                Token::StructEnd,
-                Token::Str("VecStorage<usize>"),
-                Token::Map { len: Some(0) },
-                Token::MapEnd,
-                Token::MapEnd,
-                Token::Str("fixed_update_systems"),
-                Token::Map { len: Some(0) },
-                Token::MapEnd,
-                Token::Str("update_systems"),
-                Token::Map { len: Some(0) },
-                Token::MapEnd,
-                Token::Str("render_systems"),
-                Token::Map { len: Some(0) },
-                Token::MapEnd,
-                Token::Str("receiver"),
-                Token::Some,
-                Token::U64(0),
-                Token::Str("foreign_receiver"),
-                Token::Some,
-                Token::U64(1),
-                Token::StructEnd,
-            ],
-        );
     }
 }

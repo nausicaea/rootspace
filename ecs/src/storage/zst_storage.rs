@@ -10,7 +10,7 @@ use super::{
     iterators::{IndexedRIter, RIter, WIter},
     Storage,
 };
-use crate::{entity::index::Index, resource::Resource, SerializationName};
+use crate::{entity::index::Index, resource::Resource};
 
 /// Implements component storage for zero-sized types.
 pub struct ZstStorage<T> {
@@ -108,8 +108,6 @@ impl<T> Storage for ZstStorage<T> {
 }
 
 impl<T> Resource for ZstStorage<T> where T: 'static {}
-
-impl<T> SerializationName for ZstStorage<T> {}
 
 impl<T> Default for ZstStorage<T>
 where

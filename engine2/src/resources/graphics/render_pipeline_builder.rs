@@ -1,4 +1,4 @@
-use super::{runtime::Runtime, ids::PipelineId};
+use super::{ids::PipelineId, runtime::Runtime};
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {

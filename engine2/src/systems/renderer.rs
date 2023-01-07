@@ -1,8 +1,11 @@
-use ecs::{EventQueue, ReceiverId, SerializationName, System, WithResources};
+use ecs::{EventQueue, ReceiverId, System, WithResources};
 
 use crate::{
     events::window_event::WindowEvent,
-    resources::{graphics::{Graphics, ids::PipelineId}, statistics::Statistics},
+    resources::{
+        graphics::{ids::PipelineId, Graphics},
+        statistics::Statistics,
+    },
 };
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -27,12 +30,10 @@ impl WithResources for Renderer {
     }
 }
 
-impl SerializationName for Renderer {}
-
 impl System for Renderer {
     fn run(&mut self, res: &ecs::Resources, _t: &std::time::Duration, _dt: &std::time::Duration) {
         self.handle_events(res);
-        
+
         res.borrow::<Graphics>().render(|_rp| ()).unwrap();
     }
 }
