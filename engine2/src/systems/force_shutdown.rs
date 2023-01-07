@@ -8,24 +8,24 @@ use std::{
     time::Duration,
 };
 
-use ecs::{EventQueue, Resources, System, WithResources};
+use ecs::{EventQueue, Resources, System, WithResources, ReceiverId};
 use log::debug;
 #[cfg(not(test))]
 use log::error;
 #[cfg(not(test))]
 use log::info;
-use serde::{Deserialize, Serialize};
+use winit::event::{KeyboardInput, ElementState, VirtualKeyCode};
 
-use crate::events::engine_event::EngineEvent;
+use crate::events::{engine_event::EngineEvent, window_event::WindowEvent};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct ForceShutdown {
-    #[serde(skip)]
     ctrlc_triggered: Arc<AtomicUsize>,
+    receiver: ReceiverId<WindowEvent>,
 }
 
 impl WithResources for ForceShutdown {
-    fn with_res(_res: &Resources) -> Result<Self, anyhow::Error> {
+    fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
         #[cfg(not(test))]
         {
@@ -42,7 +42,9 @@ impl WithResources for ForceShutdown {
             }
         }
 
-        Ok(ForceShutdown { ctrlc_triggered })
+        let receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
+
+        Ok(ForceShutdown { ctrlc_triggered, receiver })
     }
 }
 
@@ -51,9 +53,37 @@ impl System for ForceShutdown {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             debug!("Recently caught a termination signal");
             res.borrow_mut::<EventQueue<EngineEvent>>()
-                .send(EngineEvent::AboutToAbort);
+                .send(EngineEvent::AbortRequested);
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
+
+        let events = res
+            .borrow_mut::<EventQueue<WindowEvent>>()
+            .receive(&self.receiver);
+        for event in events {
+            match event {
+                WindowEvent::CloseRequested => {
+                    debug!("User requested abort by closing the window");
+                    res.borrow_mut::<EventQueue<EngineEvent>>()
+                        .send(EngineEvent::AbortRequested);
+                },
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            state: ElementState::Released,
+                            virtual_keycode: Some(VirtualKeyCode::Q),
+                            ..
+                        },
+                    ..
+                } => {
+                    debug!("User requested abort by pressing Q");
+                    res.borrow_mut::<EventQueue<EngineEvent>>()
+                        .send(EngineEvent::AbortRequested);
+                },
+                _ => (),
+            }
+        }
+
     }
 }
 

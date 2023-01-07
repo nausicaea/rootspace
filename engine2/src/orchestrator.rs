@@ -2,10 +2,10 @@ use std::time::{Duration, Instant};
 
 use ecs::{
     with_dependencies::WithDependencies, EventQueue, LoopControl, ReceiverId, ResourceRegistry, SystemRegistry,
-    WithResources, WorldEvent,
+    WithResources, WorldEvent, Entity, Storage,
 };
 use winit::{
-    event::{ElementState, Event, KeyboardInput, VirtualKeyCode},
+    event::Event,
     event_loop::{ControlFlow, EventLoopWindowTarget},
 };
 
@@ -16,7 +16,7 @@ use crate::{
         asset_database::AssetDatabaseDeps,
         graphics::{Graphics, GraphicsDeps},
         statistics::Statistics,
-    },
+    }, components::{status::Status, info::Info, model::Model, ui_model::UiModel, renderable::Renderable},
 };
 
 const DELTA_TIME: u64 = 50; // milliseconds
@@ -25,7 +25,7 @@ const MAX_FRAME_DURATION: u64 = 250; // milliseconds
 pub struct Orchestrator {
     world: ecs::World,
     timers: Timers,
-    window_event_receiver: ReceiverId<WindowEvent>,
+    world_event_receiver: ReceiverId<WorldEvent>,
     engine_event_receiver: ReceiverId<EngineEvent>,
 }
 
@@ -40,13 +40,13 @@ impl Orchestrator {
     {
         let mut world =
             ecs::World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, RSRegistry<RSR>, _>(deps)?;
-        let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
+        let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
         Ok(Orchestrator {
             world,
             timers: Timers::default(),
-            window_event_receiver,
+            world_event_receiver,
             engine_event_receiver,
         })
     }
@@ -58,7 +58,7 @@ impl Orchestrator {
             #[cfg(feature = "loopdbg")]
             {
                 match &event {
-                    Event::NewEvents(_) => log::trace!("⬇"),
+                    Event::NewEvents(_) => log::debug!("⬇"),
                     Event::RedrawEventsCleared | Event::LoopDestroyed => draw_bottom = true,
                     _ => (),
                 }
@@ -82,7 +82,7 @@ impl Orchestrator {
 
             #[cfg(feature = "loopdbg")]
             if draw_bottom {
-                log::trace!("⬆\n\n");
+                log::debug!("⬆\n\n");
             }
         }
     }
@@ -129,23 +129,11 @@ impl Orchestrator {
             *control_flow = ControlFlow::Exit;
         }
 
-        // Process window events
-        let events = self
-            .world
-            .get_mut::<EventQueue<WindowEvent>>()
-            .receive(&self.window_event_receiver);
+        // Process world events
+        let events = self.world.get_mut::<EventQueue<WorldEvent>>().receive(&self.world_event_receiver);
         for event in events {
             match event {
-                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            state: ElementState::Released,
-                            virtual_keycode: Some(VirtualKeyCode::Q),
-                            ..
-                        },
-                    ..
-                } => *control_flow = ControlFlow::Exit,
+                WorldEvent::EntityDestroyed(e) => self.on_entity_destroyed(e),
                 _ => (),
             }
         }
@@ -157,13 +145,33 @@ impl Orchestrator {
             .receive(&self.engine_event_receiver);
         for event in events {
             match event {
-                EngineEvent::AboutToAbort => self.world.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Abort),
+                EngineEvent::AbortRequested => self.on_abort_requested(),
                 _ => (),
             }
         }
 
         #[cfg(feature = "loopdbg")]
-        log::trace!("Control flow: {:?}", control_flow);
+        if control_flow != &ControlFlow::Poll {
+            log::trace!("Control flow: {:?}", control_flow);
+        }
+    }
+
+    fn on_entity_destroyed(&mut self, entity: Entity) {
+        log::trace!("Removing entity from components Status, Info, Model, UiModel, Renderable");
+        self.world.get_components_mut::<Status>()
+            .remove(entity);
+        self.world.get_components_mut::<Info>()
+            .remove(entity);
+        self.world.get_components_mut::<Model>()
+            .remove(entity);
+        self.world.get_components_mut::<UiModel>()
+            .remove(entity);
+        self.world.get_components_mut::<Renderable>()
+            .remove(entity);
+    }
+
+    fn on_abort_requested(&mut self) {
+        self.world.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Abort)
     }
 
     fn cleanup(&mut self) {
