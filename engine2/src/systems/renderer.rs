@@ -20,29 +20,23 @@ pub struct Renderer {
 
 impl Renderer {
     fn handle_events(&mut self, res: &Resources) {
-        let events = res
+        res
             .borrow_mut::<EventQueue<WindowEvent>>()
-            .receive(&self.window_receiver);
-        for event in events {
-            match event {
-                WindowEvent::Resized(ps) => self.on_window_resized(res, ps),
-                _ => (),
-            }
-        }
+            .receive_cb(&self.window_receiver, |e| {
+                match e {
+                    WindowEvent::Resized(ps) => self.on_window_resized(res, *ps),
+                    _ => (),
+                }
+            });
 
-        let events = res
+        res
             .borrow_mut::<EventQueue<EngineEvent>>()
-            .receive(&self.engine_receiver);
-        for event in events {
-            match event {
-                EngineEvent::AbortRequested => self.on_abort_requested(),
-                _ => (),
-            }
-        }
-    }
-
-    fn on_abort_requested(&mut self) {
-        self.renderer_enabled = false
+            .receive_cb(&self.engine_receiver, |e| {
+                match e {
+                    EngineEvent::AbortRequested => self.renderer_enabled = true,
+                    _ => (),
+                }
+            });
     }
 
     fn on_window_resized(&self, res: &Resources, ps: PhysicalSize<u32>) {

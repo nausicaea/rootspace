@@ -88,22 +88,30 @@ where
             })
             .unwrap_or_default();
 
-        // Delete all events that have been read by all receivers
-        let max_unread = self
-            .receivers
-            .values()
-            .map(|s| s.received - s.read)
-            .max()
-            .unwrap_or_default();
-        self.events.truncate(max_unread);
-
-        // If the event queue is empty, or all events have been read by all receivers, reset the
-        // counters for each receiver
-        if self.events.is_empty() {
-            self.receivers.values_mut().for_each(|s| s.reset());
-        }
+        self.maintain();
 
         evs
+    }
+
+    /// Receive all unread events from the queue. Instead of getting copies of the events as a
+    /// vector, process each event by reference in a callback
+    pub fn receive_cb<F>(&mut self, id: &ReceiverId<E>, func: F) 
+    where
+        F: FnMut(&E)
+    {
+        let events = &self.events;
+        self.receivers.get_mut(&id.id())
+            .into_iter()
+            .filter(|s| s.read < s.received)
+            .flat_map(|s| {
+                let total = events.len();
+                let unread = s.received - s.read;
+                s.read += unread;
+                events.iter().rev().skip(total - unread).take(unread)
+            })
+            .for_each(func);
+
+        self.maintain();
     }
 
     /// Return `true` if there are no queued events.
@@ -119,6 +127,24 @@ where
     /// Return the number of subscribers to this queue.
     pub fn subscribers(&self) -> usize {
         self.receivers.len()
+    }
+
+    fn maintain(&mut self) {
+        // Delete all events that have been read by all receivers
+        let max_unread = self
+            .receivers
+            .values()
+            .map(|s| s.received - s.read)
+            .max()
+            .unwrap_or_default();
+        self.events.truncate(max_unread);
+
+        // If the event queue is empty, or all events have been read by all receivers, reset the
+        // counters for each receiver
+        if self.events.is_empty() {
+            self.receivers.values_mut().for_each(|s| s.reset());
+        }
+
     }
 }
 
