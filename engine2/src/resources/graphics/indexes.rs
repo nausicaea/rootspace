@@ -1,5 +1,6 @@
 use super::{
-    ids::{BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, TextureId}, urn::Urn,
+    ids::{BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, TextureId},
+    urn::Urn,
 };
 
 #[derive(Debug, Default)]
@@ -11,4 +12,3 @@ pub struct Indexes {
     pub samplers: Urn<SamplerId>,
     pub render_pipelines: Urn<PipelineId>,
 }
-

@@ -95,12 +95,13 @@ where
 
     /// Receive all unread events from the queue. Instead of getting copies of the events as a
     /// vector, process each event by reference in a callback
-    pub fn receive_cb<F>(&mut self, id: &ReceiverId<E>, func: F) 
+    pub fn receive_cb<F>(&mut self, id: &ReceiverId<E>, func: F)
     where
-        F: FnMut(&E)
+        F: FnMut(&E),
     {
         let events = &self.events;
-        self.receivers.get_mut(&id.id())
+        self.receivers
+            .get_mut(&id.id())
             .into_iter()
             .filter(|s| s.read < s.received)
             .flat_map(|s| {
@@ -144,7 +145,6 @@ where
         if self.events.is_empty() {
             self.receivers.values_mut().for_each(|s| s.reset());
         }
-
     }
 }
 

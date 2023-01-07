@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use super::{
-    ids::{BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, TextureId},
-};
+use super::ids::{BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, TextureId};
 
 #[derive(Debug, Default)]
 pub struct Tables {

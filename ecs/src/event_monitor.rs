@@ -31,8 +31,7 @@ where
     E: 'static + Clone + fmt::Debug,
 {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
-        res
-            .borrow_mut::<EventQueue<E>>()
+        res.borrow_mut::<EventQueue<E>>()
             .receive_cb(&self.receiver, |e| trace!("Received {:?}", e))
     }
 }

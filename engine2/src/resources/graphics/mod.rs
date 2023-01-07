@@ -3,20 +3,26 @@ use pollster::FutureExt;
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
-    render_pass_builder::RenderPassBuilder, render_pipeline_builder::RenderPipelineBuilder, runtime::Runtime,
-    settings::Settings, ids::{BindGroupLayoutId, BindGroupId}, indexes::Indexes, tables::Tables, bind_group_layout_builder::BindGroupLayoutBuilder,
+    bind_group_layout_builder::BindGroupLayoutBuilder,
+    ids::{BindGroupId, BindGroupLayoutId},
+    indexes::Indexes,
+    render_pass_builder::RenderPassBuilder,
+    render_pipeline_builder::RenderPipelineBuilder,
+    runtime::Runtime,
+    settings::Settings,
+    tables::Tables,
 };
 
 pub mod bind_group_layout_builder;
 pub mod ids;
+mod indexes;
 pub mod render_pass_builder;
 pub mod render_pipeline_builder;
 mod runtime;
-mod indexes;
-mod tables;
 pub mod settings;
-pub mod vertex_attribute_descriptor;
+mod tables;
 mod urn;
+pub mod vertex_attribute_descriptor;
 
 pub trait GraphicsDeps {
     type CustomEvent: 'static;
@@ -47,7 +53,9 @@ impl Graphics {
             self.runtime.size = new_size;
             self.runtime.config.width = new_size.width;
             self.runtime.config.height = new_size.height;
-            self.runtime.surface.configure(&self.runtime.device, &self.runtime.config);
+            self.runtime
+                .surface
+                .configure(&self.runtime.device, &self.runtime.config);
         }
     }
 
@@ -83,7 +91,11 @@ pub struct BindGroupBuilder<'rt, 'bgl, 'bge> {
 impl<'rt, 'bgl, 'bge> BindGroupBuilder<'rt, 'bgl, 'bge> {
     pub(super) fn new(runtime: &'rt Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
         BindGroupBuilder {
-            runtime, indexes, tables, layout: None, entries: Vec::new(),
+            runtime,
+            indexes,
+            tables,
+            layout: None,
+            entries: Vec::new(),
         }
     }
 

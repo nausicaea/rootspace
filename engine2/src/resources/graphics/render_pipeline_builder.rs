@@ -1,4 +1,10 @@
-use super::{ids::{PipelineId, BindGroupLayoutId}, runtime::Runtime, tables::Tables, indexes::Indexes, vertex_attribute_descriptor::VertexAttributeDescriptor};
+use super::{
+    ids::{BindGroupLayoutId, PipelineId},
+    indexes::Indexes,
+    runtime::Runtime,
+    tables::Tables,
+    vertex_attribute_descriptor::VertexAttributeDescriptor,
+};
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
@@ -61,7 +67,9 @@ impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
 
     pub fn submit(self, label: Option<&str>) -> PipelineId {
         // Required parameters
-        let shader_module = self.shader_module.expect("cannot build a render pipeline without shader module");
+        let shader_module = self
+            .shader_module
+            .expect("cannot build a render pipeline without shader module");
         let vertex_entry_point = self.vertex_entry_point.unwrap();
 
         // Helper variables
@@ -70,7 +78,9 @@ impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
             blend: Some(wgpu::BlendState::REPLACE),
             write_mask: wgpu::ColorWrites::ALL,
         })];
-        let bgl = self.bind_group_layouts.into_iter()
+        let bgl = self
+            .bind_group_layouts
+            .into_iter()
             .map(|b| &self.tables.bind_group_layouts[b])
             .collect::<Vec<_>>();
         let pipeline_layout = self
