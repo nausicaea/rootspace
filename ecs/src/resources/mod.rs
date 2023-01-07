@@ -9,7 +9,9 @@ use std::{
 
 use anyhow::Error;
 
-use crate::{component::Component, registry::ResourceRegistry, resource::Resource, with_dependencies::WithDependencies};
+use crate::{
+    component::Component, registry::ResourceRegistry, resource::Resource, with_dependencies::WithDependencies,
+};
 
 macro_rules! impl_iter_ref {
     ($name:ident, $iter:ident, #reads: $($type:ident),+ $(,)?) => {

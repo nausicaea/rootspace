@@ -1,7 +1,10 @@
 use std::ops::Deref;
 
 use ecs::Reg;
-use engine2::{orchestrator::Orchestrator, resources::{graphics::GraphicsDeps, asset_database::AssetDatabaseDeps}};
+use engine2::{
+    orchestrator::Orchestrator,
+    resources::{asset_database::AssetDatabaseDeps, graphics::GraphicsDeps},
+};
 use winit::event_loop::EventLoop;
 
 struct Dependencies<'a, T: 'static> {

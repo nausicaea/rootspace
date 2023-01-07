@@ -1,10 +1,8 @@
-use ecs::{EventQueue, ReceiverId, System, WithResources, Resources};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 
 use crate::{
     events::window_event::WindowEvent,
-    resources::{
-        graphics::{ids::PipelineId, Graphics},
-    },
+    resources::graphics::{ids::PipelineId, Graphics},
 };
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -39,7 +37,7 @@ impl System for Renderer {
 
 #[cfg(test)]
 mod tests {
-    use ecs::{SystemRegistry, Reg, End, World};
+    use ecs::{End, Reg, SystemRegistry, World};
 
     use super::*;
 
@@ -56,6 +54,7 @@ mod tests {
 
     #[test]
     fn renderer_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![Renderer], Reg![], _>(&()).unwrap();
+        let _w =
+            World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![Renderer], Reg![], _>(&()).unwrap();
     }
 }

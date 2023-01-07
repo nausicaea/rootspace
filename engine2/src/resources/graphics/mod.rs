@@ -1,4 +1,4 @@
-use ecs::{Resource, with_dependencies::WithDependencies};
+use ecs::{with_dependencies::WithDependencies, Resource};
 use pollster::FutureExt;
 use winit::event_loop::EventLoopWindowTarget;
 

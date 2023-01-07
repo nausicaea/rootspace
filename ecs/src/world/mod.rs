@@ -18,7 +18,9 @@ use crate::{
     resources::Resources,
     storage::Storage,
     system::System,
-    systems::Systems, with_dependencies::WithDependencies, WithResources,
+    systems::Systems,
+    with_dependencies::WithDependencies,
+    WithResources,
 };
 
 pub mod error;
@@ -36,7 +38,7 @@ pub struct World {
 }
 
 impl World {
-    pub fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error> 
+    pub fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error>
     where
         RR: ResourceRegistry + WithDependencies<D>,
         FUSR: SystemRegistry + WithResources,
@@ -59,7 +61,6 @@ impl World {
             receiver,
         })
     }
-
 }
 
 impl World {

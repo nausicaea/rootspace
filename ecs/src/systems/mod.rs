@@ -10,7 +10,7 @@ impl Systems {
         Systems(Vec::with_capacity(cap))
     }
 
-    pub fn with_resources<SR>(res: &Resources) -> Result<Self, anyhow::Error> 
+    pub fn with_resources<SR>(res: &Resources) -> Result<Self, anyhow::Error>
     where
         SR: SystemRegistry + WithResources,
     {

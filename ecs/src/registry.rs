@@ -1,5 +1,6 @@
-use anyhow::Error;
 use std::fmt::Debug;
+
+use anyhow::Error;
 
 use crate::{resource::Resource, system::System, with_dependencies::WithDependencies, Resources, WithResources};
 
@@ -23,17 +24,23 @@ where
     T: WithResources,
 {
     fn with_res(res: &Resources) -> Result<Self, Error> {
-        Ok(Self { head: H::with_res(res)?, tail: T::with_res(res)? })
+        Ok(Self {
+            head: H::with_res(res)?,
+            tail: T::with_res(res)?,
+        })
     }
 }
 
-impl<D, H, T> WithDependencies<D> for Element<H, T> 
+impl<D, H, T> WithDependencies<D> for Element<H, T>
 where
     H: WithDependencies<D>,
     T: WithDependencies<D>,
 {
     fn with_deps(deps: &D) -> Result<Self, Error> {
-        Ok(Self { head: H::with_deps(deps)?, tail: T::with_deps(deps)? })
+        Ok(Self {
+            head: H::with_deps(deps)?,
+            tail: T::with_deps(deps)?,
+        })
     }
 }
 

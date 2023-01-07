@@ -1,6 +1,9 @@
 use std::time::{Duration, Instant};
 
-use ecs::{EventQueue, LoopControl, ReceiverId, ResourceRegistry, SystemRegistry, WorldEvent, with_dependencies::WithDependencies, WithResources};
+use ecs::{
+    with_dependencies::WithDependencies, EventQueue, LoopControl, ReceiverId, ResourceRegistry, SystemRegistry,
+    WithResources, WorldEvent,
+};
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode},
     event_loop::{ControlFlow, EventLoopWindowTarget},
@@ -8,7 +11,12 @@ use winit::{
 
 use crate::{
     events::{engine_event::EngineEvent, window_event::WindowEvent},
-    resources::{graphics::{Graphics, GraphicsDeps}, statistics::Statistics, asset_database::AssetDatabaseDeps}, registry::{RRegistry, USRegistry, RSRegistry},
+    registry::{RRegistry, RSRegistry, USRegistry},
+    resources::{
+        asset_database::AssetDatabaseDeps,
+        graphics::{Graphics, GraphicsDeps},
+        statistics::Statistics,
+    },
 };
 
 const DELTA_TIME: u64 = 50; // milliseconds
@@ -22,7 +30,7 @@ pub struct Orchestrator {
 }
 
 impl Orchestrator {
-    pub fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error> 
+    pub fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error>
     where
         RR: ResourceRegistry + WithDependencies<D>,
         FUSR: SystemRegistry + WithResources,
@@ -30,7 +38,8 @@ impl Orchestrator {
         RSR: SystemRegistry + WithResources,
         D: GraphicsDeps + AssetDatabaseDeps,
     {
-        let mut world = ecs::World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, RSRegistry<RSR>, _>(deps)?;
+        let mut world =
+            ecs::World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, RSRegistry<RSR>, _>(deps)?;
         let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
@@ -60,11 +69,7 @@ impl Orchestrator {
                 Event::WindowEvent {
                     window_id,
                     event: window_event,
-                } if self
-                    .world
-                    .borrow::<Graphics>()
-                    .window_id() == window_id =>
-                {
+                } if self.world.borrow::<Graphics>().window_id() == window_id => {
                     if let Ok(window_event) = window_event.try_into() {
                         self.input(window_event)
                     }

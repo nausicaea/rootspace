@@ -158,9 +158,8 @@ impl<E> Default for EventQueue<E> {
 mod tests {
     use serde_test::{assert_tokens, Token};
 
-    use crate::{Reg, ResourceRegistry, World, End};
-
     use super::*;
+    use crate::{End, Reg, ResourceRegistry, World};
 
     #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
     struct TestEvent(usize);

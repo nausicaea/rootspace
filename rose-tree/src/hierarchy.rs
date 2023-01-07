@@ -250,7 +250,7 @@ where
 mod tests {
     use std::{iter::Product, ops::Mul};
 
-    use ecs::{Component, Entities, Index, Storage, VecStorage, Reg, ResourceRegistry, End, World};
+    use ecs::{Component, End, Entities, Index, Reg, ResourceRegistry, Storage, VecStorage, World};
     use serde::{Deserialize, Serialize};
 
     use super::*;

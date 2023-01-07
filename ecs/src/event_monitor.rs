@@ -40,9 +40,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{SystemRegistry, Reg, End, World};
-
     use super::*;
+    use crate::{End, Reg, SystemRegistry, World};
 
     #[test]
     fn event_monitor_reg_macro() {
@@ -57,6 +56,7 @@ mod tests {
 
     #[test]
     fn event_monitor_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![EventMonitor<usize>], Reg![], _>(&()).unwrap();
+        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![EventMonitor<usize>], Reg![], _>(&())
+            .unwrap();
     }
 }

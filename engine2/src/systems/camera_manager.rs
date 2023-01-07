@@ -52,7 +52,7 @@ impl System for CameraManager {
 
 #[cfg(test)]
 mod tests {
-    use ecs::{SystemRegistry, Reg, End, World};
+    use ecs::{End, Reg, SystemRegistry, World};
 
     use super::*;
 
@@ -69,6 +69,7 @@ mod tests {
 
     #[test]
     fn camera_manager_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![CameraManager], Reg![], _>(&()).unwrap();
+        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![CameraManager], Reg![], _>(&())
+            .unwrap();
     }
 }

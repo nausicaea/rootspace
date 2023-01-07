@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, time::Duration};
 
-use ecs::{Resource, with_dependencies::WithDependencies};
+use ecs::{with_dependencies::WithDependencies, Resource};
 use serde::{Deserialize, Serialize};
 
 const DRAW_CALL_WINDOW: usize = 10;
@@ -76,7 +76,7 @@ impl<D> WithDependencies<D> for Statistics {
 
 #[cfg(test)]
 mod tests {
-    use ecs::{Reg, ResourceRegistry, End, World};
+    use ecs::{End, Reg, ResourceRegistry, World};
 
     use super::*;
 
@@ -94,5 +94,4 @@ mod tests {
     fn statistics_world() {
         let _w = World::with_dependencies::<Reg![Statistics], Reg![], Reg![], Reg![], _>(&()).unwrap();
     }
-
 }

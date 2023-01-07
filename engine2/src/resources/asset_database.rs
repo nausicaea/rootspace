@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::{Context, Error};
 use directories::ProjectDirs;
-use ecs::{Resource, with_dependencies::WithDependencies};
+use ecs::{with_dependencies::WithDependencies, Resource};
 use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf, NewOrExFilePathBuf};
 
 const APP_QUALIFIER: &str = "net";
@@ -154,7 +154,7 @@ pub enum AssetError {
 
 #[cfg(test)]
 mod tests {
-    use ecs::{Reg, ResourceRegistry, End, World};
+    use ecs::{End, Reg, ResourceRegistry, World};
 
     use super::*;
 
@@ -165,7 +165,10 @@ mod tests {
 
     impl Default for TDeps<'static> {
         fn default() -> Self {
-            TDeps { name: "test", force_init: false }
+            TDeps {
+                name: "test",
+                force_init: false,
+            }
         }
     }
 
@@ -195,5 +198,4 @@ mod tests {
         let deps = TDeps::default();
         let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], Reg![], _>(&deps).unwrap();
     }
-
 }

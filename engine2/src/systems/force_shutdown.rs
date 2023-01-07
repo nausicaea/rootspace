@@ -59,7 +59,7 @@ impl System for ForceShutdown {
 
 #[cfg(test)]
 mod tests {
-    use ecs::{SystemRegistry, Reg, End, World};
+    use ecs::{End, Reg, SystemRegistry, World};
 
     use super::*;
 

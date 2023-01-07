@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::{generation::Generation, index::Index, Entity},
-    resource::Resource, with_dependencies::WithDependencies,
+    resource::Resource,
+    with_dependencies::WithDependencies,
 };
 
 /// The `Entities` resource keeps track of all entities.
@@ -138,9 +139,8 @@ impl<'a> FusedIterator for Iter<'a> {}
 mod tests {
     use serde_test::{assert_tokens, Token};
 
-    use crate::{Reg, ResourceRegistry, End, World};
-
     use super::*;
+    use crate::{End, Reg, ResourceRegistry, World};
 
     #[test]
     fn entities_reg_macro() {

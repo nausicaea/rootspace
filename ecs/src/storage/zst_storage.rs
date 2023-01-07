@@ -217,7 +217,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Reg, ResourceRegistry, End, World};
+    use crate::{End, Reg, ResourceRegistry, World};
 
     #[test]
     fn zst_storage_reg_macro() {
@@ -233,5 +233,4 @@ mod tests {
     fn zst_storage_world() {
         let _w = World::with_dependencies::<Reg![ZstStorage<usize>], Reg![], Reg![], Reg![], _>(&()).unwrap();
     }
-
 }
