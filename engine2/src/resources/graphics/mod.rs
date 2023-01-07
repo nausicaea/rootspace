@@ -14,6 +14,7 @@ mod runtime;
 mod indexes;
 mod tables;
 pub mod settings;
+pub mod vertex_attribute_descriptor;
 mod urn;
 
 pub trait GraphicsDeps {

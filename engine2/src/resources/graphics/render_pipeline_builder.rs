@@ -1,4 +1,4 @@
-use super::{ids::PipelineId, runtime::Runtime, tables::Tables, indexes::Indexes};
+use super::{ids::{PipelineId, BindGroupLayoutId}, runtime::Runtime, tables::Tables, indexes::Indexes, vertex_attribute_descriptor::VertexAttributeDescriptor};
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
@@ -8,7 +8,7 @@ pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
     shader_module: Option<wgpu::ShaderModule>,
     vertex_entry_point: Option<&'l str>,
     fragment_entry_point: Option<&'l str>,
-    bind_group_layouts: Vec<&'bgl wgpu::BindGroupLayout>,
+    bind_group_layouts: Vec<&'bgl BindGroupLayoutId>,
     vertex_buffer_layouts: Vec<wgpu::VertexBufferLayout<'vbl>>,
 }
 
@@ -44,20 +44,16 @@ impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
         self
     }
 
-    pub fn add_bind_group_layout(mut self, bgl: &'bgl wgpu::BindGroupLayout) -> Self {
+    pub fn add_bind_group_layout(mut self, bgl: &'bgl BindGroupLayoutId) -> Self {
         self.bind_group_layouts.push(bgl);
         self
     }
 
-    pub fn add_vertex_buffer_layout<T>(
-        mut self,
-        step_mode: wgpu::VertexStepMode,
-        attributes: &'vbl [wgpu::VertexAttribute],
-    ) -> Self {
+    pub fn add_vertex_buffer_layout<V: VertexAttributeDescriptor>(mut self) -> Self {
         let vbl = wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<T>() as wgpu::BufferAddress,
-            step_mode,
-            attributes,
+            array_stride: std::mem::size_of::<V>() as wgpu::BufferAddress,
+            step_mode: V::STEP_MODE,
+            attributes: V::ATTRS,
         };
         self.vertex_buffer_layouts.push(vbl);
         self
@@ -74,12 +70,15 @@ impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
             blend: Some(wgpu::BlendState::REPLACE),
             write_mask: wgpu::ColorWrites::ALL,
         })];
+        let bgl = self.bind_group_layouts.into_iter()
+            .map(|b| &self.tables.bind_group_layouts[b])
+            .collect::<Vec<_>>();
         let pipeline_layout = self
             .runtime
             .device
             .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: None,
-                bind_group_layouts: self.bind_group_layouts.as_slice(),
+                bind_group_layouts: &bgl,
                 push_constant_ranges: &[],
             });
 
