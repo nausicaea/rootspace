@@ -1,12 +1,9 @@
 use std::{
     cell::{Ref, RefMut},
-    marker::PhantomData,
     time::Duration,
 };
 
-use anyhow::Error;
 use log::debug;
-use try_default::TryDefault;
 
 use self::{event::WorldEvent, type_registry::ResourceTypes};
 use crate::{
@@ -21,7 +18,7 @@ use crate::{
     resources::Resources,
     storage::Storage,
     system::System,
-    systems::Systems,
+    systems::Systems, with_dependencies::WithDependencies, WithResources,
 };
 
 pub mod error;
@@ -30,31 +27,27 @@ pub(crate) mod type_registry;
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
 /// systems to operate on the stored resources, components and entities.
-pub struct World<RR, FUSR, USR, RSR> {
+pub struct World {
     resources: Resources,
     fixed_update_systems: Systems,
     update_systems: Systems,
     render_systems: Systems,
     receiver: Option<ReceiverId<WorldEvent>>,
-    _rr: PhantomData<RR>,
-    _sr1: PhantomData<FUSR>,
-    _sr2: PhantomData<USR>,
-    _sr3: PhantomData<RSR>,
 }
 
-impl<RR, FUSR, USR, RSR> TryDefault for World<RR, FUSR, USR, RSR>
-where
-    RR: ResourceRegistry,
-    FUSR: SystemRegistry,
-    USR: SystemRegistry,
-    RSR: SystemRegistry,
-{
-    fn try_default() -> Result<Self, Error> {
-        let mut resources = Resources::with_registry::<ResourceTypes<RR>>()?;
+impl World {
+    pub fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error> 
+    where
+        RR: ResourceRegistry + WithDependencies<D>,
+        FUSR: SystemRegistry + WithResources,
+        USR: SystemRegistry + WithResources,
+        RSR: SystemRegistry + WithResources,
+    {
+        let mut resources = Resources::with_dependencies::<ResourceTypes<RR>, D>(deps)?;
 
-        let fixed_update_systems = Systems::with_registry::<FUSR>(&resources);
-        let update_systems = Systems::with_registry::<USR>(&resources);
-        let render_systems = Systems::with_registry::<RSR>(&resources);
+        let fixed_update_systems = Systems::with_resources::<FUSR>(&resources)?;
+        let update_systems = Systems::with_resources::<USR>(&resources)?;
+        let render_systems = Systems::with_resources::<RSR>(&resources)?;
 
         let receiver = Some(resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>());
 
@@ -64,21 +57,12 @@ where
             update_systems,
             render_systems,
             receiver,
-            _rr: PhantomData::default(),
-            _sr1: PhantomData::default(),
-            _sr2: PhantomData::default(),
-            _sr3: PhantomData::default(),
         })
     }
+
 }
 
-impl<RR, FUSR, USR, RSR> World<RR, FUSR, USR, RSR>
-where
-    RR: ResourceRegistry,
-    FUSR: SystemRegistry,
-    USR: SystemRegistry,
-    RSR: SystemRegistry,
-{
+impl World {
     pub fn empty() -> Self {
         World {
             resources: Resources::default(),
@@ -86,10 +70,6 @@ where
             update_systems: Systems::default(),
             render_systems: Systems::default(),
             receiver: None,
-            _rr: PhantomData::default(),
-            _sr1: PhantomData::default(),
-            _sr2: PhantomData::default(),
-            _sr3: PhantomData::default(),
         }
     }
 
@@ -318,7 +298,7 @@ where
     }
 }
 
-impl<RR, FUSR, USR, RSR> std::fmt::Debug for World<RR, FUSR, USR, RSR> {
+impl std::fmt::Debug for World {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,

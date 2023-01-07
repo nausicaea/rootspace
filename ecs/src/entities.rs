@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     entity::{generation::Generation, index::Index, Entity},
-    resource::Resource,
+    resource::Resource, with_dependencies::WithDependencies,
 };
 
 /// The `Entities` resource keeps track of all entities.
@@ -75,6 +75,12 @@ impl Entities {
 }
 
 impl Resource for Entities {}
+
+impl<D> WithDependencies<D> for Entities {
+    fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+        Ok(Entities::default())
+    }
+}
 
 impl<'a> IntoIterator for &'a Entities {
     type IntoIter = Iter<'a>;

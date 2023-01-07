@@ -19,10 +19,10 @@ impl<E> WithResources for EventMonitor<E>
 where
     E: 'static + Clone + std::fmt::Debug,
 {
-    fn with_resources(res: &Resources) -> Self {
+    fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
         let receiver = res.borrow_mut::<EventQueue<E>>().subscribe::<Self>();
 
-        EventMonitor { receiver }
+        Ok(EventMonitor { receiver })
     }
 }
 

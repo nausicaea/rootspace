@@ -11,7 +11,7 @@ use receiver_state::ReceiverState;
 use serde::{Deserialize, Serialize};
 
 use self::receiver_id::ReceiverId;
-use crate::resource::Resource;
+use crate::{resource::Resource, with_dependencies::WithDependencies};
 
 pub mod receiver_id;
 pub mod receiver_state;
@@ -28,19 +28,6 @@ pub struct EventQueue<E> {
     max_id: usize,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     free_ids: Vec<usize>,
-}
-
-impl<E> std::fmt::Debug for EventQueue<E>
-where
-    E: std::fmt::Debug,
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "EventQueue {{ events: {:?}, receivers: {:?}, max_id: {:?}, free_ids: {:?} }}",
-            self.events, self.receivers, self.max_id, self.free_ids,
-        )
-    }
 }
 
 impl<E> EventQueue<E>
@@ -136,6 +123,25 @@ where
 }
 
 impl<E> Resource for EventQueue<E> where E: fmt::Debug + 'static {}
+
+impl<D, E> WithDependencies<D> for EventQueue<E> {
+    fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+        Ok(EventQueue::default())
+    }
+}
+
+impl<E> std::fmt::Debug for EventQueue<E>
+where
+    E: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "EventQueue {{ events: {:?}, receivers: {:?}, max_id: {:?}, free_ids: {:?} }}",
+            self.events, self.receivers, self.max_id, self.free_ids,
+        )
+    }
+}
 
 impl<E> Default for EventQueue<E> {
     fn default() -> Self {

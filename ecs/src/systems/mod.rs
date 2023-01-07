@@ -1,32 +1,34 @@
-mod recursors;
-mod typed_system;
-pub(crate) mod typed_systems;
-
 use std::slice::{Iter, IterMut};
 
-use self::typed_systems::TypedSystems;
 use crate::{registry::SystemRegistry, resources::Resources, system::System, with_resources::WithResources};
 
 #[derive(Default)]
 pub struct Systems(Vec<Box<dyn System>>);
-
-impl std::fmt::Debug for Systems {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "System(#{})", self.0.len())
-    }
-}
 
 impl Systems {
     pub fn with_capacity(cap: usize) -> Self {
         Systems(Vec::with_capacity(cap))
     }
 
-    pub fn with_registry<SR>(res: &Resources) -> Self
+    pub fn with_resources<SR>(res: &Resources) -> Result<Self, anyhow::Error> 
     where
-        SR: SystemRegistry,
+        SR: SystemRegistry + WithResources,
     {
-        let helper = TypedSystems::<SR>::with_resources(res);
-        Systems::from(helper)
+        fn recursor<S: SystemRegistry>(sys: &mut Systems, reg: S) {
+            if S::LEN == 0 {
+                return;
+            }
+
+            let (head, tail) = reg.unzip();
+            sys.insert(head);
+            recursor(sys, tail);
+        }
+
+        let sr = SR::with_res(res)?;
+        let mut sys = Systems::with_capacity(SR::LEN);
+        recursor(&mut sys, sr);
+
+        Ok(sys)
     }
 
     pub fn len(&self) -> usize {
@@ -130,5 +132,11 @@ impl PartialEq for Systems {
         }
 
         self.0.iter().zip(rhs).all(|(lhs, rhs)| lhs.name() == rhs.name())
+    }
+}
+
+impl std::fmt::Debug for Systems {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "System(#{})", self.0.len())
     }
 }

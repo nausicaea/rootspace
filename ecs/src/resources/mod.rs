@@ -8,13 +8,8 @@ use std::{
 };
 
 use anyhow::Error;
-use try_default::TryDefault;
 
-use self::typed_resources::TypedResources;
-use crate::{component::Component, registry::ResourceRegistry, resource::Resource};
-
-mod recursors;
-pub(crate) mod typed_resources;
+use crate::{component::Component, registry::ResourceRegistry, resource::Resource, with_dependencies::WithDependencies};
 
 macro_rules! impl_iter_ref {
     ($name:ident, $iter:ident, #reads: $($type:ident),+ $(,)?) => {
@@ -54,12 +49,6 @@ macro_rules! impl_iter_ref {
 #[derive(Default)]
 pub struct Resources(HashMap<TypeId, RefCell<Box<dyn Resource>>>);
 
-impl std::fmt::Debug for Resources {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Resoources(#{})", self.0.len())
-    }
-}
-
 impl Resources {
     impl_iter_ref!(iter_r, RIterRef, #reads: C);
 
@@ -87,13 +76,25 @@ impl Resources {
     /// In a similar fashion to Resources::deserialize, the following method uses the types stored
     /// in the registry to initialize those resources that have a default, parameterless
     /// constructor.
-    pub fn with_registry<RR>() -> Result<Self, Error>
+    pub fn with_dependencies<RR, D>(deps: &D) -> Result<Self, Error>
     where
-        RR: ResourceRegistry,
+        RR: ResourceRegistry + WithDependencies<D>,
     {
-        let helper = TypedResources::<RR>::try_default()?;
+        fn recursor<R: ResourceRegistry>(res: &mut Resources, reg: R) {
+            if R::LEN == 0 {
+                return;
+            }
 
-        Ok(Resources::from(helper))
+            let (head, tail) = reg.unzip();
+            res.insert(head);
+            recursor(res, tail);
+        }
+
+        let rr = RR::with_deps(deps)?;
+        let mut res = Resources::with_capacity(RR::LEN);
+        recursor(&mut res, rr);
+
+        Ok(res)
     }
 
     /// Clears the resources container.
@@ -218,6 +219,12 @@ impl PartialEq for Resources {
         let rhs_k: HashSet<_> = rhs.0.keys().cloned().collect();
 
         lhs_k == rhs_k
+    }
+}
+
+impl std::fmt::Debug for Resources {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Resoources(#{})", self.0.len())
     }
 }
 

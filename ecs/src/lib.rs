@@ -37,5 +37,6 @@ pub mod resources;
 pub mod storage;
 pub mod system;
 pub mod systems;
+pub mod with_dependencies;
 pub mod with_resources;
 pub mod world;

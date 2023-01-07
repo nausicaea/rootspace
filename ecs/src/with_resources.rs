@@ -1,14 +1,7 @@
+use anyhow::Error;
 use crate::resources::Resources;
 
 pub trait WithResources: Sized {
-    fn with_resources(res: &Resources) -> Self;
+    fn with_res(res: &Resources) -> Result<Self, Error>;
 }
 
-impl<T> WithResources for T
-where
-    T: Default,
-{
-    fn with_resources(_: &Resources) -> T {
-        T::default()
-    }
-}

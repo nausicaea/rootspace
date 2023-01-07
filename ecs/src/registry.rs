@@ -1,11 +1,10 @@
+use anyhow::Error;
 use std::fmt::Debug;
 
-use try_default::TryDefault;
-
-use crate::{resource::Resource, system::System, with_resources::WithResources};
+use crate::{resource::Resource, system::System, with_dependencies::WithDependencies, Resources, WithResources};
 
 /// An element within the heterogeneous list.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Element<H, T> {
     pub head: H,
     pub tail: T,
@@ -18,9 +17,41 @@ impl<H, T> Element<H, T> {
     }
 }
 
+impl<H, T> WithResources for Element<H, T>
+where
+    H: WithResources,
+    T: WithResources,
+{
+    fn with_res(res: &Resources) -> Result<Self, Error> {
+        Ok(Self { head: H::with_res(res)?, tail: T::with_res(res)? })
+    }
+}
+
+impl<D, H, T> WithDependencies<D> for Element<H, T> 
+where
+    H: WithDependencies<D>,
+    T: WithDependencies<D>,
+{
+    fn with_deps(deps: &D) -> Result<Self, Error> {
+        Ok(Self { head: H::with_deps(deps)?, tail: T::with_deps(deps)? })
+    }
+}
+
 /// The end of the heterogeneous list;
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct End;
+
+impl WithResources for End {
+    fn with_res(_: &Resources) -> Result<Self, Error> {
+        Ok(Self)
+    }
+}
+
+impl<D> WithDependencies<D> for End {
+    fn with_deps(_: &D) -> Result<Self, Error> {
+        Ok(Self)
+    }
+}
 
 #[macro_export]
 macro_rules! impl_registry {
@@ -58,6 +89,9 @@ macro_rules! impl_registry {
 
             /// Return a reference to the tail of the heterogeneous list.
             fn tail(&self) -> &Self::Tail;
+
+            /// Destructure into head and tail
+            fn unzip(self) -> (Self::Head, Self::Tail);
         }
 
         impl<H, T> $name for $crate::registry::Element<H, T>
@@ -85,6 +119,10 @@ macro_rules! impl_registry {
             fn tail(&self) -> &Self::Tail {
                 &self.tail
             }
+
+            fn unzip(self) -> (Self::Head, Self::Tail) {
+                (self.head, self.tail)
+            }
         }
 
         impl $name for $crate::registry::End {
@@ -102,14 +140,18 @@ macro_rules! impl_registry {
             }
 
             fn tail(&self) -> &Self::Tail {
-                &$crate::registry::End
+                self
+            }
+
+            fn unzip(self) -> (Self::Head, Self::Tail) {
+                ((), self)
             }
         }
     };
 }
 
-impl_registry!(ResourceRegistry, where Head: Resource + TryDefault);
-impl_registry!(SystemRegistry, where Head: System + WithResources);
+impl_registry!(ResourceRegistry, where Head: Resource);
+impl_registry!(SystemRegistry, where Head: System);
 
 #[cfg(test)]
 mod tests {
