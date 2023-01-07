@@ -59,10 +59,10 @@ impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
         self
     }
 
-    pub fn submit(self, label: Option<&str>) -> Result<PipelineId, Error> {
+    pub fn submit(self, label: Option<&str>) -> PipelineId {
         // Required parameters
-        let shader_module = self.shader_module.ok_or(Error::MissingShaderModule)?;
-        let vertex_entry_point = self.vertex_entry_point.ok_or(Error::MissingShaderModule)?;
+        let shader_module = self.shader_module.expect("cannot build a render pipeline without shader module");
+        let vertex_entry_point = self.vertex_entry_point.unwrap();
 
         // Helper variables
         let cts = [Some(wgpu::ColorTargetState {
@@ -119,12 +119,6 @@ impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
         let id = self.indexes.render_pipelines.take();
         self.tables.render_pipelines.insert(id, pipeline);
 
-        Ok(id)
+        id
     }
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("cannot build a render pipeline without shader module")]
-    MissingShaderModule,
 }

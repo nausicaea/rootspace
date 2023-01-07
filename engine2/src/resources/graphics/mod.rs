@@ -4,7 +4,7 @@ use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
     render_pass_builder::RenderPassBuilder, render_pipeline_builder::RenderPipelineBuilder, runtime::Runtime,
-    settings::Settings, ids::BindGroupLayoutId, indexes::Indexes, tables::Tables, bind_group_layout_builder::BindGroupLayoutBuilder,
+    settings::Settings, ids::{BindGroupLayoutId, BindGroupId}, indexes::Indexes, tables::Tables, bind_group_layout_builder::BindGroupLayoutBuilder,
 };
 
 pub mod bind_group_layout_builder;
@@ -63,9 +63,53 @@ impl Graphics {
         BindGroupLayoutBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
     }
 
-    //pub fn create_bind_group(&mut self)
+    pub fn create_bind_group(&mut self) -> BindGroupBuilder {
+        BindGroupBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
+    }
+
     //pub fn create_buffer(&mut self)
     //pub fn create_texture(&mut self)
+    //pub fn create_sampler(&mut self)
+}
+
+pub struct BindGroupBuilder<'rt, 'bgl, 'bge> {
+    runtime: &'rt Runtime,
+    indexes: &'rt mut Indexes,
+    tables: &'rt mut Tables,
+    layout: Option<&'bgl BindGroupLayoutId>,
+    entries: Vec<wgpu::BindGroupEntry<'bge>>,
+}
+
+impl<'rt, 'bgl, 'bge> BindGroupBuilder<'rt, 'bgl, 'bge> {
+    pub(super) fn new(runtime: &'rt Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
+        BindGroupBuilder {
+            runtime, indexes, tables, layout: None, entries: Vec::new(),
+        }
+    }
+
+    pub fn with_layout(mut self, layout: &'bgl BindGroupLayoutId) -> Self {
+        self.layout = Some(layout);
+        self
+    }
+
+    pub fn add_entry(mut self, entry: wgpu::BindGroupEntry<'bge>) -> Self {
+        self.entries.push(entry);
+        self
+    }
+
+    pub fn submit(self, label: Option<&str>) -> BindGroupId {
+        let layout_id = self.layout.expect("cannot build a bind group without a layout");
+        let layout = &self.tables.bind_group_layouts[layout_id];
+        let bg = self.runtime.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label,
+            layout,
+            entries: &self.entries,
+        });
+
+        let id = self.indexes.bind_groups.take();
+        self.tables.bind_groups.insert(id, bg);
+        id
+    }
 }
 
 impl Resource for Graphics {}

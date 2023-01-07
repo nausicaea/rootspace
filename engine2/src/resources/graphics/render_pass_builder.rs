@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use super::{ids::PipelineId, runtime::Runtime, settings::Settings, tables::Tables};
 
 #[derive(Debug)]
@@ -6,6 +8,7 @@ pub struct RenderPassBuilder<'rt> {
     settings: &'rt Settings,
     tables: &'rt Tables,
     pipeline: Option<&'rt wgpu::RenderPipeline>,
+    draw_params: Option<(Range<u32>, Range<u32>)>,
 }
 
 impl<'rt> RenderPassBuilder<'rt> {
@@ -15,11 +18,17 @@ impl<'rt> RenderPassBuilder<'rt> {
             settings,
             tables,
             pipeline: None,
+            draw_params: None,
         }
     }
 
     pub fn with_pipeline(mut self, pipeline: &PipelineId) -> Self {
         self.pipeline = Some(&self.tables.render_pipelines[pipeline]);
+        self
+    }
+
+    pub fn draw(mut self, vertices: Range<u32>, instances: Range<u32>) -> Self {
+        self.draw_params = Some((vertices, instances));
         self
     }
 
@@ -47,6 +56,10 @@ impl<'rt> RenderPassBuilder<'rt> {
 
             if let Some(p) = self.pipeline {
                 render_pass.set_pipeline(p);
+            }
+
+            if let Some((vert, inst)) = self.draw_params {
+                render_pass.draw(vert, inst);
             }
         }
 

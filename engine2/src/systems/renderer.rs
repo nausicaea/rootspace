@@ -70,7 +70,7 @@ impl WithResources for Renderer {
         let pipeline = gfx
             .create_render_pipeline()
             .with_shader_module(None, &shader_data, "vs_main", Some("fs_main"))
-            .submit(None)?;
+            .submit(None);
 
         Ok(Renderer {
             window_receiver,
@@ -93,6 +93,7 @@ impl System for Renderer {
             .borrow::<Graphics>()
             .create_render_pass()
             .with_pipeline(&self.pipeline)
+            .draw(0..3, 0..3)
             .submit(None, None);
 
         match r {
