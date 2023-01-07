@@ -244,7 +244,10 @@ impl World {
     /// main loop shall continue, otherwise it shall abort.
     pub fn maintain(&mut self) -> LoopControl {
         // Receive all pending events
-        let events = self.resources.get_mut::<EventQueue<WorldEvent>>().receive(&self.receiver);
+        let events = self
+            .resources
+            .get_mut::<EventQueue<WorldEvent>>()
+            .receive(&self.receiver);
 
         // Process all pending events
         for e in events {

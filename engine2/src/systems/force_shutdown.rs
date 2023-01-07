@@ -8,13 +8,13 @@ use std::{
     time::Duration,
 };
 
-use ecs::{EventQueue, Resources, System, WithResources, ReceiverId};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use log::debug;
 #[cfg(not(test))]
 use log::error;
 #[cfg(not(test))]
 use log::info;
-use winit::event::{KeyboardInput, ElementState, VirtualKeyCode};
+use winit::event::{ElementState, KeyboardInput, VirtualKeyCode};
 
 use crate::events::{engine_event::EngineEvent, window_event::WindowEvent};
 
@@ -44,7 +44,10 @@ impl WithResources for ForceShutdown {
 
         let receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
 
-        Ok(ForceShutdown { ctrlc_triggered, receiver })
+        Ok(ForceShutdown {
+            ctrlc_triggered,
+            receiver,
+        })
     }
 }
 
@@ -57,16 +60,14 @@ impl System for ForceShutdown {
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
 
-        let events = res
-            .borrow_mut::<EventQueue<WindowEvent>>()
-            .receive(&self.receiver);
+        let events = res.borrow_mut::<EventQueue<WindowEvent>>().receive(&self.receiver);
         for event in events {
             match event {
                 WindowEvent::CloseRequested => {
                     debug!("User requested abort by closing the window");
                     res.borrow_mut::<EventQueue<EngineEvent>>()
                         .send(EngineEvent::AbortRequested);
-                },
+                }
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
@@ -79,11 +80,10 @@ impl System for ForceShutdown {
                     debug!("User requested abort by pressing Q");
                     res.borrow_mut::<EventQueue<EngineEvent>>()
                         .send(EngineEvent::AbortRequested);
-                },
+                }
                 _ => (),
             }
         }
-
     }
 }
 

@@ -1,8 +1,8 @@
 use std::time::{Duration, Instant};
 
 use ecs::{
-    with_dependencies::WithDependencies, EventQueue, LoopControl, ReceiverId, ResourceRegistry, SystemRegistry,
-    WithResources, WorldEvent, Entity, Storage,
+    with_dependencies::WithDependencies, Entity, EventQueue, LoopControl, ReceiverId, ResourceRegistry, Storage,
+    SystemRegistry, WithResources, WorldEvent,
 };
 use winit::{
     event::Event,
@@ -10,13 +10,14 @@ use winit::{
 };
 
 use crate::{
+    components::{info::Info, model::Model, renderable::Renderable, status::Status, ui_model::UiModel},
     events::{engine_event::EngineEvent, window_event::WindowEvent},
     registry::{RRegistry, RSRegistry, USRegistry},
     resources::{
         asset_database::AssetDatabaseDeps,
         graphics::{Graphics, GraphicsDeps},
         statistics::Statistics,
-    }, components::{status::Status, info::Info, model::Model, ui_model::UiModel, renderable::Renderable},
+    },
 };
 
 const DELTA_TIME: u64 = 50; // milliseconds
@@ -130,7 +131,10 @@ impl Orchestrator {
         }
 
         // Process world events
-        let events = self.world.get_mut::<EventQueue<WorldEvent>>().receive(&self.world_event_receiver);
+        let events = self
+            .world
+            .get_mut::<EventQueue<WorldEvent>>()
+            .receive(&self.world_event_receiver);
         for event in events {
             match event {
                 WorldEvent::EntityDestroyed(e) => self.on_entity_destroyed(e),
@@ -158,16 +162,11 @@ impl Orchestrator {
 
     fn on_entity_destroyed(&mut self, entity: Entity) {
         log::trace!("Removing entity from components Status, Info, Model, UiModel, Renderable");
-        self.world.get_components_mut::<Status>()
-            .remove(entity);
-        self.world.get_components_mut::<Info>()
-            .remove(entity);
-        self.world.get_components_mut::<Model>()
-            .remove(entity);
-        self.world.get_components_mut::<UiModel>()
-            .remove(entity);
-        self.world.get_components_mut::<Renderable>()
-            .remove(entity);
+        self.world.get_components_mut::<Status>().remove(entity);
+        self.world.get_components_mut::<Info>().remove(entity);
+        self.world.get_components_mut::<Model>().remove(entity);
+        self.world.get_components_mut::<UiModel>().remove(entity);
+        self.world.get_components_mut::<Renderable>().remove(entity);
     }
 
     fn on_abort_requested(&mut self) {
