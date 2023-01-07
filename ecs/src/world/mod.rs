@@ -61,9 +61,7 @@ impl World {
             receiver,
         })
     }
-}
 
-impl World {
     pub fn empty() -> Self {
         World {
             resources: Resources::default(),
