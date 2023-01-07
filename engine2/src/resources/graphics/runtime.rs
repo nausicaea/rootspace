@@ -6,8 +6,9 @@ use winit::event_loop::EventLoopWindowTarget;
 
 use super::{
     ids::{BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, TextureId},
+    render_pass_builder::RenderPassBuilder,
     render_pipeline_builder::RenderPipelineBuilder,
-    urn::Urn,
+    urn::Urn, settings::Settings,
 };
 
 #[derive(Debug)]
@@ -107,38 +108,8 @@ impl Runtime {
         }
     }
 
-    pub fn render<F>(&self, clear_color: wgpu::Color, mut rdr: F) -> Result<(), wgpu::SurfaceError>
-    where
-        F: FnMut(&mut wgpu::RenderPass),
-    {
-        let output = self.surface.get_current_texture()?;
-        let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("Render Encoder"),
-        });
-
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render Pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(clear_color),
-                        store: true,
-                    },
-                })],
-                depth_stencil_attachment: None,
-            });
-
-            rdr(&mut render_pass);
-        }
-
-        // submit will accept anything that implements IntoIter
-        let _si = self.queue.submit(std::iter::once(encoder.finish()));
-        output.present();
-
-        Ok(())
+    pub fn create_render_pass<'rt>(&'rt self, settings: &'rt Settings) -> RenderPassBuilder {
+        RenderPassBuilder::new(self, settings)
     }
 
     pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {

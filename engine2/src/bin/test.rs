@@ -3,7 +3,7 @@ use std::ops::Deref;
 use ecs::Reg;
 use engine2::{
     orchestrator::Orchestrator,
-    resources::{asset_database::AssetDatabaseDeps, graphics::GraphicsDeps},
+    resources::{asset_database::AssetDatabaseDeps, graphics::{GraphicsDeps, settings::Settings}},
 };
 use winit::event_loop::EventLoop;
 
@@ -11,6 +11,7 @@ struct Dependencies<'a, T: 'static> {
     event_loop: &'a EventLoop<T>,
     name: &'a str,
     force_init: bool,
+    graphics_settings: Settings,
 }
 
 impl<'a, T> GraphicsDeps for Dependencies<'a, T> {
@@ -18,6 +19,10 @@ impl<'a, T> GraphicsDeps for Dependencies<'a, T> {
 
     fn event_loop(&self) -> &winit::event_loop::EventLoopWindowTarget<Self::CustomEvent> {
         self.event_loop.deref()
+    }
+
+    fn settings(&self) -> &Settings {
+        &self.graphics_settings
     }
 }
 
@@ -40,6 +45,7 @@ fn main() -> anyhow::Result<()> {
         event_loop: &event_loop,
         name: "test",
         force_init: false,
+        graphics_settings: Settings::default(),
     };
 
     let state = Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps).unwrap();

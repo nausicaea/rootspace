@@ -1,4 +1,4 @@
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub backends: wgpu::Backends,
     pub power_preference: wgpu::PowerPreference,
