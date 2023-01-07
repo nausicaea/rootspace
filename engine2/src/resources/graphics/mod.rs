@@ -4,9 +4,10 @@ use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
     render_pass_builder::RenderPassBuilder, render_pipeline_builder::RenderPipelineBuilder, runtime::Runtime,
-    settings::Settings, ids::BindGroupLayoutId, indexes::Indexes, tables::Tables,
+    settings::Settings, ids::BindGroupLayoutId, indexes::Indexes, tables::Tables, bind_group_layout_builder::BindGroupLayoutBuilder,
 };
 
+pub mod bind_group_layout_builder;
 pub mod ids;
 pub mod render_pass_builder;
 pub mod render_pipeline_builder;
@@ -50,31 +51,16 @@ impl Graphics {
         }
     }
 
-    pub fn get_bind_group_layout(&self, bgl: &BindGroupLayoutId) -> &wgpu::BindGroupLayout {
-        &self.tables.bind_group_layouts[bgl]
-    }
-
     pub fn create_render_pass(&self) -> RenderPassBuilder {
         RenderPassBuilder::new(&self.runtime, &self.settings, &self.tables)
     }
 
     pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {
-        RenderPipelineBuilder::new(&mut self.runtime, &mut self.indexes, &mut self.tables)
+        RenderPipelineBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
     }
 
-    pub fn create_bind_group_layout(
-        &mut self,
-        label: Option<&str>,
-        entries: &[wgpu::BindGroupLayoutEntry],
-    ) -> BindGroupLayoutId {
-        let bgl = self
-            .runtime
-            .device
-            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { label, entries });
-
-        let id = self.indexes.bind_group_layouts.take();
-        self.tables.bind_group_layouts.insert(id, bgl);
-        id
+    pub fn create_bind_group_layout(&mut self) -> BindGroupLayoutBuilder {
+        BindGroupLayoutBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
     }
 
     //pub fn create_bind_group(&mut self)

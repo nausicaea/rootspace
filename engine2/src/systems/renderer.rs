@@ -67,7 +67,6 @@ impl WithResources for Renderer {
         let shader_data = shader_path.read_to_string()?;
 
         let mut gfx = res.borrow_mut::<Graphics>();
-        // let bind_group_layout = gfx.create_bind_group_layout(None, &[]);
         let pipeline = gfx
             .create_render_pipeline()
             .with_shader_module(None, &shader_data, "vs_main", Some("fs_main"))

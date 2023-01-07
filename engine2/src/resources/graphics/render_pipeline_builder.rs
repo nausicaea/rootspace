@@ -2,7 +2,7 @@ use super::{ids::{PipelineId, BindGroupLayoutId}, runtime::Runtime, tables::Tabl
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
-    runtime: &'rt mut Runtime,
+    runtime: &'rt Runtime,
     indexes: &'rt mut Indexes,
     tables: &'rt mut Tables,
     shader_module: Option<wgpu::ShaderModule>,
@@ -13,7 +13,7 @@ pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
 }
 
 impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
-    pub(super) fn new(runtime: &'rt mut Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
         RenderPipelineBuilder {
             runtime,
             indexes,
