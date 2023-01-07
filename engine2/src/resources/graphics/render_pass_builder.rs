@@ -1,23 +1,25 @@
-use super::{ids::PipelineId, runtime::Runtime, settings::Settings};
+use super::{ids::PipelineId, runtime::Runtime, settings::Settings, tables::Tables};
 
 #[derive(Debug)]
 pub struct RenderPassBuilder<'rt> {
     runtime: &'rt Runtime,
     settings: &'rt Settings,
+    tables: &'rt Tables,
     pipeline: Option<&'rt wgpu::RenderPipeline>,
 }
 
 impl<'rt> RenderPassBuilder<'rt> {
-    pub(super) fn new(runtime: &'rt Runtime, settings: &'rt Settings) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, settings: &'rt Settings, tables: &'rt Tables) -> Self {
         RenderPassBuilder {
             runtime,
             settings,
+            tables,
             pipeline: None,
         }
     }
 
     pub fn with_pipeline(mut self, pipeline: &PipelineId) -> Self {
-        self.pipeline = Some(&self.runtime.tables.render_pipelines[pipeline]);
+        self.pipeline = Some(&self.tables.render_pipelines[pipeline]);
         self
     }
 

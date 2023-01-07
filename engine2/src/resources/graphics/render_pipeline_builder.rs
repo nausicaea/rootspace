@@ -1,8 +1,10 @@
-use super::{ids::PipelineId, runtime::Runtime};
+use super::{ids::PipelineId, runtime::Runtime, tables::Tables, indexes::Indexes};
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
     runtime: &'rt mut Runtime,
+    indexes: &'rt mut Indexes,
+    tables: &'rt mut Tables,
     shader_module: Option<wgpu::ShaderModule>,
     vertex_entry_point: Option<&'l str>,
     fragment_entry_point: Option<&'l str>,
@@ -11,9 +13,11 @@ pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
 }
 
 impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
-    pub(super) fn new(rt: &'rt mut Runtime) -> Self {
+    pub(super) fn new(runtime: &'rt mut Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
         RenderPipelineBuilder {
-            runtime: rt,
+            runtime,
+            indexes,
+            tables,
             shader_module: None,
             vertex_entry_point: None,
             fragment_entry_point: None,
@@ -113,8 +117,8 @@ impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
                 multiview: None,
             });
 
-        let id = self.runtime.indexes.render_pipelines.take();
-        self.runtime.tables.render_pipelines.insert(id, pipeline);
+        let id = self.indexes.render_pipelines.take();
+        self.tables.render_pipelines.insert(id, pipeline);
 
         Ok(id)
     }

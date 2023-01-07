@@ -1,16 +1,6 @@
-use std::collections::HashMap;
-
 use log::debug;
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
 use winit::event_loop::EventLoopWindowTarget;
-
-use super::{
-    ids::{BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, TextureId},
-    render_pass_builder::RenderPassBuilder,
-    render_pipeline_builder::RenderPipelineBuilder,
-    settings::Settings,
-    urn::Urn,
-};
 
 #[derive(Debug)]
 pub struct Runtime {
@@ -20,8 +10,6 @@ pub struct Runtime {
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
-    pub indexes: Indexes,
-    pub tables: Tables,
 }
 
 impl Runtime {
@@ -95,67 +83,8 @@ impl Runtime {
             queue,
             config,
             size,
-            indexes: Indexes::default(),
-            tables: Tables::default(),
         }
     }
 
-    pub fn reconfigure(&mut self) {
-        self.resize(self.size)
-    }
-
-    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        if new_size.width > 0 && new_size.height > 0 {
-            self.size = new_size;
-            self.config.width = new_size.width;
-            self.config.height = new_size.height;
-            self.surface.configure(&self.device, &self.config);
-        }
-    }
-
-    pub fn create_render_pass<'rt>(&'rt self, settings: &'rt Settings) -> RenderPassBuilder {
-        RenderPassBuilder::new(self, settings)
-    }
-
-    pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {
-        RenderPipelineBuilder::new(self)
-    }
-
-    pub fn create_bind_group_layout(
-        &mut self,
-        label: Option<&str>,
-        entries: &[wgpu::BindGroupLayoutEntry],
-    ) -> BindGroupLayoutId {
-        let bgl = self
-            .device
-            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { label, entries });
-
-        let id = self.indexes.bind_group_layouts.take();
-        self.tables.bind_group_layouts.insert(id, bgl);
-        id
-    }
-
-    //pub fn create_bind_group(&mut self)
-    //pub fn create_buffer(&mut self)
-    //pub fn create_texture(&mut self)
 }
 
-#[derive(Debug, Default)]
-pub struct Indexes {
-    pub bind_group_layouts: Urn<BindGroupLayoutId>,
-    pub bind_groups: Urn<BindGroupId>,
-    pub buffers: Urn<BufferId>,
-    pub textures: Urn<TextureId>,
-    pub samplers: Urn<SamplerId>,
-    pub render_pipelines: Urn<PipelineId>,
-}
-
-#[derive(Debug, Default)]
-pub struct Tables {
-    pub bind_group_layouts: HashMap<BindGroupLayoutId, wgpu::BindGroupLayout>,
-    pub bind_groups: HashMap<BindGroupId, wgpu::BindGroup>,
-    pub buffers: HashMap<BufferId, wgpu::Buffer>,
-    pub textures: HashMap<TextureId, (wgpu::Texture, wgpu::TextureView)>,
-    pub samplers: HashMap<SamplerId, wgpu::Sampler>,
-    pub render_pipelines: HashMap<PipelineId, wgpu::RenderPipeline>,
-}
