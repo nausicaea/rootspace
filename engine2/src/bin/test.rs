@@ -44,7 +44,7 @@ fn main() -> anyhow::Result<()> {
     let deps = Dependencies {
         event_loop: &event_loop,
         name: "test",
-        force_init: false,
+        force_init: true,
         graphics_settings: Settings::default(),
     };
 
