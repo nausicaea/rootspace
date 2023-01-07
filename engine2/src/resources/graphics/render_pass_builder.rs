@@ -21,16 +21,16 @@ impl<'rt> RenderPassBuilder<'rt> {
         self
     }
 
-    pub fn commit(self) -> Result<(), wgpu::SurfaceError> {
+    pub fn submit(self, encoder_label: Option<&str>, pass_label: Option<&str>) -> Result<(), wgpu::SurfaceError> {
         let output = self.runtime.surface.get_current_texture()?;
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
         let mut encoder = self.runtime.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("Render Encoder"),
+            label: encoder_label,
         });
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render Pass"),
+                label: pass_label,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &view,
                     resolve_target: None,

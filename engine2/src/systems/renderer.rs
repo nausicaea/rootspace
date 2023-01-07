@@ -70,7 +70,7 @@ impl System for Renderer {
 
         res.borrow::<Graphics>().create_render_pass()
             .with_pipeline(&self.pipeline)
-            .commit()
+            .submit(None, None)
             .unwrap();
     }
 }
