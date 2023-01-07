@@ -26,6 +26,10 @@ pub struct Graphics {
 }
 
 impl Graphics {
+    pub fn reconfigure(&mut self) {
+        self.runtime.reconfigure()
+    }
+
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         self.runtime.resize(new_size)
     }

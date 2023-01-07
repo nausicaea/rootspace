@@ -1,4 +1,6 @@
 use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
+use wgpu::SurfaceError;
+use winit::dpi::PhysicalSize;
 
 use crate::{
     events::{engine_event::EngineEvent, window_event::WindowEvent},
@@ -14,13 +16,13 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    fn handle_events(&mut self, res: &ecs::Resources) {
+    fn handle_events(&mut self, res: &Resources) {
         let events = res
             .borrow_mut::<EventQueue<WindowEvent>>()
             .receive(&self.window_receiver);
         for event in events {
             match event {
-                WindowEvent::Resized(ps) => res.borrow_mut::<Graphics>().resize(ps),
+                WindowEvent::Resized(ps) => self.on_window_resized(res, ps),
                 _ => (),
             }
         }
@@ -30,10 +32,31 @@ impl Renderer {
             .receive(&self.engine_receiver);
         for event in events {
             match event {
-                EngineEvent::AbortRequested => self.renderer_enabled = false,
+                EngineEvent::AbortRequested => self.on_abort_requested(),
                 _ => (),
             }
         }
+    }
+
+    fn on_abort_requested(&mut self) {
+        self.renderer_enabled = false
+    }
+
+    fn on_window_resized(&self, res: &Resources, ps: PhysicalSize<u32>) {
+        res.borrow_mut::<Graphics>().resize(ps)
+    }
+
+    fn on_surface_outdated(&self, res: &Resources) {
+        res.borrow_mut::<Graphics>().reconfigure()
+    }
+
+    fn on_out_of_memory(&self, res: &Resources) {
+        log::error!("WGPU surface is out of memory");
+        res.borrow_mut::<EventQueue<EngineEvent>>().send(EngineEvent::AbortRequested)
+    }
+
+    fn on_timeout(&self) {
+        log::warn!("WGPU surface timed out")
     }
 }
 
@@ -68,10 +91,16 @@ impl System for Renderer {
             return;
         }
 
-        res.borrow::<Graphics>().create_render_pass()
+        let r = res.borrow::<Graphics>().create_render_pass()
             .with_pipeline(&self.pipeline)
-            .submit(None, None)
-            .unwrap();
+            .submit(None, None);
+
+        match r {
+            Err(SurfaceError::Lost | SurfaceError::Outdated) => self.on_surface_outdated(res),
+            Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
+            Err(SurfaceError::Timeout) => self.on_timeout(),
+            Ok(_) => (),
+        }
     }
 }
 
