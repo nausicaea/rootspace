@@ -100,12 +100,13 @@ mod tests {
 
     #[test]
     fn force_shutdown_system_registry() {
-        let res = Resources::with_dependencies::<Reg![], _>(&()).unwrap();
+        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&()).unwrap();
         let _rr = SystemRegistry::push(End, ForceShutdown::with_res(&res).unwrap());
     }
 
     #[test]
     fn force_shutdown_world() {
-        let _w = World::with_dependencies::<Reg![], Reg![], Reg![ForceShutdown], Reg![], _>(&()).unwrap();
+        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![ForceShutdown], Reg![], _>(&())
+            .unwrap();
     }
 }

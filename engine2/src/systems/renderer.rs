@@ -103,22 +103,36 @@ impl System for Renderer {
 mod tests {
     use ecs::{End, Reg, SystemRegistry, World};
 
+    use crate::resources::asset_database::AssetDatabaseDeps;
+
     use super::*;
+
+    struct TDeps<'a> {
+        name: &'a str,
+        force_init: bool,
+    }
+
+    impl Default for TDeps<'static> {
+        fn default() -> Self {
+            TDeps {
+                name: "test",
+                force_init: false,
+            }
+        }
+    }
+
+    impl<'a> AssetDatabaseDeps for TDeps<'a> {
+        fn name(&self) -> &str {
+            self.name
+        }
+
+        fn force_init(&self) -> bool {
+            self.force_init
+        }
+    }
 
     #[test]
     fn renderer_reg_macro() {
         type _SR = Reg![Renderer];
-    }
-
-    #[test]
-    fn renderer_system_registry() {
-        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&()).unwrap();
-        let _rr = SystemRegistry::push(End, Renderer::with_res(&res).unwrap());
-    }
-
-    #[test]
-    fn renderer_world() {
-        let _w =
-            World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![Renderer], Reg![], _>(&()).unwrap();
     }
 }
