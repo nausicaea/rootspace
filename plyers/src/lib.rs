@@ -55,7 +55,10 @@ use file_manipulation::FilePathBuf;
 use nom::error::VerboseError;
 
 use crate::parser::error::convert_error;
-pub use crate::{parser::parse_ply, types::Ply};
+pub use crate::{
+    parser::parse_ply,
+    types::{DataType, Ply},
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PlyError {

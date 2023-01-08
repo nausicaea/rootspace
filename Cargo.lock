@@ -523,6 +523,7 @@ dependencies = [
  "forward-ref",
  "glamour",
  "log",
+ "plyers",
  "pollster",
  "proptest",
  "rose-tree",

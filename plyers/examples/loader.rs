@@ -5,18 +5,44 @@ use clap::Parser;
 struct Args {
     #[arg(short, long, help = "Increases the output of the program", action = clap::ArgAction::Count)]
     verbose: u8,
-    #[arg(help = "Specify the path of the file to be parsed")]
-    path: std::path::PathBuf,
+    #[arg(short, long, help = "Print only the names of elements", action = clap::ArgAction::SetTrue)]
+    element_names: bool,
+    #[arg(short, long, help = "Print the names of properties for each element", action = clap::ArgAction::SetTrue)]
+    property_names: bool,
+    #[arg(help = "Specify the path(s) of the file to be parsed", action = clap::ArgAction::Append)]
+    paths: Vec<std::path::PathBuf>,
 }
 
 fn main() {
     let matches = Args::parse();
 
-    match plyers::load_ply(&matches.path) {
-        Err(e) => panic!("{}", e),
-        Ok(ply) => {
-            if matches.verbose > 0 {
-                print!("{:?}", ply)
+    for path in &matches.paths {
+        if matches.verbose > 0 {
+            println!("{}:", path.display());
+        }
+        match plyers::load_ply(path) {
+            Err(e) => panic!("{}", e),
+            Ok(ply) => {
+                if matches.verbose > 1 {
+                    println!("{:?}", ply)
+                }
+
+                if matches.element_names {
+                    for element in &ply.descriptor.elements {
+                        println!("{}", &element.name);
+                    }
+                }
+
+                if matches.property_names {
+                    for element in &ply.descriptor.elements {
+                        for property in &element.properties {
+                            println!("{}.{}", &element.name, &property.name);
+                        }
+                        for list_property in &element.list_properties {
+                            println!("{}.{}", &element.name, &list_property.name);
+                        }
+                    }
+                }
             }
         }
     }

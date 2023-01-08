@@ -101,7 +101,7 @@ impl System for Renderer {
 
 #[cfg(test)]
 mod tests {
-    use ecs::{End, Reg, SystemRegistry, World};
+    use ecs::Reg;
 
     use super::*;
     use crate::resources::asset_database::AssetDatabaseDeps;
