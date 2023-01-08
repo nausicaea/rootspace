@@ -3,12 +3,14 @@ name = "engine2"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "engine2"
+
 [features]
 loopdbg = []
 # spirv = ["wgpu/spirv"]
 
 [dependencies]
-env_logger = "^0.9" # Only used for wgpu.rs
 log = "^0.4"
 winit = { version = "^0.27", features = ["serde"] }
 wgpu = "^0.14"
@@ -35,4 +37,8 @@ forward-ref = { path = "../forward-ref" }
 # tobj = { version = "3.2.2", features = ["async"] }
 
 [dev-dependencies]
+env_logger = "^0.9"
 proptest = "^1.0.0"
+
+[[example]]
+name = "test"
