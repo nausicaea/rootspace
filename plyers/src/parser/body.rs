@@ -4,8 +4,8 @@ use nom::{
     error::{FromExternalError, ParseError},
     multi::{fold_many_m_n, length_count},
     number::complete::{
-        be_f32, be_f64, be_i16, be_i32, be_i8, be_u16, be_u32, be_u8, le_f32, le_f64, le_i16, le_i32, le_i8, le_u16,
-        le_u32, le_u8, recognize_float,
+        be_f32, be_f64, be_i16, be_i32, be_i64, be_i8, be_u16, be_u32, be_u64, be_u8, le_f32, le_f64, le_i16, le_i32,
+        le_i64, le_i8, le_u16, le_u32, le_u64, le_u8, recognize_float,
     },
     sequence::{pair, terminated},
     IResult,
@@ -51,6 +51,12 @@ fn ascii_number_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], Pa
             DataType::I32 => pd
                 .parse::<i32>()
                 .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+            DataType::U64 => pd
+                .parse::<u64>()
+                .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
+            DataType::I64 => pd
+                .parse::<i64>()
+                .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
             DataType::F32 => pd
                 .parse::<f32>()
                 .map(|pd| pd.to_ne_bytes().into_iter().collect::<Vec<_>>())?,
@@ -70,6 +76,7 @@ fn le_count_fct<'a, E: ParseError<&'a [u8]>>(
         CountType::U8 => map(le_u8, |n| n as usize)(input),
         CountType::U16 => map(le_u16, |n| n as usize)(input),
         CountType::U32 => map(le_u32, |n| n as usize)(input),
+        CountType::U64 => map(le_u64, |n| n as usize)(input),
     }
 }
 
@@ -83,6 +90,8 @@ fn le_number_fct<'a, E: ParseError<&'a [u8]>>(
         DataType::I16 => map(le_i16, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
         DataType::U32 => map(le_u32, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
         DataType::I32 => map(le_i32, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
+        DataType::U64 => map(le_u64, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
+        DataType::I64 => map(le_i64, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
         DataType::F32 => map(le_f32, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
         DataType::F64 => map(le_f64, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
     }
@@ -95,6 +104,7 @@ fn be_count_fct<'a, E: ParseError<&'a [u8]>>(
         CountType::U8 => map(be_u8, |n| n as usize)(input),
         CountType::U16 => map(be_u16, |n| n as usize)(input),
         CountType::U32 => map(be_u32, |n| n as usize)(input),
+        CountType::U64 => map(be_u64, |n| n as usize)(input),
     }
 }
 
@@ -108,6 +118,8 @@ fn be_number_fct<'a, E: ParseError<&'a [u8]>>(
         DataType::I16 => map(be_i16, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
         DataType::U32 => map(be_u32, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
         DataType::I32 => map(be_i32, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
+        DataType::U64 => map(be_u64, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
+        DataType::I64 => map(be_i64, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
         DataType::F32 => map(be_f32, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
         DataType::F64 => map(be_f64, |n| n.to_ne_bytes().into_iter().collect::<Vec<u8>>())(input),
     }

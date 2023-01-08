@@ -12,6 +12,7 @@ pub enum CountType {
     U8,
     U16,
     U32,
+    U64,
 }
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
@@ -23,6 +24,8 @@ pub enum DataType {
     U16,
     I32,
     U32,
+    I64,
+    U64,
     F32,
     F64,
 }
