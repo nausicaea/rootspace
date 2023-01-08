@@ -3,6 +3,9 @@ name = "plyers"
 version = "0.2.0"
 edition = "2021"
 
+[lib]
+name = "plyers"
+
 [dependencies]
 thiserror = "1.0"
 nom = "7.1.1"
@@ -10,5 +13,9 @@ either = "1.0"
 file-manipulation = { path = "../file-manipulation" }
 
 [dev-dependencies]
+clap = { version = "^4.0.0", features = ["derive"] }
 proptest = "1.0.0"
 proptest-derive = "0.3.0"
+
+[[example]]
+name = "loader"

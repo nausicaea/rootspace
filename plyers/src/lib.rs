@@ -101,9 +101,9 @@ mod tests {
     #[test]
     fn load_ply_succeeds_for_test_files() {
         for &p in TEST_FILES {
-            let r = load_ply(p);
-            if let Err(e) = r {
-                panic!("{}", e)
+            match load_ply(p) {
+                Err(e) => panic!("{}", e),
+                _ => (),
             }
         }
     }
