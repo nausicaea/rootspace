@@ -103,9 +103,8 @@ impl System for Renderer {
 mod tests {
     use ecs::{End, Reg, SystemRegistry, World};
 
-    use crate::resources::asset_database::AssetDatabaseDeps;
-
     use super::*;
+    use crate::resources::asset_database::AssetDatabaseDeps;
 
     struct TDeps<'a> {
         name: &'a str,
