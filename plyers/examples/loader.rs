@@ -9,6 +9,8 @@ struct Args {
     element_names: bool,
     #[arg(short, long, help = "Print the names of properties for each element", action = clap::ArgAction::SetTrue)]
     property_names: bool,
+    #[arg(short, long, help = "Print the face primitive type (triangles, quads)", action = clap::ArgAction::SetTrue)]
+    face_types: bool,
     #[arg(help = "Specify the path(s) of the file to be parsed", action = clap::ArgAction::Append)]
     paths: Vec<std::path::PathBuf>,
 }
@@ -42,6 +44,11 @@ fn main() {
                             println!("{}.{}", &element.name, &list_property.name);
                         }
                     }
+                }
+
+                if matches.face_types {
+                    let ft = ply.face_type();
+                    println!("{:?}", ft);
                 }
             }
         }

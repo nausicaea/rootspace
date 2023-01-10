@@ -30,19 +30,25 @@ pub fn parse_ply<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], Parse
     all_consuming(flat_map(header, |descriptor| {
         map(body_fct(descriptor.clone()), move |data| Ply {
             descriptor: descriptor.clone(),
-            data,
+            data: data
+                .into_iter()
+                .zip(descriptor.elements.iter().map(|e| &e.name))
+                .map(|(d, n)| (n.clone(), d))
+                .collect(),
         })
     }))(input)
 }
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use nom::error::dbg_dmp;
 
     use super::*;
     use crate::types::{
-        CommentDescriptor, DataType, ElementDescriptor, FormatType, ObjInfoDescriptor, PlyDescriptor,
-        PropertyDescriptor,
+        CommentDescriptor, DataType, DataValue, ElementDescriptor, FormatType, ListPropertyData, ObjInfoDescriptor,
+        PlyDescriptor, PropertyData, PropertyDescriptor,
     };
 
     const EMPTY: &'static [u8] = b"";
@@ -50,6 +56,12 @@ mod tests {
     #[test]
     fn parse_ply_minimal_ascii_parses_correctly() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
+        let expected_data: BTreeMap<String, (Vec<PropertyData>, Vec<ListPropertyData>)> = vec![(
+            "vertex".to_string(),
+            (vec![PropertyData(DataValue::F32(1.0))], Vec::new()),
+        )]
+        .into_iter()
+        .collect();
         assert_eq!(
             parse_ply::<nom::error::Error<_>>(&input[..]),
             Ok((
@@ -73,7 +85,7 @@ mod tests {
                         comments: Vec::new(),
                         obj_info: Vec::new()
                     },
-                    data: vec![vec![0x00, 0x00, 0x80, 0x3f]],
+                    data: expected_data,
                 }
             ))
         );
@@ -98,6 +110,12 @@ mod tests {
     #[test]
     fn parse_ply_has_no_errors_for_ascii_with_heavy_comments() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/heavy_comments_ascii.ply"));
+        let expected_data: BTreeMap<String, (Vec<PropertyData>, Vec<ListPropertyData>)> = vec![(
+            "vertex".to_string(),
+            (vec![PropertyData(DataValue::F32(1.0))], Vec::new()),
+        )]
+        .into_iter()
+        .collect();
         assert_eq!(
             parse_ply::<nom::error::Error<_>>(&input[..]),
             Ok((
@@ -133,7 +151,7 @@ mod tests {
                         ],
                         obj_info: vec![ObjInfoDescriptor(String::from("1. ObjInfo are allowed here"))]
                     },
-                    data: vec![vec![0, 0, 128, 63]],
+                    data: expected_data,
                 }
             ))
         );

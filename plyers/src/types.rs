@@ -1,3 +1,8 @@
+use std::collections::{BTreeMap, HashSet};
+
+pub const VERTEX_ELEMENT: &'static str = "vertex";
+pub const FACE_ELEMENT: &'static str = "face";
+
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FormatType {
@@ -89,10 +94,63 @@ impl Default for PlyDescriptor {
 }
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
+#[derive(Debug, Clone)]
+pub enum DataValue {
+    I8(i8),
+    U8(u8),
+    I16(i16),
+    U16(u16),
+    I32(i32),
+    U32(u32),
+    I64(i64),
+    U64(u64),
+    F32(f32),
+    F64(f64),
+}
+
+#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
+#[derive(Debug, Clone)]
+pub struct PropertyData(pub DataValue);
+
+#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
+#[derive(Debug, Clone)]
+pub struct ListPropertyData(pub Vec<DataValue>);
+
+#[cfg_attr(test, derive(proptest_derive::Arbitrary))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Primitive {
+    Triangles,
+    Quads,
+    Mixed,
+}
+
+#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug)]
 pub struct Ply {
     pub descriptor: PlyDescriptor,
-    pub data: Vec<Vec<u8>>,
+    pub data: BTreeMap<String, (Vec<PropertyData>, Vec<ListPropertyData>)>,
+}
+
+impl Ply {
+    pub fn face_type(&self) -> Option<Primitive> {
+        if !self.data.contains_key(FACE_ELEMENT) {
+            return None;
+        }
+
+        if self.data[FACE_ELEMENT].1.is_empty() {
+            return None;
+        }
+
+        let primitives: HashSet<usize> = self.data[FACE_ELEMENT].1.iter().map(|f| f.0.len()).collect();
+
+        if primitives.iter().all(|&p| p == 3) {
+            Some(Primitive::Triangles)
+        } else if primitives.iter().all(|&p| p == 4) {
+            Some(Primitive::Quads)
+        } else {
+            Some(Primitive::Mixed)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -129,7 +187,7 @@ mod tests {
     fn ply_data_container_has_the_following_structure() {
         let _ = Ply {
             descriptor: PlyDescriptor::default(),
-            data: Vec::<Vec<u8>>::new(),
+            data: BTreeMap::<String, (Vec<PropertyData>, Vec<ListPropertyData>)>::default(),
         };
     }
 

@@ -2,9 +2,22 @@ use std::{borrow::Borrow, collections::BTreeMap, path::Path};
 
 use plyers::load_ply;
 
+#[derive(Debug)]
+pub struct Vertex {
+    position: [f32; 3],
+    normals: [f32; 3],
+    tex_coords: [f32; 2],
+}
+
+#[derive(Debug)]
 pub struct Mesh {}
 
 impl Mesh {
+    const VERTEX_KWD: &'static str = "vertex";
+    const X_KWD: &'static str = "x";
+    const Y_KWD: &'static str = "y";
+    const Z_KWD: &'static str = "z";
+
     pub fn with_file<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let ply = load_ply(path)?;
 
@@ -32,26 +45,40 @@ impl Mesh {
         // vertex.texture_u
         // vertex.texture_v
 
-        let mut index: BTreeMap<&str, (usize, BTreeMap<&str, plyers::DataType>)> = BTreeMap::new();
-        for element in &ply.descriptor.elements {
+        let mut index: BTreeMap<&str, (usize, usize, BTreeMap<&str, (usize, plyers::DataType)>)> = BTreeMap::new();
+        for (ei, element) in ply.descriptor.elements.iter().enumerate() {
             if !index.contains_key(&element.name.borrow()) {
-                index.insert(&element.name, (element.count, BTreeMap::default()));
+                index.insert(&element.name, (ei, element.count, BTreeMap::default()));
             }
 
-            for property in &element.properties {
+            for (pi, property) in element.properties.iter().enumerate() {
                 index
                     .get_mut(&element.name.borrow())
-                    .map(|(_, e)| e.insert(&property.name, property.data_type));
+                    .map(|(_, _, e)| e.insert(&property.name, (pi, property.data_type)));
             }
 
-            for list_property in &element.list_properties {
+            for (pi, list_property) in element.list_properties.iter().enumerate() {
                 index
                     .get_mut(&element.name.borrow())
-                    .map(|(_, e)| e.insert(&list_property.name, list_property.data_type));
+                    .map(|(_, _, e)| e.insert(&list_property.name, (pi, list_property.data_type)));
             }
         }
 
-        dbg!(&index);
+        if !index.contains_key(Mesh::VERTEX_KWD) {
+            return Err(Error::NoVertexElement);
+        }
+
+        if !index[Mesh::VERTEX_KWD].2.contains_key(Mesh::X_KWD) {
+            return Err(Error::NoVertexPropertyX);
+        }
+
+        if !index[Mesh::VERTEX_KWD].2.contains_key(Mesh::Y_KWD) {
+            return Err(Error::NoVertexPropertyY);
+        }
+
+        if !index[Mesh::VERTEX_KWD].2.contains_key(Mesh::Z_KWD) {
+            return Err(Error::NoVertexPropertyZ);
+        }
 
         todo!()
     }
@@ -61,6 +88,14 @@ impl Mesh {
 pub enum Error {
     #[error(transparent)]
     PlyError(#[from] plyers::PlyError),
+    #[error("No element named 'vertex' was found")]
+    NoVertexElement,
+    #[error("No property named 'x' found in element 'vertex'")]
+    NoVertexPropertyX,
+    #[error("No property named 'y' found in element 'vertex'")]
+    NoVertexPropertyY,
+    #[error("No property named 'z' found in element 'vertex'")]
+    NoVertexPropertyZ,
 }
 
 #[cfg(test)]
