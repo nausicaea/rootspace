@@ -482,22 +482,18 @@ dependencies = [
 
 [[package]]
 name = "ecs"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "downcast-rs",
- "either",
  "fern",
  "file-manipulation",
- "lazy_static",
  "log",
  "proptest",
- "regex",
  "serde",
  "serde_json",
  "serde_test",
  "thiserror",
- "try-default",
 ]
 
 [[package]]
@@ -505,9 +501,6 @@ name = "either"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90e5c1c8368803113bf0c9584fc495a58b86dc8a29edbf8fe877d21d9507e797"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "engine2"
@@ -530,8 +523,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
- "tokio",
- "try-default",
  "wgpu",
  "wgpu-types",
  "winit",
@@ -1244,12 +1235,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "478c572c3d73181ff3c2539045f6eb99e5491218eae919370993b890cdbdd98e"
 
 [[package]]
-name = "pin-project-lite"
-version = "0.2.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0a7ae3ac2f1173085d398531c705756c94a4c56843785df85a60c1a0afac116"
-
-[[package]]
 name = "pkg-config"
 version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1498,9 +1483,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.7.0"
+version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e076559ef8e241f2ae3479e36f97bd5741c0330689e217ad51ce2c76808b868a"
+checksum = "48aaa5748ba571fb95cd2c85c09f629215d3a6ece942baa100950af03a34f733"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1814,17 +1799,6 @@ checksum = "c114d32f0c2ee43d585367cb013dfaba967ab9f62b90d9af0d696e955e70fa6c"
 dependencies = [
  "arrayref",
  "bytemuck",
-]
-
-[[package]]
-name = "tokio"
-version = "1.24.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d9f76183f91ecfb55e1d7d5602bd1d979e38a3a522fe900241cf195624d67ae"
-dependencies = [
- "autocfg",
- "pin-project-lite",
- "windows-sys 0.42.0",
 ]
 
 [[package]]
