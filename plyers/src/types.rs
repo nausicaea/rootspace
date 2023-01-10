@@ -95,26 +95,11 @@ impl Default for PlyDescriptor {
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
-pub enum DataValue {
-    I8(i8),
-    U8(u8),
-    I16(i16),
-    U16(u16),
-    I32(i32),
-    U32(u32),
-    I64(i64),
-    U64(u64),
-    F32(f32),
-    F64(f64),
-}
+pub struct PropertyData<T>(pub T);
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
-pub struct PropertyData(pub DataValue);
-
-#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
-#[derive(Debug, Clone)]
-pub struct ListPropertyData(pub Vec<DataValue>);
+pub struct ListPropertyData<T>(pub Vec<T>);
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -126,12 +111,12 @@ pub enum Primitive {
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug)]
-pub struct Ply {
+pub struct Ply<T> {
     pub descriptor: PlyDescriptor,
-    pub data: BTreeMap<String, (Vec<PropertyData>, Vec<ListPropertyData>)>,
+    pub data: BTreeMap<String, (Vec<PropertyData<T>>, Vec<ListPropertyData<T>>)>,
 }
 
-impl Ply {
+impl<T> Ply<T> {
     pub fn face_type(&self) -> Option<Primitive> {
         if !self.data.contains_key(FACE_ELEMENT) {
             return None;
@@ -187,7 +172,7 @@ mod tests {
     fn ply_data_container_has_the_following_structure() {
         let _ = Ply {
             descriptor: PlyDescriptor::default(),
-            data: BTreeMap::<String, (Vec<PropertyData>, Vec<ListPropertyData>)>::default(),
+            data: BTreeMap::<String, (Vec<PropertyData<f32>>, Vec<ListPropertyData<f32>>)>::default(),
         };
     }
 

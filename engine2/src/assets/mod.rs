@@ -24,7 +24,7 @@ impl Mesh {
         Self::with_ply(&ply)
     }
 
-    pub fn with_ply(ply: &plyers::Ply) -> Result<Self, Error> {
+    pub fn with_ply(ply: &plyers::Ply<f32>) -> Result<Self, Error> {
         // For the mesh, we need both vertices and indices
         //
         // The following element and property names (ie. element.property) were found in my test

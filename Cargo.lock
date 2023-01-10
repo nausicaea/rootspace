@@ -1263,6 +1263,7 @@ dependencies = [
  "either",
  "file-manipulation",
  "nom",
+ "num-traits",
  "proptest",
  "proptest-derive",
  "thiserror",

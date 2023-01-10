@@ -5,6 +5,7 @@ use nom::{
     error::{FromExternalError, ParseError},
     IResult,
 };
+use num_traits::NumCast;
 
 use self::{body::body_fct, header::header};
 use crate::types::Ply;
@@ -22,11 +23,13 @@ pub enum ParseNumError {
     ParseIntError(#[from] ParseIntError),
     #[error(transparent)]
     ParseFloatError(#[from] ParseFloatError),
+    #[error("Unable to cast from source to output numeric type")]
+    NumCastError,
 }
 
-pub fn parse_ply<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a>(
+pub fn parse_ply<'a, T: NumCast + 'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a>(
     input: &'a [u8],
-) -> IResult<&'a [u8], Ply, E> {
+) -> IResult<&'a [u8], Ply<T>, E> {
     all_consuming(flat_map(header, |descriptor| {
         map(body_fct(descriptor.clone()), move |data| Ply {
             descriptor: descriptor.clone(),
@@ -47,8 +50,8 @@ mod tests {
 
     use super::*;
     use crate::types::{
-        CommentDescriptor, DataType, DataValue, ElementDescriptor, FormatType, ListPropertyData, ObjInfoDescriptor,
-        PlyDescriptor, PropertyData, PropertyDescriptor,
+        CommentDescriptor, DataType, ElementDescriptor, FormatType, ListPropertyData, ObjInfoDescriptor, PlyDescriptor,
+        PropertyData, PropertyDescriptor,
     };
 
     const EMPTY: &'static [u8] = b"";
@@ -56,14 +59,12 @@ mod tests {
     #[test]
     fn parse_ply_minimal_ascii_parses_correctly() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
-        let expected_data: BTreeMap<String, (Vec<PropertyData>, Vec<ListPropertyData>)> = vec![(
-            "vertex".to_string(),
-            (vec![PropertyData(DataValue::F32(1.0))], Vec::new()),
-        )]
-        .into_iter()
-        .collect();
+        let expected_data: BTreeMap<String, (Vec<PropertyData<f32>>, Vec<ListPropertyData<f32>>)> =
+            vec![("vertex".to_string(), (vec![PropertyData(1.0f32)], Vec::new()))]
+                .into_iter()
+                .collect();
         assert_eq!(
-            parse_ply::<nom::error::Error<_>>(&input[..]),
+            parse_ply::<f32, nom::error::Error<_>>(&input[..]),
             Ok((
                 EMPTY,
                 Ply {
@@ -94,7 +95,7 @@ mod tests {
     #[test]
     fn parse_ply_fails_with_garbage() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/garbage.ply"));
-        let r = dbg_dmp(parse_ply::<nom::error::Error<_>>, "GARBAGE")(&input[..]);
+        let r = dbg_dmp(parse_ply::<f32, nom::error::Error<_>>, "GARBAGE")(&input[..]);
         assert!(r.is_err(), "{:?}", r.unwrap());
         print!("{:?}", r.unwrap_err())
     }
@@ -102,7 +103,7 @@ mod tests {
     #[test]
     fn parse_ply_fails_with_incomplete_header() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/incomplete_header.ply"));
-        let r = nom::error::dbg_dmp(parse_ply::<nom::error::Error<_>>, "INCOMPLETE HEADER")(&input[..]);
+        let r = nom::error::dbg_dmp(parse_ply::<f32, nom::error::Error<_>>, "INCOMPLETE HEADER")(&input[..]);
         assert!(r.is_err(), "{:?}", r.unwrap());
         print!("{:?}", r.unwrap_err())
     }
@@ -110,14 +111,12 @@ mod tests {
     #[test]
     fn parse_ply_has_no_errors_for_ascii_with_heavy_comments() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/heavy_comments_ascii.ply"));
-        let expected_data: BTreeMap<String, (Vec<PropertyData>, Vec<ListPropertyData>)> = vec![(
-            "vertex".to_string(),
-            (vec![PropertyData(DataValue::F32(1.0))], Vec::new()),
-        )]
-        .into_iter()
-        .collect();
+        let expected_data: BTreeMap<String, (Vec<PropertyData<f32>>, Vec<ListPropertyData<f32>>)> =
+            vec![("vertex".to_string(), (vec![PropertyData(1.0f32)], Vec::new()))]
+                .into_iter()
+                .collect();
         assert_eq!(
-            parse_ply::<nom::error::Error<_>>(&input[..]),
+            parse_ply::<f32, nom::error::Error<_>>(&input[..]),
             Ok((
                 EMPTY,
                 Ply {

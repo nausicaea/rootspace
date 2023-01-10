@@ -10,14 +10,13 @@ use nom::{
     sequence::{pair, terminated},
     IResult,
 };
+use num_traits::{cast, NumCast};
 
 use super::{
     common::{is_whitespace, whitespace},
     ParseNumError,
 };
-use crate::types::{
-    CountType, DataType, DataValue, ElementDescriptor, FormatType, ListPropertyData, PlyDescriptor, PropertyData,
-};
+use crate::types::{CountType, DataType, ElementDescriptor, FormatType, ListPropertyData, PlyDescriptor, PropertyData};
 
 fn ascii_count_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
     _count_type: CountType,
@@ -29,22 +28,52 @@ fn ascii_count_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], Par
     })
 }
 
-fn ascii_number_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
+fn ascii_number_fct<'a, T: NumCast, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
     data_type: DataType,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], DataValue, E> {
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], T, E> {
     map_res(terminated(recognize_float, whitespace), move |pd| {
         let pd = std::str::from_utf8(pd)?;
         let pd = match data_type {
-            DataType::U8 => pd.parse::<u8>().map(|pd| DataValue::U8(pd))?,
-            DataType::I8 => pd.parse::<i8>().map(|pd| DataValue::I8(pd))?,
-            DataType::U16 => pd.parse::<u16>().map(|pd| DataValue::U16(pd))?,
-            DataType::I16 => pd.parse::<i16>().map(|pd| DataValue::I16(pd))?,
-            DataType::U32 => pd.parse::<u32>().map(|pd| DataValue::U32(pd))?,
-            DataType::I32 => pd.parse::<i32>().map(|pd| DataValue::I32(pd))?,
-            DataType::U64 => pd.parse::<u64>().map(|pd| DataValue::U64(pd))?,
-            DataType::I64 => pd.parse::<i64>().map(|pd| DataValue::I64(pd))?,
-            DataType::F32 => pd.parse::<f32>().map(|pd| DataValue::F32(pd))?,
-            DataType::F64 => pd.parse::<f64>().map(|pd| DataValue::F64(pd))?,
+            DataType::U8 => pd
+                .parse::<u8>()
+                .map_err(|e| ParseNumError::ParseIntError(e))
+                .and_then(|pd| cast::<_, T>(pd).ok_or(ParseNumError::NumCastError))?,
+            DataType::I8 => pd
+                .parse::<i8>()
+                .map_err(|e| ParseNumError::ParseIntError(e))
+                .and_then(|pd| cast::<_, T>(pd).ok_or(ParseNumError::NumCastError))?,
+            DataType::U16 => pd
+                .parse::<u16>()
+                .map_err(|e| ParseNumError::ParseIntError(e))
+                .and_then(|pd| cast::<_, T>(pd).ok_or(ParseNumError::NumCastError))?,
+            DataType::I16 => pd
+                .parse::<i16>()
+                .map_err(|e| ParseNumError::ParseIntError(e))
+                .and_then(|pd| cast::<_, T>(pd).ok_or(ParseNumError::NumCastError))?,
+            DataType::U32 => pd
+                .parse::<u32>()
+                .map_err(|e| ParseNumError::ParseIntError(e))
+                .and_then(|pd| cast::<_, T>(pd).ok_or(ParseNumError::NumCastError))?,
+            DataType::I32 => pd
+                .parse::<i32>()
+                .map_err(|e| ParseNumError::ParseIntError(e))
+                .and_then(|pd| cast::<_, T>(pd).ok_or(ParseNumError::NumCastError))?,
+            DataType::U64 => pd
+                .parse::<u64>()
+                .map_err(|e| ParseNumError::ParseIntError(e))
+                .and_then(|pd| cast::<_, T>(pd).ok_or(ParseNumError::NumCastError))?,
+            DataType::I64 => pd
+                .parse::<i64>()
+                .map_err(|e| ParseNumError::ParseIntError(e))
+                .and_then(|pd| cast::<_, T>(pd).ok_or(ParseNumError::NumCastError))?,
+            DataType::F32 => pd
+                .parse::<f32>()
+                .map_err(|e| ParseNumError::ParseFloatError(e))
+                .and_then(|pd| cast::<_, T>(pd).ok_or(ParseNumError::NumCastError))?,
+            DataType::F64 => pd
+                .parse::<f64>()
+                .map_err(|e| ParseNumError::ParseFloatError(e))
+                .and_then(|pd| cast::<_, T>(pd).ok_or(ParseNumError::NumCastError))?,
         };
 
         Result::<_, ParseNumError>::Ok(pd)
@@ -62,20 +91,20 @@ fn le_count_fct<'a, E: ParseError<&'a [u8]>>(
     }
 }
 
-fn le_number_fct<'a, E: ParseError<&'a [u8]>>(
+fn le_number_fct<'a, T: NumCast, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
     data_type: DataType,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], DataValue, E> {
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], T, E> {
     move |input| match data_type {
-        DataType::U8 => map(le_u8, |n| DataValue::U8(n))(input),
-        DataType::I8 => map(le_i8, |n| DataValue::I8(n))(input),
-        DataType::U16 => map(le_u16, |n| DataValue::U16(n))(input),
-        DataType::I16 => map(le_i16, |n| DataValue::I16(n))(input),
-        DataType::U32 => map(le_u32, |n| DataValue::U32(n))(input),
-        DataType::I32 => map(le_i32, |n| DataValue::I32(n))(input),
-        DataType::U64 => map(le_u64, |n| DataValue::U64(n))(input),
-        DataType::I64 => map(le_i64, |n| DataValue::I64(n))(input),
-        DataType::F32 => map(le_f32, |n| DataValue::F32(n))(input),
-        DataType::F64 => map(le_f64, |n| DataValue::F64(n))(input),
+        DataType::U8 => map_res(le_u8, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::I8 => map_res(le_i8, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::U16 => map_res(le_u16, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::I16 => map_res(le_i16, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::U32 => map_res(le_u32, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::I32 => map_res(le_i32, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::U64 => map_res(le_u64, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::I64 => map_res(le_i64, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::F32 => map_res(le_f32, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::F64 => map_res(le_f64, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
     }
 }
 
@@ -90,56 +119,62 @@ fn be_count_fct<'a, E: ParseError<&'a [u8]>>(
     }
 }
 
-fn be_number_fct<'a, E: ParseError<&'a [u8]>>(
+fn be_number_fct<'a, T: NumCast, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
     data_type: DataType,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], DataValue, E> {
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], T, E> {
     move |input| match data_type {
-        DataType::U8 => map(be_u8, |n| DataValue::U8(n))(input),
-        DataType::I8 => map(be_i8, |n| DataValue::I8(n))(input),
-        DataType::U16 => map(be_u16, |n| DataValue::U16(n))(input),
-        DataType::I16 => map(be_i16, |n| DataValue::I16(n))(input),
-        DataType::U32 => map(be_u32, |n| DataValue::U32(n))(input),
-        DataType::I32 => map(be_i32, |n| DataValue::I32(n))(input),
-        DataType::U64 => map(be_u64, |n| DataValue::U64(n))(input),
-        DataType::I64 => map(be_i64, |n| DataValue::I64(n))(input),
-        DataType::F32 => map(be_f32, |n| DataValue::F32(n))(input),
-        DataType::F64 => map(be_f64, |n| DataValue::F64(n))(input),
+        DataType::U8 => map_res(be_u8, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::I8 => map_res(be_i8, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::U16 => map_res(be_u16, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::I16 => map_res(be_i16, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::U32 => map_res(be_u32, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::I32 => map_res(be_i32, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::U64 => map_res(be_u64, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::I64 => map_res(be_i64, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::F32 => map_res(be_f32, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
+        DataType::F64 => map_res(be_f64, |n| cast::<_, T>(n).ok_or(ParseNumError::NumCastError))(input),
     }
 }
 
-fn property_fct<'a, F, P, E>(num_fn: &'a F, dt: DataType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], PropertyData, E>
+fn property_fct<'a, T, F, P, E>(
+    num_fn: &'a F,
+    dt: DataType,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], PropertyData<T>, E>
 where
-    P: FnMut(&'a [u8]) -> IResult<&'a [u8], DataValue, E>,
+    T: NumCast,
     F: Fn(DataType) -> P,
+    P: FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>,
     E: ParseError<&'a [u8]>,
 {
     map(num_fn(dt), |r| PropertyData(r))
 }
 
-fn list_property_fct<'a, F1, F2, P1, P2, E>(
+fn list_property_fct<'a, T, F1, F2, P1, P2, E>(
     cnt_fn: &'a F1,
     num_fn: &'a F2,
     ct: CountType,
     dt: DataType,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], ListPropertyData, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], ListPropertyData<T>, E>
 where
-    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
-    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], DataValue, E>,
+    T: NumCast,
     F1: Fn(CountType) -> P1,
     F2: Fn(DataType) -> P2,
+    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
+    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>,
     E: ParseError<&'a [u8]>,
 {
     map(length_count(cnt_fn(ct), num_fn(dt)), |r| ListPropertyData(r))
 }
 
-fn properties_fct<'a, F, P, E>(
+fn properties_fct<'a, T, F, P, E>(
     num_fn: &'a F,
     types: Vec<DataType>,
     repetitions: usize,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<PropertyData>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<PropertyData<T>>, E>
 where
-    P: FnMut(&'a [u8]) -> IResult<&'a [u8], DataValue, E>,
+    T: NumCast,
     F: Fn(DataType) -> P,
+    P: FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>,
     E: ParseError<&'a [u8]>,
 {
     let m = types.len() * repetitions;
@@ -161,17 +196,18 @@ where
     )
 }
 
-fn list_properties_fct<'a, F1, F2, P1, P2, E>(
+fn list_properties_fct<'a, T, F1, F2, P1, P2, E>(
     cnt_fn: &'a F1,
     num_fn: &'a F2,
     types: Vec<(CountType, DataType)>,
     repetitions: usize,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<ListPropertyData>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<ListPropertyData<T>>, E>
 where
-    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
-    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], DataValue, E>,
+    T: NumCast,
     F1: Fn(CountType) -> P1,
     F2: Fn(DataType) -> P2,
+    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
+    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>,
     E: ParseError<&'a [u8]>,
 {
     let m = types.len() * repetitions;
@@ -193,16 +229,17 @@ where
     )
 }
 
-fn elements_fct<'a, F1, F2, P1, P2, E>(
+fn elements_fct<'a, T, F1, F2, P1, P2, E>(
     cnt_fn: &'a F1,
     num_fn: &'a F2,
     elements: Vec<ElementDescriptor>,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<PropertyData>, Vec<ListPropertyData>)>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<PropertyData<T>>, Vec<ListPropertyData<T>>)>, E>
 where
-    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
-    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], DataValue, E>,
+    T: NumCast,
     F1: Fn(CountType) -> P1,
     F2: Fn(DataType) -> P2,
+    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
+    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>,
     E: ParseError<&'a [u8]>,
 {
     let m = elements.len();
@@ -239,9 +276,9 @@ where
     )
 }
 
-pub fn body_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a>(
+pub fn body_fct<'a, T: NumCast + 'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a>(
     ply: PlyDescriptor,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<PropertyData>, Vec<ListPropertyData>)>, E> {
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<PropertyData<T>>, Vec<ListPropertyData<T>>)>, E> {
     move |input| {
         let elements = ply.elements.iter().cloned().collect();
         match ply.format_type {

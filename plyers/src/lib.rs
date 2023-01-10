@@ -53,6 +53,7 @@ use std::{fs::File, io::Read, path::Path};
 
 use file_manipulation::FilePathBuf;
 use nom::error::VerboseError;
+use num_traits::NumCast;
 
 use crate::parser::error::convert_error;
 pub use crate::{
@@ -70,13 +71,13 @@ pub enum PlyError {
     NomError(String),
 }
 
-pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
+pub fn load_ply<T: NumCast, P: AsRef<Path>>(path: P) -> Result<Ply<T>, PlyError> {
     let path = FilePathBuf::try_from(path.as_ref())?;
     let mut file = File::open(path)?;
     let mut input = Vec::new();
     file.read_to_end(&mut input)?;
 
-    let r = parse_ply::<VerboseError<_>>(&input)
+    let r = parse_ply::<T, VerboseError<_>>(&input)
         .map(|(_, p)| p)
         .map_err(|e| match e {
             nom::Err::Error(e) | nom::Err::Failure(e) => PlyError::NomError(convert_error(&input, e)),
@@ -104,7 +105,7 @@ mod tests {
     #[test]
     fn load_ply_succeeds_for_test_files() {
         for &p in TEST_FILES {
-            match load_ply(p) {
+            match load_ply::<f32, _>(p) {
                 Err(e) => panic!("{}", e),
                 _ => (),
             }

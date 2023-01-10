@@ -1,7 +1,7 @@
 use std::fmt;
 
 use glium::Rect as GliumRect;
-use num_traits::{Num, RefNum};
+use num_traits::{NumCast, RefNum};
 use rusttype::{Point as RusttypePoint, Rect as RusttypeRect};
 
 use super::point::Point;
