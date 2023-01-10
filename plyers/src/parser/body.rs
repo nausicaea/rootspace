@@ -16,7 +16,7 @@ use super::{
     common::{is_whitespace, whitespace},
     ParseNumError,
 };
-use crate::types::{CountType, DataType, ElementDescriptor, FormatType, ListPropertyData, PlyDescriptor, PropertyData};
+use crate::types::{CountType, DataType, ElementDescriptor, FormatType, PlyDescriptor};
 
 fn ascii_count_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
     _count_type: CountType,
@@ -136,17 +136,14 @@ fn be_number_fct<'a, T: NumCast, E: ParseError<&'a [u8]> + FromExternalError<&'a
     }
 }
 
-fn property_fct<'a, T, F, P, E>(
-    num_fn: &'a F,
-    dt: DataType,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], PropertyData<T>, E>
+fn property_fct<'a, T, F, P, E>(num_fn: &'a F, dt: DataType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>
 where
     T: NumCast,
     F: Fn(DataType) -> P,
     P: FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>,
     E: ParseError<&'a [u8]>,
 {
-    map(num_fn(dt), |r| PropertyData(r))
+    num_fn(dt)
 }
 
 fn list_property_fct<'a, T, F1, F2, P1, P2, E>(
@@ -154,7 +151,7 @@ fn list_property_fct<'a, T, F1, F2, P1, P2, E>(
     num_fn: &'a F2,
     ct: CountType,
     dt: DataType,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], ListPropertyData<T>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<T>, E>
 where
     T: NumCast,
     F1: Fn(CountType) -> P1,
@@ -163,14 +160,14 @@ where
     P2: FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>,
     E: ParseError<&'a [u8]>,
 {
-    map(length_count(cnt_fn(ct), num_fn(dt)), |r| ListPropertyData(r))
+    length_count(cnt_fn(ct), num_fn(dt))
 }
 
 fn properties_fct<'a, T, F, P, E>(
     num_fn: &'a F,
     types: Vec<DataType>,
     repetitions: usize,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<PropertyData<T>>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<T>, E>
 where
     T: NumCast,
     F: Fn(DataType) -> P,
@@ -201,7 +198,7 @@ fn list_properties_fct<'a, T, F1, F2, P1, P2, E>(
     num_fn: &'a F2,
     types: Vec<(CountType, DataType)>,
     repetitions: usize,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<ListPropertyData<T>>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<Vec<T>>, E>
 where
     T: NumCast,
     F1: Fn(CountType) -> P1,
@@ -233,7 +230,7 @@ fn elements_fct<'a, T, F1, F2, P1, P2, E>(
     cnt_fn: &'a F1,
     num_fn: &'a F2,
     elements: Vec<ElementDescriptor>,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<PropertyData<T>>, Vec<ListPropertyData<T>>)>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<T>, Vec<Vec<T>>)>, E>
 where
     T: NumCast,
     F1: Fn(CountType) -> P1,
@@ -278,7 +275,7 @@ where
 
 pub fn body_fct<'a, T: NumCast + 'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a>(
     ply: PlyDescriptor,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<PropertyData<T>>, Vec<ListPropertyData<T>>)>, E> {
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<T>, Vec<Vec<T>>)>, E> {
     move |input| {
         let elements = ply.elements.iter().cloned().collect();
         match ply.format_type {

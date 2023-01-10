@@ -93,14 +93,6 @@ impl Default for PlyDescriptor {
     }
 }
 
-#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
-#[derive(Debug, Clone)]
-pub struct PropertyData<T>(pub T);
-
-#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
-#[derive(Debug, Clone)]
-pub struct ListPropertyData<T>(pub Vec<T>);
-
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Primitive {
@@ -113,7 +105,7 @@ pub enum Primitive {
 #[derive(Debug)]
 pub struct Ply<T> {
     pub descriptor: PlyDescriptor,
-    pub data: BTreeMap<String, (Vec<PropertyData<T>>, Vec<ListPropertyData<T>>)>,
+    pub data: BTreeMap<String, (Vec<T>, Vec<Vec<T>>)>,
 }
 
 impl<T> Ply<T> {
@@ -126,7 +118,7 @@ impl<T> Ply<T> {
             return None;
         }
 
-        let primitives: HashSet<usize> = self.data[FACE_ELEMENT].1.iter().map(|f| f.0.len()).collect();
+        let primitives: HashSet<usize> = self.data[FACE_ELEMENT].1.iter().map(|f| f.len()).collect();
 
         if primitives.iter().all(|&p| p == 3) {
             Some(Primitive::Triangles)
@@ -172,7 +164,7 @@ mod tests {
     fn ply_data_container_has_the_following_structure() {
         let _ = Ply {
             descriptor: PlyDescriptor::default(),
-            data: BTreeMap::<String, (Vec<PropertyData<f32>>, Vec<ListPropertyData<f32>>)>::default(),
+            data: BTreeMap::<String, (Vec<f32>, Vec<Vec<f32>>)>::default(),
         };
     }
 
