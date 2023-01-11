@@ -131,7 +131,7 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
 
         Ok(AssetDatabase {
             game_name: deps.name().to_string(),
-            project_dirs: project_dirs,
+            project_dirs,
             assets: DirPathBuf::try_from(asset_database)?,
             states: DirPathBuf::try_from(state_database)?,
         })

@@ -15,6 +15,7 @@ log = "^0.4"
 winit = { version = "^0.27", features = ["serde"] }
 wgpu = "^0.14"
 wgpu-types = { version = "^0.14", features = ["trace", "replay"] }
+bytemuck = { version = "^1.0", features = [ "derive" ] }
 pollster = "^0.2.5"
 
 anyhow = "^1.0.0"
@@ -32,7 +33,6 @@ glamour = { path = "../glamour", features = ["serde_support"] }
 forward-ref = { path = "../forward-ref" }
 plyers = { path = "../plyers" }
 
-# bytemuck = { version = "1.4", features = [ "derive" ] }
 # tobj = { version = "3.2.2", features = ["async"] }
 
 [dev-dependencies]

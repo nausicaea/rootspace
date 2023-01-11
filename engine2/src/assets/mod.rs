@@ -2,46 +2,42 @@ use std::{collections::HashMap, path::Path};
 
 use plyers::{load_ply, types::Primitive};
 
-#[derive(Debug, Default, Clone)]
-pub struct Vertex {
-    position: [f32; 3],
-    normals: [f32; 3],
-    tex_coords: [f32; 2],
+use crate::resources::graphics::{ids::BufferId, vertex::Vertex, Graphics};
+
+pub struct Mesh {
+    vertex_buffer: BufferId,
+    index_buffer: BufferId,
+    num_indices: u32,
+}
+
+impl Mesh {
+    pub fn with_file<P: AsRef<Path>>(gfx: &mut Graphics, path: P) -> Result<Self, Error> {
+        let ply = load_ply(path)?;
+        Self::with_ply(gfx, &ply)
+    }
+
+    pub fn with_ply(gfx: &mut Graphics, ply: &plyers::Ply<f32, u32>) -> Result<Self, Error> {
+        let rm = RawMesh::with_ply(ply)?;
+
+        let vertex_buffer = gfx.create_buffer(None, wgpu::BufferUsages::VERTEX, &rm.vertices);
+        let index_buffer = gfx.create_buffer(None, wgpu::BufferUsages::INDEX, &rm.indices);
+
+        Ok(Mesh {
+            vertex_buffer,
+            index_buffer,
+            num_indices: rm.indices.len() as u32,
+        })
+    }
 }
 
 #[derive(Debug)]
-pub struct RawMesh {
+struct RawMesh {
     vertices: Vec<Vertex>,
-    indices: Vec<u16>,
+    indices: Vec<u32>,
 }
 
 impl RawMesh {
-    pub fn with_file<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
-        let ply = load_ply(path)?;
-        Self::with_ply(&ply)
-    }
-
-    pub fn with_ply(ply: &plyers::Ply<f32, u16>) -> Result<Self, Error> {
-        // For the mesh, we need both vertices and indices
-        //
-        // The following element and property names (ie. element.property) were found in my test
-        // files:
-        // vertex.x
-        // vertex.y
-        // vertex.z
-        // vertex.red
-        // vertex.green
-        // vertex.blue
-        // vertex.confidence
-        // vertex.intensity
-        // face.vertex_indices
-        // vertex.nx
-        // vertex.ny
-        // vertex.nz
-        // vertex.alpha
-        // vertex.texture_u
-        // vertex.texture_v
-
+    fn with_ply(ply: &plyers::Ply<f32, u32>) -> Result<Self, Error> {
         if !ply.data.contains_key(plyers::VERTEX_ELEMENT) {
             return Err(Error::NoVertexElement);
         }

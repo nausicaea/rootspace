@@ -1,9 +1,9 @@
 use super::{
+    descriptors::VertexAttributeDescriptor,
     ids::{BindGroupLayoutId, PipelineId},
     indexes::Indexes,
     runtime::Runtime,
     tables::Tables,
-    vertex_attribute_descriptor::VertexAttributeDescriptor,
 };
 
 #[derive(Debug)]
