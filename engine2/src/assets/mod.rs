@@ -109,9 +109,23 @@ impl RawMesh {
             }
         }
 
-        dbg!(&vertices);
-
         if !ply.data.contains_key(plyers::FACE_ELEMENT) {
+            return Err(Error::NoTriangleIndices);
+        }
+
+        let lprp: HashMap<_, _> = ply
+            .descriptor
+            .elements
+            .iter()
+            .filter(|e| &e.name == plyers::FACE_ELEMENT)
+            .flat_map(|e| e.list_properties.iter().enumerate())
+            .filter_map(|(i, p)| match p.name.as_ref() {
+                plyers::VERTEX_INDICES_LIST_PROPERTY => Some((plyers::VERTEX_INDICES_LIST_PROPERTY, i)),
+                _ => None,
+            })
+            .collect();
+
+        if !lprp.contains_key(plyers::VERTEX_INDICES_LIST_PROPERTY) {
             return Err(Error::NoTriangleIndices);
         }
 
@@ -119,16 +133,12 @@ impl RawMesh {
             return Err(Error::NoTriangleIndices);
         }
 
-        let indices = ply.data[plyers::FACE_ELEMENT]
-            .1
+        let indices = ply.data[plyers::FACE_ELEMENT].1[lprp[plyers::VERTEX_INDICES_LIST_PROPERTY]]
             .iter()
-            .flatten()
             .map(|i| *i)
             .collect::<Vec<_>>();
 
-        let m = RawMesh { vertices, indices };
-        dbg!(&m);
-        Ok(m)
+        Ok(RawMesh { vertices, indices })
     }
 }
 
