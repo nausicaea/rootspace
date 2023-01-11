@@ -11,6 +11,10 @@ struct Args {
     property_names: bool,
     #[arg(short, long, help = "Print the face primitive type (triangles, quads)", action = clap::ArgAction::SetTrue)]
     face_types: bool,
+    #[arg(short, long, help = "Print all obj_info directives", action = clap::ArgAction::SetTrue)]
+    obj_infos: bool,
+    #[arg(short, long, help = "Print all comment directives", action = clap::ArgAction::SetTrue)]
+    comments: bool,
     #[arg(help = "Specify the path(s) of the file to be parsed", action = clap::ArgAction::Append)]
     paths: Vec<std::path::PathBuf>,
 }
@@ -49,6 +53,48 @@ fn main() {
                 if matches.face_types {
                     let ft = ply.face_type();
                     println!("{:?}", ft);
+                }
+
+                if matches.comments {
+                    for comment in &ply.descriptor.comments {
+                        println!("ply: {}", comment);
+                    }
+                    for element in &ply.descriptor.elements {
+                        for comment in &element.comments {
+                            println!("{}: {}", &element.name, comment);
+                        }
+                        for property in &element.properties {
+                            for comment in &property.comments {
+                                println!("{}.{}: {}", &element.name, &property.name, comment);
+                            }
+                        }
+                        for list_property in &element.list_properties {
+                            for comment in &list_property.comments {
+                                println!("{}.{}: {}", &element.name, &list_property.name, comment);
+                            }
+                        }
+                    }
+                }
+
+                if matches.obj_infos {
+                    for obj_info in &ply.descriptor.obj_info {
+                        println!("ply: {}", obj_info);
+                    }
+                    for element in &ply.descriptor.elements {
+                        for obj_info in &element.obj_info {
+                            println!("{}: {}", &element.name, obj_info);
+                        }
+                        for property in &element.properties {
+                            for obj_info in &property.obj_info {
+                                println!("{}.{}: {}", &element.name, &property.name, obj_info);
+                            }
+                        }
+                        for list_property in &element.list_properties {
+                            for obj_info in &list_property.obj_info {
+                                println!("{}.{}: {}", &element.name, &list_property.name, obj_info);
+                            }
+                        }
+                    }
                 }
             }
         }

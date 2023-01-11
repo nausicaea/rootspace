@@ -82,9 +82,21 @@ pub struct ElementDescriptor {
 #[derive(Debug, Clone)]
 pub struct CommentDescriptor(pub String);
 
+impl std::fmt::Display for CommentDescriptor {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
 pub struct ObjInfoDescriptor(pub String);
+
+impl std::fmt::Display for ObjInfoDescriptor {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]

@@ -4,10 +4,16 @@ use plyers::{load_ply, types::Primitive};
 
 use crate::resources::graphics::{ids::BufferId, vertex::Vertex, Graphics};
 
+#[derive(Debug)]
+pub struct Model {
+    mesh: Mesh,
+}
+
+#[derive(Debug)]
 pub struct Mesh {
-    vertex_buffer: BufferId,
-    index_buffer: BufferId,
-    num_indices: u32,
+    pub(crate) vertex_buffer: BufferId,
+    pub(crate) index_buffer: BufferId,
+    pub(crate) num_indices: u32,
 }
 
 impl Mesh {
