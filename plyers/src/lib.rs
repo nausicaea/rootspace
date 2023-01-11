@@ -58,7 +58,11 @@ use num_traits::NumCast;
 use crate::parser::error::convert_error;
 pub use crate::{
     parser::parse_ply,
-    types::{DataType, Ply},
+    types::{
+        DataType, Ply, ALPHA_PROPERTY, BLUE_PROPERTY, FACE_ELEMENT, GREEN_PROPERTY, NX_PROPERTY, NY_PROPERTY,
+        NZ_PROPERTY, RED_PROPERTY, TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, VERTEX_ELEMENT,
+        VERTEX_INDICES_LIST_PROPERTY, X_PROPERTY, Y_PROPERTY, Z_PROPERTY,
+    },
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -71,13 +75,13 @@ pub enum PlyError {
     NomError(String),
 }
 
-pub fn load_ply<T: NumCast, P: AsRef<Path>>(path: P) -> Result<Ply<T>, PlyError> {
+pub fn load_ply<V: NumCast, I: NumCast, P: AsRef<Path>>(path: P) -> Result<Ply<V, I>, PlyError> {
     let path = FilePathBuf::try_from(path.as_ref())?;
     let mut file = File::open(path)?;
     let mut input = Vec::new();
     file.read_to_end(&mut input)?;
 
-    let r = parse_ply::<T, VerboseError<_>>(&input)
+    let r = parse_ply::<V, I, VerboseError<_>>(&input)
         .map(|(_, p)| p)
         .map_err(|e| match e {
             nom::Err::Error(e) | nom::Err::Failure(e) => PlyError::NomError(convert_error(&input, e)),
@@ -105,7 +109,7 @@ mod tests {
     #[test]
     fn load_ply_succeeds_for_test_files() {
         for &p in TEST_FILES {
-            match load_ply::<f32, _>(p) {
+            match load_ply::<f32, u32, _>(p) {
                 Err(e) => panic!("{}", e),
                 _ => (),
             }

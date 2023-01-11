@@ -2,6 +2,19 @@ use std::collections::{BTreeMap, HashSet};
 
 pub const VERTEX_ELEMENT: &'static str = "vertex";
 pub const FACE_ELEMENT: &'static str = "face";
+pub const X_PROPERTY: &'static str = "x";
+pub const Y_PROPERTY: &'static str = "y";
+pub const Z_PROPERTY: &'static str = "z";
+pub const RED_PROPERTY: &'static str = "red";
+pub const GREEN_PROPERTY: &'static str = "green";
+pub const BLUE_PROPERTY: &'static str = "blue";
+pub const ALPHA_PROPERTY: &'static str = "alpha";
+pub const NX_PROPERTY: &'static str = "nx";
+pub const NY_PROPERTY: &'static str = "ny";
+pub const NZ_PROPERTY: &'static str = "nz";
+pub const TEXTURE_U_PROPERTY: &'static str = "texture_u";
+pub const TEXTURE_V_PROPERTY: &'static str = "texture_v";
+pub const VERTEX_INDICES_LIST_PROPERTY: &'static str = "vertex_indices";
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -103,12 +116,12 @@ pub enum Primitive {
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug)]
-pub struct Ply<T> {
+pub struct Ply<V, I> {
     pub descriptor: PlyDescriptor,
-    pub data: BTreeMap<String, (Vec<T>, Vec<Vec<T>>)>,
+    pub data: BTreeMap<String, (Vec<V>, Vec<Vec<I>>)>,
 }
 
-impl<T> Ply<T> {
+impl<V, I> Ply<V, I> {
     pub fn face_type(&self) -> Option<Primitive> {
         if !self.data.contains_key(FACE_ELEMENT) {
             return None;

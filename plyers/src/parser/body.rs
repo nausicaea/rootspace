@@ -226,17 +226,21 @@ where
     )
 }
 
-fn elements_fct<'a, T, F1, F2, P1, P2, E>(
+fn elements_fct<'a, V, I, F1, F2, F3, P1, P2, P3, E>(
     cnt_fn: &'a F1,
-    num_fn: &'a F2,
+    v_num_fn: &'a F2,
+    i_num_fn: &'a F3,
     elements: Vec<ElementDescriptor>,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<T>, Vec<Vec<T>>)>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<V>, Vec<Vec<I>>)>, E>
 where
-    T: NumCast,
+    V: NumCast,
+    I: NumCast,
     F1: Fn(CountType) -> P1,
     F2: Fn(DataType) -> P2,
+    F3: Fn(DataType) -> P3,
     P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
-    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>,
+    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], V, E>,
+    P3: FnMut(&'a [u8]) -> IResult<&'a [u8], I, E>,
     E: ParseError<&'a [u8]>,
 {
     let m = elements.len();
@@ -250,13 +254,13 @@ where
             let r = pair(
                 cond(
                     !el.properties.is_empty(),
-                    properties_fct(num_fn, el.properties.iter().map(|p| p.data_type).collect(), el.count),
+                    properties_fct(v_num_fn, el.properties.iter().map(|p| p.data_type).collect(), el.count),
                 ),
                 cond(
                     !el.list_properties.is_empty(),
                     list_properties_fct(
                         cnt_fn,
-                        num_fn,
+                        i_num_fn,
                         el.list_properties.iter().map(|p| (p.count_type, p.data_type)).collect(),
                         el.count,
                     ),
@@ -273,15 +277,22 @@ where
     )
 }
 
-pub fn body_fct<'a, T: NumCast + 'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a>(
+pub fn body_fct<
+    'a,
+    V: NumCast + 'a,
+    I: NumCast + 'a,
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a,
+>(
     ply: PlyDescriptor,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<T>, Vec<Vec<T>>)>, E> {
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<V>, Vec<Vec<I>>)>, E> {
     move |input| {
         let elements = ply.elements.iter().cloned().collect();
         match ply.format_type {
-            FormatType::Ascii => elements_fct(&ascii_count_fct, &ascii_number_fct, elements)(input),
-            FormatType::BinaryLittleEndian => elements_fct(&le_count_fct, &le_number_fct, elements)(input),
-            FormatType::BinaryBigEndian => elements_fct(&be_count_fct, &be_number_fct, elements)(input),
+            FormatType::Ascii => elements_fct(&ascii_count_fct, &ascii_number_fct, &ascii_number_fct, elements)(input),
+            FormatType::BinaryLittleEndian => {
+                elements_fct(&le_count_fct, &le_number_fct, &le_number_fct, elements)(input)
+            }
+            FormatType::BinaryBigEndian => elements_fct(&be_count_fct, &be_number_fct, &be_number_fct, elements)(input),
         }
     }
 }

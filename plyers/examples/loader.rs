@@ -22,7 +22,7 @@ fn main() {
         if matches.verbose > 0 {
             println!("{}:", path.display());
         }
-        match plyers::load_ply::<f32, _>(path) {
+        match plyers::load_ply::<f32, u32, _>(path) {
             Err(e) => panic!("{}", e),
             Ok(ply) => {
                 if matches.verbose > 1 {
