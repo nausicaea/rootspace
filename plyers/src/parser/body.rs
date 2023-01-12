@@ -1,13 +1,14 @@
+use either::Either::{self, Left, Right};
 use nom::{
     bytes::complete::take_till1,
-    combinator::{cond, map, map_res},
+    combinator::{map, map_res},
     error::{FromExternalError, ParseError},
     multi::{fold_many_m_n, length_count},
     number::complete::{
         be_f32, be_f64, be_i16, be_i32, be_i64, be_i8, be_u16, be_u32, be_u64, be_u8, le_f32, le_f64, le_i16, le_i32,
         le_i64, le_i8, le_u16, le_u32, le_u64, le_u8, recognize_float,
     },
-    sequence::{pair, terminated},
+    sequence::terminated,
     IResult,
 };
 use num_traits::{cast, NumCast};
@@ -16,7 +17,7 @@ use super::{
     common::{is_whitespace, whitespace},
     ParseNumError,
 };
-use crate::types::{CountType, DataType, ElementDescriptor, FormatType, PlyDescriptor};
+use crate::types::{CountType, DataType, ElementDescriptor, FormatType, PlyDescriptor, PropertyDescriptor};
 
 fn ascii_count_fct<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
     _count_type: CountType,
@@ -163,27 +164,40 @@ where
     length_count(cnt_fn(ct), num_fn(dt))
 }
 
-fn properties_fct<'a, T, F, P, E>(
-    num_fn: &'a F,
-    types: Vec<DataType>,
+fn properties_fct<'a, V, I, F1, F2, F3, P1, P2, P3, E>(
+    cnt_fn: &'a F1,
+    v_num_fn: &'a F2,
+    i_num_fn: &'a F3,
+    descriptors: Vec<PropertyDescriptor>,
     repetitions: usize,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<T>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<Either<V, Vec<I>>>, E>
 where
-    T: NumCast,
-    F: Fn(DataType) -> P,
-    P: FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>,
+    V: NumCast,
+    I: NumCast,
+    F1: Fn(CountType) -> P1,
+    F2: Fn(DataType) -> P2,
+    F3: Fn(DataType) -> P3,
+    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
+    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], V, E>,
+    P3: FnMut(&'a [u8]) -> IResult<&'a [u8], I, E>,
     E: ParseError<&'a [u8]>,
 {
-    let m = types.len() * repetitions;
+    let m = descriptors.len() * repetitions;
     let mut i = 0;
 
     fold_many_m_n(
         m,
         m,
         move |input| {
-            let r = property_fct(num_fn, types[i % types.len()])(input);
+            let desc = descriptors[i % descriptors.len()].clone();
             i += 1;
-            r
+
+            match desc {
+                PropertyDescriptor::Scalar { data_type, .. } => map(property_fct(v_num_fn, data_type), Left)(input),
+                PropertyDescriptor::List {
+                    count_type, data_type, ..
+                } => map(list_property_fct(cnt_fn, i_num_fn, count_type, data_type), Right)(input),
+            }
         },
         Vec::new,
         |mut p_acc, p| {
@@ -193,45 +207,12 @@ where
     )
 }
 
-fn list_properties_fct<'a, T, F1, F2, P1, P2, E>(
-    cnt_fn: &'a F1,
-    num_fn: &'a F2,
-    types: Vec<(CountType, DataType)>,
-    repetitions: usize,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<Vec<T>>, E>
-where
-    T: NumCast,
-    F1: Fn(CountType) -> P1,
-    F2: Fn(DataType) -> P2,
-    P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
-    P2: FnMut(&'a [u8]) -> IResult<&'a [u8], T, E>,
-    E: ParseError<&'a [u8]>,
-{
-    let m = types.len() * repetitions;
-    let mut i = 0;
-
-    fold_many_m_n(
-        m,
-        m,
-        move |input| {
-            let r = list_property_fct(cnt_fn, num_fn, types[i % types.len()].0, types[i % types.len()].1)(input);
-            i += 1;
-            r
-        },
-        Vec::new,
-        |mut pl_acc, pl| {
-            pl_acc.push(pl);
-            pl_acc
-        },
-    )
-}
-
 fn elements_fct<'a, V, I, F1, F2, F3, P1, P2, P3, E>(
     cnt_fn: &'a F1,
     v_num_fn: &'a F2,
     i_num_fn: &'a F3,
     elements: Vec<ElementDescriptor>,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<V>, Vec<Vec<I>>)>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<Vec<Either<V, Vec<I>>>>, E>
 where
     V: NumCast,
     I: NumCast,
@@ -250,28 +231,14 @@ where
         m,
         m,
         move |input: &'a [u8]| {
-            let el = &elements[i];
-            let r = pair(
-                cond(
-                    !el.properties.is_empty(),
-                    properties_fct(v_num_fn, el.properties.iter().map(|p| p.data_type).collect(), el.count),
-                ),
-                cond(
-                    !el.list_properties.is_empty(),
-                    list_properties_fct(
-                        cnt_fn,
-                        i_num_fn,
-                        el.list_properties.iter().map(|p| (p.count_type, p.data_type)).collect(),
-                        el.count,
-                    ),
-                ),
-            )(input);
+            let el = elements[i].clone();
             i += 1;
-            r
+
+            properties_fct(cnt_fn, v_num_fn, i_num_fn, el.properties, el.count)(input)
         },
         Vec::new,
-        |mut p_acc, (p, pl)| {
-            p_acc.push((p.unwrap_or_else(Vec::new), pl.unwrap_or_else(Vec::new)));
+        |mut p_acc, p| {
+            p_acc.push(p);
             p_acc
         },
     )
@@ -284,7 +251,7 @@ pub fn body_fct<
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a,
 >(
     ply: PlyDescriptor,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<(Vec<V>, Vec<Vec<I>>)>, E> {
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<Vec<Either<V, Vec<I>>>>, E> {
     move |input| {
         let elements = ply.elements.iter().cloned().collect();
         match ply.format_type {

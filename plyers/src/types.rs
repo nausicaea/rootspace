@@ -1,5 +1,7 @@
 use std::collections::{BTreeMap, HashSet};
 
+use either::Either;
+
 pub const VERTEX_ELEMENT: &'static str = "vertex";
 pub const FACE_ELEMENT: &'static str = "face";
 pub const X_PROPERTY: &'static str = "x";
@@ -50,21 +52,20 @@ pub enum DataType {
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
-pub struct PropertyDescriptor {
-    pub data_type: DataType,
-    pub name: String,
-    pub comments: Vec<CommentDescriptor>,
-    pub obj_info: Vec<ObjInfoDescriptor>,
-}
-
-#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
-#[derive(Debug, Clone)]
-pub struct ListPropertyDescriptor {
-    pub count_type: CountType,
-    pub data_type: DataType,
-    pub name: String,
-    pub comments: Vec<CommentDescriptor>,
-    pub obj_info: Vec<ObjInfoDescriptor>,
+pub enum PropertyDescriptor {
+    Scalar {
+        data_type: DataType,
+        name: String,
+        comments: Vec<CommentDescriptor>,
+        obj_info: Vec<ObjInfoDescriptor>,
+    },
+    List {
+        count_type: CountType,
+        data_type: DataType,
+        name: String,
+        comments: Vec<CommentDescriptor>,
+        obj_info: Vec<ObjInfoDescriptor>,
+    },
 }
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
@@ -73,7 +74,6 @@ pub struct ElementDescriptor {
     pub name: String,
     pub count: usize,
     pub properties: Vec<PropertyDescriptor>,
-    pub list_properties: Vec<ListPropertyDescriptor>,
     pub comments: Vec<CommentDescriptor>,
     pub obj_info: Vec<ObjInfoDescriptor>,
 }
@@ -126,11 +126,11 @@ pub enum Primitive {
     Mixed,
 }
 
-#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
+#[cfg_attr(test, derive(PartialEq))]
 #[derive(Debug)]
 pub struct Ply<V, I> {
     pub descriptor: PlyDescriptor,
-    pub data: BTreeMap<String, (Vec<V>, Vec<Vec<I>>)>,
+    pub data: BTreeMap<String, Vec<Either<V, Vec<I>>>>,
 }
 
 impl<V, I> Ply<V, I> {
@@ -139,19 +139,21 @@ impl<V, I> Ply<V, I> {
             return None;
         }
 
-        if self.data[FACE_ELEMENT].1.is_empty() {
-            return None;
-        }
+        todo!()
 
-        let primitives: HashSet<usize> = self.data[FACE_ELEMENT].1.iter().map(|f| f.len()).collect();
+        // if self.data[FACE_ELEMENT].1.is_empty() {
+        //     return None;
+        // }
 
-        if primitives.iter().all(|&p| p == 3) {
-            Some(Primitive::Triangles)
-        } else if primitives.iter().all(|&p| p == 4) {
-            Some(Primitive::Quads)
-        } else {
-            Some(Primitive::Mixed)
-        }
+        // let primitives: HashSet<usize> = self.data[FACE_ELEMENT].1.iter().map(|f| f.len()).collect();
+
+        // if primitives.iter().all(|&p| p == 3) {
+        //     Some(Primitive::Triangles)
+        // } else if primitives.iter().all(|&p| p == 4) {
+        //     Some(Primitive::Quads)
+        // } else {
+        //     Some(Primitive::Mixed)
+        // }
     }
 }
 
@@ -189,7 +191,7 @@ mod tests {
     fn ply_data_container_has_the_following_structure() {
         let _ = Ply {
             descriptor: PlyDescriptor::default(),
-            data: BTreeMap::<String, (Vec<f32>, Vec<Vec<f32>>)>::default(),
+            data: BTreeMap::<String, Vec<Either<f32, Vec<u16>>>>::default(),
         };
     }
 
@@ -209,7 +211,6 @@ mod tests {
             name: String::from("vertex"),
             count: 0usize,
             properties: Vec::<PropertyDescriptor>::new(),
-            list_properties: Vec::<ListPropertyDescriptor>::new(),
             comments: Vec::<CommentDescriptor>::new(),
             obj_info: Vec::<ObjInfoDescriptor>::new(),
         };
@@ -217,17 +218,13 @@ mod tests {
 
     #[test]
     fn property_descriptor_has_the_following_structure() {
-        let _ = PropertyDescriptor {
+        let _ = PropertyDescriptor::Scalar {
             name: String::from("x"),
             data_type: DataType::F32,
             comments: Vec::<CommentDescriptor>::new(),
             obj_info: Vec::<ObjInfoDescriptor>::new(),
         };
-    }
-
-    #[test]
-    fn list_property_descriptor_has_the_following_structure() {
-        let _ = ListPropertyDescriptor {
+        let _ = PropertyDescriptor::List {
             name: String::from("i"),
             count_type: CountType::U16,
             data_type: DataType::F32,

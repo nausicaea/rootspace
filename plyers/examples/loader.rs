@@ -1,4 +1,5 @@
 use clap::Parser;
+use plyers::types::PropertyDescriptor;
 
 #[derive(Debug, Parser)]
 #[command(name = "loader", author, version, about = "Loads files as Stanford PLY model files", long_about = None)]
@@ -42,10 +43,10 @@ fn main() {
                 if matches.property_names {
                     for element in &ply.descriptor.elements {
                         for property in &element.properties {
-                            println!("{}.{}", &element.name, &property.name);
-                        }
-                        for list_property in &element.list_properties {
-                            println!("{}.{}", &element.name, &list_property.name);
+                            match property {
+                                PropertyDescriptor::Scalar { ref name, .. }
+                                | PropertyDescriptor::List { ref name, .. } => println!("{}.{}", &element.name, name),
+                            }
                         }
                     }
                 }
@@ -64,13 +65,17 @@ fn main() {
                             println!("{}: {}", &element.name, comment);
                         }
                         for property in &element.properties {
-                            for comment in &property.comments {
-                                println!("{}.{}: {}", &element.name, &property.name, comment);
-                            }
-                        }
-                        for list_property in &element.list_properties {
-                            for comment in &list_property.comments {
-                                println!("{}.{}: {}", &element.name, &list_property.name, comment);
+                            match property {
+                                PropertyDescriptor::Scalar {
+                                    ref name, ref comments, ..
+                                }
+                                | PropertyDescriptor::List {
+                                    ref name, ref comments, ..
+                                } => {
+                                    for comment in comments {
+                                        println!("{}.{}: {}", &element.name, name, comment);
+                                    }
+                                }
                             }
                         }
                     }
@@ -85,13 +90,17 @@ fn main() {
                             println!("{}: {}", &element.name, obj_info);
                         }
                         for property in &element.properties {
-                            for obj_info in &property.obj_info {
-                                println!("{}.{}: {}", &element.name, &property.name, obj_info);
-                            }
-                        }
-                        for list_property in &element.list_properties {
-                            for obj_info in &list_property.obj_info {
-                                println!("{}.{}: {}", &element.name, &list_property.name, obj_info);
+                            match property {
+                                PropertyDescriptor::Scalar {
+                                    ref name, ref obj_info, ..
+                                }
+                                | PropertyDescriptor::List {
+                                    ref name, ref obj_info, ..
+                                } => {
+                                    for oinf in obj_info {
+                                        println!("{}.{}: {}", &element.name, name, oinf);
+                                    }
+                                }
                             }
                         }
                     }

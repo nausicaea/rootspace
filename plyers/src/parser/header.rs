@@ -15,8 +15,8 @@ use super::{
     ParseNumError,
 };
 use crate::types::{
-    CommentDescriptor, CountType, DataType, ElementDescriptor, FormatType, ListPropertyDescriptor, ObjInfoDescriptor,
-    PlyDescriptor, PropertyDescriptor,
+    CommentDescriptor, CountType, DataType, ElementDescriptor, FormatType, ObjInfoDescriptor, PlyDescriptor,
+    PropertyDescriptor,
 };
 
 const PLY: &'static [u8] = b"ply";
@@ -132,31 +132,6 @@ fn count_type<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8],
     ))(input)
 }
 
-fn property_scalar_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], (DataType, String), E> {
-    map(
-        tuple((tag(PROPERTY), space, data_type, space, identifier, newline)),
-        |(_, _, dt, _, nm, _)| (dt, String::from_utf8_lossy(nm).to_string()),
-    )(input)
-}
-
-fn property_list_decl<'a, E: ParseError<&'a [u8]>>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], (CountType, DataType, String), E> {
-    map(
-        tuple((
-            tag(PROPERTY_LIST),
-            space,
-            count_type,
-            space,
-            data_type,
-            space,
-            identifier,
-            newline,
-        )),
-        |(_, _, ct, _, dt, _, nm, _)| (ct, dt, String::from_utf8_lossy(nm).to_string()),
-    )(input)
-}
-
 fn comment_blk<'a, E: ParseError<&'a [u8]>>(
     input: &'a [u8],
 ) -> IResult<&'a [u8], Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, E> {
@@ -169,15 +144,15 @@ fn format_blk<'a, E: ParseError<&'a [u8]>>(
     tuple((comment_blk, format_decl))(input)
 }
 
-fn property_scalar_rpt<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E> {
+fn property_scalar_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E> {
     map(
-        tuple((comment_blk, property_scalar_decl)),
-        |(cmt, (data_type, name))| {
+        tuple((comment_blk, tag(PROPERTY), space, data_type, space, identifier, newline)),
+        |(cmt, _, _, data_type, _, name, _)| {
             let (comments, obj_info) = split_vecs_of_either(cmt);
 
-            PropertyDescriptor {
+            PropertyDescriptor::Scalar {
+                name: String::from_utf8_lossy(name).to_string(),
                 data_type,
-                name,
                 comments,
                 obj_info,
             }
@@ -185,20 +160,26 @@ fn property_scalar_rpt<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<
     )(input)
 }
 
-fn property_scalar_blk<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], Vec<PropertyDescriptor>, E> {
-    many1(property_scalar_rpt)(input)
-}
-
-fn property_list_rpt<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], ListPropertyDescriptor, E> {
+fn property_list_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E> {
     map(
-        tuple((comment_blk, property_list_decl)),
-        |(cmt, (count_type, data_type, name))| {
+        tuple((
+            comment_blk,
+            tag(PROPERTY_LIST),
+            space,
+            count_type,
+            space,
+            data_type,
+            space,
+            identifier,
+            newline,
+        )),
+        |(cmt, _, _, count_type, _, data_type, _, name, _)| {
             let (comments, obj_info) = split_vecs_of_either(cmt);
 
-            ListPropertyDescriptor {
+            PropertyDescriptor::List {
+                name: String::from_utf8_lossy(name).to_string(),
                 count_type,
                 data_type,
-                name,
                 comments,
                 obj_info,
             }
@@ -206,16 +187,12 @@ fn property_list_rpt<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'
     )(input)
 }
 
-fn property_list_blk<'a, E: ParseError<&'a [u8]>>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], Vec<ListPropertyDescriptor>, E> {
-    many1(property_list_rpt)(input)
+fn property_rpt<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E> {
+    alt((property_scalar_decl, property_list_decl))(input)
 }
 
-fn property_blk<'a, E: ParseError<&'a [u8]>>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], Either<Vec<PropertyDescriptor>, Vec<ListPropertyDescriptor>>, E> {
-    alt((map(property_list_blk, Right), map(property_scalar_blk, Left)))(input)
+fn property_blk<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], Vec<PropertyDescriptor>, E> {
+    many1(property_rpt)(input)
 }
 
 fn element_rpt<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
@@ -223,26 +200,15 @@ fn element_rpt<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNu
 ) -> IResult<&'a [u8], ElementDescriptor, E> {
     map(
         tuple((comment_blk, element_decl, property_blk)),
-        |(cmt, (name, count), prp)| {
+        |(cmt, (name, count), properties)| {
             let (comments, obj_info) = split_vecs_of_either(cmt);
 
-            match prp {
-                Left(properties) => ElementDescriptor {
-                    name,
-                    count,
-                    properties,
-                    list_properties: Vec::new(),
-                    comments,
-                    obj_info,
-                },
-                Right(list_properties) => ElementDescriptor {
-                    name,
-                    count,
-                    properties: Vec::new(),
-                    list_properties,
-                    comments,
-                    obj_info,
-                },
+            ElementDescriptor {
+                name,
+                count,
+                properties,
+                comments,
+                obj_info,
             }
         },
     )(input)
@@ -296,13 +262,12 @@ mod tests {
                     elements: vec![ElementDescriptor {
                         name: String::from("vertex"),
                         count: 1usize,
-                        properties: vec![PropertyDescriptor {
+                        properties: vec![PropertyDescriptor::Scalar {
                             data_type: DataType::F32,
                             name: String::from("x"),
                             comments: Vec::new(),
                             obj_info: Vec::new()
                         }],
-                        list_properties: Vec::new(),
                         comments: Vec::new(),
                         obj_info: Vec::new()
                     }],
