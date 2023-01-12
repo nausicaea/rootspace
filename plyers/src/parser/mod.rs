@@ -2,7 +2,7 @@ use std::num::{ParseFloatError, ParseIntError};
 
 use nom::{
     combinator::{all_consuming, flat_map, map},
-    error::{FromExternalError, ParseError},
+    error::{context, ContextError, FromExternalError, ParseError},
     IResult,
 };
 use num_traits::NumCast;
@@ -31,20 +31,23 @@ pub fn parse_ply<
     'a,
     V: NumCast + 'a,
     I: NumCast + 'a,
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + 'a,
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'a,
 >(
     input: &'a [u8],
 ) -> IResult<&'a [u8], Ply<V, I>, E> {
-    all_consuming(flat_map(header, |descriptor| {
-        map(body_fct(descriptor.clone()), move |data| Ply {
-            descriptor: descriptor.clone(),
-            data: data
-                .into_iter()
-                .zip(descriptor.elements.iter().map(|e| &e.name))
-                .map(|(d, n)| (n.clone(), d))
-                .collect(),
-        })
-    }))(input)
+    context(
+        "plyers::parser::parse_ply",
+        all_consuming(flat_map(header, |descriptor| {
+            map(body_fct(descriptor.clone()), move |data| Ply {
+                descriptor: descriptor.clone(),
+                data: data
+                    .into_iter()
+                    .zip(descriptor.elements.iter().map(|e| &e.name))
+                    .map(|(d, n)| (n.clone(), d))
+                    .collect(),
+            })
+        })),
+    )(input)
 }
 
 #[cfg(test)]

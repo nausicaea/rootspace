@@ -4,7 +4,7 @@ use nom::{
     bytes::complete::tag,
     character::complete::digit1,
     combinator::{map, map_res, opt, value},
-    error::{FromExternalError, ParseError},
+    error::{context, ContextError, FromExternalError, ParseError},
     multi::{many0, many1},
     sequence::tuple,
     IResult,
@@ -132,117 +132,154 @@ fn count_type<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8],
     ))(input)
 }
 
-fn comment_blk<'a, E: ParseError<&'a [u8]>>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, E> {
-    many0(alt((map(comment_decl, Left), map(obj_info_decl, Right))))(input)
-}
-
-fn format_blk<'a, E: ParseError<&'a [u8]>>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], (Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, FormatType), E> {
-    tuple((comment_blk, format_decl))(input)
-}
-
-fn property_scalar_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E> {
-    map(
-        tuple((comment_blk, tag(PROPERTY), space, data_type, space, identifier, newline)),
-        |(cmt, _, _, data_type, _, name, _)| {
-            let (comments, obj_info) = split_vecs_of_either(cmt);
-
-            PropertyDescriptor::Scalar {
-                name: String::from_utf8_lossy(name).to_string(),
-                data_type,
-                comments,
-                obj_info,
-            }
-        },
+fn comment_blk<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context(
+        "plyers::parser::header::comment_blk",
+        many0(alt((map(comment_decl, Left), map(obj_info_decl, Right)))),
     )(input)
 }
 
-fn property_list_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E> {
-    map(
-        tuple((
-            comment_blk,
-            tag(PROPERTY_LIST),
-            space,
-            count_type,
-            space,
-            data_type,
-            space,
-            identifier,
-            newline,
-        )),
-        |(cmt, _, _, count_type, _, data_type, _, name, _)| {
-            let (comments, obj_info) = split_vecs_of_either(cmt);
+fn format_blk<'a, E>(
+    input: &'a [u8],
+) -> IResult<&'a [u8], (Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, FormatType), E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context("plyers::parser::header::format_blk", tuple((comment_blk, format_decl)))(input)
+}
 
-            PropertyDescriptor::List {
-                name: String::from_utf8_lossy(name).to_string(),
+fn property_scalar_decl<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context(
+        "plyers::parser::header::property_scalar_decl",
+        map(
+            tuple((comment_blk, tag(PROPERTY), space, data_type, space, identifier, newline)),
+            |(cmt, _, _, data_type, _, name, _)| {
+                let (comments, obj_info) = split_vecs_of_either(cmt);
+
+                PropertyDescriptor::Scalar {
+                    name: String::from_utf8_lossy(name).to_string(),
+                    data_type,
+                    comments,
+                    obj_info,
+                }
+            },
+        ),
+    )(input)
+}
+
+fn property_list_decl<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context(
+        "plyers::parser::header::property_list_decl",
+        map(
+            tuple((
+                comment_blk,
+                tag(PROPERTY_LIST),
+                space,
                 count_type,
+                space,
                 data_type,
-                comments,
-                obj_info,
-            }
-        },
+                space,
+                identifier,
+                newline,
+            )),
+            |(cmt, _, _, count_type, _, data_type, _, name, _)| {
+                let (comments, obj_info) = split_vecs_of_either(cmt);
+
+                PropertyDescriptor::List {
+                    name: String::from_utf8_lossy(name).to_string(),
+                    count_type,
+                    data_type,
+                    comments,
+                    obj_info,
+                }
+            },
+        ),
     )(input)
 }
 
-fn property_rpt<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E> {
-    alt((property_scalar_decl, property_list_decl))(input)
-}
-
-fn property_blk<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], Vec<PropertyDescriptor>, E> {
-    many1(property_rpt)(input)
-}
-
-fn element_rpt<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], ElementDescriptor, E> {
-    map(
-        tuple((comment_blk, element_decl, property_blk)),
-        |(cmt, (name, count), properties)| {
-            let (comments, obj_info) = split_vecs_of_either(cmt);
-
-            ElementDescriptor {
-                name,
-                count,
-                properties,
-                comments,
-                obj_info,
-            }
-        },
+fn property_rpt<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context(
+        "plyers::parser::header::property_rpt",
+        alt((property_scalar_decl, property_list_decl)),
     )(input)
 }
 
-fn element_blk<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], Vec<ElementDescriptor>, E> {
-    many1(element_rpt)(input)
+fn property_blk<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], Vec<PropertyDescriptor>, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context("plyers::parser::header::property_blk", many1(property_rpt))(input)
 }
 
-pub fn header<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], PlyDescriptor, E> {
-    map(
-        tuple((
-            opt(whitespace),
-            tag(PLY),
-            newline,
-            format_blk,
-            element_blk,
-            tag(END_HEADER),
-            newline,
-        )),
-        |(_, _, _, (cmt, format_type), elements, _, _)| {
-            let (comments, obj_info) = split_vecs_of_either(cmt);
+fn element_rpt<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], ElementDescriptor, E>
+where
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
+{
+    context(
+        "plyers::parser::header::element_rpt",
+        map(
+            tuple((comment_blk, element_decl, property_blk)),
+            |(cmt, (name, count), properties)| {
+                let (comments, obj_info) = split_vecs_of_either(cmt);
 
-            PlyDescriptor {
-                format_type,
-                elements,
-                comments,
-                obj_info,
-            }
-        },
+                ElementDescriptor {
+                    name,
+                    count,
+                    properties,
+                    comments,
+                    obj_info,
+                }
+            },
+        ),
+    )(input)
+}
+
+fn element_blk<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], Vec<ElementDescriptor>, E>
+where
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
+{
+    context("plyers::parser::header::element_blk", many1(element_rpt))(input)
+}
+
+pub fn header<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], PlyDescriptor, E>
+where
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
+{
+    context(
+        "plyers::parser::header::header",
+        map(
+            tuple((
+                opt(whitespace),
+                tag(PLY),
+                newline,
+                format_blk,
+                element_blk,
+                tag(END_HEADER),
+                newline,
+            )),
+            |(_, _, _, (cmt, format_type), elements, _, _)| {
+                let (comments, obj_info) = split_vecs_of_either(cmt);
+
+                PlyDescriptor {
+                    format_type,
+                    elements,
+                    comments,
+                    obj_info,
+                }
+            },
+        ),
     )(input)
 }
 

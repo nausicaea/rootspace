@@ -10,7 +10,7 @@ use nom::{
     error::ParseError,
     multi::many0_count,
     sequence::pair,
-    IResult,
+    IResult, Parser,
 };
 
 pub fn split_vecs_of_either<L, R>(mut input: Vec<Either<L, R>>) -> (Vec<L>, Vec<R>) {
@@ -55,6 +55,31 @@ pub fn identifier<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [
         alt((alpha1, tag(b"_"))),
         many0_count(alt((alphanumeric1, tag(b"_")))),
     ))(input)
+}
+
+pub fn fold_exact<I, O, B, P, F, G, E>(n: usize, mut parser: P, init: G, mut f: F) -> impl FnMut(I) -> IResult<I, B, E>
+where
+    I: Clone,
+    P: Parser<I, O, E>,
+    F: FnMut(B, O) -> B,
+    G: Fn() -> B,
+    E: ParseError<I>,
+{
+    move |mut input: I| {
+        let mut accum = init();
+
+        for _ in 0..n {
+            match parser.parse(input.clone()) {
+                Ok((tail, output)) => {
+                    accum = f(accum, output);
+                    input = tail;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+
+        Ok((input, accum))
+    }
 }
 
 #[cfg(test)]
