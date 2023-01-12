@@ -94,23 +94,16 @@ pub fn load_ply<V: NumCast, I: NumCast, P: AsRef<Path>>(path: P) -> Result<Ply<V
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    const TEST_FILES: &'static [&'static str] = &[
-        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/cube.ply"), // Ascii Cube
-        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/bun_zipper.ply"), // Large Ascii File
-        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/surfaceAB.ply"), // Large Little Endian File
-        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/Baby_Kinect.ply"), // Large Big Endian File
-        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/db_tall_obstacle_0.ply"), // VTK generated
-        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/saved_terrain.ply"), // VCGLIB generated
-        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/pasillo_1.ply"), // Large Ascii File
-        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/changing_dtypes.ply"), // Large Ascii File
-    ];
+    use glob::glob;
 
     #[test]
     fn load_ply_succeeds_for_test_files() {
-        for &p in TEST_FILES {
-            match load_ply::<f32, u32, _>(p) {
-                Err(e) => panic!("{}", e),
+        for path_buf in
+            glob(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/valid/*.ply")).expect("Failed to read glob pattern")
+        {
+            let path = path_buf.expect("Failed to read a globbed path");
+            match load_ply::<f32, u32, _>(&path) {
+                Err(e) => panic!("{}: {}", path.display(), e),
                 _ => (),
             }
         }

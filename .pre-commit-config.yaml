@@ -1,4 +1,6 @@
 ---
+fail_fast: true
+exclude: "\.ply$"
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
@@ -7,6 +9,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/doublify/pre-commit-rust
+    types_or: ["rust, toml"]
     rev: v1.0
     hooks:
       - id: fmt
