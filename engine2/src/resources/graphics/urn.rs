@@ -1,5 +1,3 @@
-use super::ids::FromUsize;
-
 #[derive(Debug)]
 pub struct Urn<T> {
     max_token: usize,
@@ -7,7 +5,7 @@ pub struct Urn<T> {
     _t: std::marker::PhantomData<T>,
 }
 
-impl<T: Into<usize> + FromUsize> Urn<T> {
+impl<T: Into<usize> + From<usize>> Urn<T> {
     pub fn take(&mut self) -> T {
         let token = if let Some(t) = self.free_tokens.pop() {
             t
@@ -17,7 +15,7 @@ impl<T: Into<usize> + FromUsize> Urn<T> {
             tmp
         };
 
-        T::from_usize::<super::ids::private::Private>(token)
+        T::from(token)
     }
 
     pub fn replace(&mut self, token: T) {

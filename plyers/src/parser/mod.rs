@@ -7,8 +7,8 @@ use nom::{
 };
 use num_traits::NumCast;
 
-use self::{body::body_fct, header::header};
-use crate::types::Ply;
+use self::{body::body_fct, common::Urn, header::header_fct};
+use crate::types::{ElementId, Ply, PropertyId};
 
 mod body;
 mod common;
@@ -35,19 +35,21 @@ pub fn parse_ply<
 >(
     input: &'a [u8],
 ) -> IResult<&'a [u8], Ply<V, I>, E> {
-    context(
+    let mut e_urn = Urn::<ElementId>::default();
+    let mut p_urn = Urn::<PropertyId>::default();
+    let e_urn_ref = &mut e_urn;
+    let p_urn_ref = &mut p_urn;
+    let r = context(
         "plyers::parser::parse_ply",
-        all_consuming(flat_map(header, |descriptor| {
+        all_consuming(flat_map(header_fct(e_urn_ref, p_urn_ref), |descriptor| {
             map(body_fct(descriptor.clone()), move |data| Ply {
                 descriptor: descriptor.clone(),
-                data: data
-                    .into_iter()
-                    .zip(descriptor.elements.iter().map(|e| &e.name))
-                    .map(|(d, n)| (n.clone(), d))
-                    .collect(),
+                data,
             })
         })),
-    )(input)
+    )(input);
+
+    r
 }
 
 #[cfg(test)]
@@ -68,8 +70,12 @@ mod tests {
     #[test]
     fn parse_ply_minimal_ascii_parses_correctly() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
-        let expected_data: BTreeMap<String, Vec<Either<f32, Vec<u16>>>> =
-            vec![("vertex".to_string(), vec![Left(1.0f32)])].into_iter().collect();
+        let expected_data: BTreeMap<ElementId, BTreeMap<PropertyId, Either<Vec<f32>, Vec<Vec<u16>>>>> = vec![(
+            ElementId(0),
+            vec![(PropertyId(0), Left(vec![1.0f32]))].into_iter().collect(),
+        )]
+        .into_iter()
+        .collect();
         assert_eq!(
             parse_ply::<f32, u16, nom::error::Error<_>>(&input[..]),
             Ok((
@@ -77,18 +83,28 @@ mod tests {
                 Ply {
                     descriptor: PlyDescriptor {
                         format_type: FormatType::Ascii,
-                        elements: vec![ElementDescriptor {
-                            name: String::from("vertex"),
-                            count: 1usize,
-                            properties: vec![PropertyDescriptor::Scalar {
-                                data_type: DataType::F32,
-                                name: String::from("x"),
+                        elements: vec![(
+                            ElementId(0),
+                            ElementDescriptor {
+                                name: String::from("vertex"),
+                                count: 1usize,
+                                properties: vec![(
+                                    PropertyId(0),
+                                    PropertyDescriptor::Scalar {
+                                        data_type: DataType::F32,
+                                        name: String::from("x"),
+                                        comments: Vec::new(),
+                                        obj_info: Vec::new()
+                                    }
+                                )]
+                                .into_iter()
+                                .collect(),
                                 comments: Vec::new(),
                                 obj_info: Vec::new()
-                            }],
-                            comments: Vec::new(),
-                            obj_info: Vec::new()
-                        }],
+                            }
+                        )]
+                        .into_iter()
+                        .collect(),
                         comments: Vec::new(),
                         obj_info: Vec::new()
                     },
@@ -117,8 +133,12 @@ mod tests {
     #[test]
     fn parse_ply_has_no_errors_for_ascii_with_heavy_comments() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/heavy_comments_ascii.ply"));
-        let expected_data: BTreeMap<String, Vec<Either<f32, Vec<u16>>>> =
-            vec![("vertex".to_string(), vec![Left(1.0f32)])].into_iter().collect();
+        let expected_data: BTreeMap<ElementId, BTreeMap<PropertyId, Either<Vec<f32>, Vec<Vec<u16>>>>> = vec![(
+            ElementId(0),
+            vec![(PropertyId(0), Left(vec![1.0f32]))].into_iter().collect(),
+        )]
+        .into_iter()
+        .collect();
         assert_eq!(
             parse_ply::<f32, u16, nom::error::Error<_>>(&input[..]),
             Ok((
@@ -126,27 +146,37 @@ mod tests {
                 Ply {
                     descriptor: PlyDescriptor {
                         format_type: FormatType::Ascii,
-                        elements: vec![ElementDescriptor {
-                            name: String::from("vertex"),
-                            count: 1,
-                            properties: vec![PropertyDescriptor::Scalar {
-                                data_type: DataType::F32,
-                                name: String::from("x"),
+                        elements: vec![(
+                            ElementId(0),
+                            ElementDescriptor {
+                                name: String::from("vertex"),
+                                count: 1,
+                                properties: vec![(
+                                    PropertyId(0),
+                                    PropertyDescriptor::Scalar {
+                                        data_type: DataType::F32,
+                                        name: String::from("x"),
+                                        comments: vec![
+                                            CommentDescriptor(String::from("5. Comments are allowed here")),
+                                            CommentDescriptor(String::from("6. Comments are allowed here"))
+                                        ],
+                                        obj_info: vec![ObjInfoDescriptor(String::from("4. ObjInfo are allowed here"))]
+                                    }
+                                )]
+                                .into_iter()
+                                .collect(),
                                 comments: vec![
-                                    CommentDescriptor(String::from("5. Comments are allowed here")),
-                                    CommentDescriptor(String::from("6. Comments are allowed here"))
+                                    CommentDescriptor(String::from("3. Comments are allowed here")),
+                                    CommentDescriptor(String::from("4. Comments are allowed here"))
                                 ],
-                                obj_info: vec![ObjInfoDescriptor(String::from("4. ObjInfo are allowed here"))]
-                            }],
-                            comments: vec![
-                                CommentDescriptor(String::from("3. Comments are allowed here")),
-                                CommentDescriptor(String::from("4. Comments are allowed here"))
-                            ],
-                            obj_info: vec![
-                                ObjInfoDescriptor(String::from("2. ObjInfo are allowed here")),
-                                ObjInfoDescriptor(String::from("3. ObjInfo are allowed here"))
-                            ]
-                        }],
+                                obj_info: vec![
+                                    ObjInfoDescriptor(String::from("2. ObjInfo are allowed here")),
+                                    ObjInfoDescriptor(String::from("3. ObjInfo are allowed here"))
+                                ]
+                            }
+                        )]
+                        .into_iter()
+                        .collect(),
                         comments: vec![
                             CommentDescriptor(String::from("1. Comments are allowed here")),
                             CommentDescriptor(String::from("2. Comments are allowed here"))

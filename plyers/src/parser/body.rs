@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use either::Either::{self, Left, Right};
 use nom::{
     bytes::complete::take_till1,
@@ -9,7 +11,7 @@ use nom::{
         le_i64, le_i8, le_u16, le_u32, le_u64, le_u8, recognize_float,
     },
     sequence::terminated,
-    IResult, Parser,
+    IResult,
 };
 use num_traits::{cast, NumCast};
 
@@ -17,7 +19,9 @@ use super::{
     common::{fold_exact, is_whitespace, whitespace},
     ParseNumError,
 };
-use crate::types::{CountType, DataType, ElementDescriptor, FormatType, PlyDescriptor, PropertyDescriptor};
+use crate::types::{
+    CountType, DataType, ElementDescriptor, ElementId, FormatType, PlyDescriptor, PropertyDescriptor, PropertyId,
+};
 
 fn ascii_count_fct<'a, E>(_count_type: CountType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>
 where
@@ -179,87 +183,104 @@ where
     )
 }
 
-fn properties_fct<'a, V, I, F1, F2, F3, P1, P2, P3, E>(
+fn properties_fct<'a, 'b, V, I, F1, F2, F3, P1, P2, P3, E>(
     cnt_fn: &'a F1,
     v_num_fn: &'a F2,
     i_num_fn: &'a F3,
-    descriptors: Vec<PropertyDescriptor>,
+    properties: &'b BTreeMap<PropertyId, PropertyDescriptor>,
     repetitions: usize,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<Either<V, Vec<I>>>, E>
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, Either<Vec<V>, Vec<Vec<I>>>>, E> + 'b
 where
-    V: NumCast,
-    I: NumCast,
+    'a: 'b,
+    V: NumCast + 'b,
+    I: NumCast + 'b,
     F1: Fn(CountType) -> P1,
     F2: Fn(DataType) -> P2,
     F3: Fn(DataType) -> P3,
     P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
     P2: FnMut(&'a [u8]) -> IResult<&'a [u8], V, E>,
     P3: FnMut(&'a [u8]) -> IResult<&'a [u8], I, E>,
-    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]> + 'b,
 {
-    let m = descriptors.len() * repetitions;
-    let mut i = 0;
+    let mut p_iter = properties.iter().cycle();
 
     context(
         "plyers::parser::body::properties_fct",
         fold_exact(
-            m,
+            properties.len() * repetitions,
             move |input| {
-                let desc = descriptors[i % descriptors.len()].clone();
-                i += 1;
+                let (&p_id, p_desc) = p_iter.next().unwrap();
 
-                match desc {
+                match p_desc {
                     PropertyDescriptor::Scalar { data_type, .. } => {
-                        map(property_scalar_fct(v_num_fn, data_type), Left)(input)
+                        map(property_scalar_fct(v_num_fn, *data_type), |p| (p_id, Left(p)))(input)
                     }
                     PropertyDescriptor::List {
                         count_type, data_type, ..
-                    } => map(property_list_fct(cnt_fn, i_num_fn, count_type, data_type), Right)(input),
+                    } => map(property_list_fct(cnt_fn, i_num_fn, *count_type, *data_type), |ps| {
+                        (p_id, Right(ps))
+                    })(input),
                 }
             },
-            Vec::new,
-            |mut p_acc, p| {
-                p_acc.push(p);
+            BTreeMap::<PropertyId, Either<Vec<V>, Vec<Vec<I>>>>::new,
+            |mut p_acc, (p_id, p)| {
+                if !p_acc.contains_key(&p_id) {
+                    p_acc.insert(
+                        p_id,
+                        match p {
+                            Left(ps) => Left(vec![ps]),
+                            Right(pl) => Right(vec![pl]),
+                        },
+                    );
+                } else {
+                    p_acc.get_mut(&p_id).map(|p_acc_entry| match p_acc_entry {
+                        Left(ref mut ps_acc) => p.map_left(|ps| ps_acc.push(ps)).left().unwrap_or_default(),
+                        Right(ref mut pl_acc) => p.map_right(|pl| pl_acc.push(pl)).right().unwrap_or_default(),
+                    });
+                }
+
                 p_acc
             },
         ),
     )
 }
 
-fn elements_fct<'a, V, I, F1, F2, F3, P1, P2, P3, E>(
+fn elements_fct<'a, 'b, V, I, F1, F2, F3, P1, P2, P3, E>(
     cnt_fn: &'a F1,
     v_num_fn: &'a F2,
     i_num_fn: &'a F3,
-    elements: Vec<ElementDescriptor>,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<Vec<Either<V, Vec<I>>>>, E>
+    elements: &'b BTreeMap<ElementId, ElementDescriptor>,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<ElementId, BTreeMap<PropertyId, Either<Vec<V>, Vec<Vec<I>>>>>, E> + 'b
 where
-    V: NumCast,
-    I: NumCast,
+    'a: 'b,
+    V: NumCast + 'b,
+    I: NumCast + 'b,
     F1: Fn(CountType) -> P1,
     F2: Fn(DataType) -> P2,
     F3: Fn(DataType) -> P3,
     P1: FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>,
     P2: FnMut(&'a [u8]) -> IResult<&'a [u8], V, E>,
     P3: FnMut(&'a [u8]) -> IResult<&'a [u8], I, E>,
-    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]> + 'b,
 {
-    let m = elements.len();
-    let mut i = 0;
+    let mut e_iter = elements.iter();
 
     context(
         "plyers::parser::body::elements_fct",
         fold_exact(
-            m,
+            elements.len(),
             move |input: &'a [u8]| {
-                let el = elements[i].clone();
-                i += 1;
+                let (e_id, e_desc) = e_iter.next().unwrap();
 
-                properties_fct(cnt_fn, v_num_fn, i_num_fn, el.properties, el.count)(input)
+                map(
+                    properties_fct(cnt_fn, v_num_fn, i_num_fn, &e_desc.properties, e_desc.count),
+                    |e| (*e_id, e),
+                )(input)
             },
-            Vec::new,
-            |mut p_acc, p| {
-                p_acc.push(p);
-                p_acc
+            BTreeMap::<ElementId, BTreeMap<PropertyId, Either<Vec<V>, Vec<Vec<I>>>>>::new,
+            |mut e_acc, (e_id, e)| {
+                e_acc.insert(e_id, e);
+                e_acc
             },
         ),
     )
@@ -272,15 +293,15 @@ pub fn body_fct<
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'a,
 >(
     ply: PlyDescriptor,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], Vec<Vec<Either<V, Vec<I>>>>, E> {
-    context("plyers::parser::body::body_fct", move |input| {
-        let elements = ply.elements.iter().cloned().collect();
-        match ply.format_type {
-            FormatType::Ascii => elements_fct(&ascii_count_fct, &ascii_number_fct, &ascii_number_fct, elements)(input),
-            FormatType::BinaryLittleEndian => {
-                elements_fct(&le_count_fct, &le_number_fct, &le_number_fct, elements)(input)
-            }
-            FormatType::BinaryBigEndian => elements_fct(&be_count_fct, &be_number_fct, &be_number_fct, elements)(input),
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<ElementId, BTreeMap<PropertyId, Either<Vec<V>, Vec<Vec<I>>>>>, E>
+{
+    context("plyers::parser::body::body_fct", move |input| match ply.format_type {
+        FormatType::Ascii => elements_fct(&ascii_count_fct, &ascii_number_fct, &ascii_number_fct, &ply.elements)(input),
+        FormatType::BinaryLittleEndian => {
+            elements_fct(&le_count_fct, &le_number_fct, &le_number_fct, &ply.elements)(input)
+        }
+        FormatType::BinaryBigEndian => {
+            elements_fct(&be_count_fct, &be_number_fct, &be_number_fct, &ply.elements)(input)
         }
     })
 }

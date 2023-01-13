@@ -1,18 +1,3 @@
-/// Semi-private trait to allow conversion from usize only for internal functions
-pub trait FromUsize {
-    fn from_usize<P: self::private::IsPrivate>(value: usize) -> Self;
-}
-
-/// This **private-module-in-public-trait** trick was described wonderfully in
-/// [Jack Wrenn's blog](https://jack.wrenn.fyi/blog/private-trait-methods/).
-pub(super) mod private {
-    pub enum Private {}
-
-    pub trait IsPrivate {}
-
-    impl IsPrivate for Private {}
-}
-
 macro_rules! impl_id {
     ($name:ident) => {
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -24,8 +9,8 @@ macro_rules! impl_id {
             }
         }
 
-        impl FromUsize for $name {
-            fn from_usize<L: $crate::resources::graphics::ids::private::IsPrivate>(value: usize) -> Self {
+        impl From<usize> for $name {
+            fn from(value: usize) -> Self {
                 $name(value)
             }
         }

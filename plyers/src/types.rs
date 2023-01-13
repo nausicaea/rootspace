@@ -18,6 +18,36 @@ pub const TEXTURE_U_PROPERTY: &'static str = "texture_u";
 pub const TEXTURE_V_PROPERTY: &'static str = "texture_v";
 pub const VERTEX_INDICES_LIST_PROPERTY: &'static str = "vertex_indices";
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct ElementId(pub(crate) usize);
+
+impl Into<usize> for ElementId {
+    fn into(self) -> usize {
+        self.0
+    }
+}
+
+impl From<usize> for ElementId {
+    fn from(value: usize) -> Self {
+        ElementId(value)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PropertyId(pub(crate) usize);
+
+impl Into<usize> for PropertyId {
+    fn into(self) -> usize {
+        self.0
+    }
+}
+
+impl From<usize> for PropertyId {
+    fn from(value: usize) -> Self {
+        PropertyId(value)
+    }
+}
+
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FormatType {
@@ -68,12 +98,12 @@ pub enum PropertyDescriptor {
     },
 }
 
-#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
+#[cfg_attr(test, derive(PartialEq))]
 #[derive(Debug, Clone)]
 pub struct ElementDescriptor {
     pub name: String,
     pub count: usize,
-    pub properties: Vec<PropertyDescriptor>,
+    pub properties: BTreeMap<PropertyId, PropertyDescriptor>,
     pub comments: Vec<CommentDescriptor>,
     pub obj_info: Vec<ObjInfoDescriptor>,
 }
@@ -98,11 +128,11 @@ impl std::fmt::Display for ObjInfoDescriptor {
     }
 }
 
-#[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
+#[cfg_attr(test, derive(PartialEq))]
 #[derive(Debug, Clone)]
 pub struct PlyDescriptor {
     pub format_type: FormatType,
-    pub elements: Vec<ElementDescriptor>,
+    pub elements: BTreeMap<ElementId, ElementDescriptor>,
     pub comments: Vec<CommentDescriptor>,
     pub obj_info: Vec<ObjInfoDescriptor>,
 }
@@ -111,7 +141,7 @@ impl Default for PlyDescriptor {
     fn default() -> Self {
         PlyDescriptor {
             format_type: FormatType::Ascii,
-            elements: Vec::default(),
+            elements: BTreeMap::default(),
             comments: Vec::default(),
             obj_info: Vec::default(),
         }
@@ -130,30 +160,53 @@ pub enum Primitive {
 #[derive(Debug)]
 pub struct Ply<V, I> {
     pub descriptor: PlyDescriptor,
-    pub data: BTreeMap<String, Vec<Either<V, Vec<I>>>>,
+    pub data: BTreeMap<ElementId, BTreeMap<PropertyId, Either<Vec<V>, Vec<Vec<I>>>>>,
 }
 
 impl<V, I> Ply<V, I> {
+    pub fn element_id(&self, name: &str) -> Option<ElementId> {
+        self.descriptor
+            .elements
+            .iter()
+            .filter(|(_, e)| e.name == name)
+            .map(|(e_id, _)| *e_id)
+            .next()
+    }
+
+    pub fn property_id(&self, element_name: &str, property_name: &str) -> Option<(ElementId, PropertyId)> {
+        self.descriptor
+            .elements
+            .iter()
+            .filter(|(_, e)| e.name == element_name)
+            .flat_map(|(e_id, e)| e.properties.iter().map(|(p_id, p)| (*e_id, p_id, p)))
+            .filter(|(_, _, p)| match p {
+                PropertyDescriptor::Scalar { name, .. } => name == property_name,
+                PropertyDescriptor::List { name, .. } => name == property_name,
+            })
+            .map(|(e_id, p_id, _)| (e_id, *p_id))
+            .next()
+    }
+
+    pub fn property_data(&self, element_name: &str, property_name: &str) -> Option<&Either<Vec<V>, Vec<Vec<I>>>> {
+        let (e_id, p_id) = self.property_id(element_name, property_name)?;
+
+        self.data.get(&e_id).and_then(|e| e.get(&p_id))
+    }
+
     pub fn face_type(&self) -> Option<Primitive> {
-        if !self.data.contains_key(FACE_ELEMENT) {
-            return None;
+        let d = self
+            .property_data(FACE_ELEMENT, VERTEX_INDICES_LIST_PROPERTY)
+            .and_then(|d| d.as_ref().right())?;
+
+        let primitives: HashSet<usize> = d.iter().map(|i| i.len()).collect();
+
+        if primitives.iter().all(|&p| p == 3) {
+            Some(Primitive::Triangles)
+        } else if primitives.iter().all(|&p| p == 4) {
+            Some(Primitive::Quads)
+        } else {
+            Some(Primitive::Mixed)
         }
-
-        todo!()
-
-        // if self.data[FACE_ELEMENT].1.is_empty() {
-        //     return None;
-        // }
-
-        // let primitives: HashSet<usize> = self.data[FACE_ELEMENT].1.iter().map(|f| f.len()).collect();
-
-        // if primitives.iter().all(|&p| p == 3) {
-        //     Some(Primitive::Triangles)
-        // } else if primitives.iter().all(|&p| p == 4) {
-        //     Some(Primitive::Quads)
-        // } else {
-        //     Some(Primitive::Mixed)
-        // }
     }
 }
 
@@ -191,7 +244,7 @@ mod tests {
     fn ply_data_container_has_the_following_structure() {
         let _ = Ply {
             descriptor: PlyDescriptor::default(),
-            data: BTreeMap::<String, Vec<Either<f32, Vec<u16>>>>::default(),
+            data: BTreeMap::<ElementId, BTreeMap<PropertyId, Either<Vec<f32>, Vec<Vec<u16>>>>>::default(),
         };
     }
 
@@ -199,7 +252,7 @@ mod tests {
     fn ply_descriptor_has_the_following_structure() {
         let _ = PlyDescriptor {
             format_type: FormatType::Ascii,
-            elements: Vec::<ElementDescriptor>::new(),
+            elements: BTreeMap::<ElementId, ElementDescriptor>::new(),
             comments: Vec::<CommentDescriptor>::new(),
             obj_info: Vec::<ObjInfoDescriptor>::new(),
         };
@@ -210,7 +263,7 @@ mod tests {
         let _ = ElementDescriptor {
             name: String::from("vertex"),
             count: 0usize,
-            properties: Vec::<PropertyDescriptor>::new(),
+            properties: BTreeMap::<PropertyId, PropertyDescriptor>::new(),
             comments: Vec::<CommentDescriptor>::new(),
             obj_info: Vec::<ObjInfoDescriptor>::new(),
         };

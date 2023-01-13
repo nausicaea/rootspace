@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use either::{Either, Left, Right};
 use nom::{
     branch::alt,
@@ -5,18 +7,18 @@ use nom::{
     character::complete::digit1,
     combinator::{map, map_res, opt, value},
     error::{context, ContextError, FromExternalError, ParseError},
-    multi::{many0, many1},
+    multi::{fold_many1, many0},
     sequence::tuple,
     IResult,
 };
 
 use super::{
-    common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace},
+    common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace, Urn},
     ParseNumError,
 };
 use crate::types::{
-    CommentDescriptor, CountType, DataType, ElementDescriptor, FormatType, ObjInfoDescriptor, PlyDescriptor,
-    PropertyDescriptor,
+    CommentDescriptor, CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, PlyDescriptor,
+    PropertyDescriptor, PropertyId,
 };
 
 const PLY: &'static [u8] = b"ply";
@@ -216,21 +218,37 @@ where
     )(input)
 }
 
-fn property_blk<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], Vec<PropertyDescriptor>, E>
+fn property_blk_fct<'a, 'b, E>(
+    p_urn: &'b mut Urn<PropertyId>,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, PropertyDescriptor>, E> + 'b
 where
-    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
-{
-    context("plyers::parser::header::property_blk", many1(property_rpt))(input)
-}
-
-fn element_rpt<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], ElementDescriptor, E>
-where
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
+    'a: 'b,
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]> + 'b,
 {
     context(
-        "plyers::parser::header::element_rpt",
+        "plyers::parser::header::property_blk",
+        fold_many1(
+            property_rpt,
+            BTreeMap::<PropertyId, PropertyDescriptor>::new,
+            |mut p_acc, p| {
+                p_acc.insert(p_urn.take(), p);
+                p_acc
+            },
+        ),
+    )
+}
+
+fn element_rpt_fct<'a, 'b, E>(
+    p_urn: &'b mut Urn<PropertyId>,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], ElementDescriptor, E> + 'b
+where
+    'a: 'b,
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'b,
+{
+    context(
+        "plyers::parser::header::element_rpt_fct",
         map(
-            tuple((comment_blk, element_decl, property_blk)),
+            tuple((comment_blk, element_decl, property_blk_fct(p_urn))),
             |(cmt, (name, count), properties)| {
                 let (comments, obj_info) = split_vecs_of_either(cmt);
 
@@ -243,29 +261,47 @@ where
                 }
             },
         ),
-    )(input)
+    )
 }
 
-fn element_blk<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], Vec<ElementDescriptor>, E>
+fn element_blk_fct<'a, 'b, E>(
+    e_urn: &'b mut Urn<ElementId>,
+    p_urn: &'b mut Urn<PropertyId>,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<ElementId, ElementDescriptor>, E> + 'b
 where
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
-{
-    context("plyers::parser::header::element_blk", many1(element_rpt))(input)
-}
-
-pub fn header<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], PlyDescriptor, E>
-where
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
+    'a: 'b,
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'b,
 {
     context(
-        "plyers::parser::header::header",
+        "plyers::parser::header::element_blk_fct",
+        fold_many1(
+            element_rpt_fct(p_urn),
+            BTreeMap::<ElementId, ElementDescriptor>::new,
+            |mut e_acc, e| {
+                e_acc.insert(e_urn.take(), e);
+                e_acc
+            },
+        ),
+    )
+}
+
+pub fn header_fct<'a, 'b, E>(
+    e_urn: &'b mut Urn<ElementId>,
+    p_urn: &'b mut Urn<PropertyId>,
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], PlyDescriptor, E> + 'b
+where
+    'a: 'b,
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'b,
+{
+    context(
+        "plyers::parser::header::header_fct",
         map(
             tuple((
                 opt(whitespace),
                 tag(PLY),
                 newline,
                 format_blk,
-                element_blk,
+                element_blk_fct(e_urn, p_urn),
                 tag(END_HEADER),
                 newline,
             )),
@@ -280,7 +316,7 @@ where
                 }
             },
         ),
-    )(input)
+    )
 }
 
 #[cfg(test)]
@@ -290,24 +326,36 @@ mod tests {
     #[test]
     fn header_minimal_ascii_parses_correctly() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
+        let mut e_urn = Urn::<ElementId>::default();
+        let mut p_urn = Urn::<PropertyId>::default();
         assert_eq!(
-            header::<nom::error::Error<_>>(&input[..]),
+            header_fct::<nom::error::Error<_>>(&mut e_urn, &mut p_urn)(&input[..]),
             Ok((
                 &b"1.0\n"[..],
                 PlyDescriptor {
                     format_type: FormatType::Ascii,
-                    elements: vec![ElementDescriptor {
-                        name: String::from("vertex"),
-                        count: 1usize,
-                        properties: vec![PropertyDescriptor::Scalar {
-                            data_type: DataType::F32,
-                            name: String::from("x"),
+                    elements: vec![(
+                        ElementId(0),
+                        ElementDescriptor {
+                            name: String::from("vertex"),
+                            count: 1usize,
+                            properties: vec![(
+                                PropertyId(0),
+                                PropertyDescriptor::Scalar {
+                                    data_type: DataType::F32,
+                                    name: String::from("x"),
+                                    comments: Vec::new(),
+                                    obj_info: Vec::new()
+                                }
+                            )]
+                            .into_iter()
+                            .collect(),
                             comments: Vec::new(),
                             obj_info: Vec::new()
-                        }],
-                        comments: Vec::new(),
-                        obj_info: Vec::new()
-                    }],
+                        }
+                    )]
+                    .into_iter()
+                    .collect(),
                     comments: Vec::new(),
                     obj_info: Vec::new()
                 }

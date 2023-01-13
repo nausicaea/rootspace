@@ -35,14 +35,14 @@ fn main() {
                 }
 
                 if matches.element_names {
-                    for element in &ply.descriptor.elements {
+                    for (_, element) in &ply.descriptor.elements {
                         println!("{}", &element.name);
                     }
                 }
 
                 if matches.property_names {
-                    for element in &ply.descriptor.elements {
-                        for property in &element.properties {
+                    for (_, element) in &ply.descriptor.elements {
+                        for (_, property) in &element.properties {
                             match property {
                                 PropertyDescriptor::Scalar { ref name, .. }
                                 | PropertyDescriptor::List { ref name, .. } => println!("{}.{}", &element.name, name),
@@ -60,11 +60,11 @@ fn main() {
                     for comment in &ply.descriptor.comments {
                         println!("ply: {}", comment);
                     }
-                    for element in &ply.descriptor.elements {
+                    for (_, element) in &ply.descriptor.elements {
                         for comment in &element.comments {
                             println!("{}: {}", &element.name, comment);
                         }
-                        for property in &element.properties {
+                        for (_, property) in &element.properties {
                             match property {
                                 PropertyDescriptor::Scalar {
                                     ref name, ref comments, ..
@@ -85,11 +85,11 @@ fn main() {
                     for obj_info in &ply.descriptor.obj_info {
                         println!("ply: {}", obj_info);
                     }
-                    for element in &ply.descriptor.elements {
+                    for (_, element) in &ply.descriptor.elements {
                         for obj_info in &element.obj_info {
                             println!("{}: {}", &element.name, obj_info);
                         }
-                        for property in &element.properties {
+                        for (_, property) in &element.properties {
                             match property {
                                 PropertyDescriptor::Scalar {
                                     ref name, ref obj_info, ..
