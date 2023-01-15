@@ -9,4 +9,5 @@ members = [
     "glamour",
     "plyers",
     "forward-ref",
+    "urn",
 ]

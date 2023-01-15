@@ -21,5 +21,6 @@ impl_id!(BindGroupLayoutId);
 impl_id!(BindGroupId);
 impl_id!(BufferId);
 impl_id!(TextureId);
+impl_id!(TextureViewId);
 impl_id!(SamplerId);
 impl_id!(PipelineId);

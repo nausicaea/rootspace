@@ -32,6 +32,7 @@ rose-tree = { path = "../rose-tree", features = ["ecs", "serde_support"] }
 glamour = { path = "../glamour", features = ["serde_support"] }
 forward-ref = { path = "../forward-ref" }
 plyers = { path = "../plyers" }
+urn = { path = "../urn" }
 
 # tobj = { version = "3.2.2", features = ["async"] }
 

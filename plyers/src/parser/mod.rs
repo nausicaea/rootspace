@@ -6,8 +6,9 @@ use nom::{
     IResult,
 };
 
-use self::{body::body_fct, common::Urn, header::header_fct};
+use self::{body::body_fct, header::header_fct};
 use crate::types::{ElementId, Ply, PropertyId};
+use urn::Urn;
 
 mod body;
 mod common;

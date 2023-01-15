@@ -5,26 +5,38 @@ use plyers::{
     types::{AsSlice, Primitive, PropertyDescriptor},
 };
 
-use crate::resources::graphics::{ids::BufferId, vertex::Vertex, Graphics};
+use crate::resources::graphics::{
+    ids::{BindGroupId, BufferId, SamplerId, TextureId, TextureViewId},
+    vertex::Vertex,
+    Graphics,
+};
 
 #[derive(Debug)]
 pub struct Model {
-    mesh: Mesh,
+    pub mesh: Mesh,
 }
 
-#[derive(Debug)]
-pub struct Mesh {
-    pub(crate) vertex_buffer: BufferId,
-    pub(crate) index_buffer: BufferId,
-    pub(crate) num_indices: u32,
-}
-
-impl Mesh {
+impl Model {
     pub fn with_file<P: AsRef<Path>>(gfx: &mut Graphics, path: P) -> Result<Self, Error> {
         let ply = load_ply(path)?;
         Self::with_ply(gfx, &ply)
     }
 
+    pub fn with_ply(gfx: &mut Graphics, ply: &plyers::Ply) -> Result<Self, Error> {
+        Ok(Model {
+            mesh: Mesh::with_ply(gfx, ply)?,
+        })
+    }
+}
+
+#[derive(Debug)]
+pub struct Mesh {
+    pub vertex_buffer: BufferId,
+    pub index_buffer: BufferId,
+    pub num_indices: u32,
+}
+
+impl Mesh {
     pub fn with_ply(gfx: &mut Graphics, ply: &plyers::Ply) -> Result<Self, Error> {
         let rm = RawMesh::with_ply(ply)?;
 
@@ -152,6 +164,19 @@ impl RawMesh {
 
         Ok(RawMesh { vertices, indices })
     }
+}
+
+#[derive(Debug)]
+pub struct Material {
+    texture: Texture,
+    bind_group: BindGroupId,
+}
+
+#[derive(Debug)]
+pub struct Texture {
+    texture: TextureId,
+    view: TextureViewId,
+    sampler: SamplerId,
 }
 
 #[derive(Debug, thiserror::Error)]

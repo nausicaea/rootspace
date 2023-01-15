@@ -12,6 +12,7 @@ nom = "^7.0.0"
 num-traits = "^0.2.0"
 either = "^1.0"
 file-manipulation = { path = "../file-manipulation" }
+urn = { path = "../urn" }
 
 [dev-dependencies]
 clap = { version = "^4.0.0", features = ["derive"] }

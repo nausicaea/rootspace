@@ -22,7 +22,6 @@ pub mod render_pipeline_builder;
 mod runtime;
 pub mod settings;
 mod tables;
-mod urn;
 pub mod vertex;
 
 pub trait GraphicsDeps {

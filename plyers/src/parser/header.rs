@@ -13,13 +13,14 @@ use nom::{
 };
 
 use super::{
-    common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace, Urn},
+    common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace},
     ParseNumError,
 };
 use crate::types::{
     CommentDescriptor, CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, PlyDescriptor,
     PropertyDescriptor, PropertyId,
 };
+use urn::Urn;
 
 const PLY: &'static [u8] = b"ply";
 const END_HEADER: &'static [u8] = b"end_header";
