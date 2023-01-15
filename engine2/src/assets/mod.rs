@@ -76,8 +76,12 @@ impl RawMesh {
                     plyers::NX_PROPERTY => Some((plyers::NX_PROPERTY, p_id)),
                     plyers::NY_PROPERTY => Some((plyers::NY_PROPERTY, p_id)),
                     plyers::NZ_PROPERTY => Some((plyers::NZ_PROPERTY, p_id)),
-                    plyers::TEXTURE_U_PROPERTY => Some((plyers::TEXTURE_U_PROPERTY, p_id)),
-                    plyers::TEXTURE_V_PROPERTY => Some((plyers::TEXTURE_V_PROPERTY, p_id)),
+                    plyers::TEXTURE_U_PROPERTY | plyers::S_PROPERTY | plyers::U_PROPERTY => {
+                        Some((plyers::TEXTURE_U_PROPERTY, p_id))
+                    }
+                    plyers::TEXTURE_V_PROPERTY | plyers::T_PROPERTY | plyers::V_PROPERTY => {
+                        Some((plyers::TEXTURE_V_PROPERTY, p_id))
+                    }
                     _ => None,
                 },
                 _ => None,

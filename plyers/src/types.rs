@@ -14,6 +14,10 @@ pub const NY_PROPERTY: &'static str = "ny";
 pub const NZ_PROPERTY: &'static str = "nz";
 pub const TEXTURE_U_PROPERTY: &'static str = "texture_u";
 pub const TEXTURE_V_PROPERTY: &'static str = "texture_v";
+pub const S_PROPERTY: &'static str = "s";
+pub const T_PROPERTY: &'static str = "t";
+pub const U_PROPERTY: &'static str = "u";
+pub const V_PROPERTY: &'static str = "v";
 pub const VERTEX_INDICES_LIST_PROPERTY: &'static str = "vertex_indices";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
