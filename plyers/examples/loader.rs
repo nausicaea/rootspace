@@ -31,7 +31,7 @@ fn main() {
             Err(e) => panic!("{}", e),
             Ok(ply) => {
                 if matches.verbose > 1 {
-                    println!("{:?}", ply)
+                    println!("{:#?}", ply)
                 }
 
                 if matches.element_names {

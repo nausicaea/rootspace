@@ -164,15 +164,6 @@ pub struct Ply<V, I> {
 }
 
 impl<V, I> Ply<V, I> {
-    pub fn element_id(&self, name: &str) -> Option<ElementId> {
-        self.descriptor
-            .elements
-            .iter()
-            .filter(|(_, e)| e.name == name)
-            .map(|(e_id, _)| *e_id)
-            .next()
-    }
-
     pub fn property_id(&self, element_name: &str, property_name: &str) -> Option<(ElementId, PropertyId)> {
         self.descriptor
             .elements
