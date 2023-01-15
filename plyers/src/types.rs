@@ -16,6 +16,10 @@ pub const TEXTURE_U_PROPERTY: &'static str = "texture_u";
 pub const TEXTURE_V_PROPERTY: &'static str = "texture_v";
 pub const VERTEX_INDICES_LIST_PROPERTY: &'static str = "vertex_indices";
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+#[error("the sequence of values contains inconsistent data types")]
+pub struct InconsistentDataTypes;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ElementId(pub(crate) usize);
 
@@ -273,9 +277,33 @@ impl Values {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
-#[error("the sequence of values contains inconsistent data types")]
-pub struct InconsistentDataTypes;
+pub trait AsSlice<T> {
+    fn as_slice(&self) -> Option<&[T]>;
+}
+
+macro_rules! impl_as_slice {
+    ($ty:ty, $var:ident) => {
+        impl AsSlice<$ty> for Values {
+            fn as_slice(&self) -> Option<&[$ty]> {
+                match self {
+                    Values::$var(v) => Some(v),
+                    _ => None,
+                }
+            }
+        }
+    };
+}
+
+impl_as_slice!(u8, U8);
+impl_as_slice!(i8, I8);
+impl_as_slice!(u16, U16);
+impl_as_slice!(i16, I16);
+impl_as_slice!(u32, U32);
+impl_as_slice!(i32, I32);
+impl_as_slice!(u64, U64);
+impl_as_slice!(i64, I64);
+impl_as_slice!(f32, F32);
+impl_as_slice!(f64, F64);
 
 impl TryFrom<(DataType, Vec<Value>)> for Values {
     type Error = InconsistentDataTypes;

@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::Path};
 
 use plyers::{
     load_ply,
-    types::{Primitive, PropertyDescriptor},
+    types::{AsSlice, Primitive, PropertyDescriptor},
 };
 
 use crate::resources::graphics::{ids::BufferId, vertex::Vertex, Graphics};
@@ -25,7 +25,7 @@ impl Mesh {
         Self::with_ply(gfx, &ply)
     }
 
-    pub fn with_ply(gfx: &mut Graphics, ply: &plyers::Ply<f32, u32>) -> Result<Self, Error> {
+    pub fn with_ply(gfx: &mut Graphics, ply: &plyers::Ply) -> Result<Self, Error> {
         let rm = RawMesh::with_ply(ply)?;
 
         let vertex_buffer = gfx.create_buffer(None, wgpu::BufferUsages::VERTEX, &rm.vertices);
@@ -46,8 +46,8 @@ struct RawMesh {
 }
 
 impl RawMesh {
-    fn with_ply(ply: &plyers::Ply<f32, u32>) -> Result<Self, Error> {
-        let (e_id, num_vertices) = ply
+    fn with_ply(ply: &plyers::Ply) -> Result<Self, Error> {
+        let (v_e_id, num_vertices) = ply
             .descriptor
             .elements
             .iter()
@@ -56,7 +56,16 @@ impl RawMesh {
             .next()
             .ok_or(Error::NoVertexElement)?;
 
-        let v_p_index: HashMap<_, _> = ply.descriptor.elements[&e_id]
+        let f_e_id = ply
+            .descriptor
+            .elements
+            .iter()
+            .filter(|(_, e)| &e.name == plyers::FACE_ELEMENT)
+            .map(|(&e_id, _)| e_id)
+            .next()
+            .ok_or(Error::NoFaceElement)?;
+
+        let v_p_index: HashMap<_, _> = ply.descriptor.elements[&v_e_id]
             .properties
             .iter()
             .filter_map(|(&p_id, p)| match p {
@@ -75,100 +84,67 @@ impl RawMesh {
             })
             .collect();
 
-        let mut vertices = vec![Vertex::default(); num_vertices];
-
-        let vertex_data = &ply.data[&e_id];
-        for i in 0..num_vertices {
-            if let Some(p_idx) = v_p_index.get(plyers::X_PROPERTY) {
-                vertices[i].position[0] = vertex_data[p_idx]
-                    .as_ref()
-                    .map_left(|l| Ok(l[i]))
-                    .left_or(Err(Error::NotAScalar(plyers::X_PROPERTY)))?;
-            }
-
-            if let Some(p_idx) = v_p_index.get(plyers::Y_PROPERTY) {
-                vertices[i].position[1] = vertex_data[p_idx]
-                    .as_ref()
-                    .map_left(|l| Ok(l[i]))
-                    .left_or(Err(Error::NotAScalar(plyers::Y_PROPERTY)))?;
-            }
-
-            if let Some(p_idx) = v_p_index.get(plyers::Z_PROPERTY) {
-                vertices[i].position[2] = vertex_data[p_idx]
-                    .as_ref()
-                    .map_left(|l| Ok(l[i]))
-                    .left_or(Err(Error::NotAScalar(plyers::Z_PROPERTY)))?;
-            }
-
-            if let Some(p_idx) = v_p_index.get(plyers::NX_PROPERTY) {
-                vertices[i].normals[0] = vertex_data[p_idx]
-                    .as_ref()
-                    .map_left(|l| Ok(l[i]))
-                    .left_or(Err(Error::NotAScalar(plyers::NX_PROPERTY)))?;
-            }
-
-            if let Some(p_idx) = v_p_index.get(plyers::NY_PROPERTY) {
-                vertices[i].normals[1] = vertex_data[p_idx]
-                    .as_ref()
-                    .map_left(|l| Ok(l[i]))
-                    .left_or(Err(Error::NotAScalar(plyers::NY_PROPERTY)))?;
-            }
-
-            if let Some(p_idx) = v_p_index.get(plyers::NZ_PROPERTY) {
-                vertices[i].normals[2] = vertex_data[p_idx]
-                    .as_ref()
-                    .map_left(|l| Ok(l[i]))
-                    .left_or(Err(Error::NotAScalar(plyers::NZ_PROPERTY)))?;
-            }
-
-            if let Some(p_idx) = v_p_index.get(plyers::TEXTURE_U_PROPERTY) {
-                vertices[i].tex_coords[0] = vertex_data[p_idx]
-                    .as_ref()
-                    .map_left(|l| Ok(l[i]))
-                    .left_or(Err(Error::NotAScalar(plyers::TEXTURE_U_PROPERTY)))?;
-            }
-
-            if let Some(p_idx) = v_p_index.get(plyers::TEXTURE_V_PROPERTY) {
-                vertices[i].tex_coords[1] = vertex_data[p_idx]
-                    .as_ref()
-                    .map_left(|l| Ok(l[i]))
-                    .left_or(Err(Error::NotAScalar(plyers::TEXTURE_V_PROPERTY)))?;
-            }
-        }
-
-        let e_id = ply
-            .descriptor
-            .elements
-            .iter()
-            .filter(|(_, e)| &e.name == plyers::FACE_ELEMENT)
-            .map(|(&e_id, _)| e_id)
-            .next()
-            .ok_or(Error::NoFaceElement)?;
-
-        let f_p_index: HashMap<_, _> = ply.descriptor.elements[&e_id]
+        let vertex_indices_id = ply.descriptor.elements[&f_e_id]
             .properties
             .iter()
-            .filter_map(|(&p_id, p)| match p {
+            .find_map(|(&p_id, p)| match p {
                 PropertyDescriptor::List { ref name, .. } => match name.as_ref() {
-                    plyers::VERTEX_INDICES_LIST_PROPERTY => Some((plyers::VERTEX_INDICES_LIST_PROPERTY, p_id)),
+                    plyers::VERTEX_INDICES_LIST_PROPERTY => Some(p_id),
                     _ => None,
                 },
                 _ => None,
             })
-            .collect();
+            .ok_or(Error::NoVertexIndices)?;
 
-        if ply.face_type() != Some(Primitive::Triangles) {
+        if ply.primitive() != Some(Primitive::Triangles) {
             return Err(Error::NoTriangleFaces);
         }
 
-        let indices = ply.data[&e_id][&f_p_index[plyers::VERTEX_INDICES_LIST_PROPERTY]]
-            .as_ref()
-            .right()
-            .ok_or(Error::NoVertexIndices)?
+        let mut vertices = vec![Vertex::default(); num_vertices];
+
+        let vertex_data = &ply.data;
+        for i in 0..num_vertices {
+            if let Some(p_idx) = v_p_index.get(plyers::X_PROPERTY) {
+                vertices[i].position[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+            }
+
+            if let Some(p_idx) = v_p_index.get(plyers::Y_PROPERTY) {
+                vertices[i].position[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+            }
+
+            if let Some(p_idx) = v_p_index.get(plyers::Z_PROPERTY) {
+                vertices[i].position[2] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+            }
+
+            if let Some(p_idx) = v_p_index.get(plyers::NX_PROPERTY) {
+                vertices[i].normals[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+            }
+
+            if let Some(p_idx) = v_p_index.get(plyers::NY_PROPERTY) {
+                vertices[i].normals[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+            }
+
+            if let Some(p_idx) = v_p_index.get(plyers::NZ_PROPERTY) {
+                vertices[i].normals[2] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+            }
+
+            if let Some(p_idx) = v_p_index.get(plyers::TEXTURE_U_PROPERTY) {
+                vertices[i].tex_coords[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+            }
+
+            if let Some(p_idx) = v_p_index.get(plyers::TEXTURE_V_PROPERTY) {
+                vertices[i].tex_coords[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+            }
+        }
+
+        let indices: Vec<u32> = ply.data[&vertex_indices_id]
+            .1
+            .as_slice()
+            .map(|inner: &[u32]| inner)
             .iter()
-            .flatten()
+            .flat_map(|inner| inner.iter())
             .map(|i| *i)
-            .collect::<Vec<_>>();
+            .collect();
 
         Ok(RawMesh { vertices, indices })
     }
@@ -196,7 +172,7 @@ mod tests {
 
     #[test]
     fn playground() {
-        let path = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../plyers/tests/cube.ply"));
+        let path = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../plyers/tests/valid/cube.ply"));
         let ply = load_ply(path).unwrap();
 
         let _ = RawMesh::with_ply(&ply).unwrap();
