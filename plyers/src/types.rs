@@ -291,7 +291,7 @@ impl TryFrom<(DataType, Vec<Value>)> for Values {
 #[derive(Debug)]
 pub struct Ply {
     pub descriptor: PlyDescriptor,
-    pub data: BTreeMap<PropertyId, (Primitive, DataType, Values)>,
+    pub data: BTreeMap<PropertyId, (Primitive, Values)>,
 }
 
 impl Ply {
@@ -352,7 +352,7 @@ mod tests {
     fn ply_data_container_has_the_following_structure() {
         let _ = Ply {
             descriptor: PlyDescriptor::default(),
-            data: BTreeMap::<PropertyId, (Primitive, DataType, Values)>::default(),
+            data: BTreeMap::<PropertyId, (Primitive, Values)>::default(),
         };
     }
 

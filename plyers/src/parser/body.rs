@@ -185,7 +185,7 @@ fn properties_fct<'a, 'b, F1, F2, P1, P2, E>(
     num_fn: &'a F2,
     properties: &'b BTreeMap<PropertyId, PropertyDescriptor>,
     repetitions: usize,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, DataType, Values)>, E> + 'b
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, Values)>, E> + 'b
 where
     'a: 'b,
     F1: Fn(CountType) -> P1,
@@ -208,22 +208,19 @@ where
                         (p_id, Primitive::Single, *data_type, vec![p])
                     })(input),
                     PropertyDescriptor::List {
-                        name,
-                        count_type,
-                        data_type,
-                        ..
+                        count_type, data_type, ..
                     } => map(property_list_fct(cnt_fn, num_fn, *count_type, *data_type), |ps| {
                         let prim = Primitive::from(ps.len());
                         (p_id, prim, *data_type, ps)
                     })(input),
                 }
             },
-            BTreeMap::<PropertyId, (Primitive, DataType, Values)>::new,
+            BTreeMap::<PropertyId, (Primitive, Values)>::new,
             |mut p_acc, (p_id, prim, dt, p)| {
                 if !p_acc.contains_key(&p_id) {
-                    p_acc.insert(p_id, (prim, dt, (dt, p).try_into().unwrap()));
+                    p_acc.insert(p_id, (prim, (dt, p).try_into().unwrap()));
                 } else {
-                    p_acc.get_mut(&p_id).map(|(prim_acc, _, ref mut p_acc)| {
+                    p_acc.get_mut(&p_id).map(|(prim_acc, ref mut p_acc)| {
                         if prim_acc != &prim {
                             *prim_acc = Primitive::Mixed;
                         }
@@ -241,7 +238,7 @@ fn elements_fct<'a, 'b, F1, F2, P1, P2, E>(
     cnt_fn: &'a F1,
     num_fn: &'a F2,
     elements: &'b BTreeMap<ElementId, ElementDescriptor>,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, DataType, Values)>, E> + 'b
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, Values)>, E> + 'b
 where
     'a: 'b,
     F1: Fn(CountType) -> P1,
@@ -261,7 +258,7 @@ where
 
                 properties_fct(cnt_fn, num_fn, &e_desc.properties, e_desc.count)(input)
             },
-            BTreeMap::<PropertyId, (Primitive, DataType, Values)>::new,
+            BTreeMap::<PropertyId, (Primitive, Values)>::new,
             |mut p_acc, e_values| {
                 p_acc.extend(e_values);
                 p_acc
@@ -275,7 +272,7 @@ pub fn body_fct<
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'a,
 >(
     ply: PlyDescriptor,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, DataType, Values)>, E> {
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, Values)>, E> {
     context("plyers::parser::body::body_fct", move |input| match ply.format_type {
         FormatType::Ascii => elements_fct(&ascii_count_fct, &ascii_number_fct, &ply.elements)(input),
         FormatType::BinaryLittleEndian => elements_fct(&le_count_fct, &le_number_fct, &ply.elements)(input),

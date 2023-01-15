@@ -66,12 +66,10 @@ mod tests {
     #[test]
     fn parse_ply_minimal_ascii_parses_correctly() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
-        let expected_data: BTreeMap<PropertyId, (Primitive, DataType, Values)> = vec![(
-            PropertyId(0),
-            (Primitive::Single, DataType::F32, Values::F32(vec![1.0])),
-        )]
-        .into_iter()
-        .collect();
+        let expected_data: BTreeMap<PropertyId, (Primitive, Values)> =
+            vec![(PropertyId(0), (Primitive::Single, Values::F32(vec![1.0])))]
+                .into_iter()
+                .collect();
         assert_eq!(
             parse_ply::<nom::error::Error<_>>(&input[..]),
             Ok((
@@ -129,12 +127,10 @@ mod tests {
     #[test]
     fn parse_ply_has_no_errors_for_ascii_with_heavy_comments() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/heavy_comments_ascii.ply"));
-        let expected_data: BTreeMap<PropertyId, (Primitive, DataType, Values)> = vec![(
-            PropertyId(0),
-            (Primitive::Single, DataType::F32, Values::F32(vec![1.0])),
-        )]
-        .into_iter()
-        .collect();
+        let expected_data: BTreeMap<PropertyId, (Primitive, Values)> =
+            vec![(PropertyId(0), (Primitive::Single, Values::F32(vec![1.0])))]
+                .into_iter()
+                .collect();
         assert_eq!(
             parse_ply::<nom::error::Error<_>>(&input[..]),
             Ok((
@@ -161,23 +157,20 @@ mod tests {
                                 )]
                                 .into_iter()
                                 .collect(),
-                                comments: vec![
-                                    CommentDescriptor(String::from("3. Comments are allowed here")),
-                                    CommentDescriptor(String::from("4. Comments are allowed here"))
-                                ],
-                                obj_info: vec![
-                                    ObjInfoDescriptor(String::from("2. ObjInfo are allowed here")),
-                                    ObjInfoDescriptor(String::from("3. ObjInfo are allowed here"))
-                                ]
+                                comments: vec![],
+                                obj_info: vec![]
                             }
                         )]
                         .into_iter()
                         .collect(),
                         comments: vec![
-                            CommentDescriptor(String::from("1. Comments are allowed here")),
-                            CommentDescriptor(String::from("2. Comments are allowed here"))
+                            CommentDescriptor(String::from("3. Comments are allowed here")),
+                            CommentDescriptor(String::from("4. Comments are allowed here"))
                         ],
-                        obj_info: vec![ObjInfoDescriptor(String::from("1. ObjInfo are allowed here"))]
+                        obj_info: vec![
+                            ObjInfoDescriptor(String::from("2. ObjInfo are allowed here")),
+                            ObjInfoDescriptor(String::from("3. ObjInfo are allowed here"))
+                        ]
                     },
                     data: expected_data,
                 }

@@ -458,7 +458,6 @@ mod tests {
                     PropertyId(0),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![
                             0.037002, 0.036996, -0.036999, -0.036993, 0.036999, -0.036996, -0.037002, 0.036993,
                             0.037002, 0.036999, 0.036993, 0.036996, 0.036996, 0.036993, -0.037002, -0.036999,
@@ -470,7 +469,6 @@ mod tests {
                     PropertyId(1),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![
                             0.032001, -0.032002, -0.031999, 0.032004, 0.031999, 0.032002, -0.032001, -0.032004,
                             0.032001, 0.031999, -0.032004, -0.032002, -0.032002, -0.032004, -0.032001, -0.031999,
@@ -482,7 +480,6 @@ mod tests {
                     PropertyId(2),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![
                             -0.060002, -0.059996, -0.060001, -0.060006, 0.060001, 0.059996, 0.060002, 0.060006,
                             -0.060002, 0.060001, 0.060006, -0.059996, -0.059996, 0.060006, 0.060002, -0.060001,
@@ -494,7 +491,6 @@ mod tests {
                     PropertyId(3),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![
                             0.000062, 0.000062, 0.000062, 0.000062, -0.000062, -0.000062, -0.000062, -0.000062,
                             1.000000, 1.000000, 1.000000, 1.000000, -0.000034, -0.000034, -0.000034, -0.000034,
@@ -506,7 +502,6 @@ mod tests {
                     PropertyId(4),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![
                             -0.000085, -0.000085, -0.000085, -0.000085, 0.000085, 0.000085, 0.000085, 0.000085,
                             -0.000095, -0.000095, -0.000095, -0.000095, -1.000000, -1.000000, -1.000000, -1.000000,
@@ -518,7 +513,6 @@ mod tests {
                     PropertyId(5),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![
                             -1.000000, -1.000000, -1.000000, -1.000000, 1.000000, 1.000000, 1.000000, 1.000000,
                             0.000025, 0.000025, 0.000025, 0.000025, -0.000013, -0.000013, -0.000013, -0.000013,
@@ -530,7 +524,6 @@ mod tests {
                     PropertyId(6),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![
                             1.000000, 0.000000, 0.046274, 0.995699, 0.787469, 0.000000, 0.169696, 1.000000, 1.000000,
                             0.924001, 0.000000, 0.152738, 1.000000, 0.964649, 0.000000, 0.122957, 1.000000, 0.906571,
@@ -542,7 +535,6 @@ mod tests {
                     PropertyId(7),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![
                             1.000000, 0.916903, 0.000000, 0.107536, 1.000000, 0.834112, 0.000000, 0.202412, 0.095504,
                             1.000000, 0.925341, 0.000000, 0.109484, 1.000000, 0.916022, 0.000000, 0.099584, 1.000000,
@@ -554,21 +546,16 @@ mod tests {
                     PropertyId(8),
                     (
                         Primitive::Quads,
-                        DataType::U32,
                         Values::U32(vec![
                             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
                         ]),
                     ),
                 ),
-                (
-                    PropertyId(9),
-                    (Primitive::Single, DataType::U32, Values::U32(vec![3, 1, 4, 5, 2, 0])),
-                ),
+                (PropertyId(9), (Primitive::Single, Values::U32(vec![3, 1, 4, 5, 2, 0]))),
                 (
                     PropertyId(10),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![1.606138, 1.625754, -0.480422, -1.597932, 0.441293, -0.049902]),
                     ),
                 ),
@@ -576,7 +563,6 @@ mod tests {
                     PropertyId(11),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.377680, 0.408797, 0.632663, 0.428811, -0.706215, 2.092186]),
                     ),
                 ),
@@ -584,7 +570,6 @@ mod tests {
                     PropertyId(12),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.253921, 0.188426, 0.977627, 0.285758, -0.974627, -0.334516]),
                     ),
                 ),
@@ -592,7 +577,6 @@ mod tests {
                     PropertyId(13),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.241534, 0.179235, 0.929938, 0.271818, -0.927084, -0.318198]),
                     ),
                 ),
@@ -600,7 +584,6 @@ mod tests {
                     PropertyId(14),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![-0.496447, -0.405338, -1.606825, -0.521590, 1.619993, 1.621019]),
                     ),
                 ),
@@ -608,7 +591,6 @@ mod tests {
                     PropertyId(15),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.811847, 2.015269, -0.389332, -0.912783, 0.359951, 0.272766]),
                     ),
                 ),
@@ -616,7 +598,6 @@ mod tests {
                     PropertyId(16),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.947651, 0.421430, -0.248646, -0.914065, 0.224057, 0.244900]),
                     ),
                 ),
@@ -624,7 +605,6 @@ mod tests {
                     PropertyId(17),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.901424, 0.400873, -0.236517, -0.869477, 0.213127, 0.232953]),
                     ),
                 ),
@@ -632,7 +612,6 @@ mod tests {
                     PropertyId(18),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![-0.100194, 0.169712, -0.153255, 0.103609, -0.130623, -0.453854]),
                     ),
                 ),
@@ -640,7 +619,6 @@ mod tests {
                     PropertyId(19),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![2.051921, 0.885265, 2.111936, 1.998766, 2.093756, 0.748648]),
                     ),
                 ),
@@ -648,7 +626,6 @@ mod tests {
                     PropertyId(20),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![-0.377725, -0.944503, -0.295997, -0.433614, -0.324182, 0.966083]),
                     ),
                 ),
@@ -656,7 +633,6 @@ mod tests {
                     PropertyId(21),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![-0.359299, -0.898430, -0.281558, -0.412462, -0.308369, 0.918957]),
                     ),
                 ),
@@ -664,7 +640,6 @@ mod tests {
                     PropertyId(22),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.006884, 0.028156, 0.030603, 0.001764, 0.014361, 0.003482]),
                     ),
                 ),
@@ -672,7 +647,6 @@ mod tests {
                     PropertyId(23),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.050059, 0.017858, 0.030462, 0.025788, 0.008944, 0.072094]),
                     ),
                 ),
@@ -680,7 +654,6 @@ mod tests {
                     PropertyId(24),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.318657, 0.298807, 0.305354, 0.296511, 0.301228, 0.336362]),
                     ),
                 ),
@@ -688,7 +661,6 @@ mod tests {
                     PropertyId(25),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.498234, 0.479353, 0.485581, 0.477169, 0.481656, 0.515076]),
                     ),
                 ),
@@ -696,7 +668,6 @@ mod tests {
                     PropertyId(26),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.451387, 0.459713, 0.485658, 0.417102, 0.465644, 0.473894]),
                     ),
                 ),
@@ -704,7 +675,6 @@ mod tests {
                     PropertyId(27),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.382772, 0.489358, 0.356537, 0.349984, 0.331910, 0.436498]),
                     ),
                 ),
@@ -712,7 +682,6 @@ mod tests {
                     PropertyId(28),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.136837, 0.173210, 0.128915, 0.143695, 0.129949, 0.114713]),
                     ),
                 ),
@@ -720,14 +689,10 @@ mod tests {
                     PropertyId(29),
                     (
                         Primitive::Single,
-                        DataType::F32,
                         Values::F32(vec![0.293662, 0.179877, 0.308941, 0.302289, 0.305762, 0.187858]),
                     ),
                 ),
-                (
-                    PropertyId(30),
-                    (Primitive::Single, DataType::U8, Values::U8(vec![0, 1, 2, 3, 4, 5])),
-                ),
+                (PropertyId(30), (Primitive::Single, Values::U8(vec![0, 1, 2, 3, 4, 5]))),
             ]
             .into_iter()
             .collect::<BTreeMap<_, _>>(),
