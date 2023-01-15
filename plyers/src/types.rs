@@ -1,6 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
-
-use either::Either;
+use std::collections::BTreeMap;
 
 pub const VERTEX_ELEMENT: &'static str = "vertex";
 pub const FACE_ELEMENT: &'static str = "face";
@@ -151,19 +149,152 @@ impl Default for PlyDescriptor {
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Primitive {
+    Single,
     Triangles,
     Quads,
     Mixed,
 }
 
-#[cfg_attr(test, derive(PartialEq))]
-#[derive(Debug)]
-pub struct Ply<V, I> {
-    pub descriptor: PlyDescriptor,
-    pub data: BTreeMap<ElementId, BTreeMap<PropertyId, Either<Vec<V>, Vec<Vec<I>>>>>,
+impl From<usize> for Primitive {
+    fn from(value: usize) -> Self {
+        use self::Primitive::*;
+        match value {
+            1 => Single,
+            3 => Triangles,
+            4 => Quads,
+            _ => Mixed,
+        }
+    }
 }
 
-impl<V, I> Ply<V, I> {
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Value {
+    U8(u8),
+    I8(i8),
+    U16(u16),
+    I16(i16),
+    U32(u32),
+    I32(i32),
+    U64(u64),
+    I64(i64),
+    F32(f32),
+    F64(f64),
+}
+
+macro_rules! impl_from_and_try_into {
+    ($prim:ty, $var:ident) => {
+        impl From<$prim> for Value {
+            fn from(value: $prim) -> Self {
+                Self::$var(value)
+            }
+        }
+
+        impl TryInto<$prim> for Value {
+            type Error = ();
+
+            fn try_into(self) -> Result<$prim, Self::Error> {
+                match self {
+                    Self::$var(n) => Ok(n),
+                    _ => Err(()),
+                }
+            }
+        }
+    };
+}
+
+impl_from_and_try_into!(u8, U8);
+impl_from_and_try_into!(i8, I8);
+impl_from_and_try_into!(u16, U16);
+impl_from_and_try_into!(i16, I16);
+impl_from_and_try_into!(u32, U32);
+impl_from_and_try_into!(i32, I32);
+impl_from_and_try_into!(u64, U64);
+impl_from_and_try_into!(i64, I64);
+impl_from_and_try_into!(f32, F32);
+impl_from_and_try_into!(f64, F64);
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Values {
+    U8(Vec<u8>),
+    I8(Vec<i8>),
+    U16(Vec<u16>),
+    I16(Vec<i16>),
+    U32(Vec<u32>),
+    I32(Vec<i32>),
+    U64(Vec<u64>),
+    I64(Vec<i64>),
+    F32(Vec<f32>),
+    F64(Vec<f64>),
+}
+
+impl Values {
+    pub fn with_data_type(dt: DataType) -> Self {
+        match dt {
+            DataType::U8 => Values::U8(Vec::new()),
+            DataType::I8 => Values::I8(Vec::new()),
+            DataType::U16 => Values::U16(Vec::new()),
+            DataType::I16 => Values::I16(Vec::new()),
+            DataType::U32 => Values::U32(Vec::new()),
+            DataType::I32 => Values::I32(Vec::new()),
+            DataType::U64 => Values::U64(Vec::new()),
+            DataType::I64 => Values::I64(Vec::new()),
+            DataType::F32 => Values::F32(Vec::new()),
+            DataType::F64 => Values::F64(Vec::new()),
+        }
+    }
+
+    pub fn try_push(&mut self, v: Value) -> Result<(), InconsistentDataTypes> {
+        match (self, v) {
+            (Values::U8(acc), Value::U8(v)) => acc.push(v),
+            (Values::I8(acc), Value::I8(v)) => acc.push(v),
+            (Values::U16(acc), Value::U16(v)) => acc.push(v),
+            (Values::I16(acc), Value::I16(v)) => acc.push(v),
+            (Values::U32(acc), Value::U32(v)) => acc.push(v),
+            (Values::I32(acc), Value::I32(v)) => acc.push(v),
+            (Values::U64(acc), Value::U64(v)) => acc.push(v),
+            (Values::I64(acc), Value::I64(v)) => acc.push(v),
+            (Values::F32(acc), Value::F32(v)) => acc.push(v),
+            (Values::F64(acc), Value::F64(v)) => acc.push(v),
+            _ => return Err(InconsistentDataTypes),
+        }
+
+        Ok(())
+    }
+
+    pub fn try_extend<I>(&mut self, iter: I) -> Result<(), InconsistentDataTypes>
+    where
+        I: IntoIterator<Item = Value>,
+    {
+        for value in iter.into_iter() {
+            self.try_push(value)?;
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+#[error("the sequence of values contains inconsistent data types")]
+pub struct InconsistentDataTypes;
+
+impl TryFrom<(DataType, Vec<Value>)> for Values {
+    type Error = InconsistentDataTypes;
+
+    fn try_from(value: (DataType, Vec<Value>)) -> Result<Self, Self::Error> {
+        let mut accum = Values::with_data_type(value.0);
+        accum.try_extend(value.1)?;
+        Ok(accum)
+    }
+}
+
+#[cfg_attr(test, derive(PartialEq))]
+#[derive(Debug)]
+pub struct Ply {
+    pub descriptor: PlyDescriptor,
+    pub data: BTreeMap<PropertyId, (Primitive, DataType, Values)>,
+}
+
+impl Ply {
     pub fn property_id(&self, element_name: &str, property_name: &str) -> Option<(ElementId, PropertyId)> {
         self.descriptor
             .elements
@@ -178,26 +309,12 @@ impl<V, I> Ply<V, I> {
             .next()
     }
 
-    pub fn property_data(&self, element_name: &str, property_name: &str) -> Option<&Either<Vec<V>, Vec<Vec<I>>>> {
-        let (e_id, p_id) = self.property_id(element_name, property_name)?;
+    pub fn primitive(&self) -> Option<Primitive> {
+        let p_id = self
+            .property_id(FACE_ELEMENT, VERTEX_INDICES_LIST_PROPERTY)
+            .map(|(_, p_id)| p_id)?;
 
-        self.data.get(&e_id).and_then(|e| e.get(&p_id))
-    }
-
-    pub fn face_type(&self) -> Option<Primitive> {
-        let d = self
-            .property_data(FACE_ELEMENT, VERTEX_INDICES_LIST_PROPERTY)
-            .and_then(|d| d.as_ref().right())?;
-
-        let primitives: HashSet<usize> = d.iter().map(|i| i.len()).collect();
-
-        if primitives.iter().all(|&p| p == 3) {
-            Some(Primitive::Triangles)
-        } else if primitives.iter().all(|&p| p == 4) {
-            Some(Primitive::Quads)
-        } else {
-            Some(Primitive::Mixed)
-        }
+        Some(self.data[&p_id].0)
     }
 }
 
@@ -235,7 +352,7 @@ mod tests {
     fn ply_data_container_has_the_following_structure() {
         let _ = Ply {
             descriptor: PlyDescriptor::default(),
-            data: BTreeMap::<ElementId, BTreeMap<PropertyId, Either<Vec<f32>, Vec<Vec<u16>>>>>::default(),
+            data: BTreeMap::<PropertyId, (Primitive, DataType, Values)>::default(),
         };
     }
 

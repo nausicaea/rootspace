@@ -146,11 +146,11 @@ where
 
 fn format_blk<'a, E>(
     input: &'a [u8],
-) -> IResult<&'a [u8], (Vec<Either<CommentDescriptor, ObjInfoDescriptor>>, FormatType), E>
+) -> IResult<&'a [u8], (FormatType, Vec<Either<CommentDescriptor, ObjInfoDescriptor>>), E>
 where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
-    context("plyers::parser::header::format_blk", tuple((comment_blk, format_decl)))(input)
+    context("plyers::parser::header::format_blk", tuple((format_decl, comment_blk)))(input)
 }
 
 fn property_scalar_decl<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E>
@@ -305,7 +305,7 @@ where
                 tag(END_HEADER),
                 newline,
             )),
-            |(_, _, _, (cmt, format_type), elements, _, _)| {
+            |(_, _, _, (format_type, cmt), elements, _, _)| {
                 let (comments, obj_info) = split_vecs_of_either(cmt);
 
                 PlyDescriptor {

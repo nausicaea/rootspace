@@ -10,8 +10,8 @@ struct Args {
     element_names: bool,
     #[arg(short, long, help = "Print the names of properties for each element", action = clap::ArgAction::SetTrue)]
     property_names: bool,
-    #[arg(short, long, help = "Print the face primitive type (triangles, quads)", action = clap::ArgAction::SetTrue)]
-    face_types: bool,
+    #[arg(short = 'f', long, help = "Print the primitive type (eg. triangles, quads)", action = clap::ArgAction::SetTrue)]
+    primitives: bool,
     #[arg(short, long, help = "Print all obj_info directives", action = clap::ArgAction::SetTrue)]
     obj_infos: bool,
     #[arg(short, long, help = "Print all comment directives", action = clap::ArgAction::SetTrue)]
@@ -27,11 +27,11 @@ fn main() {
         if matches.verbose > 0 {
             println!("{}:", path.display());
         }
-        match plyers::load_ply::<f32, u32, _>(path) {
+        match plyers::load_ply(path) {
             Err(e) => panic!("{}", e),
             Ok(ply) => {
                 if matches.verbose > 1 {
-                    println!("{:#?}", ply)
+                    println!("{:?}", ply)
                 }
 
                 if matches.element_names {
@@ -51,8 +51,8 @@ fn main() {
                     }
                 }
 
-                if matches.face_types {
-                    let ft = ply.face_type();
+                if matches.primitives {
+                    let ft = ply.primitive();
                     println!("{:?}", ft);
                 }
 

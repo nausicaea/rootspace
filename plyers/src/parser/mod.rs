@@ -5,7 +5,6 @@ use nom::{
     error::{context, ContextError, FromExternalError, ParseError},
     IResult,
 };
-use num_traits::NumCast;
 
 use self::{body::body_fct, common::Urn, header::header_fct};
 use crate::types::{ElementId, Ply, PropertyId};
@@ -29,12 +28,10 @@ pub enum ParseNumError {
 
 pub fn parse_ply<
     'a,
-    V: NumCast + 'a,
-    I: NumCast + 'a,
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'a,
 >(
     input: &'a [u8],
-) -> IResult<&'a [u8], Ply<V, I>, E> {
+) -> IResult<&'a [u8], Ply, E> {
     let mut e_urn = Urn::<ElementId>::default();
     let mut p_urn = Urn::<PropertyId>::default();
     let e_urn_ref = &mut e_urn;
@@ -56,13 +53,12 @@ pub fn parse_ply<
 mod tests {
     use std::collections::BTreeMap;
 
-    use either::Either::{self, Left};
     use nom::error::dbg_dmp;
 
     use super::*;
     use crate::types::{
-        CommentDescriptor, DataType, ElementDescriptor, FormatType, ObjInfoDescriptor, PlyDescriptor,
-        PropertyDescriptor,
+        CommentDescriptor, DataType, ElementDescriptor, FormatType, ObjInfoDescriptor, PlyDescriptor, Primitive,
+        PropertyDescriptor, Values,
     };
 
     const EMPTY: &'static [u8] = b"";
@@ -70,14 +66,14 @@ mod tests {
     #[test]
     fn parse_ply_minimal_ascii_parses_correctly() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
-        let expected_data: BTreeMap<ElementId, BTreeMap<PropertyId, Either<Vec<f32>, Vec<Vec<u16>>>>> = vec![(
-            ElementId(0),
-            vec![(PropertyId(0), Left(vec![1.0f32]))].into_iter().collect(),
+        let expected_data: BTreeMap<PropertyId, (Primitive, DataType, Values)> = vec![(
+            PropertyId(0),
+            (Primitive::Single, DataType::F32, Values::F32(vec![1.0])),
         )]
         .into_iter()
         .collect();
         assert_eq!(
-            parse_ply::<f32, u16, nom::error::Error<_>>(&input[..]),
+            parse_ply::<nom::error::Error<_>>(&input[..]),
             Ok((
                 EMPTY,
                 Ply {
@@ -117,7 +113,7 @@ mod tests {
     #[test]
     fn parse_ply_fails_with_garbage() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/garbage.ply"));
-        let r = dbg_dmp(parse_ply::<f32, u16, nom::error::Error<_>>, "GARBAGE")(&input[..]);
+        let r = dbg_dmp(parse_ply::<nom::error::Error<_>>, "GARBAGE")(&input[..]);
         assert!(r.is_err(), "{:?}", r.unwrap());
         print!("{:?}", r.unwrap_err())
     }
@@ -125,7 +121,7 @@ mod tests {
     #[test]
     fn parse_ply_fails_with_incomplete_header() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/incomplete_header.ply"));
-        let r = nom::error::dbg_dmp(parse_ply::<f32, u16, nom::error::Error<_>>, "INCOMPLETE HEADER")(&input[..]);
+        let r = nom::error::dbg_dmp(parse_ply::<nom::error::Error<_>>, "INCOMPLETE HEADER")(&input[..]);
         assert!(r.is_err(), "{:?}", r.unwrap());
         print!("{:?}", r.unwrap_err())
     }
@@ -133,14 +129,14 @@ mod tests {
     #[test]
     fn parse_ply_has_no_errors_for_ascii_with_heavy_comments() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/heavy_comments_ascii.ply"));
-        let expected_data: BTreeMap<ElementId, BTreeMap<PropertyId, Either<Vec<f32>, Vec<Vec<u16>>>>> = vec![(
-            ElementId(0),
-            vec![(PropertyId(0), Left(vec![1.0f32]))].into_iter().collect(),
+        let expected_data: BTreeMap<PropertyId, (Primitive, DataType, Values)> = vec![(
+            PropertyId(0),
+            (Primitive::Single, DataType::F32, Values::F32(vec![1.0])),
         )]
         .into_iter()
         .collect();
         assert_eq!(
-            parse_ply::<f32, u16, nom::error::Error<_>>(&input[..]),
+            parse_ply::<nom::error::Error<_>>(&input[..]),
             Ok((
                 EMPTY,
                 Ply {
