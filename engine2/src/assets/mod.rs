@@ -18,8 +18,13 @@ pub struct Model {
 
 impl Model {
     pub fn with_file<P: AsRef<Path>>(gfx: &mut Graphics, path: P) -> Result<Self, Error> {
-        let ply = load_ply(path)?;
-        Self::with_ply(gfx, &ply)
+        match path.as_ref().extension().and_then(|ext| ext.to_str()) {
+            Some("ply") => {
+                let ply = load_ply(path)?;
+                Self::with_ply(gfx, &ply)
+            }
+            _ => Err(Error::UnsupportedFileFormat),
+        }
     }
 
     pub fn with_ply(gfx: &mut Graphics, ply: &plyers::Ply) -> Result<Self, Error> {
@@ -179,8 +184,29 @@ pub struct Texture {
     sampler: SamplerId,
 }
 
+impl Texture {
+    pub fn with_file<P: AsRef<Path>>(gfx: &mut Graphics, fmt: image::ImageFormat, path: P) -> Result<Self, Error> {
+        let f = std::fs::File::open(path)?;
+        let img = image::load(std::io::BufReader::new(f), fmt)?;
+
+        let texture = gfx.create_texture().with_image(img).submit(None);
+
+        let view = gfx.create_texture_view(texture);
+
+        let sampler = gfx.create_sampler().submit();
+
+        Ok(Texture { texture, view, sampler })
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+    #[error(transparent)]
+    ImageError(#[from] image::ImageError),
+    #[error("The specified file format is not supported for loading assets")]
+    UnsupportedFileFormat,
     #[error(transparent)]
     PlyError(#[from] plyers::PlyError),
     #[error("No element named 'vertex' was found")]

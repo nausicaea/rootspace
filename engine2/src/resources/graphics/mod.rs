@@ -4,13 +4,15 @@ use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
     bind_group_layout_builder::BindGroupLayoutBuilder,
-    ids::{BindGroupId, BindGroupLayoutId, BufferId},
+    ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureId, TextureViewId},
     indexes::Indexes,
     render_pass_builder::RenderPassBuilder,
     render_pipeline_builder::RenderPipelineBuilder,
     runtime::Runtime,
+    sampler_builder::SamplerBuilder,
     settings::Settings,
     tables::Tables,
+    texture_builder::TextureBuilder,
 };
 
 pub mod bind_group_layout_builder;
@@ -20,8 +22,10 @@ mod indexes;
 pub mod render_pass_builder;
 pub mod render_pipeline_builder;
 mod runtime;
+pub mod sampler_builder;
 pub mod settings;
 mod tables;
+pub mod texture_builder;
 pub mod vertex;
 
 pub trait GraphicsDeps {
@@ -78,10 +82,10 @@ impl Graphics {
     pub fn create_bind_group(
         &mut self,
         label: Option<&str>,
-        layout: &BindGroupLayoutId,
+        layout: BindGroupLayoutId,
         entries: &[wgpu::BindGroupEntry],
     ) -> BindGroupId {
-        let layout = &self.tables.bind_group_layouts[layout];
+        let layout = &self.tables.bind_group_layouts[&layout];
         let bg = self
             .runtime
             .device
@@ -114,7 +118,22 @@ impl Graphics {
         id
     }
 
-    //pub fn create_texture(&mut self)
+    pub fn create_texture(&mut self) -> TextureBuilder {
+        TextureBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
+    }
+
+    pub fn create_texture_view(&mut self, texture: TextureId) -> TextureViewId {
+        let texture = &self.tables.textures[&texture];
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let id = self.indexes.texture_views.take();
+        self.tables.texture_views.insert(id, view);
+        id
+    }
+
+    pub fn create_sampler(&mut self) -> SamplerBuilder {
+        SamplerBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
+    }
+
     //pub fn create_sampler(&mut self)
 }
 
