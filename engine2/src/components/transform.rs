@@ -7,11 +7,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Model(Affine<f32>);
+pub struct Transform(Affine<f32>);
 
-impl Model {
-    pub fn builder() -> ModelBuilder {
-        ModelBuilder::default()
+impl Transform {
+    pub fn builder() -> TransformBuilder {
+        TransformBuilder::default()
     }
 
     pub fn set_translation(&mut self, value: Vec3<f32>) {
@@ -47,29 +47,29 @@ impl Model {
     }
 }
 
-impl Default for Model {
+impl Default for Transform {
     fn default() -> Self {
-        Model::builder().build()
+        Transform::builder().build()
     }
 }
 
-impl Component for Model {
+impl Component for Transform {
     type Storage = VecStorage<Self>;
 }
 
-impl From<Affine<f32>> for Model {
+impl From<Affine<f32>> for Transform {
     fn from(value: Affine<f32>) -> Self {
-        Model(value)
+        Transform(value)
     }
 }
 
-impl AsRef<Affine<f32>> for Model {
+impl AsRef<Affine<f32>> for Transform {
     fn as_ref(&self) -> &Affine<f32> {
         &self.0
     }
 }
 
-impl std::fmt::Display for Model {
+impl std::fmt::Display for Transform {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -81,32 +81,32 @@ impl std::fmt::Display for Model {
     }
 }
 
-impl<'a, 'b> Mul<&'b Model> for &'a Model {
-    type Output = Model;
+impl<'a, 'b> Mul<&'b Transform> for &'a Transform {
+    type Output = Transform;
 
-    fn mul(self, rhs: &'b Model) -> Self::Output {
-        Model(self.as_affine().mul(rhs.as_affine()))
+    fn mul(self, rhs: &'b Transform) -> Self::Output {
+        Transform(self.as_affine().mul(rhs.as_affine()))
     }
 }
 
-forward_ref_binop!(impl Mul, mul for Model, Model, Model);
+forward_ref_binop!(impl Mul, mul for Transform, Transform, Transform);
 
-impl Product for Model {
+impl Product for Transform {
     fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(Model::default(), |state, item| state * item)
+        iter.fold(Transform::default(), |state, item| state * item)
     }
 }
 
-impl<'a> Product<&'a Model> for Model {
-    fn product<I: Iterator<Item = &'a Model>>(iter: I) -> Self {
-        iter.fold(Model::default(), |state, item| state * item)
+impl<'a> Product<&'a Transform> for Transform {
+    fn product<I: Iterator<Item = &'a Transform>>(iter: I) -> Self {
+        iter.fold(Transform::default(), |state, item| state * item)
     }
 }
 
 #[derive(Debug, Default, PartialEq, Clone)]
-pub struct ModelBuilder(AffineBuilder<f32>);
+pub struct TransformBuilder(AffineBuilder<f32>);
 
-impl ModelBuilder {
+impl TransformBuilder {
     pub fn with_translation(mut self, t: Vec3<f32>) -> Self {
         self.0 = self.0.with_translation(t);
         self
@@ -122,8 +122,8 @@ impl ModelBuilder {
         self
     }
 
-    pub fn build(self) -> Model {
-        Model(self.0.build())
+    pub fn build(self) -> Transform {
+        Transform(self.0.build())
     }
 }
 
@@ -136,46 +136,46 @@ mod tests {
 
     #[test]
     fn implements_default() {
-        let _: Model = Default::default();
+        let _: Transform = Default::default();
     }
 
     #[test]
     fn provides_builder() {
-        let _: ModelBuilder = Model::builder();
+        let _: TransformBuilder = Transform::builder();
     }
 
     #[test]
     fn blank_builder_is_the_same_as_default() {
-        let ma: Model = Model::builder().build();
-        let mb: Model = Default::default();
+        let ma: Transform = Transform::builder().build();
+        let mb: Transform = Default::default();
 
         assert_eq!(ma, mb);
     }
 
     #[test]
     fn default_is_identity() {
-        let m: Model = Default::default();
+        let m: Transform = Default::default();
         assert_ulps_eq!(m.to_matrix(), &Mat4::identity())
     }
 
     #[test]
     fn builder_accepts_position() {
-        let _: ModelBuilder = ModelBuilder::default().with_translation(Vec3::zero());
+        let _: TransformBuilder = TransformBuilder::default().with_translation(Vec3::zero());
     }
 
     #[test]
     fn builder_accepts_orientaton() {
-        let _: ModelBuilder = ModelBuilder::default().with_orientation(Quat::identity());
+        let _: TransformBuilder = TransformBuilder::default().with_orientation(Quat::identity());
     }
 
     #[test]
     fn builder_accepts_scale() {
-        let _: ModelBuilder = ModelBuilder::default().with_scale(Vec3::zero());
+        let _: TransformBuilder = TransformBuilder::default().with_scale(Vec3::zero());
     }
 
     #[test]
     fn builder_complete_example() {
-        let m: Model = ModelBuilder::default()
+        let m: Transform = TransformBuilder::default()
             .with_translation(Vec3::zero())
             .with_orientation(Quat::identity())
             .with_scale(Vec3::one())
@@ -189,7 +189,7 @@ mod tests {
     proptest! {
         #[test]
         fn position_may_be_changed(num in vec(NORMAL, 3)) {
-            let mut m = Model::default();
+            let mut m = Transform::default();
 
             let p = Vec3::new(num[0], num[1], num[2]);
             m.set_translation(p.clone());
@@ -199,7 +199,7 @@ mod tests {
 
         #[test]
         fn orientation_may_be_changed(num in vec(NORMAL, 4)) {
-            let mut m = Model::default();
+            let mut m = Transform::default();
 
             let o = Unit::from(Quat::new(num[0], num[1], num[2], num[3]));
             m.set_orientation(o.clone());
@@ -209,7 +209,7 @@ mod tests {
 
         #[test]
         fn scale_may_be_changed(num in vec(NORMAL, 3)) {
-            let mut m = Model::default();
+            let mut m = Transform::default();
 
             let s = Vec3::new(num[0], num[1], num[2]);
             m.set_scale(s.clone());

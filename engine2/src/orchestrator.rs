@@ -10,7 +10,7 @@ use winit::{
 };
 
 use crate::{
-    components::{info::Info, model::Model, renderable::Renderable, status::Status, ui_model::UiModel},
+    components::{info::Info, renderable::Renderable, status::Status, transform::Transform, ui_transform::UiTransform},
     events::{engine_event::EngineEvent, window_event::WindowEvent},
     registry::{RRegistry, RSRegistry, USRegistry},
     resources::{
@@ -161,11 +161,11 @@ impl Orchestrator {
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {
-        log::trace!("Removing entity from components Status, Info, Model, UiModel, Renderable");
+        log::trace!("Removing entity from components Status, Info, Transform, UiTransform, Renderable");
         self.world.get_components_mut::<Status>().remove(entity);
         self.world.get_components_mut::<Info>().remove(entity);
-        self.world.get_components_mut::<Model>().remove(entity);
-        self.world.get_components_mut::<UiModel>().remove(entity);
+        self.world.get_components_mut::<Transform>().remove(entity);
+        self.world.get_components_mut::<UiTransform>().remove(entity);
         self.world.get_components_mut::<Renderable>().remove(entity);
     }
 

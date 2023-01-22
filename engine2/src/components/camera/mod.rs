@@ -8,7 +8,7 @@ use glamour::{Mat4, Ortho, Persp, Vec2, Vec4};
 use serde::{Deserialize, Serialize};
 
 use self::{camera_builder::CameraBuilder, camera_ser_de::CameraSerDe, projection::Projection};
-use crate::components::model::Model;
+use crate::components::transform::Transform;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(into = "self::camera_ser_de::CameraSerDe", from = "self::camera_ser_de::CameraSerDe")]
@@ -83,8 +83,8 @@ impl Camera {
     }
 
     /// Transforms a point or vector in world-space to normalized device coordinates.
-    pub fn world_to_ndc(&self, model: &Model, v: &Vec4<f32>) -> Vec4<f32> {
-        let mdlm4 = model.to_matrix();
+    pub fn world_to_ndc(&self, transform: &Transform, v: &Vec4<f32>) -> Vec4<f32> {
+        let mdlm4 = transform.to_matrix();
         let vndc = match self.projection {
             Projection::Perspective => self.persp.as_matrix() * &mdlm4 * v,
             Projection::Orthographic => self.ortho.as_matrix() * &mdlm4 * v,
@@ -94,8 +94,8 @@ impl Camera {
     }
 
     // /// Transforms a point or vector in normalized device coordinates to world-space.
-    // pub fn ndc_to_world(&self, model: &Model, v: &Vec4<f32>) -> Vec4<f32> {
-    //     let mdlaffinv = model.as_affine().inv().to_matrix();
+    // pub fn ndc_to_world(&self, transform: &Transform, v: &Vec4<f32>) -> Vec4<f32> {
+    //     let mdlaffinv = transform.as_affine().inv().to_matrix();
     //     match self.projection {
     //         Projection::Perspective => &mdlaffinv * self.persp.inv().as_matrix() * v,
     //         Projection::Orthographic => &mdlaffinv * self.ortho.inv().as_matrix() * v,
@@ -114,8 +114,8 @@ impl Camera {
     // }
 
     // /// Transforms a point or vector in world-space to a screen point.
-    pub fn world_to_screen(&self, model: &Model, v: &Vec4<f32>) -> Vec2<u32> {
-        self.ndc_to_screen(&self.world_to_ndc(model, v))
+    pub fn world_to_screen(&self, transform: &Transform, v: &Vec4<f32>) -> Vec2<u32> {
+        self.ndc_to_screen(&self.world_to_ndc(transform, v))
     }
 
     /// Transforms a point or vector in ui-space to screen coordinates.
@@ -159,8 +159,8 @@ impl Camera {
     // }
 
     // /// Transforms a point or vector in screen space to world space.
-    // fn screen_to_world(&self, model: &Model, v: &Vec2<u32>) -> Vec4<f32> {
-    //     self.ndc_to_world(model, &self.screen_to_ndc(v))
+    // fn screen_to_world(&self, transform: &Transform, v: &Vec2<u32>) -> Vec4<f32> {
+    //     self.ndc_to_world(transform, &self.screen_to_ndc(v))
     // }
 
     // /// Transforms a point or vector in screen space to ui space.

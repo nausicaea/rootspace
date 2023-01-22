@@ -7,7 +7,7 @@ pub struct SamplerBuilder<'rt> {
 }
 
 impl<'rt> SamplerBuilder<'rt> {
-    pub fn new(runtime: &'rt Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
         Self {
             runtime,
             indexes,

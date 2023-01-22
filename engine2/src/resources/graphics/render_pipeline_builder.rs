@@ -7,7 +7,7 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
+pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl, 'lbl> {
     runtime: &'rt Runtime,
     indexes: &'rt mut Indexes,
     tables: &'rt mut Tables,
@@ -16,9 +16,10 @@ pub struct RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
     fragment_entry_point: Option<&'l str>,
     bind_group_layouts: Vec<&'bgl BindGroupLayoutId>,
     vertex_buffer_layouts: Vec<wgpu::VertexBufferLayout<'vbl>>,
+    label: Option<&'lbl str>,
 }
 
-impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
+impl<'rt, 'l, 'bgl, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl, 'lbl> {
     pub(super) fn new(runtime: &'rt Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
         RenderPipelineBuilder {
             runtime,
@@ -29,7 +30,13 @@ impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
             fragment_entry_point: None,
             bind_group_layouts: Vec::new(),
             vertex_buffer_layouts: Vec::new(),
+            label: None,
         }
+    }
+
+    pub fn with_label(mut self, label: &'lbl str) -> Self {
+        self.label = Some(label);
+        self
     }
 
     pub fn with_shader_module<'s, S: Into<std::borrow::Cow<'s, str>>>(
@@ -65,7 +72,7 @@ impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
         self
     }
 
-    pub fn submit(self, label: Option<&str>) -> PipelineId {
+    pub fn submit(self) -> PipelineId {
         // Required parameters
         let shader_module = self
             .shader_module
@@ -96,7 +103,7 @@ impl<'rt, 'l, 'bgl, 'vbl> RenderPipelineBuilder<'rt, 'l, 'bgl, 'vbl> {
             .runtime
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label,
+                label: self.label,
                 layout: Some(&pipeline_layout),
                 vertex: wgpu::VertexState {
                     module: &shader_module,

@@ -64,7 +64,7 @@ impl WithResources for Renderer {
         let pipeline = gfx
             .create_render_pipeline()
             .with_shader_module(None, &shader_data, "vs_main", Some("fs_main"))
-            .submit(None);
+            .submit();
 
         Ok(Renderer {
             window_receiver,
