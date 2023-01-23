@@ -104,6 +104,22 @@ pub enum PropertyDescriptor {
     },
 }
 
+impl PropertyDescriptor {
+    pub fn comments(&self) -> impl Iterator<Item = &CommentDescriptor> {
+        match self {
+            PropertyDescriptor::Scalar { comments, .. } => comments.iter(),
+            PropertyDescriptor::List { comments, .. } => comments.iter(),
+        }
+    }
+
+    pub fn obj_info(&self) -> impl Iterator<Item = &ObjInfoDescriptor> {
+        match self {
+            PropertyDescriptor::Scalar { obj_info, .. } => obj_info.iter(),
+            PropertyDescriptor::List { obj_info, .. } => obj_info.iter(),
+        }
+    }
+}
+
 #[cfg_attr(test, derive(PartialEq))]
 #[derive(Debug, Clone)]
 pub struct ElementDescriptor {
@@ -118,6 +134,12 @@ pub struct ElementDescriptor {
 #[derive(Debug, Clone)]
 pub struct CommentDescriptor(pub String);
 
+impl AsRef<str> for CommentDescriptor {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
+    }
+}
+
 impl std::fmt::Display for CommentDescriptor {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.0)
@@ -127,6 +149,12 @@ impl std::fmt::Display for CommentDescriptor {
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]
 #[derive(Debug, Clone)]
 pub struct ObjInfoDescriptor(pub String);
+
+impl AsRef<str> for ObjInfoDescriptor {
+    fn as_ref(&self) -> &str {
+        self.0.as_ref()
+    }
+}
 
 impl std::fmt::Display for ObjInfoDescriptor {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {

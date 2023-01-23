@@ -5,32 +5,85 @@ use plyers::{
     types::{AsSlice, Primitive, PropertyDescriptor},
 };
 
-use crate::resources::graphics::{
-    ids::{BindGroupId, BufferId, SamplerId, TextureId, TextureViewId},
-    vertex::Vertex,
-    Graphics,
+use crate::resources::{
+    asset_database::AssetDatabase,
+    graphics::{
+        ids::{BufferId, SamplerId, TextureId, TextureViewId},
+        vertex::Vertex,
+        Graphics,
+    },
 };
+use image::ImageFormat;
+
+pub trait Asset: Sized {
+    type Error;
+
+    fn with_file<P: AsRef<Path>>(adb: &AssetDatabase, gfx: &mut Graphics, path: P) -> Result<Self, Self::Error>;
+}
 
 #[derive(Debug)]
 pub struct Model {
     pub mesh: Mesh,
+    pub materials: Vec<Material>,
 }
 
 impl Model {
-    pub fn with_file<P: AsRef<Path>>(gfx: &mut Graphics, path: P) -> Result<Self, Error> {
+    pub fn with_ply(adb: &AssetDatabase, gfx: &mut Graphics, ply: &plyers::Ply) -> Result<Self, Error> {
+        let texture_file_names = ply
+            .descriptor
+            .comments
+            .iter()
+            .chain(ply.descriptor.elements.values().flat_map(|e| e.comments.iter()))
+            .chain(
+                ply.descriptor
+                    .elements
+                    .values()
+                    .flat_map(|e| e.properties.values().flat_map(|p| p.comments())),
+            )
+            .map(|c| AsRef::<str>::as_ref(c))
+            .filter(|c| c.starts_with("TextureFile"))
+            .map(|c| c.trim_start_matches("TextureFile "))
+            .chain(
+                ply.descriptor
+                    .obj_info
+                    .iter()
+                    .chain(ply.descriptor.elements.values().flat_map(|e| e.obj_info.iter()))
+                    .chain(
+                        ply.descriptor
+                            .elements
+                            .values()
+                            .flat_map(|e| e.properties.values().flat_map(|p| p.obj_info())),
+                    )
+                    .map(|c| AsRef::<str>::as_ref(c))
+                    .filter(|c| c.starts_with("texture"))
+                    .map(|c| c.trim_start_matches("texture ")),
+            )
+            .collect::<Vec<&str>>();
+
+        let mut materials = Vec::new();
+        for name in texture_file_names {
+            let texture_path = adb.find_asset("textures", name)?;
+            materials.push(Material::with_file(gfx, texture_path)?);
+        }
+
+        Ok(Model {
+            mesh: Mesh::with_ply(gfx, ply)?,
+            materials,
+        })
+    }
+}
+
+impl Asset for Model {
+    type Error = Error;
+
+    fn with_file<P: AsRef<Path>>(adb: &AssetDatabase, gfx: &mut Graphics, path: P) -> Result<Self, Self::Error> {
         match path.as_ref().extension().and_then(|ext| ext.to_str()) {
             Some("ply") => {
                 let ply = load_ply(path)?;
-                Self::with_ply(gfx, &ply)
+                Self::with_ply(adb, gfx, &ply)
             }
             _ => Err(Error::UnsupportedFileFormat),
         }
-    }
-
-    pub fn with_ply(gfx: &mut Graphics, ply: &plyers::Ply) -> Result<Self, Error> {
-        Ok(Model {
-            mesh: Mesh::with_ply(gfx, ply)?,
-        })
     }
 }
 
@@ -42,7 +95,7 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub fn with_ply(gfx: &mut Graphics, ply: &plyers::Ply) -> Result<Self, Error> {
+    fn with_ply(gfx: &mut Graphics, ply: &plyers::Ply) -> Result<Self, Error> {
         let rm = RawMesh::with_ply(ply)?;
 
         let vertex_buffer = gfx.create_buffer(None, wgpu::BufferUsages::VERTEX, &rm.vertices);
@@ -173,21 +226,39 @@ impl RawMesh {
 
 #[derive(Debug)]
 pub struct Material {
-    texture: Texture,
-    bind_group: BindGroupId,
+    pub texture: Texture,
+}
+
+impl Material {
+    fn with_file<P: AsRef<Path>>(gfx: &mut Graphics, path: P) -> Result<Self, Error> {
+        Ok(Material {
+            texture: Texture::with_file(gfx, path)?,
+        })
+    }
 }
 
 #[derive(Debug)]
 pub struct Texture {
-    texture: TextureId,
-    view: TextureViewId,
-    sampler: SamplerId,
+    pub texture: TextureId,
+    pub view: TextureViewId,
+    pub sampler: SamplerId,
 }
 
 impl Texture {
-    pub fn with_file<P: AsRef<Path>>(gfx: &mut Graphics, fmt: image::ImageFormat, path: P) -> Result<Self, Error> {
+    fn with_file<P: AsRef<Path>>(gfx: &mut Graphics, path: P) -> Result<Self, Error> {
+        let path = path.as_ref();
+        let image_format = path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .and_then(|ext| match ext {
+                "jpg" | "jpeg" => Some(ImageFormat::Jpeg),
+                "png" => Some(ImageFormat::Png),
+                _ => None,
+            })
+            .ok_or(Error::UnsupportedFileFormat)?;
+
         let f = std::fs::File::open(path)?;
-        let img = image::load(std::io::BufReader::new(f), fmt)?;
+        let img = image::load(std::io::BufReader::new(f), image_format)?;
 
         let texture = gfx.create_texture().with_image(img).submit(None);
 
@@ -205,10 +276,12 @@ pub enum Error {
     IoError(#[from] std::io::Error),
     #[error(transparent)]
     ImageError(#[from] image::ImageError),
-    #[error("The specified file format is not supported for loading assets")]
-    UnsupportedFileFormat,
+    #[error(transparent)]
+    AssetError(#[from] crate::resources::asset_database::AssetError),
     #[error(transparent)]
     PlyError(#[from] plyers::PlyError),
+    #[error("The specified file format is not supported for loading assets")]
+    UnsupportedFileFormat,
     #[error("No element named 'vertex' was found")]
     NoVertexElement,
     #[error("No element named 'face' was found")]
@@ -217,8 +290,6 @@ pub enum Error {
     NoVertexIndices,
     #[error("The vertex indices do not denote triangles")]
     NoTriangleFaces,
-    #[error("The property named '{}' is not a scalar", .0)]
-    NotAScalar(&'static str),
 }
 
 #[cfg(test)]

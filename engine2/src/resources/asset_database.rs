@@ -1,16 +1,23 @@
 use std::{
     convert::TryFrom,
     fs::create_dir_all,
-    path::{is_separator, Path, PathBuf},
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Error};
 use directories::ProjectDirs;
 use ecs::{with_dependencies::WithDependencies, Resource};
-use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf, NewOrExFilePathBuf};
+use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf};
 
 const APP_QUALIFIER: &str = "net";
 const APP_ORGANIZATION: &str = "nausicaea";
+
+lazy_static::lazy_static! {
+    static ref GROUP_AND_NAME_ALLOWLIST: regex::Regex = regex::RegexBuilder::new("^[-._0-9a-zA-Z]+$")
+        .multi_line(true)
+        .build()
+        .unwrap();
+}
 
 pub trait AssetDatabaseDeps {
     fn name(&self) -> &str;
@@ -30,75 +37,21 @@ impl AssetDatabase {
         &self.assets
     }
 
-    pub fn state_directory(&self) -> &Path {
-        &self.states
-    }
+    pub fn find_asset<S: AsRef<str>>(&self, group: S, name: S) -> Result<FilePathBuf, AssetError> {
+        let group = group.as_ref();
+        let name = name.as_ref();
 
-    pub fn create_state_path<S: AsRef<str>>(&self, name: S) -> Result<NewOrExFilePathBuf, AssetError> {
-        let name_str = name.as_ref();
-        if name_str.chars().any(|c| is_separator(c)) {
-            return Err(AssetError::InvalidCharacters(name_str.to_string()));
+        if !(GROUP_AND_NAME_ALLOWLIST.is_match(group) && GROUP_AND_NAME_ALLOWLIST.is_match(name)) {
+            return Err(AssetError::InvalidCharacters(group.to_string(), name.to_string()));
         }
 
-        let states = self.states.join(name_str);
-
-        let states = match states.extension() {
-            None => states.with_extension("json"),
-            Some(ext) if ext != "json" => states.with_extension("json"),
-            Some(_) => states,
-        };
-
-        let state_path = NewOrExFilePathBuf::try_from(&states)?;
-
-        if !state_path.starts_with(&states) {
-            return Err(AssetError::OutOfTree(state_path.into()));
-        }
-
-        Ok(state_path)
-    }
-
-    pub fn find_asset<P: AsRef<Path>>(&self, path: P) -> Result<FilePathBuf, AssetError> {
-        let asset_path = FilePathBuf::try_from(self.assets.join(path))?;
+        let asset_path = FilePathBuf::try_from(self.assets.join(group).join(name))?;
 
         if !asset_path.as_path().starts_with(&self.assets) {
             return Err(AssetError::OutOfTree(asset_path.into()));
         }
 
         Ok(asset_path)
-    }
-
-    pub fn find_state<S: AsRef<str>>(&self, name: S) -> Result<FilePathBuf, AssetError> {
-        let name_str = name.as_ref();
-        if name_str.chars().any(|c| is_separator(c)) {
-            return Err(AssetError::InvalidCharacters(name_str.to_string()));
-        }
-
-        let states = self.states.join(name_str);
-
-        let states = match states.extension() {
-            None => states.with_extension("json"),
-            Some(ext) if ext != "json" => states.with_extension("json"),
-            Some(_) => states,
-        };
-
-        let state_path = FilePathBuf::try_from(&states)?;
-
-        if !state_path.as_path().starts_with(&states) {
-            return Err(AssetError::OutOfTree(state_path.into()));
-        }
-
-        Ok(state_path)
-    }
-
-    pub fn all_states(&self) -> Result<Vec<FilePathBuf>, AssetError> {
-        let mut data = Vec::new();
-        for dir_entry in std::fs::read_dir(&self.states)? {
-            let dir_entry = dir_entry?;
-            let entry_path = FilePathBuf::try_from(dir_entry.path())?;
-            data.push(entry_path);
-        }
-
-        Ok(data)
     }
 }
 
@@ -144,8 +97,8 @@ pub enum AssetError {
     AssetTreeNotFound,
     #[error("Is not within the asset tree: {}", .0.display())]
     OutOfTree(PathBuf),
-    #[error("The asset name {:?} contains path separators", .0)]
-    InvalidCharacters(String),
+    #[error("The asset group or name contain disallowed characters: group='{:?}', name='{:?}'", .0, .1)]
+    InvalidCharacters(String, String),
     #[error(transparent)]
     FileError(#[from] file_manipulation::FileError),
     #[error(transparent)]

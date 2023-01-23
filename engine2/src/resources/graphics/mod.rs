@@ -4,7 +4,7 @@ use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
     bind_group_layout_builder::BindGroupLayoutBuilder,
-    ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureId, TextureViewId},
+    ids::{BindGroupId, BindGroupLayoutId, BufferId, TextureId, TextureViewId},
     indexes::Indexes,
     render_pass_builder::RenderPassBuilder,
     render_pipeline_builder::RenderPipelineBuilder,

@@ -57,7 +57,7 @@ impl WithResources for Renderer {
         let window_receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let engine_receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders/triangle.wgsl")?;
+        let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders", "triangle.wgsl")?;
         let shader_data = shader_path.read_to_string()?;
 
         let mut gfx = res.borrow_mut::<Graphics>();
