@@ -57,13 +57,50 @@ impl WithResources for Renderer {
         let window_receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let engine_receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
+        let mut gfx = res.borrow_mut::<Graphics>();
+
+        let bind_group_layout = gfx
+            .create_bind_group_layout()
+            .add_bind_group_layout_entry(
+                0,
+                wgpu::ShaderStages::VERTEX,
+                wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+            )
+            .add_bind_group_layout_entry(
+                1,
+                wgpu::ShaderStages::FRAGMENT,
+                wgpu::BindingType::Texture {
+                    sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                    view_dimension: wgpu::TextureViewDimension::D2,
+                    multisampled: false,
+                },
+            )
+            .add_bind_group_layout_entry(
+                2,
+                wgpu::ShaderStages::FRAGMENT,
+                wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+            )
+            .submit();
+
         let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders", "triangle.wgsl")?;
         let shader_data = shader_path.read_to_string()?;
+        let shader = gfx.create_shader_module(None, shader_data);
 
-        let mut gfx = res.borrow_mut::<Graphics>();
         let pipeline = gfx
             .create_render_pipeline()
-            .with_shader_module(None, &shader_data, "vs_main", Some("fs_main"))
+            .add_bind_group_layout(bind_group_layout)
+            .with_shader_module(shader, "vs_main", Some("fs_main"))
+            .submit();
+
+        let bind_group = gfx
+            .create_bind_group(bind_group_layout)
+            .add_bind_group_entry(0, wgpu::BindingResource::Buffer(()))
+            .add_bind_group_entry(1, wgpu::BindingResource::TextureView(()))
+            .add_bind_group_entry(2, wgpu::BindingResource::Sampler(()))
             .submit();
 
         Ok(Renderer {

@@ -24,3 +24,4 @@ impl_id!(TextureId);
 impl_id!(TextureViewId);
 impl_id!(SamplerId);
 impl_id!(PipelineId);
+impl_id!(ShaderModuleId);

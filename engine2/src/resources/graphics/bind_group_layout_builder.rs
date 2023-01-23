@@ -1,20 +1,27 @@
 use super::{ids::BindGroupLayoutId, indexes::Indexes, runtime::Runtime, tables::Tables};
 
-pub struct BindGroupLayoutBuilder<'rt> {
+pub struct BindGroupLayoutBuilder<'rt, 'lbl> {
     runtime: &'rt Runtime,
     indexes: &'rt mut Indexes,
     tables: &'rt mut Tables,
+    label: Option<&'lbl str>,
     entries: Vec<wgpu::BindGroupLayoutEntry>,
 }
 
-impl<'rt> BindGroupLayoutBuilder<'rt> {
+impl<'rt, 'lbl> BindGroupLayoutBuilder<'rt, 'lbl> {
     pub(super) fn new(runtime: &'rt Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
         Self {
             runtime,
             indexes,
             tables,
+            label: None,
             entries: Vec::default(),
         }
+    }
+
+    pub fn with_label(mut self, label: &'lbl str) -> Self {
+        self.label = Some(label);
+        self
     }
 
     pub fn add_bind_group_layout_entry(
@@ -32,12 +39,12 @@ impl<'rt> BindGroupLayoutBuilder<'rt> {
         self
     }
 
-    pub fn submit(self, label: Option<&str>) -> BindGroupLayoutId {
+    pub fn submit(self) -> BindGroupLayoutId {
         let bgl = self
             .runtime
             .device
             .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label,
+                label: self.label,
                 entries: &self.entries,
             });
 

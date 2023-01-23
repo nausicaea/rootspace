@@ -3,8 +3,9 @@ use pollster::FutureExt;
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
+    bind_group_builder::BindGroupBuilder,
     bind_group_layout_builder::BindGroupLayoutBuilder,
-    ids::{BindGroupId, BindGroupLayoutId, BufferId, TextureId, TextureViewId},
+    ids::{BindGroupId, BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
     indexes::Indexes,
     render_pass_builder::RenderPassBuilder,
     render_pipeline_builder::RenderPipelineBuilder,
@@ -15,6 +16,7 @@ use self::{
     texture_builder::TextureBuilder,
 };
 
+pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
 pub mod descriptors;
 pub mod ids;
@@ -67,6 +69,21 @@ impl Graphics {
         &self.tables.buffers[buf]
     }
 
+    pub fn create_shader_module<'s, S: Into<std::borrow::Cow<'s, str>>>(
+        &mut self,
+        label: Option<&str>,
+        source: S,
+    ) -> ShaderModuleId {
+        let sm = self.runtime.device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label,
+            source: wgpu::ShaderSource::Wgsl(source.into()),
+        });
+
+        let id = self.indexes.shader_modules.take();
+        self.tables.shader_modules.insert(id, sm);
+        id
+    }
+
     pub fn create_render_pass(&self) -> RenderPassBuilder {
         RenderPassBuilder::new(&self.runtime, &self.settings, &self.tables)
     }
@@ -79,21 +96,8 @@ impl Graphics {
         BindGroupLayoutBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
     }
 
-    pub fn create_bind_group(
-        &mut self,
-        label: Option<&str>,
-        layout: BindGroupLayoutId,
-        entries: &[wgpu::BindGroupEntry],
-    ) -> BindGroupId {
-        let layout = &self.tables.bind_group_layouts[&layout];
-        let bg = self
-            .runtime
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor { label, layout, entries });
-
-        let id = self.indexes.bind_groups.take();
-        self.tables.bind_groups.insert(id, bg);
-        id
+    pub fn create_bind_group(&mut self, layout: BindGroupLayoutId) -> BindGroupBuilder {
+        BindGroupBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables, layout)
     }
 
     pub fn create_buffer<T: bytemuck::NoUninit>(
@@ -133,8 +137,6 @@ impl Graphics {
     pub fn create_sampler(&mut self) -> SamplerBuilder {
         SamplerBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
     }
-
-    //pub fn create_sampler(&mut self)
 }
 
 impl Resource for Graphics {}
