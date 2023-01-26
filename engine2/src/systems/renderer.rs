@@ -120,7 +120,8 @@ impl System for Renderer {
         let r = res
             .borrow::<Graphics>()
             .create_render_pass()
-            .with_pipeline(&self.pipeline)
+            .with_pipeline(self.pipeline)
+            .add_bind_group(0, self.transform_bind_group)
             .draw(0..3, 0..3)
             .submit(None, None);
 
