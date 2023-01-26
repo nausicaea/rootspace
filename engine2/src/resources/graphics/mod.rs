@@ -5,9 +5,9 @@ use winit::event_loop::EventLoopWindowTarget;
 use self::{
     bind_group_builder::BindGroupBuilder,
     bind_group_layout_builder::BindGroupLayoutBuilder,
+    encoder::Encoder,
     ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
     indexes::Indexes,
-    render_pass_builder::RenderPassBuilder,
     render_pipeline_builder::RenderPipelineBuilder,
     runtime::Runtime,
     sampler_builder::SamplerBuilder,
@@ -19,9 +19,9 @@ use self::{
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
 pub mod descriptors;
+pub mod encoder;
 pub mod ids;
 mod indexes;
-pub mod render_pass_builder;
 pub mod render_pipeline_builder;
 mod runtime;
 pub mod sampler_builder;
@@ -90,8 +90,8 @@ impl Graphics {
         id
     }
 
-    pub fn create_render_pass(&self) -> RenderPassBuilder {
-        RenderPassBuilder::new(&self.runtime, &self.settings, &self.tables)
+    pub fn create_encoder(&self) -> Result<Encoder, wgpu::SurfaceError> {
+        Encoder::new(&self.runtime, &self.settings, &self.tables)
     }
 
     pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {

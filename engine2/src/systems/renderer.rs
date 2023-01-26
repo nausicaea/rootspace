@@ -8,6 +8,7 @@ use crate::{
     resources::{
         asset_database::AssetDatabase,
         graphics::{
+            encoder::RenderPass,
             ids::{BindGroupId, BufferId, PipelineId, ShaderModuleId},
             vertex::Vertex,
             Graphics,
@@ -41,6 +42,20 @@ impl Renderer {
                 EngineEvent::AbortRequested => self.renderer_enabled = true,
                 _ => (),
             });
+    }
+
+    fn render(&self, res: &Resources, mut rp: RenderPass) {
+        let rbls = res.borrow_components::<Renderable>();
+
+        rp.set_pipeline(self.pipeline)
+            .set_bind_group(0, self.transform_bind_group);
+
+        for r in rbls.iter() {
+            rp.set_bind_group(1, r.0.materials[0].bind_group)
+                .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
+                .set_index_buffer(r.0.mesh.index_buffer)
+                .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+        }
     }
 
     fn on_window_resized(&self, res: &Resources, ps: PhysicalSize<u32>) {
@@ -121,25 +136,15 @@ impl System for Renderer {
         }
 
         let gfx = res.borrow::<Graphics>();
-        let rbls = res.borrow_components::<Renderable>();
 
-        let mut rpb = gfx.create_render_pass();
-
-        rpb.with_pipeline(self.pipeline)
-            .add_bind_group(0, self.transform_bind_group);
-
-        for r in rbls.iter() {
-            rpb.add_bind_group(1, r.0.materials[0].bind_group)
-                .add_vertex_buffer(0, r.0.mesh.vertex_buffer)
-                .with_index_buffer(r.0.mesh.index_buffer)
-                .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
-        }
-
-        match rpb.submit(None, None) {
+        match gfx.create_encoder() {
             Err(SurfaceError::Lost | SurfaceError::Outdated) => self.on_surface_outdated(res),
             Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
             Err(SurfaceError::Timeout) => self.on_timeout(),
-            Ok(_) => (),
+            Ok(mut enc) => {
+                self.render(&res, enc.begin());
+                enc.submit();
+            }
         }
     }
 }

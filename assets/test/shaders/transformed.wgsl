@@ -14,9 +14,10 @@ var<uniform> transform: mat4x4<f32>;
 
 @vertex
 fn main(
+    in: VertexInput
 ) -> VertexOutput {
-    var out: VertexOutput;
-    out.tex_coords = model.tex_coords;
-    out.clip_position = camera.view_proj * vec4<f32>(model.position, 1.0)
-    return out;
+    return VertexOutput(
+        transform * vec4<f32>(in.position, 1.0),
+        in.tex_coords,
+    );
 }
