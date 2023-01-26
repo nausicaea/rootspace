@@ -3,11 +3,13 @@ use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
 
 use crate::{
+    components::renderable::Renderable,
     events::{engine_event::EngineEvent, window_event::WindowEvent},
     resources::{
         asset_database::AssetDatabase,
         graphics::{
             ids::{BindGroupId, BufferId, PipelineId, ShaderModuleId},
+            vertex::Vertex,
             Graphics,
         },
     },
@@ -84,6 +86,7 @@ impl WithResources for Renderer {
             .add_bind_group_layout(ml)
             .with_vertex_shader_module(vertex_shader_module, "main")
             .with_fragment_shader_module(fragment_shader_module, "main")
+            .add_vertex_buffer_layout::<Vertex>()
             .submit();
 
         let transform_buffer_data = glamour::Mat4::<f32>::identity();
@@ -117,15 +120,22 @@ impl System for Renderer {
             return;
         }
 
-        let r = res
-            .borrow::<Graphics>()
-            .create_render_pass()
-            .with_pipeline(self.pipeline)
-            .add_bind_group(0, self.transform_bind_group)
-            .draw(0..3, 0..3)
-            .submit(None, None);
+        let gfx = res.borrow::<Graphics>();
+        let rbls = res.borrow_components::<Renderable>();
 
-        match r {
+        let mut rpb = gfx.create_render_pass();
+
+        rpb.with_pipeline(self.pipeline)
+            .add_bind_group(0, self.transform_bind_group);
+
+        for r in rbls.iter() {
+            rpb.add_bind_group(1, r.0.materials[0].bind_group)
+                .add_vertex_buffer(0, r.0.mesh.vertex_buffer)
+                .with_index_buffer(r.0.mesh.index_buffer)
+                .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+        }
+
+        match rpb.submit(None, None) {
             Err(SurfaceError::Lost | SurfaceError::Outdated) => self.on_surface_outdated(res),
             Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
             Err(SurfaceError::Timeout) => self.on_timeout(),

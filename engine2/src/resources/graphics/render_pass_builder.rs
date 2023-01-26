@@ -35,32 +35,32 @@ impl<'rt> RenderPassBuilder<'rt> {
         }
     }
 
-    pub fn with_pipeline(mut self, pipeline: PipelineId) -> Self {
+    pub fn with_pipeline(&mut self, pipeline: PipelineId) -> &mut Self {
         self.pipeline = Some(pipeline);
         self
     }
 
-    pub fn add_vertex_buffer(mut self, slot: u32, buffer: BufferId) -> Self {
+    pub fn add_vertex_buffer(&mut self, slot: u32, buffer: BufferId) -> &mut Self {
         self.vertex_buffers.push((slot, buffer));
         self
     }
 
-    pub fn with_index_buffer(mut self, buffer: BufferId) -> Self {
+    pub fn with_index_buffer(&mut self, buffer: BufferId) -> &mut Self {
         self.index_buffer = Some(buffer);
         self
     }
 
-    pub fn add_bind_group(mut self, index: u32, group: BindGroupId) -> Self {
+    pub fn add_bind_group(&mut self, index: u32, group: BindGroupId) -> &mut Self {
         self.bind_groups.push((index, group));
         self
     }
 
-    pub fn draw(mut self, vertices: Range<u32>, instances: Range<u32>) -> Self {
+    pub fn draw(&mut self, vertices: Range<u32>, instances: Range<u32>) -> &mut Self {
         self.draw_params = Some((vertices, instances));
         self
     }
 
-    pub fn draw_indexed(mut self, indices: Range<u32>, base_vertex: i32, instances: Range<u32>) -> Self {
+    pub fn draw_indexed(&mut self, indices: Range<u32>, base_vertex: i32, instances: Range<u32>) -> &mut Self {
         self.draw_indexed_params = Some((indices, base_vertex, instances));
         self
     }

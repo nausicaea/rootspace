@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, marker::PhantomData, ptr};
+use std::{cell::Ref, collections::BTreeSet, marker::PhantomData, ptr};
 
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
