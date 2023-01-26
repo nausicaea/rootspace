@@ -7,7 +7,7 @@ use crate::{
     resources::{
         asset_database::AssetDatabase,
         graphics::{
-            ids::{PipelineId, ShaderModuleId},
+            ids::{BindGroupId, BufferId, PipelineId, ShaderModuleId},
             Graphics,
         },
     },
@@ -18,7 +18,11 @@ pub struct Renderer {
     window_receiver: ReceiverId<WindowEvent>,
     engine_receiver: ReceiverId<EngineEvent>,
     renderer_enabled: bool,
-    shader_module: ShaderModuleId,
+    vertex_shader_module: ShaderModuleId,
+    fragment_shader_module: ShaderModuleId,
+    transform_buffer_data: glamour::Mat4<f32>,
+    transform_buffer: BufferId,
+    transform_bind_group: BindGroupId,
     pipeline: PipelineId,
 }
 
@@ -63,9 +67,14 @@ impl WithResources for Renderer {
 
         let mut gfx = res.borrow_mut::<Graphics>();
 
-        let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders", "texture.wgsl")?;
+        let shader_path = res
+            .borrow::<AssetDatabase>()
+            .find_asset("shaders", "transformed.wgsl")?;
         let shader_data = shader_path.read_to_string()?;
-        let shader_module = gfx.create_shader_module(None, shader_data);
+        let vertex_shader_module = gfx.create_shader_module(None, shader_data);
+        let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders", "textured.wgsl")?;
+        let shader_data = shader_path.read_to_string()?;
+        let fragment_shader_module = gfx.create_shader_module(None, shader_data);
 
         let tl = gfx.transform_layout();
         let ml = gfx.material_layout();
@@ -73,14 +82,15 @@ impl WithResources for Renderer {
             .create_render_pipeline()
             .add_bind_group_layout(tl)
             .add_bind_group_layout(ml)
-            .with_shader_module(shader_module, "vs_main", Some("fs_main"))
+            .with_vertex_shader_module(vertex_shader_module, "main")
+            .with_fragment_shader_module(fragment_shader_module, "main")
             .submit();
 
-        let transform_data = glamour::Mat4::<f32>::identity();
+        let transform_buffer_data = glamour::Mat4::<f32>::identity();
         let transform_buffer = gfx.create_buffer(
             None,
             wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            transform_data.as_slice(),
+            transform_buffer_data.as_slice(),
         );
 
         let transform_bind_group = gfx.create_bind_group(tl).add_buffer(0, transform_buffer).submit();
@@ -89,7 +99,11 @@ impl WithResources for Renderer {
             window_receiver,
             engine_receiver,
             renderer_enabled: true,
-            shader_module,
+            vertex_shader_module,
+            fragment_shader_module,
+            transform_buffer_data,
+            transform_buffer,
+            transform_bind_group,
             pipeline,
         })
     }

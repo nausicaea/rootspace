@@ -12,24 +12,11 @@ struct VertexOutput {
 @group(0) @binding(1)
 var<uniform> transform: mat4x4<f32>;
 
-@group(1) @binding(0)
-var t_diffuse: texture_2d<f32>;
-
-@group(1) @binding(1)
-var s_diffuse: sampler;
-
 @vertex
-fn vs_main(
+fn main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.tex_coords = model.tex_coords;
     out.clip_position = camera.view_proj * vec4<f32>(model.position, 1.0)
     return out;
-}
-
-@fragment
-fn fs_main(
-    in: VertexOutput
-) -> @location(0) vec4<f32> {
-    return textureSample(t_diffuse, s_diffuse, in.tex_coords);
 }

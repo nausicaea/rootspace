@@ -11,7 +11,8 @@ pub struct RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
     runtime: &'rt Runtime,
     indexes: &'rt mut Indexes,
     tables: &'rt mut Tables,
-    shader_module: Option<(ShaderModuleId, &'l str, Option<&'l str>)>,
+    vertex_shader_module: Option<(ShaderModuleId, &'l str)>,
+    fragment_shader_module: Option<(ShaderModuleId, &'l str)>,
     bind_group_layouts: Vec<BindGroupLayoutId>,
     vertex_buffer_layouts: Vec<wgpu::VertexBufferLayout<'vbl>>,
     label: Option<&'lbl str>,
@@ -23,7 +24,8 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
             runtime,
             indexes,
             tables,
-            shader_module: None,
+            vertex_shader_module: None,
+            fragment_shader_module: None,
             bind_group_layouts: Vec::new(),
             vertex_buffer_layouts: Vec::new(),
             label: None,
@@ -35,13 +37,13 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
         self
     }
 
-    pub fn with_shader_module(
-        mut self,
-        module: ShaderModuleId,
-        vertex_entry_point: &'l str,
-        fragment_entry_point: Option<&'l str>,
-    ) -> Self {
-        self.shader_module = Some((module, vertex_entry_point, fragment_entry_point));
+    pub fn with_vertex_shader_module(mut self, module: ShaderModuleId, entry_point: &'l str) -> Self {
+        self.vertex_shader_module = Some((module, entry_point));
+        self
+    }
+
+    pub fn with_fragment_shader_module(mut self, module: ShaderModuleId, entry_point: &'l str) -> Self {
+        self.fragment_shader_module = Some((module, entry_point));
         self
     }
 
@@ -61,11 +63,6 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
     }
 
     pub fn submit(self) -> PipelineId {
-        // Required parameters
-        let (shader_module, vertex_entry_point, fragment_entry_point) = self
-            .shader_module
-            .expect("cannot build a render pipeline without shader module");
-
         // Helper variables
         let cts = [Some(wgpu::ColorTargetState {
             format: self.runtime.config.format,
@@ -86,19 +83,23 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
                 push_constant_ranges: &[],
             });
 
+        // Pipeline definition
         let pipeline = self
             .runtime
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: self.label,
                 layout: Some(&pipeline_layout),
-                vertex: wgpu::VertexState {
-                    module: &self.tables.shader_modules[&shader_module],
-                    entry_point: vertex_entry_point,
-                    buffers: self.vertex_buffer_layouts.as_slice(),
-                },
-                fragment: fragment_entry_point.map(|fep| wgpu::FragmentState {
-                    module: &self.tables.shader_modules[&shader_module],
+                vertex: self
+                    .vertex_shader_module
+                    .map(|(vsm, vep)| wgpu::VertexState {
+                        module: &self.tables.shader_modules[&vsm],
+                        entry_point: vep,
+                        buffers: self.vertex_buffer_layouts.as_slice(),
+                    })
+                    .expect("cannot build a render pipeline without vertex shader module"),
+                fragment: self.fragment_shader_module.map(|(fsm, fep)| wgpu::FragmentState {
+                    module: &self.tables.shader_modules[&fsm],
                     entry_point: fep,
                     targets: &cts,
                 }),
