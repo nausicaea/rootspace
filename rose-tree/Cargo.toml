@@ -5,7 +5,6 @@ authors = ["Eleanore Young"]
 edition = "2021"
 
 [features]
-default = ["serde_support"]
 serde_support = ["dep:serde"]
 ecs = ["dep:anyhow", "dep:ecs"]
 

@@ -1,5 +1,7 @@
+#[cfg(feature = "serde_support")]
 use num_traits::Zero;
 
+#[cfg(feature = "serde_support")]
 use super::Mat;
 
 #[cfg(feature = "serde_support")]

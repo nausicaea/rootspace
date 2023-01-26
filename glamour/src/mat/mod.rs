@@ -34,6 +34,12 @@ impl<R, const I: usize, const J: usize> Mat<R, I, J> {
     }
 }
 
+impl<R, const I: usize, const J: usize> Mat<R, I, J> {
+    pub fn as_slice(&self) -> &[[R; J]; I] {
+        &self.0
+    }
+}
+
 impl<R, const I: usize, const J: usize> Mat<R, I, J>
 where
     R: Copy + Zero,

@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["serde_support"]
-serde_support = ["serde"]
+serde_support = ["dep:serde"]
 
 [dependencies]
 thiserror = "^1.0.0"
 num-traits = "^0.2.14"
 approx = "^0.5.0"
 serde = { version = "^1.0.0", features = ["derive"], optional = true }
+
 forward-ref = { path = "../forward-ref" }
 
 [dev-dependencies]

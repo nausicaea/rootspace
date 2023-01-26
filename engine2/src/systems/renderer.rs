@@ -6,7 +6,10 @@ use crate::{
     events::{engine_event::EngineEvent, window_event::WindowEvent},
     resources::{
         asset_database::AssetDatabase,
-        graphics::{ids::PipelineId, Graphics},
+        graphics::{
+            ids::{PipelineId, ShaderModuleId},
+            Graphics,
+        },
     },
 };
 
@@ -15,6 +18,7 @@ pub struct Renderer {
     window_receiver: ReceiverId<WindowEvent>,
     engine_receiver: ReceiverId<EngineEvent>,
     renderer_enabled: bool,
+    shader_module: ShaderModuleId,
     pipeline: PipelineId,
 }
 
@@ -59,54 +63,33 @@ impl WithResources for Renderer {
 
         let mut gfx = res.borrow_mut::<Graphics>();
 
-        let bind_group_layout = gfx
-            .create_bind_group_layout()
-            .add_bind_group_layout_entry(
-                0,
-                wgpu::ShaderStages::VERTEX,
-                wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-            )
-            .add_bind_group_layout_entry(
-                1,
-                wgpu::ShaderStages::FRAGMENT,
-                wgpu::BindingType::Texture {
-                    sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                    view_dimension: wgpu::TextureViewDimension::D2,
-                    multisampled: false,
-                },
-            )
-            .add_bind_group_layout_entry(
-                2,
-                wgpu::ShaderStages::FRAGMENT,
-                wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-            )
-            .submit();
-
-        let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders", "triangle.wgsl")?;
+        let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders", "texture.wgsl")?;
         let shader_data = shader_path.read_to_string()?;
-        let shader = gfx.create_shader_module(None, shader_data);
+        let shader_module = gfx.create_shader_module(None, shader_data);
 
+        let tl = gfx.transform_layout();
+        let ml = gfx.material_layout();
         let pipeline = gfx
             .create_render_pipeline()
-            .add_bind_group_layout(bind_group_layout)
-            .with_shader_module(shader, "vs_main", Some("fs_main"))
+            .add_bind_group_layout(tl)
+            .add_bind_group_layout(ml)
+            .with_shader_module(shader_module, "vs_main", Some("fs_main"))
             .submit();
 
-        let bind_group = gfx
-            .create_bind_group(bind_group_layout)
-            .add_bind_group_entry(0, wgpu::BindingResource::Buffer(()))
-            .add_bind_group_entry(1, wgpu::BindingResource::TextureView(()))
-            .add_bind_group_entry(2, wgpu::BindingResource::Sampler(()))
-            .submit();
+        let transform_data = glamour::Mat4::<f32>::identity();
+        let transform_buffer = gfx.create_buffer(
+            None,
+            wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            transform_data.as_slice(),
+        );
+
+        let transform_bind_group = gfx.create_bind_group(tl).add_buffer(0, transform_buffer).submit();
 
         Ok(Renderer {
             window_receiver,
             engine_receiver,
             renderer_enabled: true,
+            shader_module,
             pipeline,
         })
     }

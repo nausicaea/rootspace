@@ -8,7 +8,7 @@ use plyers::{
 use crate::resources::{
     asset_database::AssetDatabase,
     graphics::{
-        ids::{BufferId, SamplerId, TextureId, TextureViewId},
+        ids::{BindGroupId, BufferId, SamplerId, TextureId, TextureViewId},
         vertex::Vertex,
         Graphics,
     },
@@ -227,13 +227,19 @@ impl RawMesh {
 #[derive(Debug)]
 pub struct Material {
     pub texture: Texture,
+    pub bind_group: BindGroupId,
 }
 
 impl Material {
     fn with_file<P: AsRef<Path>>(gfx: &mut Graphics, path: P) -> Result<Self, Error> {
-        Ok(Material {
-            texture: Texture::with_file(gfx, path)?,
-        })
+        let texture = Texture::with_file(gfx, path)?;
+        let bind_group = gfx
+            .create_bind_group(gfx.material_layout())
+            .add_texture_view(0, texture.view)
+            .add_sampler(1, texture.sampler)
+            .submit();
+
+        Ok(Material { texture, bind_group })
     }
 }
 

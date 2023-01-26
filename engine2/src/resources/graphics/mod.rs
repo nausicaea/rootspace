@@ -5,7 +5,7 @@ use winit::event_loop::EventLoopWindowTarget;
 use self::{
     bind_group_builder::BindGroupBuilder,
     bind_group_layout_builder::BindGroupLayoutBuilder,
-    ids::{BindGroupId, BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
+    ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
     indexes::Indexes,
     render_pass_builder::RenderPassBuilder,
     render_pipeline_builder::RenderPipelineBuilder,
@@ -43,6 +43,8 @@ pub struct Graphics {
     runtime: Runtime,
     indexes: Indexes,
     tables: Tables,
+    transform_layout: BindGroupLayoutId,
+    material_layout: BindGroupLayoutId,
 }
 
 impl Graphics {
@@ -65,8 +67,12 @@ impl Graphics {
         }
     }
 
-    pub fn buffer(&self, buf: &BufferId) -> &wgpu::Buffer {
-        &self.tables.buffers[buf]
+    pub fn transform_layout(&self) -> BindGroupLayoutId {
+        self.transform_layout
+    }
+
+    pub fn material_layout(&self) -> BindGroupLayoutId {
+        self.material_layout
     }
 
     pub fn create_shader_module<'s, S: Into<std::borrow::Cow<'s, str>>>(
@@ -156,11 +162,45 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
         )
         .block_on();
 
+        let mut indexes = Indexes::default();
+        let mut tables = Tables::default();
+
+        let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut indexes, &mut tables)
+            .add_bind_group_layout_entry(
+                0,
+                wgpu::ShaderStages::VERTEX,
+                wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+            )
+            .submit();
+
+        let material_layout = BindGroupLayoutBuilder::new(&runtime, &mut indexes, &mut tables)
+            .add_bind_group_layout_entry(
+                0,
+                wgpu::ShaderStages::FRAGMENT,
+                wgpu::BindingType::Texture {
+                    sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                    view_dimension: wgpu::TextureViewDimension::D2,
+                    multisampled: false,
+                },
+            )
+            .add_bind_group_layout_entry(
+                1,
+                wgpu::ShaderStages::FRAGMENT,
+                wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+            )
+            .submit();
+
         Ok(Graphics {
             settings: settings.clone(),
             runtime,
             indexes: Indexes::default(),
             tables: Tables::default(),
+            transform_layout,
+            material_layout,
         })
     }
 }
