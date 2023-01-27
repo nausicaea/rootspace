@@ -164,7 +164,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
         let mut database = Database::default();
 
         let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
-            .with_label("transform_layout")
+            .with_label("transform-layout")
             .add_bind_group_layout_entry(
                 0,
                 wgpu::ShaderStages::VERTEX,
@@ -177,7 +177,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
             .submit();
 
         let material_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
-            .with_label("material_layout")
+            .with_label("material-layout")
             .add_bind_group_layout_entry(
                 0,
                 wgpu::ShaderStages::FRAGMENT,

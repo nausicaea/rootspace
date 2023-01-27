@@ -88,16 +88,17 @@ impl WithResources for Renderer {
             .borrow::<AssetDatabase>()
             .find_asset("shaders", "transformed.wgsl")?;
         let shader_data = shader_path.read_to_string()?;
-        let vertex_shader_module = gfx.create_shader_module(None, shader_data);
+        let vertex_shader_module = gfx.create_shader_module(Some("vertex-shader"), shader_data);
 
         let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders", "textured.wgsl")?;
         let shader_data = shader_path.read_to_string()?;
-        let fragment_shader_module = gfx.create_shader_module(None, shader_data);
+        let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
 
         let tl = gfx.transform_layout();
         let ml = gfx.material_layout();
         let pipeline = gfx
             .create_render_pipeline()
+            .with_label("main")
             .add_bind_group_layout(tl)
             .add_bind_group_layout(ml)
             .with_vertex_shader_module(vertex_shader_module, "main")
@@ -107,12 +108,16 @@ impl WithResources for Renderer {
 
         let transform_buffer_data = glamour::Mat4::<f32>::identity();
         let transform_buffer = gfx.create_buffer(
-            None,
+            Some("transform-buffer"),
             wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             transform_buffer_data.as_slice(),
         );
 
-        let transform_bind_group = gfx.create_bind_group(tl).add_buffer(0, transform_buffer).submit();
+        let transform_bind_group = gfx
+            .create_bind_group(tl)
+            .with_label("transform-bind-group")
+            .add_buffer(0, transform_buffer)
+            .submit();
 
         Ok(Renderer {
             window_receiver,
@@ -138,12 +143,12 @@ impl System for Renderer {
 
         let gfx = res.borrow::<Graphics>();
 
-        match gfx.create_encoder(None) {
+        match gfx.create_encoder(Some("main-encoder")) {
             Err(SurfaceError::Lost | SurfaceError::Outdated) => self.on_surface_outdated(res),
             Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
             Err(SurfaceError::Timeout) => self.on_timeout(),
             Ok(mut enc) => {
-                self.render(&res, enc.begin(None));
+                self.render(&res, enc.begin(Some("main-render-pass")));
                 enc.submit();
             }
         }

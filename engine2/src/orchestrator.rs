@@ -60,14 +60,14 @@ impl Orchestrator {
             {
                 match &event {
                     Event::NewEvents(_) => {
-                        crate::spam!("⬇");
+                        log::trace!("⬇");
                     }
                     Event::RedrawEventsCleared | Event::LoopDestroyed => {
                         draw_bottom = true;
                     }
                     _ => (),
                 }
-                crate::spam!("Event trace: {:?}", &event);
+                log::trace!("Event trace: {:?}", &event);
             }
 
             match event {
@@ -87,7 +87,7 @@ impl Orchestrator {
 
             #[cfg(feature = "dbg-loop")]
             if draw_bottom {
-                crate::spam!("⬆\n\n");
+                log::trace!("⬆\n\n");
             }
         }
     }
@@ -160,7 +160,7 @@ impl Orchestrator {
 
         #[cfg(feature = "dbg-loop")]
         if control_flow != &ControlFlow::Poll {
-            crate::spam!("Control flow: {:?}", control_flow);
+            log::trace!("Control flow: {:?}", control_flow);
         }
     }
 
