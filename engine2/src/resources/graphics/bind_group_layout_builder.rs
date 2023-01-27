@@ -1,19 +1,17 @@
-use super::{ids::BindGroupLayoutId, indexes::Indexes, runtime::Runtime, tables::Tables};
+use super::{ids::BindGroupLayoutId, runtime::Runtime, Database};
 
 pub struct BindGroupLayoutBuilder<'rt, 'lbl> {
     runtime: &'rt Runtime,
-    indexes: &'rt mut Indexes,
-    tables: &'rt mut Tables,
+    database: &'rt mut Database,
     label: Option<&'lbl str>,
     entries: Vec<wgpu::BindGroupLayoutEntry>,
 }
 
 impl<'rt, 'lbl> BindGroupLayoutBuilder<'rt, 'lbl> {
-    pub(super) fn new(runtime: &'rt Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database) -> Self {
         Self {
             runtime,
-            indexes,
-            tables,
+            database,
             label: None,
             entries: Vec::default(),
         }
@@ -48,10 +46,6 @@ impl<'rt, 'lbl> BindGroupLayoutBuilder<'rt, 'lbl> {
                 entries: &self.entries,
             });
 
-        let id = self.indexes.bind_group_layouts.take_labelled(label);
-        log::trace!("Registering {:?} as {:?}", &bgl, id);
-        self.tables.bind_group_layouts.insert(id, bgl);
-        dbg!(&self.tables.bind_group_layouts);
-        id
+        self.database.insert_bind_group_layout(label, bgl)
     }
 }

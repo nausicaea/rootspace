@@ -1,16 +1,14 @@
 use super::{
     descriptors::VertexAttributeDescriptor,
     ids::{BindGroupLayoutId, PipelineId, ShaderModuleId},
-    indexes::Indexes,
     runtime::Runtime,
-    tables::Tables,
+    Database,
 };
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
     runtime: &'rt Runtime,
-    indexes: &'rt mut Indexes,
-    tables: &'rt mut Tables,
+    database: &'rt mut Database,
     vertex_shader_module: Option<(ShaderModuleId, &'l str)>,
     fragment_shader_module: Option<(ShaderModuleId, &'l str)>,
     bind_group_layouts: Vec<BindGroupLayoutId>,
@@ -19,11 +17,10 @@ pub struct RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
 }
 
 impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
-    pub(super) fn new(runtime: &'rt Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database) -> Self {
         RenderPipelineBuilder {
             runtime,
-            indexes,
-            tables,
+            database,
             vertex_shader_module: None,
             fragment_shader_module: None,
             bind_group_layouts: Vec::new(),
@@ -69,12 +66,11 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
             blend: Some(wgpu::BlendState::REPLACE),
             write_mask: wgpu::ColorWrites::ALL,
         })];
-        dbg!(&self.tables.bind_group_layouts);
         let bgl = self
             .bind_group_layouts
             .into_iter()
             .map(|b| {
-                self.tables
+                self.database
                     .bind_group_layouts
                     .get(&b)
                     .expect(&format!("Unknown {:?}", b))
@@ -100,7 +96,7 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
                     .vertex_shader_module
                     .map(|(vsm, vep)| wgpu::VertexState {
                         module: self
-                            .tables
+                            .database
                             .shader_modules
                             .get(&vsm)
                             .expect(&format!("Unknown {:?}", vsm)),
@@ -110,7 +106,7 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
                     .expect("cannot build a render pipeline without vertex shader module"),
                 fragment: self.fragment_shader_module.map(|(fsm, fep)| wgpu::FragmentState {
                     module: self
-                        .tables
+                        .database
                         .shader_modules
                         .get(&fsm)
                         .expect(&format!("Unknown {:?}", fsm)),
@@ -135,9 +131,6 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
                 multiview: None,
             });
 
-        let id = self.indexes.render_pipelines.take();
-        log::trace!("Registering {:?} as {:?}", &pipeline, id);
-        self.tables.render_pipelines.insert(id, pipeline);
-        id
+        self.database.insert_render_pipeline(None, pipeline)
     }
 }

@@ -1,18 +1,16 @@
-use super::{ids::TextureId, indexes::Indexes, runtime::Runtime, tables::Tables};
+use super::{ids::TextureId, runtime::Runtime, Database};
 
 pub struct TextureBuilder<'rt> {
     runtime: &'rt Runtime,
-    indexes: &'rt mut Indexes,
-    tables: &'rt mut Tables,
+    database: &'rt mut Database,
     image: Option<image::DynamicImage>,
 }
 
 impl<'rt> TextureBuilder<'rt> {
-    pub(super) fn new(runtime: &'rt Runtime, indexes: &'rt mut Indexes, tables: &'rt mut Tables) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database) -> Self {
         Self {
             runtime,
-            indexes,
-            tables,
+            database,
             image: None,
         }
     }
@@ -52,9 +50,6 @@ impl<'rt> TextureBuilder<'rt> {
             &rgba8_image,
         );
 
-        let id = self.indexes.textures.take();
-        log::trace!("Registering {:?} as {:?}", &texture, id);
-        self.tables.textures.insert(id, texture);
-        id
+        self.database.insert_texture(None, texture)
     }
 }

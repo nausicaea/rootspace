@@ -1,30 +1,22 @@
 use super::{
     ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureViewId},
-    indexes::Indexes,
     runtime::Runtime,
-    tables::Tables,
+    Database,
 };
 
 pub struct BindGroupBuilder<'rt, 'lbl> {
     runtime: &'rt Runtime,
-    indexes: &'rt mut Indexes,
-    tables: &'rt mut Tables,
+    database: &'rt mut Database,
     layout: BindGroupLayoutId,
     label: Option<&'lbl str>,
     entries: Vec<(u32, BindingResourceId)>,
 }
 
 impl<'rt, 'lbl> BindGroupBuilder<'rt, 'lbl> {
-    pub(super) fn new(
-        runtime: &'rt Runtime,
-        indexes: &'rt mut Indexes,
-        tables: &'rt mut Tables,
-        layout: BindGroupLayoutId,
-    ) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database, layout: BindGroupLayoutId) -> Self {
         BindGroupBuilder {
             runtime,
-            indexes,
-            tables,
+            database,
             layout,
             label: None,
             entries: Vec::new(),
@@ -52,24 +44,24 @@ impl<'rt, 'lbl> BindGroupBuilder<'rt, 'lbl> {
     }
 
     pub fn submit(self) -> BindGroupId {
-        let layout = &self.tables.bind_group_layouts[&self.layout];
+        let layout = &self.database.bind_group_layouts[&self.layout];
         let entries: Vec<_> = self
             .entries
             .into_iter()
             .map(|(binding, r)| match r {
                 BindingResourceId::Buffer(b) => {
-                    let buf = self.tables.buffers[&b].as_entire_binding();
+                    let buf = self.database.buffers[&b].as_entire_binding();
                     wgpu::BindGroupEntry { binding, resource: buf }
                 }
                 BindingResourceId::TextureView(v) => {
-                    let view = &self.tables.texture_views[&v];
+                    let view = &self.database.texture_views[&v];
                     wgpu::BindGroupEntry {
                         binding,
                         resource: wgpu::BindingResource::TextureView(view),
                     }
                 }
                 BindingResourceId::Sampler(s) => {
-                    let sampler = &self.tables.samplers[&s];
+                    let sampler = &self.database.samplers[&s];
                     wgpu::BindGroupEntry {
                         binding,
                         resource: wgpu::BindingResource::Sampler(sampler),
@@ -83,10 +75,7 @@ impl<'rt, 'lbl> BindGroupBuilder<'rt, 'lbl> {
             entries: entries.as_slice(),
         });
 
-        let id = self.indexes.bind_groups.take();
-        log::trace!("Registering {:?} as {:?}", &bg, id);
-        self.tables.bind_groups.insert(id, bg);
-        id
+        self.database.insert_bind_group(None, bg)
     }
 }
 

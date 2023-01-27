@@ -4,14 +4,14 @@ use super::{
     ids::{BindGroupId, BufferId, PipelineId},
     runtime::Runtime,
     settings::Settings,
-    tables::Tables,
+    Database,
 };
 
 #[derive(Debug)]
 pub struct Encoder<'rt> {
     runtime: &'rt Runtime,
     settings: &'rt Settings,
-    tables: &'rt Tables,
+    database: &'rt Database,
     output: wgpu::SurfaceTexture,
     view: wgpu::TextureView,
     encoder: wgpu::CommandEncoder,
@@ -21,7 +21,7 @@ impl<'rt> Encoder<'rt> {
     pub(super) fn new(
         runtime: &'rt Runtime,
         settings: &'rt Settings,
-        tables: &'rt Tables,
+        database: &'rt Database,
     ) -> Result<Self, wgpu::SurfaceError> {
         let output = runtime.surface.get_current_texture()?;
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
@@ -32,7 +32,7 @@ impl<'rt> Encoder<'rt> {
         Ok(Encoder {
             runtime,
             settings,
-            tables,
+            database,
             output,
             view,
             encoder,
@@ -53,7 +53,7 @@ impl<'rt> Encoder<'rt> {
             depth_stencil_attachment: None,
         });
 
-        RenderPass(render_pass, &self.tables)
+        RenderPass(render_pass, &self.database)
     }
 
     pub fn submit(self) {
@@ -63,7 +63,7 @@ impl<'rt> Encoder<'rt> {
 }
 
 #[derive(Debug)]
-pub struct RenderPass<'rp>(wgpu::RenderPass<'rp>, &'rp Tables);
+pub struct RenderPass<'rp>(wgpu::RenderPass<'rp>, &'rp Database);
 
 impl<'rp> RenderPass<'rp> {
     pub fn set_pipeline(&mut self, pipeline: PipelineId) -> &mut Self {

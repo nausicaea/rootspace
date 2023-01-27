@@ -1,18 +1,19 @@
+use std::collections::HashMap;
+
 use ecs::{with_dependencies::WithDependencies, Resource};
 use pollster::FutureExt;
+use urn::Urn;
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
     bind_group_builder::BindGroupBuilder,
     bind_group_layout_builder::BindGroupLayoutBuilder,
     encoder::Encoder,
-    ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
-    indexes::Indexes,
+    ids::{BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, ShaderModuleId, TextureId, TextureViewId},
     render_pipeline_builder::RenderPipelineBuilder,
     runtime::Runtime,
     sampler_builder::SamplerBuilder,
     settings::Settings,
-    tables::Tables,
     texture_builder::TextureBuilder,
 };
 
@@ -21,12 +22,10 @@ pub mod bind_group_layout_builder;
 pub mod descriptors;
 pub mod encoder;
 pub mod ids;
-mod indexes;
 pub mod render_pipeline_builder;
 mod runtime;
 pub mod sampler_builder;
 pub mod settings;
-mod tables;
 pub mod texture_builder;
 pub mod vertex;
 
@@ -41,8 +40,7 @@ pub trait GraphicsDeps {
 pub struct Graphics {
     settings: Settings,
     runtime: Runtime,
-    indexes: Indexes,
-    tables: Tables,
+    database: Database,
     transform_layout: BindGroupLayoutId,
     material_layout: BindGroupLayoutId,
 }
@@ -85,26 +83,23 @@ impl Graphics {
             source: wgpu::ShaderSource::Wgsl(source.into()),
         });
 
-        let id = self.indexes.shader_modules.take();
-        log::trace!("Registering {:?} as {:?}", &sm, id);
-        self.tables.shader_modules.insert(id, sm);
-        id
+        self.database.insert_shader_module(None, sm)
     }
 
     pub fn create_encoder(&self) -> Result<Encoder, wgpu::SurfaceError> {
-        Encoder::new(&self.runtime, &self.settings, &self.tables)
+        Encoder::new(&self.runtime, &self.settings, &self.database)
     }
 
     pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {
-        RenderPipelineBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
+        RenderPipelineBuilder::new(&self.runtime, &mut self.database)
     }
 
     pub fn create_bind_group_layout(&mut self) -> BindGroupLayoutBuilder {
-        BindGroupLayoutBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
+        BindGroupLayoutBuilder::new(&self.runtime, &mut self.database)
     }
 
     pub fn create_bind_group(&mut self, layout: BindGroupLayoutId) -> BindGroupBuilder {
-        BindGroupBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables, layout)
+        BindGroupBuilder::new(&self.runtime, &mut self.database, layout)
     }
 
     pub fn create_buffer<T: bytemuck::NoUninit>(
@@ -124,27 +119,21 @@ impl Graphics {
                 contents: bytemuck::cast_slice(contents),
             });
 
-        let id = self.indexes.buffers.take();
-        log::trace!("Registering {:?} as {:?}", &buf, id);
-        self.tables.buffers.insert(id, buf);
-        id
+        self.database.insert_buffer(None, buf)
     }
 
     pub fn create_texture(&mut self) -> TextureBuilder {
-        TextureBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
+        TextureBuilder::new(&self.runtime, &mut self.database)
     }
 
     pub fn create_texture_view(&mut self, texture: TextureId) -> TextureViewId {
-        let texture = &self.tables.textures[&texture];
+        let texture = &self.database.textures[&texture];
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let id = self.indexes.texture_views.take();
-        log::trace!("Registering {:?} as {:?}", &view, id);
-        self.tables.texture_views.insert(id, view);
-        id
+        self.database.insert_texture_view(None, view)
     }
 
     pub fn create_sampler(&mut self) -> SamplerBuilder {
-        SamplerBuilder::new(&self.runtime, &mut self.indexes, &mut self.tables)
+        SamplerBuilder::new(&self.runtime, &mut self.database)
     }
 }
 
@@ -165,10 +154,9 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
         )
         .block_on();
 
-        let mut indexes = Indexes::default();
-        let mut tables = Tables::default();
+        let mut database = Database::default();
 
-        let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut indexes, &mut tables)
+        let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
             .add_bind_group_layout_entry(
                 0,
                 wgpu::ShaderStages::VERTEX,
@@ -180,7 +168,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
             )
             .submit(Some("transform_layout"));
 
-        let material_layout = BindGroupLayoutBuilder::new(&runtime, &mut indexes, &mut tables)
+        let material_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
             .add_bind_group_layout_entry(
                 0,
                 wgpu::ShaderStages::FRAGMENT,
@@ -200,11 +188,84 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
         Ok(Graphics {
             settings: settings.clone(),
             runtime,
-            indexes,
-            tables,
+            database,
             transform_layout,
             material_layout,
         })
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Database {
+    shader_module_index: Urn<ShaderModuleId>,
+    shader_modules: HashMap<ShaderModuleId, wgpu::ShaderModule>,
+    bind_group_layout_index: Urn<BindGroupLayoutId>,
+    bind_group_layouts: HashMap<BindGroupLayoutId, wgpu::BindGroupLayout>,
+    bind_group_index: Urn<BindGroupId>,
+    bind_groups: HashMap<BindGroupId, wgpu::BindGroup>,
+    buffer_index: Urn<BufferId>,
+    buffers: HashMap<BufferId, wgpu::Buffer>,
+    texture_index: Urn<TextureId>,
+    textures: HashMap<TextureId, wgpu::Texture>,
+    texture_view_index: Urn<TextureViewId>,
+    texture_views: HashMap<TextureViewId, wgpu::TextureView>,
+    sampler_index: Urn<SamplerId>,
+    samplers: HashMap<SamplerId, wgpu::Sampler>,
+    render_pipeline_index: Urn<PipelineId>,
+    render_pipelines: HashMap<PipelineId, wgpu::RenderPipeline>,
+}
+
+impl Database {
+    fn insert_shader_module(&mut self, label: Option<&'static str>, obj: wgpu::ShaderModule) -> ShaderModuleId {
+        let id = self.shader_module_index.take_labelled(label);
+        self.shader_modules.insert(id, obj);
+        id
+    }
+
+    fn insert_bind_group_layout(
+        &mut self,
+        label: Option<&'static str>,
+        obj: wgpu::BindGroupLayout,
+    ) -> BindGroupLayoutId {
+        let id = self.bind_group_layout_index.take_labelled(label);
+        self.bind_group_layouts.insert(id, obj);
+        id
+    }
+
+    fn insert_bind_group(&mut self, label: Option<&'static str>, obj: wgpu::BindGroup) -> BindGroupId {
+        let id = self.bind_group_index.take_labelled(label);
+        self.bind_groups.insert(id, obj);
+        id
+    }
+
+    fn insert_buffer(&mut self, label: Option<&'static str>, obj: wgpu::Buffer) -> BufferId {
+        let id = self.buffer_index.take_labelled(label);
+        self.buffers.insert(id, obj);
+        id
+    }
+
+    fn insert_texture(&mut self, label: Option<&'static str>, obj: wgpu::Texture) -> TextureId {
+        let id = self.texture_index.take_labelled(label);
+        self.textures.insert(id, obj);
+        id
+    }
+
+    fn insert_texture_view(&mut self, label: Option<&'static str>, obj: wgpu::TextureView) -> TextureViewId {
+        let id = self.texture_view_index.take_labelled(label);
+        self.texture_views.insert(id, obj);
+        id
+    }
+
+    fn insert_sampler(&mut self, label: Option<&'static str>, obj: wgpu::Sampler) -> SamplerId {
+        let id = self.sampler_index.take_labelled(label);
+        self.samplers.insert(id, obj);
+        id
+    }
+
+    fn insert_render_pipeline(&mut self, label: Option<&'static str>, obj: wgpu::RenderPipeline) -> PipelineId {
+        let id = self.render_pipeline_index.take_labelled(label);
+        self.render_pipelines.insert(id, obj);
+        id
     }
 }
 
