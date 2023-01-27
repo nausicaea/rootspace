@@ -21,6 +21,7 @@ impl<'rt> SamplerBuilder<'rt> {
     }
 
     pub fn submit(self) -> SamplerId {
+        log::trace!("Creating sampler '{}'", self.label.unwrap_or("unnamed"));
         let sampler = self.runtime.device.create_sampler(&wgpu::SamplerDescriptor {
             label: self.label,
             ..Default::default()

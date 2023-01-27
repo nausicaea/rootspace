@@ -36,6 +36,7 @@ impl<'rt> TextureBuilder<'rt> {
 
         let dims = rgba8_image.dimensions();
 
+        log::trace!("Creating texture '{}'", self.label.unwrap_or("unnamed"));
         let texture = self.runtime.device.create_texture_with_data(
             &self.runtime.queue,
             &wgpu::TextureDescriptor {

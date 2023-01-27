@@ -78,6 +78,7 @@ impl Graphics {
         label: Option<&'static str>,
         source: S,
     ) -> ShaderModuleId {
+        log::trace!("Creating shader module '{}'", label.unwrap_or("unnamed"));
         let sm = self.runtime.device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label,
             source: wgpu::ShaderSource::Wgsl(source.into()),
@@ -110,6 +111,7 @@ impl Graphics {
     ) -> BufferId {
         use wgpu::util::DeviceExt;
 
+        log::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
         let buf = self
             .runtime
             .device
@@ -128,6 +130,8 @@ impl Graphics {
 
     pub fn create_texture_view(&mut self, label: Option<&'static str>, texture: TextureId) -> TextureViewId {
         let texture = &self.database.textures[&texture];
+
+        log::trace!("Creating texture view '{}'", label.unwrap_or("unnamed"));
         let view = texture.create_view(&wgpu::TextureViewDescriptor {
             label,
             ..Default::default()

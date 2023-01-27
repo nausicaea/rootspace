@@ -24,11 +24,16 @@ impl<'rt> Encoder<'rt> {
         settings: &'rt Settings,
         database: &'rt Database,
     ) -> Result<Self, wgpu::SurfaceError> {
+        crate::spam!("Getting surface texture");
         let output = runtime.surface.get_current_texture()?;
+
+        crate::spam!("Creating surface texture view '{}'", label.unwrap_or("unnamed"));
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor {
             label: label.map(|lbl| format!("{}:surface-texture-view", lbl)).as_deref(),
             ..Default::default()
         });
+
+        crate::spam!("Creating command encoder '{}'", label.unwrap_or("unnamed"));
         let encoder = runtime
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label });
@@ -44,6 +49,7 @@ impl<'rt> Encoder<'rt> {
     }
 
     pub fn begin(&mut self, label: Option<&str>) -> RenderPass {
+        crate::spam!("Beginning render pass '{}'", label.unwrap_or("unnamed"));
         let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label,
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -61,6 +67,7 @@ impl<'rt> Encoder<'rt> {
     }
 
     pub fn submit(self) {
+        crate::spam!("Submitting command encoder");
         let _si = self.runtime.queue.submit(std::iter::once(self.encoder.finish()));
         self.output.present();
     }

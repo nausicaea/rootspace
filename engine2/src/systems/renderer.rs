@@ -89,6 +89,7 @@ impl WithResources for Renderer {
             .find_asset("shaders", "transformed.wgsl")?;
         let shader_data = shader_path.read_to_string()?;
         let vertex_shader_module = gfx.create_shader_module(None, shader_data);
+
         let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders", "textured.wgsl")?;
         let shader_data = shader_path.read_to_string()?;
         let fragment_shader_module = gfx.create_shader_module(None, shader_data);

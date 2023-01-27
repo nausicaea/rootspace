@@ -76,16 +76,24 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                     .expect(&format!("Unknown {:?}", b))
             })
             .collect::<Vec<_>>();
+
+        // Pipeline layout definition
+        let label_pipeline_layout = self.label.map(|lbl| format!("{}:pipeline-layout", lbl));
+        log::trace!(
+            "Creating pipeline layout '{}'",
+            label_pipeline_layout.as_deref().unwrap_or("unnamed")
+        );
         let pipeline_layout = self
             .runtime
             .device
             .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: self.label.map(|lbl| format!("{}:pipeline-layout", lbl)).as_deref(),
+                label: label_pipeline_layout.as_deref(),
                 bind_group_layouts: &bgl,
                 push_constant_ranges: &[],
             });
 
         // Pipeline definition
+        log::trace!("Creating render pipeline '{}'", self.label.unwrap_or("unnamed"));
         let pipeline = self
             .runtime
             .device

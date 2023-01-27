@@ -54,16 +54,20 @@ impl Orchestrator {
 
     pub fn run(mut self) -> impl 'static + FnMut(Event<'_, ()>, &EventLoopWindowTarget<()>, &mut ControlFlow) {
         move |event, _event_loop, control_flow| {
-            #[cfg(feature = "loopdbg")]
+            #[cfg(feature = "dbg-loop")]
             let mut draw_bottom = false;
-            #[cfg(feature = "loopdbg")]
+            #[cfg(feature = "dbg-loop")]
             {
                 match &event {
-                    Event::NewEvents(_) => log::debug!("⬇"),
-                    Event::RedrawEventsCleared | Event::LoopDestroyed => draw_bottom = true,
+                    Event::NewEvents(_) => {
+                        crate::spam!("⬇");
+                    }
+                    Event::RedrawEventsCleared | Event::LoopDestroyed => {
+                        draw_bottom = true;
+                    }
                     _ => (),
                 }
-                log::trace!("Event trace: {:?}", &event);
+                crate::spam!("Event trace: {:?}", &event);
             }
 
             match event {
@@ -81,9 +85,9 @@ impl Orchestrator {
                 _ => (),
             }
 
-            #[cfg(feature = "loopdbg")]
+            #[cfg(feature = "dbg-loop")]
             if draw_bottom {
-                log::debug!("⬆\n\n");
+                crate::spam!("⬆\n\n");
             }
         }
     }
@@ -154,9 +158,9 @@ impl Orchestrator {
             }
         }
 
-        #[cfg(feature = "loopdbg")]
+        #[cfg(feature = "dbg-loop")]
         if control_flow != &ControlFlow::Poll {
-            log::trace!("Control flow: {:?}", control_flow);
+            crate::spam!("Control flow: {:?}", control_flow);
         }
     }
 
