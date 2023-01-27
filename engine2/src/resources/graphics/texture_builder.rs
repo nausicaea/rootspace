@@ -53,6 +53,7 @@ impl<'rt> TextureBuilder<'rt> {
         );
 
         let id = self.indexes.textures.take();
+        log::trace!("Registering {:?} as {:?}", &texture, id);
         self.tables.textures.insert(id, texture);
         id
     }

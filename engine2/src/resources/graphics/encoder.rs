@@ -25,7 +25,7 @@ impl<'rt> Encoder<'rt> {
     ) -> Result<Self, wgpu::SurfaceError> {
         let output = runtime.surface.get_current_texture()?;
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = runtime
+        let encoder = runtime
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 

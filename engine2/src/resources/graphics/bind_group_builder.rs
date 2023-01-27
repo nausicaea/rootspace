@@ -84,6 +84,7 @@ impl<'rt, 'lbl> BindGroupBuilder<'rt, 'lbl> {
         });
 
         let id = self.indexes.bind_groups.take();
+        log::trace!("Registering {:?} as {:?}", &bg, id);
         self.tables.bind_groups.insert(id, bg);
         id
     }

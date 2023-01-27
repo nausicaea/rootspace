@@ -69,10 +69,16 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
             blend: Some(wgpu::BlendState::REPLACE),
             write_mask: wgpu::ColorWrites::ALL,
         })];
+        dbg!(&self.tables.bind_group_layouts);
         let bgl = self
             .bind_group_layouts
             .into_iter()
-            .map(|b| &self.tables.bind_group_layouts[&b])
+            .map(|b| {
+                self.tables
+                    .bind_group_layouts
+                    .get(&b)
+                    .expect(&format!("Unknown {:?}", b))
+            })
             .collect::<Vec<_>>();
         let pipeline_layout = self
             .runtime
@@ -93,13 +99,21 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
                 vertex: self
                     .vertex_shader_module
                     .map(|(vsm, vep)| wgpu::VertexState {
-                        module: &self.tables.shader_modules[&vsm],
+                        module: self
+                            .tables
+                            .shader_modules
+                            .get(&vsm)
+                            .expect(&format!("Unknown {:?}", vsm)),
                         entry_point: vep,
                         buffers: self.vertex_buffer_layouts.as_slice(),
                     })
                     .expect("cannot build a render pipeline without vertex shader module"),
                 fragment: self.fragment_shader_module.map(|(fsm, fep)| wgpu::FragmentState {
-                    module: &self.tables.shader_modules[&fsm],
+                    module: self
+                        .tables
+                        .shader_modules
+                        .get(&fsm)
+                        .expect(&format!("Unknown {:?}", fsm)),
                     entry_point: fep,
                     targets: &cts,
                 }),
@@ -122,8 +136,8 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
             });
 
         let id = self.indexes.render_pipelines.take();
+        log::trace!("Registering {:?} as {:?}", &pipeline, id);
         self.tables.render_pipelines.insert(id, pipeline);
-
         id
     }
 }

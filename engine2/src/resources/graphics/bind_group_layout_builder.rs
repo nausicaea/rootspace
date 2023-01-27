@@ -39,7 +39,7 @@ impl<'rt, 'lbl> BindGroupLayoutBuilder<'rt, 'lbl> {
         self
     }
 
-    pub fn submit(self) -> BindGroupLayoutId {
+    pub fn submit(self, label: Option<&'static str>) -> BindGroupLayoutId {
         let bgl = self
             .runtime
             .device
@@ -48,8 +48,10 @@ impl<'rt, 'lbl> BindGroupLayoutBuilder<'rt, 'lbl> {
                 entries: &self.entries,
             });
 
-        let id = self.indexes.bind_group_layouts.take();
+        let id = self.indexes.bind_group_layouts.take_labelled(label);
+        log::trace!("Registering {:?} as {:?}", &bgl, id);
         self.tables.bind_group_layouts.insert(id, bgl);
+        dbg!(&self.tables.bind_group_layouts);
         id
     }
 }

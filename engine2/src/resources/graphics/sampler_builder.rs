@@ -18,6 +18,7 @@ impl<'rt> SamplerBuilder<'rt> {
     pub fn submit(self) -> SamplerId {
         let sampler = self.runtime.device.create_sampler(&wgpu::SamplerDescriptor::default());
         let id = self.indexes.samplers.take();
+        log::trace!("Registering {:?} as {:?}", &sampler, id);
         self.tables.samplers.insert(id, sampler);
         id
     }

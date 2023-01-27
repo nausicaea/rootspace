@@ -86,6 +86,7 @@ impl Graphics {
         });
 
         let id = self.indexes.shader_modules.take();
+        log::trace!("Registering {:?} as {:?}", &sm, id);
         self.tables.shader_modules.insert(id, sm);
         id
     }
@@ -124,6 +125,7 @@ impl Graphics {
             });
 
         let id = self.indexes.buffers.take();
+        log::trace!("Registering {:?} as {:?}", &buf, id);
         self.tables.buffers.insert(id, buf);
         id
     }
@@ -136,6 +138,7 @@ impl Graphics {
         let texture = &self.tables.textures[&texture];
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         let id = self.indexes.texture_views.take();
+        log::trace!("Registering {:?} as {:?}", &view, id);
         self.tables.texture_views.insert(id, view);
         id
     }
@@ -175,7 +178,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
                     min_binding_size: None,
                 },
             )
-            .submit();
+            .submit(Some("transform_layout"));
 
         let material_layout = BindGroupLayoutBuilder::new(&runtime, &mut indexes, &mut tables)
             .add_bind_group_layout_entry(
@@ -192,7 +195,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
                 wgpu::ShaderStages::FRAGMENT,
                 wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
             )
-            .submit();
+            .submit(Some("material_layout"));
 
         Ok(Graphics {
             settings: settings.clone(),
