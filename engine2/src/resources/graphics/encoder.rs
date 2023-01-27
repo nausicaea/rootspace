@@ -19,15 +19,19 @@ pub struct Encoder<'rt> {
 
 impl<'rt> Encoder<'rt> {
     pub(super) fn new(
+        label: Option<&str>,
         runtime: &'rt Runtime,
         settings: &'rt Settings,
         database: &'rt Database,
     ) -> Result<Self, wgpu::SurfaceError> {
         let output = runtime.surface.get_current_texture()?;
-        let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let view = output.texture.create_view(&wgpu::TextureViewDescriptor {
+            label: label.map(|lbl| format!("{}:surface-texture-view", lbl)).as_deref(),
+            ..Default::default()
+        });
         let encoder = runtime
             .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label });
 
         Ok(Encoder {
             runtime,
@@ -39,9 +43,9 @@ impl<'rt> Encoder<'rt> {
         })
     }
 
-    pub fn begin(&mut self) -> RenderPass {
+    pub fn begin(&mut self, label: Option<&str>) -> RenderPass {
         let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: None,
+            label,
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &self.view,
                 resolve_target: None,

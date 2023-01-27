@@ -266,9 +266,9 @@ impl Texture {
         let f = std::fs::File::open(path)?;
         let img = image::load(std::io::BufReader::new(f), image_format)?;
 
-        let texture = gfx.create_texture().with_image(img).submit(None);
+        let texture = gfx.create_texture().with_image(img).submit();
 
-        let view = gfx.create_texture_view(texture);
+        let view = gfx.create_texture_view(None, texture);
 
         let sampler = gfx.create_sampler().submit();
 

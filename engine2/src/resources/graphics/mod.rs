@@ -75,7 +75,7 @@ impl Graphics {
 
     pub fn create_shader_module<'s, S: Into<std::borrow::Cow<'s, str>>>(
         &mut self,
-        label: Option<&str>,
+        label: Option<&'static str>,
         source: S,
     ) -> ShaderModuleId {
         let sm = self.runtime.device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -83,11 +83,11 @@ impl Graphics {
             source: wgpu::ShaderSource::Wgsl(source.into()),
         });
 
-        self.database.insert_shader_module(None, sm)
+        self.database.insert_shader_module(label, sm)
     }
 
-    pub fn create_encoder(&self) -> Result<Encoder, wgpu::SurfaceError> {
-        Encoder::new(&self.runtime, &self.settings, &self.database)
+    pub fn create_encoder(&self, label: Option<&str>) -> Result<Encoder, wgpu::SurfaceError> {
+        Encoder::new(label, &self.runtime, &self.settings, &self.database)
     }
 
     pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {
@@ -104,7 +104,7 @@ impl Graphics {
 
     pub fn create_buffer<T: bytemuck::NoUninit>(
         &mut self,
-        label: Option<&str>,
+        label: Option<&'static str>,
         usage: wgpu::BufferUsages,
         contents: &[T],
     ) -> BufferId {
@@ -119,17 +119,20 @@ impl Graphics {
                 contents: bytemuck::cast_slice(contents),
             });
 
-        self.database.insert_buffer(None, buf)
+        self.database.insert_buffer(label, buf)
     }
 
     pub fn create_texture(&mut self) -> TextureBuilder {
         TextureBuilder::new(&self.runtime, &mut self.database)
     }
 
-    pub fn create_texture_view(&mut self, texture: TextureId) -> TextureViewId {
+    pub fn create_texture_view(&mut self, label: Option<&'static str>, texture: TextureId) -> TextureViewId {
         let texture = &self.database.textures[&texture];
-        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        self.database.insert_texture_view(None, view)
+        let view = texture.create_view(&wgpu::TextureViewDescriptor {
+            label,
+            ..Default::default()
+        });
+        self.database.insert_texture_view(label, view)
     }
 
     pub fn create_sampler(&mut self) -> SamplerBuilder {
@@ -157,6 +160,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
         let mut database = Database::default();
 
         let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
+            .with_label("transform_layout")
             .add_bind_group_layout_entry(
                 0,
                 wgpu::ShaderStages::VERTEX,
@@ -166,9 +170,10 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
                     min_binding_size: None,
                 },
             )
-            .submit(Some("transform_layout"));
+            .submit();
 
         let material_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
+            .with_label("material_layout")
             .add_bind_group_layout_entry(
                 0,
                 wgpu::ShaderStages::FRAGMENT,
@@ -183,7 +188,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
                 wgpu::ShaderStages::FRAGMENT,
                 wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
             )
-            .submit(Some("material_layout"));
+            .submit();
 
         Ok(Graphics {
             settings: settings.clone(),

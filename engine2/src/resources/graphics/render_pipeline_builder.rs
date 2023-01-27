@@ -6,17 +6,17 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
+pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
     runtime: &'rt Runtime,
     database: &'rt mut Database,
-    vertex_shader_module: Option<(ShaderModuleId, &'l str)>,
-    fragment_shader_module: Option<(ShaderModuleId, &'l str)>,
+    vertex_shader_module: Option<(ShaderModuleId, &'ep str)>,
+    fragment_shader_module: Option<(ShaderModuleId, &'ep str)>,
     bind_group_layouts: Vec<BindGroupLayoutId>,
     vertex_buffer_layouts: Vec<wgpu::VertexBufferLayout<'vbl>>,
-    label: Option<&'lbl str>,
+    label: Option<&'static str>,
 }
 
-impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
+impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
     pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database) -> Self {
         RenderPipelineBuilder {
             runtime,
@@ -29,17 +29,17 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
         }
     }
 
-    pub fn with_label(mut self, label: &'lbl str) -> Self {
+    pub fn with_label(mut self, label: &'static str) -> Self {
         self.label = Some(label);
         self
     }
 
-    pub fn with_vertex_shader_module(mut self, module: ShaderModuleId, entry_point: &'l str) -> Self {
+    pub fn with_vertex_shader_module(mut self, module: ShaderModuleId, entry_point: &'ep str) -> Self {
         self.vertex_shader_module = Some((module, entry_point));
         self
     }
 
-    pub fn with_fragment_shader_module(mut self, module: ShaderModuleId, entry_point: &'l str) -> Self {
+    pub fn with_fragment_shader_module(mut self, module: ShaderModuleId, entry_point: &'ep str) -> Self {
         self.fragment_shader_module = Some((module, entry_point));
         self
     }
@@ -80,7 +80,7 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
             .runtime
             .device
             .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: None,
+                label: self.label.map(|lbl| format!("{}:pipeline-layout", lbl)).as_deref(),
                 bind_group_layouts: &bgl,
                 push_constant_ranges: &[],
             });
@@ -131,6 +131,6 @@ impl<'rt, 'l, 'vbl, 'lbl> RenderPipelineBuilder<'rt, 'l, 'vbl, 'lbl> {
                 multiview: None,
             });
 
-        self.database.insert_render_pipeline(None, pipeline)
+        self.database.insert_render_pipeline(self.label, pipeline)
     }
 }

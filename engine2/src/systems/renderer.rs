@@ -137,12 +137,12 @@ impl System for Renderer {
 
         let gfx = res.borrow::<Graphics>();
 
-        match gfx.create_encoder() {
+        match gfx.create_encoder(None) {
             Err(SurfaceError::Lost | SurfaceError::Outdated) => self.on_surface_outdated(res),
             Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
             Err(SurfaceError::Timeout) => self.on_timeout(),
             Ok(mut enc) => {
-                self.render(&res, enc.begin());
+                self.render(&res, enc.begin(None));
                 enc.submit();
             }
         }

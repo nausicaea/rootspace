@@ -4,15 +4,15 @@ use super::{
     Database,
 };
 
-pub struct BindGroupBuilder<'rt, 'lbl> {
+pub struct BindGroupBuilder<'rt> {
     runtime: &'rt Runtime,
     database: &'rt mut Database,
     layout: BindGroupLayoutId,
-    label: Option<&'lbl str>,
+    label: Option<&'static str>,
     entries: Vec<(u32, BindingResourceId)>,
 }
 
-impl<'rt, 'lbl> BindGroupBuilder<'rt, 'lbl> {
+impl<'rt> BindGroupBuilder<'rt> {
     pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database, layout: BindGroupLayoutId) -> Self {
         BindGroupBuilder {
             runtime,
@@ -23,7 +23,7 @@ impl<'rt, 'lbl> BindGroupBuilder<'rt, 'lbl> {
         }
     }
 
-    pub fn with_label(mut self, label: &'lbl str) -> Self {
+    pub fn with_label(mut self, label: &'static str) -> Self {
         self.label = Some(label);
         self
     }
@@ -75,7 +75,7 @@ impl<'rt, 'lbl> BindGroupBuilder<'rt, 'lbl> {
             entries: entries.as_slice(),
         });
 
-        self.database.insert_bind_group(None, bg)
+        self.database.insert_bind_group(self.label, bg)
     }
 }
 

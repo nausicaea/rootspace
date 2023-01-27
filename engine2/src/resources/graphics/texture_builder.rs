@@ -3,6 +3,7 @@ use super::{ids::TextureId, runtime::Runtime, Database};
 pub struct TextureBuilder<'rt> {
     runtime: &'rt Runtime,
     database: &'rt mut Database,
+    label: Option<&'static str>,
     image: Option<image::DynamicImage>,
 }
 
@@ -11,8 +12,14 @@ impl<'rt> TextureBuilder<'rt> {
         Self {
             runtime,
             database,
+            label: None,
             image: None,
         }
+    }
+
+    pub fn with_label(mut self, label: &'static str) -> Self {
+        self.label = Some(label);
+        self
     }
 
     pub fn with_image(mut self, image: image::DynamicImage) -> Self {
@@ -20,7 +27,7 @@ impl<'rt> TextureBuilder<'rt> {
         self
     }
 
-    pub fn submit(self, label: Option<&str>) -> TextureId {
+    pub fn submit(self) -> TextureId {
         use wgpu::util::DeviceExt;
 
         let image = self.image.expect("cannot build a texture without a source image file");
@@ -32,7 +39,7 @@ impl<'rt> TextureBuilder<'rt> {
         let texture = self.runtime.device.create_texture_with_data(
             &self.runtime.queue,
             &wgpu::TextureDescriptor {
-                label,
+                label: self.label,
                 size: wgpu::Extent3d {
                     width: dims.0,
                     height: dims.1,
@@ -50,6 +57,6 @@ impl<'rt> TextureBuilder<'rt> {
             &rgba8_image,
         );
 
-        self.database.insert_texture(None, texture)
+        self.database.insert_texture(self.label, texture)
     }
 }

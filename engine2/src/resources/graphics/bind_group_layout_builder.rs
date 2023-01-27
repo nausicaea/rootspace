@@ -1,13 +1,13 @@
 use super::{ids::BindGroupLayoutId, runtime::Runtime, Database};
 
-pub struct BindGroupLayoutBuilder<'rt, 'lbl> {
+pub struct BindGroupLayoutBuilder<'rt> {
     runtime: &'rt Runtime,
     database: &'rt mut Database,
-    label: Option<&'lbl str>,
+    label: Option<&'static str>,
     entries: Vec<wgpu::BindGroupLayoutEntry>,
 }
 
-impl<'rt, 'lbl> BindGroupLayoutBuilder<'rt, 'lbl> {
+impl<'rt> BindGroupLayoutBuilder<'rt> {
     pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database) -> Self {
         Self {
             runtime,
@@ -17,7 +17,7 @@ impl<'rt, 'lbl> BindGroupLayoutBuilder<'rt, 'lbl> {
         }
     }
 
-    pub fn with_label(mut self, label: &'lbl str) -> Self {
+    pub fn with_label(mut self, label: &'static str) -> Self {
         self.label = Some(label);
         self
     }
@@ -37,7 +37,7 @@ impl<'rt, 'lbl> BindGroupLayoutBuilder<'rt, 'lbl> {
         self
     }
 
-    pub fn submit(self, label: Option<&'static str>) -> BindGroupLayoutId {
+    pub fn submit(self) -> BindGroupLayoutId {
         let bgl = self
             .runtime
             .device
@@ -46,6 +46,6 @@ impl<'rt, 'lbl> BindGroupLayoutBuilder<'rt, 'lbl> {
                 entries: &self.entries,
             });
 
-        self.database.insert_bind_group_layout(label, bgl)
+        self.database.insert_bind_group_layout(self.label, bgl)
     }
 }
