@@ -200,8 +200,8 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
         Ok(Graphics {
             settings: settings.clone(),
             runtime,
-            indexes: Indexes::default(),
-            tables: Tables::default(),
+            indexes,
+            tables,
             transform_layout,
             material_layout,
         })
