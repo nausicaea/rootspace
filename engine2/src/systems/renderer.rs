@@ -21,12 +21,11 @@ pub struct Renderer {
     window_receiver: ReceiverId<WindowEvent>,
     engine_receiver: ReceiverId<EngineEvent>,
     renderer_enabled: bool,
-    vertex_shader_module: ShaderModuleId,
-    fragment_shader_module: ShaderModuleId,
     transform_buffer_data: glamour::Mat4<f32>,
     transform_buffer: BufferId,
     transform_bind_group: BindGroupId,
-    pipeline: PipelineId,
+    pipeline_wt: PipelineId,
+    pipeline_wtm: PipelineId,
 }
 
 impl Renderer {
@@ -47,14 +46,21 @@ impl Renderer {
     fn render(&self, res: &Resources, mut rp: RenderPass) {
         let rbls = res.borrow_components::<Renderable>();
 
-        rp.set_pipeline(self.pipeline)
-            .set_bind_group(0, self.transform_bind_group);
-
         for r in rbls.iter() {
-            rp.set_bind_group(1, r.0.materials[0].bind_group)
-                .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
-                .set_index_buffer(r.0.mesh.index_buffer)
-                .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+            if r.0.materials.is_empty() {
+                rp.set_pipeline(self.pipeline_wt)
+                    .set_bind_group(0, self.transform_bind_group)
+                    .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
+                    .set_index_buffer(r.0.mesh.index_buffer)
+                    .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+            } else {
+                rp.set_pipeline(self.pipeline_wtm)
+                    .set_bind_group(0, self.transform_bind_group)
+                    .set_bind_group(1, r.0.materials[0].bind_group)
+                    .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
+                    .set_index_buffer(r.0.mesh.index_buffer)
+                    .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+            }
         }
     }
 
@@ -75,6 +81,62 @@ impl Renderer {
     fn on_timeout(&self) {
         log::warn!("WGPU surface timed out")
     }
+
+    fn crp_with_transform(
+        adb: &AssetDatabase,
+        gfx: &mut Graphics,
+        label: &'static str,
+    ) -> Result<PipelineId, anyhow::Error> {
+        let shader_path = adb.find_asset("shaders", "transformed.wgsl")?;
+        let shader_data = shader_path.read_to_string()?;
+        let vertex_shader_module = gfx.create_shader_module(Some("vertex-shader"), shader_data);
+
+        let shader_path = adb.find_asset("shaders", "with_static_color.wgsl")?;
+        let shader_data = shader_path.read_to_string()?;
+        let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
+
+        let tl = gfx.transform_layout();
+
+        let pipeline = gfx
+            .create_render_pipeline()
+            .with_label(label)
+            .add_bind_group_layout(tl)
+            .with_vertex_shader_module(vertex_shader_module, "main")
+            .with_fragment_shader_module(fragment_shader_module, "main")
+            .add_vertex_buffer_layout::<Vertex>()
+            .submit();
+
+        Ok(pipeline)
+    }
+
+    fn crp_with_transform_and_material(
+        adb: &AssetDatabase,
+        gfx: &mut Graphics,
+        label: &'static str,
+    ) -> Result<PipelineId, anyhow::Error> {
+        let shader_path = adb.find_asset("shaders", "transformed.wgsl")?;
+        let shader_data = shader_path.read_to_string()?;
+        let vertex_shader_module = gfx.create_shader_module(Some("vertex-shader"), shader_data);
+
+        let shader_path = adb.find_asset("shaders", "textured.wgsl")?;
+        let shader_data = shader_path.read_to_string()?;
+        let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
+
+        let tl = gfx.transform_layout();
+        let ml = gfx.material_layout();
+
+        let pipeline = gfx
+            .create_render_pipeline()
+            .with_label(label)
+            .add_bind_group_layout(tl)
+            .add_bind_group_layout(ml)
+            .with_vertex_shader_module(vertex_shader_module, "main")
+            .with_fragment_shader_module(fragment_shader_module, "main")
+            .add_vertex_buffer_layout::<Vertex>()
+            .submit();
+
+        Ok(pipeline)
+    }
 }
 
 impl WithResources for Renderer {
@@ -82,29 +144,11 @@ impl WithResources for Renderer {
         let window_receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let engine_receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
+        let adb = res.borrow::<AssetDatabase>();
         let mut gfx = res.borrow_mut::<Graphics>();
 
-        let shader_path = res
-            .borrow::<AssetDatabase>()
-            .find_asset("shaders", "transformed.wgsl")?;
-        let shader_data = shader_path.read_to_string()?;
-        let vertex_shader_module = gfx.create_shader_module(Some("vertex-shader"), shader_data);
-
-        let shader_path = res.borrow::<AssetDatabase>().find_asset("shaders", "textured.wgsl")?;
-        let shader_data = shader_path.read_to_string()?;
-        let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
-
-        let tl = gfx.transform_layout();
-        let ml = gfx.material_layout();
-        let pipeline = gfx
-            .create_render_pipeline()
-            .with_label("main")
-            .add_bind_group_layout(tl)
-            .add_bind_group_layout(ml)
-            .with_vertex_shader_module(vertex_shader_module, "main")
-            .with_fragment_shader_module(fragment_shader_module, "main")
-            .add_vertex_buffer_layout::<Vertex>()
-            .submit();
+        let pipeline_wtm = Self::crp_with_transform_and_material(&adb, &mut gfx, "wtm")?;
+        let pipeline_wt = Self::crp_with_transform(&adb, &mut gfx, "wt")?;
 
         let transform_buffer_data = glamour::Mat4::<f32>::identity();
         let transform_buffer = gfx.create_buffer(
@@ -113,6 +157,7 @@ impl WithResources for Renderer {
             transform_buffer_data.as_slice(),
         );
 
+        let tl = gfx.transform_layout();
         let transform_bind_group = gfx
             .create_bind_group(tl)
             .with_label("transform-bind-group")
@@ -123,12 +168,11 @@ impl WithResources for Renderer {
             window_receiver,
             engine_receiver,
             renderer_enabled: true,
-            vertex_shader_module,
-            fragment_shader_module,
             transform_buffer_data,
             transform_buffer,
             transform_bind_group,
-            pipeline,
+            pipeline_wtm,
+            pipeline_wt,
         })
     }
 }

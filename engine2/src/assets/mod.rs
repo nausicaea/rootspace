@@ -18,7 +18,12 @@ use image::ImageFormat;
 pub trait Asset: Sized {
     type Error;
 
-    fn with_file<P: AsRef<Path>>(adb: &AssetDatabase, gfx: &mut Graphics, path: P) -> Result<Self, Self::Error>;
+    fn with_file<S: AsRef<str>>(
+        adb: &AssetDatabase,
+        gfx: &mut Graphics,
+        group: S,
+        name: S,
+    ) -> Result<Self, Self::Error>;
 }
 
 #[derive(Debug)]
@@ -60,6 +65,8 @@ impl Model {
             )
             .collect::<Vec<&str>>();
 
+        log::trace!("Located the following texture names: {}", texture_file_names.join(", "));
+
         let mut materials = Vec::new();
         for name in texture_file_names {
             let texture_path = adb.find_asset("textures", name)?;
@@ -76,8 +83,15 @@ impl Model {
 impl Asset for Model {
     type Error = Error;
 
-    fn with_file<P: AsRef<Path>>(adb: &AssetDatabase, gfx: &mut Graphics, path: P) -> Result<Self, Self::Error> {
-        match path.as_ref().extension().and_then(|ext| ext.to_str()) {
+    fn with_file<S: AsRef<str>>(
+        adb: &AssetDatabase,
+        gfx: &mut Graphics,
+        group: S,
+        name: S,
+    ) -> Result<Self, Self::Error> {
+        let path = adb.find_asset(group, name)?;
+
+        match path.extension().and_then(|ext| ext.to_str()) {
             Some("ply") => {
                 let ply = load_ply(path)?;
                 Self::with_ply(adb, gfx, &ply)
@@ -126,6 +140,8 @@ impl RawMesh {
             .next()
             .ok_or(Error::NoVertexElement)?;
 
+        log::trace!("Located vertex element {} with {} vertices", v_e_id, num_vertices);
+
         let f_e_id = ply
             .descriptor
             .elements
@@ -134,6 +150,8 @@ impl RawMesh {
             .map(|(&e_id, _)| e_id)
             .next()
             .ok_or(Error::NoFaceElement)?;
+
+        log::trace!("Located face element {}", f_e_id);
 
         let v_p_index: HashMap<_, _> = ply.descriptor.elements[&v_e_id]
             .properties
@@ -158,6 +176,8 @@ impl RawMesh {
             })
             .collect();
 
+        log::trace!("Located {} vertex element properties", v_p_index.len());
+
         let vertex_indices_id = ply.descriptor.elements[&f_e_id]
             .properties
             .iter()
@@ -169,6 +189,8 @@ impl RawMesh {
                 _ => None,
             })
             .ok_or(Error::NoVertexIndices)?;
+
+        log::trace!("Located vertex indices property {}", vertex_indices_id);
 
         if ply.primitive() != Some(Primitive::Triangles) {
             return Err(Error::NoTriangleFaces);
@@ -219,6 +241,8 @@ impl RawMesh {
             .flat_map(|inner| inner.iter())
             .map(|i| *i)
             .collect();
+
+        log::trace!("Loaded {} vertices and {} indices", vertex_data.len(), indices.len());
 
         Ok(RawMesh { vertices, indices })
     }

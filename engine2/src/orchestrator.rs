@@ -44,6 +44,20 @@ impl Orchestrator {
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
+        {
+            use crate::assets::Asset;
+
+            let model = crate::assets::Model::with_file(
+                &world.borrow::<crate::resources::asset_database::AssetDatabase>(),
+                &mut world.borrow_mut::<crate::resources::graphics::Graphics>(),
+                "models",
+                "cube.ply",
+            )?;
+
+            let e = world.get_mut::<ecs::Entities>().create();
+            world.get_components_mut::<Renderable>().insert(e, Renderable(model));
+        }
+
         Ok(Orchestrator {
             world,
             timers: Timers::default(),

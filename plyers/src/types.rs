@@ -39,6 +39,12 @@ impl From<usize> for ElementId {
     }
 }
 
+impl std::fmt::Display for ElementId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PropertyId(pub(crate) usize);
 
@@ -51,6 +57,12 @@ impl Into<usize> for PropertyId {
 impl From<usize> for PropertyId {
     fn from(value: usize) -> Self {
         PropertyId(value)
+    }
+}
+
+impl std::fmt::Display for PropertyId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
