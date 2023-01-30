@@ -1,15 +1,13 @@
-use std::collections::HashMap;
-
 use ecs::{with_dependencies::WithDependencies, Resource};
 use pollster::FutureExt;
-use urn::Urn;
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
     bind_group_builder::BindGroupBuilder,
     bind_group_layout_builder::BindGroupLayoutBuilder,
+    database::Database,
     encoder::Encoder,
-    ids::{BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, ShaderModuleId, TextureId, TextureViewId},
+    ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
     render_pipeline_builder::RenderPipelineBuilder,
     runtime::Runtime,
     sampler_builder::SamplerBuilder,
@@ -19,6 +17,7 @@ use self::{
 
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
+mod database;
 pub mod descriptors;
 pub mod encoder;
 pub mod ids;
@@ -71,6 +70,15 @@ impl Graphics {
 
     pub fn material_layout(&self) -> BindGroupLayoutId {
         self.material_layout
+    }
+
+    pub fn write_buffer<T>(&self, buffer: BufferId, data: &[T])
+    where
+        T: bytemuck::NoUninit,
+    {
+        self.runtime
+            .queue
+            .write_buffer(&self.database.buffers[&buffer], 0, bytemuck::cast_slice(data));
     }
 
     pub fn create_shader_module<'s, S: Into<std::borrow::Cow<'s, str>>>(
@@ -201,80 +209,6 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
             transform_layout,
             material_layout,
         })
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct Database {
-    shader_module_index: Urn<ShaderModuleId>,
-    shader_modules: HashMap<ShaderModuleId, wgpu::ShaderModule>,
-    bind_group_layout_index: Urn<BindGroupLayoutId>,
-    bind_group_layouts: HashMap<BindGroupLayoutId, wgpu::BindGroupLayout>,
-    bind_group_index: Urn<BindGroupId>,
-    bind_groups: HashMap<BindGroupId, wgpu::BindGroup>,
-    buffer_index: Urn<BufferId>,
-    buffers: HashMap<BufferId, wgpu::Buffer>,
-    texture_index: Urn<TextureId>,
-    textures: HashMap<TextureId, wgpu::Texture>,
-    texture_view_index: Urn<TextureViewId>,
-    texture_views: HashMap<TextureViewId, wgpu::TextureView>,
-    sampler_index: Urn<SamplerId>,
-    samplers: HashMap<SamplerId, wgpu::Sampler>,
-    render_pipeline_index: Urn<PipelineId>,
-    render_pipelines: HashMap<PipelineId, wgpu::RenderPipeline>,
-}
-
-impl Database {
-    fn insert_shader_module(&mut self, label: Option<&'static str>, obj: wgpu::ShaderModule) -> ShaderModuleId {
-        let id = self.shader_module_index.take_labelled(label);
-        self.shader_modules.insert(id, obj);
-        id
-    }
-
-    fn insert_bind_group_layout(
-        &mut self,
-        label: Option<&'static str>,
-        obj: wgpu::BindGroupLayout,
-    ) -> BindGroupLayoutId {
-        let id = self.bind_group_layout_index.take_labelled(label);
-        self.bind_group_layouts.insert(id, obj);
-        id
-    }
-
-    fn insert_bind_group(&mut self, label: Option<&'static str>, obj: wgpu::BindGroup) -> BindGroupId {
-        let id = self.bind_group_index.take_labelled(label);
-        self.bind_groups.insert(id, obj);
-        id
-    }
-
-    fn insert_buffer(&mut self, label: Option<&'static str>, obj: wgpu::Buffer) -> BufferId {
-        let id = self.buffer_index.take_labelled(label);
-        self.buffers.insert(id, obj);
-        id
-    }
-
-    fn insert_texture(&mut self, label: Option<&'static str>, obj: wgpu::Texture) -> TextureId {
-        let id = self.texture_index.take_labelled(label);
-        self.textures.insert(id, obj);
-        id
-    }
-
-    fn insert_texture_view(&mut self, label: Option<&'static str>, obj: wgpu::TextureView) -> TextureViewId {
-        let id = self.texture_view_index.take_labelled(label);
-        self.texture_views.insert(id, obj);
-        id
-    }
-
-    fn insert_sampler(&mut self, label: Option<&'static str>, obj: wgpu::Sampler) -> SamplerId {
-        let id = self.sampler_index.take_labelled(label);
-        self.samplers.insert(id, obj);
-        id
-    }
-
-    fn insert_render_pipeline(&mut self, label: Option<&'static str>, obj: wgpu::RenderPipeline) -> PipelineId {
-        let id = self.render_pipeline_index.take_labelled(label);
-        self.render_pipelines.insert(id, obj);
-        id
     }
 }
 

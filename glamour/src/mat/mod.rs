@@ -16,11 +16,29 @@ type Vec_<R, const I: usize> = Mat<R, I, 1>;
 /// Matrix of 2x2 dimensions
 pub type Mat2<R> = Mat<R, 2, 2>;
 
+impl<R> Mat2<R> {
+    pub const fn new(v: [[R; 2]; 2]) -> Self {
+        Mat(v)
+    }
+}
+
 /// Matrix of 3x3 dimensions
 pub type Mat3<R> = Mat<R, 3, 3>;
 
+impl<R> Mat3<R> {
+    pub const fn new(v: [[R; 3]; 3]) -> Self {
+        Mat(v)
+    }
+}
+
 /// Matrix of 4x4 dimensions
 pub type Mat4<R> = Mat<R, 4, 4>;
+
+impl<R> Mat4<R> {
+    pub const fn new(v: [[R; 4]; 4]) -> Self {
+        Mat(v)
+    }
+}
 
 /// Generalized matrix type, with data stored in row-major format.
 #[derive(Debug, Clone, PartialEq)]

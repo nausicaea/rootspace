@@ -10,7 +10,10 @@ use winit::{
 };
 
 use crate::{
-    components::{info::Info, renderable::Renderable, status::Status, transform::Transform, ui_transform::UiTransform},
+    components::{
+        camera::Camera, info::Info, renderable::Renderable, status::Status, transform::Transform,
+        ui_transform::UiTransform,
+    },
     events::{engine_event::EngineEvent, window_event::WindowEvent},
     registry::{RRegistry, RSRegistry, USRegistry},
     resources::{
@@ -47,11 +50,24 @@ impl Orchestrator {
         {
             use crate::assets::Asset;
 
+            let e = world.get_mut::<ecs::Entities>().create();
+            world.get_components_mut::<Camera>().insert(e, Camera::default());
+
             let model = crate::assets::Model::with_file(
                 &world.borrow::<crate::resources::asset_database::AssetDatabase>(),
                 &mut world.borrow_mut::<crate::resources::graphics::Graphics>(),
                 "models",
                 "cube.ply",
+            )?;
+
+            let e = world.get_mut::<ecs::Entities>().create();
+            world.get_components_mut::<Renderable>().insert(e, Renderable(model));
+
+            let model = crate::assets::Model::with_file(
+                &world.borrow::<crate::resources::asset_database::AssetDatabase>(),
+                &mut world.borrow_mut::<crate::resources::graphics::Graphics>(),
+                "models",
+                "saved_terrain.ply",
             )?;
 
             let e = world.get_mut::<ecs::Entities>().create();

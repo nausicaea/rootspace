@@ -318,7 +318,7 @@ pub enum Error {
     NoFaceElement,
     #[error("The element named 'face' contains no property 'vertex_indices' with triangle indices")]
     NoVertexIndices,
-    #[error("The vertex indices do not denote triangles")]
+    #[error("The mesh does not use triangles as face primitive")]
     NoTriangleFaces,
 }
 

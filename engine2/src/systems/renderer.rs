@@ -1,27 +1,34 @@
-use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
+use ecs::{EventQueue, ReceiverId, Resources, Storage, System, WithResources};
+use glamour::Mat4;
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
 
 use crate::{
-    components::renderable::Renderable,
+    components::{camera::Camera, renderable::Renderable},
     events::{engine_event::EngineEvent, window_event::WindowEvent},
     resources::{
         asset_database::AssetDatabase,
         graphics::{
             encoder::RenderPass,
-            ids::{BindGroupId, BufferId, PipelineId, ShaderModuleId},
+            ids::{BindGroupId, BufferId, PipelineId},
             vertex::Vertex,
             Graphics,
         },
     },
 };
 
+const OPENGL_TO_WGPU_MATRIX: Mat4<f32> = Mat4::new([
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0, 0.0],
+    [0.0, 0.0, 0.5, 0.0],
+    [0.0, 0.0, 0.5, 1.0],
+]);
+
 #[derive(Debug)]
 pub struct Renderer {
     window_receiver: ReceiverId<WindowEvent>,
     engine_receiver: ReceiverId<EngineEvent>,
     renderer_enabled: bool,
-    transform_buffer_data: glamour::Mat4<f32>,
     transform_buffer: BufferId,
     transform_bind_group: BindGroupId,
     pipeline_wt: PipelineId,
@@ -44,19 +51,39 @@ impl Renderer {
     }
 
     fn render(&self, res: &Resources, mut rp: RenderPass) {
+        let gfx = res.borrow::<Graphics>();
+        let cams = res.borrow_components::<Camera>();
         let rbls = res.borrow_components::<Renderable>();
 
-        for r in rbls.iter() {
-            if r.0.materials.is_empty() {
-                rp.set_pipeline(self.pipeline_wt)
-                    .set_bind_group(0, self.transform_bind_group)
-                    .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
+        if cams.is_empty() || rbls.is_empty() {
+            return;
+        }
+
+        let rbls_wt = rbls.iter().filter(|r| r.0.materials.is_empty()).collect::<Vec<_>>();
+        for c in cams.iter() {
+            let c_mat = OPENGL_TO_WGPU_MATRIX * c.as_world_matrix();
+            gfx.write_buffer(self.transform_buffer, c_mat.as_slice());
+
+            rp.set_pipeline(self.pipeline_wt)
+                .set_bind_group(0, self.transform_bind_group);
+
+            for r in &rbls_wt {
+                rp.set_vertex_buffer(0, r.0.mesh.vertex_buffer)
                     .set_index_buffer(r.0.mesh.index_buffer)
                     .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
-            } else {
-                rp.set_pipeline(self.pipeline_wtm)
-                    .set_bind_group(0, self.transform_bind_group)
-                    .set_bind_group(1, r.0.materials[0].bind_group)
+            }
+        }
+
+        let rbls_wtm = rbls.iter().filter(|r| !r.0.materials.is_empty()).collect::<Vec<_>>();
+        for c in cams.iter() {
+            let c_mat = OPENGL_TO_WGPU_MATRIX * c.as_world_matrix();
+            gfx.write_buffer(self.transform_buffer, c_mat.as_slice());
+
+            rp.set_pipeline(self.pipeline_wtm)
+                .set_bind_group(0, self.transform_bind_group);
+
+            for r in &rbls_wtm {
+                rp.set_bind_group(1, r.0.materials[0].bind_group)
                     .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
                     .set_index_buffer(r.0.mesh.index_buffer)
                     .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
@@ -150,11 +177,10 @@ impl WithResources for Renderer {
         let pipeline_wtm = Self::crp_with_transform_and_material(&adb, &mut gfx, "wtm")?;
         let pipeline_wt = Self::crp_with_transform(&adb, &mut gfx, "wt")?;
 
-        let transform_buffer_data = glamour::Mat4::<f32>::identity();
         let transform_buffer = gfx.create_buffer(
             Some("transform-buffer"),
             wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            transform_buffer_data.as_slice(),
+            glamour::Mat4::<f32>::identity().as_slice(),
         );
 
         let tl = gfx.transform_layout();
@@ -168,7 +194,6 @@ impl WithResources for Renderer {
             window_receiver,
             engine_receiver,
             renderer_enabled: true,
-            transform_buffer_data,
             transform_buffer,
             transform_bind_group,
             pipeline_wtm,

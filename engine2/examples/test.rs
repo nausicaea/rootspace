@@ -51,7 +51,7 @@ fn main() -> anyhow::Result<()> {
         graphics_settings: Settings::default(),
     };
 
-    let state = Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps).unwrap();
+    let state = Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps)?;
 
     event_loop.run(state.run())
 }

@@ -4,7 +4,7 @@ use super::{Mat, Vec_};
 pub type Vec2<R> = Vec_<R, 2>;
 
 impl<R> Vec2<R> {
-    pub fn new(x: R, y: R) -> Self {
+    pub const fn new(x: R, y: R) -> Self {
         Mat([[x], [y]])
     }
 }

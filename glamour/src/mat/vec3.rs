@@ -6,7 +6,7 @@ use super::{vec4::Vec4, Mat, Vec_};
 pub type Vec3<R> = Vec_<R, 3>;
 
 impl<R> Vec3<R> {
-    pub fn new(x: R, y: R, z: R) -> Self {
+    pub const fn new(x: R, y: R, z: R) -> Self {
         Mat([[x], [y], [z]])
     }
 }
