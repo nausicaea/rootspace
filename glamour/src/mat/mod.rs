@@ -6,6 +6,7 @@ pub mod mat2;
 pub mod mat3;
 pub mod mat4;
 mod ops;
+#[cfg(any(test, feature = "serde_support"))]
 mod serde;
 pub mod vec2;
 pub mod vec3;

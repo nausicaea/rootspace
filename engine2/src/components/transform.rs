@@ -14,6 +14,10 @@ impl Transform {
         TransformBuilder::default()
     }
 
+    pub fn look_at_rh<V: Into<Vec3<f32>>>(eye: V, fwd: V, up: V) -> Self {
+        Transform(Affine::look_at_rh(eye.into(), fwd.into(), up.into()))
+    }
+
     pub fn set_translation(&mut self, value: Vec3<f32>) {
         self.0.t = value;
     }

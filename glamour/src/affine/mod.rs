@@ -14,9 +14,9 @@ use crate::{
     unit::Unit,
 };
 
-#[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "serde_support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
-    feature = "serde_support",
+    any(test, feature = "serde_support"),
     serde(bound(
         serialize = "R: serde::Serialize",
         deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
@@ -40,7 +40,24 @@ where
     R: Float,
 {
     pub fn identity() -> Self {
-        AffineBuilder::default().build()
+        Affine {
+            t: Vec3::zero(),
+            o: Quat::identity().into(),
+            s: Vec3::one(),
+        }
+    }
+}
+
+impl<R> Affine<R>
+where
+    R: Float + Sum,
+{
+    pub fn look_at_rh<U: Into<Unit<Vec3<R>>>>(eye: Vec3<R>, fwd: U, up: U) -> Self {
+        Affine {
+            t: -eye,
+            o: Quat::look_at_rh(fwd, up).into(),
+            s: Vec3::one(),
+        }
     }
 }
 

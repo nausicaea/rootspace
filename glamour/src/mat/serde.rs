@@ -1,10 +1,7 @@
-#[cfg(feature = "serde_support")]
 use num_traits::Zero;
 
-#[cfg(feature = "serde_support")]
 use super::Mat;
 
-#[cfg(feature = "serde_support")]
 impl<R, const I: usize, const J: usize> serde::ser::Serialize for Mat<R, I, J>
 where
     R: serde::ser::Serialize,
@@ -25,7 +22,6 @@ where
     }
 }
 
-#[cfg(feature = "serde_support")]
 impl<'de, R, const I: usize, const J: usize> serde::de::Deserialize<'de> for Mat<R, I, J>
 where
     R: Zero + Copy + serde::de::Deserialize<'de>,

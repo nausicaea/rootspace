@@ -1,4 +1,6 @@
-use num_traits::{One, Zero};
+use num_traits::{Float, One, Zero};
+
+use crate::Cross;
 
 use super::{vec4::Vec4, Mat, Vec_};
 
@@ -45,6 +47,23 @@ where
         Vec4::new(self.x(), self.y(), self.z(), R::zero())
     }
 }
+
+impl<'a, 'b, R> Cross<&'b Vec3<R>> for &'a Vec3<R>
+where
+    R: Float,
+{
+    type Output = Vec3<R>;
+
+    fn cross(self, rhs: &'b Vec3<R>) -> Self::Output {
+        Vec3::new(
+            self.x() * rhs.y() - self.y() - rhs.x(),
+            self.y() * rhs.z() - self.z() - rhs.y(),
+            self.z() * rhs.x() - self.x() - rhs.z(),
+        )
+    }
+}
+
+forward_ref::forward_ref_binop!(impl<R: Float> Cross, cross for Vec3<R>, Vec3<R>, Vec3<R>);
 
 #[cfg(test)]
 mod tests {

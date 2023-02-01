@@ -1,4 +1,7 @@
-use std::ops::{Div, Mul};
+use std::{
+    iter::Sum,
+    ops::{Div, Mul},
+};
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use forward_ref::{forward_ref_binop, forward_ref_unop};
@@ -7,9 +10,10 @@ use num_traits::{Float, One, Zero};
 use crate::{
     mat::{Mat4, Vec4},
     ops::norm::Norm,
+    Mat3, Unit, Vec3,
 };
 
-#[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "serde_support"), derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, PartialEq, Clone)]
 pub struct Quat<R> {
     pub w: R,
@@ -28,8 +32,17 @@ where
 }
 
 impl<R> Quat<R> {
-    pub fn new(w: R, i: R, j: R, k: R) -> Self {
+    pub const fn new(w: R, i: R, j: R, k: R) -> Self {
         Quat { w, i, j, k }
+    }
+}
+
+impl<R> Quat<R>
+where
+    R: Float + Sum,
+{
+    pub fn look_at_rh<U: Into<Unit<Vec3<R>>>>(fwd: U, up: U) -> Self {
+        Mat3::look_at_rh(fwd, up).into()
     }
 }
 
@@ -175,11 +188,11 @@ where
 
 forward_ref_binop!(impl<R: Float> Mul, mul for Quat<R>, Quat<R>, Quat<R>);
 
-impl<R> From<Mat4<R>> for Quat<R>
+impl<R> From<Mat3<R>> for Quat<R>
 where
     R: Float,
 {
-    fn from(v: Mat4<R>) -> Self {
+    fn from(v: Mat3<R>) -> Self {
         let half: R = R::one() / (R::one() + R::one());
 
         if v[(2, 2)] < v[(0, 0)] {
@@ -202,11 +215,20 @@ where
     }
 }
 
-/// Based on information from the [Euclidean Space Blog](https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm)
+impl<R> From<Mat4<R>> for Quat<R>
+where
+    R: Float,
+{
+    fn from(v: Mat4<R>) -> Self {
+        v.subset::<3, 3>(0, 0).into()
+    }
+}
+
 impl<R> Quat<R>
 where
     R: Float,
 {
+    /// Based on information from the [Euclidean Space Blog](https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm)
     pub fn to_matrix(&self) -> Mat4<R> {
         self.into()
     }

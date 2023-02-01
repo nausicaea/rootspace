@@ -4,7 +4,7 @@ use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
 
 use crate::{
-    components::{camera::Camera, renderable::Renderable},
+    components::{camera::Camera, renderable::Renderable, transform::Transform},
     events::{engine_event::EngineEvent, window_event::WindowEvent},
     resources::{
         asset_database::AssetDatabase,
@@ -52,16 +52,15 @@ impl Renderer {
 
     fn render(&self, res: &Resources, mut rp: RenderPass) {
         let gfx = res.borrow::<Graphics>();
-        let cams = res.borrow_components::<Camera>();
         let rbls = res.borrow_components::<Renderable>();
 
-        if cams.is_empty() || rbls.is_empty() {
+        if rbls.is_empty() {
             return;
         }
 
         let rbls_wt = rbls.iter().filter(|r| r.0.materials.is_empty()).collect::<Vec<_>>();
-        for c in cams.iter() {
-            let c_mat = OPENGL_TO_WGPU_MATRIX * c.as_world_matrix();
+        for (c, t) in res.iter_rr::<Camera, Transform>() {
+            let c_mat = OPENGL_TO_WGPU_MATRIX * c.as_world_matrix() * &t.to_matrix();
             gfx.write_buffer(self.transform_buffer, c_mat.as_slice());
 
             rp.set_pipeline(self.pipeline_wt)
@@ -75,8 +74,8 @@ impl Renderer {
         }
 
         let rbls_wtm = rbls.iter().filter(|r| !r.0.materials.is_empty()).collect::<Vec<_>>();
-        for c in cams.iter() {
-            let c_mat = OPENGL_TO_WGPU_MATRIX * c.as_world_matrix();
+        for (c, t) in res.iter_rr::<Camera, Transform>() {
+            let c_mat = OPENGL_TO_WGPU_MATRIX * c.as_world_matrix() * &t.to_matrix();
             gfx.write_buffer(self.transform_buffer, c_mat.as_slice());
 
             rp.set_pipeline(self.pipeline_wtm)

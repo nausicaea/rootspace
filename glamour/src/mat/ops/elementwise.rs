@@ -1,17 +1,17 @@
+use num_traits::Zero;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use forward_ref::forward_ref_binop;
 use num_traits::{Float, Inv};
 
 use super::super::Mat;
 use crate::ops::{inv_elem::InvElem, mul_elem::MulElem};
 
 macro_rules! impl_binops {
-    ($($Op:ident, $op:ident, $deleg:ident);+ $(;)*) => {
+    ($($Op:ident::$op:ident => $Deleg:ident::$deleg:ident);+ $(;)*) => {
         $(
         impl<'a, 'b, R, const I: usize, const J: usize> $Op<&'b Mat<R, I, J>> for &'a Mat<R, I, J>
         where
-            R: Float,
+            R: Copy + Zero + $Deleg<Output = R>,
         {
             type Output = Mat<R, I, J>;
 
@@ -26,15 +26,15 @@ macro_rules! impl_binops {
             }
         }
 
-        forward_ref_binop!(impl<R: Float, const I: usize, const J: usize> $Op, $op for Mat<R, I, J>, Mat<R, I, J>, Mat<R, I, J>);
+        forward_ref::forward_ref_binop!(impl<R: Float, const I: usize, const J: usize> $Op, $op for Mat<R, I, J>, Mat<R, I, J>, Mat<R, I, J>);
         )+
     };
 }
 
 impl_binops! {
-    Add, add, add;
-    Sub, sub, sub;
-    MulElem, mul_elem, mul;
+    Add::add => Add::add;
+    Sub::sub => Sub::sub;
+    MulElem::mul_elem => Mul::mul;
 }
 
 macro_rules! impl_unops {
@@ -42,7 +42,7 @@ macro_rules! impl_unops {
         $(
         impl<R, const I: usize, const J: usize> $Op for Mat<R, I, J>
         where
-            R: Float + $Deleg<Output = R>,
+            R: Copy + Zero + $Deleg<Output = R>,
         {
             type Output = Self;
 
@@ -53,7 +53,7 @@ macro_rules! impl_unops {
 
         impl<'a, R, const I: usize, const J: usize> $Op for &'a Mat<R, I, J>
         where
-            R: Float + $Deleg<Output = R>,
+            R: Copy + Zero + $Deleg<Output = R>,
         {
             type Output = Mat<R, I, J>;
 
@@ -68,7 +68,6 @@ macro_rules! impl_unops {
             }
         }
 
-        //forward_ref::forward_ref_unop!(impl<R: Float, const I: usize, const J: usize> $Op, $op for Mat<R, I, J>, Self);
         )+
     };
 }
@@ -98,7 +97,7 @@ macro_rules! impl_scalar_binops {
             }
         }
 
-        forward_ref_binop!(impl<R: Float, const I: usize, const J: usize> $Op, $op for Mat<R, I, J>, R, Mat<R, I, J>);
+        forward_ref::forward_ref_binop!(impl<R: Float, const I: usize, const J: usize> $Op, $op for Mat<R, I, J>, R, Mat<R, I, J>);
 
         $(
         impl<'a, 'b, const I: usize, const J: usize> $Op<&'b Mat<$tgt, I, J>> for &'a $tgt {
@@ -115,7 +114,7 @@ macro_rules! impl_scalar_binops {
             }
         }
 
-        forward_ref_binop!(impl<const I: usize, const J: usize> $Op, $op for $tgt, Mat<$tgt, I, J>, Mat<$tgt, I, J>);
+        forward_ref::forward_ref_binop!(impl<const I: usize, const J: usize> $Op, $op for $tgt, Mat<$tgt, I, J>, Mat<$tgt, I, J>);
         )*
 
         )+
@@ -132,6 +131,12 @@ impl_scalar_binops!(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn mat_supports_elementwise_neg() {
+        let a: Mat<f32, 1, 1> = Mat::from([1.0]);
+        assert_eq!(-a, Mat::<f32, 1, 1>::from([-1.0]));
+    }
 
     #[test]
     fn mat_supports_scalar_addition() {

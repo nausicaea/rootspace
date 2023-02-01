@@ -5,8 +5,8 @@ use num_traits::Float;
 
 use crate::{mat::Mat, ops::norm::Norm, quat::Quat};
 
-#[cfg_attr(feature = "serde_support", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde_support", serde(transparent))]
+#[cfg_attr(any(test, feature = "serde_support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
 #[derive(Debug, Clone, PartialEq)]
 #[repr(transparent)]
 pub struct Unit<T>(T);
@@ -22,6 +22,14 @@ where
 
 impl<T> AsRef<T> for Unit<T> {
     fn as_ref(&self) -> &T {
+        &self.0
+    }
+}
+
+impl<T> std::ops::Deref for Unit<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
