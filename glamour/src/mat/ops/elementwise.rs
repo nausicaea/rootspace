@@ -38,11 +38,11 @@ impl_binops! {
 }
 
 macro_rules! impl_unops {
-    ($($Op:ident, $op:ident, $deleg:ident);+ $(;)*) => {
+    ($($Op:ident::$op:ident => $Deleg:ident::$deleg:ident);+ $(;)*) => {
         $(
         impl<R, const I: usize, const J: usize> $Op for Mat<R, I, J>
         where
-            R: Float + Inv<Output = R>,
+            R: Float + $Deleg<Output = R>,
         {
             type Output = Self;
 
@@ -53,7 +53,7 @@ macro_rules! impl_unops {
 
         impl<'a, R, const I: usize, const J: usize> $Op for &'a Mat<R, I, J>
         where
-            R: Float + Inv<Output = R>,
+            R: Float + $Deleg<Output = R>,
         {
             type Output = Mat<R, I, J>;
 
@@ -67,13 +67,15 @@ macro_rules! impl_unops {
                 mat
             }
         }
+
+        //forward_ref::forward_ref_unop!(impl<R: Float, const I: usize, const J: usize> $Op, $op for Mat<R, I, J>, Self);
         )+
     };
 }
 
 impl_unops! {
-    Neg, neg, neg;
-    InvElem, inv_elem, inv;
+    Neg::neg => Neg::neg;
+    InvElem::inv_elem => Inv::inv;
 }
 
 macro_rules! impl_scalar_binops {
