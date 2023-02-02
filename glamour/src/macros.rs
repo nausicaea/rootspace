@@ -1,5 +1,5 @@
 /// Apply a binary operation to arrays (or anything indexable, really)
-#[macro_export]
+#[macro_export(local_inner_macros)]
 macro_rules! abop {
     // Support right-sided scalar binary operations
     ($op:ident, $lhs:expr, [$($i:literal),+ $(,)*], $rhs:expr) => {

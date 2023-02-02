@@ -8,10 +8,12 @@ use forward_ref::forward_ref_binop;
 use num_traits::{Float, Inv, NumAssign, One, Zero};
 
 use crate::{
+    iter_float::IterFloat,
     mat::{Mat4, Vec3, Vec4},
     ops::{dot::Dot, inv_elem::InvElem, mul_elem::MulElem, norm::Norm},
     quat::Quat,
     unit::Unit,
+    Cross,
 };
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(serde::Serialize, serde::Deserialize))]
@@ -50,12 +52,23 @@ where
 
 impl<R> Affine<R>
 where
-    R: Float + Sum,
+    R: IterFloat,
 {
-    pub fn look_at_rh<U: Into<Unit<Vec3<R>>>>(eye: Vec3<R>, fwd: U, up: U) -> Self {
+    pub fn look_at_lh(eye: Vec3<R>, cntr: Vec3<R>, up: Unit<Vec3<R>>) -> Self {
+        let fwd: Unit<_> = (&cntr - &eye).into();
+        let side: Unit<_> = up.as_ref().cross(fwd.as_ref()).into();
+        let rotated_up: Unit<_> = fwd.as_ref().cross(side.as_ref()).into();
+
+        let eye_t = eye.t();
+        let eye = Vec3::new(
+            -(&eye_t * side.as_ref()),
+            -(&eye_t * rotated_up.as_ref()),
+            &eye_t * fwd.as_ref(),
+        );
+
         Affine {
-            t: -eye,
-            o: Quat::look_at_rh(fwd, up).into(),
+            t: eye,
+            o: Quat::look_at_lh(fwd, up).into(),
             s: Vec3::one(),
         }
     }
@@ -323,9 +336,23 @@ where
 
 #[cfg(test)]
 mod tests {
+    use cgmath::{Matrix4, Point3, Vector3};
     use serde_test::{assert_tokens, Token};
 
     use super::*;
+
+    #[test]
+    fn affine_provides_look_at_lh() {
+        let eye = [0.0f32, 1.0, 2.0];
+        let cntr = [0.0f32, 0.0, 0.0];
+        let up = [0.0f32, 1.0, 0.0];
+
+        let a = Affine::look_at_lh(Vec3::from(eye), Vec3::from(cntr), Unit::from(Vec3::from(up)));
+        let b = Matrix4::look_at_lh(Point3::from(eye), Point3::from(cntr), Vector3::from(up));
+
+        dbg!(a.to_matrix());
+        dbg!(b);
+    }
 
     #[test]
     fn affine_provides_identity_constructor() {

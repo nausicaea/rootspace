@@ -41,8 +41,8 @@ impl<R> Quat<R>
 where
     R: Float + Sum,
 {
-    pub fn look_at_rh<U: Into<Unit<Vec3<R>>>>(fwd: U, up: U) -> Self {
-        Mat3::look_at_rh(fwd, up).into()
+    pub fn look_at_lh(fwd: Unit<Vec3<R>>, up: Unit<Vec3<R>>) -> Self {
+        Mat3::look_at_lh(fwd, up).into()
     }
 }
 

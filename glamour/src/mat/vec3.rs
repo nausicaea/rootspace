@@ -56,9 +56,9 @@ where
 
     fn cross(self, rhs: &'b Vec3<R>) -> Self::Output {
         Vec3::new(
-            self.x() * rhs.y() - self.y() - rhs.x(),
-            self.y() * rhs.z() - self.z() - rhs.y(),
-            self.z() * rhs.x() - self.x() - rhs.z(),
+            self.y() * rhs.z() - self.z() * rhs.y(),
+            self.z() * rhs.x() - self.x() * rhs.z(),
+            self.x() * rhs.y() - self.y() * rhs.x(),
         )
     }
 }
@@ -80,5 +80,13 @@ mod tests {
         assert_eq!(v.x(), 1.0f32);
         assert_eq!(v.y(), 2.0f32);
         assert_eq!(v.z(), 3.0f32);
+    }
+
+    #[test]
+    fn vec3_implements_cross() {
+        let a = Vec3::new(1.0f32, 0.0, 0.0);
+        let b = Vec3::new(0.0f32, 1.0, 0.0);
+
+        assert_eq!(a.cross(b), Vec3::new(0.0f32, 0.0, 1.0));
     }
 }

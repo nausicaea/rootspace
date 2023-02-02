@@ -134,9 +134,8 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
+forward_ref::forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
 
-/// MARK
 impl<'a, 'b, R> Dot<&'b Mat<R, 2, 1>> for &'a Mat<R, 1, 2>
 where
     R: IterFloat,
@@ -144,11 +143,63 @@ where
     type Output = R;
 
     fn dot(self, rhs: &'b Mat<R, 2, 1>) -> Self::Output {
-        abop!(dot, self, rhs, [((0, 1), (0, 1))])[0]
+        crate::abop!(dot, self, rhs, [((0, 1), (0, 1))])[0]
     }
 }
 
-forward_ref_binop!(impl<R: IterFloat> Dot, dot for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
+forward_ref::forward_ref_binop!(impl<R: IterFloat> Dot, dot for Mat<R, 1, 2>, Mat<R, 2, 1>, R);
+
+impl<'a, 'b, R> Mul<&'b Mat<R, 3, 1>> for &'a Mat<R, 1, 3>
+where
+    R: IterFloat,
+{
+    type Output = R;
+
+    fn mul(self, rhs: &'b Mat<R, 3, 1>) -> Self::Output {
+        self.dot(rhs)
+    }
+}
+
+forward_ref::forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat<R, 1, 3>, Mat<R, 3, 1>, R);
+
+impl<'a, 'b, R> Dot<&'b Mat<R, 3, 1>> for &'a Mat<R, 1, 3>
+where
+    R: IterFloat,
+{
+    type Output = R;
+
+    fn dot(self, rhs: &'b Mat<R, 3, 1>) -> Self::Output {
+        crate::abop!(dot, self, rhs, [((0, 1, 2), (0, 1, 2))])[0]
+    }
+}
+
+forward_ref::forward_ref_binop!(impl<R: IterFloat> Dot, dot for Mat<R, 1, 3>, Mat<R, 3, 1>, R);
+
+impl<'a, 'b, R> Mul<&'b Mat<R, 4, 1>> for &'a Mat<R, 1, 4>
+where
+    R: IterFloat,
+{
+    type Output = R;
+
+    fn mul(self, rhs: &'b Mat<R, 4, 1>) -> Self::Output {
+        self.dot(rhs)
+    }
+}
+
+forward_ref::forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat<R, 1, 4>, Mat<R, 4, 1>, R);
+
+impl<'a, 'b, R> Dot<&'b Mat<R, 4, 1>> for &'a Mat<R, 1, 4>
+where
+    R: IterFloat,
+{
+    type Output = R;
+
+    fn dot(self, rhs: &'b Mat<R, 4, 1>) -> Self::Output {
+        crate::abop!(dot, self, rhs, [((0, 1, 2, 3), (0, 1, 2, 3))])[0]
+    }
+}
+
+forward_ref::forward_ref_binop!(impl<R: IterFloat> Dot, dot for Mat<R, 1, 4>, Mat<R, 4, 1>, R);
 
 #[cfg(test)]
 mod tests {

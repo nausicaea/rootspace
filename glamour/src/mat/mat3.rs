@@ -19,16 +19,31 @@ impl<R> Mat3<R>
 where
     R: Float + Sum,
 {
-    pub fn look_at_rh<U: Into<Unit<Vec3<R>>>>(fwd: U, up: U) -> Self {
-        let fwd = fwd.into();
-        let up = up.into();
-        let right: Unit<_> = fwd.as_ref().cross(up.as_ref()).into();
-        let rotated_up = right.as_ref().cross(fwd.as_ref());
+    pub fn look_at_lh(fwd: Unit<Vec3<R>>, up: Unit<Vec3<R>>) -> Self {
+        let side: Unit<_> = up.as_ref().cross(fwd.as_ref()).into();
+        let rotated_up = fwd.as_ref().cross(side.as_ref());
 
         Mat([
-            [right.x(), rotated_up.x(), fwd.x()],
-            [right.y(), rotated_up.y(), fwd.y()],
-            [right.z(), rotated_up.z(), fwd.z()],
+            [side.x(), side.y(), side.z()],
+            [rotated_up.x(), rotated_up.y(), rotated_up.z()],
+            [fwd.x(), fwd.y(), fwd.z()],
         ])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use approx::assert_ulps_eq;
+
+    use super::*;
+
+    #[test]
+    fn look_at_lh() {
+        let fwd = Unit::from(Vec3::new(0.0f32, 0.0, -1.0));
+        let up = Unit::from(Vec3::new(0.0f32, 1.0, 0.0));
+
+        let m = Mat3::look_at_lh(fwd, up);
+
+        assert_ulps_eq!(m, Mat3::new([[-1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, -1.0]]));
     }
 }

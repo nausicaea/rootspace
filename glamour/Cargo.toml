@@ -19,3 +19,4 @@ proptest = "^1.0.0"
 proptest-derive = "^0.3.0"
 serde = { version = "^1.0.0", features = ["derive"]}
 serde_test = "^1.0.126"
+cgmath = "0.18.0"

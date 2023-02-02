@@ -1,4 +1,4 @@
-use std::iter::Sum;
+use std::{iter::Sum, ops::Mul};
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::Float;
