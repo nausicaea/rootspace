@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::mat::Mat4;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ortho<R>(Mat4<R>);
 
 impl<R> Ortho<R> {

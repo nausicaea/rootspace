@@ -24,7 +24,7 @@ use crate::{
         deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
     ))
 )]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Affine<R> {
     pub t: Vec3<R>,
     pub o: Unit<Quat<R>>,

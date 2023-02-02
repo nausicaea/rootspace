@@ -1,4 +1,4 @@
-use std::{iter::Sum, ops::Mul};
+use std::iter::Sum;
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::Float;
@@ -7,7 +7,7 @@ use crate::{mat::Mat, ops::norm::Norm, quat::Quat};
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(transparent)]
 pub struct Unit<T>(T);
 

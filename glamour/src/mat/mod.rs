@@ -19,7 +19,7 @@ pub use self::{vec2::Vec2, vec3::Vec3, vec4::Vec4};
 type Vec_<R, const I: usize> = Mat<R, I, 1>;
 
 /// Generalized matrix type, with data stored in row-major format.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Mat<R, const I: usize, const J: usize>([[R; J]; I]);
 
 impl<R, const I: usize, const J: usize> Mat<R, I, J> {

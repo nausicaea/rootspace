@@ -14,7 +14,7 @@ use crate::{
 };
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Quat<R> {
     pub w: R,
     pub i: R,
