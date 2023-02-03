@@ -72,25 +72,6 @@ where
             s: Vec3::one(),
         }
     }
-
-    pub fn look_at_rh(eye: Vec3<R>, cntr: Vec3<R>, up: Unit<Vec3<R>>) -> Self {
-        let fwd: Unit<_> = (&cntr - &eye).into();
-        let side: Unit<_> = fwd.as_ref().cross(up.as_ref()).into();
-        let rotated_up: Unit<_> = side.as_ref().cross(fwd.as_ref()).into();
-
-        let eye_t = eye.t();
-        let eye = Vec3::new(
-            -(&eye_t * side.as_ref()),
-            -(&eye_t * rotated_up.as_ref()),
-            -&eye_t * fwd.as_ref(),
-        );
-
-        Affine {
-            t: eye,
-            o: Quat::look_at_rh(fwd, up).into(),
-            s: Vec3::one(),
-        }
-    }
 }
 
 impl<R> Affine<R>
