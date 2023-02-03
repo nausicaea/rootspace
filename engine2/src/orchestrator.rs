@@ -66,7 +66,9 @@ impl Orchestrator {
 
             let e = world.get_mut::<ecs::Entities>().create();
             world.get_components_mut::<Renderable>().insert(e, Renderable(model));
-            world.get_components_mut::<Transform>().insert(e, Transform::default());
+            world
+                .get_components_mut::<Transform>()
+                .insert(e, Transform::builder().with_translation([1.0, 0.0, 0.0]).build());
         }
 
         Ok(Orchestrator {

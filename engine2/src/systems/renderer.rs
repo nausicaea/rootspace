@@ -52,40 +52,28 @@ impl Renderer {
 
     fn render(&self, res: &Resources, mut rp: RenderPass) {
         let gfx = res.borrow::<Graphics>();
-        let rbls = res.borrow_components::<Renderable>();
 
-        if rbls.is_empty() {
-            return;
-        }
+        for (c, ct) in res.iter_rr::<Camera, Transform>() {
+            let c_mat = OPENGL_TO_WGPU_MATRIX * c.as_world_matrix() * &ct.to_matrix();
 
-        let rbls_wt = rbls.iter().filter(|r| r.0.materials.is_empty()).collect::<Vec<_>>();
-        for (c, t) in res.iter_rr::<Camera, Transform>() {
-            let c_mat = OPENGL_TO_WGPU_MATRIX * c.as_world_matrix() * &t.to_matrix();
-            gfx.write_buffer(self.transform_buffer, c_mat.as_slice());
+            for (r, t) in res.iter_rr::<Renderable, Transform>() {
+                let t_mat = c_mat * t.to_matrix();
+                gfx.write_buffer(self.transform_buffer, t_mat.as_slice());
 
-            rp.set_pipeline(self.pipeline_wt)
-                .set_bind_group(0, self.transform_bind_group);
-
-            for r in &rbls_wt {
-                rp.set_vertex_buffer(0, r.0.mesh.vertex_buffer)
-                    .set_index_buffer(r.0.mesh.index_buffer)
-                    .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
-            }
-        }
-
-        let rbls_wtm = rbls.iter().filter(|r| !r.0.materials.is_empty()).collect::<Vec<_>>();
-        for (c, t) in res.iter_rr::<Camera, Transform>() {
-            let c_mat = OPENGL_TO_WGPU_MATRIX * c.as_world_matrix() * &t.to_matrix();
-            gfx.write_buffer(self.transform_buffer, c_mat.as_slice());
-
-            rp.set_pipeline(self.pipeline_wtm)
-                .set_bind_group(0, self.transform_bind_group);
-
-            for r in &rbls_wtm {
-                rp.set_bind_group(1, r.0.materials[0].bind_group)
-                    .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
-                    .set_index_buffer(r.0.mesh.index_buffer)
-                    .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+                if r.0.materials.is_empty() {
+                    rp.set_pipeline(self.pipeline_wt)
+                        .set_bind_group(0, self.transform_bind_group)
+                        .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
+                        .set_index_buffer(r.0.mesh.index_buffer)
+                        .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+                } else {
+                    rp.set_pipeline(self.pipeline_wtm)
+                        .set_bind_group(0, self.transform_bind_group)
+                        .set_bind_group(1, r.0.materials[0].bind_group)
+                        .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
+                        .set_index_buffer(r.0.mesh.index_buffer)
+                        .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+                }
             }
         }
     }

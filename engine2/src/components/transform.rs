@@ -111,18 +111,18 @@ impl<'a> Product<&'a Transform> for Transform {
 pub struct TransformBuilder(AffineBuilder<f32>);
 
 impl TransformBuilder {
-    pub fn with_translation(mut self, t: Vec3<f32>) -> Self {
-        self.0 = self.0.with_translation(t);
+    pub fn with_translation<V: Into<Vec3<f32>>>(mut self, t: V) -> Self {
+        self.0 = self.0.with_translation(t.into());
         self
     }
 
-    pub fn with_orientation(mut self, o: Quat<f32>) -> Self {
-        self.0 = self.0.with_orientation(o);
+    pub fn with_orientation<Q: Into<Quat<f32>>>(mut self, o: Q) -> Self {
+        self.0 = self.0.with_orientation(o.into());
         self
     }
 
-    pub fn with_scale(mut self, s: Vec3<f32>) -> Self {
-        self.0 = self.0.with_scale(s);
+    pub fn with_scale<V: Into<Vec3<f32>>>(mut self, s: V) -> Self {
+        self.0 = self.0.with_scale(s.into());
         self
     }
 
