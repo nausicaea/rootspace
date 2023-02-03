@@ -336,7 +336,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{Matrix4, Point3, Vector3};
+    use approx::assert_ulps_eq;
     use serde_test::{assert_tokens, Token};
 
     use super::*;
@@ -348,10 +348,15 @@ mod tests {
         let up = [0.0f32, 1.0, 0.0];
 
         let a = Affine::look_at_lh(Vec3::from(eye), Vec3::from(cntr), Unit::from(Vec3::from(up)));
-        let b = Matrix4::look_at_lh(Point3::from(eye), Point3::from(cntr), Vector3::from(up));
 
-        dbg!(a.to_matrix());
-        dbg!(b);
+        let expected = Mat4::new([
+            [-1.0000001f32, -0.0, 0.0, -0.0],
+            [0.0, 0.8944272, -0.44721365, -0.0],
+            [0.0, -0.44721365, -0.8944273, -2.236068],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
+
+        assert_ulps_eq!(a.to_matrix(), expected);
     }
 
     #[test]
