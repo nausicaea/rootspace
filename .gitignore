@@ -82,5 +82,21 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+### Xcode ###
+## User settings
+xcuserdata/
 
-# End of https://www.gitignore.io/api/rust,linux,macos,windows
+## Xcode 8 and earlier
+*.xcscmblueprint
+*.xccheckout
+
+### Xcode Patch ###
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+/*.gcno
+**/xcshareddata/WorkspaceSettings.xcsettings
+
+# End of https://www.gitignore.io/api/rust,linux,macos,windows,xcode
