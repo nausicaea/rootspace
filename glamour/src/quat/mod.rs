@@ -44,6 +44,10 @@ where
     pub fn look_at_lh(fwd: Unit<Vec3<R>>, up: Unit<Vec3<R>>) -> Self {
         Mat3::look_at_lh(fwd, up).into()
     }
+
+    pub fn look_at_rh(fwd: Unit<Vec3<R>>, up: Unit<Vec3<R>>) -> Self {
+        Mat3::look_at_rh(fwd, up).into()
+    }
 }
 
 impl<R> Quat<R>

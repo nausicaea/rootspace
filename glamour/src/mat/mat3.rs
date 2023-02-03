@@ -29,6 +29,17 @@ where
             [fwd.x(), fwd.y(), fwd.z()],
         ])
     }
+
+    pub fn look_at_rh(fwd: Unit<Vec3<R>>, up: Unit<Vec3<R>>) -> Self {
+        let side: Unit<_> = fwd.as_ref().cross(up.as_ref()).into();
+        let rotated_up = side.as_ref().cross(fwd.as_ref());
+
+        Mat([
+            [side.x(), side.y(), side.z()],
+            [rotated_up.x(), rotated_up.y(), rotated_up.z()],
+            [fwd.x(), fwd.y(), fwd.z()],
+        ])
+    }
 }
 
 #[cfg(test)]
