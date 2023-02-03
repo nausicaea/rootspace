@@ -1,24 +1,26 @@
-use num_traits::Zero;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use num_traits::{Float, Inv};
 
-use super::super::Mat;
+use super::super::Mat4;
 use crate::ops::{inv_elem::InvElem, mul_elem::MulElem};
 
 macro_rules! impl_binops {
     ($($Op:ident::$op:ident => $Deleg:ident::$deleg:ident);+ $(;)*) => {
         $(
-        impl<'a, 'b, R, const I: usize, const J: usize> $Op<&'b Mat<R, I, J>> for &'a Mat<R, I, J>
+        impl<'a, 'b, R> $Op<&'b Mat4<R>> for &'a Mat4<R>
         where
-            R: Copy + Zero + $Deleg<Output = R>,
+            Mat4<R>: $crate::Zero,
+            R: Copy + $Deleg<Output = R>,
         {
-            type Output = Mat<R, I, J>;
+            type Output = Mat4<R>;
 
-            fn $op(self, rhs: &'b Mat<R, I, J>) -> Self::Output {
-                let mut mat = Mat::<R, I, J>::zero();
-                for i in 0..I {
-                    for j in 0..J {
+            fn $op(self, rhs: &'b Mat4<R>) -> Self::Output {
+                use $crate::Zero;
+
+                let mut mat = Mat4::<R>::zero();
+                for i in 0..4 {
+                    for j in 0..4 {
                         mat[(i, j)] = self[(i, j)].$deleg(rhs[(i, j)]);
                     }
                 }
@@ -26,7 +28,7 @@ macro_rules! impl_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl<R: Float, const I: usize, const J: usize> $Op, $op for Mat<R, I, J>, Mat<R, I, J>, Mat<R, I, J>);
+        forward_ref::forward_ref_binop!(impl<R: Float> $Op, $op for Mat4<R>, Mat4<R>, Mat4<R>);
         )+
     };
 }
@@ -40,9 +42,10 @@ impl_binops! {
 macro_rules! impl_unops {
     ($($Op:ident::$op:ident => $Deleg:ident::$deleg:ident);+ $(;)*) => {
         $(
-        impl<R, const I: usize, const J: usize> $Op for Mat<R, I, J>
+        impl<R> $Op for Mat4<R>
         where
-            R: Copy + Zero + $Deleg<Output = R>,
+            Self: $crate::Zero,
+            R: Copy + $Deleg<Output = R>,
         {
             type Output = Self;
 
@@ -51,16 +54,19 @@ macro_rules! impl_unops {
             }
         }
 
-        impl<'a, R, const I: usize, const J: usize> $Op for &'a Mat<R, I, J>
+        impl<'a, R> $Op for &'a Mat4<R>
         where
-            R: Copy + Zero + $Deleg<Output = R>,
+            Mat4<R>: $crate::Zero,
+            R: Copy + $Deleg<Output = R>,
         {
-            type Output = Mat<R, I, J>;
+            type Output = Mat4<R>;
 
             fn $op(self) -> Self::Output {
-                let mut mat = Mat::<R, I, J>::zero();
-                for i in 0..I {
-                    for j in 0..J {
+                use $crate::Zero;
+
+                let mut mat = Mat4::<R>::zero();
+                for i in 0..4 {
+                    for j in 0..4 {
                         mat[(i, j)] = self[(i, j)].$deleg();
                     }
                 }
@@ -78,18 +84,21 @@ impl_unops! {
 }
 
 macro_rules! impl_scalar_binops {
-    ($($Op:ident, $op:ident, [$($tgt:ident),+ $(,)*]);+ $(;)*) => {
+    ($($Op:ident::$op:ident, [$($tgt:ident),+ $(,)*]);+ $(;)*) => {
         $(
-        impl<'a, 'b, R, const I: usize, const J: usize> $Op<&'b R> for &'a Mat<R, I, J>
+        impl<'a, 'b, R> $Op<&'b R> for &'a Mat4<R>
             where
-                R: Float,
+                Mat4<R>: $crate::Zero,
+                R: $Op<Output = R>,
         {
-            type Output = Mat<R, I, J>;
+            type Output = Mat4<R>;
 
             fn $op(self, rhs: &'b R) -> Self::Output {
-                let mut mat = Mat::<R, I, J>::zero();
-                for i in 0..I {
-                    for j in 0..J {
+                use $crate::Zero;
+
+                let mut mat = Mat4::<R>::zero();
+                for i in 0..4 {
+                    for j in 0..4 {
                         mat[(i, j)] = self[(i, j)].$op(*rhs);
                     }
                 }
@@ -97,16 +106,18 @@ macro_rules! impl_scalar_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl<R: Float, const I: usize, const J: usize> $Op, $op for Mat<R, I, J>, R, Mat<R, I, J>);
+        forward_ref::forward_ref_binop!(impl<R: Float> $Op, $op for Mat4<R>, R, Mat4<R>);
 
         $(
-        impl<'a, 'b, const I: usize, const J: usize> $Op<&'b Mat<$tgt, I, J>> for &'a $tgt {
-            type Output = Mat<$tgt, I, J>;
+        impl<'a, 'b> $Op<&'b Mat4<$tgt>> for &'a $tgt {
+            type Output = Mat4<$tgt>;
 
-            fn $op(self, rhs: &'b Mat<$tgt, I, J>) -> Self::Output {
-                let mut mat = Mat::<$tgt, I, J>::zero();
-                for i in 0..I {
-                    for j in 0..J {
+            fn $op(self, rhs: &'b Mat4<$tgt>) -> Self::Output {
+                use $crate::Zero;
+
+                let mut mat = Mat4::<$tgt>::zero();
+                for i in 0..4 {
+                    for j in 0..4 {
                         mat[(i, j)] = self.$op(rhs[(i, j)]);
                     }
                 }
@@ -114,7 +125,7 @@ macro_rules! impl_scalar_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl<const I: usize, const J: usize> $Op, $op for $tgt, Mat<$tgt, I, J>, Mat<$tgt, I, J>);
+        forward_ref::forward_ref_binop!(impl $Op, $op for $tgt, Mat4<$tgt>, Mat4<$tgt>);
         )*
 
         )+
@@ -122,10 +133,10 @@ macro_rules! impl_scalar_binops {
 }
 
 impl_scalar_binops!(
-    Add, add, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
-    Sub, sub, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
-    Mul, mul, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
-    Div, div, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
+    Add::add, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
+    Sub::sub, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
+    Mul::mul, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
+    Div::div, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
 );
 
 #[cfg(test)]
@@ -133,56 +144,56 @@ mod tests {
     use super::*;
 
     #[test]
-    fn mat_supports_elementwise_neg() {
-        let a: Mat<f32, 1, 1> = Mat::from([1.0]);
-        assert_eq!(-a, Mat::<f32, 1, 1>::from([-1.0]));
+    fn mat4_supports_elementwise_neg() {
+        let a: Mat4<f32> = Mat4::from([1.0; 16]);
+        assert_eq!(-a, Mat4::<f32>::from([-1.0; 16]));
     }
 
     #[test]
-    fn mat_supports_scalar_addition() {
-        let a: Mat<f32, 1, 1> = Mat::from([1.0]);
+    fn mat4_supports_scalar_addition() {
+        let a: Mat4<f32> = Mat4::from([1.0; 16]);
         let b: f32 = 2.0;
-        assert_eq!(&a + &b, Mat::<f32, 1, 1>::from([3.0]));
-        assert_eq!(&b + &a, Mat::<f32, 1, 1>::from([3.0]));
+        assert_eq!(&a + &b, Mat4::<f32>::from([3.0; 16]));
+        assert_eq!(&b + &a, Mat4::<f32>::from([3.0; 16]));
     }
 
     #[test]
-    fn mat_supports_scalar_subtraction() {
-        let a: Mat<f32, 1, 1> = Mat::from([1.0]);
+    fn mat4_supports_scalar_subtraction() {
+        let a: Mat4<f32> = Mat4::from([1.0; 16]);
         let b: f32 = 2.0;
-        assert_eq!(&a - &b, Mat::<f32, 1, 1>::from([-1.0]));
-        assert_eq!(&b - &a, Mat::<f32, 1, 1>::from([1.0]));
+        assert_eq!(&a - &b, Mat4::<f32>::from([-1.0; 16]));
+        assert_eq!(&b - &a, Mat4::<f32>::from([1.0; 16]));
     }
 
     #[test]
-    fn mat_supports_scalar_multiplication() {
-        let a: Mat<f32, 1, 1> = Mat::from([2.0]);
+    fn mat4_supports_scalar_multiplication() {
+        let a: Mat4<f32> = Mat4::from([2.0; 16]);
         let b: f32 = 2.0;
-        assert_eq!(&a * &b, Mat::<f32, 1, 1>::from([4.0]));
-        assert_eq!(&b * &a, Mat::<f32, 1, 1>::from([4.0]));
+        assert_eq!(&a * &b, Mat4::<f32>::from([4.0; 16]));
+        assert_eq!(&b * &a, Mat4::<f32>::from([4.0; 16]));
     }
 
     #[test]
-    fn mat_supports_scalar_division() {
-        let a: Mat<f32, 1, 1> = Mat::from([6.0]);
+    fn mat4_supports_scalar_division() {
+        let a: Mat4<f32> = Mat4::from([6.0; 16]);
         let b: f32 = 2.0;
-        assert_eq!(&a / &b, Mat::<f32, 1, 1>::from([3.0]));
-        assert_eq!(&b / &a, Mat::<f32, 1, 1>::from([2.0 / 6.0]));
+        assert_eq!(&a / &b, Mat4::<f32>::from([3.0; 16]));
+        assert_eq!(&b / &a, Mat4::<f32>::from([2.0 / 6.0; 16]));
     }
 
     #[test]
-    fn mat_supports_matrix_addition() {
-        let a: Mat<f32, 1, 1> = Mat::from([3.0]);
-        let b: Mat<f32, 1, 1> = Mat::from([2.0]);
-        assert_eq!(&a + &b, Mat::<f32, 1, 1>::from([5.0]));
-        assert_eq!(&b + &a, Mat::<f32, 1, 1>::from([5.0]));
+    fn mat4_supports_matrix_addition() {
+        let a: Mat4<f32> = Mat4::from([3.0; 16]);
+        let b: Mat4<f32> = Mat4::from([2.0; 16]);
+        assert_eq!(&a + &b, Mat4::<f32>::from([5.0; 16]));
+        assert_eq!(&b + &a, Mat4::<f32>::from([5.0; 16]));
     }
 
     #[test]
-    fn mat_supports_matrix_subtraction() {
-        let a: Mat<f32, 1, 1> = Mat::from([3.0]);
-        let b: Mat<f32, 1, 1> = Mat::from([2.0]);
-        assert_eq!(&a - &b, Mat::<f32, 1, 1>::from([1.0]));
-        assert_eq!(&b - &a, Mat::<f32, 1, 1>::from([-1.0]));
+    fn mat4_supports_matrix_subtraction() {
+        let a: Mat4<f32> = Mat4::from([3.0; 16]);
+        let b: Mat4<f32> = Mat4::from([2.0; 16]);
+        assert_eq!(&a - &b, Mat4::<f32>::from([1.0; 16]));
+        assert_eq!(&b - &a, Mat4::<f32>::from([-1.0; 16]));
     }
 }

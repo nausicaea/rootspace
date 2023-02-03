@@ -2,10 +2,10 @@ use std::iter::Sum;
 
 use num_traits::Float;
 
-use super::super::Mat;
+use super::super::Mat4;
 use crate::ops::norm::Norm;
 
-impl<'a, R, const I: usize, const J: usize> Norm for &'a Mat<R, I, J>
+impl<'a, R> Norm for &'a Mat4<R>
 where
     R: Float + Sum,
 {
@@ -24,7 +24,7 @@ mod tests {
 
     #[test]
     fn mat_provides_norm_method() {
-        let a: Mat<f32, 2, 2> = Mat::from([1.0f32, 2.0, 3.0, 4.0]);
-        assert_ulps_eq!(a.norm(), 5.477225575051661f32);
+        let a: Mat4<f32> = (0..16).into_iter().map(|n| n as f32).collect();
+        assert_ulps_eq!(a.norm(), 35.21363372331802);
     }
 }

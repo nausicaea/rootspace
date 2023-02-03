@@ -9,10 +9,11 @@ use num_traits::{Float, Inv, NumAssign, One, Zero};
 
 use crate::{
     iter_float::IterFloat,
-    mat::{Mat4, Vec3, Vec4},
+    mat::Mat4,
     ops::{dot::Dot, inv_elem::InvElem, mul_elem::MulElem, norm::Norm},
     quat::Quat,
     unit::Unit,
+    vec::Vec4,
     Cross,
 };
 

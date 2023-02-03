@@ -3,7 +3,7 @@ use std::iter::Sum;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::Float;
 
-use crate::{mat::Mat, ops::norm::Norm, quat::Quat};
+use crate::{mat::Mat4, ops::norm::Norm, quat::Quat};
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "serde_support"), serde(transparent))]
@@ -97,20 +97,20 @@ where
     }
 }
 
-impl<R, const I: usize, const J: usize> From<Mat<R, I, J>> for Unit<Mat<R, I, J>>
+impl<R> From<Mat4<R>> for Unit<Mat4<R>>
 where
     R: Float + Sum,
 {
-    fn from(v: Mat<R, I, J>) -> Self {
+    fn from(v: Mat4<R>) -> Self {
         From::from(&v)
     }
 }
 
-impl<'a, R, const I: usize, const J: usize> From<&'a Mat<R, I, J>> for Unit<Mat<R, I, J>>
+impl<'a, R> From<&'a Mat4<R>> for Unit<Mat4<R>>
 where
     R: Float + Sum,
 {
-    fn from(v: &'a Mat<R, I, J>) -> Self {
+    fn from(v: &'a Mat4<R>) -> Self {
         let norm = v.norm();
         Unit(v / norm)
     }

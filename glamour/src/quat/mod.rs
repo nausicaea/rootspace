@@ -7,11 +7,7 @@ use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use forward_ref::{forward_ref_binop, forward_ref_unop};
 use num_traits::{Float, One, Zero};
 
-use crate::{
-    mat::{Mat4, Vec4},
-    ops::norm::Norm,
-    Mat3, Unit, Vec3,
-};
+use crate::{mat::Mat4, ops::norm::Norm, Unit, Vec4};
 
 #[cfg_attr(any(test, feature = "serde_support"), derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -41,7 +37,7 @@ impl<R> Quat<R>
 where
     R: Float + Sum,
 {
-    pub fn look_at_lh(fwd: Unit<Vec3<R>>, up: Unit<Vec3<R>>) -> Self {
+    pub fn look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Self {
         Mat3::look_at_lh(fwd, up).into()
     }
 }

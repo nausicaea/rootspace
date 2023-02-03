@@ -3,7 +3,7 @@ use std::iter::Sum;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::Float;
 
-use super::mat::Vec4;
+use super::vec::Vec4;
 use crate::unit::Unit;
 
 #[derive(Debug, PartialEq, Clone)]
