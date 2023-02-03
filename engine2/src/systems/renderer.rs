@@ -1,4 +1,4 @@
-use ecs::{EventQueue, ReceiverId, Resources, Storage, System, WithResources};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use glamour::Mat4;
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
@@ -54,7 +54,7 @@ impl Renderer {
         let gfx = res.borrow::<Graphics>();
 
         for (c, ct) in res.iter_rr::<Camera, Transform>() {
-            let c_mat = OPENGL_TO_WGPU_MATRIX * c.as_world_matrix() * &ct.to_matrix();
+            let c_mat = ct.to_matrix();
 
             for (r, t) in res.iter_rr::<Renderable, Transform>() {
                 let t_mat = c_mat * t.to_matrix();

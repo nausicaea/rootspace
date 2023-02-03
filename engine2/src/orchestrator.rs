@@ -54,21 +54,21 @@ impl Orchestrator {
             world.get_components_mut::<Camera>().insert(e, Camera::default());
             world.get_components_mut::<Transform>().insert(
                 e,
-                Transform::look_at_lh([0.0, 1.0, 2.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+                Transform::look_at_lh([0.0, 0.0, 2.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
             );
 
             let model = crate::assets::Model::with_file(
                 &world.borrow::<crate::resources::asset_database::AssetDatabase>(),
                 &mut world.borrow_mut::<crate::resources::graphics::Graphics>(),
                 "models",
-                "cube.ply",
+                "triangle.ply",
             )?;
 
             let e = world.get_mut::<ecs::Entities>().create();
             world.get_components_mut::<Renderable>().insert(e, Renderable(model));
             world
                 .get_components_mut::<Transform>()
-                .insert(e, Transform::builder().with_translation([1.0, 0.0, 0.0]).build());
+                .insert(e, Transform::builder().with_translation([0.0, 0.0, 0.0]).build());
         }
 
         Ok(Orchestrator {

@@ -1,6 +1,5 @@
 use std::{
     convert::TryFrom,
-    fs::create_dir_all,
     path::{Path, PathBuf},
 };
 
@@ -24,6 +23,7 @@ pub trait AssetDatabaseDeps {
     fn force_init(&self) -> bool;
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct AssetDatabase {
     game_name: String,
@@ -67,6 +67,8 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
         let state_database = data_local_dir.join("states");
 
         if deps.force_init() || !asset_database.is_dir() {
+            std::fs::remove_dir_all(&asset_database)?;
+
             let source_assets = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                 .join("..")
                 .join("assets")
@@ -75,7 +77,7 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
                 copy_recursive(&source_assets, &asset_database)
                     .context("Could not copy the asset database contents to the new directory")?;
             } else {
-                create_dir_all(&asset_database).context("Could not create the asset database")?;
+                std::fs::create_dir_all(&asset_database).context("Could not create the asset database")?;
             }
         }
         if !state_database.is_dir() {
