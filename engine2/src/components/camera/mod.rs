@@ -1,17 +1,14 @@
 mod camera_builder;
-mod camera_ser_de;
 pub mod projection;
 
 use approx::ulps_eq;
 use ecs::{Component, VecStorage};
 use glamour::{Mat4, Ortho, Persp, Vec2, Vec4};
-use serde::{Deserialize, Serialize};
 
-use self::{camera_builder::CameraBuilder, camera_ser_de::CameraSerDe, projection::Projection};
+use self::{camera_builder::CameraBuilder, projection::Projection};
 use crate::components::transform::Transform;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(into = "self::camera_ser_de::CameraSerDe", from = "self::camera_ser_de::CameraSerDe")]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Camera {
     projection: Projection,
     ortho: Ortho<f32>,
@@ -194,18 +191,6 @@ impl Default for Camera {
 
 impl Component for Camera {
     type Storage = VecStorage<Self>;
-}
-
-impl From<CameraSerDe> for Camera {
-    fn from(value: CameraSerDe) -> Self {
-        Camera::builder()
-            .with_projection(value.projection)
-            .with_dimensions(value.dimensions)
-            .with_fov_y(value.fov_y)
-            .with_frustum_z(value.frustum_z)
-            .with_dpi_factor(value.dpi_factor)
-            .build()
-    }
 }
 
 #[cfg(test)]
