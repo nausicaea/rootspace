@@ -1,6 +1,9 @@
 use super::super::Vec4;
 
-impl<R> From<[R; 4]> for Vec4<R> {
+impl<R> From<[R; 4]> for Vec4<R>
+where
+    R: Copy,
+{
     fn from(value: [R; 4]) -> Self {
         Vec4 {
             x: value[0],

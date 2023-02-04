@@ -38,7 +38,7 @@ where
     R: Float + Sum,
 {
     pub fn look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Self {
-        Mat3::look_at_lh(fwd, up).into()
+        Mat4::look_at_lh(fwd, up).into()
     }
 }
 
@@ -149,9 +149,9 @@ where
     type Output = Vec4<R>;
 
     fn mul(self, rhs: &'b Vec4<R>) -> Self::Output {
-        let q = Quat::new(R::zero(), rhs.x(), rhs.y(), rhs.z());
+        let q = Quat::new(R::zero(), rhs.x, rhs.y, rhs.z);
         let rhs_1 = self * &q * self.c();
-        Vec4::new(rhs_1.i, rhs_1.j, rhs_1.k, rhs.w())
+        Vec4::new(rhs_1.i, rhs_1.j, rhs_1.k, rhs.w)
     }
 }
 
@@ -184,11 +184,11 @@ where
 
 forward_ref_binop!(impl<R: Float> Mul, mul for Quat<R>, Quat<R>, Quat<R>);
 
-impl<R> From<Mat3<R>> for Quat<R>
+impl<R> From<Mat4<R>> for Quat<R>
 where
     R: Float,
 {
-    fn from(v: Mat3<R>) -> Self {
+    fn from(v: Mat4<R>) -> Self {
         let half: R = R::one() / (R::one() + R::one());
 
         if v[(2, 2)] < v[(0, 0)] {
@@ -208,15 +208,6 @@ where
                 Quat::new(t, v[(1, 2)] - v[(2, 1)], v[(2, 0)] - v[(0, 2)], v[(0, 1)] - v[(1, 0)]) * (half / t.sqrt())
             }
         }
-    }
-}
-
-impl<R> From<Mat4<R>> for Quat<R>
-where
-    R: Float,
-{
-    fn from(v: Mat4<R>) -> Self {
-        v.subset::<3, 3>(0, 0).into()
     }
 }
 

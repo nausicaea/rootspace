@@ -4,7 +4,7 @@ use super::super::Vec4;
 
 impl<R> Zero for Vec4<R>
 where
-    R: Copy + num_traits::Zero,
+    R: num_traits::Zero,
 {
     fn zero() -> Self {
         Vec4 {
@@ -18,7 +18,7 @@ where
 
 impl<R> One for Vec4<R>
 where
-    R: Copy + num_traits::One,
+    R: num_traits::One,
 {
     fn one() -> Self {
         Vec4 {

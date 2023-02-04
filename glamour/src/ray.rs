@@ -1,5 +1,3 @@
-use std::iter::Sum;
-
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::Float;
 
@@ -14,7 +12,7 @@ pub struct Ray<R> {
 
 impl<R> Ray<R>
 where
-    R: Float + Sum,
+    R: Float,
 {
     pub fn new<D>(origin: Vec4<R>, direction: D) -> Self
     where

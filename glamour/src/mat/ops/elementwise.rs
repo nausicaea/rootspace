@@ -89,7 +89,7 @@ macro_rules! impl_scalar_binops {
         impl<'a, 'b, R> $Op<&'b R> for &'a Mat4<R>
             where
                 Mat4<R>: $crate::Zero,
-                R: $Op<Output = R>,
+                R: Copy + $Op<R, Output = R>,
         {
             type Output = Mat4<R>;
 
@@ -99,7 +99,7 @@ macro_rules! impl_scalar_binops {
                 let mut mat = Mat4::<R>::zero();
                 for i in 0..4 {
                     for j in 0..4 {
-                        mat[(i, j)] = self[(i, j)].$op(*rhs);
+                        mat[(i, j)] = $Op::$op(self[(i, j)], *rhs);
                     }
                 }
                 mat

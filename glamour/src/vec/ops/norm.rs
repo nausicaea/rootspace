@@ -13,6 +13,17 @@ where
     }
 }
 
+impl<R> Norm for Vec4<R>
+where
+    R: Float,
+{
+    type Output = R;
+
+    fn norm(self) -> Self::Output {
+        Norm::norm(&self)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use approx::assert_ulps_eq;

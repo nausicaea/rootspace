@@ -83,7 +83,7 @@ macro_rules! impl_scalar_binops {
         impl<'a, 'b, R> $Op<&'b R> for &'a Vec4<R>
             where
                 Vec4<R>: $crate::Zero,
-                R: $Op<Output = R>,
+                R: Copy + $Op<Output = R>,
         {
             type Output = Vec4<R>;
 

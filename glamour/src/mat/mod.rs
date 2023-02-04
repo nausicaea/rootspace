@@ -1,6 +1,6 @@
 use num_traits::Float;
 
-use crate::{vec::Vec4, One, Zero};
+use crate::{vec::Vec4, One, Unit, Zero};
 
 mod approx;
 mod convert;
@@ -77,6 +77,25 @@ where
             }
         }
         mat
+    }
+}
+
+impl<R> Mat4<R>
+where
+    R: num_traits::Float,
+{
+    pub fn look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Self {
+        use crate::Cross;
+
+        let side: Unit<_> = up.cross(fwd);
+        let rotated_up = fwd.cross(side);
+
+        Mat4([
+            [side.x, side.y, side.z, R::zero()],
+            [rotated_up.x, rotated_up.y, rotated_up.z, R::zero()],
+            [fwd.x, fwd.y, fwd.z, R::zero()],
+            [R::zero(), R::zero(), R::zero(), R::one()],
+        ])
     }
 }
 
