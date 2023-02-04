@@ -23,7 +23,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn mat_provides_norm_method() {
+    fn mat4_provides_norm_method() {
         let a: Mat4<f32> = (0..16).into_iter().map(|n| n as f32).collect();
         assert_ulps_eq!(a.norm(), 35.21363372331802);
     }

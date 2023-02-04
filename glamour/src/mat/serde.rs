@@ -1,8 +1,6 @@
-use num_traits::Zero;
+use super::Mat4;
 
-use super::Mat;
-
-impl<R, const I: usize, const J: usize> serde::ser::Serialize for Mat<R, I, J>
+impl<R> serde::ser::Serialize for Mat4<R>
 where
     R: serde::ser::Serialize,
 {
@@ -12,7 +10,7 @@ where
     {
         use serde::ser::SerializeSeq;
 
-        let mut state = ser.serialize_seq(Some(I * J))?;
+        let mut state = ser.serialize_seq(Some(16))?;
         for row in &self.0 {
             for cell in row {
                 state.serialize_element(cell)?;
@@ -22,44 +20,47 @@ where
     }
 }
 
-impl<'de, R, const I: usize, const J: usize> serde::de::Deserialize<'de> for Mat<R, I, J>
+impl<'de, R> serde::de::Deserialize<'de> for Mat4<R>
 where
-    R: Zero + Copy + serde::de::Deserialize<'de>,
+    Self: crate::Zero,
+    R: Copy + serde::de::Deserialize<'de>,
 {
     fn deserialize<D>(de: D) -> Result<Self, D::Error>
     where
         D: serde::de::Deserializer<'de>,
     {
-        struct MatVisitor<R, const I: usize, const J: usize>(std::marker::PhantomData<[[R; J]; I]>);
+        struct MatVisitor<R>(std::marker::PhantomData<[[R; 4]; 4]>);
 
-        impl<R, const I: usize, const J: usize> Default for MatVisitor<R, I, J> {
+        impl<R> Default for MatVisitor<R> {
             fn default() -> Self {
                 MatVisitor(std::marker::PhantomData::default())
             }
         }
 
-        impl<'v, R, const I: usize, const J: usize> serde::de::Visitor<'v> for MatVisitor<R, I, J>
+        impl<'v, R> serde::de::Visitor<'v> for MatVisitor<R>
         where
-            R: Zero + Copy + serde::de::Deserialize<'v>,
+            Mat4<R>: crate::Zero,
+            R: Copy + serde::de::Deserialize<'v>,
         {
-            type Value = Mat<R, I, J>;
+            type Value = Mat4<R>;
 
             fn expecting(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-                write!(fmt, "a sequence with {} elements", I * J)
+                write!(fmt, "a sequence with {} elements", 16)
             }
 
             fn visit_seq<A>(self, mut acc: A) -> Result<Self::Value, A::Error>
             where
                 A: serde::de::SeqAccess<'v>,
             {
+                use crate::Zero;
                 use serde::de::Error;
 
-                let mut mat: Mat<R, I, J> = Mat::zero();
+                let mut mat: Mat4<R> = Mat4::zero();
 
-                for i in 0..I {
-                    for j in 0..J {
+                for i in 0..4 {
+                    for j in 0..4 {
                         mat[(i, j)] = acc.next_element()?.ok_or_else(|| {
-                            Error::custom(format!("unexpected end of the serialized sequence of length {}", I * J))
+                            Error::custom(format!("unexpected end of the serialized sequence of length {}", 16))
                         })?;
                     }
                 }
@@ -80,13 +81,25 @@ mod tests {
 
     #[test]
     fn mat_implements_serde() {
-        let a: Mat<f32, 2, 2> = Mat::identity();
+        let a: Mat4<f32> = Mat4::identity();
 
         assert_tokens(
             &a,
             &[
-                Token::Seq { len: Some(4) },
+                Token::Seq { len: Some(16) },
                 Token::F32(1.0),
+                Token::F32(0.0),
+                Token::F32(0.0),
+                Token::F32(0.0),
+                Token::F32(0.0),
+                Token::F32(1.0),
+                Token::F32(0.0),
+                Token::F32(0.0),
+                Token::F32(0.0),
+                Token::F32(0.0),
+                Token::F32(1.0),
+                Token::F32(0.0),
+                Token::F32(0.0),
                 Token::F32(0.0),
                 Token::F32(0.0),
                 Token::F32(1.0),

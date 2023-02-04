@@ -27,9 +27,9 @@ use crate::{
 )]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Affine<R> {
-    pub t: Vec3<R>,
+    pub t: Vec4<R>,
     pub o: Unit<Quat<R>>,
-    pub s: Vec3<R>,
+    pub s: Vec4<R>,
 }
 
 impl<R> Affine<R> {
@@ -237,9 +237,9 @@ where
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct AffineBuilder<R> {
-    t: Option<Vec3<R>>,
+    t: Option<Vec4<R>>,
     o: Option<Quat<R>>,
-    s: Option<Vec3<R>>,
+    s: Option<Vec4<R>>,
 }
 
 impl<R> AffineBuilder<R> {
