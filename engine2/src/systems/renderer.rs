@@ -58,7 +58,7 @@ impl Renderer {
 
             for (r, t) in res.iter_rr::<Renderable, Transform>() {
                 let t_mat = c_mat * t.to_matrix();
-                gfx.write_buffer(self.transform_buffer, t_mat.as_slice());
+                gfx.write_buffer(self.transform_buffer, t_mat.as_ref());
 
                 if r.0.materials.is_empty() {
                     rp.set_pipeline(self.pipeline_wt)
@@ -167,7 +167,7 @@ impl WithResources for Renderer {
         let transform_buffer = gfx.create_buffer(
             Some("transform-buffer"),
             wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            glamour::Mat4::<f32>::identity().as_slice(),
+            glamour::Mat4::<f32>::identity().as_ref(),
         );
 
         let tl = gfx.transform_layout();

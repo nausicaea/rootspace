@@ -39,3 +39,12 @@ where
 }
 
 forward_ref::forward_ref_binop!(impl<R: Float> Cross, cross for Vec4<R>, Vec4<R>, Vec4<R>);
+
+impl<R> std::fmt::Display for Vec4<R>
+where
+    R: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "[{}, {}, {}, {}]", self.x, self.y, self.z, self.w)
+    }
+}

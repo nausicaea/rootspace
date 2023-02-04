@@ -1,8 +1,5 @@
-use std::{iter::Product, ops::Mul};
-
 use ecs::{Component, VecStorage};
-use forward_ref::forward_ref_binop;
-use glamour::{Affine, AffineBuilder, Mat4, Quat, Unit, Vec3};
+use glamour::{Affine, AffineBuilder, Mat4, Quat, Unit, Vec4};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -14,11 +11,11 @@ impl Transform {
         TransformBuilder::default()
     }
 
-    pub fn look_at_lh<V: Into<Vec3<f32>>>(eye: V, fwd: V, up: V) -> Self {
-        Transform(Affine::look_at_lh(eye.into(), fwd.into(), Unit::from(up.into())))
+    pub fn look_at_lh<V: Into<Vec4<f32>>>(eye: V, cntr: V, up: V) -> Self {
+        Transform(Affine::look_at_lh(eye.into(), cntr.into(), Unit::from(up.into())))
     }
 
-    pub fn set_translation(&mut self, value: Vec3<f32>) {
+    pub fn set_translation(&mut self, value: Vec4<f32>) {
         self.0.t = value;
     }
 
@@ -26,7 +23,7 @@ impl Transform {
         self.0.o = value.into();
     }
 
-    pub fn set_scale(&mut self, value: Vec3<f32>) {
+    pub fn set_scale(&mut self, value: Vec4<f32>) {
         self.0.s = value;
     }
 
@@ -38,7 +35,7 @@ impl Transform {
         self.0.to_matrix()
     }
 
-    pub fn translation(&self) -> &Vec3<f32> {
+    pub fn translation(&self) -> &Vec4<f32> {
         &self.0.t
     }
 
@@ -46,7 +43,7 @@ impl Transform {
         &self.0.o
     }
 
-    pub fn scale(&self) -> &Vec3<f32> {
+    pub fn scale(&self) -> &Vec4<f32> {
         &self.0.s
     }
 }
@@ -85,33 +82,11 @@ impl std::fmt::Display for Transform {
     }
 }
 
-impl<'a, 'b> Mul<&'b Transform> for &'a Transform {
-    type Output = Transform;
-
-    fn mul(self, rhs: &'b Transform) -> Self::Output {
-        Transform(self.as_affine().mul(rhs.as_affine()))
-    }
-}
-
-forward_ref_binop!(impl Mul, mul for Transform, Transform, Transform);
-
-impl Product for Transform {
-    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(Transform::default(), |state, item| state * item)
-    }
-}
-
-impl<'a> Product<&'a Transform> for Transform {
-    fn product<I: Iterator<Item = &'a Transform>>(iter: I) -> Self {
-        iter.fold(Transform::default(), |state, item| state * item)
-    }
-}
-
 #[derive(Debug, Default, PartialEq, Clone)]
 pub struct TransformBuilder(AffineBuilder<f32>);
 
 impl TransformBuilder {
-    pub fn with_translation<V: Into<Vec3<f32>>>(mut self, t: V) -> Self {
+    pub fn with_translation<V: Into<Vec4<f32>>>(mut self, t: V) -> Self {
         self.0 = self.0.with_translation(t.into());
         self
     }
@@ -121,7 +96,7 @@ impl TransformBuilder {
         self
     }
 
-    pub fn with_scale<V: Into<Vec3<f32>>>(mut self, s: V) -> Self {
+    pub fn with_scale<V: Into<Vec4<f32>>>(mut self, s: V) -> Self {
         self.0 = self.0.with_scale(s.into());
         self
     }
@@ -134,6 +109,7 @@ impl TransformBuilder {
 #[cfg(test)]
 mod tests {
     use approx::assert_ulps_eq;
+    use glamour::{One, Zero};
     use proptest::{collection::vec, num::f32::NORMAL, prelude::*};
 
     use super::*;
@@ -164,7 +140,7 @@ mod tests {
 
     #[test]
     fn builder_accepts_position() {
-        let _: TransformBuilder = TransformBuilder::default().with_translation(Vec3::zero());
+        let _: TransformBuilder = TransformBuilder::default().with_translation(Vec4::zero());
     }
 
     #[test]
@@ -174,20 +150,20 @@ mod tests {
 
     #[test]
     fn builder_accepts_scale() {
-        let _: TransformBuilder = TransformBuilder::default().with_scale(Vec3::zero());
+        let _: TransformBuilder = TransformBuilder::default().with_scale(Vec4::zero());
     }
 
     #[test]
     fn builder_complete_example() {
         let m: Transform = TransformBuilder::default()
-            .with_translation(Vec3::zero())
+            .with_translation(Vec4::zero())
             .with_orientation(Quat::identity())
-            .with_scale(Vec3::one())
+            .with_scale(Vec4::one())
             .build();
 
-        assert_ulps_eq!(m.translation(), &Vec3::zero());
+        assert_ulps_eq!(m.translation(), &Vec4::zero());
         assert_ulps_eq!(m.orientation(), &Unit::from(Quat::identity()));
-        assert_ulps_eq!(m.scale(), &Vec3::one());
+        assert_ulps_eq!(m.scale(), &Vec4::one());
     }
 
     proptest! {
@@ -195,7 +171,7 @@ mod tests {
         fn position_may_be_changed(num in vec(NORMAL, 3)) {
             let mut m = Transform::default();
 
-            let p = Vec3::new(num[0], num[1], num[2]);
+            let p = Vec4::new(num[0], num[1], num[2], 0.0);
             m.set_translation(p.clone());
 
             prop_assert_eq!(m.translation(), &p);
@@ -215,7 +191,7 @@ mod tests {
         fn scale_may_be_changed(num in vec(NORMAL, 3)) {
             let mut m = Transform::default();
 
-            let s = Vec3::new(num[0], num[1], num[2]);
+            let s = Vec4::new(num[0], num[1], num[2], 0.0);
             m.set_scale(s.clone());
 
             prop_assert_eq!(m.scale(), &s);

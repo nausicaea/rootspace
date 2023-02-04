@@ -1,8 +1,5 @@
-use std::{iter::Product, ops::Mul};
-
 use ecs::{Component, VecStorage};
-use forward_ref::forward_ref_binop;
-use glamour::{Affine, AffineBuilder, Mat4, Vec2, Vec3};
+use glamour::{Affine, AffineBuilder, Mat4, Vec4};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -14,13 +11,13 @@ impl UiTransform {
         UiTransformBuilder::default()
     }
 
-    pub fn set_translation(&mut self, value: Vec2<f32>) {
-        self.0.t[0] = value.x();
-        self.0.t[1] = value.y();
+    pub fn set_translation(&mut self, value: Vec4<f32>) {
+        self.0.t[0] = value.x;
+        self.0.t[1] = value.y;
     }
 
-    pub fn set_scale(&mut self, value: Vec2<f32>) {
-        self.0.s = Vec3::new(value.x(), value.y(), 1.0);
+    pub fn set_scale(&mut self, value: Vec4<f32>) {
+        self.0.s = Vec4::new(value.x, value.y, 1.0, 0.0);
     }
 
     pub fn set_depth(&mut self, value: f32) {
@@ -35,16 +32,16 @@ impl UiTransform {
         self.0.to_matrix()
     }
 
-    pub fn translation(&self) -> Vec2<f32> {
-        Vec2::new(self.0.t.x(), self.0.t.y())
+    pub fn translation(&self) -> Vec4<f32> {
+        Vec4::new(self.0.t.x, self.0.t.y, 0.0, 0.0)
     }
 
-    pub fn scale(&self) -> Vec2<f32> {
-        Vec2::new(self.0.s.x(), self.0.s.y())
+    pub fn scale(&self) -> Vec4<f32> {
+        Vec4::new(self.0.s.x, self.0.s.y, 0.0, 0.0)
     }
 
     pub fn depth(&self) -> f32 {
-        self.0.t.z()
+        self.0.t.z
     }
 }
 
@@ -82,37 +79,15 @@ impl std::fmt::Display for UiTransform {
     }
 }
 
-impl<'a, 'b> Mul<&'b UiTransform> for &'a UiTransform {
-    type Output = UiTransform;
-
-    fn mul(self, rhs: &'b UiTransform) -> UiTransform {
-        UiTransform(self.as_affine().mul(rhs.as_affine()))
-    }
-}
-
-forward_ref_binop!(impl Mul, mul for UiTransform, UiTransform, UiTransform);
-
-impl Product for UiTransform {
-    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(UiTransform::default(), |state, item| state * item)
-    }
-}
-
-impl<'a> Product<&'a UiTransform> for UiTransform {
-    fn product<I: Iterator<Item = &'a UiTransform>>(iter: I) -> Self {
-        iter.fold(UiTransform::default(), |state, item| state * item)
-    }
-}
-
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct UiTransformBuilder {
-    t: Option<Vec2<f32>>,
+    t: Option<Vec4<f32>>,
     d: Option<f32>,
-    s: Option<Vec2<f32>>,
+    s: Option<Vec4<f32>>,
 }
 
 impl UiTransformBuilder {
-    pub fn with_translation(mut self, t: Vec2<f32>) -> Self {
+    pub fn with_translation(mut self, t: Vec4<f32>) -> Self {
         self.t = Some(t);
         self
     }
@@ -122,18 +97,23 @@ impl UiTransformBuilder {
         self
     }
 
-    pub fn with_scale(mut self, s: Vec2<f32>) -> Self {
+    pub fn with_scale(mut self, s: Vec4<f32>) -> Self {
         self.s = Some(s);
         self
     }
 
     pub fn build(self) -> UiTransform {
-        let t: Vec3<f32> = self
+        use glamour::Zero;
+
+        let t: Vec4<f32> = self
             .t
             .zip(self.d)
-            .map(|(t, d)| Vec3::new(t.x(), t.y(), d))
-            .unwrap_or_else(Vec3::zero);
-        let s: Vec3<f32> = self.s.map(|s| Vec3::new(s.x(), s.y(), 1.0)).unwrap_or_else(Vec3::one);
+            .map(|(t, d)| Vec4::new(t.x, t.y, d, 0.0))
+            .unwrap_or_else(Vec4::zero);
+        let s: Vec4<f32> = self
+            .s
+            .map(|s| Vec4::new(s.x, s.y, 1.0, 0.0))
+            .unwrap_or_else(|| Vec4::new(1.0, 1.0, 1.0, 0.0));
         UiTransform(AffineBuilder::default().with_translation(t).with_scale(s).build())
     }
 }
