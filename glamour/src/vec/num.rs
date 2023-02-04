@@ -7,7 +7,12 @@ where
     R: Copy + num_traits::Zero,
 {
     fn zero() -> Self {
-        Vec4([R::zero(); 4])
+        Vec4 {
+            x: R::zero(),
+            y: R::zero(),
+            z: R::zero(),
+            w: R::zero(),
+        }
     }
 }
 
@@ -16,6 +21,11 @@ where
     R: Copy + num_traits::One,
 {
     fn one() -> Self {
-        Vec4([R::one(); 4])
+        Vec4 {
+            x: R::one(),
+            y: R::one(),
+            z: R::one(),
+            w: R::one(),
+        }
     }
 }

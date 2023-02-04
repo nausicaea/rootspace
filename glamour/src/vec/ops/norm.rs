@@ -1,17 +1,15 @@
-use std::iter::Sum;
-
 use num_traits::Float;
 
 use crate::{Norm, Vec4};
 
 impl<'a, R> Norm for &'a Vec4<R>
 where
-    R: Float + Sum,
+    R: Float,
 {
     type Output = R;
 
     fn norm(self) -> Self::Output {
-        self.0.iter().map(|e| e.powi(2)).sum::<R>().sqrt()
+        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2) + self.w.powi(2)).sqrt()
     }
 }
 
