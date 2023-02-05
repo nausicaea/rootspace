@@ -337,7 +337,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_ulps_eq;
     use serde_test::{assert_tokens, Token};
 
     use super::*;

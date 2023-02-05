@@ -27,14 +27,6 @@ impl CameraManager {
             .iter_mut()
             .for_each(|c| c.set_dimensions(dims));
     }
-
-    fn on_change_dpi(&self, res: &Resources, factor: f64) {
-        debug!("Updating the camera dpi factor (factor={:?})", factor);
-
-        res.borrow_components_mut::<Camera>()
-            .iter_mut()
-            .for_each(|c| c.set_dpi_factor(factor));
-    }
 }
 
 impl System for CameraManager {
@@ -43,7 +35,6 @@ impl System for CameraManager {
         for event in events {
             match event {
                 WindowEvent::Resized(dims) => self.on_resize(res, (dims.width, dims.height)),
-                WindowEvent::ScaleFactorChanged { scale_factor } => self.on_change_dpi(res, scale_factor),
                 _ => (),
             }
         }

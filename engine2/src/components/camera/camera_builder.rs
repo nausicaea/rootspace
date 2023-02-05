@@ -49,13 +49,12 @@ impl CameraBuilder {
             .with_far_z(self.frustum_z.1)
             .build()
             .unwrap();
-        let persp = Persp::builder()
-            .with_aspect(self.dimensions.0 as f32 / self.dimensions.1 as f32)
-            .with_fov_y(self.fov_y)
-            .with_near_z(self.frustum_z.0)
-            .with_far_z(self.frustum_z.1)
-            .build()
-            .unwrap();
+        let persp = Persp::new(
+            self.dimensions.0 as f32 / self.dimensions.1 as f32,
+            self.fov_y,
+            self.frustum_z.0,
+            self.frustum_z.1,
+        );
 
         Camera {
             projection: self.projection,

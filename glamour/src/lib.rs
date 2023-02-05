@@ -17,7 +17,7 @@ pub use self::{
     num::{One, Zero},
     ops::{cross::Cross, dot::Dot, inv_elem::InvElem, mul_elem::MulElem, norm::Norm},
     ortho::{Ortho, OrthoBuilder},
-    persp::{Persp, PerspBuilder},
+    persp::Persp,
     quat::Quat,
     ray::Ray,
     unit::Unit,
