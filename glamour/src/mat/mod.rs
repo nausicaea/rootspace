@@ -66,22 +66,6 @@ where
 
 impl<R> Mat4<R>
 where
-    Self: Zero,
-    R: Copy,
-{
-    pub fn t(&self) -> Mat4<R> {
-        let mut mat = Mat4::zero();
-        for i in 0..4 {
-            for j in 0..4 {
-                mat[(j, i)] = self[(i, j)];
-            }
-        }
-        mat
-    }
-}
-
-impl<R> Mat4<R>
-where
     R: num_traits::Float,
 {
     pub fn look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Self {
@@ -211,22 +195,6 @@ pub(crate) mod tests {
         #[test]
         fn mat4_is_nan_returns_false_for_non_nan_components(a in mat4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL)) {
             prop_assert!(!a.is_nan())
-        }
-
-        #[test]
-        fn mat4_transposition_is_its_own_inverse_operation(a in mat4(NORMAL | POSITIVE | NEGATIVE | ZERO)) {
-            let b: Mat4<f32> = a.t();
-            prop_assert_eq!(b.t(), a)
-        }
-
-        #[test]
-        fn mat4_t_flips_non_diagonal_elements(a in mat4(NORMAL | POSITIVE | NEGATIVE | ZERO)) {
-            prop_assert_eq!(a.t(), Mat4::new([
-                    [a[(0, 0)], a[(1, 0)], a[(2, 0)], a[(3, 0)]],
-                    [a[(0, 1)], a[(1, 1)], a[(2, 1)], a[(3, 1)]],
-                    [a[(0, 2)], a[(1, 2)], a[(2, 2)], a[(3, 2)]],
-                    [a[(0, 3)], a[(1, 3)], a[(2, 3)], a[(3, 3)]],
-            ]))
         }
 
         #[test]
