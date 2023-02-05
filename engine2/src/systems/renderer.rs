@@ -59,7 +59,7 @@ impl Renderer {
                 //     t_mat * glamour::Vec4::new(0.5, -0.5, 0.0, 1.0),
                 // );
 
-                gfx.write_buffer(self.transform_buffer, t_mat.t().as_ref());
+                gfx.write_buffer(self.transform_buffer, t_mat.as_ref());
 
                 if r.0.materials.is_empty() {
                     rp.set_pipeline(self.pipeline_wt)

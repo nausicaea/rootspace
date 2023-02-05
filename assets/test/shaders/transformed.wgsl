@@ -17,7 +17,7 @@ fn main(
     in: VertexInput
 ) -> VertexOutput {
     return VertexOutput(
-        transform * vec4<f32>(in.position, 1.0),
+        vec4<f32>(in.position, 1.0) * transform,
         in.tex_coords,
     );
 }
