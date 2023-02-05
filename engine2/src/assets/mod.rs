@@ -3,9 +3,10 @@ use crate::resources::{asset_database::AssetDatabase, graphics::Graphics};
 pub mod material;
 pub mod mesh;
 pub mod model;
+pub mod scene;
 pub mod texture;
 
-pub trait Asset: Sized {
+pub(crate) trait Asset: Sized {
     type Error;
 
     fn with_file<S: AsRef<str>>(

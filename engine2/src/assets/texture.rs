@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use image::ImageFormat;
 
 use crate::resources::graphics::{
@@ -7,7 +5,7 @@ use crate::resources::graphics::{
     Graphics,
 };
 
-use super::Error;
+use super::{Asset, Error};
 
 #[derive(Debug)]
 pub struct Texture {
@@ -16,8 +14,17 @@ pub struct Texture {
     pub sampler: SamplerId,
 }
 
-impl Texture {
-    pub(crate) fn with_file(gfx: &mut Graphics, path: &Path) -> Result<Self, Error> {
+impl Asset for Texture {
+    type Error = Error;
+
+    fn with_file<S: AsRef<str>>(
+        adb: &crate::resources::asset_database::AssetDatabase,
+        gfx: &mut Graphics,
+        group: S,
+        name: S,
+    ) -> Result<Self, Self::Error> {
+        let path = adb.find_asset(group, name)?;
+
         let image_format = path
             .extension()
             .and_then(|ext| ext.to_str())

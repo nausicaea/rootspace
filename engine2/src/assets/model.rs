@@ -9,7 +9,12 @@ pub struct Model {
 }
 
 impl Model {
-    pub(crate) fn with_ply(adb: &AssetDatabase, gfx: &mut Graphics, ply: &plyers::Ply) -> Result<Self, Error> {
+    pub(crate) fn with_ply(
+        adb: &AssetDatabase,
+        gfx: &mut Graphics,
+        ply: &plyers::Ply,
+        material_group: &str,
+    ) -> Result<Self, Error> {
         let texture_file_names = ply
             .descriptor
             .comments
@@ -45,8 +50,7 @@ impl Model {
 
         let mut materials = Vec::new();
         for name in texture_file_names {
-            let texture_path = adb.find_asset("textures", name)?;
-            materials.push(Material::with_file(gfx, &texture_path)?);
+            materials.push(Material::with_file(adb, gfx, material_group, name)?);
         }
 
         Ok(Model {
@@ -70,7 +74,7 @@ impl Asset for Model {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some("ply") => {
                 let ply = plyers::load_ply(path)?;
-                Self::with_ply(adb, gfx, &ply)
+                Self::with_ply(adb, gfx, &ply, "textures")
             }
             _ => Err(Error::UnsupportedFileFormat),
         }

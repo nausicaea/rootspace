@@ -4,6 +4,14 @@ use thiserror::Error;
 
 use crate::mat::Mat4;
 
+#[cfg_attr(any(test, feature = "serde_support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    any(test, feature = "serde_support"),
+    serde(bound(
+        serialize = "R: serde::Serialize",
+        deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
+    ))
+)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ortho<R>(Mat4<R>);
 
