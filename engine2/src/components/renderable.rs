@@ -1,4 +1,4 @@
-use crate::assets::Model;
+use crate::assets::model::Model;
 
 #[derive(Debug)]
 pub struct Renderable(pub Model);

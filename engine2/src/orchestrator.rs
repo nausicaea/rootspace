@@ -10,6 +10,7 @@ use winit::{
 };
 
 use crate::{
+    assets::model::Model,
     components::{
         camera::Camera, info::Info, renderable::Renderable, status::Status, transform::Transform,
         ui_transform::UiTransform,
@@ -57,7 +58,7 @@ impl Orchestrator {
                 Transform::look_at_lh([0.0, 0.0, -2.0, 1.0], [0.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 0.0]),
             );
 
-            let model = crate::assets::Model::with_file(
+            let model = Model::with_file(
                 &world.borrow::<crate::resources::asset_database::AssetDatabase>(),
                 &mut world.borrow_mut::<crate::resources::graphics::Graphics>(),
                 "models",
