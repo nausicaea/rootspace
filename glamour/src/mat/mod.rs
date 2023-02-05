@@ -146,18 +146,29 @@ where
     R: std::fmt::Display,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let prettyprint = f.alternate();
+
         write!(f, "[")?;
+        if prettyprint {
+            write!(f, "\n")?;
+        }
         for i in 0..4 {
             write!(f, "[")?;
             for j in 0..4 {
                 write!(f, "{}", self[(i, j)])?;
                 if j < 4 - 1 {
                     write!(f, ", ")?;
+                    if prettyprint {
+                        write!(f, "\t")?;
+                    }
                 }
             }
             write!(f, "]")?;
             if i < 4 - 1 {
                 write!(f, ", ")?;
+            }
+            if prettyprint {
+                write!(f, "\n")?;
             }
         }
         write!(f, "]")

@@ -45,6 +45,12 @@ where
     R: std::fmt::Display,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "[{}, {}, {}, {}]", self.x, self.y, self.z, self.w)
+        let prettyprint = f.alternate();
+
+        if prettyprint {
+            write!(f, "[\n{},\n {},\n {},\n {}\n]", self.x, self.y, self.z, self.w)
+        } else {
+            write!(f, "[{}, {}, {}, {}]", self.x, self.y, self.z, self.w)
+        }
     }
 }

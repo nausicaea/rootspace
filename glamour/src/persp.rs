@@ -36,11 +36,13 @@ where
         }
 
         let tan = o / (fov_y / t).tan();
+        let f_rel = -far_z / (far_z - near_z);
+
         let m00 = aspect * tan;
         let m11 = tan;
-        let m22 = far_z / (far_z - near_z);
-        let m23 = -(far_z * near_z) / (far_z - near_z);
-        let m32 = o;
+        let m22 = f_rel;
+        let m23 = near_z * f_rel;
+        let m32 = -o;
 
         Persp(Mat4::new([
             [m00, z, z, z],

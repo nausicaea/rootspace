@@ -1,5 +1,4 @@
 use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
-use glamour::Mat4;
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
 
@@ -16,13 +15,6 @@ use crate::{
         },
     },
 };
-
-const OPENGL_TO_WGPU_MATRIX: Mat4<f32> = Mat4::new([
-    [1.0, 0.0, 0.0, 0.0],
-    [0.0, 1.0, 0.0, 0.0],
-    [0.0, 0.0, 0.5, 0.5],
-    [0.0, 0.0, 0.0, 1.0],
-]);
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -58,7 +50,16 @@ impl Renderer {
 
             for (r, t) in res.iter_rr::<Renderable, Transform>() {
                 let t_mat = c_mat * t.to_matrix();
-                gfx.write_buffer(self.transform_buffer, t_mat.as_ref());
+
+                // panic!(
+                //     "\np={:#}\nv={:#}\nm={:#}\npvm={:#}\nt1={:}\nt2={:}\nt3={:}",
+                //     c.as_matrix(), ct.to_matrix(), t.to_matrix(), t_mat,
+                //     t_mat * glamour::Vec4::new(0.0, 0.5, 0.5, 1.0),
+                //     t_mat * glamour::Vec4::new(-0.5, -0.5, 0.0, 1.0),
+                //     t_mat * glamour::Vec4::new(0.5, -0.5, 0.0, 1.0),
+                // );
+
+                gfx.write_buffer(self.transform_buffer, t_mat.t().as_ref());
 
                 if r.0.materials.is_empty() {
                     rp.set_pipeline(self.pipeline_wt)
