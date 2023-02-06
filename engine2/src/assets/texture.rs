@@ -1,3 +1,4 @@
+use ecs::Resources;
 use image::ImageFormat;
 
 use crate::resources::graphics::{
@@ -15,16 +16,7 @@ pub struct Texture {
 }
 
 impl Asset for Texture {
-    type Error = Error;
-
-    fn with_file<S: AsRef<str>>(
-        adb: &crate::resources::asset_database::AssetDatabase,
-        gfx: &mut Graphics,
-        group: S,
-        name: S,
-    ) -> Result<Self, Self::Error> {
-        let path = adb.find_asset(group, name)?;
-
+    fn with_path(res: &Resources, path: &std::path::Path) -> Result<Self, Error> {
         let image_format = path
             .extension()
             .and_then(|ext| ext.to_str())
@@ -38,10 +30,9 @@ impl Asset for Texture {
         let f = std::fs::File::open(path)?;
         let img = image::load(std::io::BufReader::new(f), image_format)?;
 
+        let mut gfx = res.borrow_mut::<Graphics>();
         let texture = gfx.create_texture().with_image(img).submit();
-
         let view = gfx.create_texture_view(None, texture);
-
         let sampler = gfx.create_sampler().submit();
 
         Ok(Texture { texture, view, sampler })

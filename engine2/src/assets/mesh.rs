@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use ecs::Resources;
 use plyers::types::{AsSlice, Primitive, PropertyDescriptor};
 
 use crate::resources::graphics::{ids::BufferId, vertex::Vertex, Graphics};
@@ -14,9 +15,10 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub(crate) fn with_ply(gfx: &mut Graphics, ply: &plyers::Ply) -> Result<Self, Error> {
+    pub(crate) fn with_ply(res: &Resources, ply: &plyers::Ply) -> Result<Self, Error> {
         let rm = RawMesh::with_ply(ply)?;
 
+        let mut gfx = res.borrow_mut::<Graphics>();
         let vertex_buffer = gfx.create_buffer(None, wgpu::BufferUsages::VERTEX, &rm.vertices);
         let index_buffer = gfx.create_buffer(None, wgpu::BufferUsages::INDEX, &rm.indices);
 

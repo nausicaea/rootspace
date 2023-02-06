@@ -18,7 +18,7 @@ use crate::{
     events::{engine_event::EngineEvent, window_event::WindowEvent},
     registry::{RRegistry, RSRegistry, USRegistry},
     resources::{
-        asset_database::AssetDatabaseDeps,
+        asset_database::{AssetDatabase, AssetDatabaseDeps},
         graphics::{Graphics, GraphicsDeps},
         statistics::Statistics,
     },
@@ -49,8 +49,6 @@ impl Orchestrator {
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
         {
-            use crate::assets::Asset;
-
             let e = world.get_mut::<ecs::Entities>().create();
             world.get_components_mut::<Camera>().insert(e, Camera::default());
             world.get_components_mut::<Transform>().insert(
@@ -58,12 +56,10 @@ impl Orchestrator {
                 Transform::look_at_lh([0.0, 0.0, -2.0, 1.0], [0.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 0.0]),
             );
 
-            let model = Model::with_file(
-                &world.borrow::<crate::resources::asset_database::AssetDatabase>(),
-                &mut world.borrow_mut::<crate::resources::graphics::Graphics>(),
-                "models",
-                "triangle.ply",
-            )?;
+            let model: Model =
+                world
+                    .borrow::<AssetDatabase>()
+                    .load_asset(world.resources(), "models", "triangle.ply")?;
 
             let e = world.get_mut::<ecs::Entities>().create();
             world.get_components_mut::<Renderable>().insert(e, Renderable(model));

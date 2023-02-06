@@ -1,3 +1,7 @@
+use std::path::Path;
+
+use ecs::Resources;
+
 use crate::resources::graphics::{ids::BindGroupId, Graphics};
 
 use super::{texture::Texture, Asset, Error};
@@ -9,17 +13,13 @@ pub struct Material {
 }
 
 impl Asset for Material {
-    type Error = Error;
+    fn with_path(res: &Resources, path: &Path) -> Result<Self, Error> {
+        let texture = Texture::with_path(res, path)?;
 
-    fn with_file<S: AsRef<str>>(
-        adb: &crate::resources::asset_database::AssetDatabase,
-        gfx: &mut Graphics,
-        group: S,
-        name: S,
-    ) -> Result<Self, Self::Error> {
-        let texture = Texture::with_file(adb, gfx, group, name)?;
+        let mut gfx = res.borrow_mut::<Graphics>();
+        let layout = gfx.material_layout();
         let bind_group = gfx
-            .create_bind_group(gfx.material_layout())
+            .create_bind_group(layout)
             .add_texture_view(0, texture.view)
             .add_sampler(1, texture.sampler)
             .submit();

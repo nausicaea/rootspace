@@ -1,4 +1,8 @@
-use crate::resources::{asset_database::AssetDatabase, graphics::Graphics};
+use std::path::Path;
+
+use ecs::Resources;
+
+use crate::resources::asset_database::AssetDatabase;
 
 use super::{material::Material, mesh::Mesh, Asset, Error};
 
@@ -9,12 +13,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub(crate) fn with_ply(
-        adb: &AssetDatabase,
-        gfx: &mut Graphics,
-        ply: &plyers::Ply,
-        material_group: &str,
-    ) -> Result<Self, Error> {
+    pub(crate) fn with_ply(res: &Resources, ply: &plyers::Ply, material_group: &str) -> Result<Self, Error> {
         let texture_file_names = ply
             .descriptor
             .comments
@@ -50,31 +49,23 @@ impl Model {
 
         let mut materials = Vec::new();
         for name in texture_file_names {
-            materials.push(Material::with_file(adb, gfx, material_group, name)?);
+            let path = res.borrow::<AssetDatabase>().find_asset(material_group, name)?;
+            materials.push(Material::with_path(res, &path)?);
         }
 
         Ok(Model {
-            mesh: Mesh::with_ply(gfx, ply)?,
+            mesh: Mesh::with_ply(res, ply)?,
             materials,
         })
     }
 }
 
 impl Asset for Model {
-    type Error = Error;
-
-    fn with_file<S: AsRef<str>>(
-        adb: &AssetDatabase,
-        gfx: &mut Graphics,
-        group: S,
-        name: S,
-    ) -> Result<Self, Self::Error> {
-        let path = adb.find_asset(group, name)?;
-
+    fn with_path(res: &Resources, path: &Path) -> Result<Self, Error> {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some("ply") => {
                 let ply = plyers::load_ply(path)?;
-                Self::with_ply(adb, gfx, &ply, "textures")
+                Self::with_ply(res, &ply, "textures")
             }
             _ => Err(Error::UnsupportedFileFormat),
         }

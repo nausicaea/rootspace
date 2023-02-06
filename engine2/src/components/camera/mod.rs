@@ -7,7 +7,7 @@ use glamour::{Mat4, Persp};
 pub struct Camera(Persp<f32>);
 
 impl Camera {
-    pub const fn new(dimensions: (u32, u32), fov_y: f32, frustum_z: (f32, f32)) -> Self {
+    pub fn new(dimensions: (u32, u32), fov_y: f32, frustum_z: (f32, f32)) -> Self {
         Camera(Persp::new(
             dimensions.0 as f32 / dimensions.1 as f32,
             fov_y,

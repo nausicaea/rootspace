@@ -1,12 +1,11 @@
-use std::{
-    convert::TryFrom,
-    path::{Path, PathBuf},
-};
+use std::{convert::TryFrom, path::PathBuf};
 
-use anyhow::{Context, Error};
+use anyhow::Context;
 use directories::ProjectDirs;
-use ecs::{with_dependencies::WithDependencies, Resource};
+use ecs::{with_dependencies::WithDependencies, Resource, Resources};
 use file_manipulation::{copy_recursive, DirPathBuf, FilePathBuf};
+
+use crate::assets::{Asset, Error};
 
 const APP_QUALIFIER: &str = "net";
 const APP_ORGANIZATION: &str = "nausicaea";
@@ -29,26 +28,32 @@ pub struct AssetDatabase {
     game_name: String,
     project_dirs: ProjectDirs,
     assets: DirPathBuf,
-    states: DirPathBuf,
 }
 
 impl AssetDatabase {
-    pub fn asset_directory(&self) -> &Path {
-        &self.assets
+    pub fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> Result<A, Error>
+    where
+        A: Asset,
+        S: AsRef<str>,
+    {
+        let path = self.find_asset(group, name)?;
+        let asset = A::with_path(res, &path)?;
+
+        Ok(asset)
     }
 
-    pub fn find_asset<S: AsRef<str>>(&self, group: S, name: S) -> Result<FilePathBuf, AssetError> {
+    pub fn find_asset<S: AsRef<str>>(&self, group: S, name: S) -> Result<FilePathBuf, Error> {
         let group = group.as_ref();
         let name = name.as_ref();
 
         if !(GROUP_AND_NAME_ALLOWLIST.is_match(group) && GROUP_AND_NAME_ALLOWLIST.is_match(name)) {
-            return Err(AssetError::InvalidCharacters(group.to_string(), name.to_string()));
+            return Err(Error::InvalidCharacters(group.to_string(), name.to_string()));
         }
 
         let asset_path = FilePathBuf::try_from(self.assets.join(group).join(name))?;
 
         if !asset_path.as_path().starts_with(&self.assets) {
-            return Err(AssetError::OutOfTree(asset_path.into()));
+            return Err(Error::OutOfTree(asset_path.into()));
         }
 
         Ok(asset_path)
@@ -58,13 +63,12 @@ impl AssetDatabase {
 impl Resource for AssetDatabase {}
 
 impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
-    fn with_deps(deps: &D) -> Result<Self, Error> {
+    fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
         let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, deps.name())
             .context("Could not find the project directories")?;
 
         let data_local_dir = project_dirs.data_local_dir();
         let asset_database = data_local_dir.join("assets");
-        let state_database = data_local_dir.join("states");
 
         if deps.force_init() || !asset_database.is_dir() {
             std::fs::remove_dir_all(&asset_database)?;
@@ -80,31 +84,13 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
                 std::fs::create_dir_all(&asset_database).context("Could not create the asset database")?;
             }
         }
-        if !state_database.is_dir() {
-            std::fs::create_dir_all(&state_database).context("Could not create the state directory")?;
-        }
 
         Ok(AssetDatabase {
             game_name: deps.name().to_string(),
             project_dirs,
             assets: DirPathBuf::try_from(asset_database)?,
-            states: DirPathBuf::try_from(state_database)?,
         })
     }
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum AssetError {
-    #[error("The asset tree was not found")]
-    AssetTreeNotFound,
-    #[error("Is not within the asset tree: {}", .0.display())]
-    OutOfTree(PathBuf),
-    #[error("The asset group or name contain disallowed characters: group='{:?}', name='{:?}'", .0, .1)]
-    InvalidCharacters(String, String),
-    #[error(transparent)]
-    FileError(#[from] file_manipulation::FileError),
-    #[error(transparent)]
-    IoError(#[from] std::io::Error),
 }
 
 #[cfg(test)]
