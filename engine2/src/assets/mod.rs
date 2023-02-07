@@ -1,6 +1,4 @@
-use std::path::{Path, PathBuf};
-
-use ecs::Resources;
+use std::path::PathBuf;
 
 pub mod material;
 pub mod mesh;
@@ -9,10 +7,21 @@ pub mod raw_mesh;
 pub mod scene;
 pub mod texture;
 
-pub trait Asset: Sized {
-    type Output;
+pub trait Asset: self::private::LoadAsset {}
 
-    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, Error>;
+impl<T: self::private::LoadAsset + Sized> Asset for T {}
+
+pub(crate) mod private {
+    use ecs::Resources;
+    use std::path::Path;
+
+    use super::Error;
+
+    pub trait LoadAsset: Sized {
+        type Output;
+
+        fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, Error>;
+    }
 }
 
 #[derive(Debug, thiserror::Error)]

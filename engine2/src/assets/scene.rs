@@ -6,13 +6,13 @@ use rose_tree::Hierarchy;
 use crate::{
     components::{
         camera::Camera,
-        renderable::{self, Renderable, RenderableSource},
+        renderable::{Renderable, RenderableSource},
         transform::Transform,
     },
     resources::asset_database::AssetDatabase,
 };
 
-use super::{model::Model, Asset, Error};
+use super::{model::Model, private::LoadAsset, Error};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Scene {
@@ -75,7 +75,7 @@ impl Scene {
     }
 }
 
-impl Asset for Scene {
+impl LoadAsset for Scene {
     type Output = ();
 
     fn with_path(res: &ecs::Resources, path: &std::path::Path) -> Result<Self::Output, Error> {

@@ -4,7 +4,7 @@ use ecs::Resources;
 
 use crate::{assets::raw_mesh::RawMesh, resources::asset_database::AssetDatabase};
 
-use super::{material::Material, mesh::Mesh, Asset, Error};
+use super::{material::Material, mesh::Mesh, private::LoadAsset, Error};
 
 #[derive(Debug)]
 pub struct Model {
@@ -62,7 +62,7 @@ impl Model {
     }
 }
 
-impl Asset for Model {
+impl LoadAsset for Model {
     type Output = Self;
 
     fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, Error> {

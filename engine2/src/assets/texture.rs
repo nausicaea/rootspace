@@ -6,7 +6,7 @@ use crate::resources::graphics::{
     Graphics,
 };
 
-use super::{Asset, Error};
+use super::{private::LoadAsset, Error};
 
 #[derive(Debug)]
 pub struct Texture {
@@ -15,7 +15,7 @@ pub struct Texture {
     pub sampler: SamplerId,
 }
 
-impl Asset for Texture {
+impl LoadAsset for Texture {
     type Output = Self;
 
     fn with_path(res: &Resources, path: &std::path::Path) -> Result<Self::Output, Error> {

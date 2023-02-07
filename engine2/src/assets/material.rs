@@ -4,7 +4,7 @@ use ecs::Resources;
 
 use crate::resources::graphics::{ids::BindGroupId, Graphics};
 
-use super::{texture::Texture, Asset, Error};
+use super::{private::LoadAsset, texture::Texture, Error};
 
 #[derive(Debug)]
 pub struct Material {
@@ -12,7 +12,7 @@ pub struct Material {
     pub bind_group: BindGroupId,
 }
 
-impl Asset for Material {
+impl LoadAsset for Material {
     type Output = Self;
 
     fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, Error> {
