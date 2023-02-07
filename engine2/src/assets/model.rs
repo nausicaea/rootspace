@@ -2,7 +2,7 @@ use std::path::Path;
 
 use ecs::Resources;
 
-use crate::resources::asset_database::AssetDatabase;
+use crate::{assets::raw_mesh::RawMesh, resources::asset_database::AssetDatabase};
 
 use super::{material::Material, mesh::Mesh, Asset, Error};
 
@@ -53,8 +53,10 @@ impl Model {
             materials.push(Material::with_path(res, &path)?);
         }
 
+        let raw_mesh = RawMesh::with_ply(ply)?;
+
         Ok(Model {
-            mesh: Mesh::with_ply(res, ply)?,
+            mesh: Mesh::with_raw_mesh(res, &raw_mesh)?,
             materials,
         })
     }
