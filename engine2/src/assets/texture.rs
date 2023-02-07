@@ -16,7 +16,9 @@ pub struct Texture {
 }
 
 impl Asset for Texture {
-    fn with_path(res: &Resources, path: &std::path::Path) -> Result<Self, Error> {
+    type Output = Self;
+
+    fn with_path(res: &Resources, path: &std::path::Path) -> Result<Self::Output, Error> {
         let image_format = path
             .extension()
             .and_then(|ext| ext.to_str())

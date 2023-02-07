@@ -13,7 +13,9 @@ pub struct Material {
 }
 
 impl Asset for Material {
-    fn with_path(res: &Resources, path: &Path) -> Result<Self, Error> {
+    type Output = Self;
+
+    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, Error> {
         let texture = Texture::with_path(res, path)?;
 
         let mut gfx = res.borrow_mut::<Graphics>();

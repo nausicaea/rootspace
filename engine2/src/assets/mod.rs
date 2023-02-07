@@ -9,7 +9,9 @@ pub mod scene;
 pub mod texture;
 
 pub trait Asset: Sized {
-    fn with_path(res: &Resources, path: &Path) -> Result<Self, Error>;
+    type Output;
+
+    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, Error>;
 }
 
 #[derive(Debug, thiserror::Error)]

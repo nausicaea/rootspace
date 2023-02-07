@@ -31,7 +31,7 @@ pub struct AssetDatabase {
 }
 
 impl AssetDatabase {
-    pub fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> Result<A, Error>
+    pub fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> Result<A::Output, Error>
     where
         A: Asset,
         S: AsRef<str>,

@@ -61,7 +61,9 @@ impl Model {
 }
 
 impl Asset for Model {
-    fn with_path(res: &Resources, path: &Path) -> Result<Self, Error> {
+    type Output = Self;
+
+    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, Error> {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some("ply") => {
                 let ply = plyers::load_ply(path)?;

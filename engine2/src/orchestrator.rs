@@ -56,10 +56,10 @@ impl Orchestrator {
                 Transform::look_at_lh([0.0, 0.0, -2.0, 1.0], [0.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 0.0]),
             );
 
-            let model: Model =
+            let model =
                 world
                     .borrow::<AssetDatabase>()
-                    .load_asset(world.resources(), "models", "triangle.ply")?;
+                    .load_asset::<Model, _>(world.resources(), "models", "triangle.ply")?;
 
             let e = world.get_mut::<ecs::Entities>().create();
             world.get_components_mut::<Renderable>().insert(e, Renderable(model));
