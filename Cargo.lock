@@ -565,6 +565,7 @@ dependencies = [
  "rose-tree",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror",
  "urn",
  "wgpu",

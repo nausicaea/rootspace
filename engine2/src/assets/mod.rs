@@ -17,8 +17,6 @@ pub trait Asset: Sized {
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Not deserialization function is configured for the asset")]
-    NoDeserializationConfigured,
     #[error("The asset tree was not found")]
     AssetTreeNotFound,
     #[error("Is not within the asset tree: {}", .0.display())]

@@ -43,6 +43,7 @@ urn = { path = "../urn" }
 [dev-dependencies]
 env_logger = "^0.9"
 proptest = "^1.0.0"
+tempfile = "3.3.0"
 
 [[example]]
 name = "test"
