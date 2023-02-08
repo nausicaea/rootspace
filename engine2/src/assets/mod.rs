@@ -7,20 +7,26 @@ pub mod raw_mesh;
 pub mod scene;
 pub mod texture;
 
-pub trait Asset: self::private::LoadAsset {}
+pub trait LoadAsset: self::private::PrivLoadAsset {}
 
-impl<T: self::private::LoadAsset + Sized> Asset for T {}
+impl<T: self::private::PrivLoadAsset + Sized> LoadAsset for T {}
+
+pub trait SaveAsset: self::private::PrivSaveAsset {}
+
+impl<T: self::private::PrivSaveAsset> SaveAsset for T {}
 
 pub(crate) mod private {
     use ecs::Resources;
     use std::path::Path;
 
-    use super::Error;
-
-    pub trait LoadAsset: Sized {
+    pub trait PrivLoadAsset: Sized {
         type Output;
 
-        fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, Error>;
+        fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error>;
+    }
+
+    pub trait PrivSaveAsset {
+        fn to_path(&self, path: &Path) -> Result<(), anyhow::Error>;
     }
 }
 

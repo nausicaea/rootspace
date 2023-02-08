@@ -1,10 +1,11 @@
 use std::path::Path;
 
+use anyhow::Context;
 use ecs::Resources;
 
 use crate::{assets::raw_mesh::RawMesh, resources::asset_database::AssetDatabase};
 
-use super::{material::Material, mesh::Mesh, private::LoadAsset, Error};
+use super::{material::Material, mesh::Mesh, private::PrivLoadAsset, Error};
 
 #[derive(Debug)]
 pub struct Model {
@@ -13,7 +14,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub(crate) fn with_ply(res: &Resources, ply: &plyers::Ply, material_group: &str) -> Result<Self, Error> {
+    pub(crate) fn with_ply(res: &Resources, ply: &plyers::Ply, material_group: &str) -> Result<Self, anyhow::Error> {
         let texture_file_names = ply
             .descriptor
             .comments
@@ -49,29 +50,45 @@ impl Model {
 
         let mut materials = Vec::new();
         for name in texture_file_names {
-            let path = res.borrow::<AssetDatabase>().find_asset(material_group, name)?;
-            materials.push(Material::with_path(res, &path)?);
+            let path = res
+                .borrow::<AssetDatabase>()
+                .find_asset(material_group, name)
+                .with_context(|| {
+                    format!(
+                        "trying to find the material asset '{}' in group '{}'",
+                        name, material_group
+                    )
+                })?;
+            let material = Material::with_path(res, &path).with_context(|| {
+                format!(
+                    "trying to load a {} from path '{}'",
+                    std::any::type_name::<Material>(),
+                    path.display()
+                )
+            })?;
+            materials.push(material);
         }
 
-        let raw_mesh = RawMesh::with_ply(ply)?;
+        let raw_mesh = RawMesh::with_ply(ply).context("trying to load a raw mesh from Stanford Ply data")?;
 
-        Ok(Model {
-            mesh: Mesh::with_raw_mesh(res, &raw_mesh)?,
-            materials,
-        })
+        let mesh =
+            Mesh::with_raw_mesh(res, &raw_mesh).context("trying to load a GPU-native mesh from the raw mesh data")?;
+
+        Ok(Model { mesh, materials })
     }
 }
 
-impl LoadAsset for Model {
+impl PrivLoadAsset for Model {
     type Output = Self;
 
-    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, Error> {
+    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some("ply") => {
-                let ply = plyers::load_ply(path)?;
+                let ply = plyers::load_ply(path)
+                    .with_context(|| format!("trying to load a Stanford Ply file from '{}'", path.display()))?;
                 Self::with_ply(res, &ply, "textures")
             }
-            _ => Err(Error::UnsupportedFileFormat),
+            _ => Err(Error::UnsupportedFileFormat.into()),
         }
     }
 }

@@ -8,33 +8,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Uuuugh, errors!!!">
+      <change beforePath="$PROJECT_DIR$/.idea/rootspace.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rootspace.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/bytes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/bytes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/empty.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/empty.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/engram.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/engram.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/lookahead.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/lookahead.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/take_while.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/take_while.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/base/token.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/base/token.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/be_count.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/be_count.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/be_number.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/be_number.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/and_then.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/and_then.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/chain.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/chain.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/either.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/either.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/map.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/map.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/optional.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/optional.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_exact.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_exact.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_until.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/combinator/repeat_until.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/le_count.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/le_count.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/le_number.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/le_number.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/parser/read_byte.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/parser/read_byte.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/ply.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/ply.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/plyers/src/types.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/examples/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/examples/test.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/material.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/assets/material.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/assets/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/assets/model.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/scene.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/assets/scene.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/texture.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/assets/texture.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/components/renderable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/components/renderable.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/orchestrator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/orchestrator.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/asset_database.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/resources/asset_database.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/systems/renderer.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,17 +63,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/young0000/Crypt/Development/rootspace/plyers/tests&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;language.rust.cargo.check&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "true",
+    "last_opened_file_path": "/Users/young0000/Crypt/Development/personal/rootspace",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "settings.editor.selected.configurable": "language.rust.cargo.check",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/plyers/tests" />
@@ -104,9 +96,26 @@
       <command value="cargo +nightly fmt" />
     </option>
   </component>
-  <component name="RunManager" selected="Cargo.Test plyers">
+  <component name="RunManager" selected="Cargo.Run Test Example">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Run Test Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="run -p engine2 --example test" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -181,10 +190,10 @@
       <item itemvalue="Cargo.Run Headless" />
       <item itemvalue="Cargo.Test glamour" />
       <item itemvalue="Cargo.Test plyers" />
+      <item itemvalue="Cargo.Run Test Example" />
     </list>
   </component>
   <component name="RustProjectSettings">
-    <option name="externalLinter" value="Clippy" />
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
     <option name="version" value="2" />
   </component>
@@ -264,6 +273,7 @@
       <workItem from="1656925359752" duration="155000" />
       <workItem from="1657013318869" duration="3764000" />
       <workItem from="1657044391802" duration="59000" />
+      <workItem from="1675794911917" duration="4271000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>

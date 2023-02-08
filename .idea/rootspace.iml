@@ -19,6 +19,10 @@
       <sourceFolder url="file://$MODULE_DIR$/forward-ref/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/plyers/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/plyers/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/engine2/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/engine2/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/plyers/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/urn/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/affine-transform/target" />
       <excludeFolder url="file://$MODULE_DIR$/ecs/target" />

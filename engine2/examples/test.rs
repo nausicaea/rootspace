@@ -14,6 +14,7 @@ struct Dependencies<'a, T: 'static> {
     event_loop: &'a EventLoop<T>,
     name: &'a str,
     force_init: bool,
+    within_repo: bool,
     graphics_settings: Settings,
 }
 
@@ -37,6 +38,10 @@ impl<'a, T> AssetDatabaseDeps for Dependencies<'a, T> {
     fn force_init(&self) -> bool {
         self.force_init
     }
+
+    fn within_repo(&self) -> bool {
+        self.within_repo
+    }
 }
 
 fn main() -> anyhow::Result<()> {
@@ -47,7 +52,8 @@ fn main() -> anyhow::Result<()> {
     let deps = Dependencies {
         event_loop: &event_loop,
         name: "test",
-        force_init: true,
+        force_init: false,
+        within_repo: true,
         graphics_settings: Settings::default(),
     };
 

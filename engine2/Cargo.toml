@@ -42,8 +42,12 @@ urn = { path = "../urn" }
 
 [dev-dependencies]
 env_logger = "^0.9"
+clap = { version = "^4.0.0", features = ["derive"] }
 proptest = "^1.0.0"
 tempfile = "3.3.0"
 
 [[example]]
 name = "test"
+
+[[example]]
+name = "scene"

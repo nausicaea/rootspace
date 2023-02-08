@@ -1,3 +1,4 @@
+use anyhow::Context;
 use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
@@ -103,11 +104,13 @@ impl Renderer {
         label: &'static str,
     ) -> Result<PipelineId, anyhow::Error> {
         let shader_path = adb.find_asset("shaders", "transformed.wgsl")?;
-        let shader_data = shader_path.read_to_string()?;
+        let shader_data = std::fs::read_to_string(&shader_path)
+            .with_context(|| format!("trying to load a shader source from '{}'", shader_path.display()))?;
         let vertex_shader_module = gfx.create_shader_module(Some("vertex-shader"), shader_data);
 
         let shader_path = adb.find_asset("shaders", "with_static_color.wgsl")?;
-        let shader_data = shader_path.read_to_string()?;
+        let shader_data = std::fs::read_to_string(&shader_path)
+            .with_context(|| format!("trying to load a shader source from '{}'", shader_path.display()))?;
         let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
 
         let tl = gfx.transform_layout();
@@ -130,11 +133,13 @@ impl Renderer {
         label: &'static str,
     ) -> Result<PipelineId, anyhow::Error> {
         let shader_path = adb.find_asset("shaders", "transformed.wgsl")?;
-        let shader_data = shader_path.read_to_string()?;
+        let shader_data = std::fs::read_to_string(&shader_path)
+            .with_context(|| format!("trying to load a shader source from '{}'", shader_path.display()))?;
         let vertex_shader_module = gfx.create_shader_module(Some("vertex-shader"), shader_data);
 
         let shader_path = adb.find_asset("shaders", "textured.wgsl")?;
-        let shader_data = shader_path.read_to_string()?;
+        let shader_data = std::fs::read_to_string(&shader_path)
+            .with_context(|| format!("trying to load a shader source from '{}'", shader_path.display()))?;
         let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
 
         let tl = gfx.transform_layout();
@@ -162,8 +167,10 @@ impl WithResources for Renderer {
         let adb = res.borrow::<AssetDatabase>();
         let mut gfx = res.borrow_mut::<Graphics>();
 
-        let pipeline_wtm = Self::crp_with_transform_and_material(&adb, &mut gfx, "wtm")?;
-        let pipeline_wt = Self::crp_with_transform(&adb, &mut gfx, "wt")?;
+        let pipeline_wtm = Self::crp_with_transform_and_material(&adb, &mut gfx, "wtm")
+            .context("trying to create the render pipeline 'wtm'")?;
+        let pipeline_wt =
+            Self::crp_with_transform(&adb, &mut gfx, "wt").context("trying to create the render pipeline 'wt'")?;
 
         let transform_buffer = gfx.create_buffer(
             Some("transform-buffer"),
@@ -222,6 +229,7 @@ mod tests {
     struct TDeps<'a> {
         name: &'a str,
         force_init: bool,
+        within_repo: bool,
     }
 
     impl Default for TDeps<'static> {
@@ -229,6 +237,7 @@ mod tests {
             TDeps {
                 name: "test",
                 force_init: false,
+                within_repo: false,
             }
         }
     }
@@ -240,6 +249,10 @@ mod tests {
 
         fn force_init(&self) -> bool {
             self.force_init
+        }
+
+        fn within_repo(&self) -> bool {
+            self.within_repo
         }
     }
 

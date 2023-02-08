@@ -548,6 +548,7 @@ dependencies = [
  "anyhow",
  "approx 0.5.1",
  "bytemuck",
+ "clap",
  "ctrlc",
  "directories",
  "ecs",

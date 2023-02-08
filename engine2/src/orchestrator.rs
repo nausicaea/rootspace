@@ -9,8 +9,8 @@ use winit::{
     event_loop::{ControlFlow, EventLoopWindowTarget},
 };
 
+use crate::assets::scene::Scene;
 use crate::{
-    assets::model::Model,
     components::{
         camera::Camera, info::Info, renderable::Renderable, status::Status, transform::Transform,
         ui_transform::UiTransform,
@@ -48,25 +48,9 @@ impl Orchestrator {
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        {
-            let e = world.get_mut::<ecs::Entities>().create();
-            world.get_components_mut::<Camera>().insert(e, Camera::default());
-            world.get_components_mut::<Transform>().insert(
-                e,
-                Transform::look_at_lh([0.0, 0.0, -2.0, 1.0], [0.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 0.0]),
-            );
-
-            let model =
-                world
-                    .borrow::<AssetDatabase>()
-                    .load_asset::<Model, _>(world.resources(), "models", "triangle.ply")?;
-
-            let e = world.get_mut::<ecs::Entities>().create();
-            world.get_components_mut::<Renderable>().insert(e, Renderable(model));
-            world
-                .get_components_mut::<Transform>()
-                .insert(e, Transform::builder().with_translation([0.0, 0.0, 0.0, 0.0]).build());
-        }
+        world
+            .borrow::<AssetDatabase>()
+            .load_asset::<Scene, _>(world.resources(), "scenes", "test.json")?;
 
         Ok(Orchestrator {
             world,
@@ -190,6 +174,7 @@ impl Orchestrator {
 
     fn on_entity_destroyed(&mut self, entity: Entity) {
         log::trace!("Removing entity from components Status, Info, Transform, UiTransform, Renderable");
+        self.world.get_components_mut::<Camera>().remove(entity);
         self.world.get_components_mut::<Status>().remove(entity);
         self.world.get_components_mut::<Info>().remove(entity);
         self.world.get_components_mut::<Transform>().remove(entity);

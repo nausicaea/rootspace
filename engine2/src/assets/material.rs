@@ -1,10 +1,11 @@
 use std::path::Path;
 
+use anyhow::Context;
 use ecs::Resources;
 
 use crate::resources::graphics::{ids::BindGroupId, Graphics};
 
-use super::{private::LoadAsset, texture::Texture, Error};
+use super::{private::PrivLoadAsset, texture::Texture};
 
 #[derive(Debug)]
 pub struct Material {
@@ -12,11 +13,17 @@ pub struct Material {
     pub bind_group: BindGroupId,
 }
 
-impl LoadAsset for Material {
+impl PrivLoadAsset for Material {
     type Output = Self;
 
-    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, Error> {
-        let texture = Texture::with_path(res, path)?;
+    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
+        let texture = Texture::with_path(res, path).with_context(|| {
+            format!(
+                "trying to load a {} from '{}'",
+                std::any::type_name::<Texture>(),
+                path.display()
+            )
+        })?;
 
         let mut gfx = res.borrow_mut::<Graphics>();
         let layout = gfx.material_layout();
