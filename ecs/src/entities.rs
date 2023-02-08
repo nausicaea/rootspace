@@ -46,10 +46,11 @@ impl Entities {
     /// # Arguments
     ///
     /// * `entity` - The `Entity` to be destroyed.
-    pub fn destroy(&mut self, entity: Entity) {
-        let idx_usize: usize = entity.idx().into();
+    pub fn destroy<I: Into<Index>>(&mut self, entity: I) {
+        let idx = entity.into();
+        let idx_usize: usize = idx.into();
         self.generations[idx_usize].deactivate();
-        self.free_idx.push(entity.idx());
+        self.free_idx.push(idx);
     }
 
     /// Return `true` if there are no active entities

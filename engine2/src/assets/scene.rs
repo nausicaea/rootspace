@@ -34,11 +34,21 @@ impl Scene {
     pub fn load_additive(self, res: &Resources) -> Result<(), anyhow::Error> {
         let map = self.load_hierarchy_additive(&mut res.borrow_mut(), &mut res.borrow_mut());
 
-        // FIXME: if this errors out, we need to clean up!
-        self.load_components_additive(&map, res)
-            .context("trying to add the scene's components to the existing loaded components")?;
+        if let Err(e) = self.load_components_additive(&map, res) {
+            Self::unload_entities(res, map.values());
+            return Err(e).context("trying to add the scene's components to the existing loaded components");
+        }
 
         Ok(())
+    }
+
+    fn unload_entities<'a, I: IntoIterator<Item = &'a Index>>(res: &Resources, iter: I) {
+        let mut entities = res.borrow_mut::<Entities>();
+        let mut hierarchy = res.borrow_mut::<Hierarchy<Index>>();
+        for &i_new in iter {
+            entities.destroy(i_new);
+            hierarchy.remove(i_new);
+        }
     }
 
     fn load_hierarchy_additive(
