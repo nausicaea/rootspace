@@ -66,7 +66,7 @@ fn main() -> anyhow::Result<()> {
             .insert(i, RenderableSource::with_model("models", "triangle.ply"));
     }
 
-    adb.save_asset(&scene, "scenes", "test.json")?;
+    adb.save_asset(&scene, "scenes", "test.cbor")?;
 
     Ok(())
 }

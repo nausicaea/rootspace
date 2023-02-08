@@ -94,7 +94,8 @@ impl PrivLoadAsset for Scene {
         let file =
             std::fs::File::open(path).with_context(|| format!("trying to open the file '{}'", path.display()))?;
         let reader = std::io::BufReader::new(file);
-        let scene = serde_json::from_reader::<_, Scene>(reader)
+
+        let scene = ciborium::de::from_reader::<Scene, _>(reader)
             .with_context(|| format!("trying to deserialize the {}", std::any::type_name::<Scene>()))?;
 
         let map = scene.load_hierarchy_additive(&mut res.borrow_mut(), &mut res.borrow_mut());
@@ -106,9 +107,12 @@ impl PrivLoadAsset for Scene {
 
 impl PrivSaveAsset for Scene {
     fn to_path(&self, path: &Path) -> Result<(), anyhow::Error> {
-        let file = std::fs::File::create(path)?;
+        let file =
+            std::fs::File::create(path).with_context(|| format!("trying to create the file '{}'", path.display()))?;
         let writer = std::io::BufWriter::new(file);
-        serde_json::to_writer_pretty(writer, self)?;
+
+        ciborium::ser::into_writer(self, writer)
+            .with_context(|| format!("trying to deserialize the {}", std::any::type_name::<Scene>()))?;
 
         Ok(())
     }

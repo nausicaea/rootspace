@@ -50,7 +50,7 @@ impl Orchestrator {
 
         world
             .borrow::<AssetDatabase>()
-            .load_asset::<Scene, _>(world.resources(), "scenes", "test.json")?;
+            .load_asset::<Scene, _>(world.resources(), "scenes", "test.cbor")?;
 
         Ok(Orchestrator {
             world,
