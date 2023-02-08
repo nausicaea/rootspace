@@ -2,7 +2,7 @@ use anyhow::Context;
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use ecs::{Entities, Index, Resources, Storage};
+use ecs::{Entities, Entity, Index, Resources, Storage};
 use rose_tree::Hierarchy;
 
 use crate::assets::private::PrivSaveAsset;
@@ -178,8 +178,9 @@ impl<'a> EntityBuilder<'a> {
         self
     }
 
-    pub fn submit(self) {
-        let i = self.scene.entities.create().idx();
+    pub fn submit(self) -> Entity {
+        let e = self.scene.entities.create();
+        let i = e.idx();
 
         if let Some(parent) = self.parent {
             self.scene.hierarchy.insert_child(parent, i);
@@ -198,6 +199,8 @@ impl<'a> EntityBuilder<'a> {
         if let Some(renderable) = self.renderable {
             self.scene.renderables.insert(i, renderable);
         }
+
+        e
     }
 }
 
