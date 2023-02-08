@@ -19,14 +19,28 @@ use super::{model::Model, private::PrivLoadAsset};
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Scene {
-    pub entities: Entities,
-    pub hierarchy: Hierarchy<Index>,
-    pub cameras: BTreeMap<Index, Camera>,
-    pub transforms: BTreeMap<Index, Transform>,
-    pub renderables: BTreeMap<Index, RenderableSource>,
+    entities: Entities,
+    hierarchy: Hierarchy<Index>,
+    cameras: BTreeMap<Index, Camera>,
+    transforms: BTreeMap<Index, Transform>,
+    renderables: BTreeMap<Index, RenderableSource>,
 }
 
 impl Scene {
+    pub fn create_entity(&mut self) -> EntityBuilder {
+        EntityBuilder::new(self)
+    }
+
+    pub fn load_additive(self, res: &Resources) -> Result<(), anyhow::Error> {
+        let map = self.load_hierarchy_additive(&mut res.borrow_mut(), &mut res.borrow_mut());
+
+        // FIXME: if this errors out, we need to clean up!
+        self.load_components_additive(&map, res)
+            .context("trying to add the scene's components to the existing loaded components")?;
+
+        Ok(())
+    }
+
     fn load_hierarchy_additive(
         &self,
         entities: &mut Entities,
@@ -98,10 +112,7 @@ impl PrivLoadAsset for Scene {
         let scene = ciborium::de::from_reader::<Scene, _>(reader)
             .with_context(|| format!("trying to deserialize the {}", std::any::type_name::<Scene>()))?;
 
-        let map = scene.load_hierarchy_additive(&mut res.borrow_mut(), &mut res.borrow_mut());
-        scene
-            .load_components_additive(&map, res)
-            .context("trying to add the scene's components to the existing loaded components")
+        scene.load_additive(res)
     }
 }
 
@@ -115,6 +126,68 @@ impl PrivSaveAsset for Scene {
             .with_context(|| format!("trying to deserialize the {}", std::any::type_name::<Scene>()))?;
 
         Ok(())
+    }
+}
+
+pub struct EntityBuilder<'a> {
+    scene: &'a mut Scene,
+    parent: Option<Index>,
+    camera: Option<Camera>,
+    transform: Option<Transform>,
+    renderable: Option<RenderableSource>,
+}
+
+impl<'a> EntityBuilder<'a> {
+    fn new(scene: &'a mut Scene) -> Self {
+        EntityBuilder {
+            scene,
+            parent: None,
+            camera: None,
+            transform: None,
+            renderable: None,
+        }
+    }
+
+    pub fn with_parent<I: Into<Index>>(mut self, parent: I) -> Self {
+        self.parent = Some(parent.into());
+        self
+    }
+
+    pub fn with_camera(mut self, cam: Camera) -> Self {
+        self.camera = Some(cam);
+        self
+    }
+
+    pub fn with_transform(mut self, trf: Transform) -> Self {
+        self.transform = Some(trf);
+        self
+    }
+
+    pub fn with_renderable(mut self, rdb: RenderableSource) -> Self {
+        self.renderable = Some(rdb);
+        self
+    }
+
+    pub fn submit(self) {
+        let i = self.scene.entities.create().idx();
+
+        if let Some(parent) = self.parent {
+            self.scene.hierarchy.insert_child(parent, i);
+        } else {
+            self.scene.hierarchy.insert(i);
+        }
+
+        if let Some(camera) = self.camera {
+            self.scene.cameras.insert(i, camera);
+        }
+
+        if let Some(transform) = self.transform {
+            self.scene.transforms.insert(i, transform);
+        }
+
+        if let Some(renderable) = self.renderable {
+            self.scene.renderables.insert(i, renderable);
+        }
     }
 }
 

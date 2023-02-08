@@ -47,24 +47,21 @@ fn main() -> anyhow::Result<()> {
     let adb = AssetDatabase::with_deps(&deps)?;
 
     let mut scene = Scene::default();
-    {
-        let i = scene.entities.create().idx();
-        scene.hierarchy.insert(i);
-        scene.cameras.insert(i, Camera::default());
-        scene.transforms.insert(
-            i,
-            Transform::look_at_lh([0.0, 0.0, -2.0, 1.0], [0.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 0.0]),
-        );
+    scene
+        .create_entity()
+        .with_camera(Camera::default())
+        .with_transform(Transform::look_at_lh(
+            [0.0, 0.0, -2.0, 1.0],
+            [0.0, 0.0, 0.0, 1.0],
+            [0.0, 1.0, 0.0, 0.0],
+        ))
+        .submit();
 
-        let i = scene.entities.create().idx();
-        scene.hierarchy.insert(i);
-        scene
-            .transforms
-            .insert(i, Transform::builder().with_translation([0.0, 0.0, 0.0, 0.0]).build());
-        scene
-            .renderables
-            .insert(i, RenderableSource::with_model("models", "triangle.ply"));
-    }
+    scene
+        .create_entity()
+        .with_transform(Transform::default())
+        .with_renderable(RenderableSource::with_model("models", "triangle.ply"))
+        .submit();
 
     adb.save_asset(&scene, "scenes", "test.cbor")?;
 
