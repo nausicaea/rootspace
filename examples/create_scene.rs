@@ -67,8 +67,8 @@ fn main() -> anyhow::Result<()> {
     scene
         .create_entity()
         .with_parent(tri1)
-        .with_transform(Transform::builder().with_translation(Vec4::new(-1.0, 0.0, 0.0, 0.0)).build())
-        .with_renderable(RenderableSource::with_model("models", "triangle.ply"))
+        .with_transform(Transform::builder().with_translation(Vec4::new(-1.0, 0.0, 0.1, 0.0)).build())
+        .with_renderable(RenderableSource::with_model("models", "cube.ply"))
         .submit();
 
     adb.save_asset(&scene, "scenes", "test.cbor")?;

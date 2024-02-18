@@ -2,10 +2,12 @@ use anyhow::Context;
 use log::{debug, error, warn};
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
+use crate::ecs::entity::index::Index;
 
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
 use crate::ecs::resources::Resources;
+use crate::ecs::storage::Storage;
 use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
 use crate::engine::components::camera::Camera;
@@ -19,6 +21,7 @@ use crate::engine::resources::graphics::ids::{BindGroupId, BufferId, PipelineId}
 use crate::engine::resources::graphics::vertex::Vertex;
 use crate::engine::resources::graphics::Graphics;
 use crate::glamour::mat::Mat4;
+use crate::rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -48,29 +51,60 @@ impl Renderer {
 
     fn render(&self, res: &Resources, mut rp: RenderPass) {
         let gfx = res.borrow::<Graphics>();
+        let hier = res.borrow::<Hierarchy<Index>>();
 
-        for (c, ct) in res.iter_rr::<Camera, Transform>() {
-            let c_mat = c.as_matrix() * ct.to_matrix();
+        let cameras = res.borrow_components::<Camera>();
+        let transforms = res.borrow_components::<Transform>();
+        let renderables = res.borrow_components::<Renderable>();
 
-            for (r, t) in res.iter_rr::<Renderable, Transform>() {
-                let t_mat = c_mat * t.to_matrix();
+        let cam_data: Vec<_> = hier.bfs_iter()
+            .filter_map(|i| cameras.get(i).map(|c| (i, c)))
+            .map(|(i, c)| {
+                let t = hier.ancestors(i)
+                    .filter_map(|ancestor_index| transforms.get(ancestor_index).map(|t| t.to_matrix()))
+                    .product::<Mat4<f32>>();
 
-                gfx.write_buffer(self.transform_buffer, t_mat.as_ref());
+                c.as_matrix() * t
+            })
+            .collect();
 
-                if r.0.materials.is_empty() {
-                    rp.set_pipeline(self.pipeline_wt)
-                        .set_bind_group(0, self.transform_bind_group)
-                        .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
-                        .set_index_buffer(r.0.mesh.index_buffer)
-                        .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
-                } else {
-                    rp.set_pipeline(self.pipeline_wtm)
-                        .set_bind_group(0, self.transform_bind_group)
-                        .set_bind_group(1, r.0.materials[0].bind_group)
-                        .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
-                        .set_index_buffer(r.0.mesh.index_buffer)
-                        .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+        let render_data: Vec<_> = cam_data
+            .into_iter()
+            .flat_map(|ct| {
+                let mut rd = Vec::new();
+
+                for idx in hier.bfs_iter() {
+                    let Some(r) = renderables.get(idx) else {
+                        continue;
+                    };
+
+                    let t = hier.ancestors(idx)
+                        .filter_map(|ancestor_index| transforms.get(ancestor_index).map(|t| t.to_matrix()))
+                        .product::<Mat4<f32>>();
+
+                    rd.push((ct * t, r));
                 }
+
+                rd.into_iter()
+            })
+            .collect();
+
+        for (t, r) in render_data {
+            gfx.write_buffer(self.transform_buffer, t.as_ref());
+
+            if r.0.materials.is_empty() {
+                rp.set_pipeline(self.pipeline_wt)
+                    .set_bind_group(0, self.transform_bind_group)
+                    .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
+                    .set_index_buffer(r.0.mesh.index_buffer)
+                    .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+            } else {
+                rp.set_pipeline(self.pipeline_wtm)
+                    .set_bind_group(0, self.transform_bind_group)
+                    .set_bind_group(1, r.0.materials[0].bind_group)
+                    .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
+                    .set_index_buffer(r.0.mesh.index_buffer)
+                    .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
             }
         }
     }
