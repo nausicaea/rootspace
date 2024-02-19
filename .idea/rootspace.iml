@@ -5,15 +5,12 @@
       <sourceFolder url="file://$MODULE_DIR$/affine-transform/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ecs/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ecs/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/engine/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/engine/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/file-manipulation/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/file-manipulation/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/hierarchy/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ply/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ply/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/rootspace/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/rose-tree/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/try-default/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/glamour/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/forward-ref/src" isTestSource="false" />
@@ -23,14 +20,20 @@
       <sourceFolder url="file://$MODULE_DIR$/engine2/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/plyers/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/urn/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/affine-transform/target" />
       <excludeFolder url="file://$MODULE_DIR$/ecs/target" />
       <excludeFolder url="file://$MODULE_DIR$/try-default/target" />
-      <excludeFolder url="file://$MODULE_DIR$/engine/target" />
       <excludeFolder url="file://$MODULE_DIR$/hierarchy/target" />
       <excludeFolder url="file://$MODULE_DIR$/rose-tree/target" />
       <excludeFolder url="file://$MODULE_DIR$/rootspace/target" />
+      <excludeFolder url="file://$MODULE_DIR$/contrib/engine/target" />
+      <excludeFolder url="file://$MODULE_DIR$/contrib" />
+      <excludeFolder url="file://$MODULE_DIR$/contrib/engine/src" />
+      <excludeFolder url="file://$MODULE_DIR$/contrib/engine/tests" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

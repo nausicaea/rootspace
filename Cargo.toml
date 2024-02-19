@@ -1,13 +1,73 @@
-[workspace]
-resolver = "2"
-members = [
-    "try-default",
-    "file-manipulation",
-    "ecs",
-    "engine2",
-    "rose-tree",
-    "glamour",
-    "plyers",
-    "forward-ref",
-    "urn",
-]
+# [workspace]
+# resolver = "2"
+# members = [
+#     "try-default",
+#     "file-manipulation",
+#     "ecs",
+#     "engine2",
+#     "rose-tree",
+#     "glamour",
+#     "plyers",
+#     "forward-ref",
+#     "urn",
+# ]
+
+[package]
+name = "rootspace"
+version = "0.1.0"
+authors = ["Eleanor Young <developer@nausicaea.net>"]
+edition = "2021"
+
+[[example]]
+name = "loader"
+
+[[example]]
+name = "playground"
+
+[[example]]
+name = "scene"
+
+[[example]]
+name = "test"
+
+[features]
+dbg-gfx = []
+dbg-loop = []
+# spirv = ["wgpu/spirv"]
+
+[dependencies]
+winit = { version = "^0.27", features = ["serde"] }
+# async-winit = "0.2.1"
+# tobj = { version = "3.2.2", features = ["async"] }
+wgpu = "^0.14"
+wgpu-types = { version = "^0.14", features = ["trace", "replay"] }
+bytemuck = { version = "^1.0", features = [ "derive" ] }
+image = { version = "^0.24", default-features = false, features = ["png", "jpeg"] }
+pollster = "^0.2.5"
+ctrlc = { version = "^3.0.0", features = ["termination"] }
+directories = "^4.0"
+ciborium = "^0.2.0"
+lazy_static = "^1.0"
+regex = "^1.0"
+downcast-rs = "^1.0.0"
+nom = "^7.0.0"
+either = "^1.0"
+dirs = "^4.0"
+log = "^0.4.14"
+thiserror = "^1.0.0"
+serde = { version = "^1.0.0", features = ["derive"] }
+serde_json = "^1.0.0"
+anyhow = { version = "^1.0.0" }
+num-traits = "^0.2.14"
+approx = "^0.5.0"
+
+[dev-dependencies]
+env_logger = "^0.9"
+fern = "^0.6.0"
+clap = { version = "^4.0.0", features = ["derive"] }
+glob = "^0.3.1"
+tempfile = "^3.0.1"
+serde_test = "^1.0.126"
+proptest = "^1.0.0"
+proptest-derive = "^0.3.0"
+cgmath = "0.18.0"

@@ -1,0 +1,38 @@
+use std::path::Path;
+
+use anyhow::Context;
+use crate::ecs::resources::Resources;
+use crate::engine::resources::graphics::Graphics;
+use crate::engine::resources::graphics::ids::BindGroupId;
+
+use super::{private::PrivLoadAsset, texture::Texture};
+
+#[derive(Debug)]
+pub struct Material {
+    pub texture: Texture,
+    pub bind_group: BindGroupId,
+}
+
+impl PrivLoadAsset for Material {
+    type Output = Self;
+
+    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
+        let texture = Texture::with_path(res, path).with_context(|| {
+            format!(
+                "trying to load a {} from '{}'",
+                std::any::type_name::<Texture>(),
+                path.display()
+            )
+        })?;
+
+        let mut gfx = res.borrow_mut::<Graphics>();
+        let layout = gfx.material_layout();
+        let bind_group = gfx
+            .create_bind_group(layout)
+            .add_texture_view(0, texture.view)
+            .add_sampler(1, texture.sampler)
+            .submit();
+
+        Ok(Material { texture, bind_group })
+    }
+}

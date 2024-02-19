@@ -1,32 +1,284 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AutoImportSettings">
-    <option name="autoReloadType" value="SELECTIVE" />
+    <option name="autoReloadType" value="ALL" />
   </component>
   <component name="CargoProjects">
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Uuuugh, errors!!!">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Committing the blender files">
       <change beforePath="$PROJECT_DIR$/.idea/rootspace.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rootspace.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/examples/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/examples/test.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/src/assets/material.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/assets/material.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/src/assets/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/assets/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/src/assets/model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/assets/model.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/src/assets/scene.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/assets/scene.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/src/assets/texture.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/assets/texture.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/src/components/renderable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/components/renderable.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/src/orchestrator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/orchestrator.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/src/resources/asset_database.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/resources/asset_database.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine2/src/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/engine2/src/systems/renderer.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/component.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/component.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/entities.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/entities.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/entity/generation.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/entity/generation.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/entity/index.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/entity/index.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/entity/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/entity/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/event_monitor.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/event_monitor.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/event_queue/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/event_queue/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/event_queue/receiver_id.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/event_queue/receiver_id.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/event_queue/receiver_state.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/event_queue/receiver_state.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/loop_control.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/loop_control.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/loop_stage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/loop_stage.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/macros.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/macros.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/registry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/registry.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/resource.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/resource.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/resources/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/resources/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/storage/bit_indices.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/storage/bit_indices.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/storage/entry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/storage/entry.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/storage/iterators.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/storage/iterators.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/storage/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/storage/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/storage/vec_storage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/storage/vec_storage.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/storage/zst_storage.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/storage/zst_storage.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/system.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/system.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/systems/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/systems/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/systems/recursors.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/systems/recursors.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/systems/typed_system.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/systems/typed_systems.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/with_dependencies.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/with_dependencies.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/with_resources.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/with_resources.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/world/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/world/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/world/event.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/world/event.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/world/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/world/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/src/world/type_registry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/world/type_registry.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/tests/extraneous-types.json" beforeDir="false" afterPath="$PROJECT_DIR$/tests/extraneous-types.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/tests/insufficient-types.json" beforeDir="false" afterPath="$PROJECT_DIR$/tests/insufficient-types.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ecs/tests/ok.json" beforeDir="false" afterPath="$PROJECT_DIR$/tests/ok.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/proptest-regressions/components/camera/mod.txt" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/proptest-regressions/components/camera/mod.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/proptest-regressions/components/model.txt" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/proptest-regressions/components/model.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/proptest-regressions/utilities.txt" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/proptest-regressions/utilities.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/assets/image.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/assets/image.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/assets/mesh.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/assets/mesh.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/assets/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/assets/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/camera/camera_builder.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/components/camera/camera_builder.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/camera/camera_ser_de.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/components/camera/camera_ser_de.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/camera/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/components/camera/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/camera/projection.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/components/camera/projection.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/info.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/components/info.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/components/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/components/model.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/renderable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/components/renderable.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/status.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/components/status.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/components/ui_model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/components/ui_model.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/assets.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/assets.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/assets.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/assets.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/components.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/components.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/components.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/components.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/entities.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/entities.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/entities.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/entities.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/exit.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/exit.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/perf.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/perf.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/states.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/states.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/debug_commands/states.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/debug_commands/states.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/event.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/event.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/geometry/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/geometry/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/geometry/point.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/geometry/point.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/geometry/rect.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/geometry/rect.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/graphics/glium/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/graphics/glium/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/graphics/headless/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/graphics/headless/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/graphics/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/graphics/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/graphics/text.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/graphics/text.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/graphics/vertex.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/graphics/vertex.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/orchestrator/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/orchestrator/type_registry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/orchestrator/type_registry.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/asset_database.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/asset_database.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/default.wgsl" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/default.wgsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/graphics.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/graphics.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/graphics_backend/index_buffer_id.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/graphics_backend/index_buffer_id.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/graphics_backend/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/graphics_backend/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/graphics_backend/shader_id.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/graphics_backend/shader_id.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/graphics_backend/texture_id.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/graphics_backend/texture_id.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/graphics_backend/vertex_buffer_id.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/graphics_backend/vertex_buffer_id.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/settings.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/resources/statistics.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/resources/statistics.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/camera_manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/systems/camera_manager.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/debug_console.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/systems/debug_console.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/debug_interactions.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/systems/debug_interactions.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/debug_shell.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/systems/debug_shell.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/event_bridge.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/systems/event_bridge.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/event_coordinator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/systems/event_coordinator.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/event_monitor.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/systems/event_monitor.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/force_shutdown.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/systems/force_shutdown.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/systems/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/systems/renderer.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/src/text_manipulation.rs" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/src/text_manipulation.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/tests/SourceSansPro-LICENSE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/tests/SourceSansPro-LICENSE.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/tests/SourceSansPro-Regular.ttf" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/tests/SourceSansPro-Regular.ttf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/tests/cube.ply" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/tests/cube.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/tests/test-fragment.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/tests/test-fragment.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/tests/test-vertex.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/tests/test-vertex.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine/tests/tv-test-image.png" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/tests/tv-test-image.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/examples/playground.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/playground.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/examples/scene.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/scene.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/examples/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/test.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/material.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/material.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/mesh.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/mesh.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/model.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/model.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/raw_mesh.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/raw_mesh.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/scene.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/scene.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/assets/texture.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/texture.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/components/camera/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/components/camera/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/components/camera/projection.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/components/camera/projection.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/components/info.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/components/info.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/components/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/components/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/components/renderable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/components/renderable.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/components/status.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/components/status.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/components/transform.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/components/transform.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/components/ui_transform.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/components/ui_transform.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/events/engine_event.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/events/engine_event.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/events/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/events/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/events/window_event.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/events/window_event.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/macros.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/macros.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/orchestrator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/orchestrator.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/registry.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/registry.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/asset_database.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/asset_database.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/bind_group_builder.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/bind_group_builder.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/bind_group_layout_builder.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/bind_group_layout_builder.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/database.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/database.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/descriptors.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/descriptors.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/encoder.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/encoder.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/ids.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/ids.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/render_pipeline_builder.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/render_pipeline_builder.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/runtime.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/runtime.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/sampler_builder.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/sampler_builder.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/settings.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/settings.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/texture_builder.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/texture_builder.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/graphics/vertex.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/vertex.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/resources/statistics.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/statistics.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/systems/camera_manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/camera_manager.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/systems/force_shutdown.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/force_shutdown.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/systems/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine2/src/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/renderer.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/file-manipulation/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/file-manipulation/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/file_manipulation.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/file-manipulation/tests/empty-file" beforeDir="false" afterPath="$PROJECT_DIR$/tests/empty-file" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/forward-ref/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/forward-ref/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/forward_ref.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/proptest-regressions/mat/mod.txt" beforeDir="false" afterPath="$PROJECT_DIR$/proptest-regressions/glamour/mat/mod.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/proptest-regressions/mat/ops/elementwise.txt" beforeDir="false" afterPath="$PROJECT_DIR$/proptest-regressions/glamour/mat/ops/elementwise.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/affine/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/affine/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/iter_float.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/iter_float.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/macros.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/macros.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/approx.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/approx.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/convert.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/convert.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/dot.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/ops/dot.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/elementwise.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/ops/elementwise.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/index.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/ops/index.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/ops/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/ops/norm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/ops/norm.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/mat/serde.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/serde.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/num.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/num.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ops/cross.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/ops/cross.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ops/dot.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/ops/dot.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ops/inv_elem.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/ops/inv_elem.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ops/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/ops/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ops/mul_elem.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/ops/mul_elem.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ops/norm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/ops/norm.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ortho.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/ortho.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/persp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/persp.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/quat/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/quat/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/ray.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/ray.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/unit/approx.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/unit/approx.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/unit/convert.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/unit/convert.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/unit/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/unit/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/unit/ops/cross.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/unit/ops/cross.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/unit/ops/dot.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/unit/ops/dot.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/unit/ops/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/unit/ops/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/vec/approx.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/vec/approx.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/vec/convert.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/vec/convert.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/vec/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/vec/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/vec/num.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/vec/num.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/vec/ops/dot.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/vec/ops/dot.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/vec/ops/elementwise.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/vec/ops/elementwise.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/vec/ops/index.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/vec/ops/index.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/vec/ops/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/vec/ops/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glamour/src/vec/ops/norm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/vec/ops/norm.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/examples/loader.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/loader.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/proptest-regressions/parser.txt" beforeDir="false" afterPath="$PROJECT_DIR$/proptest-regressions/plyers/parser.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/proptest-regressions/parser/body.txt" beforeDir="false" afterPath="$PROJECT_DIR$/proptest-regressions/plyers/parser/body.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/proptest-regressions/parser/common.txt" beforeDir="false" afterPath="$PROJECT_DIR$/proptest-regressions/plyers/parser/common.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/plyers/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/body.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/plyers/parser/body.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/common.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/plyers/parser/common.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/plyers/parser/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/header.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/plyers/parser/header.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/parser/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/plyers/parser/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/src/types.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/plyers/types.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/garbage.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/garbage.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/heavy_comments_ascii.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/heavy_comments_ascii.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/incomplete_header.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/incomplete_header.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/minimal_ascii.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/minimal_ascii.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/string_property.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/string_property.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/1x1_2Tri_Quad_2_Sided_Pos_N_Tex.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/1x1_2Tri_Quad_2_Sided_Pos_N_Tex.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/1x1_2Tri_Quad_2_Sided_Pos_Tex.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/1x1_2Tri_Quad_2_Sided_Pos_Tex.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/Baby_Kinect.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/Baby_Kinect.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/Ground_01_MAT.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/Ground_01_MAT.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/P1.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/P1.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/VertTextureDouble.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/VertTextureDouble.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/bun_zipper.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/bun_zipper.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/changing_dtypes.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/changing_dtypes.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/cube.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/cube.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/cube_uv.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/cube_uv.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/db_tall_obstacle_0.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/db_tall_obstacle_0.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/expected_feature_2_segment_0.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/expected_feature_2_segment_0.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/fandisk.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/fandisk.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/jasmin6.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/jasmin6.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/lidar_points_cjboss_1372_3492535266742648387.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/lidar_points_cjboss_1372_3492535266742648387.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/mat_light2.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/mat_light2.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/mesh1.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/mesh1.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/mirror-right.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/mirror-right.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/pasillo_1.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/pasillo_1.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/plane-blender-2-78.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/plane-blender-2-78.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/plane.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/plane.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/saved_terrain.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/saved_terrain.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/surfaceAB.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/surfaceAB.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plyers/tests/valid/texture_in_obj_info.ply" beforeDir="false" afterPath="$PROJECT_DIR$/tests/valid/texture_in_obj_info.ply" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/assets/file_system/group_id.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/file_system/group_id.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/assets/file_system/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/file_system/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/assets/file_system/mode.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/file_system/mode.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/assets/file_system/node.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/file_system/node.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/assets/file_system/user_id.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/file_system/user_id.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/assets/mod.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/bin/rootspace.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/debug_commands.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rootspace/src/lib.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/src/hierarchy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rose_tree/hierarchy.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rose_tree/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rose-tree/src/tree.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rose_tree/tree.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/try-default/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/try-default/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/try_default.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/urn/Cargo.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/urn/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/urn.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="directory" />
+    </option>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -53,8 +305,11 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="1yZruzrKUvOTW2ObNaJrocdrnfH" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
@@ -65,9 +320,12 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Cargo.clean.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
     "WebServerToolWindowFactoryState": "true",
+    "git-widget-placeholder": "engine2",
     "last_opened_file_path": "/Users/young0000/Crypt/Development/personal/rootspace",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -75,7 +333,9 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "settings.editor.selected.configurable": "language.rust.cargo.check",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "editor.preferences.import",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -86,28 +346,31 @@
       <recent name="$PROJECT_DIR$/glamour/src" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/plyers/src/parser/base" />
-      <recent name="$PROJECT_DIR$/plyers/src/parser/combinator" />
-      <recent name="$PROJECT_DIR$/engine/src" />
+      <recent name="$PROJECT_DIR$/src/engine/assets" />
+      <recent name="$PROJECT_DIR$/src/bin" />
+      <recent name="$PROJECT_DIR$/contrib" />
+      <recent name="$PROJECT_DIR$/src/engine" />
+      <recent name="$PROJECT_DIR$/examples" />
     </key>
   </component>
   <component name="RunAnythingCache">
     <option name="myCommands">
       <command value="cargo +nightly fmt" />
+      <command value="cargo clean" />
     </option>
   </component>
-  <component name="RunManager" selected="Cargo.Run Test Example">
+  <component name="RunManager" selected="Cargo.clean">
     <configuration name="Initialize Force" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin rootspace -- init -f rootspace" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="false" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
       <option name="withSudo" value="false" />
       <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
-      <envs />
       <option name="isRedirectInput" value="false" />
       <option name="redirectInputPath" value="" />
       <method v="2">
@@ -117,14 +380,14 @@
     <configuration name="Run Test Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run -p engine2 --example test" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="false" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
       <option name="withSudo" value="false" />
       <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
-      <envs />
       <option name="isRedirectInput" value="false" />
       <option name="redirectInputPath" value="" />
       <method v="2">
@@ -134,14 +397,14 @@
     <configuration name="Test Engine Stable" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="test -p engine" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="false" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
       <option name="withSudo" value="false" />
       <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
-      <envs />
       <option name="isRedirectInput" value="false" />
       <option name="redirectInputPath" value="" />
       <method v="2">
@@ -151,14 +414,14 @@
     <configuration name="Test glamour" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="test --package glamour" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="false" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
       <option name="withSudo" value="false" />
       <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
-      <envs />
       <option name="isRedirectInput" value="false" />
       <option name="redirectInputPath" value="" />
       <method v="2">
@@ -168,14 +431,31 @@
     <configuration name="Test plyers" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="test --package plyers" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="false" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
       <option name="withSudo" value="false" />
       <option name="buildTarget" value="REMOTE" />
       <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="clean" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="clean" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
       <option name="isRedirectInput" value="false" />
       <option name="redirectInputPath" value="" />
       <method v="2">
@@ -191,11 +471,16 @@
       <item itemvalue="Cargo.Test glamour" />
       <item itemvalue="Cargo.Test plyers" />
       <item itemvalue="Cargo.Run Test Example" />
+      <item itemvalue="Cargo.clean" />
     </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Cargo.clean" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="RustProjectSettings">
-    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
-    <option name="version" value="2" />
+    <option name="toolchainHomeDirectory" value="/usr/local/bin" />
   </component>
   <component name="RustfmtProjectSettings">
     <option name="channel" value="nightly" />
@@ -274,6 +559,15 @@
       <workItem from="1657013318869" duration="3764000" />
       <workItem from="1657044391802" duration="59000" />
       <workItem from="1675794911917" duration="4271000" />
+      <workItem from="1696060442233" duration="811000" />
+      <workItem from="1704374642366" duration="431000" />
+      <workItem from="1707858411329" duration="2183000" />
+      <workItem from="1707982531792" duration="193000" />
+      <workItem from="1708249087839" duration="220000" />
+      <workItem from="1708251016071" duration="126000" />
+      <workItem from="1708284798432" duration="808000" />
+      <workItem from="1708285636742" duration="3682000" />
+      <workItem from="1708370439654" duration="3852000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -547,7 +841,15 @@
       <option name="project" value="LOCAL" />
       <updated>1656585002003</updated>
     </task>
-    <option name="localTasksCounter" value="44" />
+    <task id="LOCAL-00044" summary="Committing the blender files">
+      <option name="closed" value="true" />
+      <created>1708285198144</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1708285198144</updated>
+    </task>
+    <option name="localTasksCounter" value="45" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -566,7 +868,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Modified the output of the commands components and entities" />
     <MESSAGE value="For some reason, I have unexpected inconsistencies with point transformations" />
     <MESSAGE value="Successfully updated Nalgebra to the most recent version. Now I have an internal compiler error." />
     <MESSAGE value="Updated project deps" />
@@ -591,6 +892,11 @@
     <MESSAGE value="Improved error communication in types.rs" />
     <MESSAGE value="Display or Debug, that is the question" />
     <MESSAGE value="Uuuugh, errors!!!" />
-    <option name="LAST_COMMIT_MESSAGE" value="Uuuugh, errors!!!" />
+    <MESSAGE value="Committing the blender files" />
+    <option name="LAST_COMMIT_MESSAGE" value="Committing the blender files" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>
