@@ -1,9 +1,9 @@
 use std::path::Path;
 
-use anyhow::Context;
 use crate::ecs::resources::Resources;
-use crate::engine::resources::graphics::Graphics;
 use crate::engine::resources::graphics::ids::BindGroupId;
+use crate::engine::resources::graphics::Graphics;
+use anyhow::Context;
 
 use super::{private::PrivLoadAsset, texture::Texture};
 

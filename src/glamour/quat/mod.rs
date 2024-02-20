@@ -3,17 +3,15 @@ use std::{
     ops::{Div, Mul},
 };
 
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use num_traits::{Float, One, Zero};
-use crate::{forward_ref_binop, forward_ref_unop};
 use crate::glamour::mat::Mat4;
 use crate::glamour::ops::norm::Norm;
 use crate::glamour::unit::Unit;
 use crate::glamour::vec::Vec4;
+use crate::{forward_ref_binop, forward_ref_unop};
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use num_traits::{Float, One, Zero};
 
-
-#[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct Quat<R> {
     pub w: R,
     pub i: R,
@@ -324,8 +322,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use serde_test::{assert_tokens, Token};
     use crate::glamour::mat::Mat4;
+    use serde_test::{assert_tokens, Token};
 
     use super::*;
 

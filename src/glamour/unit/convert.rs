@@ -1,8 +1,8 @@
-use num_traits::Float;
 use crate::glamour::mat::Mat4;
 use crate::glamour::ops::norm::Norm;
 use crate::glamour::quat::Quat;
 use crate::glamour::vec::Vec4;
+use num_traits::Float;
 
 use super::Unit;
 

@@ -1,7 +1,7 @@
-use crate::ecs::resources::Resources;
-use crate::engine::resources::graphics::Graphics;
-use crate::engine::resources::graphics::ids::BufferId;
 use super::{raw_mesh::RawMesh, Error};
+use crate::ecs::resources::Resources;
+use crate::engine::resources::graphics::ids::BufferId;
+use crate::engine::resources::graphics::Graphics;
 
 #[derive(Debug)]
 pub struct Mesh {

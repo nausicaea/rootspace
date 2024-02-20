@@ -1,8 +1,8 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use num_traits::{Float, Inv};
 use crate::glamour::ops::inv_elem::InvElem;
 use crate::glamour::ops::mul_elem::MulElem;
+use num_traits::{Float, Inv};
 
 use super::super::Mat4;
 

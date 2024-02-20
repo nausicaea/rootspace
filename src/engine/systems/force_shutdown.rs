@@ -8,19 +8,19 @@ use std::{
     time::Duration,
 };
 
+use crate::ecs::event_queue::receiver_id::ReceiverId;
+use crate::ecs::event_queue::EventQueue;
+use crate::ecs::resources::Resources;
+use crate::ecs::system::System;
+use crate::ecs::with_resources::WithResources;
+use crate::engine::events::engine_event::EngineEvent;
+use crate::engine::events::window_event::WindowEvent;
 use log::debug;
 #[cfg(not(test))]
 use log::error;
 #[cfg(not(test))]
 use log::info;
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode};
-use crate::ecs::event_queue::EventQueue;
-use crate::ecs::event_queue::receiver_id::ReceiverId;
-use crate::ecs::resources::Resources;
-use crate::ecs::system::System;
-use crate::ecs::with_resources::WithResources;
-use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::events::window_event::WindowEvent;
 
 #[derive(Debug)]
 pub struct ForceShutdown {
@@ -93,10 +93,10 @@ impl System for ForceShutdown {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::ecs::registry::{End, SystemRegistry};
     use crate::ecs::world::World;
     use crate::Reg;
-    use super::*;
 
     #[test]
     fn force_shutdown_reg_macro() {

@@ -1,10 +1,7 @@
-use anyhow::Context;
-use std::collections::BTreeMap;
-use std::path::Path;
 use crate::ecs;
 use crate::ecs::entities::Entities;
-use crate::ecs::entity::Entity;
 use crate::ecs::entity::index::Index;
+use crate::ecs::entity::Entity;
 use crate::ecs::resources::Resources;
 use crate::ecs::storage::Storage;
 use crate::engine::assets::private::PrivSaveAsset;
@@ -13,6 +10,9 @@ use crate::engine::components::renderable::{Renderable, RenderableSource};
 use crate::engine::components::transform::Transform;
 use crate::engine::resources::asset_database::AssetDatabase;
 use crate::rose_tree::hierarchy::Hierarchy;
+use anyhow::Context;
+use std::collections::BTreeMap;
+use std::path::Path;
 
 use super::{model::Model, private::PrivLoadAsset};
 

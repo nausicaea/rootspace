@@ -6,11 +6,13 @@ use serde::{
     Deserialize, Serialize,
 };
 
+use super::super::{
+    entity::index::Index, resource::Resource, storage::entry::Entry, with_dependencies::WithDependencies,
+};
 use super::{
     iterators::{IndexedRIter, RIter, WIter},
     Storage,
 };
-use super::super::{entity::index::Index, resource::Resource, storage::entry::Entry, with_dependencies::WithDependencies};
 
 /// Implements component storage based on a `Vec<T>`.
 pub struct VecStorage<T> {
@@ -301,8 +303,11 @@ mod tests {
 
     use serde_test::{assert_tokens, Token};
 
+    use super::super::super::{
+        component::Component, entities::Entities, entity::Entity, registry::End, registry::ResourceRegistry,
+        world::World,
+    };
     use super::*;
-    use super::super::super::{component::Component, entities::Entities, entity::Entity, registry::End, registry::ResourceRegistry, world::World};
     use crate::Reg;
 
     struct DropCounter<'a> {

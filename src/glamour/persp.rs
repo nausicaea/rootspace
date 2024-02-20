@@ -4,12 +4,10 @@ use num_traits::Float;
 use super::mat::Mat4;
 
 #[derive(serde::Serialize, serde::Deserialize)]
-#[
-    serde(bound(
-        serialize = "R: serde::Serialize",
-        deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
-    ))
-]
+#[serde(bound(
+    serialize = "R: serde::Serialize",
+    deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
+))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Persp<R>(Mat4<R>);
 

@@ -1,5 +1,5 @@
-use downcast_rs::__std::path::PathBuf;
 use crate::file_manipulation::FileError;
+use downcast_rs::__std::path::PathBuf;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

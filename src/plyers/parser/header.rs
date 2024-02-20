@@ -12,13 +12,13 @@ use nom::{
     IResult,
 };
 
-use super::{
-    common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace},
-    ParseNumError,
-};
 use super::super::types::{
     CommentDescriptor, CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, PlyDescriptor,
     PropertyDescriptor, PropertyId,
+};
+use super::{
+    common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace},
+    ParseNumError,
 };
 use crate::urn::Urn;
 

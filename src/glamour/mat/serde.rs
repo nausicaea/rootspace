@@ -1,5 +1,5 @@
-use crate::glamour::num::Zero;
 use super::Mat4;
+use crate::glamour::num::Zero;
 
 impl<R> serde::ser::Serialize for Mat4<R>
 where

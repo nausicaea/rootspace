@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use crate::ecs::component::Component;
 use crate::ecs::storage::vec_storage::VecStorage;
 use crate::glamour::affine::{Affine, AffineBuilder};
@@ -6,6 +5,7 @@ use crate::glamour::mat::Mat4;
 use crate::glamour::quat::Quat;
 use crate::glamour::unit::Unit;
 use crate::glamour::vec::Vec4;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -113,11 +113,11 @@ impl TransformBuilder {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_ulps_eq;
-    use proptest::{collection::vec, num::f32::NORMAL, prelude::*};
     use crate::glamour::num::{One, Zero};
     use crate::glamour::quat::Quat;
     use crate::glamour::vec::Vec4;
+    use approx::assert_ulps_eq;
+    use proptest::{collection::vec, num::f32::NORMAL, prelude::*};
 
     use super::*;
 

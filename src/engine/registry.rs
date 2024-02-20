@@ -17,8 +17,8 @@ use crate::engine::resources::statistics::Statistics;
 use crate::engine::systems::camera_manager::CameraManager;
 use crate::engine::systems::force_shutdown::ForceShutdown;
 use crate::engine::systems::renderer::Renderer;
-use crate::RegAdd;
 use crate::rose_tree::hierarchy::Hierarchy;
+use crate::RegAdd;
 
 pub type RRegistry<S> = RegAdd![
     <Camera as Component>::Storage,

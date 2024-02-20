@@ -1,14 +1,14 @@
 use std::time::Duration;
 
-use log::debug;
-use serde::{Deserialize, Serialize};
-use crate::ecs::event_queue::EventQueue;
 use crate::ecs::event_queue::receiver_id::ReceiverId;
+use crate::ecs::event_queue::EventQueue;
 use crate::ecs::resources::Resources;
 use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
 use crate::engine::components::camera::Camera;
 use crate::engine::events::window_event::WindowEvent;
+use log::debug;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CameraManager {

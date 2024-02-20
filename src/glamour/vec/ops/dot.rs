@@ -1,7 +1,7 @@
-use std::ops::Mul;
-use crate::{abop, forward_ref_binop};
 use crate::glamour::iter_float::IterFloat;
 use crate::glamour::ops::dot::Dot;
+use crate::{abop, forward_ref_binop};
+use std::ops::Mul;
 
 use super::super::Vec4;
 

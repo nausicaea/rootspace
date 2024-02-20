@@ -1,8 +1,8 @@
 use std::{collections::VecDeque, time::Duration};
 
-use serde::{Deserialize, Serialize};
 use crate::ecs::resource::Resource;
 use crate::ecs::with_dependencies::WithDependencies;
+use serde::{Deserialize, Serialize};
 
 const DRAW_CALL_WINDOW: usize = 10;
 const FRAME_TIME_WINDOW: usize = 10;

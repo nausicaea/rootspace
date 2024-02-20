@@ -1,5 +1,5 @@
-use crate::glamour::ops::cross::Cross;
 use super::super::Unit;
+use crate::glamour::ops::cross::Cross;
 
 impl<'a, 'b, T> Cross<&'b Unit<T>> for &'a Unit<T>
 where

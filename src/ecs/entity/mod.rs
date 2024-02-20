@@ -3,9 +3,9 @@ pub mod index;
 
 use std::cmp::Ordering;
 
-use serde::{Deserialize, Serialize};
 use crate::ecs::entity::generation::Generation;
 use crate::ecs::entity::index::Index;
+use serde::{Deserialize, Serialize};
 
 /// An entity serves as an identifier to an object within the world.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

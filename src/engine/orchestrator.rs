@@ -1,14 +1,14 @@
 use std::time::{Duration, Instant};
 
+use crate::ecs;
 use winit::{
     event::Event,
     event_loop::{ControlFlow, EventLoopWindowTarget},
 };
-use crate::ecs;
 
 use crate::ecs::entity::Entity;
-use crate::ecs::event_queue::EventQueue;
 use crate::ecs::event_queue::receiver_id::ReceiverId;
+use crate::ecs::event_queue::EventQueue;
 use crate::ecs::loop_control::LoopControl;
 use crate::ecs::registry::{ResourceRegistry, SystemRegistry};
 use crate::ecs::storage::Storage;
@@ -49,8 +49,7 @@ impl Orchestrator {
         RSR: SystemRegistry + WithResources,
         D: GraphicsDeps + AssetDatabaseDeps,
     {
-        let mut world =
-            World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, RSRegistry<RSR>, _>(deps)?;
+        let mut world = World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, RSRegistry<RSR>, _>(deps)?;
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 

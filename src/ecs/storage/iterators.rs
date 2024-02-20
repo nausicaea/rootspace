@@ -574,8 +574,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::{vec_storage::VecStorage, Storage};
+    use super::*;
 
     #[test]
     fn size_hint() {

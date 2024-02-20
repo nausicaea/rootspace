@@ -2,23 +2,23 @@ use anyhow::Context;
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
 
-use crate::ecs::event_queue::EventQueue;
 use crate::ecs::event_queue::receiver_id::ReceiverId;
+use crate::ecs::event_queue::EventQueue;
 use crate::ecs::resources::Resources;
 use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
 use crate::engine::components::camera::Camera;
 use crate::engine::components::renderable::Renderable;
+use crate::engine::components::transform::Transform;
 use crate::engine::events::engine_event::EngineEvent;
+use crate::engine::events::window_event::WindowEvent;
 use crate::engine::resources::asset_database::AssetDatabase;
-use crate::engine::resources::graphics::Graphics;
+use crate::engine::resources::graphics::encoder::RenderPass;
 use crate::engine::resources::graphics::ids::{BindGroupId, BufferId, PipelineId};
 use crate::engine::resources::graphics::vertex::Vertex;
-use crate::{ecs, glamour};
-use crate::engine::components::transform::Transform;
-use crate::engine::events::window_event::WindowEvent;
-use crate::engine::resources::graphics::encoder::RenderPass;
+use crate::engine::resources::graphics::Graphics;
 use crate::glamour::mat::Mat4;
+use crate::{ecs, glamour};
 
 #[derive(Debug)]
 pub struct Renderer {

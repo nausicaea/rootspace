@@ -1,5 +1,5 @@
-use thiserror::Error;
 use crate::glamour::num::Zero;
+use thiserror::Error;
 
 use super::Mat4;
 

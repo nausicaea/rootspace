@@ -1,8 +1,8 @@
 use std::fmt;
 
-use serde::{Deserialize, Serialize};
 use crate::ecs::component::Component;
 use crate::ecs::storage::vec_storage::VecStorage;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Info {

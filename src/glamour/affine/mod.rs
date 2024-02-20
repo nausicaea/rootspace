@@ -1,8 +1,5 @@
 use std::iter::Sum;
 
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use num_traits::{Float, Inv, NumAssign};
-use serde::{Deserialize, Serialize};
 use crate::glamour::iter_float::IterFloat;
 use crate::glamour::mat::Mat4;
 use crate::glamour::num::{One, Zero};
@@ -12,14 +9,15 @@ use crate::glamour::ops::norm::Norm;
 use crate::glamour::quat::Quat;
 use crate::glamour::unit::Unit;
 use crate::glamour::vec::Vec4;
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+use num_traits::{Float, Inv, NumAssign};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-#[
-    serde(bound(
-        serialize = "R: serde::Serialize",
-        deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
-    ))
-]
+#[serde(bound(
+    serialize = "R: serde::Serialize",
+    deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
+))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Affine<R> {
     pub t: Vec4<R>,
@@ -335,11 +333,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use serde_test::{assert_tokens, Token};
     use crate::glamour::mat::Mat4;
     use crate::glamour::num::Zero;
     use crate::glamour::quat::Quat;
     use crate::glamour::vec::Vec4;
+    use serde_test::{assert_tokens, Token};
 
     use super::*;
 

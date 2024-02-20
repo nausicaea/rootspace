@@ -56,11 +56,11 @@ mod tests {
 
     use nom::error::dbg_dmp;
 
-    use super::*;
     use super::super::types::{
         CommentDescriptor, DataType, ElementDescriptor, FormatType, ObjInfoDescriptor, PlyDescriptor, Primitive,
         PropertyDescriptor, Values,
     };
+    use super::*;
 
     const EMPTY: &'static [u8] = b"";
 

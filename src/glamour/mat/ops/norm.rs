@@ -1,8 +1,8 @@
 use std::iter::Sum;
 
-use num_traits::Float;
-use num_traits::real::Real;
 use crate::glamour::ops::norm::Norm;
+use num_traits::real::Real;
+use num_traits::Float;
 
 use super::super::Mat4;
 

@@ -1,9 +1,11 @@
-use std::collections::HashMap;
 use crate::engine::resources::graphics::vertex::Vertex;
 use crate::plyers;
-use crate::plyers::types::{AsSlice, FACE_ELEMENT, NX_PROPERTY, NY_PROPERTY, NZ_PROPERTY, Ply, Primitive, PropertyDescriptor, S_PROPERTY, T_PROPERTY, TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, U_PROPERTY, V_PROPERTY, VERTEX_ELEMENT, VERTEX_INDICES_LIST_PROPERTY, X_PROPERTY, Y_PROPERTY, Z_PROPERTY};
-
-
+use crate::plyers::types::{
+    AsSlice, Ply, Primitive, PropertyDescriptor, FACE_ELEMENT, NX_PROPERTY, NY_PROPERTY, NZ_PROPERTY, S_PROPERTY,
+    TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, T_PROPERTY, U_PROPERTY, VERTEX_ELEMENT, VERTEX_INDICES_LIST_PROPERTY,
+    V_PROPERTY, X_PROPERTY, Y_PROPERTY, Z_PROPERTY,
+};
+use std::collections::HashMap;
 
 use super::Error;
 
@@ -48,12 +50,8 @@ impl RawMesh {
                     NX_PROPERTY => Some((NX_PROPERTY, p_id)),
                     NY_PROPERTY => Some((NY_PROPERTY, p_id)),
                     NZ_PROPERTY => Some((NZ_PROPERTY, p_id)),
-                    TEXTURE_U_PROPERTY | S_PROPERTY | U_PROPERTY => {
-                        Some((TEXTURE_U_PROPERTY, p_id))
-                    }
-                    TEXTURE_V_PROPERTY | T_PROPERTY | V_PROPERTY => {
-                        Some((TEXTURE_V_PROPERTY, p_id))
-                    }
+                    TEXTURE_U_PROPERTY | S_PROPERTY | U_PROPERTY => Some((TEXTURE_U_PROPERTY, p_id)),
+                    TEXTURE_V_PROPERTY | T_PROPERTY | V_PROPERTY => Some((TEXTURE_V_PROPERTY, p_id)),
                     _ => None,
                 },
                 _ => None,

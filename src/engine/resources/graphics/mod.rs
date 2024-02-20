@@ -1,7 +1,7 @@
-use pollster::FutureExt;
-use winit::event_loop::EventLoopWindowTarget;
 use crate::ecs::resource::Resource;
 use crate::ecs::with_dependencies::WithDependencies;
+use pollster::FutureExt;
+use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
     bind_group_builder::BindGroupBuilder,
@@ -215,8 +215,8 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
 
 #[cfg(test)]
 mod tests {
-    use crate::Reg;
     use super::*;
+    use crate::Reg;
 
     #[test]
     fn graphics_reg_macro() {

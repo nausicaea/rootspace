@@ -2,7 +2,10 @@ use std::fmt::Debug;
 
 use anyhow::Error;
 
-use super::{resource::Resource, system::System, with_dependencies::WithDependencies, resources::Resources, with_resources::WithResources};
+use super::{
+    resource::Resource, resources::Resources, system::System, with_dependencies::WithDependencies,
+    with_resources::WithResources,
+};
 
 /// An element within the heterogeneous list.
 #[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]

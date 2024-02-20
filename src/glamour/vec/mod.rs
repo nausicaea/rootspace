@@ -7,8 +7,7 @@ mod convert;
 mod num;
 mod ops;
 
-#[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct Vec4<R> {
     pub x: R,
     pub y: R,

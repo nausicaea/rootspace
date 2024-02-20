@@ -57,8 +57,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::{assert_abs_diff_eq, assert_relative_eq, assert_ulps_eq};
     use crate::glamour::num::One;
+    use approx::{assert_abs_diff_eq, assert_relative_eq, assert_ulps_eq};
 
     use super::*;
 

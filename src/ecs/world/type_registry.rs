@@ -1,5 +1,5 @@
-use super::event::WorldEvent;
 use super::super::{entities::Entities, event_queue::EventQueue};
+use super::event::WorldEvent;
 use crate::RegAdd;
 
 /// Prepends the [`Resource`s](crate::resource::Resource) [`Entities`](crate::entities::Entities)

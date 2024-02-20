@@ -185,7 +185,10 @@ mod tests {
     use serde_test::{assert_tokens, Token};
 
     use super::*;
-    use crate::{Reg, ecs::{registry::End, registry::ResourceRegistry, world::World}};
+    use crate::{
+        ecs::{registry::End, registry::ResourceRegistry, world::World},
+        Reg,
+    };
 
     #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
     struct TestEvent(usize);

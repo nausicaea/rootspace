@@ -1,8 +1,8 @@
-use num_traits::Float;
 use crate::glamour::num::{One, Zero};
 use crate::glamour::ops::cross::Cross;
 use crate::glamour::unit::Unit;
 use crate::glamour::vec::Vec4;
+use num_traits::Float;
 
 mod approx;
 mod convert;

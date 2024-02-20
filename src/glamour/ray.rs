@@ -1,8 +1,8 @@
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::Float;
 
-use super::vec::Vec4;
 use super::unit::Unit;
+use super::vec::Vec4;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Ray<R> {

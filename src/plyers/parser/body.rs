@@ -13,13 +13,13 @@ use nom::{
     IResult,
 };
 
-use super::{
-    common::{fold_exact, is_whitespace, whitespace},
-    ParseNumError,
-};
 use super::super::types::{
     CountType, DataType, ElementDescriptor, ElementId, FormatType, PlyDescriptor, Primitive, PropertyDescriptor,
     PropertyId, Value, Values,
+};
+use super::{
+    common::{fold_exact, is_whitespace, whitespace},
+    ParseNumError,
 };
 
 fn ascii_count_fct<'a, E>(_count_type: CountType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>

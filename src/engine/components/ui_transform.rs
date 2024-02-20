@@ -1,10 +1,10 @@
-use serde::{Deserialize, Serialize};
 use crate::ecs::component::Component;
 use crate::ecs::storage::vec_storage::VecStorage;
 use crate::glamour::affine::{Affine, AffineBuilder};
 use crate::glamour::mat::Mat4;
 use crate::glamour::num::Zero;
 use crate::glamour::vec::Vec4;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -107,7 +107,6 @@ impl UiTransformBuilder {
     }
 
     pub fn build(self) -> UiTransform {
-
         let t: Vec4<f32> = self
             .t
             .zip(self.d)

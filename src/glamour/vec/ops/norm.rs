@@ -1,7 +1,6 @@
-use num_traits::Float;
 use crate::glamour::ops::norm::Norm;
 use crate::glamour::vec::Vec4;
-
+use num_traits::Float;
 
 impl<'a, R> Norm for &'a Vec4<R>
 where
@@ -27,8 +26,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_ulps_eq;
     use crate::glamour::vec::Vec4;
+    use approx::assert_ulps_eq;
 
     use super::*;
 

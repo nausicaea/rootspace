@@ -1,8 +1,8 @@
-use std::ops::Mul;
 use crate::forward_ref_binop;
 use crate::glamour::iter_float::IterFloat;
 use crate::glamour::ops::dot::Dot;
 use crate::glamour::vec::Vec4;
+use std::ops::Mul;
 
 use super::super::Mat4;
 
@@ -94,8 +94,8 @@ forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat4<R>, Vec4<R>, Vec4<R>);
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::num::One;
     use super::*;
+    use crate::glamour::num::One;
 
     #[test]
     fn mat4_supports_dot_product_with_mat4() {

@@ -1,5 +1,5 @@
-use crate::glamour::ops::dot::Dot;
 use super::super::Unit;
+use crate::glamour::ops::dot::Dot;
 
 impl<'a, 'b, T> Dot<&'b Unit<T>> for &'a Unit<T>
 where

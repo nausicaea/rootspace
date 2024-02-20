@@ -51,12 +51,12 @@ pub mod types;
 
 use std::{fs::File, io::Read, path::Path};
 
-use nom::error::VerboseError;
 use crate::file_manipulation;
 use crate::file_manipulation::FilePathBuf;
 use crate::plyers::parser::error::convert_error;
 use crate::plyers::parser::parse_ply;
 use crate::plyers::types::Ply;
+use nom::error::VerboseError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PlyError {
@@ -89,8 +89,11 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::*;
+    use crate::plyers::types::{
+        CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, Ply, PlyDescriptor,
+        Primitive, PropertyDescriptor, PropertyId, Values,
+    };
     use glob::glob;
-    use crate::plyers::types::{CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, Ply, PlyDescriptor, Primitive, PropertyDescriptor, PropertyId, Values};
 
     #[test]
     fn load_ply_succeeds_for_test_files() {

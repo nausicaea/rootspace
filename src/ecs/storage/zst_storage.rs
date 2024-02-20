@@ -6,11 +6,11 @@ use serde::{
     Deserialize, Serialize,
 };
 
+use super::super::{entity::index::Index, resource::Resource, with_dependencies::WithDependencies};
 use super::{
     iterators::{IndexedRIter, RIter, WIter},
     Storage,
 };
-use super::super::{entity::index::Index, resource::Resource, with_dependencies::WithDependencies};
 
 /// Implements component storage for zero-sized types.
 pub struct ZstStorage<T> {
@@ -216,8 +216,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::super::{registry::End, registry::ResourceRegistry, world::World};
+    use super::*;
     use crate::Reg;
 
     #[test]

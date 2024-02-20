@@ -1,18 +1,16 @@
-use std::collections::VecDeque;
-use serde::{Deserialize, Serialize};
 use crate::ecs::resource::Resource;
 use crate::rose_tree::tree::Tree;
+use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 
 #[derive(Serialize, Deserialize)]
-#[
-    serde(
-        transparent,
-        bound(
-            serialize = "K: Ord + std::hash::Hash + serde::Serialize",
-            deserialize = "K: Ord + std::hash::Hash + for<'r> serde::Deserialize<'r>"
-        )
+#[serde(
+    transparent,
+    bound(
+        serialize = "K: Ord + std::hash::Hash + serde::Serialize",
+        deserialize = "K: Ord + std::hash::Hash + for<'r> serde::Deserialize<'r>"
     )
-]
+)]
 #[derive(Debug)]
 pub struct Hierarchy<K>(Tree<K, ()>);
 
@@ -243,15 +241,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::{iter::Product, ops::Mul};
     use crate::ecs::component::Component;
     use crate::ecs::entities::Entities;
     use crate::ecs::entity::index::Index;
     use crate::ecs::registry::{End, ResourceRegistry};
-    use crate::ecs::storage::Storage;
     use crate::ecs::storage::vec_storage::VecStorage;
+    use crate::ecs::storage::Storage;
     use crate::ecs::world::World;
     use crate::Reg;
+    use std::{iter::Product, ops::Mul};
 
     use super::*;
 
