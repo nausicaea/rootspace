@@ -8,7 +8,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Upgraded a few dependencies">
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,6 +68,7 @@
     "Cargo.Test glamour::persp::tests::persp_supports_inversion.executor": "Run",
     "Cargo.Test.executor": "Run",
     "Cargo.clean.executor": "Run",
+    "Cargo.update.executor": "Run",
     "Notification.DisplayName-DoNotAsk-ideavim": "ideavim",
     "Notification.DoNotAsk-ideavim": "true",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
@@ -105,6 +107,7 @@
     <option name="myCommands">
       <command value="cargo clean" />
       <command value="cargo +nightly fmt" />
+      <command value="cargo update" />
     </option>
   </component>
   <component name="RunManager" selected="Cargo.Test">
@@ -159,12 +162,35 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <configuration name="update" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="update" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
     <list>
       <item itemvalue="Cargo.Test" />
       <item itemvalue="Cargo.Run Test Example" />
       <item itemvalue="Cargo.Run Scene Example" />
       <item itemvalue="Cargo.Run Playground Example" />
+      <item itemvalue="Cargo.update" />
     </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Cargo.update" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="/usr/local/bin" />
