@@ -7,11 +7,8 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Renamed the scene.rs example">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Upgraded a few dependencies">
       <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/file_manipulation.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/file_manipulation.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -258,7 +255,7 @@
       <workItem from="1708284798432" duration="808000" />
       <workItem from="1708285636742" duration="3682000" />
       <workItem from="1708370439654" duration="5679000" />
-      <workItem from="1708410105980" duration="4173000" />
+      <workItem from="1708410105980" duration="4234000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -532,14 +529,6 @@
       <option name="project" value="LOCAL" />
       <updated>1656585002003</updated>
     </task>
-    <task id="LOCAL-00044" summary="Committing the blender files">
-      <option name="closed" value="true" />
-      <created>1708285198144</created>
-      <option name="number" value="00044" />
-      <option name="presentableId" value="LOCAL-00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1708285198144</updated>
-    </task>
     <task id="LOCAL-00045" summary="Refactored the whole workspace into a single crate.">
       <option name="closed" value="true" />
       <created>1708380358337</created>
@@ -580,7 +569,15 @@
       <option name="project" value="LOCAL" />
       <updated>1708413655641</updated>
     </task>
-    <option name="localTasksCounter" value="50" />
+    <task id="LOCAL-00050" summary="Upgraded a few dependencies">
+      <option name="closed" value="true" />
+      <created>1708415025766</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1708415025767</updated>
+    </task>
+    <option name="localTasksCounter" value="51" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -622,7 +619,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Changed a value in one of the point transformation tests" />
     <MESSAGE value="Migrated two camera tests to property tests, and promptly found a failure case" />
     <MESSAGE value="Added a property test for Model." />
     <MESSAGE value="Began working on the property tests for Camera transformations." />
@@ -647,7 +643,8 @@
     <MESSAGE value="Moved loader to the bin directory as ply-loader." />
     <MESSAGE value="Fixed two tests and deleted one nonsensical test" />
     <MESSAGE value="Renamed the scene.rs example" />
-    <option name="LAST_COMMIT_MESSAGE" value="Renamed the scene.rs example" />
+    <MESSAGE value="Upgraded a few dependencies" />
+    <option name="LAST_COMMIT_MESSAGE" value="Upgraded a few dependencies" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

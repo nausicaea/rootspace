@@ -47,7 +47,7 @@ wgpu = "0.14"
 wgpu-types = { version = "0.14", features = ["trace", "replay"] }
 bytemuck = { version = "1.0", features = [ "derive" ] }
 image = { version = "0.24", default-features = false, features = ["png", "jpeg"] }
-pollster = "0.2.5"
+pollster = "0.3.0"
 ctrlc = { version = "3.0.0", features = ["termination"] }
 directories = "5.0"
 ciborium = "^0.2.0"
