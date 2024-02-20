@@ -7,6 +7,7 @@ use crate::glamour::iter_float::IterFloat;
 use crate::glamour::mat::Mat4;
 use crate::glamour::num::{One, Zero};
 use crate::glamour::ops::cross::Cross;
+use crate::glamour::ops::inv_elem::InvElem;
 use crate::glamour::ops::norm::Norm;
 use crate::glamour::quat::Quat;
 use crate::glamour::unit::Unit;

@@ -90,7 +90,7 @@ mod tests {
 
     use super::*;
     use glob::glob;
-    use crate::plyers::types::{CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, PlyDescriptor, Primitive, PropertyDescriptor, PropertyId, Values};
+    use crate::plyers::types::{CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, Ply, PlyDescriptor, Primitive, PropertyDescriptor, PropertyId, Values};
 
     #[test]
     fn load_ply_succeeds_for_test_files() {

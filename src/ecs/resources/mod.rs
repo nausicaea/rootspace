@@ -25,7 +25,7 @@ macro_rules! impl_iter_ref {
     ($name:ident, $iter:ident, #reads: $($type:ident),*, #writes: $($type_mut:ident),* $(,)?) => {
         /// Creates a joined iterator over the specified group of components. In other words, only
         /// entities that have all the specified components will be iterated over.
-        pub fn $name<$($type,)* $($type_mut,)*>(&self) -> $crate::storage::iterators::$iter<$($type::Storage,)* $($type_mut::Storage,)*>
+        pub fn $name<$($type,)* $($type_mut,)*>(&self) -> $crate::ecs::storage::iterators::$iter<$($type::Storage,)* $($type_mut::Storage,)*>
         where
             $(
                 $type: Component,
@@ -41,7 +41,7 @@ macro_rules! impl_iter_ref {
                 let $type_mut = self.borrow_mut::<$type_mut::Storage>();
             )*
 
-            $crate::storage::iterators::$iter::new($($type,)* $($type_mut,)*)
+            $crate::ecs::storage::iterators::$iter::new($($type,)* $($type_mut,)*)
         }
     };
 }

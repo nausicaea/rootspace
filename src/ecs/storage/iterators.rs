@@ -21,14 +21,14 @@ macro_rules! impl_joined_iter {
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
         pub struct $name<$tlt, $ty> {
-            indices: Vec<$crate::entity::index::Index>,
+            indices: Vec<$crate::ecs::entity::index::Index>,
             cursor: usize,
             $ty: &$tlt $ty,
         }
 
         impl<$tlt, $ty> $name<$tlt, $ty>
         where
-            $ty: $crate::storage::Storage,
+            $ty: $crate::ecs::storage::Storage,
         {
             pub(crate) fn new($ty: &$tlt $ty) -> Self {
                 $name {
@@ -41,17 +41,17 @@ macro_rules! impl_joined_iter {
 
         impl<$tlt, $ty> ExactSizeIterator for $name<$tlt, $ty>
         where
-            $ty: $crate::storage::Storage,
+            $ty: $crate::ecs::storage::Storage,
         {}
 
         impl<$tlt, $ty> std::iter::FusedIterator for $name<$tlt, $ty>
         where
-            $ty: $crate::storage::Storage,
+            $ty: $crate::ecs::storage::Storage,
         {}
 
         impl<$tlt, $ty> Iterator for $name<$tlt, $ty>
         where
-            $ty: $crate::storage::Storage,
+            $ty: $crate::ecs::storage::Storage,
         {
             type Item = &$tlt $ty::Item;
 
@@ -83,14 +83,14 @@ macro_rules! impl_joined_iter {
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
         pub struct $name<$tltm, $tym> {
-            indices: Vec<$crate::entity::index::Index>,
+            indices: Vec<$crate::ecs::entity::index::Index>,
             cursor: usize,
             $tym: &$tltm mut $tym,
         }
 
         impl<$tltm, $tym> $name<$tltm, $tym>
         where
-            $tym: $crate::storage::Storage,
+            $tym: $crate::ecs::storage::Storage,
         {
             pub(crate) fn new($tym: &$tltm mut $tym) -> Self {
                 $name {
@@ -103,17 +103,17 @@ macro_rules! impl_joined_iter {
 
         impl<$tltm, $tym> ExactSizeIterator for $name<$tltm, $tym>
         where
-            $tym: $crate::storage::Storage,
+            $tym: $crate::ecs::storage::Storage,
         {}
 
         impl<$tltm, $tym> std::iter::FusedIterator for $name<$tltm, $tym>
         where
-            $tym: $crate::storage::Storage,
+            $tym: $crate::ecs::storage::Storage,
         {}
 
         impl<$tltm, $tym> Iterator for $name<$tltm, $tym>
         where
-            $tym: $crate::storage::Storage,
+            $tym: $crate::ecs::storage::Storage,
         {
             type Item = &$tltm mut $tym::Item;
 
@@ -155,7 +155,7 @@ macro_rules! impl_joined_iter {
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
         pub struct $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> {
-            indices: Vec<$crate::entity::index::Index>,
+            indices: Vec<$crate::ecs::entity::index::Index>,
             cursor: usize,
             $(
                 $ty: &$tlt $ty,
@@ -168,10 +168,10 @@ macro_rules! impl_joined_iter {
         impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
         where
             $(
-                $ty: $crate::storage::Storage,
+                $ty: $crate::ecs::storage::Storage,
             )*
             $(
-                $tym: $crate::storage::Storage,
+                $tym: $crate::ecs::storage::Storage,
             )*
         {
             pub(crate) fn new($($ty: &$tlt $ty,)* $($tym: &$tltm mut $tym,)*) -> Self {
@@ -191,30 +191,30 @@ macro_rules! impl_joined_iter {
         impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> ExactSizeIterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
         where
             $(
-                $ty: $crate::storage::Storage,
+                $ty: $crate::ecs::storage::Storage,
             )*
             $(
-                $tym: $crate::storage::Storage,
+                $tym: $crate::ecs::storage::Storage,
             )*
         {}
 
         impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> std::iter::FusedIterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
         where
             $(
-                $ty: $crate::storage::Storage,
+                $ty: $crate::ecs::storage::Storage,
             )*
             $(
-                $tym: $crate::storage::Storage,
+                $tym: $crate::ecs::storage::Storage,
             )*
         {}
 
         impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> Iterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
         where
             $(
-                $ty: $crate::storage::Storage,
+                $ty: $crate::ecs::storage::Storage,
             )*
             $(
-                $tym: $crate::storage::Storage,
+                $tym: $crate::ecs::storage::Storage,
             )*
         {
             type Item = ($(&$tlt $ty::Item,)* $(&$tltm mut $tym::Item,)*);
@@ -256,7 +256,7 @@ macro_rules! impl_joined_iter_ref {
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
         pub struct $name<$tlt, $ty> {
-            indices: Vec<$crate::Index>,
+            indices: Vec<$crate::ecs::entity::index::Index>,
             cursor: usize,
             $ty: std::cell::Ref<$tlt, $ty>,
         }
@@ -273,7 +273,7 @@ macro_rules! impl_joined_iter_ref {
                 }
             }
 
-            pub fn get(&mut self, index: $crate::Index) -> Option<&$tlt $ty::Item> {
+            pub fn get(&mut self, index: $crate::ecs::entity::index::Index) -> Option<&$tlt $ty::Item> {
                 let $ty = self.$ty.get(index)?;
 
                 unsafe { Some(& *($ty as *const _)) }
@@ -326,7 +326,7 @@ macro_rules! impl_joined_iter_ref {
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
         pub struct $name<$tltm, $tym> {
-            indices: Vec<$crate::Index>,
+            indices: Vec<$crate::ecs::entity::index::Index>,
             cursor: usize,
             $tym: std::cell::RefMut<$tltm, $tym>,
         }
@@ -343,7 +343,7 @@ macro_rules! impl_joined_iter_ref {
                 }
             }
 
-            pub fn get(&mut self, index: $crate::Index) -> Option<&$tltm mut $tym::Item> {
+            pub fn get(&mut self, index: $crate::ecs::entity::index::Index) -> Option<&$tltm mut $tym::Item> {
                 let $tym = self.$tym.get_mut(index)?;
 
                 unsafe { Some(&mut *($tym as *mut _)) }
@@ -404,7 +404,7 @@ macro_rules! impl_joined_iter_ref {
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
         pub struct $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> {
-            indices: Vec<$crate::Index>,
+            indices: Vec<$crate::ecs::entity::index::Index>,
             cursor: usize,
             $(
                 $ty: std::cell::Ref<$tlt, $ty>,
@@ -436,7 +436,7 @@ macro_rules! impl_joined_iter_ref {
                 }
             }
 
-            pub fn get(&mut self, index: $crate::Index) -> Option<($(&$tlt $ty::Item,)* $(&$tltm mut $tym::Item,)*)> {
+            pub fn get(&mut self, index: $crate::ecs::entity::index::Index) -> Option<($(&$tlt $ty::Item,)* $(&$tltm mut $tym::Item,)*)> {
                 $(
                     let $ty = self.$ty.get(index)?;
                 )*

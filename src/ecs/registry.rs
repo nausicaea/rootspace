@@ -79,11 +79,11 @@ macro_rules! impl_registry {
             fn contains<E: 'static>(element: &E) -> bool;
 
             /// Push a new element onto the head of the heterogeneous list.
-            fn push<E>(self, element: E) -> $crate::registry::Element<E, Self>
+            fn push<E>(self, element: E) -> $crate::ecs::registry::Element<E, Self>
             where
                 E: $bound $(+ $others)*,
             {
-                $crate::registry::Element::new(element, self)
+                $crate::ecs::registry::Element::new(element, self)
             }
 
             /// Return the length of the heterogeneous list.
@@ -101,7 +101,7 @@ macro_rules! impl_registry {
             fn unzip(self) -> (Self::Head, Self::Tail);
         }
 
-        impl<H, T> $name for $crate::registry::Element<H, T>
+        impl<H, T> $name for $crate::ecs::registry::Element<H, T>
         where
             H: $bound $(+ $others)*,
             T: $name,
@@ -132,9 +132,9 @@ macro_rules! impl_registry {
             }
         }
 
-        impl $name for $crate::registry::End {
+        impl $name for $crate::ecs::registry::End {
             type Head = ();
-            type Tail = $crate::registry::End;
+            type Tail = $crate::ecs::registry::End;
 
             const LEN: usize = 0;
 

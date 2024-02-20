@@ -11,13 +11,13 @@ macro_rules! impl_binops {
         $(
         impl<'a, 'b, R> $Op<&'b Mat4<R>> for &'a Mat4<R>
         where
-            Mat4<R>: $crate::Zero,
+            Mat4<R>: $crate::glamour::num::Zero,
             R: Copy + $Deleg<Output = R>,
         {
             type Output = Mat4<R>;
 
             fn $op(self, rhs: &'b Mat4<R>) -> Self::Output {
-                use $crate::Zero;
+                use $crate::glamour::num::Zero;
 
                 let mut mat = Mat4::<R>::zero();
                 for i in 0..4 {
@@ -29,7 +29,7 @@ macro_rules! impl_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl<R: Float> $Op, $op for Mat4<R>, Mat4<R>, Mat4<R>);
+        $crate::forward_ref_binop!(impl<R: Float> $Op, $op for Mat4<R>, Mat4<R>, Mat4<R>);
         )+
     };
 }
@@ -45,7 +45,7 @@ macro_rules! impl_unops {
         $(
         impl<R> $Op for Mat4<R>
         where
-            Self: $crate::Zero,
+            Self: $crate::glamour::num::Zero,
             R: Copy + $Deleg<Output = R>,
         {
             type Output = Self;
@@ -57,13 +57,13 @@ macro_rules! impl_unops {
 
         impl<'a, R> $Op for &'a Mat4<R>
         where
-            Mat4<R>: $crate::Zero,
+            Mat4<R>: $crate::glamour::num::Zero,
             R: Copy + $Deleg<Output = R>,
         {
             type Output = Mat4<R>;
 
             fn $op(self) -> Self::Output {
-                use $crate::Zero;
+                use $crate::glamour::num::Zero;
 
                 let mut mat = Mat4::<R>::zero();
                 for i in 0..4 {
@@ -89,13 +89,13 @@ macro_rules! impl_scalar_binops {
         $(
         impl<'a, 'b, R> $Op<&'b R> for &'a Mat4<R>
             where
-                Mat4<R>: $crate::Zero,
+                Mat4<R>: $crate::glamour::num::Zero,
                 R: Copy + $Op<R, Output = R>,
         {
             type Output = Mat4<R>;
 
             fn $op(self, rhs: &'b R) -> Self::Output {
-                use $crate::Zero;
+                use $crate::glamour::num::Zero;
 
                 let mut mat = Mat4::<R>::zero();
                 for i in 0..4 {
@@ -107,14 +107,14 @@ macro_rules! impl_scalar_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl<R: Float> $Op, $op for Mat4<R>, R, Mat4<R>);
+        $crate::forward_ref_binop!(impl<R: Float> $Op, $op for Mat4<R>, R, Mat4<R>);
 
         $(
         impl<'a, 'b> $Op<&'b Mat4<$tgt>> for &'a $tgt {
             type Output = Mat4<$tgt>;
 
             fn $op(self, rhs: &'b Mat4<$tgt>) -> Self::Output {
-                use $crate::Zero;
+                use $crate::glamour::num::Zero;
 
                 let mut mat = Mat4::<$tgt>::zero();
                 for i in 0..4 {
@@ -126,7 +126,7 @@ macro_rules! impl_scalar_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl $Op, $op for $tgt, Mat4<$tgt>, Mat4<$tgt>);
+        $crate::forward_ref_binop!(impl $Op, $op for $tgt, Mat4<$tgt>, Mat4<$tgt>);
         )*
 
         )+

@@ -1,9 +1,9 @@
-use cgmath::Transform;
 use clap::Parser;
 use rootspace::ecs::with_dependencies::WithDependencies;
 use rootspace::engine::assets::scene::Scene;
 use rootspace::engine::components::camera::Camera;
 use rootspace::engine::components::renderable::RenderableSource;
+use rootspace::engine::components::transform::Transform;
 use rootspace::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps};
 
 #[derive(Debug, Parser)]

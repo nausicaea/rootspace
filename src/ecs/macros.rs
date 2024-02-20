@@ -26,7 +26,7 @@
 #[macro_export]
 macro_rules! Reg {
     () => {
-        $crate::registry::End
+        $crate::ecs::registry::End
     };
     (...$rest:ty) => {
         $rest
@@ -35,7 +35,7 @@ macro_rules! Reg {
         $crate::Reg![$t,]
     };
     ($t:ty, $($rest:tt)*) => {
-        $crate::registry::Element<$t, $crate::Reg![$($rest)*]>
+        $crate::ecs::registry::Element<$t, $crate::Reg![$($rest)*]>
     };
 }
 
@@ -69,10 +69,10 @@ macro_rules! RegAdd {
         $t
     };
     ($ta:ty, $tb:ty) => {
-        $crate::registry::Element<$ta, $tb>
+        $crate::ecs::registry::Element<$ta, $tb>
     };
     ($t:ty, $($rest:tt)+) => {
-        $crate::registry::Element<$t, $crate::RegAdd![$($rest)+]>
+        $crate::ecs::registry::Element<$t, $crate::RegAdd![$($rest)+]>
     };
 }
 
@@ -104,7 +104,7 @@ macro_rules! RegAdd {
 #[macro_export]
 macro_rules! reg {
     () => {
-        $crate::registry::End
+        $crate::ecs::registry::End
     };
     (...$rest:expr) => {
         $rest
@@ -113,7 +113,7 @@ macro_rules! reg {
         $crate::reg![$e,]
     };
     ($e:expr, $($rest:tt)*) => {
-        $crate::registry::Element::new($e, $crate::reg![$($rest)*])
+        $crate::ecs::registry::Element::new($e, $crate::reg![$($rest)*])
     };
 }
 
@@ -148,10 +148,10 @@ macro_rules! reg_add {
         $e
     };
     ($ea:expr, $eb:expr) => {
-        $crate::registry::Element::new($ea, $eb)
+        $crate::ecs::registry::Element::new($ea, $eb)
     };
     ($t:expr, $($rest:tt)+) => {
-        $crate::registry::Element::new($t, $crate::reg_add![$($rest)+])
+        $crate::ecs::registry::Element::new($t, $crate::reg_add![$($rest)+])
     };
 }
 

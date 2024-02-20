@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::engine::resources::graphics::vertex::Vertex;
 use crate::plyers;
-use crate::plyers::types::{AsSlice, FACE_ELEMENT, NX_PROPERTY, NY_PROPERTY, NZ_PROPERTY, Primitive, PropertyDescriptor, TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, VERTEX_ELEMENT, X_PROPERTY, Y_PROPERTY, Z_PROPERTY};
+use crate::plyers::types::{AsSlice, FACE_ELEMENT, NX_PROPERTY, NY_PROPERTY, NZ_PROPERTY, Ply, Primitive, PropertyDescriptor, S_PROPERTY, T_PROPERTY, TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, U_PROPERTY, V_PROPERTY, VERTEX_ELEMENT, VERTEX_INDICES_LIST_PROPERTY, X_PROPERTY, Y_PROPERTY, Z_PROPERTY};
 
 
 
@@ -14,7 +14,7 @@ pub struct RawMesh {
 }
 
 impl RawMesh {
-    pub(crate) fn with_ply(ply: &plyers::Ply) -> Result<Self, Error> {
+    pub(crate) fn with_ply(ply: &Ply) -> Result<Self, Error> {
         let (v_e_id, num_vertices) = ply
             .descriptor
             .elements

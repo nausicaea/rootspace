@@ -6,6 +6,7 @@ use crate::ecs::resources::Resources;
 use crate::engine::assets::raw_mesh::RawMesh;
 use crate::engine::resources::asset_database::AssetDatabase;
 use crate::plyers;
+use crate::plyers::types::Ply;
 
 use super::{material::Material, mesh::Mesh, private::PrivLoadAsset, Error};
 
@@ -16,7 +17,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub(crate) fn with_ply(res: &Resources, ply: &plyers::Ply, material_group: &str) -> Result<Self, anyhow::Error> {
+    pub(crate) fn with_ply(res: &Resources, ply: &Ply, material_group: &str) -> Result<Self, anyhow::Error> {
         let texture_file_names = ply
             .descriptor
             .comments

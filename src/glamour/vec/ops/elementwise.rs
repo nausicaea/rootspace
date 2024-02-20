@@ -2,19 +2,20 @@ use num_traits::{Float, Inv};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 use crate::glamour::ops::inv_elem::InvElem;
 use crate::glamour::ops::mul_elem::MulElem;
+use crate::glamour::vec::Vec4;
 
 macro_rules! impl_binops {
     ($($Op:ident::$op:ident => $Deleg:ident::$deleg:ident);+ $(;)*) => {
         $(
         impl<'a, 'b, R> $Op<&'b Vec4<R>> for &'a Vec4<R>
         where
-            Vec4<R>: $crate::Zero,
+            Vec4<R>: $crate::glamour::num::Zero,
             R: Copy + $Deleg<Output = R>,
         {
             type Output = Vec4<R>;
 
             fn $op(self, rhs: &'b Vec4<R>) -> Self::Output {
-                use $crate::Zero;
+                use $crate::glamour::num::Zero;
 
                 let mut mat = Vec4::<R>::zero();
                 for i in 0..4 {
@@ -24,7 +25,7 @@ macro_rules! impl_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl<R: Float> $Op, $op for Vec4<R>, Vec4<R>, Vec4<R>);
+        $crate::forward_ref_binop!(impl<R: Float> $Op, $op for Vec4<R>, Vec4<R>, Vec4<R>);
         )+
     };
 }
@@ -40,7 +41,7 @@ macro_rules! impl_unops {
         $(
         impl<R> $Op for Vec4<R>
         where
-            Self: $crate::Zero,
+            Self: $crate::glamour::num::Zero,
             R: Copy + $Deleg<Output = R>,
         {
             type Output = Self;
@@ -52,13 +53,13 @@ macro_rules! impl_unops {
 
         impl<'a, R> $Op for &'a Vec4<R>
         where
-            Vec4<R>: $crate::Zero,
+            Vec4<R>: $crate::glamour::num::Zero,
             R: Copy + $Deleg<Output = R>,
         {
             type Output = Vec4<R>;
 
             fn $op(self) -> Self::Output {
-                use $crate::Zero;
+                use $crate::glamour::num::Zero;
 
                 let mut mat = Vec4::<R>::zero();
                 for i in 0..4 {
@@ -82,13 +83,13 @@ macro_rules! impl_scalar_binops {
         $(
         impl<'a, 'b, R> $Op<&'b R> for &'a Vec4<R>
             where
-                Vec4<R>: $crate::Zero,
+                Vec4<R>: $crate::glamour::num::Zero,
                 R: Copy + $Op<Output = R>,
         {
             type Output = Vec4<R>;
 
             fn $op(self, rhs: &'b R) -> Self::Output {
-                use $crate::Zero;
+                use $crate::glamour::num::Zero;
 
                 let mut mat = Vec4::<R>::zero();
                 for i in 0..4 {
@@ -98,14 +99,14 @@ macro_rules! impl_scalar_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl<R: Float> $Op, $op for Vec4<R>, R, Vec4<R>);
+        $crate::forward_ref_binop!(impl<R: Float> $Op, $op for Vec4<R>, R, Vec4<R>);
 
         $(
         impl<'a, 'b> $Op<&'b Vec4<$tgt>> for &'a $tgt {
             type Output = Vec4<$tgt>;
 
             fn $op(self, rhs: &'b Vec4<$tgt>) -> Self::Output {
-                use $crate::Zero;
+                use $crate::glamour::num::Zero;
 
                 let mut mat = Vec4::<$tgt>::zero();
                 for i in 0..4 {
@@ -115,7 +116,7 @@ macro_rules! impl_scalar_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl $Op, $op for $tgt, Vec4<$tgt>, Vec4<$tgt>);
+        $crate::forward_ref_binop!(impl $Op, $op for $tgt, Vec4<$tgt>, Vec4<$tgt>);
         )*
 
         )+
