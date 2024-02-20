@@ -19,21 +19,21 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError
     if !p.starts_with("~") {
         return Ok(p.to_path_buf());
     }
+    let user_dirs = directories::UserDirs::new().ok_or(FileError::NoHomeDirectoryFound)?;
+
     if p == Path::new("~") {
-        return dirs::home_dir().ok_or(FileError::NoHomeDirectoryFound);
+        return Ok(user_dirs.home_dir().to_path_buf());
     }
-    dirs::home_dir()
-        .map(|mut h| {
-            if h == Path::new("/") {
-                // Corner case: `h` root directory;
-                // don't prepend extra `/`, just drop the tilde.
-                p.strip_prefix("~").unwrap().to_path_buf()
-            } else {
-                h.push(p.strip_prefix("~/").unwrap());
-                h
-            }
-        })
-        .ok_or(FileError::NoHomeDirectoryFound)
+
+    let expanded_path = if user_dirs.home_dir() == Path::new("/") {
+        // Corner case: `h` root directory;
+        // don't prepend extra `/`, just drop the tilde.
+        p.strip_prefix("~").map_err(|e| FileError::StripPrefixError(p.to_path_buf(), e))?.to_path_buf()
+    } else {
+        user_dirs.home_dir().join(p.strip_prefix("~/").map_err(|e| FileError::StripPrefixError(p.to_path_buf(), e))?)
+    };
+
+    Ok(expanded_path)
 }
 
 pub fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow::Result<()> {
@@ -440,6 +440,8 @@ pub enum FileError {
     NoBaseNameFound(PathBuf),
     #[error("Could not find the user home directory")]
     NoHomeDirectoryFound,
+    #[error("Could not remove a prefix from a path")]
+    StripPrefixError(PathBuf, #[source] std::path::StripPrefixError),
 }
 
 #[cfg(test)]
