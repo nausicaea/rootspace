@@ -26,13 +26,13 @@ name = "ply-loader"
 path = "src/bin/ply_loader.rs"
 
 [[example]]
-name = "playground"
+name = "wgpu_playground"
 
 [[example]]
 name = "create_scene"
 
 [[example]]
-name = "test"
+name = "engine_test"
 
 [features]
 dbg-gfx = []

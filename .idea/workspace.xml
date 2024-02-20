@@ -7,9 +7,11 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Upgraded a few dependencies">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Updated all other compatible dependencies">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/playground.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/wgpu_playground.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/engine_test.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -110,11 +112,13 @@
       <command value="cargo update" />
     </option>
   </component>
-  <component name="RunManager" selected="Cargo.Test">
-    <configuration name="Run Playground Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-      <option name="command" value="run --example playground" />
+  <component name="RunManager" selected="Cargo.Run Engine Test Example">
+    <configuration name="Run Engine Test Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="run --example engine_test" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
+      <envs>
+        <env name="RUST_LOG" value="info" />
+      </envs>
       <option name="emulateTerminal" value="false" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -131,7 +135,9 @@
     <configuration name="Run Scene Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --example create_scene -- --within-repo" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
+      <envs>
+        <env name="RUST_LOG" value="info" />
+      </envs>
       <option name="emulateTerminal" value="false" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -145,28 +151,13 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Run Test Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-      <option name="command" value="run --example test" />
+    <configuration name="Run WGPU Playground Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="run --example wgpu_playground" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
+      <envs>
+        <env name="RUST_LOG" value="debug" />
+      </envs>
       <option name="emulateTerminal" value="false" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="update" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="update" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <envs />
-      <option name="emulateTerminal" value="true" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="false" />
@@ -181,16 +172,10 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Test" />
-      <item itemvalue="Cargo.Run Test Example" />
+      <item itemvalue="Cargo.Run Engine Test Example" />
       <item itemvalue="Cargo.Run Scene Example" />
-      <item itemvalue="Cargo.Run Playground Example" />
-      <item itemvalue="Cargo.update" />
+      <item itemvalue="Cargo.Run WGPU Playground Example" />
     </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Cargo.update" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="/usr/local/bin" />
@@ -555,14 +540,6 @@
       <option name="project" value="LOCAL" />
       <updated>1656585002003</updated>
     </task>
-    <task id="LOCAL-00045" summary="Refactored the whole workspace into a single crate.">
-      <option name="closed" value="true" />
-      <created>1708380358337</created>
-      <option name="number" value="00045" />
-      <option name="presentableId" value="LOCAL-00045" />
-      <option name="project" value="LOCAL" />
-      <updated>1708380358337</updated>
-    </task>
     <task id="LOCAL-00046" summary="Fixed a few errors that cropped up when compiling.">
       <option name="closed" value="true" />
       <created>1708410639421</created>
@@ -603,7 +580,15 @@
       <option name="project" value="LOCAL" />
       <updated>1708415025767</updated>
     </task>
-    <option name="localTasksCounter" value="51" />
+    <task id="LOCAL-00051" summary="Updated all other compatible dependencies">
+      <option name="closed" value="true" />
+      <created>1708422871943</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1708422871944</updated>
+    </task>
+    <option name="localTasksCounter" value="52" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -645,7 +630,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Migrated two camera tests to property tests, and promptly found a failure case" />
     <MESSAGE value="Added a property test for Model." />
     <MESSAGE value="Began working on the property tests for Camera transformations." />
     <MESSAGE value="I now have a good set of tests for model.rs" />
@@ -670,7 +654,8 @@
     <MESSAGE value="Fixed two tests and deleted one nonsensical test" />
     <MESSAGE value="Renamed the scene.rs example" />
     <MESSAGE value="Upgraded a few dependencies" />
-    <option name="LAST_COMMIT_MESSAGE" value="Upgraded a few dependencies" />
+    <MESSAGE value="Updated all other compatible dependencies" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated all other compatible dependencies" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
