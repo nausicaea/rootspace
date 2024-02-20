@@ -18,7 +18,6 @@ use crate::engine::resources::graphics::ids::{BindGroupId, BufferId, PipelineId}
 use crate::engine::resources::graphics::vertex::Vertex;
 use crate::engine::resources::graphics::Graphics;
 use crate::glamour::mat::Mat4;
-use crate::{ecs, glamour};
 
 #[derive(Debug)]
 pub struct Renderer {

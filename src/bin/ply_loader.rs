@@ -3,7 +3,7 @@ use rootspace::plyers::load_ply;
 use rootspace::plyers::types::PropertyDescriptor;
 
 #[derive(Debug, Parser)]
-#[command(name = "loader", author, version, about = "Loads files as Stanford PLY model files", long_about = None)]
+#[command(name = "ply-loader", author, version, about = "Loads files as Stanford PLY model files", long_about = None)]
 struct Args {
     #[arg(short, long, help = "Increases the output of the program", action = clap::ArgAction::Count)]
     verbose: u8,

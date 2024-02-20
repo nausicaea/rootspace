@@ -1,4 +1,3 @@
-use crate::ecs;
 use crate::ecs::entities::Entities;
 use crate::ecs::entity::index::Index;
 use crate::ecs::entity::Entity;

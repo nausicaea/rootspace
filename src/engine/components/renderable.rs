@@ -1,4 +1,3 @@
-use crate::ecs;
 use crate::ecs::component::Component;
 use crate::ecs::storage::vec_storage::VecStorage;
 use crate::engine::assets::model::Model;

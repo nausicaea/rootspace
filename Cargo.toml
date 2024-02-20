@@ -18,8 +18,12 @@ version = "0.1.0"
 authors = ["Eleanor Young <developer@nausicaea.net>"]
 edition = "2021"
 
-[[example]]
-name = "loader"
+[lib]
+name = "rootspace"
+
+[[bin]]
+name = "ply-loader"
+path = "src/bin/ply_loader.rs"
 
 [[example]]
 name = "playground"

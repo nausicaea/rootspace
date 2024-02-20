@@ -8,7 +8,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Fixed a few errors that cropped up when compiling.">
-      <change beforePath="$PROJECT_DIR$/src/rose_tree/tree.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rose_tree/tree.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/loader.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/bin/ply_loader.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/assets/raw_mesh.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/raw_mesh.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/assets/scene.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/scene.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/components/renderable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/components/renderable.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/orchestrator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/orchestrator.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/renderer.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/glamour/mat/ops/norm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/ops/norm.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,8 +96,8 @@
       <recent name="$PROJECT_DIR$/glamour/src" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/src/engine/assets" />
       <recent name="$PROJECT_DIR$/src/bin" />
+      <recent name="$PROJECT_DIR$/src/engine/assets" />
       <recent name="$PROJECT_DIR$/contrib" />
       <recent name="$PROJECT_DIR$/src/engine" />
       <recent name="$PROJECT_DIR$/examples" />
@@ -310,7 +318,7 @@
       <workItem from="1708284798432" duration="808000" />
       <workItem from="1708285636742" duration="3682000" />
       <workItem from="1708370439654" duration="5679000" />
-      <workItem from="1708410105980" duration="710000" />
+      <workItem from="1708410105980" duration="1580000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -613,6 +621,17 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+      </list>
+    </option>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">

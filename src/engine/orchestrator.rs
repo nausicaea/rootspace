@@ -1,6 +1,5 @@
 use std::time::{Duration, Instant};
 
-use crate::ecs;
 use winit::{
     event::Event,
     event_loop::{ControlFlow, EventLoopWindowTarget},

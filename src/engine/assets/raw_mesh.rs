@@ -1,5 +1,4 @@
 use crate::engine::resources::graphics::vertex::Vertex;
-use crate::plyers;
 use crate::plyers::types::{
     AsSlice, Ply, Primitive, PropertyDescriptor, FACE_ELEMENT, NX_PROPERTY, NY_PROPERTY, NZ_PROPERTY, S_PROPERTY,
     TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, T_PROPERTY, U_PROPERTY, VERTEX_ELEMENT, VERTEX_INDICES_LIST_PROPERTY,
