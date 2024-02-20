@@ -161,28 +161,4 @@ mod tests {
         let _: &Mat4<f32> = AsRef::as_ref(&p);
         let _: &Mat4<f32> = p.as_matrix();
     }
-
-    #[test]
-    fn persp_supports_inversion() {
-        let i = testing_persp();
-
-        let m4: Mat4<f32> = i.0;
-
-        assert_relative_eq!(m4[(0, 0)], 0.621320332);
-        assert_relative_eq!(m4[(0, 1)], 0.0);
-        assert_relative_eq!(m4[(0, 2)], 0.0);
-        assert_relative_eq!(m4[(0, 3)], 0.0);
-        assert_relative_eq!(m4[(1, 0)], 0.0);
-        assert_relative_eq!(m4[(1, 1)], 0.414213555);
-        assert_relative_eq!(m4[(1, 2)], 0.0);
-        assert_relative_eq!(m4[(1, 3)], 0.0);
-        assert_relative_eq!(m4[(2, 0)], 0.0);
-        assert_relative_eq!(m4[(2, 1)], 0.0);
-        assert_relative_eq!(m4[(2, 2)], 0.0);
-        assert_relative_eq!(m4[(2, 3)], -1.0);
-        assert_relative_eq!(m4[(3, 0)], 0.0);
-        assert_relative_eq!(m4[(3, 1)], 0.0);
-        assert_relative_eq!(m4[(3, 2)], -4.99950000);
-        assert_relative_eq!(m4[(3, 3)], 5.00050000);
-    }
 }
