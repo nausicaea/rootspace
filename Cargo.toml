@@ -29,7 +29,7 @@ path = "src/bin/ply_loader.rs"
 name = "playground"
 
 [[example]]
-name = "scene"
+name = "create_scene"
 
 [[example]]
 name = "test"

@@ -7,10 +7,10 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Moved loader to the bin directory as ply-loader.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Fixed two tests and deleted one nonsensical test">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/resources/asset_database.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/asset_database.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/glamour/persp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/persp.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/scene.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/create_scene.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,6 +63,9 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Cargo.+nightly.executor": "Run",
+    "Cargo.Run Playground Example.executor": "Run",
+    "Cargo.Run Scene Example.executor": "Run",
+    "Cargo.Run Test Example.executor": "Run",
     "Cargo.Test glamour::persp::tests::persp_supports_inversion.executor": "Run",
     "Cargo.Test.executor": "Run",
     "Cargo.clean.executor": "Run",
@@ -104,7 +107,41 @@
       <command value="cargo +nightly fmt" />
     </option>
   </component>
-  <component name="RunManager" selected="Cargo.Test">
+  <component name="RunManager" selected="Cargo.Run Scene Example">
+    <configuration name="Run Playground Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="run --example playground" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="false" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Run Scene Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="run --example create_scene -- --within-repo" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="false" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Run Test Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --example test" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -125,6 +162,8 @@
     <list>
       <item itemvalue="Cargo.Test" />
       <item itemvalue="Cargo.Run Test Example" />
+      <item itemvalue="Cargo.Run Scene Example" />
+      <item itemvalue="Cargo.Run Playground Example" />
     </list>
   </component>
   <component name="RustProjectSettings">
@@ -216,7 +255,7 @@
       <workItem from="1708284798432" duration="808000" />
       <workItem from="1708285636742" duration="3682000" />
       <workItem from="1708370439654" duration="5679000" />
-      <workItem from="1708410105980" duration="2461000" />
+      <workItem from="1708410105980" duration="2825000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -522,7 +561,15 @@
       <option name="project" value="LOCAL" />
       <updated>1708412403154</updated>
     </task>
-    <option name="localTasksCounter" value="48" />
+    <task id="LOCAL-00048" summary="Fixed two tests and deleted one nonsensical test">
+      <option name="closed" value="true" />
+      <created>1708413307685</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1708413307685</updated>
+    </task>
+    <option name="localTasksCounter" value="49" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -544,7 +591,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="engine2" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
@@ -552,7 +611,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Fixed an issue with a test of world_point_to_ndc" />
     <MESSAGE value="Removed two unused dependencies" />
     <MESSAGE value="Changed a value in one of the point transformation tests" />
     <MESSAGE value="Migrated two camera tests to property tests, and promptly found a failure case" />
@@ -577,7 +635,8 @@
     <MESSAGE value="Refactored the whole workspace into a single crate." />
     <MESSAGE value="Fixed a few errors that cropped up when compiling." />
     <MESSAGE value="Moved loader to the bin directory as ply-loader." />
-    <option name="LAST_COMMIT_MESSAGE" value="Moved loader to the bin directory as ply-loader." />
+    <MESSAGE value="Fixed two tests and deleted one nonsensical test" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed two tests and deleted one nonsensical test" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
