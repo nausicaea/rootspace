@@ -1,6 +1,7 @@
 use log::debug;
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
 use winit::event_loop::EventLoopWindowTarget;
+use winit::window::Fullscreen;
 
 #[derive(Debug)]
 pub struct Runtime {
@@ -10,6 +11,7 @@ pub struct Runtime {
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
+    pub max_size: winit::dpi::PhysicalSize<u32>,
 }
 
 impl Runtime {
@@ -23,7 +25,11 @@ impl Runtime {
         present_mode: wgpu::PresentMode,
         alpha_mode: wgpu::CompositeAlphaMode,
     ) -> Runtime {
-        let window = winit::window::WindowBuilder::new().build(event_loop).unwrap();
+        let window = winit::window::WindowBuilder::new()
+            .with_fullscreen(Some(Fullscreen::Borderless(None)))
+            .build(event_loop).unwrap();
+
+        let max_size = window.current_monitor().unwrap().size();
 
         let instance = wgpu::Instance::new(backends);
         let surface = unsafe { instance.create_surface(&window) };
@@ -83,6 +89,7 @@ impl Runtime {
             queue,
             config,
             size,
+            max_size,
         }
     }
 }

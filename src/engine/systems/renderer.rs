@@ -1,4 +1,5 @@
 use anyhow::Context;
+use log::{debug, error, warn};
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
 
@@ -91,7 +92,7 @@ impl Renderer {
     }
 
     fn on_out_of_memory(&self, res: &Resources) {
-        log::error!("WGPU surface is out of memory");
+        error!("WGPU surface is out of memory");
         res.borrow_mut::<EventQueue<EngineEvent>>()
             .send(EngineEvent::AbortRequested)
     }
@@ -209,7 +210,9 @@ impl System for Renderer {
 
         let gfx = res.borrow::<Graphics>();
 
-        match gfx.create_encoder(Some("main-encoder")) {
+        let encoder = gfx.create_encoder(Some("main-encoder"));
+
+        match encoder {
             Err(SurfaceError::Lost | SurfaceError::Outdated) => self.on_surface_outdated(res),
             Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
             Err(SurfaceError::Timeout) => self.on_timeout(),

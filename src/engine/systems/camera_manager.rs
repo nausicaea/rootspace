@@ -9,6 +9,7 @@ use crate::engine::components::camera::Camera;
 use crate::engine::events::window_event::WindowEvent;
 use log::debug;
 use serde::{Deserialize, Serialize};
+use crate::engine::resources::graphics::Graphics;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CameraManager {
@@ -38,7 +39,12 @@ impl System for CameraManager {
         let events = res.borrow_mut::<EventQueue<WindowEvent>>().receive(&self.receiver);
         for event in events {
             match event {
-                WindowEvent::Resized(dims) => self.on_resize(res, (dims.width, dims.height)),
+                WindowEvent::Resized(dims) => {
+                    let max_dims = res.borrow::<Graphics>().max_size();
+                    if dims.width <= max_dims.width && dims.height <= max_dims.height {
+                        self.on_resize(res, (dims.width, dims.height))
+                    }
+                },
                 _ => (),
             }
         }

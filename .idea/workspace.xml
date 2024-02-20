@@ -7,11 +7,13 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Updated all other compatible dependencies">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="More aptly named the examples.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/playground.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/wgpu_playground.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/engine_test.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/orchestrator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/orchestrator.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/resources/graphics/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/resources/graphics/runtime.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/runtime.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/systems/camera_manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/camera_manager.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/renderer.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,36 +63,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Cargo.+nightly.executor": "Run",
-    "Cargo.Run Playground Example.executor": "Run",
-    "Cargo.Run Scene Example.executor": "Run",
-    "Cargo.Run Test Example.executor": "Run",
-    "Cargo.Test glamour::persp::tests::persp_supports_inversion.executor": "Run",
-    "Cargo.Test.executor": "Run",
-    "Cargo.clean.executor": "Run",
-    "Cargo.update.executor": "Run",
-    "Notification.DisplayName-DoNotAsk-ideavim": "ideavim",
-    "Notification.DoNotAsk-ideavim": "true",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.rust.reset.selective.auto.import": "true",
-    "WebServerToolWindowFactoryState": "true",
-    "git-widget-placeholder": "engine2",
-    "last_opened_file_path": "/Users/young0000/Crypt/Development/personal/rootspace",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "editor.preferences.import",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Cargo.+nightly.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Run Engine Test Example.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Run Playground Example.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Run Scene Example.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Run Test Example.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test glamour::persp::tests::persp_supports_inversion.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.clean.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.update.executor&quot;: &quot;Run&quot;,
+    &quot;Notification.DisplayName-DoNotAsk-ideavim&quot;: &quot;ideavim&quot;,
+    &quot;Notification.DoNotAsk-ideavim&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;engine2&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/young0000/Crypt/Development/personal/rootspace&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
+    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;consents&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/plyers/tests" />
@@ -117,7 +120,7 @@
       <option name="command" value="run --example engine_test" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <envs>
-        <env name="RUST_LOG" value="info" />
+        <env name="RUST_LOG" value="rootspace=debug" />
       </envs>
       <option name="emulateTerminal" value="false" />
       <option name="channel" value="DEFAULT" />
@@ -267,6 +270,7 @@
       <workItem from="1708285636742" duration="3682000" />
       <workItem from="1708370439654" duration="5679000" />
       <workItem from="1708410105980" duration="4234000" />
+      <workItem from="1708453584478" duration="1419000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -540,14 +544,6 @@
       <option name="project" value="LOCAL" />
       <updated>1656585002003</updated>
     </task>
-    <task id="LOCAL-00046" summary="Fixed a few errors that cropped up when compiling.">
-      <option name="closed" value="true" />
-      <created>1708410639421</created>
-      <option name="number" value="00046" />
-      <option name="presentableId" value="LOCAL-00046" />
-      <option name="project" value="LOCAL" />
-      <updated>1708410639421</updated>
-    </task>
     <task id="LOCAL-00047" summary="Moved loader to the bin directory as ply-loader.">
       <option name="closed" value="true" />
       <created>1708412403154</created>
@@ -588,7 +584,15 @@
       <option name="project" value="LOCAL" />
       <updated>1708422871944</updated>
     </task>
-    <option name="localTasksCounter" value="52" />
+    <task id="LOCAL-00052" summary="More aptly named the examples.">
+      <option name="closed" value="true" />
+      <created>1708423343359</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1708423343359</updated>
+    </task>
+    <option name="localTasksCounter" value="53" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -630,7 +634,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Added a property test for Model." />
     <MESSAGE value="Began working on the property tests for Camera transformations." />
     <MESSAGE value="I now have a good set of tests for model.rs" />
     <MESSAGE value="I'm having serious issues getting matrix transformations to work for UI elements." />
@@ -655,7 +658,8 @@
     <MESSAGE value="Renamed the scene.rs example" />
     <MESSAGE value="Upgraded a few dependencies" />
     <MESSAGE value="Updated all other compatible dependencies" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated all other compatible dependencies" />
+    <MESSAGE value="More aptly named the examples." />
+    <option name="LAST_COMMIT_MESSAGE" value="More aptly named the examples." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

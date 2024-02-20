@@ -1,3 +1,4 @@
+use log::warn;
 use crate::ecs::resource::Resource;
 use crate::ecs::with_dependencies::WithDependencies;
 use pollster::FutureExt;
@@ -46,6 +47,10 @@ pub struct Graphics {
 }
 
 impl Graphics {
+    pub fn max_size(&self) -> winit::dpi::PhysicalSize<u32> {
+        self.runtime.max_size
+    }
+
     pub fn window_id(&self) -> winit::window::WindowId {
         self.runtime.window.id()
     }
@@ -55,14 +60,17 @@ impl Graphics {
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        if new_size.width > 0 && new_size.height > 0 {
-            self.runtime.size = new_size;
-            self.runtime.config.width = new_size.width;
-            self.runtime.config.height = new_size.height;
-            self.runtime
-                .surface
-                .configure(&self.runtime.device, &self.runtime.config);
+        if new_size.width > self.runtime.max_size.width || new_size.height > self.runtime.max_size.height {
+            warn!("Ignoring requested physical dimensions {}x{} because they exceed maximum dimensions {}x{}", new_size.width, new_size.height, self.runtime.max_size.width, self.runtime.max_size.height);
+            return;
         }
+
+        self.runtime.size = new_size;
+        self.runtime.config.width = new_size.width;
+        self.runtime.config.height = new_size.height;
+        self.runtime
+            .surface
+            .configure(&self.runtime.device, &self.runtime.config);
     }
 
     pub fn transform_layout(&self) -> BindGroupLayoutId {
