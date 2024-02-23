@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use rootspace::engine::orchestrator::Orchestrator;
+use rootspace::engine::orchestrator::{Orchestrator, OrchestratorDeps};
 use rootspace::engine::resources::asset_database::AssetDatabaseDeps;
 use rootspace::engine::resources::graphics::settings::Settings;
 use rootspace::engine::resources::graphics::GraphicsDeps;
@@ -10,6 +10,7 @@ use winit::event_loop::EventLoop;
 struct Dependencies<'a, T: 'static> {
     event_loop: &'a EventLoop<T>,
     name: &'a str,
+    main_scene: &'a str,
     force_init: bool,
     within_repo: bool,
     graphics_settings: Settings,
@@ -41,6 +42,12 @@ impl<'a, T> AssetDatabaseDeps for Dependencies<'a, T> {
     }
 }
 
+impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
+    fn main_scene(&self) -> &str {
+        self.main_scene
+    }
+}
+
 fn main() -> anyhow::Result<()> {
     env_logger::init();
 
@@ -49,6 +56,7 @@ fn main() -> anyhow::Result<()> {
     let deps = Dependencies {
         event_loop: &event_loop,
         name: "test",
+        main_scene: "test.cbor",
         force_init: false,
         within_repo: true,
         graphics_settings: Settings::default(),

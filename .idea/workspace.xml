@@ -7,12 +7,11 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="More aptly named the examples.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Tried to diagnose an issue with weird physical screen sizes.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/contrib/engine/tests/SourceSansPro-LICENSE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/tests/SourceSansPro-LICENSE.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/engine_test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/engine_test.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/engine/orchestrator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/orchestrator.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/resources/graphics/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/resources/graphics/runtime.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/runtime.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/systems/camera_manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/camera_manager.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/engine/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/renderer.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -81,7 +80,7 @@
     &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;engine2&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/young0000/Crypt/Development/personal/rootspace&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/kitsune/Crypt/Development/personal/rootspace&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -90,7 +89,7 @@
     &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
     &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
     &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;consents&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;language.rust&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -181,7 +180,7 @@
     </list>
   </component>
   <component name="RustProjectSettings">
-    <option name="toolchainHomeDirectory" value="/usr/local/bin" />
+    <option name="toolchainHomeDirectory" value="/opt/homebrew/bin" />
   </component>
   <component name="RustfmtProjectSettings">
     <option name="channel" value="nightly" />
@@ -271,6 +270,9 @@
       <workItem from="1708370439654" duration="5679000" />
       <workItem from="1708410105980" duration="4234000" />
       <workItem from="1708453584478" duration="1419000" />
+      <workItem from="1708456381744" duration="779000" />
+      <workItem from="1708639007947" duration="1256000" />
+      <workItem from="1708693581352" duration="816000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -544,14 +546,6 @@
       <option name="project" value="LOCAL" />
       <updated>1656585002003</updated>
     </task>
-    <task id="LOCAL-00047" summary="Moved loader to the bin directory as ply-loader.">
-      <option name="closed" value="true" />
-      <created>1708412403154</created>
-      <option name="number" value="00047" />
-      <option name="presentableId" value="LOCAL-00047" />
-      <option name="project" value="LOCAL" />
-      <updated>1708412403154</updated>
-    </task>
     <task id="LOCAL-00048" summary="Fixed two tests and deleted one nonsensical test">
       <option name="closed" value="true" />
       <created>1708413307685</created>
@@ -592,7 +586,15 @@
       <option name="project" value="LOCAL" />
       <updated>1708423343359</updated>
     </task>
-    <option name="localTasksCounter" value="53" />
+    <task id="LOCAL-00053" summary="Tried to diagnose an issue with weird physical screen sizes.">
+      <option name="closed" value="true" />
+      <created>1708456473260</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1708456473261</updated>
+    </task>
+    <option name="localTasksCounter" value="54" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -634,7 +636,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Began working on the property tests for Camera transformations." />
     <MESSAGE value="I now have a good set of tests for model.rs" />
     <MESSAGE value="I'm having serious issues getting matrix transformations to work for UI elements." />
     <MESSAGE value="Hell, yes! I can parse the entire PLY header!" />
@@ -659,7 +660,8 @@
     <MESSAGE value="Upgraded a few dependencies" />
     <MESSAGE value="Updated all other compatible dependencies" />
     <MESSAGE value="More aptly named the examples." />
-    <option name="LAST_COMMIT_MESSAGE" value="More aptly named the examples." />
+    <MESSAGE value="Tried to diagnose an issue with weird physical screen sizes." />
+    <option name="LAST_COMMIT_MESSAGE" value="Tried to diagnose an issue with weird physical screen sizes." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

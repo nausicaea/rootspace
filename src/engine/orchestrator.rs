@@ -46,7 +46,7 @@ impl Orchestrator {
         FUSR: SystemRegistry + WithResources,
         USR: SystemRegistry + WithResources,
         RSR: SystemRegistry + WithResources,
-        D: GraphicsDeps + AssetDatabaseDeps,
+        D: GraphicsDeps + AssetDatabaseDeps + OrchestratorDeps,
     {
         let mut world = World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, RSRegistry<RSR>, _>(deps)?;
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
@@ -54,7 +54,7 @@ impl Orchestrator {
 
         world
             .borrow::<AssetDatabase>()
-            .load_asset::<Scene, _>(world.resources(), "scenes", "test.cbor")?;
+            .load_asset::<Scene, _>(world.resources(), "scenes", deps.main_scene())?;
 
         Ok(Orchestrator {
             world,
@@ -192,6 +192,16 @@ impl Orchestrator {
 
     fn cleanup(&mut self) {
         self.world.clear();
+    }
+}
+
+pub trait OrchestratorDeps {
+    /// Specifies the name of the main scene
+    fn main_scene(&self) -> &str;
+
+    /// Specifies the name of the asset group scenes are stored in
+    fn scene_group(&self) -> &str {
+        "scenes"
     }
 }
 
