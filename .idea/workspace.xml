@@ -7,8 +7,14 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added dependency variables for the main scene">
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Forgot to move a dependency in correspondence with promoting ply_loader to a bin (from an example)">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/test/scenes/test.cbor" beforeDir="false" afterPath="$PROJECT_DIR$/assets/test/scenes/test.cbor" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/create_scene.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/create_scene.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/assets/scene.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/assets/scene.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rose_tree/hierarchy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rose_tree/hierarchy.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rose_tree/tree.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rose_tree/tree.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -110,7 +116,7 @@
       <command value="cargo update" />
     </option>
   </component>
-  <component name="RunManager" selected="Cargo.Run Engine Test Example">
+  <component name="RunManager" selected="Cargo.Run Scene Example">
     <configuration name="Run Engine Test Example" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --example engine_test" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -269,7 +275,7 @@
       <workItem from="1708456381744" duration="779000" />
       <workItem from="1708639007947" duration="1256000" />
       <workItem from="1708693581352" duration="2027000" />
-      <workItem from="1708695975906" duration="255000" />
+      <workItem from="1708695975906" duration="5232000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -543,14 +549,6 @@
       <option name="project" value="LOCAL" />
       <updated>1656585002003</updated>
     </task>
-    <task id="LOCAL-00049" summary="Renamed the scene.rs example">
-      <option name="closed" value="true" />
-      <created>1708413655641</created>
-      <option name="number" value="00049" />
-      <option name="presentableId" value="LOCAL-00049" />
-      <option name="project" value="LOCAL" />
-      <updated>1708413655641</updated>
-    </task>
     <task id="LOCAL-00050" summary="Upgraded a few dependencies">
       <option name="closed" value="true" />
       <created>1708415025766</created>
@@ -591,7 +589,15 @@
       <option name="project" value="LOCAL" />
       <updated>1708694824281</updated>
     </task>
-    <option name="localTasksCounter" value="55" />
+    <task id="LOCAL-00055" summary="Forgot to move a dependency in correspondence with promoting ply_loader to a bin (from an example)">
+      <option name="closed" value="true" />
+      <created>1708696276013</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1708696276013</updated>
+    </task>
+    <option name="localTasksCounter" value="56" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -633,7 +639,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="I'm having serious issues getting matrix transformations to work for UI elements." />
     <MESSAGE value="Hell, yes! I can parse the entire PLY header!" />
     <MESSAGE value="Removed the old parsing code" />
     <MESSAGE value="Nope. Anyhow not suitable here" />
@@ -658,7 +663,8 @@
     <MESSAGE value="More aptly named the examples." />
     <MESSAGE value="Tried to diagnose an issue with weird physical screen sizes." />
     <MESSAGE value="Added dependency variables for the main scene" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added dependency variables for the main scene" />
+    <MESSAGE value="Forgot to move a dependency in correspondence with promoting ply_loader to a bin (from an example)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Forgot to move a dependency in correspondence with promoting ply_loader to a bin (from an example)" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

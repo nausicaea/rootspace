@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Display, Formatter};
+use std::hash::Hash;
 use std::{
     collections::{BTreeMap, HashMap, VecDeque},
     iter::FusedIterator,
@@ -197,6 +199,40 @@ where
             parents: BTreeMap::default(),
             nodes: HashMap::default(),
         }
+    }
+}
+
+impl<K, V> Display for Tree<K, V>
+where
+    K: Display + Eq + PartialEq + Hash,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        fn display_rec<K: Display + Eq + PartialEq + Hash>(
+            f: &mut Formatter,
+            edges: &HashMap<K, Vec<K>>,
+            key: &K,
+            depth: usize,
+        ) -> std::fmt::Result {
+            // Print the current node
+            writeln!(f, "{:indent$}{}", "", key, indent = depth * 4)?;
+
+            // Recursively display child nodes
+            if let Some(children) = edges.get(key) {
+                for child in children {
+                    display_rec(f, edges, child, depth + 1)?;
+                }
+            }
+
+            Ok(())
+        }
+
+        let root_nodes = self.parents.iter().filter(|(_, p)| p.is_none()).map(|(n, _)| n);
+
+        for root_node in root_nodes {
+            display_rec(f, &self.edges, root_node, 0)?;
+        }
+
+        Ok(())
     }
 }
 

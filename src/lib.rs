@@ -2,7 +2,7 @@ pub mod ecs;
 pub mod engine;
 mod file_manipulation;
 mod forward_ref;
-mod glamour;
+pub mod glamour;
 pub mod plyers;
 mod rose_tree;
 mod try_default;

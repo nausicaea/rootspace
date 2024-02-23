@@ -2,6 +2,8 @@ use crate::ecs::resource::Resource;
 use crate::rose_tree::tree::Tree;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use std::fmt::{Debug, Display, Formatter};
+use std::hash::Hash;
 
 #[derive(Serialize, Deserialize)]
 #[serde(
@@ -86,6 +88,15 @@ where
 {
     fn default() -> Self {
         Hierarchy(Tree::default())
+    }
+}
+
+impl<K> Display for Hierarchy<K>
+where
+    K: Display + Eq + PartialEq + Hash,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, f)
     }
 }
 

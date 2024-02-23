@@ -29,6 +29,10 @@ impl Scene {
         EntityBuilder::new(self)
     }
 
+    pub fn hierarchy(&self) -> &Hierarchy<Index> {
+        &self.hierarchy
+    }
+
     pub fn load_additive(self, res: &Resources) -> Result<(), anyhow::Error> {
         let map = self.load_hierarchy_additive(&mut res.borrow_mut(), &mut res.borrow_mut());
 
@@ -61,8 +65,9 @@ impl Scene {
                 let i_new = entities.create().idx();
                 map.insert(i_prev, i_new);
 
-                let anc_new = entities.create().idx();
-                map.insert(anc_prev, anc_new);
+                let anc_new = map
+                    .get(&anc_prev)
+                    .expect("A (parent) scene-based entity has no corresponding world entity");
 
                 hierarchy.insert_child(anc_new, i_new);
             } else {
