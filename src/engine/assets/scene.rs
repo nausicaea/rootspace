@@ -29,10 +29,6 @@ impl Scene {
         EntityBuilder::new(self)
     }
 
-    pub fn hierarchy(&self) -> &Hierarchy<Index> {
-        &self.hierarchy
-    }
-
     pub fn load_additive(self, res: &Resources) -> Result<(), anyhow::Error> {
         let map = self.load_hierarchy_additive(&mut res.borrow_mut(), &mut res.borrow_mut());
 

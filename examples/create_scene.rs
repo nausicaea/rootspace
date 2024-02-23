@@ -5,7 +5,6 @@ use rootspace::engine::components::camera::Camera;
 use rootspace::engine::components::renderable::RenderableSource;
 use rootspace::engine::components::transform::Transform;
 use rootspace::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps};
-use rootspace::glamour::num::One;
 use rootspace::glamour::vec::Vec4;
 
 #[derive(Debug, Parser)]
@@ -53,7 +52,7 @@ fn main() -> anyhow::Result<()> {
         .create_entity()
         .with_camera(Camera::default())
         .with_transform(Transform::look_at_lh(
-            [0.0, 0.0, -2.0, 1.0],
+            [0.0, 0.0, -10.0, 1.0],
             [0.0, 0.0, 0.0, 1.0],
             [0.0, 1.0, 0.0, 0.0],
         ))
@@ -61,22 +60,16 @@ fn main() -> anyhow::Result<()> {
 
     let tri1 = scene
         .create_entity()
-        .with_transform(Transform::default())
+        .with_transform(Transform::builder().with_translation(Vec4::new(1.0, 0.0, 0.0, 0.0)).build())
         .with_renderable(RenderableSource::with_model("models", "triangle.ply"))
         .submit();
 
     scene
         .create_entity()
         .with_parent(tri1)
-        .with_transform(Transform::builder().with_translation(Vec4::new(-1.0, 0.0, 0.0, 0.0)).with_scale(Vec4::one() * 0.125).build())
-        //.with_renderable(RenderableSource::with_model("models", "triangle.ply"))
+        .with_transform(Transform::builder().with_translation(Vec4::new(-1.0, 0.0, 0.0, 0.0)).build())
+        .with_renderable(RenderableSource::with_model("models", "triangle.ply"))
         .submit();
-
-    let tri3 = scene.create_entity().with_parent(tri1).submit();
-
-    scene.create_entity().with_parent(tri3).submit();
-
-    println!("{}", scene.hierarchy());
 
     adb.save_asset(&scene, "scenes", "test.cbor")?;
 

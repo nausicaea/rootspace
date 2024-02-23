@@ -12,9 +12,9 @@ use std::{
 ))]
 #[derive(Debug)]
 pub struct Tree<K, V> {
-    pub(crate) edges: HashMap<K, Vec<K>>,
-    pub(crate) parents: BTreeMap<K, Option<K>>,
-    pub(crate) nodes: HashMap<K, V>,
+    pub(super) edges: HashMap<K, Vec<K>>,
+    pub(super) parents: BTreeMap<K, Option<K>>,
+    pub(super) nodes: HashMap<K, V>,
 }
 
 impl<K, V> Tree<K, V> {

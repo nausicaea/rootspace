@@ -6,6 +6,7 @@ use winit::{
 };
 
 use crate::ecs::entity::Entity;
+use crate::ecs::entity::index::Index;
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
 use crate::ecs::loop_control::LoopControl;
@@ -28,6 +29,7 @@ use crate::engine::registry::{RRegistry, RSRegistry, USRegistry};
 use crate::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps};
 use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
 use crate::engine::resources::statistics::Statistics;
+use crate::rose_tree::hierarchy::Hierarchy;
 
 const DELTA_TIME: u64 = 50; // milliseconds
 const MAX_FRAME_DURATION: u64 = 250; // milliseconds
