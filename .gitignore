@@ -1,5 +1,6 @@
 ### Direnv ###
 .envrc
+.direnv
 
 ### Ripgrep ###
 .ignore
