@@ -27,7 +27,8 @@ impl Runtime {
     ) -> Runtime {
         let window = winit::window::WindowBuilder::new()
             .with_fullscreen(Some(Fullscreen::Borderless(None)))
-            .build(event_loop).unwrap();
+            .build(event_loop)
+            .unwrap();
 
         let max_size = window.current_monitor().unwrap().size();
 

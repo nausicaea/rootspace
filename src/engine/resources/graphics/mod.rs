@@ -1,6 +1,6 @@
-use log::warn;
 use crate::ecs::resource::Resource;
 use crate::ecs::with_dependencies::WithDependencies;
+use log::warn;
 use pollster::FutureExt;
 use winit::event_loop::EventLoopWindowTarget;
 
@@ -61,7 +61,10 @@ impl Graphics {
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > self.runtime.max_size.width || new_size.height > self.runtime.max_size.height {
-            warn!("Ignoring requested physical dimensions {}x{} because they exceed maximum dimensions {}x{}", new_size.width, new_size.height, self.runtime.max_size.width, self.runtime.max_size.height);
+            warn!(
+                "Ignoring requested physical dimensions {}x{} because they exceed maximum dimensions {}x{}",
+                new_size.width, new_size.height, self.runtime.max_size.width, self.runtime.max_size.height
+            );
             return;
         }
 

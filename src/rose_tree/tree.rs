@@ -4,12 +4,10 @@ use std::{
 };
 
 #[derive(serde::Serialize, serde::Deserialize)]
-#[
-serde(bound(
-serialize = "K: Ord + std::hash::Hash + serde::Serialize, V: serde::Serialize",
-deserialize = "K: Ord + std::hash::Hash + for<'r> serde::Deserialize<'r>, V: for<'r> serde::Deserialize<'r>"
-))
-]
+#[serde(bound(
+    serialize = "K: Ord + std::hash::Hash + serde::Serialize, V: serde::Serialize",
+    deserialize = "K: Ord + std::hash::Hash + for<'r> serde::Deserialize<'r>, V: for<'r> serde::Deserialize<'r>"
+))]
 #[derive(Debug)]
 pub struct Tree<K, V> {
     pub(crate) edges: HashMap<K, Vec<K>>,
@@ -34,8 +32,8 @@ impl<K, V> Tree<K, V> {
 }
 
 impl<K, V> Tree<K, V>
-    where
-        K: Eq + std::hash::Hash,
+where
+    K: Eq + std::hash::Hash,
 {
     pub fn has_children<J: AsRef<K>>(&self, key: J) -> bool {
         self.edges.get(key.as_ref()).map(|e| !e.is_empty()).unwrap_or(false)
@@ -43,8 +41,8 @@ impl<K, V> Tree<K, V>
 }
 
 impl<K, V> Tree<K, V>
-    where
-        K: Clone,
+where
+    K: Clone,
 {
     pub fn bfs_iter(&self) -> BfsIter<K, V> {
         BfsIter::new(self)
@@ -60,8 +58,8 @@ impl<K, V> Tree<K, V>
 }
 
 impl<K, V> Tree<K, V>
-    where
-        K: Eq + std::hash::Hash,
+where
+    K: Eq + std::hash::Hash,
 {
     pub fn contains_key<J: AsRef<K>>(&self, key: J) -> bool {
         self.nodes.contains_key(key.as_ref())
@@ -73,8 +71,8 @@ impl<K, V> Tree<K, V>
 }
 
 impl<K, V> Tree<K, V>
-    where
-        K: Clone + Ord + std::hash::Hash,
+where
+    K: Clone + Ord + std::hash::Hash,
 {
     pub fn insert<I: Into<K>>(&mut self, key: I, value: V) -> bool {
         let key = key.into();
@@ -152,9 +150,9 @@ impl<K, V> Tree<K, V>
 }
 
 impl<K, V> Tree<K, V>
-    where
-        K: Clone + Eq + std::hash::Hash,
-        V: Default,
+where
+    K: Clone + Eq + std::hash::Hash,
+    V: Default,
 {
     pub fn traverse_with<F: Fn(&K, Option<&V>, &V) -> V>(&mut self, f: F) {
         let mut queue: VecDeque<(K, Option<K>)> = VecDeque::default();
@@ -190,8 +188,8 @@ impl<K, V> Tree<K, V>
 }
 
 impl<K, V> Default for Tree<K, V>
-    where
-        K: Ord,
+where
+    K: Ord,
 {
     fn default() -> Self {
         Tree {
@@ -203,9 +201,9 @@ impl<K, V> Default for Tree<K, V>
 }
 
 impl<K, V> PartialEq for Tree<K, V>
-    where
-        K: Eq + std::hash::Hash,
-        V: PartialEq,
+where
+    K: Eq + std::hash::Hash,
+    V: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         self.edges.eq(&other.edges) && self.nodes.eq(&other.nodes) && self.parents.eq(&other.parents)
@@ -218,8 +216,8 @@ pub struct AncestorsIter<'a, K, V> {
 }
 
 impl<'a, K, V> AncestorsIter<'a, K, V>
-    where
-        K: Clone,
+where
+    K: Clone,
 {
     fn new(hier: &'a Tree<K, V>, key: &K) -> Self {
         AncestorsIter {
@@ -230,8 +228,8 @@ impl<'a, K, V> AncestorsIter<'a, K, V>
 }
 
 impl<'a, K, V> Iterator for AncestorsIter<'a, K, V>
-    where
-        K: Clone + Ord + Eq + std::hash::Hash,
+where
+    K: Clone + Ord + Eq + std::hash::Hash,
 {
     type Item = (&'a K, &'a V);
 
@@ -256,8 +254,8 @@ pub struct BfsIter<'a, K, V> {
 }
 
 impl<'a, K, V> BfsIter<'a, K, V>
-    where
-        K: Clone,
+where
+    K: Clone,
 {
     fn new(hier: &'a Tree<K, V>) -> Self {
         BfsIter {
@@ -274,8 +272,8 @@ impl<'a, K, V> BfsIter<'a, K, V>
 }
 
 impl<'a, K, V> Iterator for BfsIter<'a, K, V>
-    where
-        K: Clone + Eq + std::hash::Hash,
+where
+    K: Clone + Eq + std::hash::Hash,
 {
     type Item = (&'a K, &'a V);
 
@@ -302,8 +300,8 @@ pub struct DfsIter<'a, K, V> {
 }
 
 impl<'a, K, V> DfsIter<'a, K, V>
-    where
-        K: Clone,
+where
+    K: Clone,
 {
     fn new(hier: &'a Tree<K, V>) -> Self {
         DfsIter {
@@ -321,8 +319,8 @@ impl<'a, K, V> DfsIter<'a, K, V>
 }
 
 impl<'a, K, V> Iterator for DfsIter<'a, K, V>
-    where
-        K: Clone + Eq + std::hash::Hash,
+where
+    K: Clone + Eq + std::hash::Hash,
 {
     type Item = (&'a K, &'a V);
 

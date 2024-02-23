@@ -7,12 +7,16 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Tried to diagnose an issue with weird physical screen sizes.">
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added dependency variables for the main scene">
+      <change afterPath="$PROJECT_DIR$/flake.lock" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/flake.nix" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/contrib/engine/tests/SourceSansPro-LICENSE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/contrib/engine/tests/SourceSansPro-LICENSE.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/engine_test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/engine_test.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/orchestrator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/orchestrator.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/renderer.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/resources/graphics/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/resources/graphics/runtime.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/runtime.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/systems/camera_manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/camera_manager.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/file_manipulation.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/file_manipulation.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/glamour/mat/ops/norm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/ops/norm.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rose_tree/tree.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rose_tree/tree.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,37 +66,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Cargo.+nightly.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Run Engine Test Example.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Run Playground Example.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Run Scene Example.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Run Test Example.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Test glamour::persp::tests::persp_supports_inversion.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Test.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.clean.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.update.executor&quot;: &quot;Run&quot;,
-    &quot;Notification.DisplayName-DoNotAsk-ideavim&quot;: &quot;ideavim&quot;,
-    &quot;Notification.DoNotAsk-ideavim&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;engine2&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/kitsune/Crypt/Development/personal/rootspace&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;language.rust&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.+nightly.executor": "Run",
+    "Cargo.Run Engine Test Example.executor": "Run",
+    "Cargo.Run Playground Example.executor": "Run",
+    "Cargo.Run Scene Example.executor": "Run",
+    "Cargo.Run Test Example.executor": "Run",
+    "Cargo.Test glamour::persp::tests::persp_supports_inversion.executor": "Run",
+    "Cargo.Test.executor": "Run",
+    "Cargo.clean.executor": "Run",
+    "Cargo.update.executor": "Run",
+    "Notification.DisplayName-DoNotAsk-ideavim": "ideavim",
+    "Notification.DoNotAsk-ideavim": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "WebServerToolWindowFactoryState": "true",
+    "git-widget-placeholder": "engine2",
+    "last_opened_file_path": "/Users/kitsune/Crypt/Development/personal/rootspace",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/plyers/tests" />
@@ -272,7 +276,7 @@
       <workItem from="1708453584478" duration="1419000" />
       <workItem from="1708456381744" duration="779000" />
       <workItem from="1708639007947" duration="1256000" />
-      <workItem from="1708693581352" duration="816000" />
+      <workItem from="1708693581352" duration="2027000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>
@@ -546,14 +550,6 @@
       <option name="project" value="LOCAL" />
       <updated>1656585002003</updated>
     </task>
-    <task id="LOCAL-00048" summary="Fixed two tests and deleted one nonsensical test">
-      <option name="closed" value="true" />
-      <created>1708413307685</created>
-      <option name="number" value="00048" />
-      <option name="presentableId" value="LOCAL-00048" />
-      <option name="project" value="LOCAL" />
-      <updated>1708413307685</updated>
-    </task>
     <task id="LOCAL-00049" summary="Renamed the scene.rs example">
       <option name="closed" value="true" />
       <created>1708413655641</created>
@@ -594,7 +590,15 @@
       <option name="project" value="LOCAL" />
       <updated>1708456473261</updated>
     </task>
-    <option name="localTasksCounter" value="54" />
+    <task id="LOCAL-00054" summary="Added dependency variables for the main scene">
+      <option name="closed" value="true" />
+      <created>1708694824280</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1708694824281</updated>
+    </task>
+    <option name="localTasksCounter" value="55" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -636,7 +640,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="I now have a good set of tests for model.rs" />
     <MESSAGE value="I'm having serious issues getting matrix transformations to work for UI elements." />
     <MESSAGE value="Hell, yes! I can parse the entire PLY header!" />
     <MESSAGE value="Removed the old parsing code" />
@@ -661,7 +664,8 @@
     <MESSAGE value="Updated all other compatible dependencies" />
     <MESSAGE value="More aptly named the examples." />
     <MESSAGE value="Tried to diagnose an issue with weird physical screen sizes." />
-    <option name="LAST_COMMIT_MESSAGE" value="Tried to diagnose an issue with weird physical screen sizes." />
+    <MESSAGE value="Added dependency variables for the main scene" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added dependency variables for the main scene" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

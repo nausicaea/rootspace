@@ -7,9 +7,9 @@ use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
 use crate::engine::components::camera::Camera;
 use crate::engine::events::window_event::WindowEvent;
+use crate::engine::resources::graphics::Graphics;
 use log::debug;
 use serde::{Deserialize, Serialize};
-use crate::engine::resources::graphics::Graphics;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CameraManager {
@@ -44,7 +44,7 @@ impl System for CameraManager {
                     if dims.width <= max_dims.width && dims.height <= max_dims.height {
                         self.on_resize(res, (dims.width, dims.height))
                     }
-                },
+                }
                 _ => (),
             }
         }

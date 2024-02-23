@@ -28,9 +28,14 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError
     let expanded_path = if user_dirs.home_dir() == Path::new("/") {
         // Corner case: `h` root directory;
         // don't prepend extra `/`, just drop the tilde.
-        p.strip_prefix("~").map_err(|e| FileError::StripPrefixError(p.to_path_buf(), e))?.to_path_buf()
+        p.strip_prefix("~")
+            .map_err(|e| FileError::StripPrefixError(p.to_path_buf(), e))?
+            .to_path_buf()
     } else {
-        user_dirs.home_dir().join(p.strip_prefix("~/").map_err(|e| FileError::StripPrefixError(p.to_path_buf(), e))?)
+        user_dirs.home_dir().join(
+            p.strip_prefix("~/")
+                .map_err(|e| FileError::StripPrefixError(p.to_path_buf(), e))?,
+        )
     };
 
     Ok(expanded_path)
