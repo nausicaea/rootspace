@@ -8,15 +8,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added dependency variables for the main scene">
-      <change afterPath="$PROJECT_DIR$/flake.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/flake.nix" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/resources/graphics/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/resources/graphics/runtime.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/resources/graphics/runtime.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/engine/systems/camera_manager.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/camera_manager.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/file_manipulation.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/file_manipulation.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/glamour/mat/ops/norm.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/glamour/mat/ops/norm.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rose_tree/tree.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/rose_tree/tree.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -177,10 +169,10 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="Cargo.Test" />
       <item itemvalue="Cargo.Run Engine Test Example" />
       <item itemvalue="Cargo.Run Scene Example" />
       <item itemvalue="Cargo.Run WGPU Playground Example" />
-      <item itemvalue="Cargo.Test" />
     </list>
   </component>
   <component name="RustProjectSettings">
@@ -277,6 +269,7 @@
       <workItem from="1708456381744" duration="779000" />
       <workItem from="1708639007947" duration="1256000" />
       <workItem from="1708693581352" duration="2027000" />
+      <workItem from="1708695975906" duration="255000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>

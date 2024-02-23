@@ -49,6 +49,7 @@ bytemuck = { version = "1.0", features = [ "derive" ] }
 image = { version = "0.24", default-features = false, features = ["png", "jpeg"] }
 pollster = "0.3.0"
 ctrlc = { version = "3.0.0", features = ["termination"] }
+clap = { version = "4.0.0", features = ["derive"] }
 directories = "5.0"
 ciborium = "^0.2.0"
 lazy_static = "1.0"
@@ -67,7 +68,6 @@ approx = "0.5.0"
 [dev-dependencies]
 env_logger = "0.11"
 fern = "0.6.0"
-clap = { version = "4.0.0", features = ["derive"] }
 glob = "0.3.1"
 tempfile = "3.0.1"
 serde_test = "1.0.126"
