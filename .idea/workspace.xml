@@ -7,13 +7,7 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="I believe I've fixed hierarchy merging when loading scenes into the world.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/test/scenes/test.cbor" beforeDir="false" afterPath="$PROJECT_DIR$/assets/test/scenes/test.cbor" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/create_scene.rs" beforeDir="false" afterPath="$PROJECT_DIR$/examples/create_scene.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rootspace.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace.xcodeproj/project.pbxproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rootspace.xcodeproj/xcshareddata/xcschemes/rootspace.xcscheme" beforeDir="false" afterPath="$PROJECT_DIR$/rootspace.xcodeproj/xcshareddata/xcschemes/rootspace.xcscheme" afterDir="false" />
-    </list>
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added the xcode project again." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -554,14 +548,6 @@
       <option name="project" value="LOCAL" />
       <updated>1656585002003</updated>
     </task>
-    <task id="LOCAL-00052" summary="More aptly named the examples.">
-      <option name="closed" value="true" />
-      <created>1708423343359</created>
-      <option name="number" value="00052" />
-      <option name="presentableId" value="LOCAL-00052" />
-      <option name="project" value="LOCAL" />
-      <updated>1708423343359</updated>
-    </task>
     <task id="LOCAL-00053" summary="Tried to diagnose an issue with weird physical screen sizes.">
       <option name="closed" value="true" />
       <created>1708456473260</created>
@@ -602,7 +588,15 @@
       <option name="project" value="LOCAL" />
       <updated>1708725258001</updated>
     </task>
-    <option name="localTasksCounter" value="58" />
+    <task id="LOCAL-00058" summary="Added the xcode project again.">
+      <option name="closed" value="true" />
+      <created>1708778557475</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1708778557475</updated>
+    </task>
+    <option name="localTasksCounter" value="59" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -647,7 +641,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Nope. Anyhow not suitable here" />
     <MESSAGE value="Added position tracking for some errors" />
     <MESSAGE value="Made the grammar more strict" />
     <MESSAGE value="Getting somewhere" />
@@ -672,7 +665,8 @@
     <MESSAGE value="Forgot to move a dependency in correspondence with promoting ply_loader to a bin (from an example)" />
     <MESSAGE value="Added a visual representation of the hierarchy." />
     <MESSAGE value="I believe I've fixed hierarchy merging when loading scenes into the world." />
-    <option name="LAST_COMMIT_MESSAGE" value="I believe I've fixed hierarchy merging when loading scenes into the world." />
+    <MESSAGE value="Added the xcode project again." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added the xcode project again." />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
