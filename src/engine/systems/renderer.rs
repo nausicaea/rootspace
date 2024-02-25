@@ -51,42 +51,14 @@ impl Renderer {
 
     fn render(&self, res: &Resources, mut rp: RenderPass) {
         let gfx = res.borrow::<Graphics>();
-        let hier = res.borrow::<Hierarchy<Index>>();
+        // let hier = res.borrow::<Hierarchy<Index>>();
 
-        let cameras = res.borrow_components::<Camera>();
-        let transforms = res.borrow_components::<Transform>();
-        let renderables = res.borrow_components::<Renderable>();
-
-        let cam_data: Vec<_> = hier.bfs_iter()
-            .filter_map(|i| cameras.get(i).map(|c| (i, c)))
-            .map(|(i, c)| {
-                let t = hier.ancestors(i)
-                    .filter_map(|ancestor_index| transforms.get(ancestor_index).map(|t| t.to_matrix()))
-                    .product::<Mat4<f32>>();
-
-                c.as_matrix() * t
-            })
+        let cam_data: Vec<_> = res.iter_rr::<Camera, Transform>()
+            .map(|(i, c, t)| c.as_matrix() * t.to_matrix())
             .collect();
 
-        let render_data: Vec<_> = cam_data
-            .into_iter()
-            .flat_map(|ct| {
-                let mut rd = Vec::new();
-
-                for idx in hier.bfs_iter() {
-                    let Some(r) = renderables.get(idx) else {
-                        continue;
-                    };
-
-                    let t = hier.ancestors(idx)
-                        .filter_map(|ancestor_index| transforms.get(ancestor_index).map(|t| t.to_matrix()))
-                        .product::<Mat4<f32>>();
-
-                    rd.push((ct * t, r));
-                }
-
-                rd.into_iter()
-            })
+        let render_data: Vec<_> = cam_data.iter()
+            .flat_map(|cm| res.iter_rr::<Renderable, Transform>().map(|(i, r, t)| (*cm * t.to_matrix(), r)))
             .collect();
 
         for (t, r) in render_data {

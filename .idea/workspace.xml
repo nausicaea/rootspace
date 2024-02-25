@@ -7,7 +7,11 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Added the xcode project again." />
+    <list default="true" id="586610ae-0992-44d8-92cd-dacb0d73ad58" name="Changes" comment="Dependency upgrade">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ecs/storage/iterators.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ecs/storage/iterators.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/systems/renderer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/systems/renderer.rs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -61,37 +65,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Cargo.+nightly.executor": "Run",
-    "Cargo.Run Engine Test Example.executor": "Run",
-    "Cargo.Run Playground Example.executor": "Run",
-    "Cargo.Run Scene Example.executor": "Run",
-    "Cargo.Run Test Example.executor": "Run",
-    "Cargo.Test glamour::persp::tests::persp_supports_inversion.executor": "Run",
-    "Cargo.Test.executor": "Run",
-    "Cargo.clean.executor": "Run",
-    "Cargo.update.executor": "Run",
-    "Notification.DisplayName-DoNotAsk-ideavim": "ideavim",
-    "Notification.DoNotAsk-ideavim": "true",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.rust.reset.selective.auto.import": "true",
-    "WebServerToolWindowFactoryState": "true",
-    "git-widget-placeholder": "engine2",
-    "last_opened_file_path": "/Users/kitsune/Crypt/Development/personal/rootspace",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Cargo.+nightly.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Run Engine Test Example.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Run Playground Example.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Run Scene Example.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Run Test Example.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test glamour::persp::tests::persp_supports_inversion.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Test.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.clean.executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.update.executor&quot;: &quot;Run&quot;,
+    &quot;Notification.DisplayName-DoNotAsk-ideavim&quot;: &quot;ideavim&quot;,
+    &quot;Notification.DoNotAsk-ideavim&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;engine2&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/kitsune/Crypt/Development/personal/rootspace&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
+    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/plyers/tests" />
@@ -275,6 +279,7 @@
       <workItem from="1708695975906" duration="5708000" />
       <workItem from="1708710835933" duration="6962000" />
       <workItem from="1708761707732" duration="2604000" />
+      <workItem from="1708803988203" duration="2799000" />
     </task>
     <task id="LOCAL−00001" summary="I had to delete and recreate the JetBrains project folder">
       <created>1632471245885</created>

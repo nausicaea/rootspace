@@ -294,7 +294,7 @@ macro_rules! impl_joined_iter_ref {
         where
             $ty: $crate::ecs::storage::Storage,
         {
-            type Item = &$tlt $ty::Item;
+            type Item = ($crate::ecs::entity::index::Index, &$tlt $ty::Item);
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.cursor >= self.indices.len() {
@@ -307,7 +307,7 @@ macro_rules! impl_joined_iter_ref {
                 unsafe {
                     let $ty = self.$ty.get_unchecked(idx);
 
-                    Some(& *($ty as *const _))
+                    Some((idx, & *($ty as *const _)))
                 }
             }
 
@@ -364,7 +364,7 @@ macro_rules! impl_joined_iter_ref {
         where
             $tym: $crate::ecs::storage::Storage,
         {
-            type Item = &$tltm mut $tym::Item;
+            type Item = ($crate::ecs::entity::index::Index, &$tltm mut $tym::Item);
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.cursor >= self.indices.len() {
@@ -377,7 +377,7 @@ macro_rules! impl_joined_iter_ref {
                 unsafe {
                     let $tym = self.$tym.get_unchecked_mut(idx);
 
-                    Some(&mut *($tym as *mut _))
+                    Some((idx, &mut *($tym as *mut _)))
                 }
             }
 
@@ -477,7 +477,7 @@ macro_rules! impl_joined_iter_ref {
                 $tym: $crate::ecs::storage::Storage,
             )*
         {
-            type Item = ($(&$tlt $ty::Item,)* $(&$tltm mut $tym::Item,)*);
+            type Item = ($crate::ecs::entity::index::Index, $(&$tlt $ty::Item,)* $(&$tltm mut $tym::Item,)*);
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.cursor >= self.indices.len() {
@@ -495,7 +495,7 @@ macro_rules! impl_joined_iter_ref {
                         let $tym = self.$tym.get_unchecked_mut(idx);
                     )*
 
-                    Some(($(& *($ty as *const _),)* $(&mut *($tym as *mut _),)*))
+                    Some((idx, $(& *($ty as *const _),)* $(&mut *($tym as *mut _),)*))
                 }
             }
 
