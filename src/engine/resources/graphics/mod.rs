@@ -3,6 +3,7 @@ use crate::ecs::with_dependencies::WithDependencies;
 use log::warn;
 use pollster::FutureExt;
 use winit::event_loop::EventLoopWindowTarget;
+use crate::glamour::mat::Mat4;
 
 use self::{
     bind_group_builder::BindGroupBuilder,
@@ -47,8 +48,12 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub fn max_size(&self) -> winit::dpi::PhysicalSize<u32> {
+    pub fn max_window_size(&self) -> winit::dpi::PhysicalSize<u32> {
         self.runtime.max_size
+    }
+
+    pub fn limits(&self) -> wgpu::Limits {
+        self.runtime.device.limits()
     }
 
     pub fn window_id(&self) -> winit::window::WindowId {
@@ -123,7 +128,26 @@ impl Graphics {
         BindGroupBuilder::new(&self.runtime, &mut self.database, layout)
     }
 
-    pub fn create_buffer<T: bytemuck::NoUninit>(
+    pub fn create_buffer(
+        &mut self,
+        label: Option<&'static str>,
+        size: wgpu::BufferAddress,
+        usage: wgpu::BufferUsages,
+    ) -> BufferId {
+        use wgpu::util::DeviceExt;
+
+        log::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
+        let buf = self.runtime.device.create_buffer(&wgpu::BufferDescriptor {
+            label,
+            size,
+            usage,
+            mapped_at_creation: false,
+        });
+
+        self.database.insert_buffer(label, buf)
+    }
+
+    pub fn create_buffer_init<T: bytemuck::NoUninit>(
         &mut self,
         label: Option<&'static str>,
         usage: wgpu::BufferUsages,
@@ -190,8 +214,8 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
                 wgpu::ShaderStages::VERTEX,
                 wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
+                    has_dynamic_offset: true,
+                    min_binding_size: wgpu::BufferSize::new(std::mem::size_of::<Mat4<f32>>() as _),
                 },
             )
             .submit();

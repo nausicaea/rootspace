@@ -40,7 +40,7 @@ impl System for CameraManager {
         for event in events {
             match event {
                 WindowEvent::Resized(dims) => {
-                    let max_dims = res.borrow::<Graphics>().max_size();
+                    let max_dims = res.borrow::<Graphics>().max_window_size();
                     if dims.width <= max_dims.width && dims.height <= max_dims.height {
                         self.on_resize(res, (dims.width, dims.height))
                     }

@@ -13,8 +13,8 @@ pub struct Mesh {
 impl Mesh {
     pub(crate) fn with_raw_mesh(res: &Resources, raw_mesh: &RawMesh) -> Result<Self, Error> {
         let mut gfx = res.borrow_mut::<Graphics>();
-        let vertex_buffer = gfx.create_buffer(None, wgpu::BufferUsages::VERTEX, &raw_mesh.vertices);
-        let index_buffer = gfx.create_buffer(None, wgpu::BufferUsages::INDEX, &raw_mesh.indices);
+        let vertex_buffer = gfx.create_buffer_init(None, wgpu::BufferUsages::VERTEX, &raw_mesh.vertices);
+        let index_buffer = gfx.create_buffer_init(None, wgpu::BufferUsages::INDEX, &raw_mesh.indices);
 
         Ok(Mesh {
             vertex_buffer,

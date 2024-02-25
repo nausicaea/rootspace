@@ -1,3 +1,4 @@
+use crate::glamour::mat::Mat4;
 use super::{
     ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureViewId},
     runtime::Runtime,
@@ -50,8 +51,14 @@ impl<'rt> BindGroupBuilder<'rt> {
             .into_iter()
             .map(|(binding, r)| match r {
                 BindingResourceId::Buffer(b) => {
-                    let buf = self.database.buffers[&b].as_entire_binding();
-                    wgpu::BindGroupEntry { binding, resource: buf }
+                    wgpu::BindGroupEntry {
+                        binding,
+                        resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                            buffer: &self.database.buffers[&b],
+                            offset: 0,
+                            size: wgpu::BufferSize::new(std::mem::size_of::<Mat4<f32>>() as _),
+                        }),
+                    }
                 }
                 BindingResourceId::TextureView(v) => {
                     let view = &self.database.texture_views[&v];

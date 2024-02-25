@@ -57,23 +57,34 @@ impl Renderer {
             .map(|(i, c, t)| c.as_matrix() * t.to_matrix())
             .collect();
 
-        let render_data: Vec<_> = cam_data.iter()
-            .flat_map(|cm| res.iter_rr::<Renderable, Transform>().map(|(i, r, t)| (*cm * t.to_matrix(), r)))
-            .collect();
+        let (renderables, transforms) = cam_data.iter()
+            .flat_map(|cm| res.iter_rr::<Renderable, Transform>().map(|(i, r, t)| (r, *cm * t.to_matrix())))
+            .fold((Vec::new(), Vec::new()), |(mut renderables, mut transforms), (r, t)| {
+                renderables.push(r);
+                transforms.push(t);
+                (renderables, transforms)
+            });
 
-        for (t, r) in render_data {
-            gfx.write_buffer(self.transform_buffer, t.as_ref());
+        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment;
+        gfx.write_buffer(self.transform_buffer, unsafe {
+            std::slice::from_raw_parts(
+                transforms.as_ptr() as *const u8,
+                transforms.len() * uniform_alignment as usize,
+            )
+        });
 
+        for (i, r) in renderables.iter().enumerate() {
+            let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset);
             if r.0.materials.is_empty() {
                 rp.set_pipeline(self.pipeline_wt)
-                    .set_bind_group(0, self.transform_bind_group)
+                    .set_bind_group(0, self.transform_bind_group, &[transform_offset])
                     .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
                     .set_index_buffer(r.0.mesh.index_buffer)
                     .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
             } else {
                 rp.set_pipeline(self.pipeline_wtm)
-                    .set_bind_group(0, self.transform_bind_group)
-                    .set_bind_group(1, r.0.materials[0].bind_group)
+                    .set_bind_group(0, self.transform_bind_group, &[transform_offset])
+                    .set_bind_group(1, r.0.materials[0].bind_group, &[])
                     .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
                     .set_index_buffer(r.0.mesh.index_buffer)
                     .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
@@ -173,10 +184,13 @@ impl WithResources for Renderer {
         let pipeline_wt =
             Self::crp_with_transform(&adb, &mut gfx, "wt").context("trying to create the render pipeline 'wt'")?;
 
+        let max_objects = gfx.limits().max_uniform_buffer_binding_size / gfx.limits().min_uniform_buffer_offset_alignment;
+        let uniform_alignment =
+            gfx.limits().min_uniform_buffer_offset_alignment as wgpu::BufferAddress;
         let transform_buffer = gfx.create_buffer(
             Some("transform-buffer"),
+            dbg!((max_objects as wgpu::BufferAddress) * uniform_alignment),
             wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            Mat4::<f32>::identity().as_ref(),
         );
 
         let tl = gfx.transform_layout();
