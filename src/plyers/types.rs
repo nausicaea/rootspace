@@ -237,6 +237,7 @@ impl Default for PlyDescriptor {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Primitive {
     Single,
+    Lines,
     Triangles,
     Quads,
     Mixed,
@@ -247,9 +248,29 @@ impl From<usize> for Primitive {
         use self::Primitive::*;
         match value {
             1 => Single,
+            2 => Lines,
             3 => Triangles,
             4 => Quads,
             _ => Mixed,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+#[error("mixed primitives are ambiguous")]
+pub struct AmbiguousMixedPrimitive;
+
+impl TryFrom<Primitive> for usize {
+    type Error = AmbiguousMixedPrimitive;
+
+    fn try_from(value: Primitive) -> Result<Self, Self::Error> {
+        use self::Primitive::*;
+        match value {
+            Single => Ok(1),
+            Lines => Ok(2),
+            Triangles => Ok(3),
+            Quads => Ok(4),
+            Mixed => Err(AmbiguousMixedPrimitive),
         }
     }
 }

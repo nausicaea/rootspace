@@ -59,7 +59,7 @@ use crate::file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use crate::plyers::de::error::convert_error;
 use crate::plyers::de::parse_ply;
 use crate::plyers::ser::{write_ascii_values, write_be_values, write_header, write_le_values};
-use crate::plyers::types::{FormatType, Ply, Values};
+use crate::plyers::types::{AmbiguousMixedPrimitive, FormatType, Ply, Values};
 use log::debug;
 use nom::error::VerboseError;
 
@@ -72,7 +72,8 @@ pub enum PlyError {
     #[error("{}", .0)]
     NomError(String),
     #[error("{}", .0)]
-    DataError(String),
+    PrimitiveError(#[from] AmbiguousMixedPrimitive),
+
 }
 
 pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
