@@ -46,9 +46,9 @@
 //! Gb -> G'' | F G'' | G'' Gb | F G'' Gb
 //! G -> Ga | Gb
 
-pub mod ser;
+pub mod de;
 pub mod types;
-mod de;
+mod ser;
 
 use std::{fs::File, io::Read, path::Path};
 use std::io::BufWriter;
@@ -57,11 +57,11 @@ use std::ops::Add;
 
 use crate::file_manipulation;
 use crate::file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
-use crate::plyers::ser::error::convert_error;
-use crate::plyers::ser::parse_ply;
+use crate::plyers::de::error::convert_error;
+use crate::plyers::de::parse_ply;
 use crate::plyers::types::{FormatType, Ply, Primitive, PropertyDescriptor, Values};
 use nom::error::VerboseError;
-use crate::plyers::de::write_header;
+use crate::plyers::ser::write_header;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PlyError {
@@ -102,48 +102,48 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
         FormatType::Ascii => {
             for (_, (primitive, values)) in &ply.data {
                 match values {
-                    Values::I8(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::U8(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::I16(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::U16(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::I32(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::U32(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::I64(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::U64(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::F32(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::F64(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::I8(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::U8(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::I16(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::U16(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::I32(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::U32(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::I64(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::U64(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::F32(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::F64(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
                 }
             }
         },
         FormatType::BinaryLittleEndian => {
             for (_, (primitive, values)) in &ply.data {
                 match values {
-                    Values::I8(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::U8(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::I16(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::U16(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::I32(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::U32(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::I64(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::U64(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::F32(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::F64(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::I8(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::U8(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::I16(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::U16(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::I32(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::U32(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::I64(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::U64(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::F32(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::F64(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
                 }
             }
         },
         FormatType::BinaryBigEndian => {
             for (_, (primitive, values)) in &ply.data {
                 match values {
-                    Values::I8(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::U8(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::I16(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::U16(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::I32(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::U32(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::I64(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::U64(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::F32(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::F64(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::I8(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::U8(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::I16(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::U16(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::I32(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::U32(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::I64(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::U64(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::F32(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::F64(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
                 }
             }
         },

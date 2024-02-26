@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::ecs::resource::Resource;
 use crate::rose_tree::tree::Tree;
 use serde::{Deserialize, Serialize};

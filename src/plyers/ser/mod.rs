@@ -1,181 +1,168 @@
-use std::num::{ParseFloatError, ParseIntError};
+use std::io::Write;
+use std::ops::Add;
+use num_traits::{One, ToBytes};
+use crate::plyers::PlyError;
+use crate::plyers::types::{PlyDescriptor, Primitive, PropertyDescriptor};
 
-use nom::{
-    combinator::{all_consuming, flat_map, map},
-    error::{context, ContextError, FromExternalError, ParseError},
-    IResult,
-};
+pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(), PlyError> {
+    writeln!(f, "ply")?;
+    writeln!(f, "format {} 1.0", descriptor.format_type)?;
+    for comment in &descriptor.comments {
+        writeln!(f, "comment {}", &comment.0)?;
+    }
+    for obj_info in &descriptor.obj_info {
+        writeln!(f, "obj_info {}", &obj_info.0)?;
+    }
+    for (_, element) in &descriptor.elements {
+        for comment in &element.comments {
+            writeln!(f, "comment {}", &comment.0)?;
+        }
+        for obj_info in &element.obj_info {
+            writeln!(f, "obj_info {}", &obj_info.0)?;
+        }
+        writeln!(f, "element {} {}", element.name, element.count)?;
+        for (_, property) in &element.properties {
+            for comment in property.comments() {
+                writeln!(f, "comment {}", &comment.0)?;
+            }
+            for obj_info in property.obj_info() {
+                writeln!(f, "obj_info {}", &obj_info.0)?;
+            }
+            match property {
+                PropertyDescriptor::Scalar { data_type, name, .. } => {
+                    writeln!(f, "property {} {}", data_type, name)?;
+                },
+                PropertyDescriptor::List { count_type, data_type, name, .. } => {
+                    writeln!(f, "property list {} {} {}", count_type, data_type, name)?;
+                }
+            }
+        }
+    }
+    writeln!(f, "end_header")?;
 
-use self::{body::body_fct, header::header_fct};
-use super::types::{ElementId, Ply, PropertyId};
-use crate::urn::Urn;
-
-mod body;
-mod common;
-pub mod error;
-mod header;
-
-#[derive(Debug, thiserror::Error)]
-pub enum ParseNumError {
-    #[error(transparent)]
-    Utf8Error(#[from] std::str::Utf8Error),
-    #[error(transparent)]
-    ParseIntError(#[from] ParseIntError),
-    #[error(transparent)]
-    ParseFloatError(#[from] ParseFloatError),
-    #[error("Unable to cast from source to output numeric type")]
-    NumCastError,
+    Ok(())
 }
 
-pub fn parse_ply<
-    'a,
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'a,
->(
-    input: &'a [u8],
-) -> IResult<&'a [u8], Ply, E> {
-    let mut e_urn = Urn::<ElementId>::default();
-    let mut p_urn = Urn::<PropertyId>::default();
-    let e_urn_ref = &mut e_urn;
-    let p_urn_ref = &mut p_urn;
-    let r = context(
-        "plyers::ser::parse_ply",
-        all_consuming(flat_map(header_fct(e_urn_ref, p_urn_ref), |descriptor| {
-            map(body_fct(descriptor.clone()), move |data| Ply {
-                descriptor: descriptor.clone(),
-                data,
-            })
-        })),
-    )(input);
-
-    r
+pub fn write_values_ascii<W: Write, T: ToString + num_traits::One + Add<T, Output = T>>(f: &mut W, primitive: &Primitive, values: &[T]) -> Result<(), PlyError> {
+    match primitive {
+        Primitive::Single => writeln!(f, "{}", values.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(" "))?,
+        Primitive::Triangles => {
+            let three = T::one() + T::one() + T::one();
+            let chunk_iter = values.chunks_exact(3);
+            if !chunk_iter.remainder().is_empty() {
+                return Err(PlyError::DataError(String::from("property data count is not divisible by three")));
+            }
+            for chunk in chunk_iter {
+                let chunk = std::iter::once(&three)
+                    .chain(chunk.iter())
+                    .map(|v| v.to_string())
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                writeln!(f, "{}", chunk)?;
+            }
+        },
+        Primitive::Quads => {
+            let four = T::one() + T::one() + T::one() + T::one();
+            let chunk_iter = values.chunks_exact(4);
+            if !chunk_iter.remainder().is_empty() {
+                return Err(PlyError::DataError(String::from("property data count is not divisible by four")));
+            }
+            for chunk in chunk_iter {
+                let chunk = std::iter::once(&four)
+                    .chain(chunk.iter())
+                    .map(|v| v.to_string())
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                writeln!(f, "{}", chunk)?;
+            }
+        },
+        _ => unimplemented!("cannot write data with mixed primitives"),
+    }
+    Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use std::collections::BTreeMap;
-
-    use nom::error::dbg_dmp;
-
-    use super::super::types::{
-        CommentDescriptor, DataType, ElementDescriptor, FormatType, ObjInfoDescriptor, PlyDescriptor, Primitive,
-        PropertyDescriptor, Values,
-    };
-    use super::*;
-
-    const EMPTY: &'static [u8] = b"";
-
-    #[test]
-    fn parse_ply_minimal_ascii_parses_correctly() {
-        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/minimal_ascii.ply"));
-        let expected_data: BTreeMap<PropertyId, (Primitive, Values)> =
-            vec![(PropertyId(0), (Primitive::Single, Values::F32(vec![1.0])))]
-                .into_iter()
-                .collect();
-        assert_eq!(
-            parse_ply::<nom::error::Error<_>>(&input[..]),
-            Ok((
-                EMPTY,
-                Ply {
-                    descriptor: PlyDescriptor {
-                        format_type: FormatType::Ascii,
-                        elements: vec![(
-                            ElementId(0),
-                            ElementDescriptor {
-                                name: String::from("vertex"),
-                                count: 1usize,
-                                properties: vec![(
-                                    PropertyId(0),
-                                    PropertyDescriptor::Scalar {
-                                        data_type: DataType::F32,
-                                        name: String::from("x"),
-                                        comments: Vec::new(),
-                                        obj_info: Vec::new()
-                                    }
-                                )]
-                                .into_iter()
-                                .collect(),
-                                comments: Vec::new(),
-                                obj_info: Vec::new()
-                            }
-                        )]
-                        .into_iter()
-                        .collect(),
-                        comments: Vec::new(),
-                        obj_info: Vec::new()
-                    },
-                    data: expected_data,
+pub fn write_values_le<const N: usize, W: Write, T: num_traits::ToBytes<Bytes = [u8; N]> + num_traits::One + Add<T, Output = T>>(f: &mut W, primitive: &Primitive, values: &[T]) -> Result<(), PlyError> {
+    match primitive {
+        Primitive::Single => {
+            let mut values_u8: Vec<u8> = Vec::with_capacity(values.len() * std::mem::size_of::<T>());
+            for v in values {
+                values_u8.extend_from_slice(&v.to_le_bytes()[..]);
+            }
+            f.write(&values_u8)?;
+        },
+        Primitive::Triangles => {
+            let chunk_iter = values.chunks_exact(3);
+            if !chunk_iter.remainder().is_empty() {
+                return Err(PlyError::DataError(String::from("property data count is not divisible by three")));
+            }
+            for chunk in chunk_iter {
+                let mut chunk_u8: Vec<u8> = Vec::with_capacity(1 + chunk.len() * std::mem::size_of::<T>());
+                chunk_u8.push(3u8);
+                for v in chunk {
+                    chunk_u8.extend_from_slice(&v.to_le_bytes()[..]);
                 }
-            ))
-        );
-    }
-
-    #[test]
-    fn parse_ply_fails_with_garbage() {
-        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/garbage.ply"));
-        let r = dbg_dmp(parse_ply::<nom::error::Error<_>>, "GARBAGE")(&input[..]);
-        assert!(r.is_err(), "{:?}", r.unwrap());
-        print!("{:?}", r.unwrap_err())
-    }
-
-    #[test]
-    fn parse_ply_fails_with_incomplete_header() {
-        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/incomplete_header.ply"));
-        let r = nom::error::dbg_dmp(parse_ply::<nom::error::Error<_>>, "INCOMPLETE HEADER")(&input[..]);
-        assert!(r.is_err(), "{:?}", r.unwrap());
-        print!("{:?}", r.unwrap_err())
-    }
-
-    #[test]
-    fn parse_ply_has_no_errors_for_ascii_with_heavy_comments() {
-        let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/heavy_comments_ascii.ply"));
-        let expected_data: BTreeMap<PropertyId, (Primitive, Values)> =
-            vec![(PropertyId(0), (Primitive::Single, Values::F32(vec![1.0])))]
-                .into_iter()
-                .collect();
-        assert_eq!(
-            parse_ply::<nom::error::Error<_>>(&input[..]),
-            Ok((
-                EMPTY,
-                Ply {
-                    descriptor: PlyDescriptor {
-                        format_type: FormatType::Ascii,
-                        elements: vec![(
-                            ElementId(0),
-                            ElementDescriptor {
-                                name: String::from("vertex"),
-                                count: 1,
-                                properties: vec![(
-                                    PropertyId(0),
-                                    PropertyDescriptor::Scalar {
-                                        data_type: DataType::F32,
-                                        name: String::from("x"),
-                                        comments: vec![
-                                            CommentDescriptor(String::from("5. Comments are allowed here")),
-                                            CommentDescriptor(String::from("6. Comments are allowed here"))
-                                        ],
-                                        obj_info: vec![ObjInfoDescriptor(String::from("4. ObjInfo are allowed here"))]
-                                    }
-                                )]
-                                .into_iter()
-                                .collect(),
-                                comments: vec![],
-                                obj_info: vec![]
-                            }
-                        )]
-                        .into_iter()
-                        .collect(),
-                        comments: vec![
-                            CommentDescriptor(String::from("3. Comments are allowed here")),
-                            CommentDescriptor(String::from("4. Comments are allowed here"))
-                        ],
-                        obj_info: vec![
-                            ObjInfoDescriptor(String::from("2. ObjInfo are allowed here")),
-                            ObjInfoDescriptor(String::from("3. ObjInfo are allowed here"))
-                        ]
-                    },
-                    data: expected_data,
+                f.write(&chunk_u8)?;
+            }
+        },
+        Primitive::Quads => {
+            let chunk_iter = values.chunks_exact(4);
+            if !chunk_iter.remainder().is_empty() {
+                return Err(PlyError::DataError(String::from("property data count is not divisible by four")));
+            }
+            for chunk in chunk_iter {
+                let mut chunk_u8: Vec<u8> = Vec::with_capacity(1 + chunk.len() * std::mem::size_of::<T>());
+                chunk_u8.push(4u8);
+                for v in chunk {
+                    chunk_u8.extend_from_slice(&v.to_le_bytes()[..]);
                 }
-            ))
-        );
+                f.write(&chunk_u8)?;
+            }
+        },
+        _ => unimplemented!("cannot write data with mixed primitives"),
     }
+
+    Ok(())
+}
+
+pub fn write_values_be<const N: usize, W: Write, T: num_traits::ToBytes<Bytes = [u8; N]> + num_traits::One + Add<T, Output = T>>(f: &mut W, primitive: &Primitive, values: &[T]) -> Result<(), PlyError> {
+    match primitive {
+        Primitive::Single => {
+            let mut values_u8: Vec<u8> = Vec::with_capacity(values.len() * std::mem::size_of::<T>());
+            for v in values {
+                values_u8.extend_from_slice(&v.to_be_bytes()[..]);
+            }
+            f.write(&values_u8)?;
+        },
+        Primitive::Triangles => {
+            let chunk_iter = values.chunks_exact(3);
+            if !chunk_iter.remainder().is_empty() {
+                return Err(PlyError::DataError(String::from("property data count is not divisible by three")));
+            }
+            for chunk in chunk_iter {
+                let mut chunk_u8: Vec<u8> = Vec::with_capacity(1 + chunk.len() * std::mem::size_of::<T>());
+                chunk_u8.push(3u8);
+                for v in chunk {
+                    chunk_u8.extend_from_slice(&v.to_be_bytes()[..]);
+                }
+                f.write(&chunk_u8)?;
+            }
+        },
+        Primitive::Quads => {
+            let chunk_iter = values.chunks_exact(4);
+            if !chunk_iter.remainder().is_empty() {
+                return Err(PlyError::DataError(String::from("property data count is not divisible by four")));
+            }
+            for chunk in chunk_iter {
+                let mut chunk_u8: Vec<u8> = Vec::with_capacity(1 + chunk.len() * std::mem::size_of::<T>());
+                chunk_u8.push(4u8);
+                for v in chunk {
+                    chunk_u8.extend_from_slice(&v.to_be_bytes()[..]);
+                }
+                f.write(&chunk_u8)?;
+            }
+        },
+        _ => unimplemented!("cannot write data with mixed primitives"),
+    }
+
+    Ok(())
 }

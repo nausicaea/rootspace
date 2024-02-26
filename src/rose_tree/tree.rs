@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use std::{
