@@ -60,6 +60,10 @@ impl Graphics {
         self.runtime.window.id()
     }
 
+    pub fn request_redraw(&self) {
+        self.runtime.window.request_redraw()
+    }
+
     pub fn reconfigure(&mut self) {
         self.resize(self.runtime.size)
     }

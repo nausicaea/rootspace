@@ -84,13 +84,15 @@ impl Orchestrator {
                     window_id,
                     event: window_event,
                 } if self.world.borrow::<Graphics>().window_id() == window_id => {
-                    if let Ok(window_event) = window_event.try_into() {
-                        self.input(window_event)
+                    match window_event {
+                        winit::event::WindowEvent::RedrawRequested => {
+                            self.redraw();
+                            self.maintain(elwt);
+                        }
+                        e => if let Ok(window_event) = e.try_into() {
+                            self.input(window_event)
+                        }
                     }
-                }
-                Event::AboutToWait => {
-                    self.redraw();
-                    self.maintain(elwt);
                 }
                 Event::LoopExiting => self.cleanup(),
                 _ => (),
@@ -164,6 +166,8 @@ impl Orchestrator {
                 _ => (),
             }
         }
+
+        self.world.get_mut::<Graphics>().request_redraw();
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {
