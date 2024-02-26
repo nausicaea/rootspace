@@ -52,7 +52,7 @@ pub mod types;
 
 use std::io::BufWriter;
 use std::io::Write;
-use std::ops::Add;
+
 use std::{fs::File, io::Read, path::Path};
 
 use crate::file_manipulation;
@@ -60,7 +60,7 @@ use crate::file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use crate::plyers::de::error::convert_error;
 use crate::plyers::de::parse_ply;
 use crate::plyers::ser::write_header;
-use crate::plyers::types::{FormatType, Ply, Primitive, PropertyDescriptor, Values};
+use crate::plyers::types::{FormatType, Ply, Values};
 use nom::error::VerboseError;
 
 #[derive(Debug, thiserror::Error)]
