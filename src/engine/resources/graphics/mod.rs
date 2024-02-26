@@ -153,7 +153,7 @@ impl Graphics {
     ) -> BufferId {
         use wgpu::util::DeviceExt;
 
-        log::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
+        log::trace!("Creating and initializing buffer '{}'", label.unwrap_or("unnamed"));
         let buf = self
             .runtime
             .device
