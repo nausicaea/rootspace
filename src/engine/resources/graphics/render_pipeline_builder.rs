@@ -139,6 +139,6 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                 multiview: None,
             });
 
-        self.database.insert_render_pipeline(self.label, pipeline)
+        self.database.insert_render_pipeline(pipeline)
     }
 }

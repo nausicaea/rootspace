@@ -10,12 +10,19 @@ use super::Error;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct RawMesh {
+    pub label: Option<String>,
     pub vertices: Vec<Vertex>,
     pub indices: Vec<u32>,
 }
 
 impl RawMesh {
     pub(crate) fn with_ply(ply: &Ply) -> Result<Self, Error> {
+        let label = ply.descriptor.obj_info
+            .iter()
+            .filter(|obj_info| obj_info.0.starts_with("label="))
+            .map(|obj_info| obj_info.0.replace("label=", ""))
+            .next();
+
         let (v_e_id, num_vertices) = ply
             .descriptor
             .elements
@@ -125,6 +132,6 @@ impl RawMesh {
 
         log::trace!("Loaded {} vertices and {} indices", vertex_data.len(), indices.len());
 
-        Ok(RawMesh { vertices, indices })
+        Ok(RawMesh { label, vertices, indices })
     }
 }

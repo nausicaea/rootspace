@@ -58,6 +58,6 @@ impl<'rt> TextureBuilder<'rt> {
             &rgba8_image,
         );
 
-        self.database.insert_texture(self.label, texture)
+        self.database.insert_texture(texture)
     }
 }

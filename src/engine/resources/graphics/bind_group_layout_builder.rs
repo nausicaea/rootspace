@@ -47,6 +47,6 @@ impl<'rt> BindGroupLayoutBuilder<'rt> {
                 entries: &self.entries,
             });
 
-        self.database.insert_bind_group_layout(self.label, bgl)
+        self.database.insert_bind_group_layout(bgl)
     }
 }

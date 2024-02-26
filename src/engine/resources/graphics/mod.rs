@@ -98,9 +98,9 @@ impl Graphics {
             .write_buffer(&self.database.buffers[&buffer], 0, bytemuck::cast_slice(data));
     }
 
-    pub fn create_shader_module<'s, S: Into<std::borrow::Cow<'s, str>>>(
+    pub fn create_shader_module<'a, 's, S: Into<std::borrow::Cow<'s, str>>>(
         &mut self,
-        label: Option<&'static str>,
+        label: Option<&'a str>,
         source: S,
     ) -> ShaderModuleId {
         log::trace!("Creating shader module '{}'", label.unwrap_or("unnamed"));
@@ -109,7 +109,7 @@ impl Graphics {
             source: wgpu::ShaderSource::Wgsl(source.into()),
         });
 
-        self.database.insert_shader_module(label, sm)
+        self.database.insert_shader_module(sm)
     }
 
     pub fn create_encoder(&self, label: Option<&str>) -> Result<Encoder, wgpu::SurfaceError> {
@@ -130,7 +130,7 @@ impl Graphics {
 
     pub fn create_buffer(
         &mut self,
-        label: Option<&'static str>,
+        label: Option<&str>,
         size: wgpu::BufferAddress,
         usage: wgpu::BufferUsages,
     ) -> BufferId {
@@ -142,12 +142,12 @@ impl Graphics {
             mapped_at_creation: false,
         });
 
-        self.database.insert_buffer(label, buf)
+        self.database.insert_buffer(buf)
     }
 
-    pub fn create_buffer_init<T: bytemuck::NoUninit>(
+    pub fn create_buffer_init<'a, T: bytemuck::NoUninit>(
         &mut self,
-        label: Option<&'static str>,
+        label: Option<&'a str>,
         usage: wgpu::BufferUsages,
         contents: &[T],
     ) -> BufferId {
@@ -163,14 +163,14 @@ impl Graphics {
                 contents: bytemuck::cast_slice(contents),
             });
 
-        self.database.insert_buffer(label, buf)
+        self.database.insert_buffer(buf)
     }
 
     pub fn create_texture(&mut self) -> TextureBuilder {
         TextureBuilder::new(&self.runtime, &mut self.database)
     }
 
-    pub fn create_texture_view(&mut self, label: Option<&'static str>, texture: TextureId) -> TextureViewId {
+    pub fn create_texture_view(&mut self, label: Option<&str>, texture: TextureId) -> TextureViewId {
         let texture = &self.database.textures[&texture];
 
         log::trace!("Creating texture view '{}'", label.unwrap_or("unnamed"));
@@ -178,7 +178,7 @@ impl Graphics {
             label,
             ..Default::default()
         });
-        self.database.insert_texture_view(label, view)
+        self.database.insert_texture_view(view)
     }
 
     pub fn create_sampler(&mut self) -> SamplerBuilder {

@@ -62,7 +62,7 @@ fn main() -> anyhow::Result<()> {
     let tri1 = scene
         .create_entity()
         .with_transform(Transform::builder().with_translation(Vec4::new(1.0, 0.0, 0.0, 0.0)).build())
-        .with_renderable(RenderableSource::with_model("models", "cube.ply"))
+        .with_renderable(RenderableSource::with_model("models", "quad.ply"))
         .submit();
 
     scene

@@ -1,7 +1,7 @@
 macro_rules! impl_id {
     ($name:ident) => {
         #[derive(Debug, Clone, Copy, Eq)]
-        pub struct $name(usize, Option<&'static str>);
+        pub struct $name(usize);
 
         impl Into<usize> for $name {
             fn into(self) -> usize {
@@ -11,13 +11,7 @@ macro_rules! impl_id {
 
         impl From<usize> for $name {
             fn from(value: usize) -> Self {
-                $name(value, None)
-            }
-        }
-
-        impl From<(usize, Option<&'static str>)> for $name {
-            fn from(value: (usize, Option<&'static str>)) -> Self {
-                $name(value.0, value.1)
+                $name(value)
             }
         }
 

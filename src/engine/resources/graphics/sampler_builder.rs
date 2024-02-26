@@ -26,6 +26,6 @@ impl<'rt> SamplerBuilder<'rt> {
             label: self.label,
             ..Default::default()
         });
-        self.database.insert_sampler(self.label, sampler)
+        self.database.insert_sampler(sampler)
     }
 }

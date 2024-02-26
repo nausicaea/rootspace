@@ -84,7 +84,7 @@ impl<'rt> BindGroupBuilder<'rt> {
             entries: entries.as_slice(),
         });
 
-        self.database.insert_bind_group(self.label, bg)
+        self.database.insert_bind_group(bg)
     }
 }
 

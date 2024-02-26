@@ -24,13 +24,6 @@ impl<T: From<usize>> Urn<T> {
     }
 }
 
-impl<T: From<(usize, Option<&'static str>)>> Urn<T> {
-    pub fn take_labelled(&mut self, label: Option<&'static str>) -> T {
-        let token = self.take_id();
-        T::from((token, label))
-    }
-}
-
 impl<T> Default for Urn<T> {
     fn default() -> Self {
         Urn {
