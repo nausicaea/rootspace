@@ -1,13 +1,11 @@
 use anyhow::Context;
-use log::{debug, error, warn};
+use log::error;
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
-use crate::ecs::entity::index::Index;
 
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
 use crate::ecs::resources::Resources;
-use crate::ecs::storage::Storage;
 use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
 use crate::engine::components::camera::Camera;
@@ -20,8 +18,6 @@ use crate::engine::resources::graphics::encoder::RenderPass;
 use crate::engine::resources::graphics::ids::{BindGroupId, BufferId, PipelineId};
 use crate::engine::resources::graphics::vertex::Vertex;
 use crate::engine::resources::graphics::Graphics;
-use crate::glamour::mat::Mat4;
-use crate::rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -54,11 +50,11 @@ impl Renderer {
         // let hier = res.borrow::<Hierarchy<Index>>();
 
         let cam_data: Vec<_> = res.iter_rr::<Camera, Transform>()
-            .map(|(i, c, t)| c.as_matrix() * t.to_matrix())
+            .map(|(_, c, t)| c.as_matrix() * t.to_matrix())
             .collect();
 
         let (renderables, transforms) = cam_data.iter()
-            .flat_map(|cm| res.iter_rr::<Renderable, Transform>().map(|(i, r, t)| (r, *cm * t.to_matrix())))
+            .flat_map(|cm| res.iter_rr::<Renderable, Transform>().map(|(_, r, t)| (r, *cm * t.to_matrix())))
             .fold((Vec::new(), Vec::new()), |(mut renderables, mut transforms), (r, t)| {
                 renderables.push(r);
                 transforms.push(t);
@@ -73,7 +69,7 @@ impl Renderer {
             )
         });
 
-        for (i, r) in renderables.iter().enumerate() {
+        for (i, r) in renderables.into_iter().enumerate() {
             let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset);
             if r.0.materials.is_empty() {
                 rp.set_pipeline(self.pipeline_wt)

@@ -1,7 +1,6 @@
 use std::iter::Sum;
 
 use crate::glamour::ops::norm::Norm;
-use num_traits::real::Real;
 use num_traits::Float;
 
 use super::super::Mat4;

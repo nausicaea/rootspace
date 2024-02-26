@@ -146,8 +146,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
     use super::*;
 
     fn testing_persp() -> Persp<f32> {

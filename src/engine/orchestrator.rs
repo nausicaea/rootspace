@@ -6,7 +6,6 @@ use winit::{
 };
 
 use crate::ecs::entity::Entity;
-use crate::ecs::entity::index::Index;
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
 use crate::ecs::loop_control::LoopControl;
@@ -29,7 +28,6 @@ use crate::engine::registry::{RRegistry, RSRegistry, USRegistry};
 use crate::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps};
 use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
 use crate::engine::resources::statistics::Statistics;
-use crate::rose_tree::hierarchy::Hierarchy;
 
 const DELTA_TIME: u64 = 50; // milliseconds
 const MAX_FRAME_DURATION: u64 = 250; // milliseconds
@@ -132,7 +130,6 @@ impl Orchestrator {
         // Call the dynamic update and render functions
         self.world.update(&self.timers.dynamic_game_time, &frame_time);
         self.world.render(&self.timers.dynamic_game_time, &frame_time);
-        // self.world.borrow::<Graphics>().render().unwrap();
 
         // Update the frame time statistics
         self.world.get_mut::<Statistics>().update_loop_times(frame_time);

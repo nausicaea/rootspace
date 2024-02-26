@@ -134,8 +134,6 @@ impl Graphics {
         size: wgpu::BufferAddress,
         usage: wgpu::BufferUsages,
     ) -> BufferId {
-        use wgpu::util::DeviceExt;
-
         log::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
         let buf = self.runtime.device.create_buffer(&wgpu::BufferDescriptor {
             label,

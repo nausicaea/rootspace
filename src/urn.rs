@@ -24,12 +24,6 @@ impl<T: From<usize>> Urn<T> {
     }
 }
 
-impl<T: Into<usize>> Urn<T> {
-    pub fn replace(&mut self, token: T) {
-        self.free_tokens.push(token.into());
-    }
-}
-
 impl<T: From<(usize, Option<&'static str>)>> Urn<T> {
     pub fn take_labelled(&mut self, label: Option<&'static str>) -> T {
         let token = self.take_id();

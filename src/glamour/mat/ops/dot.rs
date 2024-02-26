@@ -4,7 +4,6 @@ use crate::glamour::iter_float::IterFloat;
 use crate::glamour::ops::dot::Dot;
 use crate::glamour::vec::Vec4;
 use std::ops::Mul;
-use crate::glamour::num::{One, Zero};
 
 use super::super::Mat4;
 

@@ -151,44 +151,6 @@ where
     }
 }
 
-impl<K, V> Tree<K, V>
-where
-    K: Clone + Eq + std::hash::Hash,
-    V: Default,
-{
-    pub fn traverse_with<F: Fn(&K, Option<&V>, &V) -> V>(&mut self, f: F) {
-        let mut queue: VecDeque<(K, Option<K>)> = VecDeque::default();
-
-        queue.extend(
-            self.parents
-                .iter()
-                .filter(|(_, p)| p.is_none())
-                .map(|(k, _)| (k.clone(), None)),
-        );
-
-        while let Some((target, parent)) = queue.pop_front() {
-            let new_value = {
-                let parent_value = parent.and_then(|p| self.nodes.get(&p));
-                let target_value = self.nodes.get(&target).expect("The node was not found");
-
-                f(&target, parent_value, target_value)
-            };
-
-            self.nodes
-                .get_mut(&target)
-                .map(|v| *v = new_value)
-                .expect("The node was not found");
-
-            queue.extend(
-                self.edges
-                    .get(&target)
-                    .iter()
-                    .flat_map(|children| children.iter().map(|c| (c.clone(), Some(target.clone())))),
-            );
-        }
-    }
-}
-
 impl<K, V> Default for Tree<K, V>
 where
     K: Ord,
@@ -586,25 +548,6 @@ mod tests {
 
         let ancestors: Vec<(&Tk, &Tvm)> = rt.ancestors(&Tk(5)).collect();
         assert_eq!(ancestors, [(&Tk(5), &Tvm(11)), (&Tk(3), &Tvm(5)), (&Tk(1), &Tvm(3))]);
-    }
-
-    #[test]
-    fn traverse_with() {
-        let mut rt: Tree<Tk, Tvm> = Tree::default();
-        rt.insert(Tk(0), Tvm(2));
-        rt.insert_child(&Tk(0), Tk(2), Tvm(7));
-        rt.insert(Tk(1), Tvm(3));
-        rt.insert_child(&Tk(1), Tk(3), Tvm(5));
-        rt.insert_child(&Tk(3), Tk(5), Tvm(11));
-        rt.insert_child(&Tk(1), Tk(4), Tvm(13));
-
-        rt.traverse_with(|_k: &Tk, pn: Option<&Tvm>, n: &Tvm| pn.map_or(n.clone(), |p| p * n));
-        assert_eq!(rt.get(&Tk(0)), Some(&Tvm(2)));
-        assert_eq!(rt.get(&Tk(1)), Some(&Tvm(3)));
-        assert_eq!(rt.get(&Tk(2)), Some(&Tvm(14)));
-        assert_eq!(rt.get(&Tk(3)), Some(&Tvm(15)));
-        assert_eq!(rt.get(&Tk(4)), Some(&Tvm(39)));
-        assert_eq!(rt.get(&Tk(5)), Some(&Tvm(165)));
     }
 
     #[test]
