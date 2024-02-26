@@ -46,17 +46,22 @@
 //! Gb -> G'' | F G'' | G'' Gb | F G'' Gb
 //! G -> Ga | Gb
 
-pub mod parser;
+pub mod ser;
 pub mod types;
+mod de;
 
 use std::{fs::File, io::Read, path::Path};
+use std::io::BufWriter;
+use std::io::Write;
+use std::ops::Add;
 
 use crate::file_manipulation;
-use crate::file_manipulation::FilePathBuf;
-use crate::plyers::parser::error::convert_error;
-use crate::plyers::parser::parse_ply;
-use crate::plyers::types::Ply;
+use crate::file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
+use crate::plyers::ser::error::convert_error;
+use crate::plyers::ser::parse_ply;
+use crate::plyers::types::{FormatType, Ply, Primitive, PropertyDescriptor, Values};
 use nom::error::VerboseError;
+use crate::plyers::de::write_header;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PlyError {
@@ -66,6 +71,8 @@ pub enum PlyError {
     IoError(#[from] std::io::Error),
     #[error("{}", .0)]
     NomError(String),
+    #[error("{}", .0)]
+    DataError(String),
 }
 
 pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
@@ -84,27 +91,85 @@ pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
     Ok(r)
 }
 
+pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
+    let path = NewOrExFilePathBuf::try_from(path.as_ref())?;
+    let file = File::create(path)?;
+    let mut buf_writer = BufWriter::new(file);
+
+    write_header(&mut buf_writer, &ply.descriptor)?;
+
+    match ply.descriptor.format_type {
+        FormatType::Ascii => {
+            for (_, (primitive, values)) in &ply.data {
+                match values {
+                    Values::I8(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::U8(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::I16(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::U16(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::I32(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::U32(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::I64(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::U64(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::F32(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                    Values::F64(values) => de::write_values_ascii(&mut buf_writer, primitive, values)?,
+                }
+            }
+        },
+        FormatType::BinaryLittleEndian => {
+            for (_, (primitive, values)) in &ply.data {
+                match values {
+                    Values::I8(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::U8(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::I16(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::U16(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::I32(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::U32(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::I64(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::U64(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::F32(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                    Values::F64(values) => de::write_values_le(&mut buf_writer, primitive, values)?,
+                }
+            }
+        },
+        FormatType::BinaryBigEndian => {
+            for (_, (primitive, values)) in &ply.data {
+                match values {
+                    Values::I8(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::U8(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::I16(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::U16(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::I32(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::U32(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::I64(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::U64(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::F32(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                    Values::F64(values) => de::write_values_be(&mut buf_writer, primitive, values)?,
+                }
+            }
+        },
+    }
+
+    Ok(())
+}
+
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+    use std::path::PathBuf;
 
     use super::*;
     use crate::plyers::types::{
         CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, Ply, PlyDescriptor,
         Primitive, PropertyDescriptor, PropertyId, Values,
     };
-    use glob::glob;
+    use rstest::rstest;
 
-    #[test]
-    fn load_ply_succeeds_for_test_files() {
-        for path_buf in
-            glob(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/valid/*.ply")).expect("Failed to read glob pattern")
-        {
-            let path = path_buf.expect("Failed to read a globbed path");
-            match load_ply(&path) {
-                Err(e) => panic!("{}: {}", path.display(), e),
-                _ => (),
-            }
+    #[rstest]
+    fn load_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
+        match load_ply(&path) {
+            Err(e) => panic!("{}: {}", path.display(), e),
+            _ => (),
         }
     }
 
@@ -694,5 +759,29 @@ mod tests {
         eprintln!("{:#?} \n {:#?}", &ply, &expected);
 
         assert_eq!(ply, expected);
+    }
+
+    #[rstest]
+    fn save_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
+        let ply = load_ply(&path).unwrap();
+        let tmp = tempfile::Builder::new()
+            .prefix(path.file_stem().unwrap())
+            .suffix(path.extension().unwrap())
+            .tempfile()
+            .unwrap();
+        match save_ply(&ply, tmp.path()) {
+            Err(e) => panic!("{}: {}", path.display(), e),
+            _ => (),
+        }
+        let ply2 = load_ply(tmp.path()).unwrap();
+        if &ply != &ply2 {
+            let persist_path = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/target/tests/save_ply_succeeds_for_test_files"));
+            if !persist_path.is_dir() {
+                std::fs::create_dir_all(&persist_path).unwrap();
+            }
+            let persist_path = persist_path.join(path.file_name().unwrap());
+            tmp.persist(&persist_path).unwrap();
+            assert_eq!(ply, ply2, "diff {} {}", path.display(), persist_path.display());
+        }
     }
 }

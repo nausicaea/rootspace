@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::fmt::{Display, Formatter};
 
 pub const VERTEX_ELEMENT: &'static str = "vertex";
 pub const FACE_ELEMENT: &'static str = "face";
@@ -74,6 +75,16 @@ pub enum FormatType {
     BinaryBigEndian,
 }
 
+impl Display for FormatType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FormatType::Ascii => write!(f, "ascii"),
+            FormatType::BinaryLittleEndian => write!(f, "binary_little_endian"),
+            FormatType::BinaryBigEndian => write!(f, "binary_big_endian"),
+        }
+    }
+}
+
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CountType {
@@ -81,6 +92,17 @@ pub enum CountType {
     U16,
     U32,
     U64,
+}
+
+impl Display for CountType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CountType::U8 => write!(f, "uint8"),
+            CountType::U16 => write!(f, "uint16"),
+            CountType::U32 => write!(f, "uint32"),
+            CountType::U64 => write!(f, "uint64"),
+        }
+    }
 }
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
@@ -96,6 +118,23 @@ pub enum DataType {
     U64,
     F32,
     F64,
+}
+
+impl Display for DataType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DataType::I8 => write!(f, "int8"),
+            DataType::U8 => write!(f, "uint8"),
+            DataType::I16 => write!(f, "int16"),
+            DataType::U16 => write!(f, "uint16"),
+            DataType::I32 => write!(f, "int32"),
+            DataType::U32 => write!(f, "uint32"),
+            DataType::I64 => write!(f, "int64"),
+            DataType::U64 => write!(f, "uint64"),
+            DataType::F32 => write!(f, "float32"),
+            DataType::F64 => write!(f, "float64"),
+        }
+    }
 }
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary, PartialEq))]

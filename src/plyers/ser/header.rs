@@ -140,7 +140,7 @@ where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
     context(
-        "plyers::parser::header::comment_blk",
+        "plyers::ser::header::comment_blk",
         many0(alt((map(comment_decl, Left), map(obj_info_decl, Right)))),
     )(input)
 }
@@ -151,7 +151,7 @@ fn format_blk<'a, E>(
 where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
-    context("plyers::parser::header::format_blk", tuple((format_decl, comment_blk)))(input)
+    context("plyers::ser::header::format_blk", tuple((format_decl, comment_blk)))(input)
 }
 
 fn property_scalar_decl<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], PropertyDescriptor, E>
@@ -159,7 +159,7 @@ where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
     context(
-        "plyers::parser::header::property_scalar_decl",
+        "plyers::ser::header::property_scalar_decl",
         map(
             tuple((comment_blk, tag(PROPERTY), space, data_type, space, identifier, newline)),
             |(cmt, _, _, data_type, _, name, _)| {
@@ -181,7 +181,7 @@ where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
     context(
-        "plyers::parser::header::property_list_decl",
+        "plyers::ser::header::property_list_decl",
         map(
             tuple((
                 comment_blk,
@@ -214,7 +214,7 @@ where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
     context(
-        "plyers::parser::header::property_rpt",
+        "plyers::ser::header::property_rpt",
         alt((property_scalar_decl, property_list_decl)),
     )(input)
 }
@@ -227,7 +227,7 @@ where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]> + 'b,
 {
     context(
-        "plyers::parser::header::property_blk",
+        "plyers::ser::header::property_blk",
         fold_many1(
             property_rpt,
             BTreeMap::<PropertyId, PropertyDescriptor>::new,
@@ -247,7 +247,7 @@ where
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'b,
 {
     context(
-        "plyers::parser::header::element_rpt_fct",
+        "plyers::ser::header::element_rpt_fct",
         map(
             tuple((comment_blk, element_decl, property_blk_fct(p_urn))),
             |(cmt, (name, count), properties)| {
@@ -274,7 +274,7 @@ where
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'b,
 {
     context(
-        "plyers::parser::header::element_blk_fct",
+        "plyers::ser::header::element_blk_fct",
         fold_many1(
             element_rpt_fct(p_urn),
             BTreeMap::<ElementId, ElementDescriptor>::new,
@@ -295,7 +295,7 @@ where
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'b,
 {
     context(
-        "plyers::parser::header::header_fct",
+        "plyers::ser::header::header_fct",
         map(
             tuple((
                 opt(whitespace),
