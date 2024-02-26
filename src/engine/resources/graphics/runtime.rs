@@ -4,9 +4,9 @@ use winit::event_loop::EventLoopWindowTarget;
 use winit::window::Fullscreen;
 
 #[derive(Debug)]
-pub struct Runtime {
-    pub window: winit::window::Window,
-    pub surface: wgpu::Surface,
+pub struct Runtime<'a> {
+    pub window: std::sync::Arc<winit::window::Window>,
+    pub surface: wgpu::Surface<'a>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
@@ -14,26 +14,33 @@ pub struct Runtime {
     pub max_size: winit::dpi::PhysicalSize<u32>,
 }
 
-impl Runtime {
+impl<'a> Runtime<'a> {
     pub async fn new<T>(
         event_loop: &EventLoopWindowTarget<T>,
         backends: wgpu::Backends,
         power_preference: wgpu::PowerPreference,
-        features: wgpu::Features,
-        limits: wgpu::Limits,
+        required_features: wgpu::Features,
+        required_limits: wgpu::Limits,
         preferred_texture_format: &wgpu::TextureFormat,
         present_mode: wgpu::PresentMode,
         alpha_mode: wgpu::CompositeAlphaMode,
-    ) -> Runtime {
-        let window = winit::window::WindowBuilder::new()
+    ) -> Runtime<'a> {
+        let window = std::sync::Arc::new(winit::window::WindowBuilder::new()
             .with_fullscreen(Some(Fullscreen::Borderless(None)))
             .build(event_loop)
-            .unwrap();
+            .unwrap());
+
+        let size = window.inner_size();
+        debug!("Physical window size: {:?}", &size);
 
         let max_size = window.current_monitor().unwrap().size();
 
-        let instance = wgpu::Instance::new(backends);
-        let surface = unsafe { instance.create_surface(&window) };
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends,
+            ..Default::default()
+        });
+        let surface = instance.create_surface(window.clone())
+            .unwrap();
 
         let adapter = instance
             .request_adapter(&RequestAdapterOptions {
@@ -48,8 +55,8 @@ impl Runtime {
         let (device, queue) = adapter
             .request_device(
                 &DeviceDescriptor {
-                    features,
-                    limits,
+                    required_features,
+                    required_limits,
                     label: None,
                 },
                 None, // Trace path
@@ -57,29 +64,27 @@ impl Runtime {
             .await
             .unwrap();
 
-        let size = window.inner_size();
-        debug!("Physical window size: {:?}", &size);
+        let capabilities = surface.get_capabilities(&adapter);
+        debug!("Supported texture formats: {:?}", &capabilities.formats);
 
-        let texture_formats = surface.get_supported_formats(&adapter);
-        debug!("Supported texture formats: {:?}", &texture_formats);
-
-        let texture_format = *texture_formats
+        let texture_format = capabilities.formats
             .iter()
             .filter(|&tf| tf == preferred_texture_format)
             .next()
-            .unwrap_or(&texture_formats[0]);
+            .unwrap_or(&capabilities.formats[0]);
         debug!("Choosing texture format: {:?}", &texture_format);
 
-        let present_modes = surface.get_supported_present_modes(&adapter);
-        debug!("Supported present modes: {:?}", &present_modes);
+        debug!("Supported present modes: {:?}", &capabilities.present_modes);
 
         let config = wgpu::SurfaceConfiguration {
             usage: TextureUsages::RENDER_ATTACHMENT,
-            format: texture_format,
+            format: *texture_format,
             width: size.width,
             height: size.height,
             present_mode,
+            desired_maximum_frame_latency: 0,
             alpha_mode,
+            view_formats: vec![*texture_format],
         };
         surface.configure(&device, &config);
 

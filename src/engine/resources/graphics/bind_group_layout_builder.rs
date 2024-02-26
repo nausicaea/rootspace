@@ -1,7 +1,7 @@
 use super::{ids::BindGroupLayoutId, runtime::Runtime, Database};
 
 pub struct BindGroupLayoutBuilder<'rt> {
-    runtime: &'rt Runtime,
+    runtime: &'rt Runtime<'rt>,
     database: &'rt mut Database,
     label: Option<&'static str>,
     entries: Vec<wgpu::BindGroupLayoutEntry>,

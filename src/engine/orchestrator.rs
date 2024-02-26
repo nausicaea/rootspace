@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use winit::{
     event::Event,
-    event_loop::{ControlFlow, EventLoopWindowTarget},
+    event_loop::EventLoopWindowTarget,
 };
 
 use crate::ecs::entity::Entity;
@@ -64,8 +64,8 @@ impl Orchestrator {
         })
     }
 
-    pub fn run(mut self) -> impl 'static + FnMut(Event<'_, ()>, &EventLoopWindowTarget<()>, &mut ControlFlow) {
-        move |event, _elwt, control_flow| {
+    pub fn run(mut self) -> impl 'static + FnMut(Event<()>, &EventLoopWindowTarget<()>) {
+        move |event, elwt| {
             #[cfg(feature = "dbg-loop")]
             let mut draw_bottom = false;
             #[cfg(feature = "dbg-loop")]
@@ -74,7 +74,7 @@ impl Orchestrator {
                     Event::NewEvents(_) => {
                         log::trace!("⬇");
                     }
-                    Event::RedrawEventsCleared | Event::LoopDestroyed => {
+                    Event::AboutToWait | Event::LoopExiting => {
                         draw_bottom = true;
                     }
                     _ => (),
@@ -91,9 +91,11 @@ impl Orchestrator {
                         self.input(window_event)
                     }
                 }
-                Event::MainEventsCleared => self.redraw(),
-                Event::RedrawEventsCleared => self.maintain(control_flow),
-                Event::LoopDestroyed => self.cleanup(),
+                Event::AboutToWait => {
+                    self.redraw();
+                    self.maintain(elwt);
+                },
+                Event::LoopExiting => self.cleanup(),
                 _ => (),
             }
 
@@ -136,13 +138,10 @@ impl Orchestrator {
     }
 
     /// Perform maintenance tasks necessary in each game loop iteration
-    fn maintain(&mut self, control_flow: &mut ControlFlow) {
-        // The standard action is to Poll
-        *control_flow = ControlFlow::Poll;
-
+    fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
         // Call the maintenance method of [`World`](ecs::World)
         if let LoopControl::Abort = self.world.maintain() {
-            *control_flow = ControlFlow::Exit;
+            event_loop_window_target.exit();
         }
 
         // Process world events
@@ -167,11 +166,6 @@ impl Orchestrator {
                 EngineEvent::AbortRequested => self.on_abort_requested(),
                 _ => (),
             }
-        }
-
-        #[cfg(feature = "dbg-loop")]
-        if control_flow != &ControlFlow::Poll {
-            log::trace!("Control flow: {:?}", control_flow);
         }
     }
 

@@ -41,7 +41,7 @@ pub trait GraphicsDeps {
 #[derive(Debug)]
 pub struct Graphics {
     settings: Settings,
-    runtime: Runtime,
+    runtime: Runtime<'static>,
     database: Database,
     transform_layout: BindGroupLayoutId,
     material_layout: BindGroupLayoutId,

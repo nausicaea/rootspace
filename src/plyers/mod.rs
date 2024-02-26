@@ -51,7 +51,6 @@ mod ser;
 pub mod types;
 
 use std::io::BufWriter;
-use std::io::Write;
 
 use std::{fs::File, io::Read, path::Path};
 

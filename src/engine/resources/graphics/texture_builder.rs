@@ -1,7 +1,8 @@
+use wgpu::util::TextureDataOrder;
 use super::{ids::TextureId, runtime::Runtime, Database};
 
 pub struct TextureBuilder<'rt> {
-    runtime: &'rt Runtime,
+    runtime: &'rt Runtime<'rt>,
     database: &'rt mut Database,
     label: Option<&'static str>,
     image: Option<image::DynamicImage>,
@@ -54,7 +55,9 @@ impl<'rt> TextureBuilder<'rt> {
                 // TEXTURE_BINDING tells wgpu that we want to use this texture in shaders
                 // COPY_DST means that we want to copy data to this texture
                 usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                view_formats: &[wgpu::TextureFormat::Rgba8UnormSrgb],
             },
+            TextureDataOrder::default(),
             &rgba8_image,
         );
 

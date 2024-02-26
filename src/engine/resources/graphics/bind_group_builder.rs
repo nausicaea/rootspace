@@ -6,7 +6,7 @@ use super::{
 use crate::glamour::mat::Mat4;
 
 pub struct BindGroupBuilder<'rt> {
-    runtime: &'rt Runtime,
+    runtime: &'rt Runtime<'rt>,
     database: &'rt mut Database,
     layout: BindGroupLayoutId,
     label: Option<&'static str>,

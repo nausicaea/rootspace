@@ -7,7 +7,7 @@ use super::{
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
-    runtime: &'rt Runtime,
+    runtime: &'rt Runtime<'rt>,
     database: &'rt mut Database,
     vertex_shader_module: Option<(ShaderModuleId, &'ep str)>,
     fragment_shader_module: Option<(ShaderModuleId, &'ep str)>,

@@ -1,6 +1,5 @@
 use crate::plyers::types::{PlyDescriptor, Primitive, PropertyDescriptor};
 use crate::plyers::PlyError;
-use num_traits::{One, ToBytes};
 use std::io::Write;
 use std::ops::Add;
 

@@ -1,9 +1,7 @@
 use std::path::PathBuf;
 
-use winit::{
-    dpi::{PhysicalPosition, PhysicalSize},
-    event::{AxisId, ElementState, Ime, KeyboardInput, ModifiersState, MouseButton, MouseScrollDelta, TouchPhase},
-};
+use winit::{dpi::{PhysicalPosition, PhysicalSize}, event::{AxisId, ElementState, Ime, MouseButton, MouseScrollDelta, TouchPhase}, keyboard};
+use winit::keyboard::{ModifiersState, SmolStr};
 
 /// A serializable copy of [`WindowEvent`](winit::event::WindowEvent). Some fields and variants are
 /// missing:
@@ -55,7 +53,7 @@ pub enum WindowEvent {
 
     /// An event from the keyboard has been received.
     KeyboardInput {
-        input: KeyboardInput,
+        event: KeyEvent,
         /// If `true`, the event was generated synthetically by winit
         /// in one of the following circumstances:
         ///
@@ -138,12 +136,37 @@ pub enum WindowEvent {
     /// Platform-specific behavior:
     /// - **iOS / Android / Web / Wayland / Windows:** Unsupported.
     Occluded(bool),
+
+    /// Touchpad magnification event with two-finger pinch gesture.
+    /// Positive delta values indicate magnification (zooming in) and negative delta values indicate shrinking (zooming out).
+    ///
+    /// Platform-specific
+    /// Only available on macOS.
+    TouchpadMagnify { delta: f64, phase: TouchPhase },
+
+    /// Touchpad rotation event with two-finger rotation gesture.
+    /// Positive delta values indicate rotation counterclockwise and negative delta values indicate rotation clockwise.
+    ///
+    /// Platform-specific
+    /// Only available on macOS.
+    TouchpadRotate { delta: f32, phase: TouchPhase },
+
+    /// Emitted when a window should be redrawn.
+    ///
+    /// This gets triggered in two scenarios:
+    /// - The OS has performed an operation that's invalidated the window's contents (such as
+    ///   resizing the window).
+    /// - The application has explicitly requested a redraw via [`winit::Window::request_redraw`].
+    ///
+    /// Winit will aggregate duplicate redraw requests into a single event, to
+    /// help avoid duplicating rendering work.
+    RedrawRequested,
 }
 
-impl<'a> TryFrom<winit::event::WindowEvent<'a>> for WindowEvent {
+impl<'a> TryFrom<winit::event::WindowEvent> for WindowEvent {
     type Error = NonSerializableEvent;
 
-    fn try_from(value: winit::event::WindowEvent<'a>) -> Result<Self, Self::Error> {
+    fn try_from(value: winit::event::WindowEvent) -> Result<Self, Self::Error> {
         use winit::event::WindowEvent::*;
         match value {
             Resized(ps) => Ok(WindowEvent::Resized(ps)),
@@ -153,12 +176,18 @@ impl<'a> TryFrom<winit::event::WindowEvent<'a>> for WindowEvent {
             DroppedFile(pb) => Ok(WindowEvent::DroppedFile(pb)),
             HoveredFile(pb) => Ok(WindowEvent::HoveredFile(pb)),
             HoveredFileCancelled => Ok(WindowEvent::HoveredFileCancelled),
-            ReceivedCharacter(c) => Ok(WindowEvent::ReceivedCharacter(c)),
             Focused(b) => Ok(WindowEvent::Focused(b)),
             KeyboardInput {
-                input, is_synthetic, ..
-            } => Ok(WindowEvent::KeyboardInput { input, is_synthetic }),
-            ModifiersChanged(ms) => Ok(WindowEvent::ModifiersChanged(ms)),
+                event, is_synthetic, ..
+            } => Ok(WindowEvent::KeyboardInput { event: KeyEvent {
+                physical_key: event.physical_key,
+                logical_key: event.logical_key,
+                text: event.text,
+                location: event.location,
+                state: event.state,
+                repeat: event.repeat,
+            }, is_synthetic }),
+            ModifiersChanged(ms) => Ok(WindowEvent::ModifiersChanged(ms.state())),
             Ime(ime) => Ok(WindowEvent::Ime(ime)),
             CursorMoved { position, .. } => Ok(WindowEvent::CursorMoved { position }),
             CursorEntered { .. } => Ok(WindowEvent::CursorEntered),
@@ -171,10 +200,112 @@ impl<'a> TryFrom<winit::event::WindowEvent<'a>> for WindowEvent {
             ScaleFactorChanged { scale_factor, .. } => Ok(WindowEvent::ScaleFactorChanged { scale_factor }),
             ThemeChanged(_) => Err(NonSerializableEvent),
             Occluded(b) => Ok(WindowEvent::Occluded(b)),
+            ActivationTokenDone { .. } => Err(NonSerializableEvent),
+            TouchpadMagnify { delta, phase, .. } => Ok(WindowEvent::TouchpadMagnify { delta, phase }),
+            SmartMagnify { .. } => Err(NonSerializableEvent),
+            TouchpadRotate { delta, phase, .. } => Ok(WindowEvent::TouchpadRotate { delta, phase }),
+            RedrawRequested => Ok(WindowEvent::RedrawRequested),
         }
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct KeyEvent {
+    /// Represents the position of a key independent of the currently active layout.
+    ///
+    /// It also uniquely identifies the physical key (i.e. it's mostly synonymous with a scancode).
+    /// The most prevalent use case for this is games. For example the default keys for the player
+    /// to move around might be the W, A, S, and D keys on a US layout. The position of these keys
+    /// is more important than their label, so they should map to Z, Q, S, and D on an "AZERTY"
+    /// layout. (This value is `KeyCode::KeyW` for the Z key on an AZERTY layout.)
+    ///
+    /// ## Caveats
+    ///
+    /// - Certain niche hardware will shuffle around physical key positions, e.g. a keyboard that
+    /// implements DVORAK in hardware (or firmware)
+    /// - Your application will likely have to handle keyboards which are missing keys that your
+    /// own keyboard has.
+    /// - Certain `KeyCode`s will move between a couple of different positions depending on what
+    /// layout the keyboard was manufactured to support.
+    ///
+    ///  **Because of these caveats, it is important that you provide users with a way to configure
+    ///  most (if not all) keybinds in your application.**
+    ///
+    /// ## `Fn` and `FnLock`
+    ///
+    /// `Fn` and `FnLock` key events are *exceedingly unlikely* to be emitted by Winit. These keys
+    /// are usually handled at the hardware or OS level, and aren't surfaced to applications. If
+    /// you somehow see this in the wild, we'd like to know :)
+    pub physical_key: winit::keyboard::PhysicalKey,
+
+    /// This value is affected by all modifiers except <kbd>Ctrl</kbd>.
+    ///
+    /// This has two use cases:
+    /// - Allows querying whether the current input is a Dead key.
+    /// - Allows handling key-bindings on platforms which don't
+    /// support [`key_without_modifiers`].
+    ///
+    /// If you use this field (or [`key_without_modifiers`] for that matter) for keyboard
+    /// shortcuts, **it is important that you provide users with a way to configure your
+    /// application's shortcuts so you don't render your application unusable for users with an
+    /// incompatible keyboard layout.**
+    ///
+    /// ## Platform-specific
+    /// - **Web:** Dead keys might be reported as the real key instead
+    /// of `Dead` depending on the browser/OS.
+    ///
+    /// [`key_without_modifiers`]: crate::platform::modifier_supplement::KeyEventExtModifierSupplement::key_without_modifiers
+    pub logical_key: winit::keyboard::Key,
+
+    /// Contains the text produced by this keypress.
+    ///
+    /// In most cases this is identical to the content
+    /// of the `Character` variant of `logical_key`.
+    /// However, on Windows when a dead key was pressed earlier
+    /// but cannot be combined with the character from this
+    /// keypress, the produced text will consist of two characters:
+    /// the dead-key-character followed by the character resulting
+    /// from this keypress.
+    ///
+    /// An additional difference from `logical_key` is that
+    /// this field stores the text representation of any key
+    /// that has such a representation. For example when
+    /// `logical_key` is `Key::Named(NamedKey::Enter)`, this field is `Some("\r")`.
+    ///
+    /// This is `None` if the current keypress cannot
+    /// be interpreted as text.
+    ///
+    /// See also: `text_with_all_modifiers()`
+    pub text: Option<SmolStr>,
+
+    /// Contains the location of this key on the keyboard.
+    ///
+    /// Certain keys on the keyboard may appear in more than once place. For example, the "Shift" key
+    /// appears on the left side of the QWERTY keyboard as well as the right side. However, both keys
+    /// have the same symbolic value. Another example of this phenomenon is the "1" key, which appears
+    /// both above the "Q" key and as the "Keypad 1" key.
+    ///
+    /// This field allows the user to differentiate between keys like this that have the same symbolic
+    /// value but different locations on the keyboard.
+    ///
+    /// See the [`KeyLocation`] type for more details.
+    ///
+    /// [`KeyLocation`]: crate::keyboard::KeyLocation
+    pub location: keyboard::KeyLocation,
+
+    /// Whether the key is being pressed or released.
+    ///
+    /// See the [`ElementState`] type for more details.
+    pub state: ElementState,
+
+    /// Whether or not this key is a key repeat event.
+    ///
+    /// On some systems, holding down a key for some period of time causes that key to be repeated
+    /// as though it were being pressed and released repeatedly. This field is `true` if and only if
+    /// this event is the result of one of those repeats.
+    pub repeat: bool,
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, thiserror::Error)]
-#[error("Cannot create a serializable mapping from the given event")]
+#[error("Cannot create a serializable mapping from the given winit event")]
 pub struct NonSerializableEvent;

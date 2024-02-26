@@ -51,7 +51,7 @@ impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
 fn main() -> anyhow::Result<()> {
     env_logger::init();
 
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::new()?;
 
     let deps = Dependencies {
         event_loop: &event_loop,
@@ -64,5 +64,7 @@ fn main() -> anyhow::Result<()> {
 
     let state = Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps)?;
 
-    event_loop.run(state.run())
+    event_loop.run(state.run())?;
+
+    Ok(())
 }

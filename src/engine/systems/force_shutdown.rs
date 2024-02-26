@@ -14,13 +14,14 @@ use crate::ecs::resources::Resources;
 use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
 use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::events::window_event::WindowEvent;
+use crate::engine::events::window_event::{KeyEvent, WindowEvent};
 use log::debug;
 #[cfg(not(test))]
 use log::error;
 #[cfg(not(test))]
 use log::info;
-use winit::event::{ElementState, KeyboardInput, VirtualKeyCode};
+use winit::event::ElementState;
+use winit::keyboard::NamedKey;
 
 #[derive(Debug)]
 pub struct ForceShutdown {
@@ -73,10 +74,10 @@ impl System for ForceShutdown {
                         .send(EngineEvent::AbortRequested);
                 }
                 WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
+                    event:
+                        KeyEvent {
                             state: ElementState::Released,
-                            virtual_keycode: Some(VirtualKeyCode::Q),
+                            logical_key: winit::keyboard::Key::Named(NamedKey::Exit),
                             ..
                         },
                     ..

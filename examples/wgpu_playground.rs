@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use std::sync::Arc;
 use log::debug;
 use wgpu::{
     Backends, CompositeAlphaMode, Device, DeviceDescriptor, Features, Instance, Limits, PowerPreference, PresentMode,
@@ -7,7 +8,7 @@ use wgpu::{
 };
 use winit::{
     event::{Event, StartCause},
-    event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
+    event_loop::{EventLoop, EventLoopWindowTarget},
     window::{Window, WindowBuilder},
 };
 
@@ -16,37 +17,42 @@ fn main() {
 
     env_logger::init();
 
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     let state = State::new(window).block_on();
 
-    event_loop.run(run(state))
+    event_loop.run(run(state)).unwrap();
 }
 
-fn run<T>(mut state: State) -> impl 'static + FnMut(Event<T>, &EventLoopWindowTarget<T>, &mut ControlFlow) {
-    move |event, _event_loop, control_flow| match event {
+fn run<T: 'static>(mut state: State<'static>) -> impl 'static + FnMut(Event<T>, &EventLoopWindowTarget<T>) {
+    move |event, event_loop| match event {
         Event::NewEvents(StartCause::Init) => {
             state.init();
-            *control_flow = ControlFlow::Exit;
+            event_loop.exit()
         }
         _ => (),
     }
 }
 
 #[derive(Debug)]
-struct State {
-    window: Window,
-    surface: Surface,
+struct State<'a> {
+    window: Arc<Window>,
+    surface: Surface<'a>,
     device: Device,
     queue: Queue,
     surface_config: SurfaceConfiguration,
 }
 
-impl State {
+impl<'a> State<'a> {
     async fn new(window: Window) -> Self {
-        let instance = Instance::new(Backends::all());
-        let surface = unsafe { instance.create_surface(&window) };
+        let window = Arc::new(window);
+
+        let instance = Instance::new(wgpu::InstanceDescriptor {
+            backends: Backends::all(),
+            ..Default::default()
+        });
+        let surface = instance.create_surface(window.clone()).unwrap();
 
         let adapter = instance
             .request_adapter(&RequestAdapterOptions {
@@ -61,8 +67,8 @@ impl State {
         let (device, queue) = adapter
             .request_device(
                 &DeviceDescriptor {
-                    features: Features::empty(),
-                    limits: Limits::default(),
+                    required_features: Features::empty(),
+                    required_limits: Limits::default(),
                     label: Some("No features, default limits"),
                 },
                 None, // Trace path
@@ -73,13 +79,14 @@ impl State {
         let size = window.inner_size();
         debug!("Physical window size: {:?}", &size);
 
-        let texture_formats = surface.get_supported_formats(&adapter);
+        let capabilities = surface.get_capabilities(&adapter);
+        let texture_formats = capabilities.formats;
         debug!("Supported texture formats: {:?}", &texture_formats);
 
         let texture_format = texture_formats[0];
         debug!("Choosing texture format: {:?}", &texture_format);
 
-        let present_modes = surface.get_supported_present_modes(&adapter);
+        let present_modes = capabilities.present_modes;
         debug!("Supported present modes: {:?}", &present_modes);
 
         let surface_config = SurfaceConfiguration {
@@ -88,7 +95,9 @@ impl State {
             width: size.width,
             height: size.height,
             present_mode: PresentMode::AutoVsync,
+            desired_maximum_frame_latency: 0,
             alpha_mode: CompositeAlphaMode::Auto,
+            view_formats: vec![texture_format],
         };
         surface.configure(&device, &surface_config);
 

@@ -1,4 +1,5 @@
 use std::ops::Range;
+use wgpu::StoreOp;
 
 use super::{
     ids::{BindGroupId, BufferId, PipelineId},
@@ -9,7 +10,7 @@ use super::{
 
 #[derive(Debug)]
 pub struct Encoder<'rt> {
-    runtime: &'rt Runtime,
+    runtime: &'rt Runtime<'rt>,
     settings: &'rt Settings,
     database: &'rt Database,
     output: wgpu::SurfaceTexture,
@@ -57,10 +58,12 @@ impl<'rt> Encoder<'rt> {
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(self.settings.clear_color),
-                    store: true,
+                    store: StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
         });
 
         RenderPass(render_pass, &self.database)

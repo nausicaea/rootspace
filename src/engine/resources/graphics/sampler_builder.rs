@@ -1,7 +1,7 @@
 use super::{ids::SamplerId, runtime::Runtime, Database};
 
 pub struct SamplerBuilder<'rt> {
-    runtime: &'rt Runtime,
+    runtime: &'rt Runtime<'rt>,
     database: &'rt mut Database,
     label: Option<&'static str>,
 }
