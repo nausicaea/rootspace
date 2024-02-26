@@ -1,7 +1,7 @@
 use crate::plyers::types::{PlyDescriptor, Primitive, PropertyDescriptor};
 use crate::plyers::PlyError;
 use std::io::Write;
-use std::ops::Add;
+use num_traits::ToBytes;
 
 pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(), PlyError> {
     writeln!(f, "ply")?;
@@ -47,162 +47,74 @@ pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(
     Ok(())
 }
 
-pub fn write_values_ascii<W: Write, T: ToString + num_traits::One + Add<T, Output = T>>(
-    f: &mut W,
-    primitive: &Primitive,
-    values: &[T],
-) -> Result<(), PlyError> {
-    match primitive {
-        Primitive::Single => writeln!(
-            f,
-            "{}",
-            values.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(" ")
-        )?,
-        Primitive::Triangles => {
-            let three = T::one() + T::one() + T::one();
-            let chunk_iter = values.chunks_exact(3);
-            if !chunk_iter.remainder().is_empty() {
-                return Err(PlyError::DataError(String::from(
-                    "property data count is not divisible by three",
-                )));
-            }
-            for chunk in chunk_iter {
-                let chunk = std::iter::once(&three)
-                    .chain(chunk.iter())
-                    .map(|v| v.to_string())
-                    .collect::<Vec<_>>()
-                    .join(" ");
-                writeln!(f, "{}", chunk)?;
-            }
-        }
-        Primitive::Quads => {
-            let four = T::one() + T::one() + T::one() + T::one();
-            let chunk_iter = values.chunks_exact(4);
-            if !chunk_iter.remainder().is_empty() {
-                return Err(PlyError::DataError(String::from(
-                    "property data count is not divisible by four",
-                )));
-            }
-            for chunk in chunk_iter {
-                let chunk = std::iter::once(&four)
-                    .chain(chunk.iter())
-                    .map(|v| v.to_string())
-                    .collect::<Vec<_>>()
-                    .join(" ");
-                writeln!(f, "{}", chunk)?;
-            }
-        }
-        _ => unimplemented!("cannot write data with mixed primitives"),
-    }
-    Ok(())
-}
-
-pub fn write_values_le<
-    const N: usize,
-    W: Write,
-    T: num_traits::ToBytes<Bytes = [u8; N]> + num_traits::One + Add<T, Output = T>,
->(
-    f: &mut W,
-    primitive: &Primitive,
-    values: &[T],
-) -> Result<(), PlyError> {
+pub fn write_le_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(f: &mut W, primitive: &Primitive, values: &[T], element_index: usize) -> Result<(), PlyError> {
     match primitive {
         Primitive::Single => {
-            let mut values_u8: Vec<u8> = Vec::with_capacity(values.len() * std::mem::size_of::<T>());
-            for v in values {
-                values_u8.extend_from_slice(&v.to_le_bytes()[..]);
-            }
-            f.write(&values_u8)?;
-        }
+            f.write(&values[element_index].to_le_bytes()[..])?;
+        },
         Primitive::Triangles => {
-            let chunk_iter = values.chunks_exact(3);
-            if !chunk_iter.remainder().is_empty() {
-                return Err(PlyError::DataError(String::from(
-                    "property data count is not divisible by three",
-                )));
-            }
-            for chunk in chunk_iter {
-                let mut chunk_u8: Vec<u8> = Vec::with_capacity(1 + chunk.len() * std::mem::size_of::<T>());
-                chunk_u8.push(3u8);
-                for v in chunk {
-                    chunk_u8.extend_from_slice(&v.to_le_bytes()[..]);
-                }
-                f.write(&chunk_u8)?;
-            }
-        }
+            let stride = 3;
+            let value_chunk = values[(stride * element_index)..(stride * (element_index+1))].iter().flat_map(|v| v.to_le_bytes().into_iter()).collect::<Vec<_>>();
+            f.write(&[stride as u8])?;
+            f.write(&value_chunk)?;
+        },
         Primitive::Quads => {
-            let chunk_iter = values.chunks_exact(4);
-            if !chunk_iter.remainder().is_empty() {
-                return Err(PlyError::DataError(String::from(
-                    "property data count is not divisible by four",
-                )));
-            }
-            for chunk in chunk_iter {
-                let mut chunk_u8: Vec<u8> = Vec::with_capacity(1 + chunk.len() * std::mem::size_of::<T>());
-                chunk_u8.push(4u8);
-                for v in chunk {
-                    chunk_u8.extend_from_slice(&v.to_le_bytes()[..]);
-                }
-                f.write(&chunk_u8)?;
-            }
-        }
-        _ => unimplemented!("cannot write data with mixed primitives"),
+            let stride = 4;
+            let value_chunk = values[(stride * element_index)..(stride * (element_index+1))].iter().flat_map(|v| v.to_le_bytes().into_iter()).collect::<Vec<_>>();
+            f.write(&[stride as u8])?;
+            f.write(&value_chunk)?;
+        },
+        Primitive::Mixed => unimplemented!("mixed primitive data is not supported")
     }
 
     Ok(())
 }
 
-pub fn write_values_be<
-    const N: usize,
-    W: Write,
-    T: num_traits::ToBytes<Bytes = [u8; N]> + num_traits::One + Add<T, Output = T>,
->(
-    f: &mut W,
-    primitive: &Primitive,
-    values: &[T],
-) -> Result<(), PlyError> {
+pub fn write_be_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(f: &mut W, primitive: &Primitive, values: &[T], element_index: usize) -> Result<(), PlyError> {
     match primitive {
         Primitive::Single => {
-            let mut values_u8: Vec<u8> = Vec::with_capacity(values.len() * std::mem::size_of::<T>());
-            for v in values {
-                values_u8.extend_from_slice(&v.to_be_bytes()[..]);
-            }
-            f.write(&values_u8)?;
-        }
+            f.write(&values[element_index].to_be_bytes()[..])?;
+        },
         Primitive::Triangles => {
-            let chunk_iter = values.chunks_exact(3);
-            if !chunk_iter.remainder().is_empty() {
-                return Err(PlyError::DataError(String::from(
-                    "property data count is not divisible by three",
-                )));
-            }
-            for chunk in chunk_iter {
-                let mut chunk_u8: Vec<u8> = Vec::with_capacity(1 + chunk.len() * std::mem::size_of::<T>());
-                chunk_u8.push(3u8);
-                for v in chunk {
-                    chunk_u8.extend_from_slice(&v.to_be_bytes()[..]);
-                }
-                f.write(&chunk_u8)?;
-            }
-        }
+            let stride = 3;
+            let value_chunk = values[(stride * element_index)..(stride * (element_index+1))].iter().flat_map(|v| v.to_be_bytes().into_iter()).collect::<Vec<_>>();
+            f.write(&[stride as u8])?;
+            f.write(&value_chunk)?;
+        },
         Primitive::Quads => {
-            let chunk_iter = values.chunks_exact(4);
-            if !chunk_iter.remainder().is_empty() {
-                return Err(PlyError::DataError(String::from(
-                    "property data count is not divisible by four",
-                )));
-            }
-            for chunk in chunk_iter {
-                let mut chunk_u8: Vec<u8> = Vec::with_capacity(1 + chunk.len() * std::mem::size_of::<T>());
-                chunk_u8.push(4u8);
-                for v in chunk {
-                    chunk_u8.extend_from_slice(&v.to_be_bytes()[..]);
-                }
-                f.write(&chunk_u8)?;
-            }
-        }
-        _ => unimplemented!("cannot write data with mixed primitives"),
+            let stride = 4;
+            let value_chunk = values[(stride * element_index)..(stride * (element_index+1))].iter().flat_map(|v| v.to_be_bytes().into_iter()).collect::<Vec<_>>();
+            f.write(&[stride as u8])?;
+            f.write(&value_chunk)?;
+        },
+        Primitive::Mixed => unimplemented!("mixed primitive data is not supported")
     }
 
     Ok(())
 }
+
+pub fn write_ascii_values<W: Write, T: std::fmt::Display>(f: &mut W, primitive: &Primitive, values: &[T], element_index: usize) -> Result<(), PlyError> {
+    match primitive {
+        Primitive::Single => {
+            write!(f, "{} ", &values[element_index])?;
+        },
+        Primitive::Triangles => {
+            let stride = 3;
+            write!(f, "{} ", stride)?;
+            for v in &values[(stride * element_index)..(stride * (element_index+1))] {
+                write!(f, "{} ", v)?;
+            }
+        },
+        Primitive::Quads => {
+            let stride = 4;
+            write!(f, "{} ", stride)?;
+            for v in &values[(stride * element_index)..(stride * (element_index+1))] {
+                write!(f, "{} ", v)?;
+            }
+        },
+        Primitive::Mixed => unimplemented!("mixed primitive data is not supported")
+    }
+
+    Ok(())
+}
+

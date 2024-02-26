@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use log::{debug, trace};
 
 use nom::{
     bytes::complete::take_till1,
@@ -29,7 +30,9 @@ where
     context(
         "plyers::de::body::ascii_count_fct",
         map_res(terminated(take_till1(is_whitespace), whitespace), |cd| {
+            trace!("Parsing ASCII count data as utf8: {:?}", cd);
             let cd = std::str::from_utf8(cd)?;
+            trace!("Parsing ASCII count data as usize: {:?}", cd);
             let cd = cd.parse::<usize>()?;
             Result::<_, ParseNumError>::Ok(cd)
         }),
@@ -43,7 +46,9 @@ where
     context(
         "plyers::de::body::ascii_number_fct",
         map_res(terminated(recognize_float, whitespace), move |pd| {
+            trace!("Parsing ASCII property data as utf8: {:?}", pd);
             let pd = std::str::from_utf8(pd)?;
+            trace!("Parsing ASCII property data as {}: {:?}", data_type, pd);
             let pd = match data_type {
                 DataType::U8 => pd
                     .parse::<u8>()
@@ -96,11 +101,14 @@ fn le_count_fct<'a, E>(count_type: CountType) -> impl FnMut(&'a [u8]) -> IResult
 where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
-    context("plyers::de::body::le_count_fct", move |input| match count_type {
-        CountType::U8 => map(le_u8, |n| n as usize)(input),
-        CountType::U16 => map(le_u16, |n| n as usize)(input),
-        CountType::U32 => map(le_u32, |n| n as usize)(input),
-        CountType::U64 => map(le_u64, |n| n as usize)(input),
+    context("plyers::de::body::le_count_fct", move |input| {
+        trace!("Parsing LE count data as {} and casting to usize", count_type);
+        match count_type {
+            CountType::U8 => map(le_u8, |n| n as usize)(input),
+            CountType::U16 => map(le_u16, |n| n as usize)(input),
+            CountType::U32 => map(le_u32, |n| n as usize)(input),
+            CountType::U64 => map(le_u64, |n| n as usize)(input),
+        }
     })
 }
 
@@ -108,17 +116,20 @@ fn le_number_fct<'a, E>(data_type: DataType) -> impl FnMut(&'a [u8]) -> IResult<
 where
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
 {
-    context("plyers::de::body::le_number_fct", move |input| match data_type {
-        DataType::U8 => map(le_u8, Value::from)(input),
-        DataType::I8 => map(le_i8, Value::from)(input),
-        DataType::U16 => map(le_u16, Value::from)(input),
-        DataType::I16 => map(le_i16, Value::from)(input),
-        DataType::U32 => map(le_u32, Value::from)(input),
-        DataType::I32 => map(le_i32, Value::from)(input),
-        DataType::U64 => map(le_u64, Value::from)(input),
-        DataType::I64 => map(le_i64, Value::from)(input),
-        DataType::F32 => map(le_f32, Value::from)(input),
-        DataType::F64 => map(le_f64, Value::from)(input),
+    context("plyers::de::body::le_number_fct", move |input| {
+        trace!("Parsing LE property data as {}", data_type);
+        match data_type {
+            DataType::U8 => map(le_u8, Value::from)(input),
+            DataType::I8 => map(le_i8, Value::from)(input),
+            DataType::U16 => map(le_u16, Value::from)(input),
+            DataType::I16 => map(le_i16, Value::from)(input),
+            DataType::U32 => map(le_u32, Value::from)(input),
+            DataType::I32 => map(le_i32, Value::from)(input),
+            DataType::U64 => map(le_u64, Value::from)(input),
+            DataType::I64 => map(le_i64, Value::from)(input),
+            DataType::F32 => map(le_f32, Value::from)(input),
+            DataType::F64 => map(le_f64, Value::from)(input),
+        }
     })
 }
 
@@ -126,11 +137,14 @@ fn be_count_fct<'a, E>(count_type: CountType) -> impl FnMut(&'a [u8]) -> IResult
 where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
-    context("plyers::de::body::be_count_fct", move |input| match count_type {
-        CountType::U8 => map(be_u8, |n| n as usize)(input),
-        CountType::U16 => map(be_u16, |n| n as usize)(input),
-        CountType::U32 => map(be_u32, |n| n as usize)(input),
-        CountType::U64 => map(be_u64, |n| n as usize)(input),
+    context("plyers::de::body::be_count_fct", move |input| {
+        trace!("Parsing BE count data as {} and casting to usize", count_type);
+        match count_type {
+            CountType::U8 => map(be_u8, |n| n as usize)(input),
+            CountType::U16 => map(be_u16, |n| n as usize)(input),
+            CountType::U32 => map(be_u32, |n| n as usize)(input),
+            CountType::U64 => map(be_u64, |n| n as usize)(input),
+        }
     })
 }
 
@@ -138,17 +152,20 @@ fn be_number_fct<'a, E>(data_type: DataType) -> impl FnMut(&'a [u8]) -> IResult<
 where
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
 {
-    context("plyers::de::body::be_number_fct", move |input| match data_type {
-        DataType::U8 => map(be_u8, Value::from)(input),
-        DataType::I8 => map(be_i8, Value::from)(input),
-        DataType::U16 => map(be_u16, Value::from)(input),
-        DataType::I16 => map(be_i16, Value::from)(input),
-        DataType::U32 => map(be_u32, Value::from)(input),
-        DataType::I32 => map(be_i32, Value::from)(input),
-        DataType::U64 => map(be_u64, Value::from)(input),
-        DataType::I64 => map(be_i64, Value::from)(input),
-        DataType::F32 => map(be_f32, Value::from)(input),
-        DataType::F64 => map(be_f64, Value::from)(input),
+    context("plyers::de::body::be_number_fct", move |input| {
+        trace!("Parsing BE property data as {}", data_type);
+        match data_type {
+            DataType::U8 => map(be_u8, Value::from)(input),
+            DataType::I8 => map(be_i8, Value::from)(input),
+            DataType::U16 => map(be_u16, Value::from)(input),
+            DataType::I16 => map(be_i16, Value::from)(input),
+            DataType::U32 => map(be_u32, Value::from)(input),
+            DataType::I32 => map(be_i32, Value::from)(input),
+            DataType::U64 => map(be_u64, Value::from)(input),
+            DataType::I64 => map(be_i64, Value::from)(input),
+            DataType::F32 => map(be_f32, Value::from)(input),
+            DataType::F64 => map(be_f64, Value::from)(input),
+        }
     })
 }
 
@@ -204,15 +221,21 @@ where
                 let (&p_id, p_desc) = p_iter.next().unwrap();
 
                 match p_desc {
-                    PropertyDescriptor::Scalar { data_type, .. } => map(property_scalar_fct(num_fn, *data_type), |p| {
-                        (p_id, Primitive::Single, *data_type, vec![p])
-                    })(input),
+                    PropertyDescriptor::Scalar { data_type, name , .. } => {
+                        trace!("Parsing property {} as scalar data with type {}", name, data_type);
+                        map(property_scalar_fct(num_fn, *data_type), |p| {
+                            (p_id, Primitive::Single, *data_type, vec![p])
+                        })(input)
+                    },
                     PropertyDescriptor::List {
-                        count_type, data_type, ..
-                    } => map(property_list_fct(cnt_fn, num_fn, *count_type, *data_type), |ps| {
-                        let prim = Primitive::from(ps.len());
-                        (p_id, prim, *data_type, ps)
-                    })(input),
+                        count_type, data_type, name, ..
+                    } => {
+                        trace!("Parsing property {} as list data with type {} and count type {}", name, data_type, count_type);
+                        map(property_list_fct(cnt_fn, num_fn, *count_type, *data_type), |ps| {
+                            let prim = Primitive::from(ps.len());
+                            (p_id, prim, *data_type, ps)
+                        })(input)
+                    },
                 }
             },
             BTreeMap::<PropertyId, (Primitive, Values)>::new,
@@ -250,13 +273,13 @@ where
     let mut e_iter = elements.iter();
 
     context(
-        "plyers::de::body::elements_fct",
+        "plyers::de::body::elements_fct#0",
         fold_exact(
             elements.len(),
             move |input: &'a [u8]| {
                 let (_, e_desc) = e_iter.next().unwrap();
-
-                properties_fct(cnt_fn, num_fn, &e_desc.properties, e_desc.count)(input)
+                trace!("Parsing data for element {}", e_desc.name);
+                context("plyers::de::body::elements_fct#1", properties_fct(cnt_fn, num_fn, &e_desc.properties, e_desc.count))(input)
             },
             BTreeMap::<PropertyId, (Primitive, Values)>::new,
             |mut p_acc, e_values| {
@@ -274,9 +297,18 @@ pub fn body_fct<
     ply: PlyDescriptor,
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, Values)>, E> {
     context("plyers::de::body::body_fct", move |input| match ply.format_type {
-        FormatType::Ascii => elements_fct(&ascii_count_fct, &ascii_number_fct, &ply.elements)(input),
-        FormatType::BinaryLittleEndian => elements_fct(&le_count_fct, &le_number_fct, &ply.elements)(input),
-        FormatType::BinaryBigEndian => elements_fct(&be_count_fct, &be_number_fct, &ply.elements)(input),
+        FormatType::Ascii => {
+            debug!("Parsing PLY data as ASCII");
+            elements_fct(&ascii_count_fct, &ascii_number_fct, &ply.elements)(input)
+        },
+        FormatType::BinaryLittleEndian => {
+            debug!("Parsing PLY data as binary little endian");
+            elements_fct(&le_count_fct, &le_number_fct, &ply.elements)(input)
+        },
+        FormatType::BinaryBigEndian => {
+            debug!("Parsing PLY data as binary big endian");
+            elements_fct(&be_count_fct, &be_number_fct, &ply.elements)(input)
+        },
     })
 }
 

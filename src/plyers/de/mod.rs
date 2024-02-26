@@ -1,4 +1,5 @@
 use std::num::{ParseFloatError, ParseIntError};
+use log::debug;
 
 use nom::{
     combinator::{all_consuming, flat_map, map},
@@ -37,13 +38,20 @@ pub fn parse_ply<
     let mut p_urn = Urn::<PropertyId>::default();
     let e_urn_ref = &mut e_urn;
     let p_urn_ref = &mut p_urn;
+
     let r = context(
-        "plyers::de::parse_ply",
+        "plyers::de::parse_ply#0",
         all_consuming(flat_map(header_fct(e_urn_ref, p_urn_ref), |descriptor| {
-            map(body_fct(descriptor.clone()), move |data| Ply {
-                descriptor: descriptor.clone(),
-                data,
-            })
+            debug!("Completed PLY header parsing, continuing to the body");
+            context(
+                "plyers::de::parse_ply#1",
+                map(body_fct(descriptor.clone()), move |data| {
+                    debug!("Completed PLY body parsing, assembling output data");
+                    Ply {
+                        descriptor: descriptor.clone(),
+                        data,
+                    }
+                }))
         })),
     )(input);
 

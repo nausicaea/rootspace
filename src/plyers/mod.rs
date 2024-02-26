@@ -50,7 +50,7 @@ pub mod de;
 mod ser;
 pub mod types;
 
-use std::io::BufWriter;
+use std::io::{BufWriter};
 
 use std::{fs::File, io::Read, path::Path};
 
@@ -58,9 +58,10 @@ use crate::file_manipulation;
 use crate::file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use crate::plyers::de::error::convert_error;
 use crate::plyers::de::parse_ply;
-use crate::plyers::ser::write_header;
+use crate::plyers::ser::{write_ascii_values, write_be_values, write_header, write_le_values};
 use crate::plyers::types::{FormatType, Ply, Values};
 use nom::error::VerboseError;
+use log::debug;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PlyError {
@@ -76,8 +77,10 @@ pub enum PlyError {
 
 pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
     let path = FilePathBuf::try_from(path.as_ref())?;
-    let mut file = File::open(path)?;
+    debug!("Opening PLY file at {}", path.display());
+    let mut file = File::open(path.clone())?;
     let mut input = Vec::new();
+    debug!("Reading entire contents of file at {}", path.display());
     file.read_to_end(&mut input)?;
 
     let r = parse_ply::<VerboseError<_>>(&input)
@@ -92,60 +95,80 @@ pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
 
 pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
     let path = NewOrExFilePathBuf::try_from(path.as_ref())?;
-    let file = File::create(path)?;
-    let mut buf_writer = BufWriter::new(file);
+    debug!("Creating PLY file at {}", path.display());
+    let file = File::create(path.clone())?;
+    let mut f = BufWriter::new(file);
 
-    write_header(&mut buf_writer, &ply.descriptor)?;
+    debug!("Writing PLY header to file at {}", path.display());
+    write_header(&mut f, &ply.descriptor)?;
 
     match ply.descriptor.format_type {
-        FormatType::Ascii => {
-            for (_, (primitive, values)) in &ply.data {
-                match values {
-                    Values::I8(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::U8(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::I16(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::U16(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::I32(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::U32(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::I64(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::U64(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::F32(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
-                    Values::F64(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
-                }
-            }
-        }
         FormatType::BinaryLittleEndian => {
-            for (_, (primitive, values)) in &ply.data {
-                match values {
-                    Values::I8(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::U8(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::I16(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::U16(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::I32(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::U32(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::I64(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::U64(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::F32(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
-                    Values::F64(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
+            for (_, e_desc) in &ply.descriptor.elements {
+                let e_count = e_desc.count;
+                for e_idx in 0..e_count {
+                    for (p_id, _) in &e_desc.properties {
+                        let (p_prim, p_values) = &ply.data[&p_id];
+                        match p_values {
+                            Values::I8(values) => write_le_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U8(values) => write_le_values(&mut f, p_prim, values, e_idx)?,
+                            Values::I16(values) => write_le_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U16(values) => write_le_values(&mut f, p_prim, values, e_idx)?,
+                            Values::I32(values) => write_le_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U32(values) => write_le_values(&mut f, p_prim, values, e_idx)?,
+                            Values::I64(values) => write_le_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U64(values) => write_le_values(&mut f, p_prim, values, e_idx)?,
+                            Values::F32(values) => write_le_values(&mut f, p_prim, values, e_idx)?,
+                            Values::F64(values) => write_le_values(&mut f, p_prim, values, e_idx)?,
+                        }
+                    }
                 }
             }
-        }
+        },
         FormatType::BinaryBigEndian => {
-            for (_, (primitive, values)) in &ply.data {
-                match values {
-                    Values::I8(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::U8(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::I16(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::U16(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::I32(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::U32(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::I64(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::U64(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::F32(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
-                    Values::F64(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
+            for (_, e_desc) in &ply.descriptor.elements {
+                let e_count = e_desc.count;
+                for e_idx in 0..e_count {
+                    for (p_id, _) in &e_desc.properties {
+                        let (p_prim, p_values) = &ply.data[&p_id];
+                        match p_values {
+                            Values::I8(values) => write_be_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U8(values) => write_be_values(&mut f, p_prim, values, e_idx)?,
+                            Values::I16(values) => write_be_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U16(values) => write_be_values(&mut f, p_prim, values, e_idx)?,
+                            Values::I32(values) => write_be_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U32(values) => write_be_values(&mut f, p_prim, values, e_idx)?,
+                            Values::I64(values) => write_be_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U64(values) => write_be_values(&mut f, p_prim, values, e_idx)?,
+                            Values::F32(values) => write_be_values(&mut f, p_prim, values, e_idx)?,
+                            Values::F64(values) => write_be_values(&mut f, p_prim, values, e_idx)?,
+                        }
+                    }
                 }
             }
-        }
+        },
+        FormatType::Ascii => {
+            for (_, e_desc) in &ply.descriptor.elements {
+                let e_count = e_desc.count;
+                for e_idx in 0..e_count {
+                    for (p_id, _) in &e_desc.properties {
+                        let (p_prim, p_values) = &ply.data[&p_id];
+                        match p_values {
+                            Values::I8(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U8(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                            Values::I16(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U16(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                            Values::I32(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U32(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                            Values::I64(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                            Values::U64(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                            Values::F32(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                            Values::F64(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                        }
+                    }
+                }
+            }
+        },
     }
 
     Ok(())
@@ -161,9 +184,8 @@ mod tests {
         CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, Ply, PlyDescriptor,
         Primitive, PropertyDescriptor, PropertyId, Values,
     };
-    use rstest::rstest;
 
-    #[rstest]
+    #[rstest::rstest]
     fn load_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
         match load_ply(&path) {
             Err(e) => panic!("{}: {}", path.display(), e),
@@ -759,8 +781,9 @@ mod tests {
         assert_eq!(ply, expected);
     }
 
-    #[rstest]
+    #[rstest::rstest]
     fn save_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
+        let _ = env_logger::builder().is_test(true).try_init();
         let ply = load_ply(&path).unwrap();
         let tmp = tempfile::Builder::new()
             .prefix(path.file_stem().unwrap())
@@ -771,18 +794,38 @@ mod tests {
             Err(e) => panic!("{}: {}", path.display(), e),
             _ => (),
         }
-        let ply2 = load_ply(tmp.path()).unwrap();
-        if &ply != &ply2 {
-            let persist_path = Path::new(concat!(
+        match load_ply(tmp.path()) {
+            Ok(ply2) => {
+                if &ply != &ply2 {
+                    let persist_path = Path::new(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/target/tests/save_ply_succeeds_for_test_files"
+                    ));
+                    if !persist_path.is_dir() {
+                        std::fs::create_dir_all(&persist_path).unwrap();
+                    }
+                    let persist_path = persist_path.join(path.file_name().unwrap());
+                    tmp.persist(&persist_path).unwrap();
+                    eprintln!("diff {} {}", path.display(), persist_path.display());
+
+                    assert_eq!(&ply.descriptor, &ply2.descriptor, "differing headers");
+                    assert_eq!(&ply.data, &ply2.data, "differing data");
+                }
+            },
+            Err(e) => {
+                let persist_path = Path::new(concat!(
                 env!("CARGO_MANIFEST_DIR"),
                 "/target/tests/save_ply_succeeds_for_test_files"
-            ));
-            if !persist_path.is_dir() {
-                std::fs::create_dir_all(&persist_path).unwrap();
+                ));
+                if !persist_path.is_dir() {
+                    std::fs::create_dir_all(&persist_path).unwrap();
+                }
+                let persist_path = persist_path.join(path.file_name().unwrap());
+                tmp.persist(&persist_path).unwrap();
+                eprintln!("diff {} {}", path.display(), persist_path.display());
+
+                panic!("Parsing failure: \n{}", e);
             }
-            let persist_path = persist_path.join(path.file_name().unwrap());
-            tmp.persist(&persist_path).unwrap();
-            assert_eq!(ply, ply2, "diff {} {}", path.display(), persist_path.display());
         }
     }
 }

@@ -88,18 +88,24 @@ fn obj_info_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u
     )(input)
 }
 
-fn element_decl<'a, E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError>>(
+fn element_decl<'a, E>(
     input: &'a [u8],
-) -> IResult<&'a [u8], (String, usize), E> {
-    map_res(
-        tuple((tag(ELEMENT), space, identifier, space, digit1, newline)),
-        |(_, _, nm, _, cnt, _)| {
-            let nm = std::str::from_utf8(nm)?.to_string();
-            let cnt = std::str::from_utf8(cnt)?;
-            let cnt: usize = usize::from_str_radix(cnt, 10)?;
+) -> IResult<&'a [u8], (String, usize), E>
+where
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>
+{
+    context(
+        "plyers::de::header::element_decl",
+        map_res(
+            tuple((tag(ELEMENT), space, identifier, space, digit1, newline)),
+            |(_, _, nm, _, cnt, _)| {
+                let nm = std::str::from_utf8(nm)?.to_string();
+                let cnt = std::str::from_utf8(cnt)?;
+                let cnt: usize = usize::from_str_radix(cnt, 10)?;
 
-            Result::<_, ParseNumError>::Ok((nm, cnt))
-        },
+                Result::<_, ParseNumError>::Ok((nm, cnt))
+            },
+        )
     )(input)
 }
 
