@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use std::sync::Arc;
 use log::debug;
+use std::sync::Arc;
 use wgpu::{
     Backends, CompositeAlphaMode, Device, DeviceDescriptor, Features, Instance, Limits, PowerPreference, PresentMode,
     Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, TextureUsages,

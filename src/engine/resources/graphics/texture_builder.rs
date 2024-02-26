@@ -1,5 +1,5 @@
-use wgpu::util::TextureDataOrder;
 use super::{ids::TextureId, runtime::Runtime, Database};
+use wgpu::util::TextureDataOrder;
 
 pub struct TextureBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,

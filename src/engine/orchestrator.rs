@@ -1,9 +1,6 @@
 use std::time::{Duration, Instant};
 
-use winit::{
-    event::Event,
-    event_loop::EventLoopWindowTarget,
-};
+use winit::{event::Event, event_loop::EventLoopWindowTarget};
 
 use crate::ecs::entity::Entity;
 use crate::ecs::event_queue::receiver_id::ReceiverId;
@@ -94,7 +91,7 @@ impl Orchestrator {
                 Event::AboutToWait => {
                     self.redraw();
                     self.maintain(elwt);
-                },
+                }
                 Event::LoopExiting => self.cleanup(),
                 _ => (),
             }

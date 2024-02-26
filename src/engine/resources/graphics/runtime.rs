@@ -25,10 +25,12 @@ impl<'a> Runtime<'a> {
         present_mode: wgpu::PresentMode,
         alpha_mode: wgpu::CompositeAlphaMode,
     ) -> Runtime<'a> {
-        let window = std::sync::Arc::new(winit::window::WindowBuilder::new()
-            .with_fullscreen(Some(Fullscreen::Borderless(None)))
-            .build(event_loop)
-            .unwrap());
+        let window = std::sync::Arc::new(
+            winit::window::WindowBuilder::new()
+                .with_fullscreen(Some(Fullscreen::Borderless(None)))
+                .build(event_loop)
+                .unwrap(),
+        );
 
         let size = window.inner_size();
         debug!("Physical window size: {:?}", &size);
@@ -39,8 +41,7 @@ impl<'a> Runtime<'a> {
             backends,
             ..Default::default()
         });
-        let surface = instance.create_surface(window.clone())
-            .unwrap();
+        let surface = instance.create_surface(window.clone()).unwrap();
 
         let adapter = instance
             .request_adapter(&RequestAdapterOptions {
@@ -67,7 +68,8 @@ impl<'a> Runtime<'a> {
         let capabilities = surface.get_capabilities(&adapter);
         debug!("Supported texture formats: {:?}", &capabilities.formats);
 
-        let texture_format = capabilities.formats
+        let texture_format = capabilities
+            .formats
             .iter()
             .filter(|&tf| tf == preferred_texture_format)
             .next()

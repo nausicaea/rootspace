@@ -1,7 +1,11 @@
 use std::path::PathBuf;
 
-use winit::{dpi::{PhysicalPosition, PhysicalSize}, event::{AxisId, ElementState, Ime, MouseButton, MouseScrollDelta, TouchPhase}, keyboard};
 use winit::keyboard::{ModifiersState, SmolStr};
+use winit::{
+    dpi::{PhysicalPosition, PhysicalSize},
+    event::{AxisId, ElementState, Ime, MouseButton, MouseScrollDelta, TouchPhase},
+    keyboard,
+};
 
 /// A serializable copy of [`WindowEvent`](winit::event::WindowEvent). Some fields and variants are
 /// missing:
@@ -179,14 +183,17 @@ impl<'a> TryFrom<winit::event::WindowEvent> for WindowEvent {
             Focused(b) => Ok(WindowEvent::Focused(b)),
             KeyboardInput {
                 event, is_synthetic, ..
-            } => Ok(WindowEvent::KeyboardInput { event: KeyEvent {
-                physical_key: event.physical_key,
-                logical_key: event.logical_key,
-                text: event.text,
-                location: event.location,
-                state: event.state,
-                repeat: event.repeat,
-            }, is_synthetic }),
+            } => Ok(WindowEvent::KeyboardInput {
+                event: KeyEvent {
+                    physical_key: event.physical_key,
+                    logical_key: event.logical_key,
+                    text: event.text,
+                    location: event.location,
+                    state: event.state,
+                    repeat: event.repeat,
+                },
+                is_synthetic,
+            }),
             ModifiersChanged(ms) => Ok(WindowEvent::ModifiersChanged(ms.state())),
             Ime(ime) => Ok(WindowEvent::Ime(ime)),
             CursorMoved { position, .. } => Ok(WindowEvent::CursorMoved { position }),
