@@ -19,11 +19,7 @@ impl PrivLoadAsset for Texture {
         let image_format = path
             .extension()
             .and_then(|ext| ext.to_str())
-            .and_then(|ext| match ext {
-                "jpg" | "jpeg" => Some(ImageFormat::Jpeg),
-                "png" => Some(ImageFormat::Png),
-                _ => None,
-            })
+            .and_then(|ext| ImageFormat::from_extension(ext))
             .ok_or(Error::UnsupportedFileFormat)?;
 
         let f = std::fs::File::open(path)?;
