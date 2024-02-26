@@ -151,19 +151,20 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
             for (_, e_desc) in &ply.descriptor.elements {
                 let e_count = e_desc.count;
                 for e_idx in 0..e_count {
-                    for (p_id, _) in &e_desc.properties {
+                    for (p_idx, (p_id, _)) in e_desc.properties.iter().enumerate() {
+                        let is_last_property = p_idx == e_desc.properties.len() - 1;
                         let (p_prim, p_values) = &ply.data[&p_id];
                         match p_values {
-                            Values::I8(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
-                            Values::U8(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
-                            Values::I16(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
-                            Values::U16(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
-                            Values::I32(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
-                            Values::U32(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
-                            Values::I64(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
-                            Values::U64(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
-                            Values::F32(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
-                            Values::F64(values) => write_ascii_values(&mut f, p_prim, values, e_idx)?,
+                            Values::I8(values) => write_ascii_values(&mut f, p_prim, values, e_idx, is_last_property)?,
+                            Values::U8(values) => write_ascii_values(&mut f, p_prim, values, e_idx, is_last_property)?,
+                            Values::I16(values) => write_ascii_values(&mut f, p_prim, values, e_idx, is_last_property)?,
+                            Values::U16(values) => write_ascii_values(&mut f, p_prim, values, e_idx, is_last_property)?,
+                            Values::I32(values) => write_ascii_values(&mut f, p_prim, values, e_idx, is_last_property)?,
+                            Values::U32(values) => write_ascii_values(&mut f, p_prim, values, e_idx, is_last_property)?,
+                            Values::I64(values) => write_ascii_values(&mut f, p_prim, values, e_idx, is_last_property)?,
+                            Values::U64(values) => write_ascii_values(&mut f, p_prim, values, e_idx, is_last_property)?,
+                            Values::F32(values) => write_ascii_values(&mut f, p_prim, values, e_idx, is_last_property)?,
+                            Values::F64(values) => write_ascii_values(&mut f, p_prim, values, e_idx, is_last_property)?,
                         }
                     }
                 }
