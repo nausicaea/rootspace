@@ -88,11 +88,9 @@ fn obj_info_decl<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u
     )(input)
 }
 
-fn element_decl<'a, E>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], (String, usize), E>
+fn element_decl<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], (String, usize), E>
 where
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
 {
     context(
         "plyers::de::header::element_decl",
@@ -105,7 +103,7 @@ where
 
                 Result::<_, ParseNumError>::Ok((nm, cnt))
             },
-        )
+        ),
     )(input)
 }
 

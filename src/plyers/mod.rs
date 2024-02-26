@@ -50,7 +50,7 @@ pub mod de;
 mod ser;
 pub mod types;
 
-use std::io::{BufWriter};
+use std::io::BufWriter;
 
 use std::{fs::File, io::Read, path::Path};
 
@@ -60,8 +60,8 @@ use crate::plyers::de::error::convert_error;
 use crate::plyers::de::parse_ply;
 use crate::plyers::ser::{write_ascii_values, write_be_values, write_header, write_le_values};
 use crate::plyers::types::{FormatType, Ply, Values};
-use nom::error::VerboseError;
 use log::debug;
+use nom::error::VerboseError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PlyError {
@@ -124,7 +124,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
                     }
                 }
             }
-        },
+        }
         FormatType::BinaryBigEndian => {
             for (_, e_desc) in &ply.descriptor.elements {
                 let e_count = e_desc.count;
@@ -146,7 +146,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
                     }
                 }
             }
-        },
+        }
         FormatType::Ascii => {
             for (_, e_desc) in &ply.descriptor.elements {
                 let e_count = e_desc.count;
@@ -169,7 +169,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
                     }
                 }
             }
-        },
+        }
     }
 
     Ok(())
@@ -799,8 +799,8 @@ mod tests {
             Ok(ply2) => {
                 if &ply != &ply2 {
                     let persist_path = Path::new(concat!(
-                    env!("CARGO_MANIFEST_DIR"),
-                    "/target/tests/save_ply_succeeds_for_test_files"
+                        env!("CARGO_MANIFEST_DIR"),
+                        "/target/tests/save_ply_succeeds_for_test_files"
                     ));
                     if !persist_path.is_dir() {
                         std::fs::create_dir_all(&persist_path).unwrap();
@@ -812,11 +812,11 @@ mod tests {
                     assert_eq!(&ply.descriptor, &ply2.descriptor, "differing headers");
                     assert_eq!(&ply.data, &ply2.data, "differing data");
                 }
-            },
+            }
             Err(e) => {
                 let persist_path = Path::new(concat!(
-                env!("CARGO_MANIFEST_DIR"),
-                "/target/tests/save_ply_succeeds_for_test_files"
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/target/tests/save_ply_succeeds_for_test_files"
                 ));
                 if !persist_path.is_dir() {
                     std::fs::create_dir_all(&persist_path).unwrap();

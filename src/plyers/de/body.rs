@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
 use log::{debug, trace};
+use std::collections::BTreeMap;
 
 use nom::{
     bytes::complete::take_till1,
@@ -221,21 +221,29 @@ where
                 let (&p_id, p_desc) = p_iter.next().unwrap();
 
                 match p_desc {
-                    PropertyDescriptor::Scalar { data_type, name , .. } => {
+                    PropertyDescriptor::Scalar { data_type, name, .. } => {
                         trace!("Parsing property {} as scalar data with type {}", name, data_type);
                         map(property_scalar_fct(num_fn, *data_type), |p| {
                             (p_id, Primitive::Single, *data_type, vec![p])
                         })(input)
-                    },
+                    }
                     PropertyDescriptor::List {
-                        count_type, data_type, name, ..
+                        count_type,
+                        data_type,
+                        name,
+                        ..
                     } => {
-                        trace!("Parsing property {} as list data with type {} and count type {}", name, data_type, count_type);
+                        trace!(
+                            "Parsing property {} as list data with type {} and count type {}",
+                            name,
+                            data_type,
+                            count_type
+                        );
                         map(property_list_fct(cnt_fn, num_fn, *count_type, *data_type), |ps| {
                             let prim = Primitive::from(ps.len());
                             (p_id, prim, *data_type, ps)
                         })(input)
-                    },
+                    }
                 }
             },
             BTreeMap::<PropertyId, (Primitive, Values)>::new,
@@ -279,7 +287,10 @@ where
             move |input: &'a [u8]| {
                 let (_, e_desc) = e_iter.next().unwrap();
                 trace!("Parsing data for element {}", e_desc.name);
-                context("plyers::de::body::elements_fct#1", properties_fct(cnt_fn, num_fn, &e_desc.properties, e_desc.count))(input)
+                context(
+                    "plyers::de::body::elements_fct#1",
+                    properties_fct(cnt_fn, num_fn, &e_desc.properties, e_desc.count),
+                )(input)
             },
             BTreeMap::<PropertyId, (Primitive, Values)>::new,
             |mut p_acc, e_values| {
@@ -300,15 +311,15 @@ pub fn body_fct<
         FormatType::Ascii => {
             debug!("Parsing PLY data as ASCII");
             elements_fct(&ascii_count_fct, &ascii_number_fct, &ply.elements)(input)
-        },
+        }
         FormatType::BinaryLittleEndian => {
             debug!("Parsing PLY data as binary little endian");
             elements_fct(&le_count_fct, &le_number_fct, &ply.elements)(input)
-        },
+        }
         FormatType::BinaryBigEndian => {
             debug!("Parsing PLY data as binary big endian");
             elements_fct(&be_count_fct, &be_number_fct, &ply.elements)(input)
-        },
+        }
     })
 }
 

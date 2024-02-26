@@ -1,7 +1,7 @@
 use crate::plyers::types::{PlyDescriptor, Primitive, PropertyDescriptor};
 use crate::plyers::PlyError;
-use std::io::Write;
 use num_traits::ToBytes;
+use std::io::Write;
 
 pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(), PlyError> {
     writeln!(f, "ply")?;
@@ -47,78 +47,109 @@ pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(
     Ok(())
 }
 
-pub fn write_le_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(f: &mut W, primitive: &Primitive, values: &[T], element_index: usize) -> Result<(), PlyError> {
+pub fn write_le_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
+    f: &mut W,
+    primitive: &Primitive,
+    values: &[T],
+    element_index: usize,
+) -> Result<(), PlyError> {
     match primitive {
         Primitive::Single => {
             f.write(&values[element_index].to_le_bytes()[..])?;
-        },
+        }
         Primitive::Triangles => {
             let stride = 3;
-            let value_chunk = values[(stride * element_index)..(stride * (element_index+1))].iter().flat_map(|v| v.to_le_bytes().into_iter()).collect::<Vec<_>>();
+            let value_chunk = values[(stride * element_index)..(stride * (element_index + 1))]
+                .iter()
+                .flat_map(|v| v.to_le_bytes().into_iter())
+                .collect::<Vec<_>>();
             f.write(&[stride as u8])?;
             f.write(&value_chunk)?;
-        },
+        }
         Primitive::Quads => {
             let stride = 4;
-            let value_chunk = values[(stride * element_index)..(stride * (element_index+1))].iter().flat_map(|v| v.to_le_bytes().into_iter()).collect::<Vec<_>>();
+            let value_chunk = values[(stride * element_index)..(stride * (element_index + 1))]
+                .iter()
+                .flat_map(|v| v.to_le_bytes().into_iter())
+                .collect::<Vec<_>>();
             f.write(&[stride as u8])?;
             f.write(&value_chunk)?;
-        },
-        Primitive::Mixed => unimplemented!("mixed primitive data is not supported")
+        }
+        Primitive::Mixed => unimplemented!("mixed primitive data is not supported"),
     }
 
     Ok(())
 }
 
-pub fn write_be_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(f: &mut W, primitive: &Primitive, values: &[T], element_index: usize) -> Result<(), PlyError> {
+pub fn write_be_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
+    f: &mut W,
+    primitive: &Primitive,
+    values: &[T],
+    element_index: usize,
+) -> Result<(), PlyError> {
     match primitive {
         Primitive::Single => {
             f.write(&values[element_index].to_be_bytes()[..])?;
-        },
+        }
         Primitive::Triangles => {
             let stride = 3;
-            let value_chunk = values[(stride * element_index)..(stride * (element_index+1))].iter().flat_map(|v| v.to_be_bytes().into_iter()).collect::<Vec<_>>();
+            let value_chunk = values[(stride * element_index)..(stride * (element_index + 1))]
+                .iter()
+                .flat_map(|v| v.to_be_bytes().into_iter())
+                .collect::<Vec<_>>();
             f.write(&[stride as u8])?;
             f.write(&value_chunk)?;
-        },
+        }
         Primitive::Quads => {
             let stride = 4;
-            let value_chunk = values[(stride * element_index)..(stride * (element_index+1))].iter().flat_map(|v| v.to_be_bytes().into_iter()).collect::<Vec<_>>();
+            let value_chunk = values[(stride * element_index)..(stride * (element_index + 1))]
+                .iter()
+                .flat_map(|v| v.to_be_bytes().into_iter())
+                .collect::<Vec<_>>();
             f.write(&[stride as u8])?;
             f.write(&value_chunk)?;
-        },
-        Primitive::Mixed => unimplemented!("mixed primitive data is not supported")
+        }
+        Primitive::Mixed => unimplemented!("mixed primitive data is not supported"),
     }
 
     Ok(())
 }
 
-pub fn write_ascii_values<W: Write, T: std::fmt::Display>(f: &mut W, primitive: &Primitive, values: &[T], element_index: usize, is_last_property: bool) -> Result<(), PlyError> {
+pub fn write_ascii_values<W: Write, T: std::fmt::Display>(
+    f: &mut W,
+    primitive: &Primitive,
+    values: &[T],
+    element_index: usize,
+    is_last_property: bool,
+) -> Result<(), PlyError> {
     let normal_sep = " ";
-    let trailing_sep = if is_last_property {
-        "\n"
-    } else {
-        " "
-    };
+    let trailing_sep = if is_last_property { "\n" } else { " " };
     match primitive {
         Primitive::Single => {
             write!(f, "{}{}", &values[element_index], trailing_sep)?;
-        },
+        }
         Primitive::Triangles => {
             let stride = 3;
             write!(f, "{}{}", stride, normal_sep)?;
-            let chunk_values = values[(stride * element_index)..(stride * (element_index+1))].iter().map(|v| v.to_string()).collect::<Vec<_>>().join(normal_sep);
+            let chunk_values = values[(stride * element_index)..(stride * (element_index + 1))]
+                .iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<_>>()
+                .join(normal_sep);
             write!(f, "{}{}", chunk_values, trailing_sep)?;
-        },
+        }
         Primitive::Quads => {
             let stride = 4;
             write!(f, "{}{}", stride, normal_sep)?;
-            let chunk_values = values[(stride * element_index)..(stride * (element_index+1))].iter().map(|v| v.to_string()).collect::<Vec<_>>().join(normal_sep);
+            let chunk_values = values[(stride * element_index)..(stride * (element_index + 1))]
+                .iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<_>>()
+                .join(normal_sep);
             write!(f, "{}{}", chunk_values, trailing_sep)?;
-        },
-        Primitive::Mixed => unimplemented!("mixed primitive data is not supported")
+        }
+        Primitive::Mixed => unimplemented!("mixed primitive data is not supported"),
     }
 
     Ok(())
 }
-

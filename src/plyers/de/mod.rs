@@ -1,5 +1,5 @@
-use std::num::{ParseFloatError, ParseIntError};
 use log::debug;
+use std::num::{ParseFloatError, ParseIntError};
 
 use nom::{
     combinator::{all_consuming, flat_map, map},
@@ -51,7 +51,8 @@ pub fn parse_ply<
                         descriptor: descriptor.clone(),
                         data,
                     }
-                }))
+                }),
+            )
         })),
     )(input);
 
