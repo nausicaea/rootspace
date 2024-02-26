@@ -50,12 +50,19 @@ pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(
 pub fn write_le_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
     f: &mut W,
     primitive: &Primitive,
+    descriptor: &PropertyDescriptor,
     values: &[T],
     element_index: usize,
 ) -> Result<(), PlyError> {
     match primitive {
         Primitive::Single => {
-            f.write(&values[element_index].to_le_bytes()[..])?;
+            match descriptor {
+                PropertyDescriptor::Scalar { .. } => {f.write(&values[element_index].to_le_bytes()[..])?;},
+                PropertyDescriptor::List { .. } => {
+                    f.write(&[1u8])?;
+                    f.write(&values[element_index].to_le_bytes()[..])?;
+                }
+            }
         }
         Primitive::Triangles => {
             let stride = 3;
@@ -84,12 +91,19 @@ pub fn write_le_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
 pub fn write_be_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
     f: &mut W,
     primitive: &Primitive,
+    descriptor: &PropertyDescriptor,
     values: &[T],
     element_index: usize,
 ) -> Result<(), PlyError> {
     match primitive {
         Primitive::Single => {
-            f.write(&values[element_index].to_be_bytes()[..])?;
+            match descriptor {
+                PropertyDescriptor::Scalar { .. } => {f.write(&values[element_index].to_be_bytes()[..])?;},
+                PropertyDescriptor::List { .. } => {
+                    f.write(&[1u8])?;
+                    f.write(&values[element_index].to_be_bytes()[..])?;
+                }
+            }
         }
         Primitive::Triangles => {
             let stride = 3;
@@ -118,6 +132,7 @@ pub fn write_be_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
 pub fn write_ascii_values<W: Write, T: std::fmt::Display>(
     f: &mut W,
     primitive: &Primitive,
+    descriptor: &PropertyDescriptor,
     values: &[T],
     element_index: usize,
     is_last_property: bool,
@@ -126,7 +141,10 @@ pub fn write_ascii_values<W: Write, T: std::fmt::Display>(
     let trailing_sep = if is_last_property { "\n" } else { " " };
     match primitive {
         Primitive::Single => {
-            write!(f, "{}{}", &values[element_index], trailing_sep)?;
+            match descriptor {
+                PropertyDescriptor::Scalar { .. } => {write!(f, "{}{}", &values[element_index], trailing_sep)?;},
+                PropertyDescriptor::List { .. } => {write!(f, "1{}{}{}", normal_sep, &values[element_index], trailing_sep)?;}
+            }
         }
         Primitive::Triangles => {
             let stride = 3;
