@@ -17,7 +17,9 @@ pub struct RawMesh {
 
 impl RawMesh {
     pub(crate) fn with_ply(ply: &Ply) -> Result<Self, Error> {
-        let label = ply.descriptor.obj_info
+        let label = ply
+            .descriptor
+            .obj_info
             .iter()
             .filter(|obj_info| obj_info.0.starts_with("label="))
             .map(|obj_info| obj_info.0.replace("label=", ""))
@@ -132,6 +134,10 @@ impl RawMesh {
 
         log::trace!("Loaded {} vertices and {} indices", vertex_data.len(), indices.len());
 
-        Ok(RawMesh { label, vertices, indices })
+        Ok(RawMesh {
+            label,
+            vertices,
+            indices,
+        })
     }
 }

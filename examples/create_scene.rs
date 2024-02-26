@@ -61,14 +61,23 @@ fn main() -> anyhow::Result<()> {
 
     let tri1 = scene
         .create_entity()
-        .with_transform(Transform::builder().with_translation(Vec4::new(1.0, 0.0, 0.0, 0.0)).build())
+        .with_transform(
+            Transform::builder()
+                .with_translation(Vec4::new(1.0, 0.0, 0.0, 0.0))
+                .build(),
+        )
         .with_renderable(RenderableSource::with_model("models", "quad.ply"))
         .submit();
 
     scene
         .create_entity()
         .with_parent(tri1)
-        .with_transform(Transform::builder().with_translation(Vec4::new(-1.0, 0.0, 0.1, 0.0)).with_scale(Vec4::one() * 0.5).build())
+        .with_transform(
+            Transform::builder()
+                .with_translation(Vec4::new(-1.0, 0.0, 0.1, 0.0))
+                .with_scale(Vec4::one() * 0.5)
+                .build(),
+        )
         .with_renderable(RenderableSource::with_model("models", "triangle.ply"))
         .submit();
 

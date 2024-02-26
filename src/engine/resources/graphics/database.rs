@@ -32,10 +32,7 @@ impl Database {
         id
     }
 
-    pub fn insert_bind_group_layout<'a>(
-        &mut self,
-        obj: wgpu::BindGroupLayout,
-    ) -> BindGroupLayoutId {
+    pub fn insert_bind_group_layout<'a>(&mut self, obj: wgpu::BindGroupLayout) -> BindGroupLayoutId {
         let id = self.bind_group_layout_index.take();
         self.bind_group_layouts.insert(id, obj);
         id

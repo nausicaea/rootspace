@@ -82,7 +82,12 @@ impl<'rp> RenderPass<'rp> {
         self
     }
 
-    pub fn set_bind_group(&mut self, index: u32, bind_group: BindGroupId, offsets: &[wgpu::DynamicOffset]) -> &mut Self {
+    pub fn set_bind_group(
+        &mut self,
+        index: u32,
+        bind_group: BindGroupId,
+        offsets: &[wgpu::DynamicOffset],
+    ) -> &mut Self {
         self.0.set_bind_group(index, &self.1.bind_groups[&bind_group], offsets);
         self
     }

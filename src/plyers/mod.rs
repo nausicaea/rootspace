@@ -47,21 +47,21 @@
 //! G -> Ga | Gb
 
 pub mod de;
-pub mod types;
 mod ser;
+pub mod types;
 
-use std::{fs::File, io::Read, path::Path};
 use std::io::BufWriter;
 use std::io::Write;
 use std::ops::Add;
+use std::{fs::File, io::Read, path::Path};
 
 use crate::file_manipulation;
 use crate::file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
 use crate::plyers::de::error::convert_error;
 use crate::plyers::de::parse_ply;
+use crate::plyers::ser::write_header;
 use crate::plyers::types::{FormatType, Ply, Primitive, PropertyDescriptor, Values};
 use nom::error::VerboseError;
-use crate::plyers::ser::write_header;
 
 #[derive(Debug, thiserror::Error)]
 pub enum PlyError {
@@ -114,7 +114,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
                     Values::F64(values) => ser::write_values_ascii(&mut buf_writer, primitive, values)?,
                 }
             }
-        },
+        }
         FormatType::BinaryLittleEndian => {
             for (_, (primitive, values)) in &ply.data {
                 match values {
@@ -130,7 +130,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
                     Values::F64(values) => ser::write_values_le(&mut buf_writer, primitive, values)?,
                 }
             }
-        },
+        }
         FormatType::BinaryBigEndian => {
             for (_, (primitive, values)) in &ply.data {
                 match values {
@@ -146,12 +146,11 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
                     Values::F64(values) => ser::write_values_be(&mut buf_writer, primitive, values)?,
                 }
             }
-        },
+        }
     }
 
     Ok(())
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -775,7 +774,10 @@ mod tests {
         }
         let ply2 = load_ply(tmp.path()).unwrap();
         if &ply != &ply2 {
-            let persist_path = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/target/tests/save_ply_succeeds_for_test_files"));
+            let persist_path = Path::new(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/target/tests/save_ply_succeeds_for_test_files"
+            ));
             if !persist_path.is_dir() {
                 std::fs::create_dir_all(&persist_path).unwrap();
             }

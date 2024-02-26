@@ -1,9 +1,9 @@
 use crate::ecs::resource::Resource;
 use crate::ecs::with_dependencies::WithDependencies;
+use crate::glamour::mat::Mat4;
 use log::warn;
 use pollster::FutureExt;
 use winit::event_loop::EventLoopWindowTarget;
-use crate::glamour::mat::Mat4;
 
 use self::{
     bind_group_builder::BindGroupBuilder,

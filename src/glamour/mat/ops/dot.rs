@@ -1,8 +1,8 @@
-use std::iter::Product;
 use crate::forward_ref_binop;
 use crate::glamour::iter_float::IterFloat;
 use crate::glamour::ops::dot::Dot;
 use crate::glamour::vec::Vec4;
+use std::iter::Product;
 use std::ops::Mul;
 
 use super::super::Mat4;
@@ -94,13 +94,13 @@ where
 forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat4<R>, Vec4<R>, Vec4<R>);
 
 impl<'a, R: IterFloat> Product<&'a Mat4<R>> for Mat4<R> {
-    fn product<I: Iterator<Item=&'a Mat4<R>>>(iter: I) -> Self {
+    fn product<I: Iterator<Item = &'a Mat4<R>>>(iter: I) -> Self {
         iter.fold(Mat4::identity(), |state, item| &state * item)
     }
 }
 
 impl<R: IterFloat> Product<Mat4<R>> for Mat4<R> {
-    fn product<I: Iterator<Item=Mat4<R>>>(iter: I) -> Self {
+    fn product<I: Iterator<Item = Mat4<R>>>(iter: I) -> Self {
         iter.fold(Mat4::identity(), |state, item| state * item)
     }
 }

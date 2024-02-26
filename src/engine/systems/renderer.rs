@@ -49,12 +49,17 @@ impl Renderer {
         let gfx = res.borrow::<Graphics>();
         // let hier = res.borrow::<Hierarchy<Index>>();
 
-        let cam_data: Vec<_> = res.iter_rr::<Camera, Transform>()
+        let cam_data: Vec<_> = res
+            .iter_rr::<Camera, Transform>()
             .map(|(_, c, t)| c.as_matrix() * t.to_matrix())
             .collect();
 
-        let (renderables, transforms) = cam_data.iter()
-            .flat_map(|cm| res.iter_rr::<Renderable, Transform>().map(|(_, r, t)| (r, *cm * t.to_matrix())))
+        let (renderables, transforms) = cam_data
+            .iter()
+            .flat_map(|cm| {
+                res.iter_rr::<Renderable, Transform>()
+                    .map(|(_, r, t)| (r, *cm * t.to_matrix()))
+            })
             .fold((Vec::new(), Vec::new()), |(mut renderables, mut transforms), (r, t)| {
                 renderables.push(r);
                 transforms.push(t);
@@ -180,9 +185,9 @@ impl WithResources for Renderer {
         let pipeline_wt =
             Self::crp_with_transform(&adb, &mut gfx, "wt").context("trying to create the render pipeline 'wt'")?;
 
-        let max_objects = gfx.limits().max_uniform_buffer_binding_size / gfx.limits().min_uniform_buffer_offset_alignment;
-        let uniform_alignment =
-            gfx.limits().min_uniform_buffer_offset_alignment as wgpu::BufferAddress;
+        let max_objects =
+            gfx.limits().max_uniform_buffer_binding_size / gfx.limits().min_uniform_buffer_offset_alignment;
+        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment as wgpu::BufferAddress;
         let transform_buffer = gfx.create_buffer(
             Some("transform-buffer"),
             dbg!((max_objects as wgpu::BufferAddress) * uniform_alignment),
