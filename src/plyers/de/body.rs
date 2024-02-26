@@ -1,4 +1,4 @@
-use log::{debug, trace};
+use log::{debug, error, trace};
 use std::collections::BTreeMap;
 
 use nom::{
@@ -33,7 +33,10 @@ where
             trace!("Parsing ASCII count data as utf8: {:?}", cd);
             let cd = std::str::from_utf8(cd)?;
             trace!("Parsing ASCII count data as usize: {:?}", cd);
-            let cd = cd.parse::<usize>()?;
+            let cd = cd.parse::<usize>().map_err(|e| {
+                error!("Expected a usize, got {}: {}", cd, e);
+                e
+            })?;
             Result::<_, ParseNumError>::Ok(cd)
         }),
     )
@@ -52,43 +55,73 @@ where
             let pd = match data_type {
                 DataType::U8 => pd
                     .parse::<u8>()
-                    .map_err(|e| ParseNumError::ParseIntError(e))
+                    .map_err(|e| {
+                        error!("Expected a u8, got {}: {}", pd, e);
+                        ParseNumError::ParseIntError(e)
+                    })
                     .map(Value::from)?,
                 DataType::I8 => pd
                     .parse::<i8>()
-                    .map_err(|e| ParseNumError::ParseIntError(e))
+                    .map_err(|e| {
+                        error!("Expected a i8, got {}: {}", pd, e);
+                        ParseNumError::ParseIntError(e)
+                    })
                     .map(Value::from)?,
                 DataType::U16 => pd
                     .parse::<u16>()
-                    .map_err(|e| ParseNumError::ParseIntError(e))
+                    .map_err(|e| {
+                        error!("Expected a u16, got {}: {}", pd, e);
+                        ParseNumError::ParseIntError(e)
+                    })
                     .map(Value::from)?,
                 DataType::I16 => pd
                     .parse::<i16>()
-                    .map_err(|e| ParseNumError::ParseIntError(e))
+                    .map_err(|e| {
+                        error!("Expected a i16, got {}: {}", pd, e);
+                        ParseNumError::ParseIntError(e)
+                    })
                     .map(Value::from)?,
                 DataType::U32 => pd
                     .parse::<u32>()
-                    .map_err(|e| ParseNumError::ParseIntError(e))
+                    .map_err(|e| {
+                        error!("Expected a u32, got {}: {}", pd, e);
+                        ParseNumError::ParseIntError(e)
+                    })
                     .map(Value::from)?,
                 DataType::I32 => pd
                     .parse::<i32>()
-                    .map_err(|e| ParseNumError::ParseIntError(e))
+                    .map_err(|e| {
+                        error!("Expected a i32, got {}: {}", pd, e);
+                        ParseNumError::ParseIntError(e)
+                    })
                     .map(Value::from)?,
                 DataType::U64 => pd
                     .parse::<u64>()
-                    .map_err(|e| ParseNumError::ParseIntError(e))
+                    .map_err(|e| {
+                        error!("Expected a u64, got {}: {}", pd, e);
+                        ParseNumError::ParseIntError(e)
+                    })
                     .map(Value::from)?,
                 DataType::I64 => pd
                     .parse::<i64>()
-                    .map_err(|e| ParseNumError::ParseIntError(e))
+                    .map_err(|e| {
+                        error!("Expected a i64, got {}: {}", pd, e);
+                        ParseNumError::ParseIntError(e)
+                    })
                     .map(Value::from)?,
                 DataType::F32 => pd
                     .parse::<f32>()
-                    .map_err(|e| ParseNumError::ParseFloatError(e))
+                    .map_err(|e| {
+                        error!("Expected a f32, got {}: {}", pd, e);
+                        ParseNumError::ParseFloatError(e)
+                    })
                     .map(Value::from)?,
                 DataType::F64 => pd
                     .parse::<f64>()
-                    .map_err(|e| ParseNumError::ParseFloatError(e))
+                    .map_err(|e| {
+                        error!("Expected a f64, got {}: {}", pd, e);
+                        ParseNumError::ParseFloatError(e)
+                    })
                     .map(Value::from)?,
             };
 

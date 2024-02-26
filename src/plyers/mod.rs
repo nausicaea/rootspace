@@ -825,7 +825,7 @@ mod tests {
                 tmp.persist(&persist_path).unwrap();
                 eprintln!("diff {} {}", path.display(), persist_path.display());
 
-                panic!("Parsing failure: \n{}", e);
+                panic!("{}", e);
             }
         }
     }
