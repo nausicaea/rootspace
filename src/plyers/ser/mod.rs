@@ -55,16 +55,18 @@ pub fn write_le_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
     element_index: usize,
 ) -> Result<(), PlyError> {
     match primitive {
-        Primitive::Single => {
-            match descriptor {
-                PropertyDescriptor::Scalar { .. } => {f.write(&values[element_index].to_le_bytes()[..])?;},
-                PropertyDescriptor::List { .. } => {
-                    f.write(&[1u8])?;
-                    f.write(&values[element_index].to_le_bytes()[..])?;
-                }
+        Primitive::Single => match descriptor {
+            PropertyDescriptor::Scalar { .. } => {
+                f.write(&values[element_index].to_le_bytes()[..])?;
             }
+            PropertyDescriptor::List { .. } => {
+                f.write(&[1u8])?;
+                f.write(&values[element_index].to_le_bytes()[..])?;
+            }
+        },
+        p => {
+            write_le_lists(f, *p, values, element_index)?;
         }
-        p => {write_le_lists(f, *p, values, element_index)?;}
     }
 
     Ok(())
@@ -78,16 +80,18 @@ pub fn write_be_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
     element_index: usize,
 ) -> Result<(), PlyError> {
     match primitive {
-        Primitive::Single => {
-            match descriptor {
-                PropertyDescriptor::Scalar { .. } => {f.write(&values[element_index].to_be_bytes()[..])?;},
-                PropertyDescriptor::List { .. } => {
-                    f.write(&[1u8])?;
-                    f.write(&values[element_index].to_be_bytes()[..])?;
-                }
+        Primitive::Single => match descriptor {
+            PropertyDescriptor::Scalar { .. } => {
+                f.write(&values[element_index].to_be_bytes()[..])?;
             }
+            PropertyDescriptor::List { .. } => {
+                f.write(&[1u8])?;
+                f.write(&values[element_index].to_be_bytes()[..])?;
+            }
+        },
+        p => {
+            write_be_lists(f, *p, values, element_index)?;
         }
-        p => {write_be_lists(f, *p, values, element_index)?;},
     }
 
     Ok(())
@@ -104,19 +108,28 @@ pub fn write_ascii_values<W: Write, T: std::fmt::Display>(
     let normal_sep = " ";
     let trailing_sep = if is_last_property { "\n" } else { " " };
     match primitive {
-        Primitive::Single => {
-            match descriptor {
-                PropertyDescriptor::Scalar { .. } => {write!(f, "{}{}", &values[element_index], trailing_sep)?;},
-                PropertyDescriptor::List { .. } => {write!(f, "1{}{}{}", normal_sep, &values[element_index], trailing_sep)?;}
+        Primitive::Single => match descriptor {
+            PropertyDescriptor::Scalar { .. } => {
+                write!(f, "{}{}", &values[element_index], trailing_sep)?;
             }
+            PropertyDescriptor::List { .. } => {
+                write!(f, "1{}{}{}", normal_sep, &values[element_index], trailing_sep)?;
+            }
+        },
+        p => {
+            write_ascii_lists(f, *p, values, element_index, normal_sep, trailing_sep)?;
         }
-        p => {write_ascii_lists(f, *p, values, element_index, normal_sep, trailing_sep)?;},
     }
 
     Ok(())
 }
 
-fn write_le_lists<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(f: &mut W, primitive: Primitive, values: &[T], element_index: usize) -> Result<(), PlyError> {
+fn write_le_lists<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
+    f: &mut W,
+    primitive: Primitive,
+    values: &[T],
+    element_index: usize,
+) -> Result<(), PlyError> {
     let stride: usize = primitive.try_into()?;
     let value_chunk = values[(stride * element_index)..(stride * (element_index + 1))]
         .iter()
@@ -128,7 +141,12 @@ fn write_le_lists<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(f: &mut
     Ok(())
 }
 
-fn write_be_lists<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(f: &mut W, primitive: Primitive, values: &[T], element_index: usize) -> Result<(), PlyError> {
+fn write_be_lists<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
+    f: &mut W,
+    primitive: Primitive,
+    values: &[T],
+    element_index: usize,
+) -> Result<(), PlyError> {
     let stride: usize = primitive.try_into()?;
     let value_chunk = values[(stride * element_index)..(stride * (element_index + 1))]
         .iter()
@@ -140,7 +158,14 @@ fn write_be_lists<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(f: &mut
     Ok(())
 }
 
-fn write_ascii_lists<W: Write, T: std::fmt::Display>(f: &mut W, primitive: Primitive, values: &[T], element_index: usize, normal_sep: &str, trailing_sep: &str) -> Result<(), PlyError> {
+fn write_ascii_lists<W: Write, T: std::fmt::Display>(
+    f: &mut W,
+    primitive: Primitive,
+    values: &[T],
+    element_index: usize,
+    normal_sep: &str,
+    trailing_sep: &str,
+) -> Result<(), PlyError> {
     let stride: usize = primitive.try_into()?;
     write!(f, "{}{}", stride, normal_sep)?;
     let chunk_values = values[(stride * element_index)..(stride * (element_index + 1))]

@@ -1,7 +1,7 @@
-use std::path::PathBuf;
 use clap::Parser;
-use rootspace::plyers::{load_ply, save_ply};
 use rootspace::plyers::types::{FormatType, PropertyDescriptor};
+use rootspace::plyers::{load_ply, save_ply};
+use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
 #[command(name = "ply-loader", author, version, about = "Loads files as Stanford PLY model files", long_about = None)]
@@ -31,7 +31,10 @@ fn main() -> anyhow::Result<()> {
 
     if let Some(save) = &matches.save {
         if !save.is_dir() {
-            return Err(anyhow::anyhow!("Save destination is not a directory: {}", save.display()));
+            return Err(anyhow::anyhow!(
+                "Save destination is not a directory: {}",
+                save.display()
+            ));
         }
     }
 
@@ -55,8 +58,9 @@ fn main() -> anyhow::Result<()> {
             for (_, element) in &ply.descriptor.elements {
                 for (_, property) in &element.properties {
                     match property {
-                        PropertyDescriptor::Scalar { ref name, .. }
-                        | PropertyDescriptor::List { ref name, .. } => println!("{}.{}", &element.name, name),
+                        PropertyDescriptor::Scalar { ref name, .. } | PropertyDescriptor::List { ref name, .. } => {
+                            println!("{}.{}", &element.name, name)
+                        }
                     }
                 }
             }
@@ -118,7 +122,10 @@ fn main() -> anyhow::Result<()> {
         }
 
         if let Some(save) = &matches.save {
-            let output_path = save.join(path.file_name().ok_or_else(|| anyhow::anyhow!("Cannot obtain file name of path: {}", path.display()))?);
+            let output_path = save.join(
+                path.file_name()
+                    .ok_or_else(|| anyhow::anyhow!("Cannot obtain file name of path: {}", path.display()))?,
+            );
             let mut ply = ply;
             ply.descriptor.format_type = matches.format;
             save_ply(&ply, output_path)?;

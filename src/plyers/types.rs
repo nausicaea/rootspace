@@ -1,6 +1,6 @@
+use clap::builder::PossibleValue;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
-use clap::builder::PossibleValue;
 
 pub const VERTEX_ELEMENT: &'static str = "vertex";
 pub const FACE_ELEMENT: &'static str = "face";
@@ -81,7 +81,7 @@ impl clap::ValueEnum for FormatType {
         &[
             FormatType::Ascii,
             FormatType::BinaryLittleEndian,
-            FormatType::BinaryBigEndian
+            FormatType::BinaryBigEndian,
         ]
     }
 
