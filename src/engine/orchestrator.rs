@@ -20,11 +20,12 @@ use crate::engine::components::status::Status;
 use crate::engine::components::transform::Transform;
 use crate::engine::components::ui_transform::UiTransform;
 use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::events::window_event::WindowEvent;
+use winit::event::WindowEvent;
 use crate::engine::registry::{RRegistry, RSRegistry, USRegistry};
 use crate::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps};
 use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
 use crate::engine::resources::statistics::Statistics;
+use crate::trace_loop;
 
 const DELTA_TIME: u64 = 50; // milliseconds
 const MAX_FRAME_DURATION: u64 = 250; // milliseconds
@@ -79,21 +80,16 @@ impl Orchestrator {
                 log::trace!("Event trace: {:?}", &event);
             }
 
+            let main_window_id = self.world.borrow::<Graphics>().window_id();
             match event {
                 Event::WindowEvent {
                     window_id,
                     event: window_event,
-                } if self.world.borrow::<Graphics>().window_id() == window_id => match window_event {
-                    winit::event::WindowEvent::RedrawRequested => {
-                        self.redraw();
-                        self.maintain(elwt);
-                    }
-                    e => {
-                        if let Ok(window_event) = e.try_into() {
-                            self.input(window_event)
-                        }
-                    }
+                } if main_window_id == window_id => match window_event {
+                    WindowEvent::RedrawRequested => self.redraw(),
+                    e => self.world.get_mut::<EventQueue<WindowEvent>>().send(e),
                 },
+                Event::AboutToWait => self.maintain(elwt),
                 Event::LoopExiting => self.cleanup(),
                 _ => (),
             }
@@ -103,11 +99,6 @@ impl Orchestrator {
                 log::trace!("⬆\n\n");
             }
         }
-    }
-
-    /// Send the `winit` event to the internal event queue for further processing.
-    fn input(&mut self, window_event: WindowEvent) {
-        self.world.get_mut::<EventQueue<WindowEvent>>().send(window_event)
     }
 
     /// Update the game state (using [`World::update`](ecs::world::World::update) and
@@ -166,8 +157,6 @@ impl Orchestrator {
                 _ => (),
             }
         }
-
-        self.world.get_mut::<Graphics>().request_redraw();
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {

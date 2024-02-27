@@ -14,13 +14,12 @@ use crate::ecs::resources::Resources;
 use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
 use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::events::window_event::{KeyEvent, WindowEvent};
 use log::debug;
 #[cfg(not(test))]
 use log::error;
 #[cfg(not(test))]
 use log::info;
-use winit::event::ElementState;
+use winit::event::{ElementState, KeyEvent, WindowEvent};
 use winit::keyboard::NamedKey;
 
 #[derive(Debug)]

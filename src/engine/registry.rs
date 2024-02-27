@@ -1,3 +1,4 @@
+use winit::event::WindowEvent;
 use crate::ecs::component::Component;
 use crate::ecs::entity::index::Index;
 use crate::ecs::event_monitor::EventMonitor;
@@ -10,7 +11,6 @@ use crate::engine::components::status::Status;
 use crate::engine::components::transform::Transform;
 use crate::engine::components::ui_transform::UiTransform;
 use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::events::window_event::WindowEvent;
 use crate::engine::resources::asset_database::AssetDatabase;
 use crate::engine::resources::graphics::Graphics;
 use crate::engine::resources::statistics::Statistics;
