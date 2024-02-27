@@ -25,7 +25,6 @@ use crate::engine::registry::{RRegistry, RSRegistry, USRegistry};
 use crate::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps};
 use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
 use crate::engine::resources::statistics::Statistics;
-use crate::trace_loop;
 
 const DELTA_TIME: u64 = 50; // milliseconds
 const MAX_FRAME_DURATION: u64 = 250; // milliseconds
