@@ -1,3 +1,4 @@
+use crate::ecs::component::Component;
 use crate::ecs::entity::index::Index;
 use anyhow::Context;
 use log::error;
@@ -50,34 +51,30 @@ impl Renderer {
     }
 
     fn render(&mut self, res: &Resources, mut rp: RenderPass) {
+        fn hier_transform(
+            idx: Index,
+            hier: &Hierarchy<Index>,
+            transforms: &<Transform as Component>::Storage,
+        ) -> Mat4<f32> {
+            hier.ancestors(idx)
+                .filter_map(|a| transforms.get(a).map(|at| at.to_matrix()))
+                .product::<Mat4<f32>>()
+        }
+
         let gfx = res.borrow::<Graphics>();
         let hier = res.borrow::<Hierarchy<Index>>();
         let transforms = res.borrow_components::<Transform>();
 
         let cam_data: Vec<_> = res
             .iter_r::<Camera>()
-            .map(|(idx, c)| {
-                c.as_matrix()
-                    * hier
-                        .ancestors(idx)
-                        .filter_map(|a| transforms.get(a).map(|at| at.to_matrix()))
-                        .product::<Mat4<f32>>()
-            })
+            .map(|(idx, c)| c.as_matrix() * hier_transform(idx, &hier, &transforms))
             .collect();
 
         let (renderables, transforms) = cam_data
             .iter()
             .flat_map(|cm| {
-                res.iter_r::<Renderable>().map(|(idx, r)| {
-                    (
-                        idx,
-                        r,
-                        *cm * hier
-                            .ancestors(idx)
-                            .filter_map(|a| transforms.get(a).map(|at| at.to_matrix()))
-                            .product::<Mat4<f32>>(),
-                    )
-                })
+                res.iter_r::<Renderable>()
+                    .map(|(idx, r)| (idx, r, *cm * hier_transform(idx, &hier, &transforms)))
             })
             .fold(
                 (Vec::new(), Vec::new()),
