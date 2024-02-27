@@ -2,10 +2,12 @@ use anyhow::Context;
 use log::error;
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
+use crate::ecs::entity::index::Index;
 
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
 use crate::ecs::resources::Resources;
+use crate::ecs::storage::Storage;
 use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
 use crate::engine::components::camera::Camera;
@@ -18,6 +20,8 @@ use crate::engine::resources::graphics::encoder::RenderPass;
 use crate::engine::resources::graphics::ids::{BindGroupId, BufferId, PipelineId};
 use crate::engine::resources::graphics::vertex::Vertex;
 use crate::engine::resources::graphics::{Graphics, TransformWrapper};
+use crate::glamour::mat::Mat4;
+use crate::rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -47,18 +51,19 @@ impl Renderer {
 
     fn render(&mut self, res: &Resources, mut rp: RenderPass) {
         let gfx = res.borrow::<Graphics>();
-        // let hier = res.borrow::<Hierarchy<Index>>();
+        let hier = res.borrow::<Hierarchy<Index>>();
+        let transforms = res.borrow_components::<Transform>();
 
         let cam_data: Vec<_> = res
-            .iter_rr::<Camera, Transform>()
-            .map(|(_, c, t)| c.as_matrix() * t.to_matrix())
+            .iter_r::<Camera>()
+            .map(|(idx, c)| c.as_matrix() * hier.ancestors(idx).filter_map(|a| transforms.get(a).map(|at| at.to_matrix())).product::<Mat4<f32>>())
             .collect();
 
         let (renderables, transforms) = cam_data
             .iter()
             .flat_map(|cm| {
-                res.iter_rr::<Renderable, Transform>()
-                    .map(|(idx, r, t)| (idx, r, *cm * t.to_matrix()))
+                res.iter_r::<Renderable>()
+                    .map(|(idx, r)| (idx, r, *cm * hier.ancestors(idx).filter_map(|a| transforms.get(a).map(|at| at.to_matrix())).product::<Mat4<f32>>()))
             })
             .fold((Vec::new(), Vec::new()), |(mut renderables, mut transforms), (idx, r, t)| {
                 renderables.push((idx, r));
