@@ -25,6 +25,7 @@ use crate::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps}
 use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
 use crate::engine::resources::statistics::Statistics;
 use winit::event::WindowEvent;
+use crate::trace_loop;
 
 const DELTA_TIME: u64 = 50; // milliseconds
 const MAX_FRAME_DURATION: u64 = 250; // milliseconds
@@ -104,6 +105,7 @@ impl Orchestrator {
     /// [`World::fixed_update`](ecs::world::World::fixed_update)) and render the frame (using
     /// [`World::render`](ecs::world::World::render)).
     fn redraw(&mut self) {
+        trace_loop!("Redraw executing");
         // Assess the duration of the last frame
         let frame_time = std::cmp::min(self.timers.loop_time.elapsed(), self.timers.max_frame_duration);
         self.timers.loop_time = Instant::now();
@@ -128,6 +130,7 @@ impl Orchestrator {
 
     /// Perform maintenance tasks necessary in each game loop iteration
     fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
+        trace_loop!("Running maintenance");
         // Call the maintenance method of [`World`](ecs::World)
         if let LoopControl::Abort = self.world.maintain() {
             event_loop_window_target.exit();
@@ -156,6 +159,8 @@ impl Orchestrator {
                 _ => (),
             }
         }
+
+        self.world.borrow::<Graphics>().request_redraw();
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {

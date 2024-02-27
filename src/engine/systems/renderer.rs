@@ -1,7 +1,7 @@
 use crate::ecs::component::Component;
 use crate::ecs::entity::index::Index;
 use anyhow::Context;
-use log::error;
+use log::{error, trace, warn};
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
 use winit::event::WindowEvent;
@@ -113,21 +113,23 @@ impl Renderer {
     }
 
     fn on_window_resized(&self, res: &Resources, ps: PhysicalSize<u32>) {
+        trace!("Resizing surface");
         res.borrow_mut::<Graphics>().resize(ps)
     }
 
     fn on_surface_outdated(&self, res: &Resources) {
+        trace!("Surface is outdated");
         res.borrow_mut::<Graphics>().reconfigure()
     }
 
     fn on_out_of_memory(&self, res: &Resources) {
-        error!("WGPU surface is out of memory");
+        error!("surface is out of memory");
         res.borrow_mut::<EventQueue<EngineEvent>>()
             .send(EngineEvent::AbortRequested)
     }
 
     fn on_timeout(&self) {
-        log::warn!("WGPU surface timed out")
+        warn!("Surface timed out")
     }
 
     fn crp_with_transform(
