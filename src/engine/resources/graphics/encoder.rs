@@ -73,7 +73,7 @@ impl<'rt> Encoder<'rt> {
         crate::trace_gfx!("Creating command buffer");
         let command_buffer = self.encoder.finish();
         crate::trace_gfx!("Submitting command buffer");
-        let si = self.runtime.queue.submit(std::iter::once(command_buffer));
+        let _si = self.runtime.queue.submit(std::iter::once(command_buffer));
         crate::trace_gfx!("Submission index: {:?}", si);
         self.runtime.window.pre_present_notify();
         self.output.present();

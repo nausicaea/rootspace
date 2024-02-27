@@ -1,5 +1,4 @@
 use std::{
-    convert::TryFrom,
     ffi::{OsStr, OsString},
     fmt::Debug,
     fs::{copy, create_dir_all, metadata, read_dir, File},
