@@ -1,17 +1,3 @@
-# [workspace]
-# resolver = "2"
-# members = [
-#     "try-default",
-#     "file-manipulation",
-#     "ecs",
-#     "engine2",
-#     "rose-tree",
-#     "glamour",
-#     "plyers",
-#     "forward-ref",
-#     "urn",
-# ]
-
 [package]
 name = "rootspace"
 version = "0.1.0"
