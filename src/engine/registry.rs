@@ -1,4 +1,3 @@
-use winit::event::WindowEvent;
 use crate::ecs::component::Component;
 use crate::ecs::entity::index::Index;
 use crate::ecs::event_monitor::EventMonitor;
@@ -19,6 +18,7 @@ use crate::engine::systems::force_shutdown::ForceShutdown;
 use crate::engine::systems::renderer::Renderer;
 use crate::rose_tree::hierarchy::Hierarchy;
 use crate::RegAdd;
+use winit::event::WindowEvent;
 
 pub type RRegistry<S> = RegAdd![
     <Camera as Component>::Storage,
