@@ -52,6 +52,10 @@ impl Graphics {
         self.runtime.max_size
     }
 
+    pub fn max_objects(&self) -> u32 {
+        self.settings.max_objects
+    }
+
     pub fn limits(&self) -> wgpu::Limits {
         self.runtime.device.limits()
     }
@@ -209,7 +213,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
 
         let mut database = Database::default();
 
-        let min_binding_size = wgpu::BufferSize::new(std::mem::size_of::<Mat4<f32>>() as _);  // 64 bytes
+        let min_binding_size = wgpu::BufferSize::new(std::mem::size_of::<TransformWrapper>() as _);  // 64 bytes
         let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
             .with_label("transform-layout")
             .add_bind_group_layout_entry(
@@ -248,6 +252,16 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
             transform_layout,
             material_layout,
         })
+    }
+}
+
+#[repr(C, align(256))]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TransformWrapper(pub Mat4<f32>);
+
+impl From<Mat4<f32>> for TransformWrapper {
+    fn from(value: Mat4<f32>) -> Self {
+        TransformWrapper(value)
     }
 }
 

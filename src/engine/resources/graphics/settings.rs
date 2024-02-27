@@ -8,6 +8,7 @@ pub struct Settings {
     pub present_mode: wgpu::PresentMode,
     pub alpha_mode: wgpu::CompositeAlphaMode,
     pub clear_color: wgpu::Color,
+    pub max_objects: u32,
 }
 
 impl Default for Settings {
@@ -26,6 +27,7 @@ impl Default for Settings {
                 b: 0.3,
                 a: 1.0,
             },
+            max_objects: 1 << 10,
         }
     }
 }

@@ -17,7 +17,7 @@ use crate::engine::resources::asset_database::AssetDatabase;
 use crate::engine::resources::graphics::encoder::RenderPass;
 use crate::engine::resources::graphics::ids::{BindGroupId, BufferId, PipelineId};
 use crate::engine::resources::graphics::vertex::Vertex;
-use crate::engine::resources::graphics::Graphics;
+use crate::engine::resources::graphics::{Graphics, TransformWrapper};
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -62,7 +62,7 @@ impl Renderer {
             })
             .fold((Vec::new(), Vec::new()), |(mut renderables, mut transforms), (idx, r, t)| {
                 renderables.push((idx, r));
-                transforms.push(t);
+                transforms.push(TransformWrapper(t));
                 (renderables, transforms)
             });
 
@@ -185,22 +185,21 @@ impl WithResources for Renderer {
         let pipeline_wt =
             Self::crp_with_transform(&adb, &mut gfx, "wt").context("trying to create the render pipeline 'wt'")?;
 
-        let max_objects =
-            gfx.limits().max_uniform_buffer_binding_size / gfx.limits().min_uniform_buffer_offset_alignment;  // 256
+        let max_objects = gfx.max_objects();
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment;  // 256
-        let buffer_size = (max_objects * uniform_alignment) as wgpu::BufferAddress;  // 65536
+        let buffer_size = (max_objects * uniform_alignment) as wgpu::BufferAddress;  // 268'435'456
         let transform_buffer = gfx.create_buffer(
             Some("transform-buffer"),
             buffer_size,
             wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         );
 
-        let binding_size = wgpu::BufferSize::new(uniform_alignment as _).unwrap();
+        let binding_size = wgpu::BufferSize::new(std::mem::size_of::<TransformWrapper>() as _);
         let tl = gfx.transform_layout();
         let transform_bind_group = gfx
             .create_bind_group(tl)
             .with_label("transform-bind-group")
-            .add_buffer(0, 0, Some(binding_size), transform_buffer)
+            .add_buffer(0, 0, binding_size, transform_buffer)
             .submit();
 
         Ok(Renderer {
