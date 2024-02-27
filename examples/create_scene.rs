@@ -74,8 +74,8 @@ fn main() -> anyhow::Result<()> {
         .with_parent(tri1)
         .with_transform(
             Transform::builder()
-                .with_translation(Vec4::new(-1.0, 0.0, 0.1, 0.0))
-                .with_scale(Vec4::one() * 0.5)
+                .with_translation(Vec4::new(-1.0, 0.0, 0.0, 0.0))
+                .with_scale(Vec4::one() * 0.25)
                 .build(),
         )
         .with_renderable(RenderableSource::with_model("models", "triangle.ply"))
