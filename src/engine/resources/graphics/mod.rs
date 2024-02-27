@@ -209,6 +209,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
 
         let mut database = Database::default();
 
+        let min_binding_size = wgpu::BufferSize::new(std::mem::size_of::<Mat4<f32>>() as _);  // 64 bytes
         let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
             .with_label("transform-layout")
             .add_bind_group_layout_entry(
@@ -217,7 +218,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
                 wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
                     has_dynamic_offset: true,
-                    min_binding_size: wgpu::BufferSize::new(std::mem::size_of::<Mat4<f32>>() as _),
+                    min_binding_size,
                 },
             )
             .submit();

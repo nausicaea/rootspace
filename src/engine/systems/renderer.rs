@@ -1,7 +1,9 @@
+use std::collections::HashMap;
 use anyhow::Context;
-use log::error;
+use log::{error, warn};
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
+use crate::ecs::entity::index::Index;
 
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
@@ -45,7 +47,7 @@ impl Renderer {
             });
     }
 
-    fn render(&self, res: &Resources, mut rp: RenderPass) {
+    fn render(&mut self, res: &Resources, mut rp: RenderPass) {
         let gfx = res.borrow::<Graphics>();
         // let hier = res.borrow::<Hierarchy<Index>>();
 
@@ -58,15 +60,15 @@ impl Renderer {
             .iter()
             .flat_map(|cm| {
                 res.iter_rr::<Renderable, Transform>()
-                    .map(|(_, r, t)| (r, *cm * t.to_matrix()))
+                    .map(|(idx, r, t)| (idx, r, *cm * t.to_matrix()))
             })
-            .fold((Vec::new(), Vec::new()), |(mut renderables, mut transforms), (r, t)| {
-                renderables.push(r);
+            .fold((Vec::new(), Vec::new()), |(mut renderables, mut transforms), (idx, r, t)| {
+                renderables.push((idx, r));
                 transforms.push(t);
                 (renderables, transforms)
             });
 
-        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment;
+        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment;  // 256 bytes
         gfx.write_buffer(self.transform_buffer, unsafe {
             std::slice::from_raw_parts(
                 transforms.as_ptr() as *const u8,
@@ -74,8 +76,8 @@ impl Renderer {
             )
         });
 
-        for (i, r) in renderables.into_iter().enumerate() {
-            let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset);
+        for (i, (_, r)) in renderables.into_iter().enumerate() {
+            let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset);  // first 0x0, then 0x100
             if r.0.materials.is_empty() {
                 rp.set_pipeline(self.pipeline_wt)
                     .set_bind_group(0, self.transform_bind_group, &[transform_offset])
@@ -185,12 +187,13 @@ impl WithResources for Renderer {
         let pipeline_wt =
             Self::crp_with_transform(&adb, &mut gfx, "wt").context("trying to create the render pipeline 'wt'")?;
 
-        let max_objects =
+        let max_objects = // 256
             gfx.limits().max_uniform_buffer_binding_size / gfx.limits().min_uniform_buffer_offset_alignment;
-        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment as wgpu::BufferAddress;
+        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment as wgpu::BufferAddress; // 256 bytes
+        let buffer_size = (max_objects as wgpu::BufferAddress) * uniform_alignment; // 65536 bytes
         let transform_buffer = gfx.create_buffer(
             Some("transform-buffer"),
-            dbg!((max_objects as wgpu::BufferAddress) * uniform_alignment),
+            buffer_size,
             wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         );
 

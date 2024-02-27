@@ -25,9 +25,10 @@ impl<'a> Runtime<'a> {
         present_mode: wgpu::PresentMode,
         alpha_mode: wgpu::CompositeAlphaMode,
     ) -> Runtime<'a> {
+        let primary_monitor = event_loop.primary_monitor();
         let window = std::sync::Arc::new(
             winit::window::WindowBuilder::new()
-                .with_fullscreen(Some(Fullscreen::Borderless(None)))
+                .with_fullscreen(Some(Fullscreen::Borderless(primary_monitor)))
                 .build(event_loop)
                 .unwrap(),
         );
