@@ -5,5 +5,4 @@ mod forward_ref;
 pub mod glamour;
 pub mod plyers;
 mod rose_tree;
-mod try_default;
 mod urn;
