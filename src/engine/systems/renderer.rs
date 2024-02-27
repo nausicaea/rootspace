@@ -1,9 +1,7 @@
-use std::collections::HashMap;
 use anyhow::Context;
-use log::{error, warn};
+use log::error;
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
-use crate::ecs::entity::index::Index;
 
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
@@ -187,21 +185,22 @@ impl WithResources for Renderer {
         let pipeline_wt =
             Self::crp_with_transform(&adb, &mut gfx, "wt").context("trying to create the render pipeline 'wt'")?;
 
-        let max_objects = // 256
-            gfx.limits().max_uniform_buffer_binding_size / gfx.limits().min_uniform_buffer_offset_alignment;
-        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment as wgpu::BufferAddress; // 256 bytes
-        let buffer_size = (max_objects as wgpu::BufferAddress) * uniform_alignment; // 65536 bytes
+        let max_objects =
+            gfx.limits().max_uniform_buffer_binding_size / gfx.limits().min_uniform_buffer_offset_alignment;  // 256
+        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment;  // 256
+        let buffer_size = (max_objects * uniform_alignment) as wgpu::BufferAddress;  // 65536
         let transform_buffer = gfx.create_buffer(
             Some("transform-buffer"),
             buffer_size,
             wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         );
 
+        let binding_size = wgpu::BufferSize::new(uniform_alignment as _).unwrap();
         let tl = gfx.transform_layout();
         let transform_bind_group = gfx
             .create_bind_group(tl)
             .with_label("transform-bind-group")
-            .add_buffer(0, transform_buffer)
+            .add_buffer(0, 0, Some(binding_size), transform_buffer)
             .submit();
 
         Ok(Renderer {

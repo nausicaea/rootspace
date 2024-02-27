@@ -3,7 +3,6 @@ use super::{
     runtime::Runtime,
     Database,
 };
-use crate::glamour::mat::Mat4;
 
 pub struct BindGroupBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
@@ -29,8 +28,8 @@ impl<'rt> BindGroupBuilder<'rt> {
         self
     }
 
-    pub fn add_buffer(mut self, binding: u32, buffer: BufferId) -> Self {
-        self.entries.push((binding, BindingResourceId::Buffer(buffer)));
+    pub fn add_buffer(mut self, binding: u32, offset: wgpu::BufferAddress, size: Option<wgpu::BufferSize>, buffer: BufferId) -> Self {
+        self.entries.push((binding, BindingResourceId::Buffer { buffer, offset, size }));
         self
     }
 
@@ -50,12 +49,12 @@ impl<'rt> BindGroupBuilder<'rt> {
             .entries
             .into_iter()
             .map(|(binding, r)| match r {
-                BindingResourceId::Buffer(b) => wgpu::BindGroupEntry {
+                BindingResourceId::Buffer { buffer, size, offset } => wgpu::BindGroupEntry {
                     binding,
                     resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                        buffer: &self.database.buffers[&b],
-                        offset: 0,
-                        size: wgpu::BufferSize::new(std::mem::size_of::<Mat4<f32>>() as _),
+                        buffer: &self.database.buffers[&buffer],
+                        offset,
+                        size,
                     }),
                 },
                 BindingResourceId::TextureView(v) => {
@@ -88,7 +87,7 @@ impl<'rt> BindGroupBuilder<'rt> {
 
 #[derive(Debug, Clone, Copy)]
 enum BindingResourceId {
-    Buffer(BufferId),
+    Buffer{ buffer: BufferId, offset: wgpu::BufferAddress, size: Option<wgpu::BufferSize> },
     TextureView(TextureViewId),
     Sampler(SamplerId),
 }
