@@ -2,7 +2,6 @@ use crate::ecs::resource::Resource;
 use crate::ecs::with_dependencies::WithDependencies;
 use crate::glamour::mat::Mat4;
 use log::warn;
-use pollster::FutureExt;
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
@@ -197,7 +196,7 @@ impl Graphics {
 impl Resource for Graphics {}
 
 impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
-    fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
         let settings = deps.settings();
         let runtime = Runtime::new(
             deps.event_loop(),
@@ -208,8 +207,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
             &settings.preferred_texture_format,
             settings.present_mode,
             settings.alpha_mode,
-        )
-        .block_on();
+        ).await;
 
         let mut database = Database::default();
 

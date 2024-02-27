@@ -78,7 +78,7 @@ impl Resources {
     /// In a similar fashion to Resources::deserialize, the following method uses the types stored
     /// in the registry to initialize those resources that have a default, parameterless
     /// constructor.
-    pub fn with_dependencies<RR, D>(deps: &D) -> Result<Self, Error>
+    pub async fn with_dependencies<RR, D>(deps: &D) -> Result<Self, Error>
     where
         RR: ResourceRegistry + WithDependencies<D>,
     {
@@ -92,7 +92,7 @@ impl Resources {
             recursor(res, tail);
         }
 
-        let rr = RR::with_deps(deps)?;
+        let rr = RR::with_deps(deps).await?;
         let mut res = Resources::with_capacity(RR::LEN);
         recursor(&mut res, rr);
 

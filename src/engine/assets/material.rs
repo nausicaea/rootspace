@@ -16,8 +16,8 @@ pub struct Material {
 impl PrivLoadAsset for Material {
     type Output = Self;
 
-    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
-        let texture = Texture::with_path(res, path).with_context(|| {
+    async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
+        let texture = Texture::with_path(res, path).await.with_context(|| {
             format!(
                 "trying to load a {} from '{}'",
                 std::any::type_name::<Texture>(),

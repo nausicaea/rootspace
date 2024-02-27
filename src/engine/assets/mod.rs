@@ -23,11 +23,11 @@ pub(crate) mod private {
     pub trait PrivLoadAsset: Sized {
         type Output;
 
-        fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error>;
+        async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error>;
     }
 
     pub trait PrivSaveAsset {
-        fn to_path(&self, path: &Path) -> Result<(), anyhow::Error>;
+        async fn to_path(&self, path: &Path) -> Result<(), anyhow::Error>;
     }
 }
 

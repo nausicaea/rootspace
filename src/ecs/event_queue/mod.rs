@@ -151,7 +151,7 @@ where
 impl<E> Resource for EventQueue<E> where E: fmt::Debug + 'static {}
 
 impl<D, E> WithDependencies<D> for EventQueue<E> {
-    fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
         Ok(EventQueue::default())
     }
 }

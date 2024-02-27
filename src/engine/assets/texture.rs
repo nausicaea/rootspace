@@ -15,7 +15,7 @@ pub struct Texture {
 impl PrivLoadAsset for Texture {
     type Output = Self;
 
-    fn with_path(res: &Resources, path: &std::path::Path) -> Result<Self::Output, anyhow::Error> {
+    async fn with_path(res: &Resources, path: &std::path::Path) -> Result<Self::Output, anyhow::Error> {
         let image_format = path
             .extension()
             .and_then(|ext| ext.to_str())

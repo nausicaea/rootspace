@@ -1,14 +1,17 @@
 use std::{
     ffi::{OsStr, OsString},
     fmt::Debug,
-    fs::{copy, create_dir_all, metadata, read_dir, File},
     hash::Hash,
-    io::{self, Read},
     ops::Deref,
     path::{Path, PathBuf},
 };
+use async_std::{
+    io::{self, ReadExt},
+    fs::{copy, create_dir_all, File, metadata, read_dir},
+};
 
 use anyhow::anyhow;
+use async_std::stream::StreamExt;
 use log::trace;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -21,7 +24,7 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError
     let user_dirs = directories::UserDirs::new().ok_or(FileError::NoHomeDirectoryFound)?;
 
     if p == Path::new("~") {
-        return Ok(user_dirs.home_dir().to_path_buf());
+        return Ok(PathBuf::from(user_dirs.home_dir()));
     }
 
     let expanded_path = if user_dirs.home_dir() == Path::new("/") {
@@ -40,13 +43,13 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError
     Ok(expanded_path)
 }
 
-pub fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow::Result<()> {
+pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow::Result<()> {
     let input_root = PathBuf::from(from.as_ref());
     let num_input_components = input_root.components().count();
     let output_root = PathBuf::from(to.as_ref());
 
     // Initialize the directory stack
-    let mut stack = Vec::new();
+    let mut stack: Vec<PathBuf> = Vec::new();
     stack.push(input_root);
 
     // As long as there are directories on the stack, proceed
@@ -65,17 +68,18 @@ pub fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow:
 
         // Create the destination if it is missing
         // Why don't they use `dest.is_dir()` or `dest.exists()`?
-        if metadata(&dest).is_err() {
+        if metadata(&dest).await.is_err() {
             trace!("Creating directory: {}", dest.display());
-            create_dir_all(&dest)?;
+            create_dir_all(&dest).await?;
         }
 
         // Read the contents of the directory
-        let read_dir_iter = read_dir(&working_path)
+        let mut read_dir_iter = read_dir(&working_path)
+            .await
             .map_err(|e| anyhow!("Cannot read the directory {}: {}", working_path.display(), e))?;
 
         // Iterate over the contents of the working directory
-        for entry in read_dir_iter {
+        while let Some(entry) = read_dir_iter.next().await {
             let path = entry
                 .map_err(|e| {
                     anyhow!(
@@ -87,14 +91,14 @@ pub fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow:
                 .path();
 
             // Push child directories onto the stack, and copy files
-            if path.is_dir() {
-                stack.push(path);
+            if path.is_dir().await {
+                stack.push(path.into());
             } else {
                 match path.file_name() {
                     Some(filename) => {
                         let dest_path = dest.join(filename);
                         trace!("Copying file: {} -> {}", path.display(), dest_path.display());
-                        copy(&path, &dest_path).map_err(|e| {
+                        copy(&path, &dest_path).await.map_err(|e| {
                             anyhow!(
                                 "Cannot copy the file {} -> {}: {}",
                                 path.display(),
@@ -226,19 +230,21 @@ impl TryFrom<&PathBuf> for NewOrExFilePathBuf {
 pub struct FilePathBuf(PathBuf);
 
 impl FilePathBuf {
-    pub fn read_to_string(&self) -> Result<String, FileError> {
-        let mut f = File::open(&self.0).map_err(|e| FileError::IoError(self.0.clone(), e))?;
+    pub async fn read_to_string(&self) -> Result<String, FileError> {
+        let mut f = File::open(&self.0).await.map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = String::new();
         f.read_to_string(&mut buf)
+            .await
             .map_err(|e| FileError::IoError(self.0.clone(), e))?;
 
         Ok(buf)
     }
 
-    pub fn read_to_bytes(&self) -> Result<Vec<u8>, FileError> {
-        let mut f = File::open(&self.0).map_err(|e| FileError::IoError(self.0.clone(), e))?;
+    pub async fn read_to_bytes(&self) -> Result<Vec<u8>, FileError> {
+        let mut f = File::open(&self.0).await.map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = Vec::new();
         f.read_to_end(&mut buf)
+            .await
             .map_err(|e| FileError::IoError(self.0.clone(), e))?;
 
         Ok(buf)

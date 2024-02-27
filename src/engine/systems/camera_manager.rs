@@ -17,7 +17,7 @@ pub struct CameraManager {
 }
 
 impl WithResources for CameraManager {
-    fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
         let receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
 
         Ok(CameraManager { receiver })

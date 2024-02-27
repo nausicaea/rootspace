@@ -17,7 +17,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub(crate) fn with_ply(res: &Resources, ply: &Ply, material_group: &str) -> Result<Self, anyhow::Error> {
+    pub(crate) async fn with_ply(res: &Resources, ply: &Ply, material_group: &str) -> Result<Self, anyhow::Error> {
         let texture_file_names = ply
             .descriptor
             .comments
@@ -62,7 +62,7 @@ impl Model {
                         name, material_group
                     )
                 })?;
-            let material = Material::with_path(res, &path).with_context(|| {
+            let material = Material::with_path(res, &path).await.with_context(|| {
                 format!(
                     "trying to load a {} from path '{}'",
                     std::any::type_name::<Material>(),
@@ -84,12 +84,12 @@ impl Model {
 impl PrivLoadAsset for Model {
     type Output = Self;
 
-    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
+    async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some("ply") => {
                 let ply = plyers::load_ply(path)
                     .with_context(|| format!("trying to load a Stanford Ply file from '{}'", path.display()))?;
-                Self::with_ply(res, &ply, "textures")
+                Self::with_ply(res, &ply, "textures").await
             }
             _ => Err(Error::UnsupportedFileFormat.into()),
         }

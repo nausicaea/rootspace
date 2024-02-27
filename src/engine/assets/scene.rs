@@ -29,10 +29,10 @@ impl Scene {
         EntityBuilder::new(self)
     }
 
-    pub fn load_additive(self, res: &Resources) -> Result<(), anyhow::Error> {
+    pub async fn load_additive(self, res: &Resources) -> Result<(), anyhow::Error> {
         let map = self.load_hierarchy_additive(&mut res.borrow_mut(), &mut res.borrow_mut());
 
-        if let Err(e) = self.load_components_additive(&map, res) {
+        if let Err(e) = self.load_components_additive(&map, res).await {
             Self::unload_entities(res, map.values());
             return Err(e).context("trying to add the scene's components to the existing loaded components");
         }
@@ -76,7 +76,7 @@ impl Scene {
         map
     }
 
-    fn load_components_additive(&self, map: &BTreeMap<Index, Index>, res: &Resources) -> Result<(), anyhow::Error> {
+    async fn load_components_additive(&self, map: &BTreeMap<Index, Index>, res: &Resources) -> Result<(), anyhow::Error> {
         for (&i_prev, &i_new) in map {
             if let Some(camera) = self.cameras.get(&i_prev).cloned() {
                 res.borrow_components_mut::<Camera>().insert(i_new, camera);
@@ -92,7 +92,7 @@ impl Scene {
                         let path = res.borrow::<AssetDatabase>().find_asset(group, name).with_context(|| {
                             format!("trying to find the path of asset '{}' in group '{}'", name, group)
                         })?;
-                        let model = Model::with_path(res, &path).with_context(|| {
+                        let model = Model::with_path(res, &path).await.with_context(|| {
                             format!(
                                 "trying to load {} from path '{}'",
                                 std::any::type_name::<Model>(),
@@ -113,7 +113,7 @@ impl Scene {
 impl PrivLoadAsset for Scene {
     type Output = ();
 
-    fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
+    async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
         let file =
             std::fs::File::open(path).with_context(|| format!("trying to open the file '{}'", path.display()))?;
         let reader = std::io::BufReader::new(file);
@@ -121,12 +121,12 @@ impl PrivLoadAsset for Scene {
         let scene = ciborium::de::from_reader::<Scene, _>(reader)
             .with_context(|| format!("trying to deserialize the {}", std::any::type_name::<Scene>()))?;
 
-        scene.load_additive(res)
+        scene.load_additive(res).await
     }
 }
 
 impl PrivSaveAsset for Scene {
-    fn to_path(&self, path: &Path) -> Result<(), anyhow::Error> {
+    async fn to_path(&self, path: &Path) -> Result<(), anyhow::Error> {
         let file =
             std::fs::File::create(path).with_context(|| format!("trying to create the file '{}'", path.display()))?;
         let writer = std::io::BufWriter::new(file);

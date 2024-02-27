@@ -62,7 +62,7 @@ fn main() -> anyhow::Result<()> {
         graphics_settings: Settings::default(),
     };
 
-    let state = Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps)?;
+    let state = async_std::task::block_on(Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps))?;
 
     event_loop.run(state.run())?;
 

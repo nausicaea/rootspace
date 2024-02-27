@@ -114,7 +114,7 @@ where
 impl<K> Resource for Hierarchy<K> where K: 'static {}
 
 impl<D, K: Ord> crate::ecs::with_dependencies::WithDependencies<D> for Hierarchy<K> {
-    fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
         Ok(Hierarchy::default())
     }
 }

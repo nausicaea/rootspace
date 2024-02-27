@@ -9,7 +9,7 @@ use std::time::Duration;
 pub struct Rpc;
 
 impl WithResources for Rpc {
-    fn with_res(_res: &Resources) -> Result<Self, Error> {
+    async fn with_res(_res: &Resources) -> Result<Self, Error> {
         todo!()
     }
 }

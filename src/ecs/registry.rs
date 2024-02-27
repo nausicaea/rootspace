@@ -26,10 +26,10 @@ where
     H: WithResources,
     T: WithResources,
 {
-    fn with_res(res: &Resources) -> Result<Self, Error> {
+    async fn with_res(res: &Resources) -> Result<Self, Error> {
         Ok(Self {
-            head: H::with_res(res)?,
-            tail: T::with_res(res)?,
+            head: H::with_res(res).await?,
+            tail: T::with_res(res).await?,
         })
     }
 }
@@ -39,10 +39,10 @@ where
     H: WithDependencies<D>,
     T: WithDependencies<D>,
 {
-    fn with_deps(deps: &D) -> Result<Self, Error> {
+    async fn with_deps(deps: &D) -> Result<Self, Error> {
         Ok(Self {
-            head: H::with_deps(deps)?,
-            tail: T::with_deps(deps)?,
+            head: H::with_deps(deps).await?,
+            tail: T::with_deps(deps).await?,
         })
     }
 }
@@ -52,13 +52,13 @@ where
 pub struct End;
 
 impl WithResources for End {
-    fn with_res(_: &Resources) -> Result<Self, Error> {
+    async fn with_res(_: &Resources) -> Result<Self, Error> {
         Ok(Self)
     }
 }
 
 impl<D> WithDependencies<D> for End {
-    fn with_deps(_: &D) -> Result<Self, Error> {
+    async fn with_deps(_: &D) -> Result<Self, Error> {
         Ok(Self)
     }
 }

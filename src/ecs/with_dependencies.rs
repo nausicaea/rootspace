@@ -1,5 +1,3 @@
-use anyhow::Error;
-
 pub trait WithDependencies<D>: Sized {
-    fn with_deps(deps: &D) -> Result<Self, Error>;
+    async fn with_deps(deps: &D) -> Result<Self, anyhow::Error>;
 }

@@ -194,7 +194,7 @@ impl Renderer {
 }
 
 impl WithResources for Renderer {
-    fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
         let window_receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let engine_receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 

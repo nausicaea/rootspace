@@ -38,7 +38,7 @@ pub struct Orchestrator {
 }
 
 impl Orchestrator {
-    pub fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error>
+    pub async fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error>
     where
         RR: ResourceRegistry + WithDependencies<D>,
         FUSR: SystemRegistry + WithResources,
@@ -46,13 +46,14 @@ impl Orchestrator {
         RSR: SystemRegistry + WithResources,
         D: GraphicsDeps + AssetDatabaseDeps + OrchestratorDeps,
     {
-        let mut world = World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, RSRegistry<RSR>, _>(deps)?;
+        let mut world = World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, RSRegistry<RSR>, _>(deps).await?;
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
         world
             .borrow::<AssetDatabase>()
-            .load_asset::<Scene, _>(world.resources(), "scenes", deps.main_scene())?;
+            .load_asset::<Scene, _>(world.resources(), "scenes", deps.main_scene())
+            .await?;
 
         Ok(Orchestrator {
             world,

@@ -29,7 +29,7 @@ pub struct ForceShutdown {
 }
 
 impl WithResources for ForceShutdown {
-    fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
         #[cfg(not(test))]
         {

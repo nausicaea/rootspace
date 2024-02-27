@@ -38,18 +38,18 @@ pub struct World {
 }
 
 impl World {
-    pub fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error>
+    pub async fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error>
     where
         RR: ResourceRegistry + WithDependencies<D>,
         FUSR: SystemRegistry + WithResources,
         USR: SystemRegistry + WithResources,
         RSR: SystemRegistry + WithResources,
     {
-        let mut resources = Resources::with_dependencies::<ResourceTypes<RR>, D>(deps)?;
+        let mut resources = Resources::with_dependencies::<ResourceTypes<RR>, D>(deps).await?;
 
-        let fixed_update_systems = Systems::with_resources::<FUSR>(&resources)?;
-        let update_systems = Systems::with_resources::<USR>(&resources)?;
-        let render_systems = Systems::with_resources::<RSR>(&resources)?;
+        let fixed_update_systems = Systems::with_resources::<FUSR>(&resources).await?;
+        let update_systems = Systems::with_resources::<USR>(&resources).await?;
+        let render_systems = Systems::with_resources::<RSR>(&resources).await?;
 
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 

@@ -10,7 +10,7 @@ impl Systems {
         Systems(Vec::with_capacity(cap))
     }
 
-    pub fn with_resources<SR>(res: &Resources) -> Result<Self, anyhow::Error>
+    pub async fn with_resources<SR>(res: &Resources) -> Result<Self, anyhow::Error>
     where
         SR: SystemRegistry + WithResources,
     {
@@ -24,7 +24,7 @@ impl Systems {
             recursor(sys, tail);
         }
 
-        let sr = SR::with_res(res)?;
+        let sr = SR::with_res(res).await?;
         let mut sys = Systems::with_capacity(SR::LEN);
         recursor(&mut sys, sr);
 
