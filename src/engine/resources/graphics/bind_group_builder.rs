@@ -28,8 +28,15 @@ impl<'rt> BindGroupBuilder<'rt> {
         self
     }
 
-    pub fn add_buffer(mut self, binding: u32, offset: wgpu::BufferAddress, size: Option<wgpu::BufferSize>, buffer: BufferId) -> Self {
-        self.entries.push((binding, BindingResourceId::Buffer { buffer, offset, size }));
+    pub fn add_buffer(
+        mut self,
+        binding: u32,
+        offset: wgpu::BufferAddress,
+        size: Option<wgpu::BufferSize>,
+        buffer: BufferId,
+    ) -> Self {
+        self.entries
+            .push((binding, BindingResourceId::Buffer { buffer, offset, size }));
         self
     }
 
@@ -87,7 +94,11 @@ impl<'rt> BindGroupBuilder<'rt> {
 
 #[derive(Debug, Clone, Copy)]
 enum BindingResourceId {
-    Buffer{ buffer: BufferId, offset: wgpu::BufferAddress, size: Option<wgpu::BufferSize> },
+    Buffer {
+        buffer: BufferId,
+        offset: wgpu::BufferAddress,
+        size: Option<wgpu::BufferSize>,
+    },
     TextureView(TextureViewId),
     Sampler(SamplerId),
 }

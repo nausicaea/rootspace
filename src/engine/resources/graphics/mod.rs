@@ -213,7 +213,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
 
         let mut database = Database::default();
 
-        let min_binding_size = wgpu::BufferSize::new(std::mem::size_of::<TransformWrapper>() as _);  // 64 bytes
+        let min_binding_size = wgpu::BufferSize::new(std::mem::size_of::<TransformWrapper>() as _); // 64 bytes
         let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
             .with_label("transform-layout")
             .add_bind_group_layout_entry(

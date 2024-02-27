@@ -1,8 +1,8 @@
+use crate::ecs::entity::index::Index;
 use anyhow::Context;
 use log::error;
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
-use crate::ecs::entity::index::Index;
 
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
@@ -56,22 +56,39 @@ impl Renderer {
 
         let cam_data: Vec<_> = res
             .iter_r::<Camera>()
-            .map(|(idx, c)| c.as_matrix() * hier.ancestors(idx).filter_map(|a| transforms.get(a).map(|at| at.to_matrix())).product::<Mat4<f32>>())
+            .map(|(idx, c)| {
+                c.as_matrix()
+                    * hier
+                        .ancestors(idx)
+                        .filter_map(|a| transforms.get(a).map(|at| at.to_matrix()))
+                        .product::<Mat4<f32>>()
+            })
             .collect();
 
         let (renderables, transforms) = cam_data
             .iter()
             .flat_map(|cm| {
-                res.iter_r::<Renderable>()
-                    .map(|(idx, r)| (idx, r, *cm * hier.ancestors(idx).filter_map(|a| transforms.get(a).map(|at| at.to_matrix())).product::<Mat4<f32>>()))
+                res.iter_r::<Renderable>().map(|(idx, r)| {
+                    (
+                        idx,
+                        r,
+                        *cm * hier
+                            .ancestors(idx)
+                            .filter_map(|a| transforms.get(a).map(|at| at.to_matrix()))
+                            .product::<Mat4<f32>>(),
+                    )
+                })
             })
-            .fold((Vec::new(), Vec::new()), |(mut renderables, mut transforms), (idx, r, t)| {
-                renderables.push((idx, r));
-                transforms.push(TransformWrapper(t));
-                (renderables, transforms)
-            });
+            .fold(
+                (Vec::new(), Vec::new()),
+                |(mut renderables, mut transforms), (idx, r, t)| {
+                    renderables.push((idx, r));
+                    transforms.push(TransformWrapper(t));
+                    (renderables, transforms)
+                },
+            );
 
-        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment;  // 256 bytes
+        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256 bytes
         gfx.write_buffer(self.transform_buffer, unsafe {
             std::slice::from_raw_parts(
                 transforms.as_ptr() as *const u8,
@@ -80,7 +97,7 @@ impl Renderer {
         });
 
         for (i, (_, r)) in renderables.into_iter().enumerate() {
-            let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset);  // first 0x0, then 0x100
+            let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset); // first 0x0, then 0x100
             if r.0.materials.is_empty() {
                 rp.set_pipeline(self.pipeline_wt)
                     .set_bind_group(0, self.transform_bind_group, &[transform_offset])
@@ -191,8 +208,8 @@ impl WithResources for Renderer {
             Self::crp_with_transform(&adb, &mut gfx, "wt").context("trying to create the render pipeline 'wt'")?;
 
         let max_objects = gfx.max_objects();
-        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment;  // 256
-        let buffer_size = (max_objects * uniform_alignment) as wgpu::BufferAddress;  // 268'435'456
+        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256
+        let buffer_size = (max_objects * uniform_alignment) as wgpu::BufferAddress; // 268'435'456
         let transform_buffer = gfx.create_buffer(
             Some("transform-buffer"),
             buffer_size,

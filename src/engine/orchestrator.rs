@@ -83,17 +83,17 @@ impl Orchestrator {
                 Event::WindowEvent {
                     window_id,
                     event: window_event,
-                } if self.world.borrow::<Graphics>().window_id() == window_id => {
-                    match window_event {
-                        winit::event::WindowEvent::RedrawRequested => {
-                            self.redraw();
-                            self.maintain(elwt);
-                        }
-                        e => if let Ok(window_event) = e.try_into() {
+                } if self.world.borrow::<Graphics>().window_id() == window_id => match window_event {
+                    winit::event::WindowEvent::RedrawRequested => {
+                        self.redraw();
+                        self.maintain(elwt);
+                    }
+                    e => {
+                        if let Ok(window_event) = e.try_into() {
                             self.input(window_event)
                         }
                     }
-                }
+                },
                 Event::LoopExiting => self.cleanup(),
                 _ => (),
             }
