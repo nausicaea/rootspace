@@ -154,9 +154,9 @@ mod tests {
         let _rr = ResourceRegistry::push(End, Entities::default());
     }
 
-    #[test]
-    fn entities_world() {
-        let _w = World::with_dependencies::<Reg![Entities], Reg![], Reg![], Reg![], _>(&()).unwrap();
+    #[async_std::test]
+    async fn entities_world() {
+        let _w = World::with_dependencies::<Reg![Entities], Reg![], Reg![], Reg![], _>(&()).await.unwrap();
     }
 
     #[test]

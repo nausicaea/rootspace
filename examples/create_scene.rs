@@ -1,3 +1,4 @@
+use async_std::task::block_on;
 use clap::Parser;
 use rootspace::ecs::with_dependencies::WithDependencies;
 use rootspace::engine::assets::scene::Scene;
@@ -35,9 +36,7 @@ impl<'a> AssetDatabaseDeps for Dependencies<'a> {
     }
 }
 
-fn main() -> anyhow::Result<()> {
-    env_logger::init();
-
+async fn async_main() -> anyhow::Result<()> {
     let matches = Args::parse();
 
     let deps = Dependencies {
@@ -46,7 +45,7 @@ fn main() -> anyhow::Result<()> {
         within_repo: matches.within_repo,
     };
 
-    let adb = AssetDatabase::with_deps(&deps)?;
+    let adb = AssetDatabase::with_deps(&deps).await?;
 
     let mut scene = Scene::default();
     scene
@@ -81,7 +80,13 @@ fn main() -> anyhow::Result<()> {
         .with_renderable(RenderableSource::with_model("models", "triangle.ply"))
         .submit();
 
-    adb.save_asset(&scene, "scenes", "test.cbor")?;
+    adb.save_asset(&scene, "scenes", "test.cbor").await?;
 
+    Ok(())
+}
+
+fn main() -> anyhow::Result<()> {
+    env_logger::init();
+    block_on(async_main())?;
     Ok(())
 }

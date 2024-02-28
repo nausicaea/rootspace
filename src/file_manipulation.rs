@@ -547,24 +547,24 @@ mod tests {
         assert!(r.is_ok(), "{:?}", r.unwrap_err())
     }
 
-    #[test]
-    fn file_path_read_to_string() {
+    #[async_std::test]
+    async fn file_path_read_to_string() {
         let mut tf = NamedTempFile::new().unwrap();
 
         write!(tf, "Hello, World!").unwrap();
 
-        let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_string();
+        let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_string().await;
         assert!(r.is_ok());
         assert_eq!(r.unwrap(), "Hello, World!");
     }
 
-    #[test]
-    fn file_path_read_to_bytes() {
+    #[async_std::test]
+    async fn file_path_read_to_bytes() {
         let mut tf = NamedTempFile::new().unwrap();
 
         tf.write(&[0x00, 0xff, 0x14, 0xf6]).unwrap();
 
-        let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_bytes();
+        let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_bytes().await;
         assert!(r.is_ok());
         assert_eq!(r.unwrap(), vec![0x00, 0xff, 0x14, 0xf6]);
     }

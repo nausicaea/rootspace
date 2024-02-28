@@ -93,8 +93,8 @@ mod tests {
         let _rr = ResourceRegistry::push(End, Statistics::default());
     }
 
-    #[test]
-    fn statistics_world() {
-        let _w = World::with_dependencies::<Reg![Statistics], Reg![], Reg![], Reg![], _>(&()).unwrap();
+    #[async_std::test]
+    async fn statistics_world() {
+        let _w = World::with_dependencies::<Reg![Statistics], Reg![], Reg![], Reg![], _>(&()).await.unwrap();
     }
 }

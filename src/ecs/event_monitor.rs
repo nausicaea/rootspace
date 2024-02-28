@@ -47,15 +47,16 @@ mod tests {
         type _SR = Reg![EventMonitor<u32>];
     }
 
-    #[test]
-    fn event_monitor_system_registry() {
-        let res = Resources::with_dependencies::<Reg![EventQueue<usize>], _>(&()).unwrap();
-        let _rr = SystemRegistry::push(End, EventMonitor::<usize>::with_res(&res).unwrap());
+    #[async_std::test]
+    async fn event_monitor_system_registry() {
+        let res = Resources::with_dependencies::<Reg![EventQueue<usize>], _>(&()).await.unwrap();
+        let _rr = SystemRegistry::push(End, EventMonitor::<usize>::with_res(&res).await.unwrap());
     }
 
-    #[test]
-    fn event_monitor_world() {
+    #[async_std::test]
+    async fn event_monitor_world() {
         let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![EventMonitor<usize>], Reg![], _>(&())
+            .await
             .unwrap();
     }
 }

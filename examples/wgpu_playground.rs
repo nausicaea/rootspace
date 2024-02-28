@@ -2,6 +2,7 @@
 
 use log::debug;
 use std::sync::Arc;
+use async_std::task::block_on;
 use wgpu::{
     Backends, CompositeAlphaMode, Device, DeviceDescriptor, Features, Instance, Limits, PowerPreference, PresentMode,
     Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, TextureUsages,
@@ -13,14 +14,15 @@ use winit::{
 };
 
 fn main() {
-    use pollster::FutureExt;
-
     env_logger::init();
+    block_on(async_main());
+}
 
+async fn async_main() {
     let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
-    let state = State::new(window).block_on();
+    let state = State::new(window).await;
 
     event_loop.run(run(state)).unwrap();
 }

@@ -203,9 +203,9 @@ mod tests {
         let _rr = ResourceRegistry::push(End, EventQueue::<usize>::default());
     }
 
-    #[test]
-    fn event_queue_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![], Reg![], _>(&()).unwrap();
+    #[async_std::test]
+    async fn event_queue_world() {
+        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![], Reg![], _>(&()).await.unwrap();
     }
 
     #[test]

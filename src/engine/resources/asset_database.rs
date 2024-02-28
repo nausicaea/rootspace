@@ -208,15 +208,15 @@ mod tests {
         type _RR = Reg![AssetDatabase];
     }
 
-    #[test]
-    fn asset_database_resource_registry() {
+    #[async_std::test]
+    async fn asset_database_resource_registry() {
         let deps = TDeps::default();
-        let _rr = ResourceRegistry::push(End, AssetDatabase::with_deps(&deps).unwrap());
+        let _rr = ResourceRegistry::push(End, AssetDatabase::with_deps(&deps).await.unwrap());
     }
 
-    #[test]
-    fn asset_database_world() {
+    #[async_std::test]
+    async fn asset_database_world() {
         let deps = TDeps::default();
-        let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], Reg![], _>(&deps).unwrap();
+        let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], Reg![], _>(&deps).await.unwrap();
     }
 }
