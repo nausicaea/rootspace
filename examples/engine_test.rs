@@ -48,9 +48,7 @@ impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
     }
 }
 
-fn main() -> anyhow::Result<()> {
-    env_logger::init();
-
+async fn async_main() -> anyhow::Result<()> {
     let event_loop = EventLoop::new()?;
 
     let deps = Dependencies {
@@ -62,9 +60,15 @@ fn main() -> anyhow::Result<()> {
         graphics_settings: Settings::default(),
     };
 
-    let state = async_std::task::block_on(Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps))?;
+    let state = Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps).await?;
 
     event_loop.run(state.run())?;
 
+    Ok(())
+}
+
+fn main() -> anyhow::Result<()> {
+    env_logger::init();
+    async_std::task::block_on(async_main())?;
     Ok(())
 }
