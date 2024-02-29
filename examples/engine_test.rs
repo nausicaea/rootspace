@@ -62,7 +62,7 @@ async fn async_main() -> anyhow::Result<()> {
 
     let state = Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps).await?;
 
-    event_loop.run(state.run())?;
+    event_loop.run(state.start())?;
 
     Ok(())
 }

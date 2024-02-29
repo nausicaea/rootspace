@@ -63,7 +63,7 @@ impl Orchestrator {
         })
     }
 
-    pub fn run(mut self) -> impl 'static + FnMut(Event<()>, &EventLoopWindowTarget<()>) {
+    pub fn start(mut self) -> impl 'static + FnMut(Event<()>, &EventLoopWindowTarget<()>) {
         move |event, elwt| {
             #[cfg(feature = "dbg-loop")]
             let mut draw_bottom = false;
