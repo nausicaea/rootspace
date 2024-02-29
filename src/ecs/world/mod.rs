@@ -153,52 +153,6 @@ impl World {
         }
     }
 
-    pub fn get_system<S>(&self, stage: LoopStage) -> &S
-    where
-        S: System,
-    {
-        match stage {
-            LoopStage::FixedUpdate => self.fixed_update_systems.get::<S>(),
-            LoopStage::Update => self.update_systems.get::<S>(),
-            LoopStage::Render => self.render_systems.get::<S>(),
-        }
-    }
-
-    pub fn get_system_mut<S>(&mut self, stage: LoopStage) -> &mut S
-    where
-        S: System,
-    {
-        match stage {
-            LoopStage::FixedUpdate => self.fixed_update_systems.get_mut::<S>(),
-            LoopStage::Update => self.update_systems.get_mut::<S>(),
-            LoopStage::Render => self.render_systems.get_mut::<S>(),
-        }
-    }
-
-    /// Try to retrieve the specified system type.
-    pub fn find_system<S>(&self, stage: LoopStage) -> Option<&S>
-    where
-        S: System,
-    {
-        match stage {
-            LoopStage::FixedUpdate => self.fixed_update_systems.find::<S>(),
-            LoopStage::Update => self.update_systems.find::<S>(),
-            LoopStage::Render => self.render_systems.find::<S>(),
-        }
-    }
-
-    /// Try to retrieve the specified system type as a mutable reference.
-    pub fn find_system_mut<S>(&mut self, stage: LoopStage) -> Option<&mut S>
-    where
-        S: System,
-    {
-        match stage {
-            LoopStage::FixedUpdate => self.fixed_update_systems.find_mut::<S>(),
-            LoopStage::Update => self.update_systems.find_mut::<S>(),
-            LoopStage::Render => self.render_systems.find_mut::<S>(),
-        }
-    }
-
     /// The fixed update method is supposed to be called from the main loop at fixed time
     /// intervals.
     ///

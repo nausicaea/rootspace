@@ -1,6 +1,6 @@
 //! Provides the resource downcastable trait.
 
-use downcast_rs::{impl_downcast, Downcast, DowncastSync};
+use downcast_rs::{impl_downcast, DowncastSync};
 
 /// A resource is a data structure that is not coupled to a specific entity. Resources can be used
 /// to provide "global" state to systems.
