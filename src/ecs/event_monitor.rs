@@ -17,7 +17,7 @@ pub struct EventMonitor<E> {
 
 impl<E> WithResources for EventMonitor<E>
 where
-    E: 'static + Clone + std::fmt::Debug,
+    E: 'static + Clone + std::fmt::Debug + Send + Sync,
 {
     async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
         let receiver = res.borrow_mut::<EventQueue<E>>().subscribe::<Self>();
@@ -28,7 +28,7 @@ where
 
 impl<E> System for EventMonitor<E>
 where
-    E: 'static + Clone + fmt::Debug,
+    E: 'static + Clone + fmt::Debug + Send + Sync,
 {
     fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
         res.borrow_mut::<EventQueue<E>>()

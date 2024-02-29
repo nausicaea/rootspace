@@ -107,7 +107,7 @@ impl<T> Storage for ZstStorage<T> {
     }
 }
 
-impl<T> Resource for ZstStorage<T> where T: 'static {}
+impl<T> Resource for ZstStorage<T> where T: 'static + Send + Sync {}
 
 impl<T> Default for ZstStorage<T>
 where

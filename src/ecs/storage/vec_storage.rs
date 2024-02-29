@@ -174,7 +174,7 @@ impl<T> Storage for VecStorage<T> {
     }
 }
 
-impl<T> Resource for VecStorage<T> where T: 'static {}
+impl<T> Resource for VecStorage<T> where T: 'static + Send + Sync {}
 
 impl<T> Drop for VecStorage<T> {
     fn drop(&mut self) {
