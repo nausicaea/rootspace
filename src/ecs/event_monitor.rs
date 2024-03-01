@@ -1,4 +1,5 @@
 use std::{fmt, time::Duration};
+use async_trait::async_trait;
 
 use log::trace;
 use serde::{Deserialize, Serialize};
@@ -26,11 +27,12 @@ where
     }
 }
 
+#[async_trait]
 impl<E> System for EventMonitor<E>
 where
     E: 'static + Clone + fmt::Debug + Send + Sync,
 {
-    fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
+    async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         res.borrow_mut::<EventQueue<E>>()
             .receive_cb(&self.receiver, |e| trace!("Received {:?}", e))
     }

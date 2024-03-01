@@ -1,6 +1,8 @@
+use std::time::Duration;
 use crate::ecs::component::Component;
 use crate::ecs::entity::index::Index;
 use anyhow::Context;
+use async_trait::async_trait;
 use log::{error, trace, warn};
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
@@ -235,8 +237,9 @@ impl WithResources for Renderer {
     }
 }
 
+#[async_trait]
 impl System for Renderer {
-    fn run(&mut self, res: &Resources, _t: &std::time::Duration, _dt: &std::time::Duration) {
+    async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         self.handle_events(res);
 
         if !self.renderer_enabled {

@@ -8,6 +8,7 @@ use std::{
 };
 
 use anyhow::Error;
+use parking_lot::{RwLock, RwLockReadGuard};
 
 use super::{
     component::Component, registry::ResourceRegistry, resource::Resource, with_dependencies::WithDependencies,
@@ -49,7 +50,7 @@ macro_rules! impl_iter_ref {
 /// A container that manages resources. Allows mutable borrows of multiple different resources at
 /// the same time.
 #[derive(Default)]
-pub struct Resources(HashMap<TypeId, RefCell<Box<dyn Resource>>>);
+pub struct Resources(HashMap<TypeId, RwLock<Box<dyn Resource>>>);
 
 impl Resources {
     impl_iter_ref!(iter_r, RIterRef, #reads: C);
@@ -117,7 +118,7 @@ impl Resources {
     where
         R: Resource,
     {
-        self.0.insert(TypeId::of::<R>(), RefCell::new(Box::new(res)));
+        self.0.insert(TypeId::of::<R>(), RwLock::new(Box::new(res)));
     }
 
     /// Removes the resource of the specified type.
@@ -143,12 +144,15 @@ impl Resources {
     {
         self.0
             .get(&TypeId::of::<R>())
-            .map(|r| {
-                Ref::map(r.borrow(), |i| {
-                    i.downcast_ref::<R>().unwrap_or_else(|| {
-                        panic!("Could not downcast the requested resource to type {}", type_name::<R>())
-                    })
-                })
+            .ok_or(ResourcesError::NoSuchTypeFound)
+            .and_then(|r| {
+                r.try_read()
+                    .map(|r| RwLockReadGuard::map(r, |i| {
+                        i.downcast_ref::<R>().unwrap_or_else(|| {
+                            panic!("Could not downcast the requested resource to type {}", type_name::<R>())
+                        })
+                    }))
+                    .ok_or(ResourcesError::RwLockReadError)
             })
             .unwrap_or_else(|| panic!("Could not find any resource of type {}", type_name::<R>()))
     }
@@ -228,6 +232,16 @@ impl std::fmt::Debug for Resources {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "Resoources(#{})", self.0.len())
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+enum ResourcesError<'a> {
+    #[error("Could not find any resource of the requested type")]
+    NoSuchTypeFound,
+    #[error(transparent)]
+    RwLockReadError(#[from] std::sync::TryLockError<std::sync::RwLockReadGuard<'a, Box<dyn Resource>>>),
+    #[error(transparent)]
+    RwLockWriteError(#[from] std::sync::TryLockError<std::sync::RwLockWriteGuard<'a, Box<dyn Resource>>>),
 }
 
 #[cfg(test)]

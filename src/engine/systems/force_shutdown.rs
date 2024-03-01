@@ -7,6 +7,7 @@ use std::{
     },
     time::Duration,
 };
+use async_trait::async_trait;
 
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
@@ -55,8 +56,9 @@ impl WithResources for ForceShutdown {
     }
 }
 
+#[async_trait]
 impl System for ForceShutdown {
-    fn run(&mut self, res: &Resources, _: &Duration, _: &Duration) {
+    async fn run(&mut self, res: &Resources, _: Duration, _: Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             debug!("Recently caught a termination signal");
             res.borrow_mut::<EventQueue<EngineEvent>>()

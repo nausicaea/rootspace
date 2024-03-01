@@ -1,4 +1,5 @@
 use std::time::Duration;
+use async_trait::async_trait;
 
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
@@ -34,8 +35,9 @@ impl CameraManager {
     }
 }
 
+#[async_trait]
 impl System for CameraManager {
-    fn run(&mut self, res: &Resources, _t: &Duration, _dt: &Duration) {
+    async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         let events = res.borrow_mut::<EventQueue<WindowEvent>>().receive(&self.receiver);
         for event in events {
             match event {
