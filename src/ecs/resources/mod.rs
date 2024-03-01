@@ -3,12 +3,11 @@
 
 use std::{
     any::{type_name, TypeId},
-    cell::{Ref, RefCell, RefMut},
     collections::{HashMap, HashSet},
 };
 
 use anyhow::Error;
-use parking_lot::{RwLock, RwLockReadGuard};
+use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use super::{
     component::Component, registry::ResourceRegistry, resource::Resource, with_dependencies::WithDependencies,
@@ -36,10 +35,10 @@ macro_rules! impl_iter_ref {
             )*
         {
             $(
-                let $type = self.borrow::<$type::Storage>();
+                let $type = self.try_read::<$type::Storage>();
             )*
             $(
-                let $type_mut = self.borrow_mut::<$type_mut::Storage>();
+                let $type_mut = self.try_write::<$type_mut::Storage>();
             )*
 
             $crate::ecs::storage::iterators::$iter::new($($type,)* $($type_mut,)*)
@@ -138,7 +137,7 @@ impl Resources {
     }
 
     /// Borrows the requested resource.
-    pub fn borrow<R>(&self) -> Ref<R>
+    pub fn try_read<R>(&self) -> MappedRwLockReadGuard<R>
     where
         R: Resource,
     {
@@ -154,24 +153,27 @@ impl Resources {
                     }))
                     .ok_or(ResourcesError::RwLockReadError)
             })
-            .unwrap_or_else(|| panic!("Could not find any resource of type {}", type_name::<R>()))
+            .unwrap_or_else(|e| panic!("Unable to acquire read access to resource {}: {}", type_name::<R>(), e))
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
-    pub fn borrow_mut<R>(&self) -> RefMut<R>
+    pub fn try_write<R>(&self) -> MappedRwLockWriteGuard<R>
     where
         R: Resource,
     {
         self.0
             .get(&TypeId::of::<R>())
-            .map(|r| {
-                RefMut::map(r.borrow_mut(), |i| {
-                    i.downcast_mut::<R>().unwrap_or_else(|| {
-                        panic!("Could not downcast the requested resource to type {}", type_name::<R>())
-                    })
-                })
+            .ok_or(ResourcesError::NoSuchTypeFound)
+            .and_then(|r| {
+                r.try_write()
+                    .map(|r| RwLockWriteGuard::map(r, |i| {
+                        i.downcast_mut::<R>().unwrap_or_else(|| {
+                            panic!("Could not downcast the requested resource to type {}", type_name::<R>())
+                        })
+                    }))
+                    .ok_or(ResourcesError::RwLockWriteError)
             })
-            .unwrap_or_else(|| panic!("Could not find any resource of type {}", type_name::<R>()))
+            .unwrap_or_else(|e| panic!("Unable to acquire write access to resource {}: {}", type_name::<R>(), e))
     }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
@@ -190,20 +192,20 @@ impl Resources {
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
-    pub fn borrow_components<C>(&self) -> Ref<C::Storage>
+    pub fn try_read_components<C>(&self) -> MappedRwLockReadGuard<C::Storage>
     where
         C: Component,
     {
-        self.borrow::<C::Storage>()
+        self.try_read::<C::Storage>()
     }
 
     /// Mutably borrows the requested component storage (this is a convenience method to
     /// `borrow_mut`).
-    pub fn borrow_components_mut<C>(&self) -> RefMut<C::Storage>
+    pub fn try_write_components<C>(&self) -> MappedRwLockWriteGuard<C::Storage>
     where
         C: Component,
     {
-        self.borrow_mut::<C::Storage>()
+        self.try_write::<C::Storage>()
     }
 
     /// Mutably borrows the requested component storage (with a compile-time borrow check).
@@ -235,13 +237,13 @@ impl std::fmt::Debug for Resources {
 }
 
 #[derive(Debug, thiserror::Error)]
-enum ResourcesError<'a> {
+enum ResourcesError {
     #[error("Could not find any resource of the requested type")]
     NoSuchTypeFound,
-    #[error(transparent)]
-    RwLockReadError(#[from] std::sync::TryLockError<std::sync::RwLockReadGuard<'a, Box<dyn Resource>>>),
-    #[error(transparent)]
-    RwLockWriteError(#[from] std::sync::TryLockError<std::sync::RwLockWriteGuard<'a, Box<dyn Resource>>>),
+    #[error("Could not acquire a read lock for the requested resource")]
+    RwLockReadError,
+    #[error("Could not acquire a write lock for the requested resource")]
+    RwLockWriteError
 }
 
 #[cfg(test)]
@@ -283,10 +285,10 @@ mod tests {
     }
 
     #[test]
-    fn borrow() {
+    fn try_read() {
         let mut resources = Resources::default();
         resources.insert(TestResourceA::default());
 
-        let _: Ref<TestResourceA> = resources.borrow();
+        let _: MappedRwLockReadGuard<TestResourceA> = resources.try_read();
     }
 }

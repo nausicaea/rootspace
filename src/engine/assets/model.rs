@@ -54,7 +54,7 @@ impl Model {
         let mut materials = Vec::new();
         for name in texture_file_names {
             let path = res
-                .borrow::<AssetDatabase>()
+                .try_read::<AssetDatabase>()
                 .find_asset(material_group, name)
                 .with_context(|| {
                     format!(

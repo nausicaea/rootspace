@@ -12,7 +12,7 @@ pub struct Mesh {
 
 impl Mesh {
     pub(crate) fn with_raw_mesh(res: &Resources, raw_mesh: &RawMesh) -> Result<Self, Error> {
-        let mut gfx = res.borrow_mut::<Graphics>();
+        let mut gfx = res.try_write::<Graphics>();
         let vertex_buffer = gfx.create_buffer_init(
             raw_mesh
                 .label

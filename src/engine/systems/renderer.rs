@@ -39,13 +39,13 @@ pub struct Renderer {
 
 impl Renderer {
     fn handle_events(&mut self, res: &Resources) {
-        res.borrow_mut::<EventQueue<WindowEvent>>()
+        res.try_write::<EventQueue<WindowEvent>>()
             .receive_cb(&self.window_receiver, |e| match e {
                 WindowEvent::Resized(ps) => self.on_window_resized(res, *ps),
                 _ => (),
             });
 
-        res.borrow_mut::<EventQueue<EngineEvent>>()
+        res.try_write::<EventQueue<EngineEvent>>()
             .receive_cb(&self.engine_receiver, |e| match e {
                 EngineEvent::AbortRequested => self.renderer_enabled = true,
                 _ => (),
@@ -63,9 +63,9 @@ impl Renderer {
                 .product::<Mat4<f32>>()
         }
 
-        let gfx = res.borrow::<Graphics>();
-        let hier = res.borrow::<Hierarchy<Index>>();
-        let transforms = res.borrow_components::<Transform>();
+        let gfx = res.try_read::<Graphics>();
+        let hier = res.try_read::<Hierarchy<Index>>();
+        let transforms = res.try_read_components::<Transform>();
 
         let cam_data: Vec<_> = res
             .iter_r::<Camera>()
@@ -116,17 +116,17 @@ impl Renderer {
 
     fn on_window_resized(&self, res: &Resources, ps: PhysicalSize<u32>) {
         trace!("Resizing surface");
-        res.borrow_mut::<Graphics>().resize(ps)
+        res.try_write::<Graphics>().resize(ps)
     }
 
     fn on_surface_outdated(&self, res: &Resources) {
         trace!("Surface is outdated");
-        res.borrow_mut::<Graphics>().reconfigure()
+        res.try_write::<Graphics>().reconfigure()
     }
 
     fn on_out_of_memory(&self, res: &Resources) {
         error!("surface is out of memory");
-        res.borrow_mut::<EventQueue<EngineEvent>>()
+        res.try_write::<EventQueue<EngineEvent>>()
             .send(EngineEvent::AbortRequested)
     }
 
@@ -197,11 +197,11 @@ impl Renderer {
 
 impl WithResources for Renderer {
     async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
-        let window_receiver = res.borrow_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
-        let engine_receiver = res.borrow_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
+        let window_receiver = res.try_write::<EventQueue<WindowEvent>>().subscribe::<Self>();
+        let engine_receiver = res.try_write::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        let adb = res.borrow::<AssetDatabase>();
-        let mut gfx = res.borrow_mut::<Graphics>();
+        let adb = res.try_read::<AssetDatabase>();
+        let mut gfx = res.try_write::<Graphics>();
 
         let pipeline_wtm = Self::crp_with_transform_and_material(&adb, &mut gfx, "wtm")
             .context("trying to create the render pipeline 'wtm'")?;
@@ -246,7 +246,7 @@ impl System for Renderer {
             return;
         }
 
-        let gfx = res.borrow::<Graphics>();
+        let gfx = res.try_read::<Graphics>();
 
         let encoder = gfx.create_encoder(Some("main-encoder"));
 

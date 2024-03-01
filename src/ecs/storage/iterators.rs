@@ -258,14 +258,14 @@ macro_rules! impl_joined_iter_ref {
         pub struct $name<$tlt, $ty> {
             indices: Vec<$crate::ecs::entity::index::Index>,
             cursor: usize,
-            $ty: std::cell::Ref<$tlt, $ty>,
+            $ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>,
         }
 
         impl<$tlt, $ty> $name<$tlt, $ty>
         where
             $ty: $crate::ecs::storage::Storage,
         {
-            pub(crate) fn new($ty: std::cell::Ref<$tlt, $ty>) -> Self {
+            pub(crate) fn new($ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>) -> Self {
                 $name {
                     indices: $ty.indices().iter().cloned().collect(),
                     cursor: 0,
@@ -328,14 +328,14 @@ macro_rules! impl_joined_iter_ref {
         pub struct $name<$tltm, $tym> {
             indices: Vec<$crate::ecs::entity::index::Index>,
             cursor: usize,
-            $tym: std::cell::RefMut<$tltm, $tym>,
+            $tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>,
         }
 
         impl<$tltm, $tym> $name<$tltm, $tym>
         where
             $tym: $crate::ecs::storage::Storage,
         {
-            pub(crate) fn new($tym: std::cell::RefMut<$tltm, $tym>) -> Self {
+            pub(crate) fn new($tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>) -> Self {
                 $name {
                     indices: $tym.indices().iter().cloned().collect(),
                     cursor: 0,
@@ -407,10 +407,10 @@ macro_rules! impl_joined_iter_ref {
             indices: Vec<$crate::ecs::entity::index::Index>,
             cursor: usize,
             $(
-                $ty: std::cell::Ref<$tlt, $ty>,
+                $ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>,
             )*
             $(
-                $tym: std::cell::RefMut<$tltm, $tym>,
+                $tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>,
             )*
         }
 
@@ -423,7 +423,7 @@ macro_rules! impl_joined_iter_ref {
                 $tym: $crate::ecs::storage::Storage,
             )*
         {
-            pub(crate) fn new($($ty: std::cell::Ref<$tlt, $ty>,)* $($tym: std::cell::RefMut<$tltm, $tym>,)*) -> Self {
+            pub(crate) fn new($($ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>,)* $($tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>,)*) -> Self {
                 $name {
                     indices: intersect_many(&[$($ty.indices(),)* $($tym.indices(),)*]),
                     cursor: 0,

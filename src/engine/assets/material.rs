@@ -25,7 +25,7 @@ impl PrivLoadAsset for Material {
             )
         })?;
 
-        let mut gfx = res.borrow_mut::<Graphics>();
+        let mut gfx = res.try_write::<Graphics>();
         let layout = gfx.material_layout();
         let bind_group = gfx
             .create_bind_group(layout)

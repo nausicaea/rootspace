@@ -1,4 +1,5 @@
 use std::time::{Duration, Instant};
+use async_std::task::block_on;
 
 use winit::{event::Event, event_loop::EventLoopWindowTarget};
 
@@ -51,7 +52,7 @@ impl Orchestrator {
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
         world
-            .borrow::<AssetDatabase>()
+            .try_read::<AssetDatabase>()
             .load_asset::<Scene, _>(world.resources(), "scenes", deps.main_scene())
             .await?;
 
@@ -65,47 +66,51 @@ impl Orchestrator {
 
     pub fn start(mut self) -> impl 'static + FnMut(Event<()>, &EventLoopWindowTarget<()>) {
         move |event, elwt| {
-            #[cfg(feature = "dbg-loop")]
-            let mut draw_bottom = false;
-            #[cfg(feature = "dbg-loop")]
-            {
-                match &event {
-                    Event::NewEvents(_) => {
-                        log::trace!("⬇");
-                    }
-                    Event::AboutToWait | Event::LoopExiting => {
-                        draw_bottom = true;
-                    }
-                    _ => (),
-                }
-                log::trace!("Event trace: {:?}", &event);
-            }
+            block_on(self.run(event, elwt));
+        }
+    }
 
-            let main_window_id = self.world.borrow::<Graphics>().window_id();
-            match event {
-                Event::WindowEvent {
-                    window_id,
-                    event: window_event,
-                } if main_window_id == window_id => match window_event {
-                    WindowEvent::RedrawRequested => self.redraw(),
-                    e => self.world.get_mut::<EventQueue<WindowEvent>>().send(e),
-                },
-                Event::AboutToWait => self.maintain(elwt),
-                Event::LoopExiting => self.cleanup(),
+    async fn run(&mut self, event: Event<()>, elwt: &EventLoopWindowTarget<()>) {
+        #[cfg(feature = "dbg-loop")]
+        let mut draw_bottom = false;
+        #[cfg(feature = "dbg-loop")]
+        {
+            match &event {
+                Event::NewEvents(_) => {
+                    log::trace!("⬇");
+                }
+                Event::AboutToWait | Event::LoopExiting => {
+                    draw_bottom = true;
+                }
                 _ => (),
             }
+            log::trace!("Event trace: {:?}", &event);
+        }
 
-            #[cfg(feature = "dbg-loop")]
-            if draw_bottom {
-                log::trace!("⬆\n\n");
-            }
+        let main_window_id = self.world.try_read::<Graphics>().window_id();
+        match event {
+            Event::WindowEvent {
+                window_id,
+                event: window_event,
+            } if main_window_id == window_id => match window_event {
+                WindowEvent::RedrawRequested => self.redraw().await,
+                e => self.world.get_mut::<EventQueue<WindowEvent>>().send(e),
+            },
+            Event::AboutToWait => self.maintain(elwt),
+            Event::LoopExiting => self.cleanup(),
+            _ => (),
+        }
+
+        #[cfg(feature = "dbg-loop")]
+        if draw_bottom {
+            log::trace!("⬆\n\n");
         }
     }
 
     /// Update the game state (using [`World::update`](ecs::world::World::update) and
     /// [`World::fixed_update`](ecs::world::World::fixed_update)) and render the frame (using
     /// [`World::render`](ecs::world::World::render)).
-    fn redraw(&mut self) {
+    async fn redraw(&mut self) {
         trace_loop!("Redraw executing");
         // Assess the duration of the last frame
         let frame_time = std::cmp::min(self.timers.loop_time.elapsed(), self.timers.max_frame_duration);
@@ -116,14 +121,14 @@ impl Orchestrator {
         // Call fixed update functions until the accumulated time buffer is empty
         while self.timers.accumulator >= self.timers.delta_time {
             self.world
-                .fixed_update(&self.timers.fixed_game_time, &self.timers.delta_time);
+                .fixed_update(self.timers.fixed_game_time, self.timers.delta_time).await;
             self.timers.accumulator -= self.timers.delta_time;
             self.timers.fixed_game_time += self.timers.delta_time;
         }
 
         // Call the dynamic update and render functions
-        self.world.update(&self.timers.dynamic_game_time, &frame_time);
-        self.world.render(&self.timers.dynamic_game_time, &frame_time);
+        self.world.update(self.timers.dynamic_game_time, frame_time).await;
+        self.world.render(self.timers.dynamic_game_time, frame_time).await;
 
         // Update the frame time statistics
         self.world.get_mut::<Statistics>().update_loop_times(frame_time);
@@ -161,7 +166,7 @@ impl Orchestrator {
             }
         }
 
-        self.world.borrow::<Graphics>().request_redraw();
+        self.world.try_read::<Graphics>().request_redraw();
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {

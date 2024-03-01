@@ -1,9 +1,9 @@
 use std::{
-    cell::{Ref, RefMut},
     time::Duration,
 };
 
 use log::debug;
+use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard};
 
 use self::{event::WorldEvent, type_registry::ResourceTypes};
 use super::{
@@ -99,19 +99,19 @@ impl World {
     }
 
     /// Borrows the requested resource.
-    pub fn borrow<R>(&self) -> Ref<R>
+    pub fn try_read<R>(&self) -> MappedRwLockReadGuard<R>
     where
         R: Resource,
     {
-        self.resources.borrow::<R>()
+        self.resources.try_read::<R>()
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
-    pub fn borrow_mut<R>(&self) -> RefMut<R>
+    pub fn try_write<R>(&self) -> MappedRwLockWriteGuard<R>
     where
         R: Resource,
     {
-        self.resources.borrow_mut::<R>()
+        self.resources.try_write::<R>()
     }
 
     /// Create a new `Entity`.
@@ -127,11 +127,11 @@ impl World {
         self.resources.get_mut::<C::Storage>().insert(entity, component);
     }
 
-    pub fn borrow_components<C>(&self) -> Ref<C::Storage>
+    pub fn try_read_components<C>(&self) -> MappedRwLockReadGuard<C::Storage>
     where
         C: Component,
     {
-        self.resources.borrow_components::<C>()
+        self.resources.try_read_components::<C>()
     }
 
     pub fn get_components_mut<C>(&mut self) -> &mut C::Storage
@@ -160,9 +160,9 @@ impl World {
     ///
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `fixed_update`.
-    pub fn fixed_update(&mut self, t: &Duration, dt: &Duration) {
+    pub async fn fixed_update(&mut self, t: Duration, dt: Duration) {
         for system in self.fixed_update_systems.iter_mut() {
-            system.run(&self.resources, t, dt);
+            system.run(&self.resources, t, dt).await;
         }
     }
 
@@ -173,9 +173,9 @@ impl World {
     ///
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `update`.
-    pub fn update(&mut self, t: &Duration, dt: &Duration) {
+    pub async fn update(&mut self, t: Duration, dt: Duration) {
         for system in self.update_systems.iter_mut() {
-            system.run(&self.resources, t, dt);
+            system.run(&self.resources, t, dt).await;
         }
     }
 
@@ -186,9 +186,9 @@ impl World {
     ///
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `render`.
-    pub fn render(&mut self, t: &Duration, dt: &Duration) {
+    pub async fn render(&mut self, t: Duration, dt: Duration) {
         for system in self.render_systems.iter_mut() {
-            system.run(&self.resources, t, dt);
+            system.run(&self.resources, t, dt).await;
         }
     }
 

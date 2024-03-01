@@ -21,7 +21,7 @@ where
     E: 'static + Clone + std::fmt::Debug + Send + Sync,
 {
     async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
-        let receiver = res.borrow_mut::<EventQueue<E>>().subscribe::<Self>();
+        let receiver = res.try_write::<EventQueue<E>>().subscribe::<Self>();
 
         Ok(EventMonitor { receiver })
     }
@@ -33,7 +33,7 @@ where
     E: 'static + Clone + fmt::Debug + Send + Sync,
 {
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
-        res.borrow_mut::<EventQueue<E>>()
+        res.try_write::<EventQueue<E>>()
             .receive_cb(&self.receiver, |e| trace!("Received {:?}", e))
     }
 }
