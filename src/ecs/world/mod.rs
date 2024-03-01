@@ -99,19 +99,19 @@ impl World {
     }
 
     /// Borrows the requested resource.
-    pub fn try_read<R>(&self) -> MappedRwLockReadGuard<R>
+    pub fn read<R>(&self) -> MappedRwLockReadGuard<R>
     where
         R: Resource,
     {
-        self.resources.try_read::<R>()
+        self.resources.read::<R>()
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
-    pub fn try_write<R>(&self) -> MappedRwLockWriteGuard<R>
+    pub fn write<R>(&self) -> MappedRwLockWriteGuard<R>
     where
         R: Resource,
     {
-        self.resources.try_write::<R>()
+        self.resources.write::<R>()
     }
 
     /// Create a new `Entity`.
@@ -127,11 +127,11 @@ impl World {
         self.resources.get_mut::<C::Storage>().insert(entity, component);
     }
 
-    pub fn try_read_components<C>(&self) -> MappedRwLockReadGuard<C::Storage>
+    pub fn read_components<C>(&self) -> MappedRwLockReadGuard<C::Storage>
     where
         C: Component,
     {
-        self.resources.try_read_components::<C>()
+        self.resources.read_components::<C>()
     }
 
     pub fn get_components_mut<C>(&mut self) -> &mut C::Storage

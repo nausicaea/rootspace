@@ -25,7 +25,7 @@ impl PrivLoadAsset for Texture {
         let f = std::fs::File::open(path)?;
         let img = image::load(std::io::BufReader::new(f), image_format)?;
 
-        let mut gfx = res.try_write::<Graphics>();
+        let mut gfx = res.write::<Graphics>();
         let texture = gfx.create_texture().with_image(img).submit();
         let view = gfx.create_texture_view(None, texture);
         let sampler = gfx.create_sampler().submit();

@@ -47,7 +47,7 @@ impl WithResources for ForceShutdown {
             }
         }
 
-        let receiver = res.try_write::<EventQueue<WindowEvent>>().subscribe::<Self>();
+        let receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
 
         Ok(ForceShutdown {
             ctrlc_triggered,
@@ -61,17 +61,17 @@ impl System for ForceShutdown {
     async fn run(&mut self, res: &Resources, _: Duration, _: Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             debug!("Recently caught a termination signal");
-            res.try_write::<EventQueue<EngineEvent>>()
+            res.write::<EventQueue<EngineEvent>>()
                 .send(EngineEvent::AbortRequested);
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
 
-        let events = res.try_write::<EventQueue<WindowEvent>>().receive(&self.receiver);
+        let events = res.write::<EventQueue<WindowEvent>>().receive(&self.receiver);
         for event in events {
             match event {
                 WindowEvent::CloseRequested => {
                     debug!("User requested abort by closing the window");
-                    res.try_write::<EventQueue<EngineEvent>>()
+                    res.write::<EventQueue<EngineEvent>>()
                         .send(EngineEvent::AbortRequested);
                 }
                 WindowEvent::KeyboardInput {
@@ -84,7 +84,7 @@ impl System for ForceShutdown {
                     ..
                 } => {
                     debug!("User requested abort by pressing Q");
-                    res.try_write::<EventQueue<EngineEvent>>()
+                    res.write::<EventQueue<EngineEvent>>()
                         .send(EngineEvent::AbortRequested);
                 }
                 _ => (),

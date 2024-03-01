@@ -35,10 +35,10 @@ macro_rules! impl_iter_ref {
             )*
         {
             $(
-                let $type = self.try_read::<$type::Storage>();
+                let $type = self.read::<$type::Storage>();
             )*
             $(
-                let $type_mut = self.try_write::<$type_mut::Storage>();
+                let $type_mut = self.write::<$type_mut::Storage>();
             )*
 
             $crate::ecs::storage::iterators::$iter::new($($type,)* $($type_mut,)*)
@@ -137,41 +137,37 @@ impl Resources {
     }
 
     /// Borrows the requested resource.
-    pub fn try_read<R>(&self) -> MappedRwLockReadGuard<R>
+    pub fn read<R>(&self) -> MappedRwLockReadGuard<R>
     where
         R: Resource,
     {
         self.0
             .get(&TypeId::of::<R>())
-            .ok_or(ResourcesError::NoSuchTypeFound)
-            .and_then(|r| {
-                r.try_read()
-                    .map(|r| RwLockReadGuard::map(r, |i| {
-                        i.downcast_ref::<R>().unwrap_or_else(|| {
-                            panic!("Could not downcast the requested resource to type {}", type_name::<R>())
-                        })
-                    }))
-                    .ok_or(ResourcesError::RwLockReadError)
+            .ok_or(NoSuchTypeFound)
+            .map(|r| {
+                RwLockReadGuard::map(r.read(), |i| {
+                    i.downcast_ref::<R>().unwrap_or_else(|| {
+                        panic!("Could not downcast the requested resource to type {}", type_name::<R>())
+                    })
+                })
             })
             .unwrap_or_else(|e| panic!("Unable to acquire read access to resource {}: {}", type_name::<R>(), e))
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
-    pub fn try_write<R>(&self) -> MappedRwLockWriteGuard<R>
+    pub fn write<R>(&self) -> MappedRwLockWriteGuard<R>
     where
         R: Resource,
     {
         self.0
             .get(&TypeId::of::<R>())
-            .ok_or(ResourcesError::NoSuchTypeFound)
-            .and_then(|r| {
-                r.try_write()
-                    .map(|r| RwLockWriteGuard::map(r, |i| {
-                        i.downcast_mut::<R>().unwrap_or_else(|| {
-                            panic!("Could not downcast the requested resource to type {}", type_name::<R>())
-                        })
-                    }))
-                    .ok_or(ResourcesError::RwLockWriteError)
+            .ok_or(NoSuchTypeFound)
+            .map(|r| {
+                RwLockWriteGuard::map(r.write(), |i| {
+                    i.downcast_mut::<R>().unwrap_or_else(|| {
+                        panic!("Could not downcast the requested resource to type {}", type_name::<R>())
+                    })
+                })
             })
             .unwrap_or_else(|e| panic!("Unable to acquire write access to resource {}: {}", type_name::<R>(), e))
     }
@@ -192,20 +188,20 @@ impl Resources {
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
-    pub fn try_read_components<C>(&self) -> MappedRwLockReadGuard<C::Storage>
+    pub fn read_components<C>(&self) -> MappedRwLockReadGuard<C::Storage>
     where
         C: Component,
     {
-        self.try_read::<C::Storage>()
+        self.read::<C::Storage>()
     }
 
     /// Mutably borrows the requested component storage (this is a convenience method to
     /// `borrow_mut`).
-    pub fn try_write_components<C>(&self) -> MappedRwLockWriteGuard<C::Storage>
+    pub fn write_components<C>(&self) -> MappedRwLockWriteGuard<C::Storage>
     where
         C: Component,
     {
-        self.try_write::<C::Storage>()
+        self.write::<C::Storage>()
     }
 
     /// Mutably borrows the requested component storage (with a compile-time borrow check).
@@ -236,15 +232,9 @@ impl std::fmt::Debug for Resources {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-enum ResourcesError {
-    #[error("Could not find any resource of the requested type")]
-    NoSuchTypeFound,
-    #[error("Could not acquire a read lock for the requested resource")]
-    RwLockReadError,
-    #[error("Could not acquire a write lock for the requested resource")]
-    RwLockWriteError
-}
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+#[error("Could not find any resource of the requested type")]
+struct NoSuchTypeFound;
 
 #[cfg(test)]
 mod tests {
@@ -285,10 +275,10 @@ mod tests {
     }
 
     #[test]
-    fn try_read() {
+    fn read() {
         let mut resources = Resources::default();
         resources.insert(TestResourceA::default());
 
-        let _: MappedRwLockReadGuard<TestResourceA> = resources.try_read();
+        let _: MappedRwLockReadGuard<TestResourceA> = resources.read();
     }
 }

@@ -19,7 +19,7 @@ pub struct CameraManager {
 
 impl WithResources for CameraManager {
     async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
-        let receiver = res.try_write::<EventQueue<WindowEvent>>().subscribe::<Self>();
+        let receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
 
         Ok(CameraManager { receiver })
     }
@@ -29,7 +29,7 @@ impl CameraManager {
     fn on_resize(&self, res: &Resources, dims: (u32, u32)) {
         debug!("Updating the camera dimensions (dims={:?})", dims);
 
-        res.try_write_components::<Camera>()
+        res.write_components::<Camera>()
             .iter_mut()
             .for_each(|c| c.set_dimensions(dims));
     }
@@ -38,11 +38,11 @@ impl CameraManager {
 #[async_trait]
 impl System for CameraManager {
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
-        let events = res.try_write::<EventQueue<WindowEvent>>().receive(&self.receiver);
+        let events = res.write::<EventQueue<WindowEvent>>().receive(&self.receiver);
         for event in events {
             match event {
                 WindowEvent::Resized(dims) => {
-                    let max_dims = res.try_read::<Graphics>().max_window_size();
+                    let max_dims = res.read::<Graphics>().max_window_size();
                     if dims.width <= max_dims.width && dims.height <= max_dims.height {
                         self.on_resize(res, (dims.width, dims.height))
                     }

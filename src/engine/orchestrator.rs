@@ -52,7 +52,7 @@ impl Orchestrator {
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
         world
-            .try_read::<AssetDatabase>()
+            .read::<AssetDatabase>()
             .load_asset::<Scene, _>(world.resources(), "scenes", deps.main_scene())
             .await?;
 
@@ -87,7 +87,7 @@ impl Orchestrator {
             log::trace!("Event trace: {:?}", &event);
         }
 
-        let main_window_id = self.world.try_read::<Graphics>().window_id();
+        let main_window_id = self.world.read::<Graphics>().window_id();
         match event {
             Event::WindowEvent {
                 window_id,
@@ -166,7 +166,7 @@ impl Orchestrator {
             }
         }
 
-        self.world.try_read::<Graphics>().request_redraw();
+        self.world.read::<Graphics>().request_redraw();
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {

@@ -30,7 +30,7 @@ impl Scene {
     }
 
     pub async fn load_additive(self, res: &Resources) -> Result<(), anyhow::Error> {
-        let map = self.load_hierarchy_additive(&mut res.try_write(), &mut res.try_write());
+        let map = self.load_hierarchy_additive(&mut res.write(), &mut res.write());
 
         if let Err(e) = self.load_components_additive(&map, res).await {
             Self::unload_entities(res, map.values());
@@ -41,8 +41,8 @@ impl Scene {
     }
 
     fn unload_entities<'a, I: IntoIterator<Item = &'a Index>>(res: &Resources, iter: I) {
-        let mut entities = res.try_write::<Entities>();
-        let mut hierarchy = res.try_write::<Hierarchy<Index>>();
+        let mut entities = res.write::<Entities>();
+        let mut hierarchy = res.write::<Hierarchy<Index>>();
         for &i_new in iter {
             entities.destroy(i_new);
             hierarchy.remove(i_new);
@@ -79,17 +79,17 @@ impl Scene {
     async fn load_components_additive(&self, map: &BTreeMap<Index, Index>, res: &Resources) -> Result<(), anyhow::Error> {
         for (&i_prev, &i_new) in map {
             if let Some(camera) = self.cameras.get(&i_prev).cloned() {
-                res.try_write_components::<Camera>().insert(i_new, camera);
+                res.write_components::<Camera>().insert(i_new, camera);
             }
 
             if let Some(transform) = self.transforms.get(&i_prev).cloned() {
-                res.try_write_components::<Transform>().insert(i_new, transform);
+                res.write_components::<Transform>().insert(i_new, transform);
             }
 
             if let Some(renderable_source) = self.renderables.get(&i_prev) {
                 match renderable_source {
                     RenderableSource::Model { group, name } => {
-                        let path = res.try_read::<AssetDatabase>().find_asset(group, name).with_context(|| {
+                        let path = res.read::<AssetDatabase>().find_asset(group, name).with_context(|| {
                             format!("trying to find the path of asset '{}' in group '{}'", name, group)
                         })?;
                         let model = Model::with_path(res, &path).await.with_context(|| {
@@ -100,7 +100,7 @@ impl Scene {
                             )
                         })?;
                         let renderable = Renderable(model);
-                        res.try_write_components::<Renderable>().insert(i_new, renderable);
+                        res.write_components::<Renderable>().insert(i_new, renderable);
                     }
                 }
             }
