@@ -4,6 +4,7 @@ use std::{
 use std::sync::Arc;
 use async_std::task::spawn;
 use futures::future::join_all;
+use futures::{Stream, StreamExt};
 use futures::stream::FuturesUnordered;
 
 use log::debug;
@@ -177,26 +178,26 @@ impl World {
     }
 
     async fn run_systems_parallel(systems: &Systems, resources: &Arc<Resources>, t: Duration, dt: Duration) {
-        let fut = systems.into_iter()
+        let mut fut = systems.into_iter()
             .map(|s| {
                 let r = resources.clone();
                 spawn(async move {
                     s.lock().await.run(&r, t, dt).await
                 })
             })
-            .collect::<Vec<_>>();
+            .collect::<FuturesUnordered<_>>();
 
-        join_all(fut).await;
+        while let Some(()) = fut.next().await {}
     }
 
     async fn run_systems_concurrent(systems: &Systems, resources: &Arc<Resources>, t: Duration, dt: Duration) {
-        let join_handles = systems.into_iter()
+        let mut fut = systems.into_iter()
             .map(|s| { async move {
                 s.lock().await.run(&resources.clone(), t, dt).await
             }})
-            .collect::<Vec<_>>();
+            .collect::<FuturesUnordered<_>>();
 
-        join_all(join_handles).await;
+        while let Some(()) = fut.next().await {}
     }
 
     fn on_create_entity(&mut self) {
