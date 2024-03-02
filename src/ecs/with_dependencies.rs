@@ -1,3 +1,3 @@
 pub trait WithDependencies<D>: Sized {
-    async fn with_deps(deps: &D) -> Result<Self, anyhow::Error>;
+    fn with_deps(deps: &D) -> impl std::future::Future<Output = Result<Self, anyhow::Error>>;
 }
