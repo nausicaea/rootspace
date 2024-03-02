@@ -2082,6 +2082,7 @@ dependencies = [
  "downcast-rs",
  "either",
  "env_logger",
+ "futures",
  "image",
  "lazy_static",
  "log",
