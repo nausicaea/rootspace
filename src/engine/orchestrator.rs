@@ -31,7 +31,7 @@ use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
 use crate::engine::systems::renderer::Renderer;
 
-const DEBUG_INTERVAL: Duration = Duration::from_secs(15);
+const STATS_DISPLAY_INTERVAL: Duration = Duration::from_secs(15);
 const DELTA_TIME: Duration = Duration::from_millis(50);
 const MAX_LOOP_DURATION: Duration = Duration::from_millis(250);
 const MIN_LOOP_DURATION: Duration = Duration::from_millis(32);
@@ -68,7 +68,7 @@ impl Orchestrator {
                 delta_time: deps.delta_time(),
                 max_loop_duration: deps.max_loop_duration(),
                 min_loop_duration: deps.min_loop_duration(),
-                debug_interval: deps.debug_interval(),
+                stats_display_interval: deps.stats_display_interval(),
                 ..Default::default()
             },
             world_event_receiver,
@@ -177,8 +177,8 @@ impl Orchestrator {
         }
 
         #[cfg(feature = "dbg-loop")]
-        if self.timers.debug_time.elapsed() >= self.timers.debug_interval {
-            self.timers.debug_time = Instant::now();
+        if self.timers.last_stats_display.elapsed() >= self.timers.stats_display_interval {
+            self.timers.last_stats_display = Instant::now();
             log::info!("{}", self.world.read::<Statistics>());
         }
 
@@ -230,8 +230,8 @@ pub trait OrchestratorDeps {
         DELTA_TIME
     }
 
-    /// Specifies the interval at which debug information is shown (only applies with feature 'dbg-loop')
-    fn debug_interval(&self) -> Duration { DEBUG_INTERVAL }
+    /// Specifies the interval at which stats information is shown (only applies with feature 'dbg-loop')
+    fn stats_display_interval(&self) -> Duration { STATS_DISPLAY_INTERVAL }
 }
 
 #[derive(Debug)]
@@ -243,8 +243,8 @@ struct Timers {
     delta_time: Duration,
     max_loop_duration: Duration,
     min_loop_duration: Duration,
-    debug_time: Instant,
-    debug_interval: Duration,
+    last_stats_display: Instant,
+    stats_display_interval: Duration,
 }
 
 impl Default for Timers {
@@ -257,8 +257,8 @@ impl Default for Timers {
             delta_time: DELTA_TIME,
             max_loop_duration: MAX_LOOP_DURATION,
             min_loop_duration: MIN_LOOP_DURATION,
-            debug_time: Instant::now(),
-            debug_interval: DEBUG_INTERVAL,
+            last_stats_display: Instant::now(),
+            stats_display_interval: STATS_DISPLAY_INTERVAL,
         }
     }
 }
