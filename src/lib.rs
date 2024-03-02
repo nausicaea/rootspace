@@ -1,3 +1,5 @@
+#![warn(clippy::unwrap_used)]
+
 pub mod ecs;
 pub mod engine;
 mod file_manipulation;

@@ -1,10 +1,11 @@
-use std::any::{Any};
-use std::slice::{Iter, IterMut};
+use std::iter::FusedIterator;
+use std::sync::Arc;
+use async_std::sync::Mutex;
 
 use super::{registry::SystemRegistry, resources::Resources, system::System, with_resources::WithResources};
 
 #[derive(Default)]
-pub struct Systems(Vec<Box<dyn System>>);
+pub struct Systems(Vec<Arc<Mutex<Box<dyn System>>>>);
 
 impl Systems {
     pub fn with_capacity(cap: usize) -> Self {
@@ -40,13 +41,6 @@ impl Systems {
         self.0.is_empty()
     }
 
-    pub fn contains<S>(&self) -> bool
-    where
-        S: System,
-    {
-        self.0.iter().any(|s| s.type_id() == std::any::TypeId::of::<S>())
-    }
-
     pub fn clear(&mut self) {
         self.0.clear()
     }
@@ -55,48 +49,74 @@ impl Systems {
     where
         S: System,
     {
-        self.0.push(Box::new(sys))
+        self.0.push(Arc::new(Mutex::new(Box::new(sys))))
     }
 
-    pub fn iter(&self) -> Iter<'_, Box<dyn System>> {
-        self.into_iter()
-    }
-
-    pub fn iter_mut(&mut self) -> IterMut<'_, Box<dyn System>> {
+    pub fn iter(&self) -> SystemsIter {
         self.into_iter()
     }
 }
 
-impl<'a> IntoIterator for &'a Systems {
-    type Item = &'a Box<dyn System>;
-    type IntoIter = Iter<'a, Box<dyn System>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        (&self.0).iter()
-    }
-}
-
-impl<'a> IntoIterator for &'a mut Systems {
-    type Item = &'a mut Box<dyn System>;
-    type IntoIter = IterMut<'a, Box<dyn System>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        (&mut self.0).iter_mut()
-    }
-}
-
-impl PartialEq for Systems {
-    fn eq(&self, rhs: &Self) -> bool {
-        if self.len() != rhs.len() {
-            return false;
-        }
-
-        self.0.iter().zip(rhs).all(|(lhs, rhs)| lhs.name() == rhs.name())
-    }
-}
+// impl PartialEq for Systems {
+//     fn eq(&self, rhs: &Self) -> bool {
+//         if self.len() != rhs.len() {
+//             return false;
+//         }
+//
+//         self.0.iter().zip(rhs).all(|(lhs, rhs)| lhs.name() == rhs.name())
+//     }
+// }
 
 impl std::fmt::Debug for Systems {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "System(#{})", self.0.len())
     }
 }
+
+impl<'a> IntoIterator for &'a Systems {
+    type Item = <SystemsIter<'a> as Iterator>::Item;
+    type IntoIter = SystemsIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        SystemsIter::new(self)
+    }
+}
+
+pub struct SystemsIter<'a> {
+    length: usize,
+    cursor: usize,
+    systems: &'a Systems,
+}
+
+impl<'a> SystemsIter<'a> {
+    fn new(systems: &'a Systems) -> Self {
+        SystemsIter {
+            length: systems.0.len(),
+            cursor: 0,
+            systems,
+        }
+    }
+}
+
+impl<'a> Iterator for SystemsIter<'a> {
+    type Item = Arc<Mutex<Box<dyn System>>>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.cursor >= self.length {
+            return None
+        }
+
+        let arc = self.systems.0[self.cursor].clone();
+        self.cursor += 1;
+        Some(arc)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let rest = self.length.saturating_sub(self.cursor);
+        (rest, Some(rest))
+    }
+}
+
+impl<'a> ExactSizeIterator for SystemsIter<'a> {}
+
+impl<'a> FusedIterator for SystemsIter<'a> {}

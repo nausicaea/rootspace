@@ -7,7 +7,7 @@ use super::resources::Resources;
 
 /// Encodes a system or behaviour.
 #[async_trait]
-pub trait System: 'static {
+pub trait System: 'static + Sync + Send {
     /// Return the system's name.
     fn name(&self) -> &'static str {
         std::any::type_name::<Self>()

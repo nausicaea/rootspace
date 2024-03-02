@@ -1,6 +1,10 @@
 use std::{
     time::Duration,
 };
+use std::sync::Arc;
+use async_std::task::spawn;
+use futures::future::join_all;
+use futures::stream::FuturesUnordered;
 
 use log::debug;
 use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard};
@@ -30,7 +34,7 @@ pub(crate) mod type_registry;
 /// A World must perform actions for four types of calls that each allow a subset of the registered
 /// systems to operate on the stored resources, components and entities.
 pub struct World {
-    resources: Resources,
+    resources: Arc<Resources>,
     fixed_update_systems: Systems,
     update_systems: Systems,
     render_systems: Systems,
@@ -54,7 +58,7 @@ impl World {
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
         Ok(World {
-            resources,
+            resources: Arc::new(resources),
             fixed_update_systems,
             update_systems,
             render_systems,
@@ -64,22 +68,6 @@ impl World {
 
     pub fn resources(&self) -> &Resources {
         &self.resources
-    }
-
-    /// Insert a new resource.
-    pub fn insert<R>(&mut self, res: R)
-    where
-        R: Resource,
-    {
-        self.resources.insert(res)
-    }
-
-    /// Removes the resource of the specified type.
-    pub fn remove<R>(&mut self)
-    where
-        R: Resource,
-    {
-        self.resources.remove::<R>()
     }
 
     /// Returns `true` if a resource of the specified type is present.
@@ -95,7 +83,7 @@ impl World {
     where
         R: Resource,
     {
-        self.resources.get_mut::<R>()
+        Arc::get_mut(&mut self.resources).unwrap().get_mut::<R>()
     }
 
     /// Borrows the requested resource.
@@ -114,43 +102,11 @@ impl World {
         self.resources.write::<R>()
     }
 
-    /// Create a new `Entity`.
-    pub fn create_entity(&mut self) -> Entity {
-        self.resources.get_mut::<Entities>().create()
-    }
-
-    /// Add a component to the specified `Entity`.
-    pub fn insert_component<C>(&mut self, entity: Entity, component: C)
-    where
-        C: Component,
-    {
-        self.resources.get_mut::<C::Storage>().insert(entity, component);
-    }
-
-    pub fn read_components<C>(&self) -> MappedRwLockReadGuard<C::Storage>
-    where
-        C: Component,
-    {
-        self.resources.read_components::<C>()
-    }
-
     pub fn get_components_mut<C>(&mut self) -> &mut C::Storage
     where
         C: Component,
     {
-        self.resources.get_components_mut::<C>()
-    }
-
-    /// Add the specified system to the specified loop stage.
-    pub fn add_system<S>(&mut self, stage: LoopStage, system: S)
-    where
-        S: System,
-    {
-        match stage {
-            LoopStage::FixedUpdate => self.fixed_update_systems.insert(system),
-            LoopStage::Update => self.update_systems.insert(system),
-            LoopStage::Render => self.render_systems.insert(system),
-        }
+        Arc::get_mut(&mut self.resources).unwrap().get_components_mut::<C>()
     }
 
     /// The fixed update method is supposed to be called from the main loop at fixed time
@@ -161,9 +117,7 @@ impl World {
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `fixed_update`.
     pub async fn fixed_update(&mut self, t: Duration, dt: Duration) {
-        for system in self.fixed_update_systems.iter_mut() {
-            system.run(&self.resources, t, dt).await;
-        }
+        World::run_systems_parallel(&self.fixed_update_systems, &self.resources, t, dt).await
     }
 
     /// The dynamic update method is supposed to be called from the main loop just before the
@@ -174,9 +128,7 @@ impl World {
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `update`.
     pub async fn update(&mut self, t: Duration, dt: Duration) {
-        for system in self.update_systems.iter_mut() {
-            system.run(&self.resources, t, dt).await;
-        }
+        World::run_systems_parallel(&self.update_systems, &self.resources, t, dt).await
     }
 
     /// The render method is supposed to be called when a re-draw of the graphical representation
@@ -187,9 +139,7 @@ impl World {
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `render`.
     pub async fn render(&mut self, t: Duration, dt: Duration) {
-        for system in self.render_systems.iter_mut() {
-            system.run(&self.resources, t, dt).await;
-        }
+        World::run_systems_concurrent(&self.render_systems, &self.resources, t, dt).await
     }
 
     /// This method is supposed to be called when pending events or messages should be
@@ -198,8 +148,9 @@ impl World {
     /// main loop shall continue, otherwise it shall abort.
     pub fn maintain(&mut self) -> LoopControl {
         // Receive all pending events
-        let events = self
-            .resources
+        let events = Arc::get_mut(&mut self
+            .resources)
+            .unwrap()
             .get_mut::<EventQueue<WorldEvent>>()
             .receive(&self.receiver);
 
@@ -222,21 +173,44 @@ impl World {
         self.render_systems.clear();
         self.update_systems.clear();
         self.fixed_update_systems.clear();
-        self.resources.clear();
+        Arc::get_mut(&mut self.resources).unwrap().clear();
+    }
+
+    async fn run_systems_parallel(systems: &Systems, resources: &Arc<Resources>, t: Duration, dt: Duration) {
+        let fut = systems.into_iter()
+            .map(|s| {
+                let r = resources.clone();
+                spawn(async move {
+                    s.lock().await.run(&r, t, dt).await
+                })
+            })
+            .collect::<Vec<_>>();
+
+        join_all(fut).await;
+    }
+
+    async fn run_systems_concurrent(systems: &Systems, resources: &Arc<Resources>, t: Duration, dt: Duration) {
+        let join_handles = systems.into_iter()
+            .map(|s| { async move {
+                s.lock().await.run(&resources.clone(), t, dt).await
+            }})
+            .collect::<Vec<_>>();
+
+        join_all(join_handles).await;
     }
 
     fn on_create_entity(&mut self) {
-        let entity = self.resources.get_mut::<Entities>().create();
+        let entity = self.get_mut::<Entities>().create();
         debug!("Created the entity {}", entity.idx());
-        self.resources
+        self
             .get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::EntityCreated(entity));
     }
 
     fn on_destroy_entity(&mut self, entity: Entity) {
-        self.resources.get_mut::<Entities>().destroy(entity);
+        self.get_mut::<Entities>().destroy(entity);
         debug!("Destroyed the entity {}", entity);
-        self.resources
+        self
             .get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::EntityDestroyed(entity));
     }
