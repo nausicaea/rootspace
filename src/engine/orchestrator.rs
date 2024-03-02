@@ -1,5 +1,6 @@
 use std::time::{Duration, Instant};
 use async_std::task::block_on;
+use log::{info, trace};
 
 use winit::{event::Event, event_loop::EventLoopWindowTarget};
 
@@ -28,8 +29,9 @@ use crate::engine::resources::statistics::Statistics;
 use crate::trace_loop;
 use winit::event::WindowEvent;
 
-const DELTA_TIME: u64 = 50; // milliseconds
-const MAX_FRAME_DURATION: u64 = 250; // milliseconds
+const DEBUG_INTERVAL: Duration = Duration::from_secs(15);
+const DELTA_TIME: Duration = Duration::from_millis(50);
+const MAX_FRAME_DURATION: Duration = Duration::from_millis(250);
 
 pub struct Orchestrator {
     world: World,
@@ -58,7 +60,12 @@ impl Orchestrator {
 
         Ok(Orchestrator {
             world,
-            timers: Timers::default(),
+            timers: Timers {
+                delta_time: deps.delta_time(),
+                max_frame_duration: deps.max_frame_duration(),
+                debug_interval: deps.debug_interval(),
+                ..Default::default()
+            },
             world_event_receiver,
             engine_event_receiver,
         })
@@ -77,14 +84,14 @@ impl Orchestrator {
         {
             match &event {
                 Event::NewEvents(_) => {
-                    log::trace!("⬇");
+                    trace!("⬇");
                 }
                 Event::AboutToWait | Event::LoopExiting => {
                     draw_bottom = true;
                 }
                 _ => (),
             }
-            log::trace!("Event trace: {:?}", &event);
+            trace!("Event trace: {:?}", &event);
         }
 
         let main_window_id = self.world.read::<Graphics>().window_id();
@@ -103,7 +110,7 @@ impl Orchestrator {
 
         #[cfg(feature = "dbg-loop")]
         if draw_bottom {
-            log::trace!("⬆\n\n");
+            trace!("⬆\n\n");
         }
     }
 
@@ -166,11 +173,17 @@ impl Orchestrator {
             }
         }
 
+        #[cfg(feature = "dbg-loop")]
+        if self.timers.debug_time.elapsed() >= self.timers.debug_interval {
+            self.timers.debug_time = Instant::now();
+            let stats = self.world.read::<Statistics>();
+            info!("{}", stats);
+        }
         self.world.read::<Graphics>().request_redraw();
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {
-        log::trace!("Removing entity from components Status, Info, Transform, UiTransform, Renderable");
+        trace!("Removing entity from components Status, Info, Transform, UiTransform, Renderable");
         self.world.get_components_mut::<Camera>().remove(entity);
         self.world.get_components_mut::<Status>().remove(entity);
         self.world.get_components_mut::<Info>().remove(entity);
@@ -196,6 +209,19 @@ pub trait OrchestratorDeps {
     fn scene_group(&self) -> &str {
         "scenes"
     }
+
+    /// Specifies the upper bound for the duration of a frame
+    fn max_frame_duration(&self) -> Duration {
+        MAX_FRAME_DURATION
+    }
+
+    /// Specifies the fixed time interval
+    fn delta_time(&self) -> Duration {
+        DELTA_TIME
+    }
+
+    /// Specifies the interval at which debug information is shown (only applies with feature 'dbg-loop')
+    fn debug_interval(&self) -> Duration { DEBUG_INTERVAL }
 }
 
 #[derive(Debug)]
@@ -206,6 +232,8 @@ struct Timers {
     fixed_game_time: Duration,
     delta_time: Duration,
     max_frame_duration: Duration,
+    debug_time: Instant,
+    debug_interval: Duration,
 }
 
 impl Default for Timers {
@@ -215,8 +243,10 @@ impl Default for Timers {
             accumulator: Duration::default(),
             dynamic_game_time: Duration::default(),
             fixed_game_time: Duration::default(),
-            delta_time: Duration::from_millis(DELTA_TIME),
-            max_frame_duration: Duration::from_millis(MAX_FRAME_DURATION),
+            delta_time: DELTA_TIME,
+            max_frame_duration: MAX_FRAME_DURATION,
+            debug_time: Instant::now(),
+            debug_interval: DEBUG_INTERVAL,
         }
     }
 }

@@ -1,4 +1,5 @@
 use std::{collections::VecDeque, time::Duration};
+use std::fmt::{Display, Formatter};
 
 use crate::ecs::resource::Resource;
 use crate::ecs::with_dependencies::WithDependencies;
@@ -19,19 +20,19 @@ pub struct Statistics {
 }
 
 impl Statistics {
-    pub fn average_world_draw_calls(&self) -> f32 {
+    pub fn mean_world_draw_calls(&self) -> f32 {
         self.draw_calls.iter().map(|(wdc, _)| wdc).sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
     }
 
-    pub fn average_ui_draw_calls(&self) -> f32 {
+    pub fn mean_ui_draw_calls(&self) -> f32 {
         self.draw_calls.iter().map(|(_, udc)| udc).sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
     }
 
-    pub fn average_frame_time(&self) -> Duration {
+    pub fn mean_frame_time(&self) -> Duration {
         self.frame_times.iter().sum::<Duration>() / FRAME_TIME_WINDOW as u32
     }
 
-    pub fn average_loop_time(&self) -> Duration {
+    pub fn mean_loop_time(&self) -> Duration {
         self.loop_times.iter().sum::<Duration>() / LOOP_TIME_WINDOW as u32
     }
 
@@ -64,6 +65,16 @@ impl Default for Statistics {
             frame_times: VecDeque::with_capacity(FRAME_TIME_WINDOW),
             loop_times: VecDeque::with_capacity(LOOP_TIME_WINDOW),
         }
+    }
+}
+
+impl Display for Statistics {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Loop and Render Stats:\nWorld Draw Calls (mean): {}\nFrame Time (mean): {} ms\nLoop Time (mean): {} ms\n\n",
+            self.mean_world_draw_calls(),
+            self.mean_frame_time().as_millis(),
+            self.mean_loop_time().as_millis(),
+        )
     }
 }
 
