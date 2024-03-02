@@ -28,6 +28,8 @@ use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
 use crate::engine::resources::statistics::Statistics;
 use crate::trace_loop;
 use winit::event::WindowEvent;
+use crate::ecs::system::System;
+use crate::engine::systems::renderer::Renderer;
 
 const DEBUG_INTERVAL: Duration = Duration::from_secs(15);
 const DELTA_TIME: Duration = Duration::from_millis(50);
@@ -41,15 +43,14 @@ pub struct Orchestrator {
 }
 
 impl Orchestrator {
-    pub async fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error>
+    pub async fn with_dependencies<RR, FUSR, USR, D>(deps: &D) -> Result<Self, anyhow::Error>
     where
         RR: ResourceRegistry + WithDependencies<D>,
         FUSR: SystemRegistry + WithResources,
         USR: SystemRegistry + WithResources,
-        RSR: SystemRegistry + WithResources,
         D: GraphicsDeps + AssetDatabaseDeps + OrchestratorDeps,
     {
-        let mut world = World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, RSRegistry<RSR>, _>(deps).await?;
+        let mut world = World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, Renderer, _>(deps).await?;
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 

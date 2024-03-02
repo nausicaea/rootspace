@@ -60,7 +60,7 @@ async fn async_main() -> anyhow::Result<()> {
         graphics_settings: Settings::default(),
     };
 
-    let state = Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps).await?;
+    let state = Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], _>(&deps).await?;
 
     event_loop.run(state.start())?;
 

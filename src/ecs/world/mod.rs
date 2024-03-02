@@ -38,23 +38,23 @@ pub struct World {
     resources: Arc<Resources>,
     fixed_update_systems: Systems,
     update_systems: Systems,
-    render_systems: Systems,
+    render_system: Box<dyn System>,
     receiver: ReceiverId<WorldEvent>,
 }
 
 impl World {
-    pub async fn with_dependencies<RR, FUSR, USR, RSR, D>(deps: &D) -> Result<Self, anyhow::Error>
+    pub async fn with_dependencies<RR, FUSR, USR, RS, D>(deps: &D) -> Result<Self, anyhow::Error>
     where
         RR: ResourceRegistry + WithDependencies<D>,
         FUSR: SystemRegistry + WithResources,
         USR: SystemRegistry + WithResources,
-        RSR: SystemRegistry + WithResources,
+        RS: System + WithResources,
     {
         let mut resources = Resources::with_dependencies::<ResourceTypes<RR>, D>(deps).await?;
 
         let fixed_update_systems = Systems::with_resources::<FUSR>(&resources).await?;
         let update_systems = Systems::with_resources::<USR>(&resources).await?;
-        let render_systems = Systems::with_resources::<RSR>(&resources).await?;
+        let render_system = RS::with_res(&resources).await?;
 
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
@@ -62,7 +62,7 @@ impl World {
             resources: Arc::new(resources),
             fixed_update_systems,
             update_systems,
-            render_systems,
+            render_system: Box::new(render_system),
             receiver,
         })
     }
@@ -140,7 +140,7 @@ impl World {
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `render`.
     pub async fn render(&mut self, t: Duration, dt: Duration) {
-        World::run_systems_concurrent(&self.render_systems, &self.resources, t, dt).await
+        self.render_system.run(&self.resources, t, dt).await;
     }
 
     /// This method is supposed to be called when pending events or messages should be
@@ -171,7 +171,6 @@ impl World {
     }
 
     pub fn clear(&mut self) {
-        self.render_systems.clear();
         self.update_systems.clear();
         self.fixed_update_systems.clear();
         Arc::get_mut(&mut self.resources).unwrap().clear();
@@ -221,11 +220,10 @@ impl std::fmt::Debug for World {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "World {{ resources: {:?}, fixed_update_systems: {:?}, update_systems: {:?}, render_systems: {:?}, receiver: {:?} }}",
+            "World {{ resources: {:?}, fixed_update_systems: {:?}, update_systems: {:?}, receiver: {:?} }}",
             self.resources,
             self.fixed_update_systems,
             self.update_systems,
-            self.render_systems,
             self.receiver,
         )
     }
