@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use crate::ecs::component::Component;
 use crate::ecs::entity::index::Index;
 use anyhow::Context;
@@ -23,6 +23,7 @@ use crate::engine::resources::graphics::encoder::RenderPass;
 use crate::engine::resources::graphics::ids::{BindGroupId, BufferId, PipelineId};
 use crate::engine::resources::graphics::vertex::Vertex;
 use crate::engine::resources::graphics::{Graphics, TransformWrapper};
+use crate::engine::resources::statistics::Statistics;
 use crate::glamour::mat::Mat4;
 use crate::rose_tree::hierarchy::Hierarchy;
 
@@ -95,6 +96,7 @@ impl Renderer {
             )
         });
 
+        let world_draw_calls = renderables.len();
         for (i, (_, r)) in renderables.into_iter().enumerate() {
             let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset); // first 0x0, then 0x100
             if r.0.materials.is_empty() {
@@ -112,6 +114,7 @@ impl Renderer {
                     .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
             }
         }
+        res.write::<Statistics>().update_draw_calls(world_draw_calls, 0);
     }
 
     fn on_window_resized(&self, res: &Resources, ps: PhysicalSize<u32>) {
@@ -240,6 +243,7 @@ impl WithResources for Renderer {
 #[async_trait]
 impl System for Renderer {
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
+        let frame_start = Instant::now();
         self.handle_events(res);
 
         if !self.renderer_enabled {
@@ -259,6 +263,8 @@ impl System for Renderer {
                 enc.submit();
             }
         }
+
+        res.write::<Statistics>().update_frame_time(frame_start.elapsed());
     }
 }
 
