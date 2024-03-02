@@ -264,7 +264,7 @@ impl System for Renderer {
             }
         }
 
-        res.write::<Statistics>().update_frame_time(frame_start.elapsed());
+        res.write::<Statistics>().update_render_durations(frame_start.elapsed());
     }
 }
 

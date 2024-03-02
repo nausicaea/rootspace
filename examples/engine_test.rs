@@ -5,7 +5,7 @@ use rootspace::engine::resources::asset_database::AssetDatabaseDeps;
 use rootspace::engine::resources::graphics::settings::Settings;
 use rootspace::engine::resources::graphics::GraphicsDeps;
 use rootspace::Reg;
-use winit::event_loop::EventLoop;
+use winit::event_loop::{ControlFlow, EventLoop};
 
 struct Dependencies<'a, T: 'static> {
     event_loop: &'a EventLoop<T>,

@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
-use async_std::task::block_on;
-use log::{info, trace};
+use async_std::task::{block_on, sleep};
+use log::{debug, info, trace};
 
 use winit::{event::Event, event_loop::EventLoopWindowTarget};
 
@@ -28,12 +28,14 @@ use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
 use crate::engine::resources::statistics::Statistics;
 use crate::trace_loop;
 use winit::event::WindowEvent;
+use winit::event_loop::ControlFlow;
 use crate::ecs::system::System;
 use crate::engine::systems::renderer::Renderer;
 
 const DEBUG_INTERVAL: Duration = Duration::from_secs(15);
 const DELTA_TIME: Duration = Duration::from_millis(50);
-const MAX_FRAME_DURATION: Duration = Duration::from_millis(250);
+const MAX_LOOP_DURATION: Duration = Duration::from_millis(250);
+const MIN_LOOP_DURATION: Duration = Duration::from_millis(32);
 
 pub struct Orchestrator {
     world: World,
@@ -50,6 +52,8 @@ impl Orchestrator {
         USR: SystemRegistry + WithResources,
         D: GraphicsDeps + AssetDatabaseDeps + OrchestratorDeps,
     {
+        deps.event_loop().set_control_flow(ControlFlow::Poll);
+
         let mut world = World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, Renderer, _>(deps).await?;
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
@@ -63,7 +67,8 @@ impl Orchestrator {
             world,
             timers: Timers {
                 delta_time: deps.delta_time(),
-                max_frame_duration: deps.max_frame_duration(),
+                max_loop_duration: deps.max_loop_duration(),
+                min_loop_duration: deps.min_loop_duration(),
                 debug_interval: deps.debug_interval(),
                 ..Default::default()
             },
@@ -119,12 +124,11 @@ impl Orchestrator {
     /// [`World::fixed_update`](ecs::world::World::fixed_update)) and render the frame (using
     /// [`World::render`](ecs::world::World::render)).
     async fn redraw(&mut self) {
-        trace_loop!("Redraw executing");
         // Assess the duration of the last frame
-        let frame_time = std::cmp::min(self.timers.loop_time.elapsed(), self.timers.max_frame_duration);
-        self.timers.loop_time = Instant::now();
-        self.timers.accumulator += frame_time;
-        self.timers.dynamic_game_time += frame_time;
+        let loop_time = std::cmp::min(self.timers.last_loop.elapsed(), self.timers.max_loop_duration);
+        self.timers.last_loop = Instant::now();
+        self.timers.accumulator += loop_time;
+        self.timers.dynamic_game_time += loop_time;
 
         // Call fixed update functions until the accumulated time buffer is empty
         while self.timers.accumulator >= self.timers.delta_time {
@@ -135,16 +139,15 @@ impl Orchestrator {
         }
 
         // Call the dynamic update and render functions
-        self.world.update(self.timers.dynamic_game_time, frame_time).await;
-        self.world.render(self.timers.dynamic_game_time, frame_time).await;
+        self.world.update(self.timers.dynamic_game_time, loop_time).await;
+        self.world.render(self.timers.dynamic_game_time, loop_time).await;
 
         // Update the frame time statistics
-        self.world.get_mut::<Statistics>().update_loop_times(frame_time);
+        self.world.get_mut::<Statistics>().update_redraw_intervals(loop_time);
     }
 
     /// Perform maintenance tasks necessary in each game loop iteration
     fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
-        trace_loop!("Running maintenance");
         // Call the maintenance method of [`World`](ecs::World)
         if let LoopControl::Abort = self.world.maintain() {
             event_loop_window_target.exit();
@@ -177,10 +180,12 @@ impl Orchestrator {
         #[cfg(feature = "dbg-loop")]
         if self.timers.debug_time.elapsed() >= self.timers.debug_interval {
             self.timers.debug_time = Instant::now();
-            let stats = self.world.read::<Statistics>();
-            info!("{}", stats);
+            info!("{}", self.world.read::<Statistics>());
         }
-        self.world.read::<Graphics>().request_redraw();
+
+        if self.timers.last_loop.elapsed() >= self.timers.min_loop_duration {
+            self.world.read::<Graphics>().request_redraw();
+        }
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {
@@ -211,9 +216,14 @@ pub trait OrchestratorDeps {
         "scenes"
     }
 
-    /// Specifies the upper bound for the duration of a frame
-    fn max_frame_duration(&self) -> Duration {
-        MAX_FRAME_DURATION
+    /// Specifies the upper bound for the duration of a loop iteration
+    fn max_loop_duration(&self) -> Duration {
+        MAX_LOOP_DURATION
+    }
+
+    /// Specifies the lower bound for the duration of a loop iteration
+    fn min_loop_duration(&self) -> Duration {
+        MIN_LOOP_DURATION
     }
 
     /// Specifies the fixed time interval
@@ -227,12 +237,13 @@ pub trait OrchestratorDeps {
 
 #[derive(Debug)]
 struct Timers {
-    loop_time: Instant,
+    last_loop: Instant,
     accumulator: Duration,
     dynamic_game_time: Duration,
     fixed_game_time: Duration,
     delta_time: Duration,
-    max_frame_duration: Duration,
+    max_loop_duration: Duration,
+    min_loop_duration: Duration,
     debug_time: Instant,
     debug_interval: Duration,
 }
@@ -240,12 +251,13 @@ struct Timers {
 impl Default for Timers {
     fn default() -> Self {
         Timers {
-            loop_time: Instant::now(),
+            last_loop: Instant::now(),
             accumulator: Duration::default(),
             dynamic_game_time: Duration::default(),
             fixed_game_time: Duration::default(),
             delta_time: DELTA_TIME,
-            max_frame_duration: MAX_FRAME_DURATION,
+            max_loop_duration: MAX_LOOP_DURATION,
+            min_loop_duration: MIN_LOOP_DURATION,
             debug_time: Instant::now(),
             debug_interval: DEBUG_INTERVAL,
         }
