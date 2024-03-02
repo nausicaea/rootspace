@@ -217,6 +217,6 @@ mod tests {
     #[async_std::test]
     async fn asset_database_world() {
         let deps = TDeps::default();
-        let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], Reg![], _>(&deps).await.unwrap();
+        let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], (), _>(&deps).await.unwrap();
     }
 }

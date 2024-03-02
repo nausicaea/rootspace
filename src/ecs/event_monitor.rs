@@ -57,7 +57,7 @@ mod tests {
 
     #[async_std::test]
     async fn event_monitor_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![EventMonitor<usize>], Reg![], _>(&())
+        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![EventMonitor<usize>], (), _>(&())
             .await
             .unwrap();
     }

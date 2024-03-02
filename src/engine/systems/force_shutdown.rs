@@ -113,7 +113,7 @@ mod tests {
 
     #[async_std::test]
     async fn force_shutdown_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![ForceShutdown], Reg![], _>(&())
+        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![ForceShutdown], (), _>(&())
             .await
             .unwrap();
     }
