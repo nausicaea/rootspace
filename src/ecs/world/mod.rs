@@ -3,8 +3,8 @@ use std::{
 };
 use std::sync::Arc;
 use async_std::task::spawn;
-use futures::future::join_all;
-use futures::{Stream, StreamExt};
+
+use futures::StreamExt;
 use futures::stream::FuturesUnordered;
 
 use log::debug;
@@ -17,11 +17,9 @@ use super::{
     entity::Entity,
     event_queue::{receiver_id::ReceiverId, EventQueue},
     loop_control::LoopControl,
-    loop_stage::LoopStage,
     registry::{ResourceRegistry, SystemRegistry},
     resource::Resource,
     resources::Resources,
-    storage::Storage,
     system::System,
     systems::Systems,
     with_dependencies::WithDependencies,
@@ -184,16 +182,6 @@ impl World {
                     s.lock().await.run(&r, t, dt).await
                 })
             })
-            .collect::<FuturesUnordered<_>>();
-
-        while let Some(()) = fut.next().await {}
-    }
-
-    async fn run_systems_concurrent(systems: &Systems, resources: &Arc<Resources>, t: Duration, dt: Duration) {
-        let mut fut = systems.into_iter()
-            .map(|s| { async move {
-                s.lock().await.run(&resources.clone(), t, dt).await
-            }})
             .collect::<FuturesUnordered<_>>();
 
         while let Some(()) = fut.next().await {}

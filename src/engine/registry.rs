@@ -44,5 +44,3 @@ pub type USRegistry<D> = RegAdd![
     EventMonitor<WorldEvent>,
     D
 ];
-
-pub type RSRegistry<R> = RegAdd![Renderer, R];

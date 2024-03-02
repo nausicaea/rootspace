@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
-use async_std::task::{block_on, sleep};
-use log::{debug, info, trace};
+use async_std::task::{block_on};
+use log::trace;
 
 use winit::{event::Event, event_loop::EventLoopWindowTarget};
 
@@ -22,14 +22,13 @@ use crate::engine::components::status::Status;
 use crate::engine::components::transform::Transform;
 use crate::engine::components::ui_transform::UiTransform;
 use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::registry::{RRegistry, RSRegistry, USRegistry};
+use crate::engine::registry::{RRegistry, USRegistry};
 use crate::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps};
 use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
 use crate::engine::resources::statistics::Statistics;
-use crate::trace_loop;
+
 use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
-use crate::ecs::system::System;
 use crate::engine::systems::renderer::Renderer;
 
 const DEBUG_INTERVAL: Duration = Duration::from_secs(15);
@@ -180,7 +179,7 @@ impl Orchestrator {
         #[cfg(feature = "dbg-loop")]
         if self.timers.debug_time.elapsed() >= self.timers.debug_interval {
             self.timers.debug_time = Instant::now();
-            info!("{}", self.world.read::<Statistics>());
+            log::info!("{}", self.world.read::<Statistics>());
         }
 
         if self.timers.last_loop.elapsed() >= self.timers.min_loop_duration {
