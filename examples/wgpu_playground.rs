@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use async_std::task::block_on;
 use log::debug;
 use std::sync::Arc;
 use wgpu::{
@@ -13,12 +12,9 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-fn main() {
+#[tokio::main]
+async fn main() {
     env_logger::init();
-    block_on(async_main());
-}
-
-async fn async_main() {
     let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 

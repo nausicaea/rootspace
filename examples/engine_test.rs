@@ -48,7 +48,9 @@ impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
     }
 }
 
-async fn async_main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    env_logger::init();
     let event_loop = EventLoop::new()?;
 
     let deps = Dependencies {
@@ -64,11 +66,5 @@ async fn async_main() -> anyhow::Result<()> {
 
     event_loop.run(state.start())?;
 
-    Ok(())
-}
-
-fn main() -> anyhow::Result<()> {
-    env_logger::init();
-    async_std::task::block_on(async_main())?;
     Ok(())
 }

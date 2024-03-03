@@ -1,6 +1,6 @@
-use async_std::sync::Mutex;
 use std::iter::FusedIterator;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 use super::{registry::SystemRegistry, resources::Resources, system::System, with_resources::WithResources};
 

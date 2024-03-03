@@ -13,11 +13,12 @@ use tarpc::context::Context;
 use tarpc::server::incoming::Incoming;
 use tarpc::server::{BaseChannel, Channel};
 use tarpc::tokio_serde::formats::Json;
+use tokio::task::JoinHandle;
 
 
 #[derive(Debug)]
 pub struct Rpc {
-    listener: async_std::task::JoinHandle<()>,
+    listener: JoinHandle<()>,
 }
 
 #[async_trait]
@@ -31,7 +32,7 @@ impl WithResources for Rpc {
         let mut listener = tarpc::serde_transport::tcp::listen(&server_addr, Json::default).await?;
         info!("Listening on port {}", listener.local_addr().port());
         listener.config_mut().max_frame_length(usize::MAX);
-        let join_handle: async_std::task::JoinHandle<()> = async_std::task::spawn(async move {
+        let join_handle: JoinHandle<()> = tokio::task::spawn(async move {
             trace!("Starting RPC listener");
             listener
                 // Ignore accept errors.

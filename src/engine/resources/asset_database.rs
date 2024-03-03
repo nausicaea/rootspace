@@ -7,6 +7,7 @@ use crate::engine::assets::{Error, LoadAsset, SaveAsset};
 use crate::file_manipulation::copy_recursive;
 use anyhow::Context;
 use directories::ProjectDirs;
+use tokio::fs::{create_dir_all, remove_dir_all};
 
 const APP_QUALIFIER: &str = "net";
 const APP_ORGANIZATION: &str = "nausicaea";
@@ -74,7 +75,7 @@ impl AssetDatabase {
         })?;
 
         if let Some(parent) = path.parent() {
-            async_std::fs::create_dir_all(parent)
+            create_dir_all(parent)
                 .await
                 .with_context(|| format!("trying to create the parent directories of path '{}'", path.display()))?;
         }
@@ -129,7 +130,7 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
         };
 
         if (deps.force_init() && !deps.within_repo()) || !assets.is_dir() {
-            async_std::fs::remove_dir_all(&assets)
+            remove_dir_all(&assets)
                 .await
                 .with_context(|| format!("trying to remove all contents of the path '{}'", assets.display()))?;
 
@@ -143,7 +144,7 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
                     )
                 })?;
             } else {
-                async_std::fs::create_dir_all(&assets).await.with_context(|| {
+                create_dir_all(&assets).await.with_context(|| {
                     format!(
                         "trying to create the asset database directory at '{}'",
                         assets.display()

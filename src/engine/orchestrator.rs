@@ -1,4 +1,3 @@
-use async_std::task::block_on;
 use log::trace;
 use std::time::{Duration, Instant};
 
@@ -78,7 +77,7 @@ impl Orchestrator {
 
     pub fn start(mut self) -> impl 'static + FnMut(Event<()>, &EventLoopWindowTarget<()>) {
         move |event, elwt| {
-            block_on(self.run(event, elwt));
+            tokio::runtime::Handle::current().block_on(self.run(event, elwt));
         }
     }
 

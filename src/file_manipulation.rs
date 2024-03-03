@@ -1,7 +1,3 @@
-use async_std::{
-    fs::{copy, create_dir_all, metadata, read_dir, File},
-    io::{self, ReadExt},
-};
 use std::{
     ffi::{OsStr, OsString},
     fmt::Debug,
@@ -11,10 +7,11 @@ use std::{
 };
 
 use anyhow::anyhow;
-use async_std::stream::StreamExt;
 use log::trace;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use tokio::fs::{copy, create_dir_all, File, metadata, read_dir};
+use tokio::io::AsyncReadExt;
 
 fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError> {
     let p = path_user_input.as_ref();
@@ -79,7 +76,7 @@ pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> a
             .map_err(|e| anyhow!("Cannot read the directory {}: {}", working_path.display(), e))?;
 
         // Iterate over the contents of the working directory
-        while let Some(entry) = read_dir_iter.next().await {
+        while let Some(entry) = read_dir_iter.next_entry().await.transpose() {
             let path = entry
                 .map_err(|e| {
                     anyhow!(
@@ -91,7 +88,7 @@ pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> a
                 .path();
 
             // Push child directories onto the stack, and copy files
-            if path.is_dir().await {
+            if path.is_dir() {
                 stack.push(path.into());
             } else {
                 match path.file_name() {
@@ -449,7 +446,7 @@ pub enum FileError {
     #[error("Parent directory not found: {}", .0.display())]
     ParentDirectoryNotFound(PathBuf),
     #[error("{}: {}", .1, .0.display())]
-    IoError(PathBuf, #[source] io::Error),
+    IoError(PathBuf, #[source] std::io::Error),
     #[error("Path does not contain a basename: {}", .0.display())]
     NoBaseNameFound(PathBuf),
     #[error("Could not find the user home directory")]

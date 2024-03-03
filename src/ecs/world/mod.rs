@@ -1,4 +1,3 @@
-use async_std::task::spawn;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -176,11 +175,11 @@ impl World {
             .into_iter()
             .map(|s| {
                 let r = resources.clone();
-                spawn(async move { s.lock().await.run(&r, t, dt).await })
+                tokio::task::spawn(async move { s.lock().await.run(&r, t, dt).await })
             })
             .collect::<FuturesUnordered<_>>();
 
-        while let Some(()) = fut.next().await {}
+        while let Some(()) = fut.next().await.transpose().unwrap() {}
     }
 
     fn on_create_entity(&mut self) {

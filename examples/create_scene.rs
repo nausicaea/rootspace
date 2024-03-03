@@ -1,4 +1,3 @@
-use async_std::task::block_on;
 use clap::Parser;
 use rootspace::ecs::with_dependencies::WithDependencies;
 use rootspace::engine::assets::scene::Scene;
@@ -36,7 +35,9 @@ impl<'a> AssetDatabaseDeps for Dependencies<'a> {
     }
 }
 
-async fn async_main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    env_logger::init();
     let matches = Args::parse();
 
     let deps = Dependencies {
@@ -82,11 +83,5 @@ async fn async_main() -> anyhow::Result<()> {
 
     adb.save_asset(&scene, "scenes", "test.cbor").await?;
 
-    Ok(())
-}
-
-fn main() -> anyhow::Result<()> {
-    env_logger::init();
-    block_on(async_main())?;
     Ok(())
 }
