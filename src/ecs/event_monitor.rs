@@ -49,13 +49,13 @@ mod tests {
         type _SR = Reg![EventMonitor<u32>];
     }
 
-    #[async_std::test]
+    #[tokio::test]
     async fn event_monitor_system_registry() {
         let res = Resources::with_dependencies::<Reg![EventQueue<usize>], _>(&()).await.unwrap();
         let _rr = SystemRegistry::push(End, EventMonitor::<usize>::with_res(&res).await.unwrap());
     }
 
-    #[async_std::test]
+    #[tokio::test]
     async fn event_monitor_world() {
         let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![EventMonitor<usize>], (), _>(&())
             .await

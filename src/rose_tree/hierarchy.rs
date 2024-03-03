@@ -320,7 +320,7 @@ mod tests {
         let _rr = ResourceRegistry::push(End, Hierarchy::<Tk>::default());
     }
 
-    #[async_std::test]
+    #[tokio::test]
     async fn hierarchy_world() {
         let _w = World::with_dependencies::<Reg![Hierarchy<Tk>], Reg![], Reg![], (), _>(&()).await.unwrap();
     }

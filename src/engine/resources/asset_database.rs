@@ -208,13 +208,13 @@ mod tests {
         type _RR = Reg![AssetDatabase];
     }
 
-    #[async_std::test]
+    #[tokio::test]
     async fn asset_database_resource_registry() {
         let deps = TDeps::default();
         let _rr = ResourceRegistry::push(End, AssetDatabase::with_deps(&deps).await.unwrap());
     }
 
-    #[async_std::test]
+    #[tokio::test]
     async fn asset_database_world() {
         let deps = TDeps::default();
         let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], (), _>(&deps).await.unwrap();

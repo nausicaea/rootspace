@@ -105,13 +105,13 @@ mod tests {
         type _SR = Reg![ForceShutdown];
     }
 
-    #[async_std::test]
+    #[tokio::test]
     async fn force_shutdown_system_registry() {
         let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&()).await.unwrap();
         let _rr = SystemRegistry::push(End, ForceShutdown::with_res(&res).await.unwrap());
     }
 
-    #[async_std::test]
+    #[tokio::test]
     async fn force_shutdown_world() {
         let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![ForceShutdown], (), _>(&())
             .await

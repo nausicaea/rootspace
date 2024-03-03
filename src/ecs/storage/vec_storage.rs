@@ -365,7 +365,7 @@ mod tests {
         let _rr = ResourceRegistry::push(End, VecStorage::<usize>::default());
     }
 
-    #[async_std::test]
+    #[tokio::test]
     async fn vec_storage_world() {
         let _w = World::with_dependencies::<Reg![VecStorage<usize>], Reg![], Reg![], (), _>(&()).await.unwrap();
     }

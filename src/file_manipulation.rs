@@ -547,7 +547,7 @@ mod tests {
         assert!(r.is_ok(), "{:?}", r.unwrap_err())
     }
 
-    #[async_std::test]
+    #[tokio::test]
     async fn file_path_read_to_string() {
         let mut tf = NamedTempFile::new().unwrap();
 
@@ -558,7 +558,7 @@ mod tests {
         assert_eq!(r.unwrap(), "Hello, World!");
     }
 
-    #[async_std::test]
+    #[tokio::test]
     async fn file_path_read_to_bytes() {
         let mut tf = NamedTempFile::new().unwrap();
 
