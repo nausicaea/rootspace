@@ -4,7 +4,7 @@ use crate::ecs::with_resources::WithResources;
 use anyhow::Error;
 
 use async_trait::async_trait;
-use futures::{StreamExt};
+use futures::StreamExt;
 use log::{info, trace};
 use std::future::{ready, Future};
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
