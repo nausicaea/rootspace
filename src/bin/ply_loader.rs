@@ -4,7 +4,7 @@ use rootspace::plyers::{load_ply, save_ply};
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
-#[command(name = "ply-loader", author, version, about = "Loads files as Stanford PLY model files", long_about = None)]
+#[command(name = "ply_loader", author, version, about = "Loads files as Stanford PLY model files", long_about = None)]
 struct Args {
     #[arg(short, long, help = "Increases the output of the program", action = clap::ArgAction::Count)]
     verbose: u8,

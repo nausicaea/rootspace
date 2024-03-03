@@ -28,7 +28,7 @@ impl System for Rpc {
 
 impl WithResources for Rpc {
     async fn with_res(_res: &Resources) -> Result<Self, Error> {
-        let server_addr = (IpAddr::V6(Ipv6Addr::LOCALHOST), 0);
+        let server_addr = (IpAddr::V6(Ipv6Addr::LOCALHOST), 7919);
         let mut listener = tarpc::serde_transport::tcp::listen(&server_addr, Json::default).await?;
         info!("Listening on port {}", listener.local_addr().port());
         listener.config_mut().max_frame_length(usize::MAX);
@@ -57,7 +57,7 @@ impl WithResources for Rpc {
 }
 
 #[tarpc::service]
-trait RpcService {
+pub trait RpcService {
     /// Returns a greeting for name.
     async fn hello(name: String) -> String;
 }
@@ -69,7 +69,7 @@ struct RpcConnection {
 
 impl RpcService for RpcConnection {
     async fn hello(self, _context: Context, name: String) -> String {
-        format!("Hello, {}", name)
+        format!("Hello, {}@{}", name, self.socket_address)
     }
 }
 

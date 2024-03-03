@@ -1,4 +1,6 @@
 use std::ops::Deref;
+use std::sync::Arc;
+use tokio::runtime::Runtime;
 
 use rootspace::engine::orchestrator::{Orchestrator, OrchestratorDeps};
 use rootspace::engine::resources::asset_database::AssetDatabaseDeps;
@@ -8,6 +10,7 @@ use rootspace::Reg;
 use winit::event_loop::EventLoop;
 
 struct Dependencies<'a, T: 'static> {
+    rt: Arc<Runtime>,
     event_loop: &'a EventLoop<T>,
     name: &'a str,
     main_scene: &'a str,
@@ -46,14 +49,24 @@ impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
     fn main_scene(&self) -> &str {
         self.main_scene
     }
+
+    fn runtime(&self) -> Arc<Runtime> {
+        self.rt.clone()
+    }
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
     env_logger::init();
     let event_loop = EventLoop::new()?;
 
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?;
+
+    let rt = Arc::new(rt);
+
     let deps = Dependencies {
+        rt: rt.clone(),
         event_loop: &event_loop,
         name: "test",
         main_scene: "test.cbor",
@@ -62,7 +75,7 @@ async fn main() -> anyhow::Result<()> {
         graphics_settings: Settings::default(),
     };
 
-    let state = Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], _>(&deps).await?;
+    let state = rt.block_on(async move {Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], _>(&deps).await })?;
 
     event_loop.run(state.start())?;
 

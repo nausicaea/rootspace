@@ -1,5 +1,7 @@
+use std::sync::Arc;
 use log::trace;
 use std::time::{Duration, Instant};
+use tokio::runtime::Runtime;
 
 use winit::{event::Event, event_loop::EventLoopWindowTarget};
 
@@ -40,6 +42,7 @@ pub struct Orchestrator {
     timers: Timers,
     world_event_receiver: ReceiverId<WorldEvent>,
     engine_event_receiver: ReceiverId<EngineEvent>,
+    runtime: Arc<Runtime>,
 }
 
 impl Orchestrator {
@@ -72,12 +75,15 @@ impl Orchestrator {
             },
             world_event_receiver,
             engine_event_receiver,
+            runtime: deps.runtime(),
         })
     }
 
     pub fn start(mut self) -> impl 'static + FnMut(Event<()>, &EventLoopWindowTarget<()>) {
+        let rt = self.runtime.clone();
+
         move |event, elwt| {
-            tokio::runtime::Handle::current().block_on(self.run(event, elwt));
+            rt.block_on(self.run(event, elwt));
         }
     }
 
@@ -207,6 +213,8 @@ impl Orchestrator {
 }
 
 pub trait OrchestratorDeps {
+    fn runtime(&self) -> Arc<Runtime>;
+
     /// Specifies the name of the main scene
     fn main_scene(&self) -> &str;
 
