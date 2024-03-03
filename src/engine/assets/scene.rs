@@ -76,7 +76,11 @@ impl Scene {
         map
     }
 
-    async fn load_components_additive(&self, map: &BTreeMap<Index, Index>, res: &Resources) -> Result<(), anyhow::Error> {
+    async fn load_components_additive(
+        &self,
+        map: &BTreeMap<Index, Index>,
+        res: &Resources,
+    ) -> Result<(), anyhow::Error> {
         for (&i_prev, &i_new) in map {
             if let Some(camera) = self.cameras.get(&i_prev).cloned() {
                 res.write_components::<Camera>().insert(i_new, camera);

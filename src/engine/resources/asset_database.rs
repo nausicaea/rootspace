@@ -79,15 +79,13 @@ impl AssetDatabase {
                 .with_context(|| format!("trying to create the parent directories of path '{}'", path.display()))?;
         }
 
-        asset.to_path(&path)
-            .await
-            .with_context(|| {
-                format!(
-                    "trying to save a {} asset to path '{}'",
-                    std::any::type_name::<A>(),
-                    path.display()
-                )
-            })?;
+        asset.to_path(&path).await.with_context(|| {
+            format!(
+                "trying to save a {} asset to path '{}'",
+                std::any::type_name::<A>(),
+                path.display()
+            )
+        })?;
 
         Ok(())
     }
@@ -137,24 +135,20 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
 
             let source_assets = WITHIN_REPO_ASSETS.join(deps.name());
             if source_assets.is_dir() {
-                copy_recursive(&source_assets, &assets)
-                    .await
-                    .with_context(|| {
-                        format!(
-                            "trying to copy the asset database contents from '{}' to '{}'",
-                            source_assets.display(),
-                            assets.display()
-                        )
-                    })?;
+                copy_recursive(&source_assets, &assets).await.with_context(|| {
+                    format!(
+                        "trying to copy the asset database contents from '{}' to '{}'",
+                        source_assets.display(),
+                        assets.display()
+                    )
+                })?;
             } else {
-                async_std::fs::create_dir_all(&assets)
-                    .await
-                    .with_context(|| {
-                        format!(
-                            "trying to create the asset database directory at '{}'",
-                            assets.display()
-                        )
-                    })?;
+                async_std::fs::create_dir_all(&assets).await.with_context(|| {
+                    format!(
+                        "trying to create the asset database directory at '{}'",
+                        assets.display()
+                    )
+                })?;
             }
         }
 
@@ -217,6 +211,8 @@ mod tests {
     #[tokio::test]
     async fn asset_database_world() {
         let deps = TDeps::default();
-        let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], (), _>(&deps).await.unwrap();
+        let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], (), _>(&deps)
+            .await
+            .unwrap();
     }
 }

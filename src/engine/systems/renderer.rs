@@ -1,9 +1,9 @@
-use std::time::{Duration, Instant};
 use crate::ecs::component::Component;
 use crate::ecs::entity::index::Index;
 use anyhow::Context;
 use async_trait::async_trait;
 use log::{error, trace, warn};
+use std::time::{Duration, Instant};
 use wgpu::SurfaceError;
 use winit::dpi::PhysicalSize;
 use winit::event::WindowEvent;
@@ -129,8 +129,7 @@ impl Renderer {
 
     fn on_out_of_memory(&self, res: &Resources) {
         error!("surface is out of memory");
-        res.write::<EventQueue<EngineEvent>>()
-            .send(EngineEvent::AbortRequested)
+        res.write::<EventQueue<EngineEvent>>().send(EngineEvent::AbortRequested)
     }
 
     fn on_timeout(&self) {

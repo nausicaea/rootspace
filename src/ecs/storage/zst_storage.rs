@@ -232,6 +232,8 @@ mod tests {
 
     #[tokio::test]
     async fn zst_storage_world() {
-        let _w = World::with_dependencies::<Reg![ZstStorage<usize>], Reg![], Reg![], (), _>(&()).await.unwrap();
+        let _w = World::with_dependencies::<Reg![ZstStorage<usize>], Reg![], Reg![], (), _>(&())
+            .await
+            .unwrap();
     }
 }

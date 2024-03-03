@@ -1,13 +1,13 @@
+use async_std::{
+    fs::{copy, create_dir_all, metadata, read_dir, File},
+    io::{self, ReadExt},
+};
 use std::{
     ffi::{OsStr, OsString},
     fmt::Debug,
     hash::Hash,
     ops::Deref,
     path::{Path, PathBuf},
-};
-use async_std::{
-    io::{self, ReadExt},
-    fs::{copy, create_dir_all, File, metadata, read_dir},
 };
 
 use anyhow::anyhow;
@@ -231,7 +231,9 @@ pub struct FilePathBuf(PathBuf);
 
 impl FilePathBuf {
     pub async fn read_to_string(&self) -> Result<String, FileError> {
-        let mut f = File::open(&self.0).await.map_err(|e| FileError::IoError(self.0.clone(), e))?;
+        let mut f = File::open(&self.0)
+            .await
+            .map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = String::new();
         f.read_to_string(&mut buf)
             .await
@@ -241,7 +243,9 @@ impl FilePathBuf {
     }
 
     pub async fn read_to_bytes(&self) -> Result<Vec<u8>, FileError> {
-        let mut f = File::open(&self.0).await.map_err(|e| FileError::IoError(self.0.clone(), e))?;
+        let mut f = File::open(&self.0)
+            .await
+            .map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = Vec::new();
         f.read_to_end(&mut buf)
             .await

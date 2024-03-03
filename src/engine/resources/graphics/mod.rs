@@ -207,7 +207,8 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
             &settings.preferred_texture_format,
             settings.present_mode,
             settings.alpha_mode,
-        ).await;
+        )
+        .await;
 
         let mut database = Database::default();
 

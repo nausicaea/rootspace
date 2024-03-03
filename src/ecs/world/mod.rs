@@ -1,11 +1,9 @@
-use std::{
-    time::Duration,
-};
-use std::sync::Arc;
 use async_std::task::spawn;
+use std::sync::Arc;
+use std::time::Duration;
 
-use futures::StreamExt;
 use futures::stream::FuturesUnordered;
+use futures::StreamExt;
 
 use log::debug;
 use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard};
@@ -147,8 +145,7 @@ impl World {
     /// main loop shall continue, otherwise it shall abort.
     pub fn maintain(&mut self) -> LoopControl {
         // Receive all pending events
-        let events = Arc::get_mut(&mut self
-            .resources)
+        let events = Arc::get_mut(&mut self.resources)
             .unwrap()
             .get_mut::<EventQueue<WorldEvent>>()
             .receive(&self.receiver);
@@ -175,12 +172,11 @@ impl World {
     }
 
     async fn run_systems_parallel(systems: &Systems, resources: &Arc<Resources>, t: Duration, dt: Duration) {
-        let mut fut = systems.into_iter()
+        let mut fut = systems
+            .into_iter()
             .map(|s| {
                 let r = resources.clone();
-                spawn(async move {
-                    s.lock().await.run(&r, t, dt).await
-                })
+                spawn(async move { s.lock().await.run(&r, t, dt).await })
             })
             .collect::<FuturesUnordered<_>>();
 
@@ -190,16 +186,14 @@ impl World {
     fn on_create_entity(&mut self) {
         let entity = self.get_mut::<Entities>().create();
         debug!("Created the entity {}", entity.idx());
-        self
-            .get_mut::<EventQueue<WorldEvent>>()
+        self.get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::EntityCreated(entity));
     }
 
     fn on_destroy_entity(&mut self, entity: Entity) {
         self.get_mut::<Entities>().destroy(entity);
         debug!("Destroyed the entity {}", entity);
-        self
-            .get_mut::<EventQueue<WorldEvent>>()
+        self.get_mut::<EventQueue<WorldEvent>>()
             .send(WorldEvent::EntityDestroyed(entity));
     }
 }
@@ -209,10 +203,7 @@ impl std::fmt::Debug for World {
         write!(
             f,
             "World {{ resources: {:?}, fixed_update_systems: {:?}, update_systems: {:?}, receiver: {:?} }}",
-            self.resources,
-            self.fixed_update_systems,
-            self.update_systems,
-            self.receiver,
+            self.resources, self.fixed_update_systems, self.update_systems, self.receiver,
         )
     }
 }

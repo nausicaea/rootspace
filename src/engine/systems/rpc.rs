@@ -1,19 +1,19 @@
-use std::future::{Future, ready};
-use std::net::{IpAddr, Ipv6Addr, SocketAddr};
-use std::time::Duration;
+use crate::ecs::resources::Resources;
+use crate::ecs::system::System;
+use crate::ecs::with_resources::WithResources;
 use anyhow::Error;
 use async_std::task::block_on;
 use async_trait::async_trait;
 use futures::{Stream, StreamExt};
 use log::{debug, info, trace};
-use tarpc::ClientMessage;
+use std::future::{ready, Future};
+use std::net::{IpAddr, Ipv6Addr, SocketAddr};
+use std::time::Duration;
 use tarpc::context::Context;
-use tarpc::server::{BaseChannel, Channel};
 use tarpc::server::incoming::Incoming;
+use tarpc::server::{BaseChannel, Channel};
 use tarpc::tokio_serde::formats::Json;
-use crate::ecs::resources::Resources;
-use crate::ecs::system::System;
-use crate::ecs::with_resources::WithResources;
+use tarpc::ClientMessage;
 
 #[derive(Debug)]
 pub struct Rpc {
@@ -51,9 +51,7 @@ impl WithResources for Rpc {
                 .await;
         });
 
-        Ok(Rpc {
-            listener: join_handle,
-        })
+        Ok(Rpc { listener: join_handle })
     }
 }
 

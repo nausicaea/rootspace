@@ -1,6 +1,6 @@
+use async_std::sync::Mutex;
 use std::iter::FusedIterator;
 use std::sync::Arc;
-use async_std::sync::Mutex;
 
 use super::{registry::SystemRegistry, resources::Resources, system::System, with_resources::WithResources};
 
@@ -103,7 +103,7 @@ impl<'a> Iterator for SystemsIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.cursor >= self.length {
-            return None
+            return None;
         }
 
         let arc = self.systems.0[self.cursor].clone();

@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 #[cfg(not(test))]
 use std::process;
 use std::{
@@ -7,7 +8,6 @@ use std::{
     },
     time::Duration,
 };
-use async_trait::async_trait;
 
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
@@ -61,8 +61,7 @@ impl System for ForceShutdown {
     async fn run(&mut self, res: &Resources, _: Duration, _: Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             debug!("Recently caught a termination signal");
-            res.write::<EventQueue<EngineEvent>>()
-                .send(EngineEvent::AbortRequested);
+            res.write::<EventQueue<EngineEvent>>().send(EngineEvent::AbortRequested);
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
 
@@ -71,8 +70,7 @@ impl System for ForceShutdown {
             match event {
                 WindowEvent::CloseRequested => {
                     debug!("User requested abort by closing the window");
-                    res.write::<EventQueue<EngineEvent>>()
-                        .send(EngineEvent::AbortRequested);
+                    res.write::<EventQueue<EngineEvent>>().send(EngineEvent::AbortRequested);
                 }
                 WindowEvent::KeyboardInput {
                     event:
@@ -84,8 +82,7 @@ impl System for ForceShutdown {
                     ..
                 } => {
                     debug!("User requested abort by pressing Q");
-                    res.write::<EventQueue<EngineEvent>>()
-                        .send(EngineEvent::AbortRequested);
+                    res.write::<EventQueue<EngineEvent>>().send(EngineEvent::AbortRequested);
                 }
                 _ => (),
             }
@@ -107,7 +104,9 @@ mod tests {
 
     #[tokio::test]
     async fn force_shutdown_system_registry() {
-        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&()).await.unwrap();
+        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&())
+            .await
+            .unwrap();
         let _rr = SystemRegistry::push(End, ForceShutdown::with_res(&res).await.unwrap());
     }
 

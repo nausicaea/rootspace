@@ -1,5 +1,5 @@
-use std::time::Duration;
 use async_trait::async_trait;
+use std::time::Duration;
 
 use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::ecs::event_queue::EventQueue;
@@ -67,7 +67,9 @@ mod tests {
 
     #[tokio::test]
     async fn camera_manager_system_registry() {
-        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&()).await.unwrap();
+        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&())
+            .await
+            .unwrap();
         let _rr = SystemRegistry::push(End, CameraManager::with_res(&res).await.unwrap());
     }
 

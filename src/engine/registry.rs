@@ -15,10 +15,10 @@ use crate::engine::resources::graphics::Graphics;
 use crate::engine::resources::statistics::Statistics;
 use crate::engine::systems::camera_manager::CameraManager;
 use crate::engine::systems::force_shutdown::ForceShutdown;
+use crate::engine::systems::rpc::Rpc;
 use crate::rose_tree::hierarchy::Hierarchy;
 use crate::RegAdd;
 use winit::event::WindowEvent;
-use crate::engine::systems::rpc::Rpc;
 
 pub type RRegistry<S> = RegAdd![
     <Camera as Component>::Storage,

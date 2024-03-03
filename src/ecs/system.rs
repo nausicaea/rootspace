@@ -1,7 +1,7 @@
 //! Provides traits to specify behaviour (e.g. systems) that operates on data (e.g. components).
 
-use std::time::Duration;
 use async_trait::async_trait;
+use std::time::Duration;
 
 use super::resources::Resources;
 

@@ -1,5 +1,5 @@
-use std::{fmt, time::Duration};
 use async_trait::async_trait;
+use std::{fmt, time::Duration};
 
 use log::trace;
 use serde::{Deserialize, Serialize};
@@ -51,7 +51,9 @@ mod tests {
 
     #[tokio::test]
     async fn event_monitor_system_registry() {
-        let res = Resources::with_dependencies::<Reg![EventQueue<usize>], _>(&()).await.unwrap();
+        let res = Resources::with_dependencies::<Reg![EventQueue<usize>], _>(&())
+            .await
+            .unwrap();
         let _rr = SystemRegistry::push(End, EventMonitor::<usize>::with_res(&res).await.unwrap());
     }
 

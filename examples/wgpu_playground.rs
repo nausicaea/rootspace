@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
+use async_std::task::block_on;
 use log::debug;
 use std::sync::Arc;
-use async_std::task::block_on;
 use wgpu::{
     Backends, CompositeAlphaMode, Device, DeviceDescriptor, Features, Instance, Limits, PowerPreference, PresentMode,
     Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, TextureUsages,

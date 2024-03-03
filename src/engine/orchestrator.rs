@@ -1,6 +1,6 @@
-use std::time::{Duration, Instant};
-use async_std::task::{block_on};
+use async_std::task::block_on;
 use log::trace;
+use std::time::{Duration, Instant};
 
 use winit::{event::Event, event_loop::EventLoopWindowTarget};
 
@@ -27,9 +27,9 @@ use crate::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps}
 use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
 use crate::engine::resources::statistics::Statistics;
 
+use crate::engine::systems::renderer::Renderer;
 use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
-use crate::engine::systems::renderer::Renderer;
 
 const STATS_DISPLAY_INTERVAL: Duration = Duration::from_secs(15);
 const DELTA_TIME: Duration = Duration::from_millis(50);
@@ -132,7 +132,8 @@ impl Orchestrator {
         // Call fixed update functions until the accumulated time buffer is empty
         while self.timers.accumulator >= self.timers.delta_time {
             self.world
-                .fixed_update(self.timers.fixed_game_time, self.timers.delta_time).await;
+                .fixed_update(self.timers.fixed_game_time, self.timers.delta_time)
+                .await;
             self.timers.accumulator -= self.timers.delta_time;
             self.timers.fixed_game_time += self.timers.delta_time;
         }
@@ -231,7 +232,9 @@ pub trait OrchestratorDeps {
     }
 
     /// Specifies the interval at which stats information is shown (only applies with feature 'dbg-loop')
-    fn stats_display_interval(&self) -> Duration { STATS_DISPLAY_INTERVAL }
+    fn stats_display_interval(&self) -> Duration {
+        STATS_DISPLAY_INTERVAL
+    }
 }
 
 #[derive(Debug)]

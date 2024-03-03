@@ -156,7 +156,9 @@ mod tests {
 
     #[tokio::test]
     async fn entities_world() {
-        let _w = World::with_dependencies::<Reg![Entities], Reg![], Reg![], (), _>(&()).await.unwrap();
+        let _w = World::with_dependencies::<Reg![Entities], Reg![], Reg![], (), _>(&())
+            .await
+            .unwrap();
     }
 
     #[test]
