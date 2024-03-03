@@ -2,11 +2,10 @@ use crate::ecs::resources::Resources;
 use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
 use anyhow::Error;
-use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use async_trait::async_trait;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct Rpc;
 
 impl WithResources for Rpc {

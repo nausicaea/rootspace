@@ -9,10 +9,9 @@ use crate::ecs::with_resources::WithResources;
 use crate::engine::components::camera::Camera;
 use crate::engine::resources::graphics::Graphics;
 use log::debug;
-use serde::{Deserialize, Serialize};
 use winit::event::WindowEvent;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct CameraManager {
     receiver: ReceiverId<WindowEvent>,
 }
