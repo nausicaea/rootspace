@@ -18,6 +18,7 @@ use crate::engine::systems::force_shutdown::ForceShutdown;
 use crate::rose_tree::hierarchy::Hierarchy;
 use crate::RegAdd;
 use winit::event::WindowEvent;
+use crate::engine::systems::rpc::Rpc;
 
 pub type RRegistry<S> = RegAdd![
     <Camera as Component>::Storage,
@@ -41,5 +42,6 @@ pub type USRegistry<D> = RegAdd![
     EventMonitor<WindowEvent>,
     EventMonitor<EngineEvent>,
     EventMonitor<WorldEvent>,
+    Rpc,
     D
 ];
