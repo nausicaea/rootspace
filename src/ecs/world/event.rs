@@ -9,5 +9,5 @@ pub enum WorldEvent {
     EntityCreated(Entity),
     DestroyEntity(Entity),
     EntityDestroyed(Entity),
-    Abort,
+    Exiting,
 }

@@ -11,10 +11,10 @@ async fn main() -> anyhow::Result<()> {
     let client = RpcServiceClient::new(tarpc::client::Config::default(), connection.await?).spawn();
 
     let response = client
-        .hello(tarpc::context::current(), String::from("nausicaea"))
+        .exit(tarpc::context::current())
         .await?;
 
-    println!("{}", response);
+    println!("{:?}", response);
 
     Ok(())
 }

@@ -1,4 +1,4 @@
-use log::trace;
+use log::{info, trace};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
@@ -116,7 +116,7 @@ impl Orchestrator {
                 e => self.world.get_mut::<EventQueue<WindowEvent>>().send(e),
             },
             Event::AboutToWait => self.maintain(elwt),
-            Event::LoopExiting => self.cleanup(),
+            Event::LoopExiting => self.on_exiting(),
             _ => (),
         }
 
@@ -179,7 +179,7 @@ impl Orchestrator {
             .receive(&self.engine_event_receiver);
         for event in events {
             match event {
-                EngineEvent::AbortRequested => self.on_abort_requested(),
+                EngineEvent::Exit => self.on_exit(),
                 _ => (),
             }
         }
@@ -187,7 +187,7 @@ impl Orchestrator {
         #[cfg(feature = "dbg-loop")]
         if self.timers.last_stats_display.elapsed() >= self.timers.stats_display_interval {
             self.timers.last_stats_display = Instant::now();
-            log::info!("{}", self.world.read::<Statistics>());
+            info!("{}", self.world.read::<Statistics>());
         }
 
         if self.timers.last_loop.elapsed() >= self.timers.min_loop_duration {
@@ -205,11 +205,14 @@ impl Orchestrator {
         self.world.get_components_mut::<Renderable>().remove(entity);
     }
 
-    fn on_abort_requested(&mut self) {
-        self.world.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Abort)
+    fn on_exit(&mut self) {
+        info!("Exit requested");
+        self.world.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Exiting);
+        self.world.read::<Graphics>().request_redraw();
     }
 
-    fn cleanup(&mut self) {
+    fn on_exiting(&mut self) {
+        info!("Exiting");
         self.world.clear();
     }
 }

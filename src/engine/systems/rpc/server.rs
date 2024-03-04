@@ -28,4 +28,11 @@ impl RpcService for RpcServer {
             .unwrap();
         output
     }
+
+    async fn exit(self, _: Context) {
+        self.mpsc_tx
+            .send(RpcMessage::Exit)
+            .await
+            .unwrap();
+    }
 }

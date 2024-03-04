@@ -48,7 +48,7 @@ impl Renderer {
 
         res.write::<EventQueue<EngineEvent>>()
             .receive_cb(&self.engine_receiver, |e| match e {
-                EngineEvent::AbortRequested => self.renderer_enabled = true,
+                EngineEvent::Exit => self.renderer_enabled = false,
                 _ => (),
             });
     }
@@ -129,7 +129,7 @@ impl Renderer {
 
     fn on_out_of_memory(&self, res: &Resources) {
         error!("surface is out of memory");
-        res.write::<EventQueue<EngineEvent>>().send(EngineEvent::AbortRequested)
+        res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit)
     }
 
     fn on_timeout(&self) {

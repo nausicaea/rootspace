@@ -24,6 +24,8 @@ use tarpc::tokio_serde::formats::Json;
 use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::{Receiver};
 use tokio::task::JoinHandle;
+use crate::ecs::event_queue::EventQueue;
+use crate::engine::events::engine_event::EngineEvent;
 
 #[derive(Debug)]
 pub struct Rpc {
@@ -33,10 +35,11 @@ pub struct Rpc {
 
 #[async_trait]
 impl System for Rpc {
-    async fn run(&mut self, _res: &Resources, _t: Duration, _dt: Duration) {
+    async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         'recv: loop {
             match self.mpsc_rx.try_recv() {
                 Ok(RpcMessage::Hello(name, addr)) => info!("Hello from {}@{}", name, addr),
+                Ok(RpcMessage::Exit) => res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit),
                 Err(TryRecvError::Empty | TryRecvError::Disconnected) => break 'recv,
             }
         }

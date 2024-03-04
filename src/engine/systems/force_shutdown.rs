@@ -60,8 +60,8 @@ impl WithResources for ForceShutdown {
 impl System for ForceShutdown {
     async fn run(&mut self, res: &Resources, _: Duration, _: Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
-            debug!("Recently caught a termination signal");
-            res.write::<EventQueue<EngineEvent>>().send(EngineEvent::AbortRequested);
+            debug!("User requested to exit by SIGINT");
+            res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit);
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
 
@@ -69,8 +69,8 @@ impl System for ForceShutdown {
         for event in events {
             match event {
                 WindowEvent::CloseRequested => {
-                    debug!("User requested abort by closing the window");
-                    res.write::<EventQueue<EngineEvent>>().send(EngineEvent::AbortRequested);
+                    debug!("User requested to exit by closing the window");
+                    res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit);
                 }
                 WindowEvent::KeyboardInput {
                     event:
@@ -81,8 +81,8 @@ impl System for ForceShutdown {
                         },
                     ..
                 } => {
-                    debug!("User requested abort by pressing Q");
-                    res.write::<EventQueue<EngineEvent>>().send(EngineEvent::AbortRequested);
+                    debug!("User requested to exit by pressing Cmd-Q");
+                    res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit);
                 }
                 _ => (),
             }

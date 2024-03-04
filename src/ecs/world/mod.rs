@@ -152,7 +152,7 @@ impl World {
         // Process all pending events
         for e in events {
             match e {
-                WorldEvent::Abort => {
+                WorldEvent::Exiting => {
                     return LoopControl::Abort;
                 }
                 WorldEvent::CreateEntity => self.on_create_entity(),
