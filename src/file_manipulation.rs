@@ -10,7 +10,7 @@ use anyhow::anyhow;
 use log::trace;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tokio::fs::{copy, create_dir_all, File, metadata, read_dir};
+use tokio::fs::{copy, create_dir_all, metadata, read_dir, File};
 use tokio::io::AsyncReadExt;
 
 fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError> {

@@ -7,9 +7,9 @@ use rootspace::engine::orchestrator::{Orchestrator, OrchestratorDeps};
 use rootspace::engine::resources::asset_database::AssetDatabaseDeps;
 use rootspace::engine::resources::graphics::settings::Settings;
 use rootspace::engine::resources::graphics::GraphicsDeps;
+use rootspace::engine::resources::rpc_settings::RpcDeps;
 use rootspace::Reg;
 use winit::event_loop::EventLoop;
-use rootspace::engine::resources::rpc_settings::RpcDeps;
 
 struct Dependencies<'a, T: 'static> {
     rt: Arc<Runtime>,
@@ -63,9 +63,7 @@ fn main() -> anyhow::Result<()> {
     env_logger::init();
     let event_loop = EventLoop::new()?;
 
-    let rt = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()?;
+    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
 
     let rt = Arc::new(rt);
 
@@ -79,7 +77,8 @@ fn main() -> anyhow::Result<()> {
         graphics_settings: Settings::default(),
     };
 
-    let state = rt.block_on(async move {Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], _>(&deps).await })?;
+    let state =
+        rt.block_on(async move { Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], _>(&deps).await })?;
 
     event_loop.run(state.start())?;
 

@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use log::trace;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 
@@ -28,10 +28,10 @@ use crate::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps}
 use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
 use crate::engine::resources::statistics::Statistics;
 
+use crate::engine::resources::rpc_settings::RpcDeps;
 use crate::engine::systems::renderer::Renderer;
 use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
-use crate::engine::resources::rpc_settings::RpcDeps;
 
 const STATS_DISPLAY_INTERVAL: Duration = Duration::from_secs(15);
 const DELTA_TIME: Duration = Duration::from_millis(50);

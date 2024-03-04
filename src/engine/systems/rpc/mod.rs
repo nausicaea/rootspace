@@ -1,15 +1,19 @@
-pub mod service;
 mod message;
 mod server;
+pub mod service;
 
 use crate::ecs::resources::Resources;
 use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
 use anyhow::Error;
 
+use crate::engine::resources::rpc_settings::RpcSettings;
+use crate::engine::systems::rpc::server::RpcServer;
+use crate::engine::systems::rpc::service::RpcService;
 use async_trait::async_trait;
 use futures::StreamExt;
 use log::{info, trace};
+use message::RpcMessage;
 use std::future::ready;
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
@@ -17,13 +21,9 @@ use tarpc::context::Context;
 use tarpc::server::incoming::Incoming;
 use tarpc::server::{BaseChannel, Channel};
 use tarpc::tokio_serde::formats::Json;
-use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::sync::mpsc::error::TryRecvError;
+use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::task::JoinHandle;
-use message::RpcMessage;
-use crate::engine::resources::rpc_settings::RpcSettings;
-use crate::engine::systems::rpc::server::RpcServer;
-use crate::engine::systems::rpc::service::RpcService;
 
 #[derive(Debug)]
 pub struct Rpc {
@@ -47,11 +47,13 @@ impl WithResources for Rpc {
     async fn with_res(res: &Resources) -> Result<Self, Error> {
         let (ba, mfl, mcc, mcpk, rcc) = {
             let settings = res.read::<RpcSettings>();
-            (settings.bind_address,
-            settings.max_frame_length,
-            settings.mpsc_channel_capacity,
-            settings.max_channels_per_key,
-            settings.rpc_channel_capacity)
+            (
+                settings.bind_address,
+                settings.max_frame_length,
+                settings.mpsc_channel_capacity,
+                settings.max_channels_per_key,
+                settings.rpc_channel_capacity,
+            )
         };
 
         let mut listener = tarpc::serde_transport::tcp::listen(&ba, Json::default).await?;
@@ -83,6 +85,9 @@ impl WithResources for Rpc {
                 .await;
         });
 
-        Ok(Rpc { listener_handle: join_handle, mpsc_rx: rx, })
+        Ok(Rpc {
+            listener_handle: join_handle,
+            mpsc_rx: rx,
+        })
     }
 }

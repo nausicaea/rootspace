@@ -12,6 +12,7 @@ use crate::engine::components::ui_transform::UiTransform;
 use crate::engine::events::engine_event::EngineEvent;
 use crate::engine::resources::asset_database::AssetDatabase;
 use crate::engine::resources::graphics::Graphics;
+use crate::engine::resources::rpc_settings::RpcSettings;
 use crate::engine::resources::statistics::Statistics;
 use crate::engine::systems::camera_manager::CameraManager;
 use crate::engine::systems::force_shutdown::ForceShutdown;
@@ -19,7 +20,6 @@ use crate::engine::systems::rpc::Rpc;
 use crate::rose_tree::hierarchy::Hierarchy;
 use crate::RegAdd;
 use winit::event::WindowEvent;
-use crate::engine::resources::rpc_settings::RpcSettings;
 
 pub type RRegistry<S> = RegAdd![
     <Camera as Component>::Storage,

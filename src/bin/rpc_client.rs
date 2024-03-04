@@ -1,6 +1,6 @@
+use rootspace::engine::systems::rpc::service::RpcServiceClient;
 use std::net::{IpAddr, Ipv6Addr};
 use tarpc::tokio_serde::formats::Json;
-use rootspace::engine::systems::rpc::service::RpcServiceClient;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -10,7 +10,9 @@ async fn main() -> anyhow::Result<()> {
 
     let client = RpcServiceClient::new(tarpc::client::Config::default(), connection.await?).spawn();
 
-    let response = client.hello(tarpc::context::current(), String::from("nausicaea")).await?;
+    let response = client
+        .hello(tarpc::context::current(), String::from("nausicaea"))
+        .await?;
 
     println!("{}", response);
 
