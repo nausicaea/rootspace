@@ -70,6 +70,7 @@ impl Orchestrator {
                 delta_time: deps.delta_time(),
                 max_loop_duration: deps.max_loop_duration(),
                 min_loop_duration: deps.min_loop_duration(),
+                #[cfg(feature = "dbg-loop")]
                 stats_display_interval: deps.stats_display_interval(),
                 ..Default::default()
             },
@@ -253,7 +254,9 @@ struct Timers {
     delta_time: Duration,
     max_loop_duration: Duration,
     min_loop_duration: Duration,
+    #[cfg(feature = "dbg-loop")]
     last_stats_display: Instant,
+    #[cfg(feature = "dbg-loop")]
     stats_display_interval: Duration,
 }
 
@@ -267,7 +270,9 @@ impl Default for Timers {
             delta_time: DELTA_TIME,
             max_loop_duration: MAX_LOOP_DURATION,
             min_loop_duration: MIN_LOOP_DURATION,
+            #[cfg(feature = "dbg-loop")]
             last_stats_display: Instant::now(),
+            #[cfg(feature = "dbg-loop")]
             stats_display_interval: STATS_DISPLAY_INTERVAL,
         }
     }
