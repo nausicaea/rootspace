@@ -25,21 +25,43 @@ use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::{Receiver};
 use tokio::task::JoinHandle;
 use crate::ecs::event_queue::EventQueue;
+use crate::ecs::event_queue::receiver_id::ReceiverId;
 use crate::engine::events::engine_event::EngineEvent;
+use crate::engine::resources::statistics::Statistics;
 
 #[derive(Debug)]
 pub struct Rpc {
     listener_handle: JoinHandle<()>,
     mpsc_rx: Receiver<RpcMessage>,
+    receiver: ReceiverId<EngineEvent>,
 }
 
 #[async_trait]
 impl System for Rpc {
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
+        let events = res.write::<EventQueue<EngineEvent>>().receive(&self.receiver);
+        for event in events {
+            if let EngineEvent::Exit = event {
+                trace!("Stopping RPC listener");
+                self.listener_handle.abort();
+            }
+        }
+
         'recv: loop {
             match self.mpsc_rx.try_recv() {
-                Ok(RpcMessage::Hello(name, addr)) => info!("Hello from {}@{}", name, addr),
-                Ok(RpcMessage::Exit) => res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit),
+                Ok(msg) => {
+                    trace!("RPC incoming call: {:?}", &msg);
+                    match msg {
+                        RpcMessage::Hello(name, addr) => info!("Hello from {}@{}", name, addr),
+                        RpcMessage::StatsRequest(tx) => {
+                            let stats = res.read::<Statistics>().clone();
+                            tx.send(stats).unwrap();
+                        }
+                        RpcMessage::Exit => {
+                            res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit)
+                        },
+                    }
+                }
                 Err(TryRecvError::Empty | TryRecvError::Disconnected) => break 'recv,
             }
         }
@@ -58,6 +80,7 @@ impl WithResources for Rpc {
                 settings.rpc_channel_capacity,
             )
         };
+        let receiver = res.write::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
         let mut listener = tarpc::serde_transport::tcp::listen(&ba, Json::default).await?;
         info!("RPC binding to {}", listener.local_addr());
@@ -91,6 +114,7 @@ impl WithResources for Rpc {
         Ok(Rpc {
             listener_handle: join_handle,
             mpsc_rx: rx,
+            receiver,
         })
     }
 }

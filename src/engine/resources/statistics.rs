@@ -9,13 +9,10 @@ const DRAW_CALL_WINDOW: usize = 10;
 const RENDER_DURATION_WINDOW: usize = 10;
 const REDRAW_INTERVAL_WINDOW: usize = 10;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Statistics {
-    #[serde(skip)]
     draw_calls: VecDeque<(usize, usize)>,
-    #[serde(skip)]
     render_durations: VecDeque<Duration>,
-    #[serde(skip)]
     redraw_intervals: VecDeque<Duration>,
 }
 
