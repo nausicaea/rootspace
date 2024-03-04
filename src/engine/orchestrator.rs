@@ -31,6 +31,7 @@ use crate::engine::resources::statistics::Statistics;
 use crate::engine::systems::renderer::Renderer;
 use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
+use crate::engine::resources::rpc_settings::RpcDeps;
 
 const STATS_DISPLAY_INTERVAL: Duration = Duration::from_secs(15);
 const DELTA_TIME: Duration = Duration::from_millis(50);
@@ -51,7 +52,7 @@ impl Orchestrator {
         RR: ResourceRegistry + WithDependencies<D>,
         FUSR: SystemRegistry + WithResources,
         USR: SystemRegistry + WithResources,
-        D: GraphicsDeps + AssetDatabaseDeps + OrchestratorDeps,
+        D: GraphicsDeps + AssetDatabaseDeps + OrchestratorDeps + RpcDeps,
     {
         deps.event_loop().set_control_flow(ControlFlow::Poll);
 

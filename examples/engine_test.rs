@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::ops::Deref;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
@@ -8,6 +9,7 @@ use rootspace::engine::resources::graphics::settings::Settings;
 use rootspace::engine::resources::graphics::GraphicsDeps;
 use rootspace::Reg;
 use winit::event_loop::EventLoop;
+use rootspace::engine::resources::rpc_settings::RpcDeps;
 
 struct Dependencies<'a, T: 'static> {
     rt: Arc<Runtime>,
@@ -54,6 +56,8 @@ impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
         self.rt.clone()
     }
 }
+
+impl<'a, T> RpcDeps for Dependencies<'a, T> {}
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();

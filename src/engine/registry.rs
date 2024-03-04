@@ -19,6 +19,7 @@ use crate::engine::systems::rpc::Rpc;
 use crate::rose_tree::hierarchy::Hierarchy;
 use crate::RegAdd;
 use winit::event::WindowEvent;
+use crate::engine::resources::rpc_settings::RpcSettings;
 
 pub type RRegistry<S> = RegAdd![
     <Camera as Component>::Storage,
@@ -33,6 +34,7 @@ pub type RRegistry<S> = RegAdd![
     Graphics,
     Hierarchy<Index>,
     Statistics,
+    RpcSettings,
     S
 ];
 

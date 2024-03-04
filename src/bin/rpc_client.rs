@@ -1,6 +1,6 @@
 use std::net::{IpAddr, Ipv6Addr};
 use tarpc::tokio_serde::formats::Json;
-use rootspace::engine::systems::rpc::RpcServiceClient;
+use rootspace::engine::systems::rpc::service::RpcServiceClient;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
