@@ -4,24 +4,6 @@ version = "0.1.0"
 authors = ["Eleanor Young <developer@nausicaea.net>"]
 edition = "2021"
 
-[lib]
-name = "rootspace"
-
-[[bin]]
-name = "ply_loader"
-
-[[bin]]
-name = "rpc_client"
-
-[[example]]
-name = "wgpu_playground"
-
-[[example]]
-name = "create_scene"
-
-[[example]]
-name = "engine_test"
-
 [features]
 dbg-gfx = []
 dbg-loop = []
@@ -61,3 +43,26 @@ proptest = "1.0.0"
 proptest-derive = "0.4.0"
 cgmath = "0.18.0"
 rstest = "0.18.2"
+criterion = "0.5.1"
+
+[lib]
+name = "rootspace"
+
+[[bin]]
+name = "ply_loader"
+
+[[bin]]
+name = "rpc_client"
+
+[[example]]
+name = "wgpu_playground"
+
+[[example]]
+name = "create_scene"
+
+[[example]]
+name = "engine_test"
+
+[[bench]]
+name = "plyers_benchmarks"
+harness = false
