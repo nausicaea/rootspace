@@ -57,6 +57,14 @@ impl<'a, T: 'a, S: Storage<Item = T>> Entry<'a, T, S> {
 
 impl<'a, T: Default + 'a, S: Storage<Item = T>> Entry<'a, T, S> {
     pub fn or_default(self) -> &'a mut T {
-        self.or_default()
+        match self {
+            Entry::Vacant(s, i) => {
+                s.insert(i, Default::default());
+                unsafe { s.get_unchecked_mut(i) }
+            },
+            Entry::Occupied(s, i) => {
+                unsafe { s.get_unchecked_mut(i) }
+            },
+        }
     }
 }
