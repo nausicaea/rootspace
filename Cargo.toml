@@ -9,6 +9,7 @@ dbg-gfx = []
 dbg-loop = []
 
 [dependencies]
+env_logger = "0.11"
 winit = { version = "0.29", features = ["serde"] }
 wgpu = { version = "0.19", features = ["serde", "trace", "replay"] }
 bytemuck = { version = "1.0", features = [ "derive" ] }
@@ -36,7 +37,6 @@ tokio = { version = "1.36.0", features = ["rt-multi-thread", "macros", "net", "f
 tarpc = { version = "0.34.0", features = ["serde-transport-json", "tcp", "serde-transport"] }
 
 [dev-dependencies]
-env_logger = "0.11"
 tempfile = "3.0.1"
 serde_test = "1.0.126"
 proptest = "1.0.0"
@@ -44,6 +44,7 @@ proptest-derive = "0.4.0"
 cgmath = "0.18.0"
 rstest = "0.18.2"
 criterion = "0.5.1"
+cargo-husky = { version = "1.5.0", features = ["run-cargo-clippy", "run-cargo-fmt"] }
 
 [lib]
 name = "rootspace"
@@ -53,6 +54,9 @@ name = "ply_loader"
 
 [[bin]]
 name = "rpc_client"
+
+[[bin]]
+name = "rootspace"
 
 [[example]]
 name = "wgpu_playground"
