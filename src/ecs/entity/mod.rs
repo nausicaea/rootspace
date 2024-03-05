@@ -50,7 +50,7 @@ impl std::fmt::Display for Entity {
 
 impl PartialOrd for Entity {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.idx.partial_cmp(&other.idx)
+        Some(self.cmp(other))
     }
 }
 
