@@ -1,6 +1,6 @@
+use clap::{Parser, Subcommand};
 use rootspace::engine::systems::rpc::service::RpcServiceClient;
 use std::net::{IpAddr, Ipv6Addr};
-use clap::{Parser, Subcommand};
 use tarpc::tokio_serde::formats::Json;
 
 #[derive(Debug, Parser)]

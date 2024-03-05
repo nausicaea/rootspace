@@ -18,16 +18,16 @@ use std::future::ready;
 
 use std::time::Duration;
 
+use crate::ecs::event_queue::receiver_id::ReceiverId;
+use crate::ecs::event_queue::EventQueue;
+use crate::engine::events::engine_event::EngineEvent;
+use crate::engine::resources::statistics::Statistics;
 use tarpc::server::incoming::Incoming;
 use tarpc::server::{BaseChannel, Channel};
 use tarpc::tokio_serde::formats::Json;
 use tokio::sync::mpsc::error::TryRecvError;
-use tokio::sync::mpsc::{Receiver};
+use tokio::sync::mpsc::Receiver;
 use tokio::task::JoinHandle;
-use crate::ecs::event_queue::EventQueue;
-use crate::ecs::event_queue::receiver_id::ReceiverId;
-use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::resources::statistics::Statistics;
 
 #[derive(Debug)]
 pub struct Rpc {
@@ -57,9 +57,7 @@ impl System for Rpc {
                             let stats = res.read::<Statistics>().clone();
                             tx.send(stats).unwrap();
                         }
-                        RpcMessage::Exit => {
-                            res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit)
-                        },
+                        RpcMessage::Exit => res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit),
                     }
                 }
                 Err(TryRecvError::Empty | TryRecvError::Disconnected) => break 'recv,
