@@ -33,10 +33,7 @@ impl<E> std::fmt::Debug for ReceiverId<E> {
 
 impl<E> Clone for ReceiverId<E> {
     fn clone(&self) -> Self {
-        ReceiverId {
-            id: self.id,
-            _e: PhantomData,
-        }
+        *self
     }
 }
 
