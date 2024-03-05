@@ -2,25 +2,25 @@ use clap::builder::PossibleValue;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 
-pub const VERTEX_ELEMENT: &'static str = "vertex";
-pub const FACE_ELEMENT: &'static str = "face";
-pub const X_PROPERTY: &'static str = "x";
-pub const Y_PROPERTY: &'static str = "y";
-pub const Z_PROPERTY: &'static str = "z";
-pub const RED_PROPERTY: &'static str = "red";
-pub const GREEN_PROPERTY: &'static str = "green";
-pub const BLUE_PROPERTY: &'static str = "blue";
-pub const ALPHA_PROPERTY: &'static str = "alpha";
-pub const NX_PROPERTY: &'static str = "nx";
-pub const NY_PROPERTY: &'static str = "ny";
-pub const NZ_PROPERTY: &'static str = "nz";
-pub const TEXTURE_U_PROPERTY: &'static str = "texture_u";
-pub const TEXTURE_V_PROPERTY: &'static str = "texture_v";
-pub const S_PROPERTY: &'static str = "s";
-pub const T_PROPERTY: &'static str = "t";
-pub const U_PROPERTY: &'static str = "u";
-pub const V_PROPERTY: &'static str = "v";
-pub const VERTEX_INDICES_LIST_PROPERTY: &'static str = "vertex_indices";
+pub const VERTEX_ELEMENT: &str = "vertex";
+pub const FACE_ELEMENT: &str = "face";
+pub const X_PROPERTY: &str = "x";
+pub const Y_PROPERTY: &str = "y";
+pub const Z_PROPERTY: &str = "z";
+pub const RED_PROPERTY: &str = "red";
+pub const GREEN_PROPERTY: &str = "green";
+pub const BLUE_PROPERTY: &str = "blue";
+pub const ALPHA_PROPERTY: &str = "alpha";
+pub const NX_PROPERTY: &str = "nx";
+pub const NY_PROPERTY: &str = "ny";
+pub const NZ_PROPERTY: &str = "nz";
+pub const TEXTURE_U_PROPERTY: &str = "texture_u";
+pub const TEXTURE_V_PROPERTY: &str = "texture_v";
+pub const S_PROPERTY: &str = "s";
+pub const T_PROPERTY: &str = "t";
+pub const U_PROPERTY: &str = "u";
+pub const V_PROPERTY: &str = "v";
+pub const VERTEX_INDICES_LIST_PROPERTY: &str = "vertex_indices";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 #[error("the sequence of values contains inconsistent data types")]
@@ -29,9 +29,9 @@ pub struct InconsistentDataTypes;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ElementId(pub(crate) usize);
 
-impl Into<usize> for ElementId {
-    fn into(self) -> usize {
-        self.0
+impl From<ElementId> for usize {
+    fn from(val: ElementId) -> Self {
+        val.0
     }
 }
 
@@ -50,9 +50,9 @@ impl std::fmt::Display for ElementId {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PropertyId(pub(crate) usize);
 
-impl Into<usize> for PropertyId {
-    fn into(self) -> usize {
-        self.0
+impl From<PropertyId> for usize {
+    fn from(val: PropertyId) -> Self {
+        val.0
     }
 }
 

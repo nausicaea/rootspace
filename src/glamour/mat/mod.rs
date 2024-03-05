@@ -133,7 +133,7 @@ where
 
         write!(f, "[")?;
         if prettyprint {
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         for i in 0..4 {
             write!(f, "[")?;
@@ -151,7 +151,7 @@ where
                 write!(f, ", ")?;
             }
             if prettyprint {
-                write!(f, "\n")?;
+                writeln!(f)?;
             }
         }
         write!(f, "]")

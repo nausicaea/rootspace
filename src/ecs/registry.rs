@@ -246,7 +246,7 @@ mod tests {
         fn push_n_induction(n in 0usize..1000) {
             let list_n = End;
             for i in 0usize..n {
-                let list_nm1 = list_n.clone();
+                let list_nm1 = list_n;
                 let list_n = ResourceRegistry::push(list_n, TestElementA(i));
 
                 if i == n - 1 {
@@ -259,7 +259,7 @@ mod tests {
         fn len_n_induction(n in 0usize..1000) {
             let list_n = End;
             for i in 0usize..n {
-                let list_nm1 = list_n.clone();
+                let list_nm1 = list_n;
                 let list_n = ResourceRegistry::push(list_n, TestElementA(i));
 
                 if i == n - 1 {

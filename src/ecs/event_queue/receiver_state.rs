@@ -18,7 +18,7 @@ impl<E> ReceiverState<E> {
             id,
             read: 0,
             received: 0,
-            _e: PhantomData::default(),
+            _e: PhantomData,
         }
     }
 
@@ -40,7 +40,7 @@ impl<E> Clone for ReceiverState<E> {
             id: self.id,
             read: self.read,
             received: self.received,
-            _e: PhantomData::default(),
+            _e: PhantomData,
         }
     }
 }
@@ -51,7 +51,7 @@ impl<E> From<(usize, usize, usize)> for ReceiverState<E> {
             id: value.0,
             read: value.1,
             received: value.2,
-            _e: PhantomData::default(),
+            _e: PhantomData,
         }
     }
 }

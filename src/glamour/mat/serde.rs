@@ -34,7 +34,7 @@ where
 
         impl<R> Default for MatVisitor<R> {
             fn default() -> Self {
-                MatVisitor(std::marker::PhantomData::default())
+                MatVisitor(std::marker::PhantomData)
             }
         }
 

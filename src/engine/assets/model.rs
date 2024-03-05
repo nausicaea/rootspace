@@ -29,7 +29,7 @@ impl Model {
                     .values()
                     .flat_map(|e| e.properties.values().flat_map(|p| p.comments())),
             )
-            .map(|c| AsRef::<str>::as_ref(c))
+            .map(AsRef::<str>::as_ref)
             .filter(|c| c.starts_with("TextureFile"))
             .map(|c| c.trim_start_matches("TextureFile "))
             .chain(
@@ -43,7 +43,7 @@ impl Model {
                             .values()
                             .flat_map(|e| e.properties.values().flat_map(|p| p.obj_info())),
                     )
-                    .map(|c| AsRef::<str>::as_ref(c))
+                    .map(AsRef::<str>::as_ref)
                     .filter(|c| c.starts_with("texture"))
                     .map(|c| c.trim_start_matches("texture ")),
             )

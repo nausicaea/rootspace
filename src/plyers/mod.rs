@@ -823,7 +823,7 @@ mod tests {
                         "/target/tests/save_ply_succeeds_for_test_files"
                     ));
                     if !persist_path.is_dir() {
-                        std::fs::create_dir_all(&persist_path).unwrap();
+                        std::fs::create_dir_all(persist_path).unwrap();
                     }
                     let persist_path = persist_path.join(path.file_name().unwrap());
                     tmp.persist(&persist_path).unwrap();
@@ -839,7 +839,7 @@ mod tests {
                     "/target/tests/save_ply_succeeds_for_test_files"
                 ));
                 if !persist_path.is_dir() {
-                    std::fs::create_dir_all(&persist_path).unwrap();
+                    std::fs::create_dir_all(persist_path).unwrap();
                 }
                 let persist_path = persist_path.join(path.file_name().unwrap());
                 tmp.persist(&persist_path).unwrap();

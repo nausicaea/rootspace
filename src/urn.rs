@@ -29,7 +29,7 @@ impl<T> Default for Urn<T> {
         Urn {
             max_token: 0,
             free_tokens: Vec::default(),
-            _t: std::marker::PhantomData::default(),
+            _t: std::marker::PhantomData,
         }
     }
 }

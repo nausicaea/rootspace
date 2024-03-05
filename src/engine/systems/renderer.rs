@@ -258,7 +258,7 @@ impl System for Renderer {
             Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
             Err(SurfaceError::Timeout) => self.on_timeout(),
             Ok(mut enc) => {
-                self.render(&res, enc.begin(Some("main-render-pass")));
+                self.render(res, enc.begin(Some("main-render-pass")));
                 enc.submit();
             }
         }

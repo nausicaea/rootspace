@@ -71,7 +71,7 @@ mod tests {
     };
     use super::*;
 
-    const EMPTY: &'static [u8] = b"";
+    const EMPTY: &[u8] = b"";
 
     #[test]
     fn parse_ply_minimal_ascii_parses_correctly() {

@@ -89,7 +89,7 @@ pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> a
 
             // Push child directories onto the stack, and copy files
             if path.is_dir() {
-                stack.push(path.into());
+                stack.push(path);
             } else {
                 match path.file_name() {
                     Some(filename) => {
@@ -156,7 +156,7 @@ impl<'a> TryFrom<&'a str> for NewOrExFilePathBuf {
     type Error = FileError;
 
     fn try_from(path: &'a str) -> Result<Self, Self::Error> {
-        TryFrom::<&Path>::try_from(&Path::new(path))
+        TryFrom::<&Path>::try_from(Path::new(path))
     }
 }
 
@@ -288,7 +288,7 @@ impl<'a> TryFrom<&'a str> for FilePathBuf {
     type Error = FileError;
 
     fn try_from(path: &'a str) -> Result<Self, Self::Error> {
-        TryFrom::<&Path>::try_from(&Path::new(path))
+        TryFrom::<&Path>::try_from(Path::new(path))
     }
 }
 
@@ -382,7 +382,7 @@ impl<'a> TryFrom<&'a str> for DirPathBuf {
     type Error = FileError;
 
     fn try_from(path: &'a str) -> Result<Self, Self::Error> {
-        TryFrom::<&Path>::try_from(&Path::new(path))
+        TryFrom::<&Path>::try_from(Path::new(path))
     }
 }
 

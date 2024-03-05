@@ -179,7 +179,7 @@ mod tests {
             let mut m = Transform::default();
 
             let p = Vec4::new(num[0], num[1], num[2], 0.0);
-            m.set_translation(p.clone());
+            m.set_translation(p);
 
             prop_assert_eq!(m.translation(), &p);
         }
@@ -189,7 +189,7 @@ mod tests {
             let mut m = Transform::default();
 
             let o = Unit::from(Quat::new(num[0], num[1], num[2], num[3]));
-            m.set_orientation(o.clone());
+            m.set_orientation(o);
 
             prop_assert_eq!(m.orientation(), &o);
         }
@@ -199,7 +199,7 @@ mod tests {
             let mut m = Transform::default();
 
             let s = Vec4::new(num[0], num[1], num[2], 0.0);
-            m.set_scale(s.clone());
+            m.set_scale(s);
 
             prop_assert_eq!(m.scale(), &s);
         }

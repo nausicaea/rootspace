@@ -66,7 +66,7 @@ impl<'rt> Encoder<'rt> {
             occlusion_query_set: None,
         });
 
-        RenderPass(render_pass, &self.database)
+        RenderPass(render_pass, self.database)
     }
 
     pub fn submit(self) {

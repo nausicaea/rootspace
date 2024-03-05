@@ -347,18 +347,18 @@ mod tests {
 
         let m4: Mat4<f32> = p.0;
 
-        assert_relative_eq!(m4[(0, 0)], 0.004828427216);
+        assert_relative_eq!(m4[(0, 0)], 0.004_828_427);
         assert_relative_eq!(m4[(0, 1)], 0.0);
         assert_relative_eq!(m4[(0, 2)], 0.0);
         assert_relative_eq!(m4[(0, 3)], 0.0);
         assert_relative_eq!(m4[(1, 0)], 0.0);
-        assert_relative_eq!(m4[(1, 1)], 0.007242640824);
+        assert_relative_eq!(m4[(1, 1)], 0.007_242_641);
         assert_relative_eq!(m4[(1, 2)], 0.0);
         assert_relative_eq!(m4[(1, 3)], 0.0);
         assert_relative_eq!(m4[(2, 0)], 0.0);
         assert_relative_eq!(m4[(2, 1)], 0.0);
-        assert_relative_eq!(m4[(2, 2)], -0.00200020002);
-        assert_relative_eq!(m4[(2, 3)], -1.00020002);
+        assert_relative_eq!(m4[(2, 2)], -0.002_000_2);
+        assert_relative_eq!(m4[(2, 3)], -1.000_2);
         assert_relative_eq!(m4[(3, 0)], 0.0);
         assert_relative_eq!(m4[(3, 1)], 0.0);
         assert_relative_eq!(m4[(3, 2)], 0.0);
@@ -378,18 +378,18 @@ mod tests {
 
         let m4: Mat4<f32> = i.0;
 
-        assert_relative_eq!(m4[(0, 0)], 207.1067772724);
+        assert_relative_eq!(m4[(0, 0)], 207.106_78);
         assert_relative_eq!(m4[(0, 1)], 0.0);
         assert_relative_eq!(m4[(0, 2)], 0.0);
         assert_relative_eq!(m4[(0, 3)], 0.0);
         assert_relative_eq!(m4[(1, 0)], 0.0);
-        assert_relative_eq!(m4[(1, 1)], 138.0711848483);
+        assert_relative_eq!(m4[(1, 1)], 138.071_18);
         assert_relative_eq!(m4[(1, 2)], 0.0);
         assert_relative_eq!(m4[(1, 3)], 0.0);
         assert_relative_eq!(m4[(2, 0)], 0.0);
         assert_relative_eq!(m4[(2, 1)], 0.0);
-        assert_relative_eq!(m4[(2, 2)], -499.9500000005);
-        assert_relative_eq!(m4[(2, 3)], -500.0499999995);
+        assert_relative_eq!(m4[(2, 2)], -499.95);
+        assert_relative_eq!(m4[(2, 3)], -500.05);
         assert_relative_eq!(m4[(3, 0)], 0.0);
         assert_relative_eq!(m4[(3, 1)], 0.0);
         assert_relative_eq!(m4[(3, 2)], 0.0);

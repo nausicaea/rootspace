@@ -128,8 +128,7 @@ impl RawMesh {
             .as_slice()
             .map(|inner: &[u32]| inner)
             .iter()
-            .flat_map(|inner| inner.iter())
-            .map(|i| *i)
+            .flat_map(|inner| inner.iter()).copied()
             .collect();
 
         log::trace!("Loaded {} vertices and {} indices", vertex_data.len(), indices.len());

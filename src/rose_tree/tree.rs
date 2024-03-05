@@ -103,7 +103,7 @@ where
             return false;
         }
 
-        if !self.nodes.contains_key(&parent) {
+        if !self.nodes.contains_key(parent) {
             panic!("The parent node does not exist");
         }
 
@@ -237,7 +237,7 @@ where
         let key = self.key.as_ref()?;
 
         if let Some(node) = self.hier.nodes.get_key_value(key) {
-            self.key = self.hier.parents.get(key).map(|p| p.clone()).flatten();
+            self.key = self.hier.parents.get(key).cloned().flatten();
             Some(node)
         } else {
             self.key = None;

@@ -102,7 +102,7 @@ impl AssetDatabase {
         let asset_path = self.assets.join(group).join(name);
 
         if !asset_path.starts_with(&self.assets) {
-            return Err(Error::OutOfTree(asset_path.into()));
+            return Err(Error::OutOfTree(asset_path));
         }
 
         Ok(asset_path)

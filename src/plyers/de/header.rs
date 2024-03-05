@@ -22,38 +22,38 @@ use super::{
 };
 use crate::urn::Urn;
 
-const PLY: &'static [u8] = b"ply";
-const END_HEADER: &'static [u8] = b"end_header";
-const FORMAT: &'static [u8] = b"format";
-const ELEMENT: &'static [u8] = b"element";
-const COMMENT: &'static [u8] = b"comment";
-const OBJ_INFO: &'static [u8] = b"obj_info";
-const PROPERTY: &'static [u8] = b"property";
-const PROPERTY_LIST: &'static [u8] = b"property list";
-const ASCII: &'static [u8] = b"ascii";
-const BINARY_LITTLE_ENDIAN: &'static [u8] = b"binary_little_endian";
-const BINARY_BIG_ENDIAN: &'static [u8] = b"binary_big_endian";
+const PLY: &[u8] = b"ply";
+const END_HEADER: &[u8] = b"end_header";
+const FORMAT: &[u8] = b"format";
+const ELEMENT: &[u8] = b"element";
+const COMMENT: &[u8] = b"comment";
+const OBJ_INFO: &[u8] = b"obj_info";
+const PROPERTY: &[u8] = b"property";
+const PROPERTY_LIST: &[u8] = b"property list";
+const ASCII: &[u8] = b"ascii";
+const BINARY_LITTLE_ENDIAN: &[u8] = b"binary_little_endian";
+const BINARY_BIG_ENDIAN: &[u8] = b"binary_big_endian";
 
-const FLOAT64: &'static [u8] = b"float64";
-const FLOAT32: &'static [u8] = b"float32";
+const FLOAT64: &[u8] = b"float64";
+const FLOAT32: &[u8] = b"float32";
 
-const USHORT: &'static [u8] = b"ushort";
-const UINT32: &'static [u8] = b"uint32";
-const UINT16: &'static [u8] = b"uint16";
-const DOUBLE: &'static [u8] = b"double";
+const USHORT: &[u8] = b"ushort";
+const UINT32: &[u8] = b"uint32";
+const UINT16: &[u8] = b"uint16";
+const DOUBLE: &[u8] = b"double";
 
-const UINT8: &'static [u8] = b"uint8";
-const UCHAR: &'static [u8] = b"uchar";
-const SHORT: &'static [u8] = b"short";
-const INT32: &'static [u8] = b"int32";
-const INT16: &'static [u8] = b"int16";
-const FLOAT: &'static [u8] = b"float";
+const UINT8: &[u8] = b"uint8";
+const UCHAR: &[u8] = b"uchar";
+const SHORT: &[u8] = b"short";
+const INT32: &[u8] = b"int32";
+const INT16: &[u8] = b"int16";
+const FLOAT: &[u8] = b"float";
 
-const UINT: &'static [u8] = b"uint";
-const INT8: &'static [u8] = b"int8";
-const CHAR: &'static [u8] = b"char";
+const UINT: &[u8] = b"uint";
+const INT8: &[u8] = b"int8";
+const CHAR: &[u8] = b"char";
 
-const INT: &'static [u8] = b"int";
+const INT: &[u8] = b"int";
 
 fn format_type<'a, E: ParseError<&'a [u8]>>(input: &'a [u8]) -> IResult<&'a [u8], FormatType, E> {
     alt((

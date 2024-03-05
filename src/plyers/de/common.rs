@@ -27,7 +27,7 @@ pub fn split_vecs_of_either<L, R>(mut input: Vec<Either<L, R>>) -> (Vec<L>, Vec<
 }
 
 pub fn is_whitespace(b: u8) -> bool {
-    (b >= 0x09 && b <= 0x0d) || (b == 0x20)
+    (0x09..=0x0d).contains(&b) || (b == 0x20)
 }
 
 pub fn is_newline(b: u8) -> bool {
@@ -89,7 +89,7 @@ mod tests {
 
     use super::*;
 
-    const EMPTY: &'static [u8] = b"";
+    const EMPTY: &[u8] = b"";
 
     proptest! {
         #[test]

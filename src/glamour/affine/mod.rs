@@ -205,7 +205,7 @@ where
 
         let s = Vec4::new(v.col(0).norm(), v.col(1).norm(), v.col(2).norm(), R::zero());
 
-        let mut rot_m: Mat4<R> = v.clone();
+        let mut rot_m: Mat4<R> = v;
         rot_m[(0, 0)] /= s[0];
         rot_m[(1, 0)] /= s[0];
         rot_m[(2, 0)] /= s[0];
@@ -262,7 +262,7 @@ where
             t: self.t.unwrap_or_else(Vec4::zero),
             o: self
                 .o
-                .map(|o| Unit::from(o))
+                .map(Unit::from)
                 .unwrap_or_else(|| Unit::from(Quat::identity())),
             s: self
                 .s

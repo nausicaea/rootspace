@@ -24,7 +24,7 @@ mod tests {
 
     #[test]
     fn mat4_provides_norm_method() {
-        let a: Mat4<f32> = (0..16).into_iter().map(|n| n as f32).collect();
-        assert_ulps_eq!(a.norm(), 35.21363372331802);
+        let a: Mat4<f32> = (0..16).map(|n| n as f32).collect();
+        assert_ulps_eq!(a.norm(), 35.213_634);
     }
 }

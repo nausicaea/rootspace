@@ -182,7 +182,7 @@ where
 
         impl<U> Default for ZstStorageVisitor<U> {
             fn default() -> Self {
-                ZstStorageVisitor(PhantomData::default())
+                ZstStorageVisitor(PhantomData)
             }
         }
 

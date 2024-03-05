@@ -35,7 +35,7 @@ impl<E> Clone for ReceiverId<E> {
     fn clone(&self) -> Self {
         ReceiverId {
             id: self.id,
-            _e: PhantomData::default(),
+            _e: PhantomData,
         }
     }
 }
@@ -46,7 +46,7 @@ impl<E> ReceiverId<E> {
     pub(super) fn new(id: usize) -> Self {
         ReceiverId {
             id,
-            _e: PhantomData::default(),
+            _e: PhantomData,
         }
     }
 

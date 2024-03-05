@@ -71,9 +71,7 @@ impl<'a> Runtime<'a> {
 
         let texture_format = capabilities
             .formats
-            .iter()
-            .filter(|&tf| tf == preferred_texture_format)
-            .next()
+            .iter().find(|&tf| tf == preferred_texture_format)
             .unwrap_or(&capabilities.formats[0]);
         debug!("Choosing texture format: {:?}", &texture_format);
 

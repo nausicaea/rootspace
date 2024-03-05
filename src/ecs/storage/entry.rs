@@ -57,6 +57,6 @@ impl<'a, T: 'a, S: Storage<Item = T>> Entry<'a, T, S> {
 
 impl<'a, T: Default + 'a, S: Storage<Item = T>> Entry<'a, T, S> {
     pub fn or_default(self) -> &'a mut T {
-        self.or_insert_with(Default::default)
+        self.or_default()
     }
 }

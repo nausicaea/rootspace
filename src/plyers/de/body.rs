@@ -281,8 +281,8 @@ where
             },
             BTreeMap::<PropertyId, (Primitive, Values)>::new,
             |mut p_acc, (p_id, prim, dt, p)| {
-                if !p_acc.contains_key(&p_id) {
-                    p_acc.insert(p_id, (prim, (dt, p).try_into().unwrap()));
+                if let std::collections::btree_map::Entry::Vacant(e) = p_acc.entry(p_id) {
+                    e.insert((prim, (dt, p).try_into().unwrap()));
                 } else {
                     p_acc.get_mut(&p_id).map(|(prim_acc, ref mut p_acc)| {
                         if prim_acc != &prim {
@@ -361,7 +361,7 @@ mod tests {
     use nom::number::complete::recognize_float;
     use proptest::{prop_assert_eq, proptest, string::bytes_regex};
 
-    const EMPTY: &'static [u8] = b"";
+    const EMPTY: &[u8] = b"";
 
     proptest! {
         #[test]

@@ -62,7 +62,7 @@ impl Ord for Entity {
 
 impl AsRef<Entity> for Entity {
     fn as_ref(&self) -> &Entity {
-        &self
+        self
     }
 }
 

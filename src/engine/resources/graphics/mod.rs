@@ -152,9 +152,9 @@ impl Graphics {
         self.database.insert_buffer(buf)
     }
 
-    pub fn create_buffer_init<'a, T: bytemuck::NoUninit>(
+    pub fn create_buffer_init<T: bytemuck::NoUninit>(
         &mut self,
-        label: Option<&'a str>,
+        label: Option<&str>,
         usage: wgpu::BufferUsages,
         contents: &[T],
     ) -> BufferId {

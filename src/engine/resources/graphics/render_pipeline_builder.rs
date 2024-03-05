@@ -73,7 +73,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                 self.database
                     .bind_group_layouts
                     .get(&b)
-                    .expect(&format!("Unknown {:?}", b))
+                    .unwrap_or_else(|| panic!("Unknown {:?}", b))
             })
             .collect::<Vec<_>>();
 
@@ -107,7 +107,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                             .database
                             .shader_modules
                             .get(&vsm)
-                            .expect(&format!("Unknown {:?}", vsm)),
+                            .unwrap_or_else(|| panic!("Unknown {:?}", vsm)),
                         entry_point: vep,
                         buffers: self.vertex_buffer_layouts.as_slice(),
                     })
@@ -117,7 +117,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                         .database
                         .shader_modules
                         .get(&fsm)
-                        .expect(&format!("Unknown {:?}", fsm)),
+                        .unwrap_or_else(|| panic!("Unknown {:?}", fsm)),
                     entry_point: fep,
                     targets: &cts,
                 }),

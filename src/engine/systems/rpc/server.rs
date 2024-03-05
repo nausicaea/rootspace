@@ -41,7 +41,7 @@ impl RpcService for RpcServer {
         trace!("RpcService::perf");
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.mpsc_tx.send(RpcMessage::StatsRequest(tx)).await.unwrap();
-        let stats = rx.await.unwrap();
-        stats
+        
+        rx.await.unwrap()
     }
 }

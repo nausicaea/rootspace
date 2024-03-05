@@ -34,6 +34,6 @@ mod tests {
     #[test]
     fn vec4_provides_norm_method() {
         let a: Vec4<f32> = Vec4::new(0.0, 1.0, 2.0, 3.0);
-        assert_ulps_eq!(a.norm(), 3.7416573868);
+        assert_ulps_eq!(a.norm(), 3.741_657_5);
     }
 }

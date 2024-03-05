@@ -44,7 +44,7 @@ impl std::fmt::Display for Index {
 
 impl AsRef<Index> for Index {
     fn as_ref(&self) -> &Index {
-        &self
+        self
     }
 }
 

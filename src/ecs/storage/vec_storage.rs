@@ -265,7 +265,7 @@ where
 
         impl<T> Default for VecStorageVisitor<T> {
             fn default() -> Self {
-                VecStorageVisitor(PhantomData::default())
+                VecStorageVisitor(PhantomData)
             }
         }
 
