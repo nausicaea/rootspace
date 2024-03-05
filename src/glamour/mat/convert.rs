@@ -48,8 +48,6 @@ where
 {
     fn from_iter<T: IntoIterator<Item = R>>(iter: T) -> Self {
         let mut iter = iter.into_iter();
-        let sh = iter.size_hint();
-        sh.0 < 16;
 
         let mut mat: Mat4<R> = Mat4::zero();
         for i in 0..4 {
