@@ -10,6 +10,7 @@ repos:
         pass_filenames: false
         language: system
         types: [rust]
+        stages: [pre-commit]
 
       - id: cargo-check
         name: Cargo Check
@@ -17,6 +18,7 @@ repos:
         pass_filenames: false
         language: system
         types: [rust]
+        stages: [pre-commit]
 
       - id: cargo-clippy
         name: Cargo Clippy (with warnings)
@@ -24,11 +26,29 @@ repos:
         pass_filenames: false
         language: system
         types: [rust]
+        stages: [pre-commit]
 
-      - id: cargo-fmt
-        name: Cargo Format
+      - id: cargo-fmt-check
+        name: Cargo Format (check)
         entry: cargo fmt -- --check
         pass_filenames: false
         language: system
         types: [rust]
+        stages: [pre-commit]
+
+      - id: cargo-clippy-fix
+        name: Cargo Clippy
+        entry: cargo clippy -- --fix
+        pass_filenames: false
+        language: system
+        types: [rust]
+        stages: [pre-push]
+
+      - id: cargo-fmt
+        name: Cargo Format
+        entry: cargo fmt
+        pass_filenames: false
+        language: system
+        types: [rust]
+        stages: [pre-push]
 

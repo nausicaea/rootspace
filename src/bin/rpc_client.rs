@@ -1,7 +1,6 @@
 use clap::{Parser, Subcommand};
 use rootspace::engine::systems::rpc::service::RpcServiceClient;
 use std::net::{IpAddr, Ipv6Addr};
-use tarpc::tokio_serde::formats::Json;
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -25,7 +24,8 @@ enum Command {
 async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     let server_addr = (args.host, args.port);
-    let mut connection = tarpc::serde_transport::tcp::connect(server_addr, Json::default);
+    let mut connection =
+        tarpc::serde_transport::tcp::connect(server_addr, tarpc::tokio_serde::formats::Bincode::default);
     connection.config_mut().max_frame_length(args.max_frame_length);
 
     let client = RpcServiceClient::new(tarpc::client::Config::default(), connection.await?).spawn();

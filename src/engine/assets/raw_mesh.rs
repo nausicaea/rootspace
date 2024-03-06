@@ -9,13 +9,13 @@ use std::collections::HashMap;
 use super::Error;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct RawMesh {
+pub struct CpuMesh {
     pub label: Option<String>,
     pub vertices: Vec<Vertex>,
     pub indices: Vec<u32>,
 }
 
-impl RawMesh {
+impl CpuMesh {
     pub(crate) fn with_ply(ply: &Ply) -> Result<Self, Error> {
         let label = ply
             .descriptor
@@ -134,7 +134,7 @@ impl RawMesh {
 
         log::trace!("Loaded {} vertices and {} indices", vertex_data.len(), indices.len());
 
-        Ok(RawMesh {
+        Ok(CpuMesh {
             label,
             vertices,
             indices,

@@ -3,16 +3,16 @@ use std::path::Path;
 use anyhow::Context;
 
 use crate::ecs::resources::Resources;
-use crate::engine::assets::raw_mesh::RawMesh;
+use crate::engine::assets::raw_mesh::CpuMesh;
 use crate::engine::resources::asset_database::AssetDatabase;
 use crate::plyers;
 use crate::plyers::types::Ply;
 
-use super::{material::Material, mesh::Mesh, private::PrivLoadAsset, Error};
+use super::{material::Material, mesh::GpuMesh, private::PrivLoadAsset, Error};
 
 #[derive(Debug)]
 pub struct Model {
-    pub mesh: Mesh,
+    pub mesh: GpuMesh,
     pub materials: Vec<Material>,
 }
 
@@ -72,10 +72,10 @@ impl Model {
             materials.push(material);
         }
 
-        let raw_mesh = RawMesh::with_ply(ply).context("trying to load a raw mesh from Stanford Ply data")?;
+        let raw_mesh = CpuMesh::with_ply(ply).context("trying to load a raw mesh from Stanford Ply data")?;
 
-        let mesh =
-            Mesh::with_raw_mesh(res, &raw_mesh).context("trying to load a GPU-native mesh from the raw mesh data")?;
+        let mesh = GpuMesh::with_raw_mesh(res, &raw_mesh)
+            .context("trying to load a GPU-native mesh from the raw mesh data")?;
 
         Ok(Model { mesh, materials })
     }

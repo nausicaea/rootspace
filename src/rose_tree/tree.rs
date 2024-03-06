@@ -395,7 +395,7 @@ mod tests {
         let mut rt: Tree<Tk, Tv> = Tree::default();
         rt.insert(Tk(0), Tv("Hello, World!"));
         rt.insert_child(&Tk(0), Tk(1), Tv("Good night, World!"));
-        rt.insert_child(&Tk(0), Tk(2), Tv("Data for TestKey2"));
+        rt.insert_child(&Tk(0), Tk(2), Tv("Data for Tk2"));
     }
 
     #[test]
@@ -481,9 +481,9 @@ mod tests {
         let mut rt: Tree<Tk, Tv> = Tree::default();
 
         assert_eq!(rt.len(), 0);
-        rt.insert(Tk(0), Tv("TestKey(0)"));
+        rt.insert(Tk(0), Tv("Tk(0)"));
         assert_eq!(rt.len(), 1);
-        rt.insert_child(&Tk(0), Tk(1), Tv("TestKey(1)"));
+        rt.insert_child(&Tk(0), Tk(1), Tv("Tk(1)"));
         assert_eq!(rt.len(), 2);
     }
 
@@ -492,17 +492,17 @@ mod tests {
         let mut rt: Tree<Tk, Tv> = Tree::default();
 
         assert!(!rt.contains_key(&Tk(0)));
-        rt.insert(Tk(0), Tv("TestKey(0)"));
+        rt.insert(Tk(0), Tv("Tk(0)"));
         assert!(rt.contains_key(&Tk(0)));
-        rt.insert_child(&Tk(0), Tk(1), Tv("TestKey(1)"));
+        rt.insert_child(&Tk(0), Tk(1), Tv("Tk(1)"));
         assert!(rt.contains_key(&Tk(1)));
     }
 
     #[test]
     fn clear() {
         let mut rt: Tree<Tk, Tv> = Tree::default();
-        rt.insert(Tk(0), Tv("TestKey(0)"));
-        rt.insert_child(&Tk(0), Tk(1), Tv("TestKey(1)"));
+        rt.insert(Tk(0), Tv("Tk(0)"));
+        rt.insert_child(&Tk(0), Tk(1), Tv("Tk(1)"));
 
         rt.clear();
         assert!(rt.is_empty());
@@ -598,50 +598,50 @@ mod tests {
                 Token::Struct { name: "Tree", len: 3 },
                 Token::Str("edges"),
                 Token::Map { len: Some(3) },
-                Token::NewtypeStruct { name: "TestKey" },
+                Token::NewtypeStruct { name: "Tk" },
                 Token::U64(0),
                 Token::Seq { len: Some(1) },
-                Token::NewtypeStruct { name: "TestKey" },
+                Token::NewtypeStruct { name: "Tk" },
                 Token::U64(2),
                 Token::SeqEnd,
-                Token::NewtypeStruct { name: "TestKey" },
+                Token::NewtypeStruct { name: "Tk" },
                 Token::U64(1),
                 Token::Seq { len: Some(2) },
-                Token::NewtypeStruct { name: "TestKey" },
+                Token::NewtypeStruct { name: "Tk" },
                 Token::U64(3),
-                Token::NewtypeStruct { name: "TestKey" },
+                Token::NewtypeStruct { name: "Tk" },
                 Token::U64(4),
                 Token::SeqEnd,
-                Token::NewtypeStruct { name: "TestKey" },
+                Token::NewtypeStruct { name: "Tk" },
                 Token::U64(3),
                 Token::Seq { len: Some(1) },
-                Token::NewtypeStruct { name: "TestKey" },
+                Token::NewtypeStruct { name: "Tk" },
                 Token::U64(5),
                 Token::SeqEnd,
+                Token::MapEnd,
+                Token::Str("parents"),
+                Token::Map { len: Some(6) },
+                Token::NewtypeStruct { name: "Tk" },
+                Token::U64(0),
+                Token::NewtypeStruct { name: "Tk" },
+                Token::U64(1),
+                Token::NewtypeStruct { name: "Tk" },
+                Token::U64(2),
+                Token::NewtypeStruct { name: "Tk" },
+                Token::U64(3),
+                Token::NewtypeStruct { name: "Tk" },
+                Token::U64(4),
+                Token::NewtypeStruct { name: "Tk" },
+                Token::U64(5),
                 Token::MapEnd,
                 Token::Str("nodes"),
-                Token::Map { len: Some(6) },
-                Token::NewtypeStruct { name: "TestKey" },
+                Token::Map { len: Some(2) },
+                Token::NewtypeStruct { name: "Tk" },
                 Token::U64(0),
-                Token::NewtypeStruct { name: "TestKey" },
-                Token::U64(1),
-                Token::NewtypeStruct { name: "TestKey" },
-                Token::U64(2),
-                Token::NewtypeStruct { name: "TestKey" },
-                Token::U64(3),
-                Token::NewtypeStruct { name: "TestKey" },
-                Token::U64(4),
-                Token::NewtypeStruct { name: "TestKey" },
-                Token::U64(5),
-                Token::MapEnd,
-                Token::Str("roots"),
-                Token::Seq { len: Some(2) },
-                Token::NewtypeStruct { name: "TestKey" },
-                Token::U64(0),
-                Token::NewtypeStruct { name: "TestKey" },
+                Token::NewtypeStruct { name: "Tk" },
                 Token::U64(1),
                 Token::SeqEnd,
-                Token::StructEnd,
+                Token::MapEnd,
             ],
         )
     }

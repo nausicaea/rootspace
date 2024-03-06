@@ -24,7 +24,6 @@ use crate::engine::events::engine_event::EngineEvent;
 use crate::engine::resources::statistics::Statistics;
 use tarpc::server::incoming::Incoming;
 use tarpc::server::{BaseChannel, Channel};
-use tarpc::tokio_serde::formats::Json;
 use tokio::sync::mpsc::error::TryRecvError;
 use tokio::sync::mpsc::Receiver;
 use tokio::task::JoinHandle;
@@ -80,7 +79,8 @@ impl WithResources for Rpc {
         };
         let receiver = res.write::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        let mut listener = tarpc::serde_transport::tcp::listen(&ba, Json::default).await?;
+        let mut listener =
+            tarpc::serde_transport::tcp::listen(&ba, tarpc::tokio_serde::formats::Bincode::default).await?;
         info!("RPC binding to {}", listener.local_addr());
         listener.config_mut().max_frame_length(mfl);
         let (tx, rx) = tokio::sync::mpsc::channel(mcc);
