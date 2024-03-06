@@ -2,13 +2,33 @@
 fail_fast: true
 exclude: \.ply$
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+  - repo: local
     hooks:
-      - id: check-yaml
-      - id: trailing-whitespace
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
-    hooks:
-      - id: fmt
+      - id: cargo-test
+        name: Cargo Test
+        entry: cargo test
+        pass_filenames: false
+        language: system
+        types: [rust]
+
       - id: cargo-check
+        name: Cargo Check
+        entry: cargo check
+        pass_filenames: false
+        language: system
+        types: [rust]
+
+      - id: cargo-clippy
+        name: Cargo Clippy (with warnings)
+        entry: cargo clippy -- -D warnings
+        pass_filenames: false
+        language: system
+        types: [rust]
+
+      - id: cargo-fmt
+        name: Cargo Format
+        entry: cargo fmt -- --check
+        pass_filenames: false
+        language: system
+        types: [rust]
+
