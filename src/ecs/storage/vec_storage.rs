@@ -1,5 +1,5 @@
-use std::{collections::BTreeSet, marker::PhantomData, ptr};
 use std::mem::MaybeUninit;
+use std::{collections::BTreeSet, marker::PhantomData, ptr};
 
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
@@ -48,7 +48,8 @@ impl<T> VecStorage<T> {
 
         // Adjust the length of the data container if necessary.
         if self.data.len() <= idx_usize {
-            self.data.resize_with(idx_usize + 1 - self.data.len(), || MaybeUninit::uninit());
+            self.data
+                .resize_with(idx_usize + 1 - self.data.len(), || MaybeUninit::uninit());
         }
 
         // If the index was previously occupied, return the old piece of data.
@@ -225,7 +226,7 @@ where
         self.index
             .iter()
             .map(Into::<usize>::into)
-            .all(|idx| unsafe { self.data[idx].assume_init_ref().eq(rhs.data[idx].assume_init_ref())})
+            .all(|idx| unsafe { self.data[idx].assume_init_ref().eq(rhs.data[idx].assume_init_ref()) })
     }
 }
 
@@ -245,7 +246,7 @@ where
     {
         let mut state = ser.serialize_map(Some(self.index.len()))?;
         for idx in &self.index {
-            state.serialize_entry(idx, unsafe {self.data[Into::<usize>::into(idx)].assume_init_ref()})?;
+            state.serialize_entry(idx, unsafe { self.data[Into::<usize>::into(idx)].assume_init_ref() })?;
         }
         state.end()
     }

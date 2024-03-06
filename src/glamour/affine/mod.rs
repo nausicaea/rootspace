@@ -260,10 +260,7 @@ where
     pub fn build(self) -> Affine<R> {
         Affine {
             t: self.t.unwrap_or_else(Vec4::zero),
-            o: self
-                .o
-                .map(Unit::from)
-                .unwrap_or_else(|| Unit::from(Quat::identity())),
+            o: self.o.map(Unit::from).unwrap_or_else(|| Unit::from(Quat::identity())),
             s: self
                 .s
                 .unwrap_or_else(|| Vec4::new(R::one(), R::one(), R::one(), R::zero())),

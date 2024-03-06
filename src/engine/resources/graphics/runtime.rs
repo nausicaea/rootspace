@@ -1,8 +1,8 @@
+use crate::engine::resources::graphics::settings::Settings;
 use log::debug;
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
 use winit::event_loop::EventLoopWindowTarget;
 use winit::window::Fullscreen;
-use crate::engine::resources::graphics::settings::Settings;
 
 #[derive(Debug)]
 pub struct Runtime<'a> {
@@ -16,10 +16,7 @@ pub struct Runtime<'a> {
 }
 
 impl<'a> Runtime<'a> {
-    pub async fn new<T>(
-        event_loop: &EventLoopWindowTarget<T>,
-        settings: &Settings,
-    ) -> Runtime<'a> {
+    pub async fn new<T>(event_loop: &EventLoopWindowTarget<T>, settings: &Settings) -> Runtime<'a> {
         let primary_monitor = event_loop.primary_monitor();
         let window = std::sync::Arc::new(
             winit::window::WindowBuilder::new()
@@ -66,7 +63,8 @@ impl<'a> Runtime<'a> {
 
         let texture_format = capabilities
             .formats
-            .iter().find(|&tf| tf == &settings.preferred_texture_format)
+            .iter()
+            .find(|&tf| tf == &settings.preferred_texture_format)
             .unwrap_or(&capabilities.formats[0]);
         debug!("Choosing texture format: {:?}", &texture_format);
 

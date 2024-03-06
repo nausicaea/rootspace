@@ -151,9 +151,7 @@ where
 
 type FormatBlockOutput = (FormatType, Vec<Either<CommentDescriptor, ObjInfoDescriptor>>);
 
-fn format_blk<'a, E>(
-    input: &'a [u8],
-) -> IResult<&'a [u8], FormatBlockOutput, E>
+fn format_blk<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], FormatBlockOutput, E>
 where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {

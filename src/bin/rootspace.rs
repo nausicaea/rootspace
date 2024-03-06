@@ -10,7 +10,6 @@ use rootspace::engine::resources::rpc_settings::RpcDeps;
 use rootspace::Reg;
 use winit::event_loop::EventLoop;
 
-
 struct Dependencies<'a, T: 'static> {
     rt: Arc<Runtime>,
     event_loop: &'a EventLoop<T>,

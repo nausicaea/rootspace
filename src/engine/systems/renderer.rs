@@ -41,13 +41,17 @@ pub struct Renderer {
 impl Renderer {
     fn handle_events(&mut self, res: &Resources) {
         res.write::<EventQueue<WindowEvent>>()
-            .receive_cb(&self.window_receiver, |e| if let WindowEvent::Resized(ps) = e {
-                self.on_window_resized(res, *ps)
+            .receive_cb(&self.window_receiver, |e| {
+                if let WindowEvent::Resized(ps) = e {
+                    self.on_window_resized(res, *ps)
+                }
             });
 
         res.write::<EventQueue<EngineEvent>>()
-            .receive_cb(&self.engine_receiver, |e| if let EngineEvent::Exit = e {
-                self.renderer_enabled = false
+            .receive_cb(&self.engine_receiver, |e| {
+                if let EngineEvent::Exit = e {
+                    self.renderer_enabled = false
+                }
             });
     }
 

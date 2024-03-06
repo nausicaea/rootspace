@@ -61,10 +61,8 @@ impl<'a, T: Default + 'a, S: Storage<Item = T>> Entry<'a, T, S> {
             Entry::Vacant(s, i) => {
                 s.insert(i, Default::default());
                 unsafe { s.get_unchecked_mut(i) }
-            },
-            Entry::Occupied(s, i) => {
-                unsafe { s.get_unchecked_mut(i) }
-            },
+            }
+            Entry::Occupied(s, i) => unsafe { s.get_unchecked_mut(i) },
         }
     }
 }

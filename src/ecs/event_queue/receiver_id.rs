@@ -41,10 +41,7 @@ impl<E> Copy for ReceiverId<E> {}
 
 impl<E> ReceiverId<E> {
     pub(super) fn new(id: usize) -> Self {
-        ReceiverId {
-            id,
-            _e: PhantomData,
-        }
+        ReceiverId { id, _e: PhantomData }
     }
 
     pub(super) fn id(&self) -> usize {

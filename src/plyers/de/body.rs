@@ -290,7 +290,6 @@ where
                     p_acc.try_extend(p).unwrap();
                 }
 
-
                 p_acc
             },
         ),
