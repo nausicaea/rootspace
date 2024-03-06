@@ -1,10 +1,10 @@
 use crate::{file_manipulation, plyers};
 use std::path::PathBuf;
 
+pub mod cpu_mesh;
+pub mod gpu_mesh;
 pub mod material;
-pub mod mesh;
 pub mod model;
-pub mod raw_mesh;
 pub mod scene;
 pub mod texture;
 

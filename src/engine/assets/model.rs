@@ -3,12 +3,12 @@ use std::path::Path;
 use anyhow::Context;
 
 use crate::ecs::resources::Resources;
-use crate::engine::assets::raw_mesh::CpuMesh;
+use crate::engine::assets::cpu_mesh::CpuMesh;
 use crate::engine::resources::asset_database::AssetDatabase;
 use crate::plyers;
 use crate::plyers::types::Ply;
 
-use super::{material::Material, mesh::GpuMesh, private::PrivLoadAsset, Error};
+use super::{gpu_mesh::GpuMesh, material::Material, private::PrivLoadAsset, Error};
 
 #[derive(Debug)]
 pub struct Model {
@@ -18,36 +18,7 @@ pub struct Model {
 
 impl Model {
     pub(crate) async fn with_ply(res: &Resources, ply: &Ply, material_group: &str) -> Result<Self, anyhow::Error> {
-        let texture_file_names = ply
-            .descriptor
-            .comments
-            .iter()
-            .chain(ply.descriptor.elements.values().flat_map(|e| e.comments.iter()))
-            .chain(
-                ply.descriptor
-                    .elements
-                    .values()
-                    .flat_map(|e| e.properties.values().flat_map(|p| p.comments())),
-            )
-            .map(AsRef::<str>::as_ref)
-            .filter(|c| c.starts_with("TextureFile"))
-            .map(|c| c.trim_start_matches("TextureFile "))
-            .chain(
-                ply.descriptor
-                    .obj_info
-                    .iter()
-                    .chain(ply.descriptor.elements.values().flat_map(|e| e.obj_info.iter()))
-                    .chain(
-                        ply.descriptor
-                            .elements
-                            .values()
-                            .flat_map(|e| e.properties.values().flat_map(|p| p.obj_info())),
-                    )
-                    .map(AsRef::<str>::as_ref)
-                    .filter(|c| c.starts_with("texture"))
-                    .map(|c| c.trim_start_matches("texture ")),
-            )
-            .collect::<Vec<&str>>();
+        let texture_file_names = find_texture_paths(ply);
 
         log::trace!("Located the following texture names: {}", texture_file_names.join(", "));
 
@@ -94,4 +65,36 @@ impl PrivLoadAsset for Model {
             _ => Err(Error::UnsupportedFileFormat.into()),
         }
     }
+}
+
+fn find_texture_paths(ply: &Ply) -> Vec<&str> {
+    ply.descriptor
+        .comments
+        .iter()
+        .chain(ply.descriptor.elements.values().flat_map(|e| e.comments.iter()))
+        .chain(
+            ply.descriptor
+                .elements
+                .values()
+                .flat_map(|e| e.properties.values().flat_map(|p| p.comments())),
+        )
+        .map(AsRef::<str>::as_ref)
+        .filter(|c| c.starts_with("TextureFile"))
+        .map(|c| c.trim_start_matches("TextureFile "))
+        .chain(
+            ply.descriptor
+                .obj_info
+                .iter()
+                .chain(ply.descriptor.elements.values().flat_map(|e| e.obj_info.iter()))
+                .chain(
+                    ply.descriptor
+                        .elements
+                        .values()
+                        .flat_map(|e| e.properties.values().flat_map(|p| p.obj_info())),
+                )
+                .map(AsRef::<str>::as_ref)
+                .filter(|c| c.starts_with("texture"))
+                .map(|c| c.trim_start_matches("texture ")),
+        )
+        .collect()
 }
