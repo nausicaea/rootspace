@@ -48,8 +48,7 @@ impl<T> VecStorage<T> {
 
         // Adjust the length of the data container if necessary.
         if self.data.len() <= idx_usize {
-            self.data
-                .resize_with(idx_usize + 1, || MaybeUninit::uninit());
+            self.data.resize_with(idx_usize + 1, || MaybeUninit::uninit());
         }
 
         // If the index was previously occupied, return the old piece of data.
@@ -484,13 +483,23 @@ mod tests {
 
             {
                 let a = Entity::new(0u32, 1u32);
-                let _ = s.insert(a, DropCounter { count: &mut entity_a_drop_count });
+                let _ = s.insert(
+                    a,
+                    DropCounter {
+                        count: &mut entity_a_drop_count,
+                    },
+                );
                 let _ = s.remove(&a);
             }
 
             {
                 let b = Entity::new(1u32, 1u32);
-                let _ = s.insert(b, DropCounter { count: &mut entity_b_drop_count });
+                let _ = s.insert(
+                    b,
+                    DropCounter {
+                        count: &mut entity_b_drop_count,
+                    },
+                );
             }
         }
 
