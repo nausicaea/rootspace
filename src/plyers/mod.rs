@@ -198,6 +198,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+    #[cfg(feature = "test-slow")]
     use std::path::PathBuf;
 
     use super::*;
@@ -205,14 +206,6 @@ mod tests {
         CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, Ply, PlyDescriptor,
         Primitive, PropertyDescriptor, PropertyId, Values,
     };
-
-    #[rstest::rstest]
-    fn load_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
-        match load_ply(&path) {
-            Err(e) => panic!("{}: {}", path.display(), e),
-            _ => (),
-        }
-    }
 
     #[test]
     fn load_ply_parses_jasmin6_correctly() {
@@ -802,8 +795,18 @@ mod tests {
         assert_eq!(ply, expected);
     }
 
+    #[cfg(feature = "test-slow")]
     #[rstest::rstest]
-    fn save_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
+    fn load_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
+        match load_ply(&path) {
+            Err(e) => panic!("{}: {}", path.display(), e),
+            _ => (),
+        }
+    }
+
+    #[cfg(feature = "test-slow")]
+    #[rstest::rstest]
+    fn roundtrip_save_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
         let _ = env_logger::builder().is_test(true).try_init();
         let ply = load_ply(&path).unwrap();
         let tmp = tempfile::Builder::new()

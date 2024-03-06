@@ -345,6 +345,7 @@ where
 mod tests {
     use std::ops::Mul;
 
+    #[cfg(feature = "test-slow")]
     use serde_test::{assert_tokens, Token};
 
     use super::{BfsIter, DfsIter, Tree};
@@ -581,8 +582,8 @@ mod tests {
         assert_ne!(&rt, &rt3);
     }
 
+    #[cfg(feature = "test-slow")]
     #[test]
-    #[ignore]
     fn impl_serde() {
         let mut rt: Tree<Tk, Tvm> = Tree::default();
         rt.insert(Tk(0), Tvm(2));
