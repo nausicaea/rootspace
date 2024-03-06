@@ -1,4 +1,4 @@
-#![warn(clippy::unwrap_used)]
+//#![warn(clippy::unwrap_used)]
 
 pub mod ecs;
 pub mod engine;

@@ -52,8 +52,16 @@ pub trait Storage: Sized + std::ops::Index<Index, Output = Self::Item> {
     fn indices(&self) -> &BTreeSet<Index>;
 
     /// Borrows the component of type `Item` for the specified `Entity` without checking for existence.
+    ///
+    /// # Safety
+    ///
+    /// Calls to this method are only safe if you've previously verified that the item at the specified index actually exists.
     unsafe fn get_unchecked<I: Into<Index>>(&self, index: I) -> &Self::Item;
 
     /// Mutably borrows the component of type `Item` for the specified `Entity` without checking for existence.
+    ///
+    /// # Safety
+    ///
+    /// Calls to this method are only safe if you've previously verified that the item at the specified index actually exists.
     unsafe fn get_unchecked_mut<I: Into<Index>>(&mut self, index: I) -> &mut Self::Item;
 }

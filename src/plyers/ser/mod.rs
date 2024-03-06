@@ -12,7 +12,7 @@ pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(
     for obj_info in &descriptor.obj_info {
         writeln!(f, "obj_info {}", &obj_info.0)?;
     }
-    for (_, element) in &descriptor.elements {
+    for element in descriptor.elements.values() {
         for comment in &element.comments {
             writeln!(f, "comment {}", &comment.0)?;
         }
@@ -20,7 +20,7 @@ pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(
             writeln!(f, "obj_info {}", &obj_info.0)?;
         }
         writeln!(f, "element {} {}", element.name, element.count)?;
-        for (_, property) in &element.properties {
+        for property in element.properties.values() {
             for comment in property.comments() {
                 writeln!(f, "comment {}", &comment.0)?;
             }
@@ -57,11 +57,11 @@ pub fn write_le_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
     match primitive {
         Primitive::Single => match descriptor {
             PropertyDescriptor::Scalar { .. } => {
-                f.write(&values[element_index].to_le_bytes()[..])?;
+                f.write_all(&values[element_index].to_le_bytes()[..])?;
             }
             PropertyDescriptor::List { .. } => {
-                f.write(&[1u8])?;
-                f.write(&values[element_index].to_le_bytes()[..])?;
+                f.write_all(&[1u8])?;
+                f.write_all(&values[element_index].to_le_bytes()[..])?;
             }
         },
         p => {
@@ -82,11 +82,11 @@ pub fn write_be_values<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
     match primitive {
         Primitive::Single => match descriptor {
             PropertyDescriptor::Scalar { .. } => {
-                f.write(&values[element_index].to_be_bytes()[..])?;
+                f.write_all(&values[element_index].to_be_bytes()[..])?;
             }
             PropertyDescriptor::List { .. } => {
-                f.write(&[1u8])?;
-                f.write(&values[element_index].to_be_bytes()[..])?;
+                f.write_all(&[1u8])?;
+                f.write_all(&values[element_index].to_be_bytes()[..])?;
             }
         },
         p => {
@@ -135,8 +135,8 @@ fn write_le_lists<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
         .iter()
         .flat_map(|v| v.to_le_bytes().into_iter())
         .collect::<Vec<_>>();
-    f.write(&[stride as u8])?;
-    f.write(&value_chunk)?;
+    f.write_all(&[stride as u8])?;
+    f.write_all(&value_chunk)?;
 
     Ok(())
 }
@@ -152,8 +152,8 @@ fn write_be_lists<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
         .iter()
         .flat_map(|v| v.to_be_bytes().into_iter())
         .collect::<Vec<_>>();
-    f.write(&[stride as u8])?;
-    f.write(&value_chunk)?;
+    f.write_all(&[stride as u8])?;
+    f.write_all(&value_chunk)?;
 
     Ok(())
 }

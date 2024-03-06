@@ -39,14 +39,11 @@ impl System for CameraManager {
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         let events = res.write::<EventQueue<WindowEvent>>().receive(&self.receiver);
         for event in events {
-            match event {
-                WindowEvent::Resized(dims) => {
-                    let max_dims = res.read::<Graphics>().max_window_size();
-                    if dims.width <= max_dims.width && dims.height <= max_dims.height {
-                        self.on_resize(res, (dims.width, dims.height))
-                    }
+            if let WindowEvent::Resized(dims) = event {
+                let max_dims = res.read::<Graphics>().max_window_size();
+                if dims.width <= max_dims.width && dims.height <= max_dims.height {
+                    self.on_resize(res, (dims.width, dims.height))
                 }
-                _ => (),
             }
         }
     }

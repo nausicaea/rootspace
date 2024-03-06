@@ -30,7 +30,7 @@ where
     R: Float,
 {
     pub fn at(&self, position: &R) -> Vec4<R> {
-        &self.o + self.d.as_ref() * position
+        self.o + self.d.as_ref() * position
     }
 }
 

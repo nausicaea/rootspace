@@ -2,8 +2,8 @@
 pub struct Settings {
     pub backends: wgpu::Backends,
     pub power_preference: wgpu::PowerPreference,
-    pub features: wgpu::Features,
-    pub limits: wgpu::Limits,
+    pub required_features: wgpu::Features,
+    pub required_limits: wgpu::Limits,
     pub preferred_texture_format: wgpu::TextureFormat,
     pub present_mode: wgpu::PresentMode,
     pub alpha_mode: wgpu::CompositeAlphaMode,
@@ -16,8 +16,8 @@ impl Default for Settings {
         Settings {
             backends: wgpu::Backends::all(),
             power_preference: wgpu::PowerPreference::LowPower,
-            features: wgpu::Features::empty(),
-            limits: wgpu::Limits::default(),
+            required_features: wgpu::Features::empty(),
+            required_limits: wgpu::Limits::default(),
             preferred_texture_format: wgpu::TextureFormat::Bgra8UnormSrgb,
             present_mode: wgpu::PresentMode::AutoVsync,
             alpha_mode: wgpu::CompositeAlphaMode::Opaque,

@@ -49,14 +49,14 @@ fn main() -> anyhow::Result<()> {
         }
 
         if matches.element_names {
-            for (_, element) in &ply.descriptor.elements {
+            for element in ply.descriptor.elements.values() {
                 println!("{}", &element.name);
             }
         }
 
         if matches.property_names {
-            for (_, element) in &ply.descriptor.elements {
-                for (_, property) in &element.properties {
+            for element in ply.descriptor.elements.values() {
+                for property in element.properties.values() {
                     match property {
                         PropertyDescriptor::Scalar { ref name, .. } | PropertyDescriptor::List { ref name, .. } => {
                             println!("{}.{}", &element.name, name)
@@ -75,11 +75,11 @@ fn main() -> anyhow::Result<()> {
             for comment in &ply.descriptor.comments {
                 println!("ply: {}", comment);
             }
-            for (_, element) in &ply.descriptor.elements {
+            for element in ply.descriptor.elements.values() {
                 for comment in &element.comments {
                     println!("{}: {}", &element.name, comment);
                 }
-                for (_, property) in &element.properties {
+                for property in element.properties.values() {
                     match property {
                         PropertyDescriptor::Scalar {
                             ref name, ref comments, ..
@@ -100,11 +100,11 @@ fn main() -> anyhow::Result<()> {
             for obj_info in &ply.descriptor.obj_info {
                 println!("ply: {}", obj_info);
             }
-            for (_, element) in &ply.descriptor.elements {
+            for element in ply.descriptor.elements.values() {
                 for obj_info in &element.obj_info {
                     println!("{}: {}", &element.name, obj_info);
                 }
-                for (_, property) in &element.properties {
+                for property in element.properties.values() {
                     match property {
                         PropertyDescriptor::Scalar {
                             ref name, ref obj_info, ..

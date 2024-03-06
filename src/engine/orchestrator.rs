@@ -166,9 +166,8 @@ impl Orchestrator {
             .get_mut::<EventQueue<WorldEvent>>()
             .receive(&self.world_event_receiver);
         for event in events {
-            match event {
-                WorldEvent::EntityDestroyed(e) => self.on_entity_destroyed(e),
-                _ => (),
+            if let WorldEvent::EntityDestroyed(e) = event {
+                self.on_entity_destroyed(e);
             }
         }
 
@@ -178,9 +177,8 @@ impl Orchestrator {
             .get_mut::<EventQueue<EngineEvent>>()
             .receive(&self.engine_event_receiver);
         for event in events {
-            match event {
-                EngineEvent::Exit => self.on_exit(),
-                _ => (),
+            if let EngineEvent::Exit = event {
+                self.on_exit();
             }
         }
 

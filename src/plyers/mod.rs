@@ -104,7 +104,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
 
     match ply.descriptor.format_type {
         FormatType::BinaryLittleEndian => {
-            for (_, e_desc) in &ply.descriptor.elements {
+            for e_desc in ply.descriptor.elements.values() {
                 let e_count = e_desc.count;
                 for e_idx in 0..e_count {
                     for (p_id, p_desc) in &e_desc.properties {
@@ -126,7 +126,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
             }
         }
         FormatType::BinaryBigEndian => {
-            for (_, e_desc) in &ply.descriptor.elements {
+            for e_desc in ply.descriptor.elements.values() {
                 let e_count = e_desc.count;
                 for e_idx in 0..e_count {
                     for (p_id, p_desc) in &e_desc.properties {
@@ -148,7 +148,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
             }
         }
         FormatType::Ascii => {
-            for (_, e_desc) in &ply.descriptor.elements {
+            for e_desc in ply.descriptor.elements.values() {
                 let e_count = e_desc.count;
                 for e_idx in 0..e_count {
                     for (p_idx, (p_id, p_desc)) in e_desc.properties.iter().enumerate() {

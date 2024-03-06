@@ -410,7 +410,7 @@ impl TryFrom<&OsStr> for DirPathBuf {
     }
 }
 
-impl<'a> TryFrom<&Path> for DirPathBuf {
+impl TryFrom<&Path> for DirPathBuf {
     type Error = FileError;
 
     fn try_from(path: &Path) -> Result<Self, Self::Error> {

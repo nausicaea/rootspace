@@ -2,6 +2,7 @@ use log::debug;
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
 use winit::event_loop::EventLoopWindowTarget;
 use winit::window::Fullscreen;
+use crate::engine::resources::graphics::settings::Settings;
 
 #[derive(Debug)]
 pub struct Runtime<'a> {
@@ -17,13 +18,7 @@ pub struct Runtime<'a> {
 impl<'a> Runtime<'a> {
     pub async fn new<T>(
         event_loop: &EventLoopWindowTarget<T>,
-        backends: wgpu::Backends,
-        power_preference: wgpu::PowerPreference,
-        required_features: wgpu::Features,
-        required_limits: wgpu::Limits,
-        preferred_texture_format: &wgpu::TextureFormat,
-        present_mode: wgpu::PresentMode,
-        alpha_mode: wgpu::CompositeAlphaMode,
+        settings: &Settings,
     ) -> Runtime<'a> {
         let primary_monitor = event_loop.primary_monitor();
         let window = std::sync::Arc::new(
@@ -39,14 +34,14 @@ impl<'a> Runtime<'a> {
         let max_size = window.current_monitor().unwrap().size();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends,
+            backends: settings.backends,
             ..Default::default()
         });
         let surface = instance.create_surface(window.clone()).unwrap();
 
         let adapter = instance
             .request_adapter(&RequestAdapterOptions {
-                power_preference,
+                power_preference: settings.power_preference,
                 compatible_surface: Some(&surface),
                 force_fallback_adapter: false,
             })
@@ -57,8 +52,8 @@ impl<'a> Runtime<'a> {
         let (device, queue) = adapter
             .request_device(
                 &DeviceDescriptor {
-                    required_features,
-                    required_limits,
+                    required_features: settings.required_features,
+                    required_limits: settings.required_limits.clone(),
                     label: None,
                 },
                 None, // Trace path
@@ -71,7 +66,7 @@ impl<'a> Runtime<'a> {
 
         let texture_format = capabilities
             .formats
-            .iter().find(|&tf| tf == preferred_texture_format)
+            .iter().find(|&tf| tf == &settings.preferred_texture_format)
             .unwrap_or(&capabilities.formats[0]);
         debug!("Choosing texture format: {:?}", &texture_format);
 
@@ -82,9 +77,9 @@ impl<'a> Runtime<'a> {
             format: *texture_format,
             width: size.width,
             height: size.height,
-            present_mode,
+            present_mode: settings.present_mode,
             desired_maximum_frame_latency: 0,
-            alpha_mode,
+            alpha_mode: settings.alpha_mode,
             view_formats: vec![*texture_format],
         };
         surface.configure(&device, &config);

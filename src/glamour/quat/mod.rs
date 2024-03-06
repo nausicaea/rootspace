@@ -151,7 +151,7 @@ where
 
     fn mul(self, rhs: &'b Vec4<R>) -> Self::Output {
         let q = Quat::new(R::zero(), rhs.x, rhs.y, rhs.z);
-        let rhs_1 = self * &q * self.c();
+        let rhs_1 = self * q * self.c();
         Vec4::new(rhs_1.i, rhs_1.j, rhs_1.k, rhs.w)
     }
 }

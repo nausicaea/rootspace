@@ -26,49 +26,49 @@ pub struct Database {
 }
 
 impl Database {
-    pub fn insert_shader_module<'a>(&mut self, obj: wgpu::ShaderModule) -> ShaderModuleId {
+    pub fn insert_shader_module(&mut self, obj: wgpu::ShaderModule) -> ShaderModuleId {
         let id = self.shader_module_index.take();
         self.shader_modules.insert(id, obj);
         id
     }
 
-    pub fn insert_bind_group_layout<'a>(&mut self, obj: wgpu::BindGroupLayout) -> BindGroupLayoutId {
+    pub fn insert_bind_group_layout(&mut self, obj: wgpu::BindGroupLayout) -> BindGroupLayoutId {
         let id = self.bind_group_layout_index.take();
         self.bind_group_layouts.insert(id, obj);
         id
     }
 
-    pub fn insert_bind_group<'a>(&mut self, obj: wgpu::BindGroup) -> BindGroupId {
+    pub fn insert_bind_group(&mut self, obj: wgpu::BindGroup) -> BindGroupId {
         let id = self.bind_group_index.take();
         self.bind_groups.insert(id, obj);
         id
     }
 
-    pub fn insert_buffer<'a>(&mut self, obj: wgpu::Buffer) -> BufferId {
+    pub fn insert_buffer(&mut self, obj: wgpu::Buffer) -> BufferId {
         let id = self.buffer_index.take();
         self.buffers.insert(id, obj);
         id
     }
 
-    pub fn insert_texture<'a>(&mut self, obj: wgpu::Texture) -> TextureId {
+    pub fn insert_texture(&mut self, obj: wgpu::Texture) -> TextureId {
         let id = self.texture_index.take();
         self.textures.insert(id, obj);
         id
     }
 
-    pub fn insert_texture_view<'a>(&mut self, obj: wgpu::TextureView) -> TextureViewId {
+    pub fn insert_texture_view(&mut self, obj: wgpu::TextureView) -> TextureViewId {
         let id = self.texture_view_index.take();
         self.texture_views.insert(id, obj);
         id
     }
 
-    pub fn insert_sampler<'a>(&mut self, obj: wgpu::Sampler) -> SamplerId {
+    pub fn insert_sampler(&mut self, obj: wgpu::Sampler) -> SamplerId {
         let id = self.sampler_index.take();
         self.samplers.insert(id, obj);
         id
     }
 
-    pub fn insert_render_pipeline<'a>(&mut self, obj: wgpu::RenderPipeline) -> PipelineId {
+    pub fn insert_render_pipeline(&mut self, obj: wgpu::RenderPipeline) -> PipelineId {
         let id = self.render_pipeline_index.take();
         self.render_pipelines.insert(id, obj);
         id

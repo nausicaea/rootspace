@@ -283,14 +283,13 @@ where
             |mut p_acc, (p_id, prim, dt, p)| {
                 if let std::collections::btree_map::Entry::Vacant(e) = p_acc.entry(p_id) {
                     e.insert((prim, (dt, p).try_into().unwrap()));
-                } else {
-                    p_acc.get_mut(&p_id).map(|(prim_acc, ref mut p_acc)| {
-                        if prim_acc != &prim {
-                            *prim_acc = Primitive::Mixed;
-                        }
-                        p_acc.try_extend(p).unwrap();
-                    });
+                } else if let Some((prim_acc, ref mut p_acc)) = p_acc.get_mut(&p_id) {
+                    if prim_acc != &prim {
+                        *prim_acc = Primitive::Mixed;
+                    }
+                    p_acc.try_extend(p).unwrap();
                 }
+
 
                 p_acc
             },

@@ -29,7 +29,7 @@ impl RawMesh {
             .descriptor
             .elements
             .iter()
-            .filter(|(_, e)| &e.name == VERTEX_ELEMENT)
+            .filter(|(_, e)| e.name == VERTEX_ELEMENT)
             .map(|(&e_id, e)| (e_id, e.count))
             .next()
             .ok_or(Error::NoVertexElement)?;
@@ -40,7 +40,7 @@ impl RawMesh {
             .descriptor
             .elements
             .iter()
-            .filter(|(_, e)| &e.name == FACE_ELEMENT)
+            .filter(|(_, e)| e.name == FACE_ELEMENT)
             .map(|(&e_id, _)| e_id)
             .next()
             .ok_or(Error::NoFaceElement)?;
@@ -89,37 +89,37 @@ impl RawMesh {
         let mut vertices = vec![Vertex::default(); num_vertices];
 
         let vertex_data = &ply.data;
-        for i in 0..num_vertices {
+        for (i, vertex) in vertices.iter_mut().enumerate() {
             if let Some(p_idx) = v_p_index.get(X_PROPERTY) {
-                vertices[i].position[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.position[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
 
             if let Some(p_idx) = v_p_index.get(Y_PROPERTY) {
-                vertices[i].position[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.position[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
 
             if let Some(p_idx) = v_p_index.get(Z_PROPERTY) {
-                vertices[i].position[2] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.position[2] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
 
             if let Some(p_idx) = v_p_index.get(NX_PROPERTY) {
-                vertices[i].normals[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.normals[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
 
             if let Some(p_idx) = v_p_index.get(NY_PROPERTY) {
-                vertices[i].normals[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.normals[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
 
             if let Some(p_idx) = v_p_index.get(NZ_PROPERTY) {
-                vertices[i].normals[2] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.normals[2] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
 
             if let Some(p_idx) = v_p_index.get(TEXTURE_U_PROPERTY) {
-                vertices[i].tex_coords[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.tex_coords[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
 
             if let Some(p_idx) = v_p_index.get(TEXTURE_V_PROPERTY) {
-                vertices[i].tex_coords[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.tex_coords[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
         }
 

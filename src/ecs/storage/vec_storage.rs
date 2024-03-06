@@ -1,4 +1,5 @@
 use std::{collections::BTreeSet, marker::PhantomData, ptr};
+use std::mem::MaybeUninit;
 
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
@@ -19,7 +20,7 @@ pub struct VecStorage<T> {
     /// The index into the data vector.
     index: BTreeSet<Index>,
     /// The data vector containing the components.
-    data: Vec<T>,
+    data: Vec<MaybeUninit<T>>,
 }
 
 impl<T> VecStorage<T> {
@@ -47,22 +48,19 @@ impl<T> VecStorage<T> {
 
         // Adjust the length of the data container if necessary.
         if self.data.len() <= idx_usize {
-            self.data.reserve(idx_usize + 1 - self.data.len());
-            unsafe {
-                self.data.set_len(idx_usize + 1);
-            }
+            self.data.resize_with(idx_usize + 1 - self.data.len(), || MaybeUninit::uninit());
         }
 
         // If the index was previously occupied, return the old piece of data.
         if !self.index.insert(idx) {
             unsafe {
                 let old_datum = ptr::read(self.data.get_unchecked(idx_usize));
-                ptr::write(self.data.get_unchecked_mut(idx_usize), datum);
-                Some(old_datum)
+                ptr::write(self.data.get_unchecked_mut(idx_usize), MaybeUninit::new(datum));
+                Some(old_datum.assume_init())
             }
         } else {
             unsafe {
-                ptr::write(self.data.get_unchecked_mut(idx_usize), datum);
+                ptr::write(self.data.get_unchecked_mut(idx_usize), MaybeUninit::new(datum));
                 None
             }
         }
@@ -101,7 +99,7 @@ impl<T> Storage for VecStorage<T> {
             let idx_usize: usize = idx.into();
             unsafe {
                 let old_datum = ptr::read(self.data.get_unchecked(idx_usize));
-                Some(old_datum)
+                Some(old_datum.assume_init())
             }
         } else {
             None
@@ -140,7 +138,7 @@ impl<T> Storage for VecStorage<T> {
 
         if self.index.contains(&idx) {
             let idx_usize: usize = idx.into();
-            unsafe { Some(self.data.get_unchecked(idx_usize)) }
+            unsafe { Some(self.data.get_unchecked(idx_usize).assume_init_ref()) }
         } else {
             None
         }
@@ -151,7 +149,7 @@ impl<T> Storage for VecStorage<T> {
 
         if self.index.contains(&idx) {
             let idx_usize: usize = idx.into();
-            unsafe { Some(self.data.get_unchecked_mut(idx_usize)) }
+            unsafe { Some(self.data.get_unchecked_mut(idx_usize).assume_init_mut()) }
         } else {
             None
         }
@@ -164,13 +162,13 @@ impl<T> Storage for VecStorage<T> {
     unsafe fn get_unchecked<I: Into<Index>>(&self, index: I) -> &T {
         let idx: Index = index.into();
         let idx_usize: usize = idx.into();
-        self.data.get_unchecked(idx_usize)
+        self.data.get_unchecked(idx_usize).assume_init_ref()
     }
 
     unsafe fn get_unchecked_mut<I: Into<Index>>(&mut self, index: I) -> &mut T {
         let idx: Index = index.into();
         let idx_usize: usize = idx.into();
-        self.data.get_unchecked_mut(idx_usize)
+        self.data.get_unchecked_mut(idx_usize).assume_init_mut()
     }
 }
 
@@ -227,7 +225,7 @@ where
         self.index
             .iter()
             .map(Into::<usize>::into)
-            .all(|idx| self.data[idx].eq(&rhs.data[idx]))
+            .all(|idx| unsafe { self.data[idx].assume_init_ref().eq(rhs.data[idx].assume_init_ref())})
     }
 }
 
@@ -247,7 +245,7 @@ where
     {
         let mut state = ser.serialize_map(Some(self.index.len()))?;
         for idx in &self.index {
-            state.serialize_entry(idx, &self.data[Into::<usize>::into(idx)])?;
+            state.serialize_entry(idx, unsafe {self.data[Into::<usize>::into(idx)].assume_init_ref()})?;
         }
         state.end()
     }

@@ -99,7 +99,7 @@ where
             |(_, _, nm, _, cnt, _)| {
                 let nm = std::str::from_utf8(nm)?.to_string();
                 let cnt = std::str::from_utf8(cnt)?;
-                let cnt: usize = usize::from_str_radix(cnt, 10)?;
+                let cnt: usize = cnt.parse::<usize>()?;
 
                 Result::<_, ParseNumError>::Ok((nm, cnt))
             },
@@ -149,9 +149,11 @@ where
     )(input)
 }
 
+type FormatBlockOutput = (FormatType, Vec<Either<CommentDescriptor, ObjInfoDescriptor>>);
+
 fn format_blk<'a, E>(
     input: &'a [u8],
-) -> IResult<&'a [u8], (FormatType, Vec<Either<CommentDescriptor, ObjInfoDescriptor>>), E>
+) -> IResult<&'a [u8], FormatBlockOutput, E>
 where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {

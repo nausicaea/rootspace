@@ -138,7 +138,7 @@ where
             );
 
             // Remove all dangling edges
-            for (_, children) in &mut self.edges {
+            for children in self.edges.values_mut() {
                 children.retain(|c| c != &k);
             }
 

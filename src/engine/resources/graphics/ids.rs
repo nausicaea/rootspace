@@ -3,9 +3,9 @@ macro_rules! impl_id {
         #[derive(Debug, Clone, Copy, Eq)]
         pub struct $name(usize);
 
-        impl Into<usize> for $name {
-            fn into(self) -> usize {
-                self.0
+        impl From<$name> for usize {
+            fn from(value: $name) -> Self {
+                value.0
             }
         }
 

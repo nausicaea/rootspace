@@ -200,13 +200,7 @@ impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
         let settings = deps.settings();
         let runtime = Runtime::new(
             deps.event_loop(),
-            settings.backends,
-            settings.power_preference,
-            settings.features,
-            settings.limits.clone(),
-            &settings.preferred_texture_format,
-            settings.present_mode,
-            settings.alpha_mode,
+            settings,
         )
         .await;
 

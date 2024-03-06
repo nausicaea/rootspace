@@ -95,7 +95,7 @@ forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat4<R>, Vec4<R>, Vec4<R>);
 
 impl<'a, R: IterFloat> Product<&'a Mat4<R>> for Mat4<R> {
     fn product<I: Iterator<Item = &'a Mat4<R>>>(iter: I) -> Self {
-        iter.fold(Mat4::identity(), |state, item| &state * item)
+        iter.fold(Mat4::identity(), |state, item| state * item)
     }
 }
 
