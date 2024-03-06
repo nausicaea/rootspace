@@ -116,7 +116,10 @@ impl<T> Storage for VecStorage<T> {
 
         for idx in &self.index {
             let idx_usize: usize = idx.into();
-            unsafe { ptr::drop_in_place(data.get_unchecked_mut(idx_usize)) }
+            unsafe {
+                let value = data.get_unchecked_mut(idx_usize);
+                value.assume_init_drop();
+            }
         }
 
         self.index.clear();
@@ -480,26 +483,26 @@ mod tests {
 
     #[test]
     fn vec_storage_drops() {
-        let mut a_count = 0usize;
-        let mut b_count = 0usize;
+        let mut entity_a_drop_count = 0usize;
+        let mut entity_b_drop_count = 0usize;
 
         {
             let mut s: VecStorage<DropCounter> = Default::default();
 
             {
                 let a = Entity::new(0u32, 1u32);
-                let _ = s.insert(a, DropCounter { count: &mut a_count });
+                let _ = s.insert(a, DropCounter { count: &mut entity_a_drop_count });
                 let _ = s.remove(&a);
             }
 
             {
                 let b = Entity::new(1u32, 1u32);
-                let _ = s.insert(b, DropCounter { count: &mut b_count });
+                let _ = s.insert(b, DropCounter { count: &mut entity_b_drop_count });
             }
         }
 
-        assert_eq!(a_count, 1);
-        assert_eq!(b_count, 1);
+        assert_eq!(entity_a_drop_count, 1, "drop count with prior removal");
+        assert_eq!(entity_b_drop_count, 1, "drop count with storage going out of scope");
     }
 
     #[test]
