@@ -182,7 +182,6 @@ impl<E> Default for EventQueue<E> {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "test-slow")]
     use serde_test::{assert_tokens, Token};
 
     use super::*;
@@ -319,8 +318,8 @@ mod tests {
         assert_eq!(q.len(), 0);
     }
 
-    #[cfg(feature = "test-slow")]
     #[test]
+    #[ignore]
     fn event_queue_serde() {
         let mut eq = EventQueue::<TestEvent>::default();
         eq.send(TestEvent(0));

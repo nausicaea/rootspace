@@ -198,7 +198,6 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
-    #[cfg(feature = "test-slow")]
     use std::path::PathBuf;
 
     use super::*;
@@ -795,8 +794,8 @@ mod tests {
         assert_eq!(ply, expected);
     }
 
-    #[cfg(feature = "test-slow")]
     #[rstest::rstest]
+    #[ignore]
     fn load_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
         match load_ply(&path) {
             Err(e) => panic!("{}: {}", path.display(), e),
@@ -804,8 +803,8 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "test-slow")]
     #[rstest::rstest]
+    #[ignore]
     fn roundtrip_save_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
         let _ = env_logger::builder().is_test(true).try_init();
         let ply = load_ply(&path).unwrap();

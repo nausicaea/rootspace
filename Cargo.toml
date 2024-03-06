@@ -7,7 +7,6 @@ edition = "2021"
 [features]
 dbg-gfx = []
 dbg-loop = []
-test-slow = []
 
 [dependencies]
 env_logger = "0.11"
