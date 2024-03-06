@@ -8,12 +8,12 @@ use crate::engine::resources::asset_database::AssetDatabase;
 use crate::plyers;
 use crate::plyers::types::Ply;
 
-use super::{gpu_mesh::GpuMesh, material::Material, private::PrivLoadAsset, Error};
+use super::{gpu_material::GpuMaterial, gpu_mesh::GpuMesh, private::PrivLoadAsset, Error};
 
 #[derive(Debug)]
 pub struct Model {
     pub mesh: GpuMesh,
-    pub materials: Vec<Material>,
+    pub materials: Vec<GpuMaterial>,
 }
 
 impl Model {
@@ -33,22 +33,25 @@ impl Model {
                         name, material_group
                     )
                 })?;
-            let material = Material::with_path(res, &path).await.with_context(|| {
+            let material = GpuMaterial::with_path(res, &path).await.with_context(|| {
                 format!(
                     "trying to load a {} from path '{}'",
-                    std::any::type_name::<Material>(),
+                    std::any::type_name::<GpuMaterial>(),
                     path.display()
                 )
             })?;
             materials.push(material);
         }
 
-        let raw_mesh = CpuMesh::with_ply(ply).context("trying to load a raw mesh from Stanford Ply data")?;
+        let cpu_mesh = CpuMesh::with_ply(ply).context("trying to load a raw mesh from Stanford Ply data")?;
 
-        let mesh = GpuMesh::with_raw_mesh(res, &raw_mesh)
+        let gpu_mesh = GpuMesh::with_cpu_mesh(res, &cpu_mesh)
             .context("trying to load a GPU-native mesh from the raw mesh data")?;
 
-        Ok(Model { mesh, materials })
+        Ok(Model {
+            mesh: gpu_mesh,
+            materials,
+        })
     }
 }
 

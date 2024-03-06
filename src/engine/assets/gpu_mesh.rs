@@ -11,31 +11,23 @@ pub struct GpuMesh {
 }
 
 impl GpuMesh {
-    pub(crate) fn with_raw_mesh(res: &Resources, raw_mesh: &CpuMesh) -> Result<Self, Error> {
+    pub(crate) fn with_cpu_mesh(res: &Resources, mesh: &CpuMesh) -> Result<Self, Error> {
         let mut gfx = res.write::<Graphics>();
         let vertex_buffer = gfx.create_buffer_init(
-            raw_mesh
-                .label
-                .as_ref()
-                .map(|l| format!("{}:vertex-buffer", &l))
-                .as_deref(),
+            mesh.label.as_ref().map(|l| format!("{}:vertex-buffer", &l)).as_deref(),
             wgpu::BufferUsages::VERTEX,
-            &raw_mesh.vertices,
+            &mesh.vertices,
         );
         let index_buffer = gfx.create_buffer_init(
-            raw_mesh
-                .label
-                .as_ref()
-                .map(|l| format!("{}:index-buffer", &l))
-                .as_deref(),
+            mesh.label.as_ref().map(|l| format!("{}:index-buffer", &l)).as_deref(),
             wgpu::BufferUsages::INDEX,
-            &raw_mesh.indices,
+            &mesh.indices,
         );
 
         Ok(GpuMesh {
             vertex_buffer,
             index_buffer,
-            num_indices: raw_mesh.indices.len() as u32,
+            num_indices: mesh.indices.len() as u32,
         })
     }
 }

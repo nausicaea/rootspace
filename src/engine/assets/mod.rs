@@ -2,8 +2,8 @@ use crate::{file_manipulation, plyers};
 use std::path::PathBuf;
 
 pub mod cpu_mesh;
+pub mod gpu_material;
 pub mod gpu_mesh;
-pub mod material;
 pub mod model;
 pub mod scene;
 pub mod texture;

@@ -8,12 +8,12 @@ use anyhow::Context;
 use super::{private::PrivLoadAsset, texture::Texture};
 
 #[derive(Debug)]
-pub struct Material {
+pub struct GpuMaterial {
     pub texture: Texture,
     pub bind_group: BindGroupId,
 }
 
-impl PrivLoadAsset for Material {
+impl PrivLoadAsset for GpuMaterial {
     type Output = Self;
 
     async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
@@ -33,6 +33,6 @@ impl PrivLoadAsset for Material {
             .add_sampler(1, texture.sampler)
             .submit();
 
-        Ok(Material { texture, bind_group })
+        Ok(GpuMaterial { texture, bind_group })
     }
 }
