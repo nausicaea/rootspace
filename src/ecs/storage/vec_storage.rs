@@ -1,5 +1,5 @@
 use std::mem::MaybeUninit;
-use std::{collections::BTreeSet, marker::PhantomData, ptr};
+use std::{collections::BTreeSet, marker::PhantomData};
 
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
@@ -49,21 +49,16 @@ impl<T> VecStorage<T> {
         // Adjust the length of the data container if necessary.
         if self.data.len() <= idx_usize {
             self.data
-                .resize_with(idx_usize + 1 - self.data.len(), || MaybeUninit::uninit());
+                .resize_with(idx_usize + 1, || MaybeUninit::uninit());
         }
 
         // If the index was previously occupied, return the old piece of data.
         if !self.index.insert(idx) {
-            unsafe {
-                let old_datum = ptr::read(self.data.get_unchecked(idx_usize));
-                ptr::write(self.data.get_unchecked_mut(idx_usize), MaybeUninit::new(datum));
-                Some(old_datum.assume_init())
-            }
+            let old_datum = std::mem::replace(&mut self.data[idx_usize], MaybeUninit::new(datum));
+            Some(unsafe { old_datum.assume_init() })
         } else {
-            unsafe {
-                ptr::write(self.data.get_unchecked_mut(idx_usize), MaybeUninit::new(datum));
-                None
-            }
+            self.data[idx_usize] = MaybeUninit::new(datum);
+            None
         }
     }
 }
@@ -98,10 +93,8 @@ impl<T> Storage for VecStorage<T> {
         // If the index was previously occupied, return the old piece of data.
         if self.index.remove(&idx) {
             let idx_usize: usize = idx.into();
-            unsafe {
-                let old_datum = ptr::read(self.data.get_unchecked(idx_usize));
-                Some(old_datum.assume_init())
-            }
+            let old_datum = std::mem::replace(&mut self.data[idx_usize], MaybeUninit::uninit());
+            Some(unsafe { old_datum.assume_init() })
         } else {
             None
         }
