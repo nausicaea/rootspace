@@ -47,8 +47,8 @@ impl<'a, T> AssetDatabaseDeps for Dependencies<'a, T> {
 }
 
 impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
-    fn main_scene(&self) -> &str {
-        self.main_scene
+    fn main_scene(&self) -> Option<&str> {
+        Some(self.main_scene)
     }
 
     fn runtime(&self) -> Arc<Runtime> {

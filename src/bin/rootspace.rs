@@ -14,7 +14,6 @@ struct Dependencies<'a, T: 'static> {
     rt: Arc<Runtime>,
     event_loop: &'a EventLoop<T>,
     name: &'a str,
-    main_scene: &'a str,
     force_init: bool,
     within_repo: bool,
     graphics_settings: Settings,
@@ -26,7 +25,6 @@ impl<'a, T> Dependencies<'a, T> {
             rt,
             event_loop,
             name: "test",
-            main_scene: "test.cbor",
             force_init: false,
             within_repo: true,
             graphics_settings: Settings::default(),
@@ -65,8 +63,8 @@ impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
         self.rt.clone()
     }
 
-    fn main_scene(&self) -> &str {
-        self.main_scene
+    fn main_scene(&self) -> Option<&str> {
+        None
     }
 }
 

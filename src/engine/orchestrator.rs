@@ -60,10 +60,12 @@ impl Orchestrator {
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        world
-            .read::<AssetDatabase>()
-            .load_asset::<Scene, _>(world.resources(), "scenes", deps.main_scene())
-            .await?;
+        if let Some(main_scene) = deps.main_scene() {
+            world
+                .read::<AssetDatabase>()
+                .load_asset::<Scene, _>(world.resources(), deps.scene_group(), main_scene)
+                .await?;
+        }
 
         Ok(Orchestrator {
             world,
@@ -219,7 +221,7 @@ pub trait OrchestratorDeps {
     fn runtime(&self) -> Arc<Runtime>;
 
     /// Specifies the name of the main scene
-    fn main_scene(&self) -> &str;
+    fn main_scene(&self) -> Option<&str>;
 
     /// Specifies the name of the asset group scenes are stored in
     fn scene_group(&self) -> &str {
