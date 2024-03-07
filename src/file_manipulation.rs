@@ -465,7 +465,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg_attr(not(target_family = "unix"), ignore)]
+    #[cfg_attr(not(target_family = "unix"), should_panic)]
     fn test_expand_tilde() {
         // Should work on your linux box during tests, would fail in stranger
         // environments!

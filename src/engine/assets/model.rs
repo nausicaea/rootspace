@@ -33,13 +33,9 @@ impl Model {
                         name, material_group
                     )
                 })?;
-            let material = GpuMaterial::with_path(res, &path).await.with_context(|| {
-                format!(
-                    "trying to load a {} from path '{}'",
-                    std::any::type_name::<GpuMaterial>(),
-                    path.display()
-                )
-            })?;
+            let material = GpuMaterial::with_path(res, &path)
+                .await
+                .with_context(|| format!("trying to load a GpuMaterial from path '{}'", path.display()))?;
             materials.push(material);
         }
 

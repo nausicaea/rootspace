@@ -795,7 +795,6 @@ mod tests {
     }
 
     #[rstest::rstest]
-    #[ignore]
     fn load_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
         match load_ply(&path) {
             Err(e) => panic!("{}: {}", path.display(), e),
@@ -804,7 +803,6 @@ mod tests {
     }
 
     #[rstest::rstest]
-    #[ignore]
     fn roundtrip_save_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
         let _ = env_logger::builder().is_test(true).try_init();
         let ply = load_ply(&path).unwrap();
@@ -820,35 +818,28 @@ mod tests {
         match load_ply(tmp.path()) {
             Ok(ply2) => {
                 if &ply != &ply2 {
-                    let persist_path = Path::new(concat!(
-                        env!("CARGO_MANIFEST_DIR"),
-                        "/target/tests/save_ply_succeeds_for_test_files"
-                    ));
-                    if !persist_path.is_dir() {
-                        std::fs::create_dir_all(persist_path).unwrap();
-                    }
-                    let persist_path = persist_path.join(path.file_name().unwrap());
-                    tmp.persist(&persist_path).unwrap();
-                    eprintln!("diff {} {}", path.display(), persist_path.display());
-
+                    persist_failures(&path, tmp);
                     assert_eq!(&ply.descriptor, &ply2.descriptor, "differing headers");
                     assert_eq!(&ply.data, &ply2.data, "differing data");
                 }
             }
             Err(e) => {
-                let persist_path = Path::new(concat!(
-                    env!("CARGO_MANIFEST_DIR"),
-                    "/target/tests/save_ply_succeeds_for_test_files"
-                ));
-                if !persist_path.is_dir() {
-                    std::fs::create_dir_all(persist_path).unwrap();
-                }
-                let persist_path = persist_path.join(path.file_name().unwrap());
-                tmp.persist(&persist_path).unwrap();
-                eprintln!("diff {} {}", path.display(), persist_path.display());
-
+                persist_failures(&path, tmp);
                 panic!("{}", e);
             }
         }
+    }
+
+    fn persist_failures(source: &Path, tmp: tempfile::NamedTempFile) {
+        let persist_path = Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/target/tests/save_ply_succeeds_for_test_files"
+        ));
+        if !persist_path.is_dir() {
+            std::fs::create_dir_all(persist_path).unwrap();
+        }
+        let persist_path = persist_path.join(source.file_name().unwrap());
+        tmp.persist(&persist_path).unwrap();
+        eprintln!("diff {} {}", source.display(), persist_path.display());
     }
 }
