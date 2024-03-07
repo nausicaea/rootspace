@@ -8,4 +8,3 @@ pub struct Renderable(pub Model);
 impl Component for Renderable {
     type Storage = VecStorage<Self>;
 }
-
