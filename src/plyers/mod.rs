@@ -796,9 +796,8 @@ mod tests {
 
     #[rstest::rstest]
     fn load_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
-        match load_ply(&path) {
-            Err(e) => panic!("{}: {}", path.display(), e),
-            _ => (),
+        if let Err(e) = load_ply(&path) {
+            panic!("{}: {}", path.display(), e);
         }
     }
 
@@ -811,13 +810,13 @@ mod tests {
             .suffix(path.extension().unwrap())
             .tempfile()
             .unwrap();
-        match save_ply(&ply, tmp.path()) {
-            Err(e) => panic!("{}: {}", path.display(), e),
-            _ => (),
+        if let Err(e) = save_ply(&ply, tmp.path()) {
+            panic!("{}: {}", path.display(), e);
+            
         }
         match load_ply(tmp.path()) {
             Ok(ply2) => {
-                if &ply != &ply2 {
+                if ply != ply2 {
                     persist_failures(&path, tmp);
                     assert_eq!(&ply.descriptor, &ply2.descriptor, "differing headers");
                     assert_eq!(&ply.data, &ply2.data, "differing data");

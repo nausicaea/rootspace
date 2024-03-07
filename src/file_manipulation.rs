@@ -491,7 +491,7 @@ mod tests {
         assert!(r.is_ok(), "{:?}", r.unwrap_err());
 
         // The operation must fail for a path whose parent does not exist
-        let bad_new_file = base_dir.path().join("/i/do/not/exist.tmp");
+        let bad_new_file = base_dir.path().join("i/do/not/exist.tmp");
         let r = NewOrExFilePathBuf::try_from(bad_new_file);
         assert!(r.is_err());
 
@@ -515,7 +515,7 @@ mod tests {
         assert!(r.is_err());
 
         // The operation must fail for a path whose parent does not exist
-        let bad_new_file = base_dir.path().join("/i/do/not/exist.tmp");
+        let bad_new_file = base_dir.path().join("i/do/not/exist.tmp");
         let r = FilePathBuf::try_from(bad_new_file);
         assert!(r.is_err());
 
@@ -539,7 +539,7 @@ mod tests {
         assert!(r.is_err());
 
         // The operation must fail for a path whose parent does not exist
-        let bad_new_file = base_dir.path().join("/i/do/not/exist");
+        let bad_new_file = base_dir.path().join("i/do/not/exist");
         let r = DirPathBuf::try_from(bad_new_file);
         assert!(r.is_err());
 
@@ -563,7 +563,7 @@ mod tests {
     async fn file_path_read_to_bytes() {
         let mut tf = NamedTempFile::new().unwrap();
 
-        tf.write(&[0x00, 0xff, 0x14, 0xf6]).unwrap();
+        tf.write_all(&[0x00, 0xff, 0x14, 0xf6]).unwrap();
 
         let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_bytes().await;
         assert!(r.is_ok());

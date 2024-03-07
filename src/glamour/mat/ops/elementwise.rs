@@ -154,47 +154,47 @@ mod tests {
     fn mat4_supports_scalar_addition() {
         let a: Mat4<f32> = Mat4::from([1.0; 16]);
         let b: f32 = 2.0;
-        assert_eq!(&a + &b, Mat4::<f32>::from([3.0; 16]));
-        assert_eq!(&b + &a, Mat4::<f32>::from([3.0; 16]));
+        assert_eq!(a + b, Mat4::<f32>::from([3.0; 16]));
+        assert_eq!(b + a, Mat4::<f32>::from([3.0; 16]));
     }
 
     #[test]
     fn mat4_supports_scalar_subtraction() {
         let a: Mat4<f32> = Mat4::from([1.0; 16]);
         let b: f32 = 2.0;
-        assert_eq!(&a - &b, Mat4::<f32>::from([-1.0; 16]));
-        assert_eq!(&b - &a, Mat4::<f32>::from([1.0; 16]));
+        assert_eq!(a - b, Mat4::<f32>::from([-1.0; 16]));
+        assert_eq!(b - a, Mat4::<f32>::from([1.0; 16]));
     }
 
     #[test]
     fn mat4_supports_scalar_multiplication() {
         let a: Mat4<f32> = Mat4::from([2.0; 16]);
         let b: f32 = 2.0;
-        assert_eq!(&a * &b, Mat4::<f32>::from([4.0; 16]));
-        assert_eq!(&b * &a, Mat4::<f32>::from([4.0; 16]));
+        assert_eq!(a * b, Mat4::<f32>::from([4.0; 16]));
+        assert_eq!(b * a, Mat4::<f32>::from([4.0; 16]));
     }
 
     #[test]
     fn mat4_supports_scalar_division() {
         let a: Mat4<f32> = Mat4::from([6.0; 16]);
         let b: f32 = 2.0;
-        assert_eq!(&a / &b, Mat4::<f32>::from([3.0; 16]));
-        assert_eq!(&b / &a, Mat4::<f32>::from([2.0 / 6.0; 16]));
+        assert_eq!(a / b, Mat4::<f32>::from([3.0; 16]));
+        assert_eq!(b / a, Mat4::<f32>::from([2.0 / 6.0; 16]));
     }
 
     #[test]
     fn mat4_supports_matrix_addition() {
         let a: Mat4<f32> = Mat4::from([3.0; 16]);
         let b: Mat4<f32> = Mat4::from([2.0; 16]);
-        assert_eq!(&a + &b, Mat4::<f32>::from([5.0; 16]));
-        assert_eq!(&b + &a, Mat4::<f32>::from([5.0; 16]));
+        assert_eq!(a + b, Mat4::<f32>::from([5.0; 16]));
+        assert_eq!(b + a, Mat4::<f32>::from([5.0; 16]));
     }
 
     #[test]
     fn mat4_supports_matrix_subtraction() {
         let a: Mat4<f32> = Mat4::from([3.0; 16]);
         let b: Mat4<f32> = Mat4::from([2.0; 16]);
-        assert_eq!(&a - &b, Mat4::<f32>::from([1.0; 16]));
-        assert_eq!(&b - &a, Mat4::<f32>::from([-1.0; 16]));
+        assert_eq!(a - b, Mat4::<f32>::from([1.0; 16]));
+        assert_eq!(b - a, Mat4::<f32>::from([-1.0; 16]));
     }
 }

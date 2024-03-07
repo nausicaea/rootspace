@@ -469,10 +469,8 @@ mod tests {
         bi.insert(3u32);
 
         let bivec: Vec<u32> = bi.iter().collect();
-        let mut i = 0;
-        for index in &bi {
+        for (i, index) in (&bi).into_iter().enumerate() {
             assert_eq!(index, bivec[i]);
-            i += 1;
         }
     }
 }
