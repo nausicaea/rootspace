@@ -24,9 +24,11 @@ async fn main() {
 }
 
 fn run<T: 'static>(mut state: State<'static>) -> impl 'static + FnMut(Event<T>, &EventLoopWindowTarget<T>) {
-    move |event, event_loop| if let Event::NewEvents(StartCause::Init) = event {
-        state.init();
-        event_loop.exit()
+    move |event, event_loop| {
+        if let Event::NewEvents(StartCause::Init) = event {
+            state.init();
+            event_loop.exit()
+        }
     }
 }
 

@@ -812,7 +812,6 @@ mod tests {
             .unwrap();
         if let Err(e) = save_ply(&ply, tmp.path()) {
             panic!("{}: {}", path.display(), e);
-            
         }
         match load_ply(tmp.path()) {
             Ok(ply2) => {

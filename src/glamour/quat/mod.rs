@@ -347,8 +347,8 @@ mod tests {
     fn quat_supports_scalar_multiplication() {
         let a: Quat<f32> = Quat::identity();
         let b: f32 = 2.0;
-        assert_eq!(&a * &b, Quat::<f32>::new(2.0, 0.0, 0.0, 0.0));
-        assert_eq!(&b * &a, Quat::<f32>::new(2.0, 0.0, 0.0, 0.0));
+        assert_eq!(a * b, Quat::<f32>::new(2.0, 0.0, 0.0, 0.0));
+        assert_eq!(b * a, Quat::<f32>::new(2.0, 0.0, 0.0, 0.0));
     }
 
     #[test]
@@ -390,7 +390,7 @@ mod tests {
     fn quat_implements_mul_for_vec4() {
         let q: Quat<f32> = Quat::identity();
         let v: Vec4<f32> = Vec4::new(1.0, 2.0, 3.0, 4.0);
-        assert_eq!(&q * &v, v);
+        assert_eq!(q * v, v);
     }
 
     #[test]
