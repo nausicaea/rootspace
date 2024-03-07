@@ -5,7 +5,7 @@ use crate::ecs::resources::Resources;
 use crate::ecs::storage::Storage;
 use crate::engine::assets::private::PrivSaveAsset;
 use crate::engine::components::camera::Camera;
-use crate::engine::components::renderable::{Renderable, RenderableSource};
+use crate::engine::components::renderable::Renderable;
 use crate::engine::components::transform::Transform;
 use crate::engine::resources::asset_database::AssetDatabase;
 use crate::rose_tree::hierarchy::Hierarchy;
@@ -206,3 +206,18 @@ impl<'a> EntityBuilder<'a> {
         e
     }
 }
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub enum RenderableSource {
+    Model { group: String, name: String },
+}
+
+impl RenderableSource {
+    pub fn with_model<S: AsRef<str>>(group: S, name: S) -> Self {
+        RenderableSource::Model {
+            group: group.as_ref().into(),
+            name: name.as_ref().into(),
+        }
+    }
+}
+
