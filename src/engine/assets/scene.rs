@@ -29,6 +29,16 @@ impl Scene {
         EntityBuilder::new(self)
     }
 
+    pub fn with_resources(res: &Resources) -> Self {
+        Scene {
+            entities: res.read::<Entities>().clone(),
+            hierarchy: res.read::<Hierarchy<Index>>().clone(),
+            cameras: res.read_components::<Camera>().indexed_iter().map(|(i, c)| (i, c.clone())).collect(),
+            transforms: res.read_components::<Transform>().indexed_iter().map(|(i, t)| (i, t.clone())).collect(),
+            renderables: res.read_components::<Renderable>().indexed_iter().map(|(i, r)| (i, r.clone())).collect(),
+        }
+    }
+
     pub async fn load_additive(self, res: &Resources) -> Result<(), anyhow::Error> {
         let map = self.load_hierarchy_additive(&mut res.write(), &mut res.write());
 
