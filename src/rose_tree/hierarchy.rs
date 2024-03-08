@@ -15,7 +15,7 @@ use std::hash::Hash;
         deserialize = "K: Ord + std::hash::Hash + for<'r> serde::Deserialize<'r>"
     )
 )]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Hierarchy<K>(Tree<K, ()>);
 
 impl<K> Hierarchy<K> {

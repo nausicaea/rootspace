@@ -12,7 +12,7 @@ use std::{
     serialize = "K: Ord + std::hash::Hash + serde::Serialize, V: serde::Serialize",
     deserialize = "K: Ord + std::hash::Hash + for<'r> serde::Deserialize<'r>, V: for<'r> serde::Deserialize<'r>"
 ))]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Tree<K, V> {
     pub(super) edges: HashMap<K, Vec<K>>,
     pub(super) parents: BTreeMap<K, Option<K>>,

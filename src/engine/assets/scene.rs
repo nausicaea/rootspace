@@ -102,7 +102,7 @@ impl Scene {
 
             if let Some(renderable_source) = self.renderables.get(&i_prev) {
                 match renderable_source {
-                    RenderableSource::Model { group, name } => {
+                    RenderableSource::Reference { group, name } => {
                         let path = res.read::<AssetDatabase>().find_asset(group, name).with_context(|| {
                             format!("trying to find the path of asset '{}' in group '{}'", name, group)
                         })?;
@@ -219,14 +219,6 @@ impl<'a> EntityBuilder<'a> {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum RenderableSource {
-    Model { group: String, name: String },
+    Reference { group: String, name: String },
 }
 
-impl RenderableSource {
-    pub fn with_model<S: AsRef<str>>(group: S, name: S) -> Self {
-        RenderableSource::Model {
-            group: group.as_ref().into(),
-            name: name.as_ref().into(),
-        }
-    }
-}

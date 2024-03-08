@@ -11,7 +11,7 @@ use super::{
 };
 
 /// The `Entities` resource keeps track of all entities.
-#[derive(Default, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Entities {
     /// Stores the highest assigned `Entity` index plus one.
     max_idx: Index,
