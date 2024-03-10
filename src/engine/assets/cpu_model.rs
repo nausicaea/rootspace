@@ -21,7 +21,7 @@ impl PrivLoadAsset for CpuModel {
     async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
         let mesh = CpuMesh::with_path(res, path)
             .await
-            .with_context(|| format!("trying to load a CpuMesh from '{}'", path.display()))?;
+            .with_context(|| format!("Loading a CpuMesh from '{}'", path.display()))?;
         trace!("Loaded CpuMesh with size {} bytes", std::mem::size_of_val(&mesh));
 
         let mut materials = Vec::new();
@@ -32,7 +32,7 @@ impl PrivLoadAsset for CpuModel {
                 .await
                 .with_context(|| {
                     format!(
-                        "trying to load a CpuMaterial from group {} and name {}",
+                        "Loading a CpuMaterial from group {} and name {}",
                         MATERIAL_ASSET_GROUP, name
                     )
                 })?;

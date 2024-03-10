@@ -18,7 +18,7 @@ impl PrivLoadAsset for CpuMaterial {
         let label = path.file_stem().and_then(|n| n.to_str()).map(|n| n.to_owned());
         let texture = CpuTexture::with_path(res, path)
             .await
-            .with_context(|| format!("trying to load CpuTexture at path {}", path.display()))?;
+            .with_context(|| format!("Loading CpuTexture at path {}", path.display()))?;
 
         Ok(CpuMaterial { label, texture })
     }

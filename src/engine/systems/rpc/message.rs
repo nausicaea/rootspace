@@ -6,5 +6,6 @@ use tokio::sync::oneshot::Sender;
 pub(crate) enum RpcMessage {
     Hello(String, SocketAddr),
     StatsRequest(Sender<Statistics>),
+    LoadScene { tx: Sender<Result<(), anyhow::Error>>, group: String, name: String },
     Exit,
 }

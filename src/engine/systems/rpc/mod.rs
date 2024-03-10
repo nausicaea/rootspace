@@ -5,6 +5,8 @@ pub mod service;
 use crate::ecs::resources::Resources;
 use crate::ecs::system::System;
 use crate::ecs::with_resources::WithResources;
+use crate::engine::assets::scene::Scene;
+use crate::engine::resources::asset_database::AssetDatabase;
 use anyhow::Error;
 
 use crate::engine::resources::rpc_settings::RpcSettings;
@@ -55,6 +57,11 @@ impl System for Rpc {
                         RpcMessage::StatsRequest(tx) => {
                             let stats = res.read::<Statistics>().clone();
                             tx.send(stats).unwrap();
+                        }
+                        RpcMessage::LoadScene { tx, group, name } => {
+                            let r = res.read::<AssetDatabase>()
+                                .load_asset::<Scene, _>(res, &group, &name).await;
+                            tx.send(r).unwrap();
                         }
                         RpcMessage::Exit => res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit),
                     }

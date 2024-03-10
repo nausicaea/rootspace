@@ -145,12 +145,12 @@ impl Renderer {
     ) -> Result<PipelineId, anyhow::Error> {
         let shader_path = adb.find_asset("shaders", "transformed.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
-            .with_context(|| format!("trying to load a shader source from '{}'", shader_path.display()))?;
+            .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let vertex_shader_module = gfx.create_shader_module(Some("vertex-shader"), shader_data);
 
         let shader_path = adb.find_asset("shaders", "with_static_color.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
-            .with_context(|| format!("trying to load a shader source from '{}'", shader_path.display()))?;
+            .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
 
         let tl = gfx.transform_layout();
@@ -174,12 +174,12 @@ impl Renderer {
     ) -> Result<PipelineId, anyhow::Error> {
         let shader_path = adb.find_asset("shaders", "transformed.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
-            .with_context(|| format!("trying to load a shader source from '{}'", shader_path.display()))?;
+            .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let vertex_shader_module = gfx.create_shader_module(Some("vertex-shader"), shader_data);
 
         let shader_path = adb.find_asset("shaders", "textured.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
-            .with_context(|| format!("trying to load a shader source from '{}'", shader_path.display()))?;
+            .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
 
         let tl = gfx.transform_layout();
@@ -208,9 +208,9 @@ impl WithResources for Renderer {
         let mut gfx = res.write::<Graphics>();
 
         let pipeline_wtm = Self::crp_with_transform_and_material(&adb, &mut gfx, "wtm")
-            .context("trying to create the render pipeline 'wtm'")?;
+            .context("Creating the render pipeline 'wtm'")?;
         let pipeline_wt =
-            Self::crp_with_transform(&adb, &mut gfx, "wt").context("trying to create the render pipeline 'wt'")?;
+            Self::crp_with_transform(&adb, &mut gfx, "wt").context("Creating the render pipeline 'wt'")?;
 
         let max_objects = gfx.max_objects();
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256

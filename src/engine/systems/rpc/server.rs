@@ -6,6 +6,8 @@ use std::net::SocketAddr;
 use tarpc::context::Context;
 use tokio::sync::mpsc::Sender;
 
+use super::service::Error;
+
 #[derive(Debug, Clone)]
 pub struct RpcServer {
     mpsc_tx: Sender<RpcMessage>,
@@ -22,26 +24,34 @@ impl RpcServer {
 }
 
 impl RpcService for RpcServer {
-    async fn hello(self, _context: Context, name: String) -> String {
+    async fn hello(self, _context: Context, name: String) -> Result<String, Error> {
         trace!("RpcService::hello");
         let output = format!("Hello, {}@{}", &name, self.socket_address);
         self.mpsc_tx
             .send(RpcMessage::Hello(name, self.socket_address))
-            .await
-            .unwrap();
-        output
+            .await?;
+        Ok(output)
     }
 
-    async fn exit(self, _: Context) {
+    async fn exit(self, _: Context) -> Result<(), Error> {
         trace!("RpcService::exit");
-        self.mpsc_tx.send(RpcMessage::Exit).await.unwrap();
+        self.mpsc_tx.send(RpcMessage::Exit).await?;
+        Ok(())
     }
 
-    async fn perf(self, _: Context) -> Statistics {
+    async fn perf(self, _: Context) -> Result<Statistics, Error> {
         trace!("RpcService::perf");
         let (tx, rx) = tokio::sync::oneshot::channel();
-        self.mpsc_tx.send(RpcMessage::StatsRequest(tx)).await.unwrap();
+        self.mpsc_tx.send(RpcMessage::StatsRequest(tx)).await?;
+        let stats = rx.await?;
+        Ok(stats)
+    }
 
-        rx.await.unwrap()
+    async fn load_scene(self, _: Context, group: String, name: String) -> Result<(), Error> {
+        trace!("RpcService::load_scene");
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        self.mpsc_tx.send(RpcMessage::LoadScene { tx, group, name }).await?;
+        rx.await??;
+        Ok(())
     }
 }

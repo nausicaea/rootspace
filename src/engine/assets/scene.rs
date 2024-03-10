@@ -64,7 +64,7 @@ impl Scene {
 
         if let Err(e) = self.load_components_additive(&map, res).await {
             Self::unload_entities(res, map.values());
-            return Err(e).context("trying to add the scene's components to the existing loaded components");
+            return Err(e).context("Adding the scene's components to the existing loaded components");
         }
 
         Ok(())
@@ -125,7 +125,7 @@ impl Scene {
                     .read::<AssetDatabase>()
                     .load_asset::<CpuModel, _>(res, group, name)
                     .await
-                    .with_context(|| format!("trying to load CpuModel from group {} and name {}", group, name,))?;
+                    .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name,))?;
                 let model = GpuModel::with_model(res, &cpu_model);
                 let renderable = Renderable {
                     model,
@@ -145,11 +145,11 @@ impl PrivLoadAsset for Scene {
 
     async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
         let file =
-            std::fs::File::open(path).with_context(|| format!("trying to open the file '{}'", path.display()))?;
+            std::fs::File::open(path).with_context(|| format!("Opening the file '{}'", path.display()))?;
         let reader = std::io::BufReader::new(file);
 
         let scene = ciborium::de::from_reader::<Scene, _>(reader)
-            .with_context(|| format!("trying to deserialize the {}", std::any::type_name::<Scene>()))?;
+            .context("Loading the Scene")?;
 
         scene.load_additive(res).await
     }
@@ -158,11 +158,11 @@ impl PrivLoadAsset for Scene {
 impl PrivSaveAsset for Scene {
     async fn to_path(&self, path: &Path) -> Result<(), anyhow::Error> {
         let file =
-            std::fs::File::create(path).with_context(|| format!("trying to create the file '{}'", path.display()))?;
+            std::fs::File::create(path).with_context(|| format!("Creating the file '{}'", path.display()))?;
         let writer = std::io::BufWriter::new(file);
 
         ciborium::ser::into_writer(self, writer)
-            .with_context(|| format!("trying to deserialize the {}", std::any::type_name::<Scene>()))?;
+            .context("Serializing the Scene")?;
 
         Ok(())
     }

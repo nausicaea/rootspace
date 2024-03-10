@@ -18,6 +18,11 @@ struct Args {
 enum Command {
     Exit,
     Perf,
+    LoadScene {
+        #[arg(short, long, help = "The asset group", default_value = "scenes")]
+        group: String,
+        name: String,
+    },
 }
 
 #[tokio::main]
@@ -32,8 +37,9 @@ async fn main() -> anyhow::Result<()> {
     let context = tarpc::context::current();
 
     match args.command {
-        Command::Exit => client.exit(context).await?,
-        Command::Perf => println!("{}", client.perf(context).await?),
+        Command::Exit => client.exit(context).await??,
+        Command::Perf => println!("{}", client.perf(context).await??),
+        Command::LoadScene { group, name } => client.load_scene(context, group, name).await??,
     }
 
     Ok(())

@@ -45,14 +45,14 @@ impl AssetDatabase {
     {
         let path = self.find_asset(&group, &name).with_context(|| {
             format!(
-                "trying to find the path of asset '{}' in group '{}'",
+                "Finding the path of asset '{}' in group '{}'",
                 name.as_ref(),
                 group.as_ref()
             )
         })?;
         let asset = A::with_path(res, &path).await.with_context(|| {
             format!(
-                "trying to load a {} asset from path '{}'",
+                "Loading a {} asset from path '{}'",
                 std::any::type_name::<A>(),
                 path.display()
             )
@@ -68,7 +68,7 @@ impl AssetDatabase {
     {
         let path = self.find_asset(&group, &name).with_context(|| {
             format!(
-                "trying to find the path of asset '{}' in group '{}'",
+                "Finding the path of asset '{}' in group '{}'",
                 name.as_ref(),
                 group.as_ref()
             )
@@ -77,12 +77,12 @@ impl AssetDatabase {
         if let Some(parent) = path.parent() {
             create_dir_all(parent)
                 .await
-                .with_context(|| format!("trying to create the parent directories of path '{}'", path.display()))?;
+                .with_context(|| format!("Creating the parent directories of path '{}'", path.display()))?;
         }
 
         asset.to_path(&path).await.with_context(|| {
             format!(
-                "trying to save a {} asset to path '{}'",
+                "Saving a {} asset to path '{}'",
                 std::any::type_name::<A>(),
                 path.display()
             )
@@ -115,7 +115,7 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
     async fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
         let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, deps.name()).with_context(|| {
             format!(
-                "trying to find the project directories of triplet ({}, {}, {})",
+                "Finding the project directories of triplet ({}, {}, {})",
                 APP_QUALIFIER,
                 APP_ORGANIZATION,
                 deps.name()
@@ -132,13 +132,13 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
         if (deps.force_init() && !deps.within_repo()) || !assets.is_dir() {
             remove_dir_all(&assets)
                 .await
-                .with_context(|| format!("trying to remove all contents of the path '{}'", assets.display()))?;
+                .with_context(|| format!("Removing all contents of the path '{}'", assets.display()))?;
 
             let source_assets = WITHIN_REPO_ASSETS.join(deps.name());
             if source_assets.is_dir() {
                 copy_recursive(&source_assets, &assets).await.with_context(|| {
                     format!(
-                        "trying to copy the asset database contents from '{}' to '{}'",
+                        "Copying the asset database contents from '{}' to '{}'",
                         source_assets.display(),
                         assets.display()
                     )
@@ -146,7 +146,7 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
             } else {
                 create_dir_all(&assets).await.with_context(|| {
                     format!(
-                        "trying to create the asset database directory at '{}'",
+                        "Creating the asset database directory at '{}'",
                         assets.display()
                     )
                 })?;
