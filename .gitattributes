@@ -6,3 +6,4 @@
 *.blend1 filter=lfs diff=lfs merge=lfs -text
 *.fspy filter=lfs diff=lfs merge=lfs -text
 *.webp filter=lfs diff=lfs merge=lfs -text
+*.cbor filter=lfs diff=lfs merge=lfs -text
