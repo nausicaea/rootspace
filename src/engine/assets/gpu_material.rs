@@ -25,4 +25,3 @@ impl GpuMaterial {
         GpuMaterial { texture, bind_group }
     }
 }
-

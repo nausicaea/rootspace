@@ -16,11 +16,10 @@ impl PrivLoadAsset for CpuMaterial {
         path: &std::path::Path,
     ) -> Result<Self::Output, anyhow::Error> {
         let label = path.file_stem().and_then(|n| n.to_str()).map(|n| n.to_owned());
-        let texture = CpuTexture::with_path(res, path).await.with_context(|| format!("trying to load CpuTexture at path {}", path.display()))?;
+        let texture = CpuTexture::with_path(res, path)
+            .await
+            .with_context(|| format!("trying to load CpuTexture at path {}", path.display()))?;
 
-        Ok(CpuMaterial {
-            label,
-            texture,
-        })
+        Ok(CpuMaterial { label, texture })
     }
 }

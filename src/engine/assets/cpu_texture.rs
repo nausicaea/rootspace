@@ -25,9 +25,6 @@ impl PrivLoadAsset for CpuTexture {
         let buf = std::io::BufReader::new(f);
         let image = image::load(buf, image_format)?;
 
-        Ok(CpuTexture {
-            label,
-            image,
-        })
+        Ok(CpuTexture { label, image })
     }
 }

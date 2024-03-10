@@ -33,9 +33,29 @@ impl Scene {
         Scene {
             entities: res.read::<Entities>().clone(),
             hierarchy: res.read::<Hierarchy<Index>>().clone(),
-            cameras: res.read_components::<Camera>().indexed_iter().map(|(i, c)| (i, c.clone())).collect(),
-            transforms: res.read_components::<Transform>().indexed_iter().map(|(i, t)| (i, t.clone())).collect(),
-            renderables: res.read_components::<Renderable>().indexed_iter().map(|(i, r)| (i, RenderableSource::Reference { group: r.group.clone(), name: r.name.clone() })).collect(),
+            cameras: res
+                .read_components::<Camera>()
+                .indexed_iter()
+                .map(|(i, c)| (i, c.clone()))
+                .collect(),
+            transforms: res
+                .read_components::<Transform>()
+                .indexed_iter()
+                .map(|(i, t)| (i, t.clone()))
+                .collect(),
+            renderables: res
+                .read_components::<Renderable>()
+                .indexed_iter()
+                .map(|(i, r)| {
+                    (
+                        i,
+                        RenderableSource::Reference {
+                            group: r.group.clone(),
+                            name: r.name.clone(),
+                        },
+                    )
+                })
+                .collect(),
         }
     }
 
@@ -101,16 +121,17 @@ impl Scene {
             }
 
             if let Some(RenderableSource::Reference { group, name }) = self.renderables.get(&i_prev) {
-                let cpu_model = res.read::<AssetDatabase>().load_asset::<CpuModel, _>(res, group, name)
+                let cpu_model = res
+                    .read::<AssetDatabase>()
+                    .load_asset::<CpuModel, _>(res, group, name)
                     .await
-                    .with_context(|| {
-                    format!(
-                        "trying to load CpuModel from group {} and name {}",
-                        group, name,
-                    )
-                })?;
+                    .with_context(|| format!("trying to load CpuModel from group {} and name {}", group, name,))?;
                 let model = GpuModel::with_model(res, &cpu_model);
-                let renderable = Renderable { model, group: group.to_string(), name: name.to_string() };
+                let renderable = Renderable {
+                    model,
+                    group: group.to_string(),
+                    name: name.to_string(),
+                };
                 res.write_components::<Renderable>().insert(i_new, renderable);
             }
         }
@@ -216,4 +237,3 @@ impl<'a> EntityBuilder<'a> {
 pub enum RenderableSource {
     Reference { group: String, name: String },
 }
-

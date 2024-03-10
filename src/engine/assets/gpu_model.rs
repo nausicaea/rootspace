@@ -12,8 +12,11 @@ impl GpuModel {
     pub fn with_model(res: &Resources, m: &CpuModel) -> Self {
         GpuModel {
             mesh: GpuMesh::with_mesh(res, &m.mesh),
-            materials: m.materials.iter().map(|mat| GpuMaterial::with_material(res, mat)).collect(),
+            materials: m
+                .materials
+                .iter()
+                .map(|mat| GpuMaterial::with_material(res, mat))
+                .collect(),
         }
     }
 }
-
