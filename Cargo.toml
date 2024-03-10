@@ -64,9 +64,6 @@ name = "wgpu_playground"
 [[example]]
 name = "create_scene"
 
-[[example]]
-name = "engine_test"
-
 [[bench]]
 name = "plyers_benchmarks"
 harness = false

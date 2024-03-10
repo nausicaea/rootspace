@@ -1,5 +1,6 @@
 use std::ops::Deref;
 use std::sync::Arc;
+use clap::Parser;
 use tokio::runtime::Runtime;
 
 use rootspace::engine::orchestrator::{Orchestrator, OrchestratorDeps};
@@ -10,12 +11,19 @@ use rootspace::engine::resources::rpc_settings::RpcDeps;
 use rootspace::Reg;
 use winit::event_loop::EventLoop;
 
+#[derive(Debug, Parser)]
+struct Args {
+    #[arg(short, long, help = "Select the game to run", default_value = "rootspace")]
+    game: String
+}
+
 fn main() -> anyhow::Result<()> {
     env_logger::init();
+    let args = Args::parse();
     let event_loop = EventLoop::new()?;
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     let rt = Arc::new(rt);
-    let deps = Dependencies::new(rt.clone(), &event_loop);
+    let deps = Dependencies::new(rt.clone(), &event_loop, &args.game);
     let state =
         rt.block_on(async move { Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], _>(&deps).await })?;
     event_loop.run(state.start())?;
@@ -31,11 +39,11 @@ struct Dependencies<'a, T: 'static> {
 }
 
 impl<'a, T> Dependencies<'a, T> {
-    fn new(rt: Arc<Runtime>, event_loop: &'a EventLoop<T>) -> Dependencies<'a, T> {
+    fn new(rt: Arc<Runtime>, event_loop: &'a EventLoop<T>, name: &'a str) -> Dependencies<'a, T> {
         Dependencies {
             rt,
             event_loop,
-            name: "rootspace",
+            name,
             force_init: false,
             graphics_settings: Settings::default(),
         }
