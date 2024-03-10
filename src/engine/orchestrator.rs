@@ -60,7 +60,8 @@ impl Orchestrator {
     {
         deps.event_loop().set_control_flow(ControlFlow::Poll);
 
-        let mut world = World::with_dependencies::<RRegistry<RR>, FUSRegistry<FUSR>, USRegistry<USR>, Renderer, _>(deps).await?;
+        let mut world =
+            World::with_dependencies::<RRegistry<RR>, FUSRegistry<FUSR>, USRegistry<USR>, Renderer, _>(deps).await?;
         let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
@@ -179,19 +180,19 @@ impl Orchestrator {
             use WindowEvent::*;
             match event {
                 Resized(_)
-                    | Moved(_)
-                    | DroppedFile(_)
-                    | Focused(_)
-                    | KeyboardInput { .. }
-                    | MouseWheel { .. }
-                    | MouseInput { .. }
-                    | TouchpadMagnify { .. }
-                    | SmartMagnify { .. }
-                    | TouchpadRotate { .. }
-                    | TouchpadPressure { .. }
-                    | Touch(_)
-                    | ScaleFactorChanged { .. }
-                    | ThemeChanged(_) => window_interaction_received = true,
+                | Moved(_)
+                | DroppedFile(_)
+                | Focused(_)
+                | KeyboardInput { .. }
+                | MouseWheel { .. }
+                | MouseInput { .. }
+                | TouchpadMagnify { .. }
+                | SmartMagnify { .. }
+                | TouchpadRotate { .. }
+                | TouchpadPressure { .. }
+                | Touch(_)
+                | ScaleFactorChanged { .. }
+                | ThemeChanged(_) => window_interaction_received = true,
                 _ => (),
             }
         }
@@ -224,7 +225,9 @@ impl Orchestrator {
             info!("{}", self.world.read::<Statistics>());
         }
 
-        if (!self.enable_editor && self.timers.last_loop.elapsed() >= self.timers.min_loop_duration) || (self.enable_editor && window_interaction_received) {
+        if (!self.enable_editor && self.timers.last_loop.elapsed() >= self.timers.min_loop_duration)
+            || (self.enable_editor && window_interaction_received)
+        {
             self.world.read::<Graphics>().request_redraw();
         }
     }

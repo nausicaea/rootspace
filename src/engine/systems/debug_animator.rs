@@ -2,7 +2,11 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 
-use crate::{ecs::{resources::Resources, system::System, with_resources::WithResources}, engine::components::{renderable::Renderable, transform::Transform}, glamour::{quat::Quat, unit::Unit}};
+use crate::{
+    ecs::{resources::Resources, system::System, with_resources::WithResources},
+    engine::components::{renderable::Renderable, transform::Transform},
+    glamour::quat::Quat,
+};
 
 #[derive(Debug)]
 pub struct DebugAnimator;

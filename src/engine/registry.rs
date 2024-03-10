@@ -40,10 +40,7 @@ pub type RRegistry<S> = RegAdd![
     S
 ];
 
-pub type FUSRegistry<D> = RegAdd![
-    DebugAnimator,
-    D
-];
+pub type FUSRegistry<D> = RegAdd![DebugAnimator, D];
 
 pub type USRegistry<D> = RegAdd![
     CameraManager,
