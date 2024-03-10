@@ -30,8 +30,8 @@ impl PrivLoadAsset for CpuMesh {
         let label = path.file_stem().and_then(|n| n.to_str()).map(|n| n.to_owned());
 
         if let Some("ply") = path.extension().and_then(|ext| ext.to_str()) {
-            let ply = load_ply(path)
-                .with_context(|| format!("Loading a Stanford Ply file from '{}'", path.display()))?;
+            let ply =
+                load_ply(path).with_context(|| format!("Loading a Stanford Ply file from '{}'", path.display()))?;
             let mesh = Self::with_ply(&ply, label)?;
             Ok(mesh)
         } else {

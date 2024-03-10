@@ -1,6 +1,6 @@
+use clap::Parser;
 use std::ops::Deref;
 use std::sync::Arc;
-use clap::Parser;
 use tokio::runtime::Runtime;
 
 use rootspace::engine::orchestrator::{Orchestrator, OrchestratorDeps};
@@ -14,7 +14,7 @@ use winit::event_loop::EventLoop;
 #[derive(Debug, Parser)]
 struct Args {
     #[arg(short, long, help = "Select the game to run", default_value = "rootspace")]
-    game: String
+    game: String,
 }
 
 fn main() -> anyhow::Result<()> {

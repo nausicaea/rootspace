@@ -43,4 +43,3 @@ impl From<RecvError> for Error {
         Error::OneshotRecvError(format!("{}", value))
     }
 }
-

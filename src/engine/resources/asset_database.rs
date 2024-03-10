@@ -144,12 +144,9 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
                     )
                 })?;
             } else {
-                create_dir_all(&assets).await.with_context(|| {
-                    format!(
-                        "Creating the asset database directory at '{}'",
-                        assets.display()
-                    )
-                })?;
+                create_dir_all(&assets)
+                    .await
+                    .with_context(|| format!("Creating the asset database directory at '{}'", assets.display()))?;
             }
         }
 

@@ -144,12 +144,10 @@ impl PrivLoadAsset for Scene {
     type Output = ();
 
     async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
-        let file =
-            std::fs::File::open(path).with_context(|| format!("Opening the file '{}'", path.display()))?;
+        let file = std::fs::File::open(path).with_context(|| format!("Opening the file '{}'", path.display()))?;
         let reader = std::io::BufReader::new(file);
 
-        let scene = ciborium::de::from_reader::<Scene, _>(reader)
-            .context("Loading the Scene")?;
+        let scene = ciborium::de::from_reader::<Scene, _>(reader).context("Loading the Scene")?;
 
         scene.load_additive(res).await
     }
@@ -157,12 +155,10 @@ impl PrivLoadAsset for Scene {
 
 impl PrivSaveAsset for Scene {
     async fn to_path(&self, path: &Path) -> Result<(), anyhow::Error> {
-        let file =
-            std::fs::File::create(path).with_context(|| format!("Creating the file '{}'", path.display()))?;
+        let file = std::fs::File::create(path).with_context(|| format!("Creating the file '{}'", path.display()))?;
         let writer = std::io::BufWriter::new(file);
 
-        ciborium::ser::into_writer(self, writer)
-            .context("Serializing the Scene")?;
+        ciborium::ser::into_writer(self, writer).context("Serializing the Scene")?;
 
         Ok(())
     }

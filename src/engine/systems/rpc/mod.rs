@@ -59,8 +59,10 @@ impl System for Rpc {
                             tx.send(stats).unwrap();
                         }
                         RpcMessage::LoadScene { tx, group, name } => {
-                            let r = res.read::<AssetDatabase>()
-                                .load_asset::<Scene, _>(res, &group, &name).await;
+                            let r = res
+                                .read::<AssetDatabase>()
+                                .load_asset::<Scene, _>(res, &group, &name)
+                                .await;
                             tx.send(r).unwrap();
                         }
                         RpcMessage::Exit => res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit),

@@ -27,9 +27,7 @@ impl RpcService for RpcServer {
     async fn hello(self, _context: Context, name: String) -> Result<String, Error> {
         trace!("RpcService::hello");
         let output = format!("Hello, {}@{}", &name, self.socket_address);
-        self.mpsc_tx
-            .send(RpcMessage::Hello(name, self.socket_address))
-            .await?;
+        self.mpsc_tx.send(RpcMessage::Hello(name, self.socket_address)).await?;
         Ok(output)
     }
 
