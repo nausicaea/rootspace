@@ -1,4 +1,4 @@
-use super::{cpu_mesh::CpuMesh, Error};
+use super::cpu_mesh::CpuMesh;
 use crate::ecs::resources::Resources;
 use crate::engine::resources::graphics::ids::BufferId;
 use crate::engine::resources::graphics::Graphics;
@@ -11,7 +11,7 @@ pub struct GpuMesh {
 }
 
 impl GpuMesh {
-    pub(crate) fn with_cpu_mesh(res: &Resources, mesh: &CpuMesh) -> Result<Self, Error> {
+    pub(crate) fn with_mesh(res: &Resources, mesh: &CpuMesh) -> Self {
         let mut gfx = res.write::<Graphics>();
         let vertex_buffer = gfx.create_buffer_init(
             mesh.label.as_ref().map(|l| format!("{}:vertex-buffer", &l)).as_deref(),
@@ -24,10 +24,10 @@ impl GpuMesh {
             &mesh.indices,
         );
 
-        Ok(GpuMesh {
+        GpuMesh {
             vertex_buffer,
             index_buffer,
             num_indices: mesh.indices.len() as u32,
-        })
+        }
     }
 }

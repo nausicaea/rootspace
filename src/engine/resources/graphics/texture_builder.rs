@@ -4,8 +4,8 @@ use wgpu::util::TextureDataOrder;
 pub struct TextureBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
     database: &'rt mut Database,
-    label: Option<&'static str>,
-    image: Option<image::DynamicImage>,
+    label: Option<&'rt str>,
+    image: Option<&'rt image::DynamicImage>,
 }
 
 impl<'rt> TextureBuilder<'rt> {
@@ -18,12 +18,12 @@ impl<'rt> TextureBuilder<'rt> {
         }
     }
 
-    pub fn with_label(mut self, label: &'static str) -> Self {
-        self.label = Some(label);
+    pub fn with_label(mut self, label: Option<&'rt str>) -> Self {
+        self.label = label;
         self
     }
 
-    pub fn with_image(mut self, image: image::DynamicImage) -> Self {
+    pub fn with_image(mut self, image: &'rt image::DynamicImage) -> Self {
         self.image = Some(image);
         self
     }

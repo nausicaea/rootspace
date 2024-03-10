@@ -1,38 +1,28 @@
-use std::path::Path;
-
-use crate::ecs::resources::Resources;
 use crate::engine::resources::graphics::ids::BindGroupId;
 use crate::engine::resources::graphics::Graphics;
-use anyhow::Context;
 
-use super::{private::PrivLoadAsset, texture::Texture};
+use super::{cpu_material::CpuMaterial, gpu_texture::GpuTexture};
 
 #[derive(Debug)]
 pub struct GpuMaterial {
-    pub texture: Texture,
+    pub texture: GpuTexture,
     pub bind_group: BindGroupId,
 }
 
-impl PrivLoadAsset for GpuMaterial {
-    type Output = Self;
-
-    async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
-        let texture = Texture::with_path(res, path).await.with_context(|| {
-            format!(
-                "trying to load a {} from '{}'",
-                std::any::type_name::<Texture>(),
-                path.display()
-            )
-        })?;
+impl GpuMaterial {
+    pub fn with_material(res: &crate::ecs::resources::Resources, m: &CpuMaterial) -> Self {
+        let texture = GpuTexture::with_texture(res, &m.texture);
 
         let mut gfx = res.write::<Graphics>();
         let layout = gfx.material_layout();
         let bind_group = gfx
             .create_bind_group(layout)
+            .with_label(m.label.as_ref().map(|l| format!("{}:bind-group", &l)).as_deref())
             .add_texture_view(0, texture.view)
             .add_sampler(1, texture.sampler)
             .submit();
 
-        Ok(GpuMaterial { texture, bind_group })
+        GpuMaterial { texture, bind_group }
     }
 }
+

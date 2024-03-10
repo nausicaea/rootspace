@@ -66,7 +66,7 @@ async fn main() -> anyhow::Result<()> {
                 .with_translation(Vec4::new(1.0, 0.0, 0.0, 0.0))
                 .build(),
         )
-        .with_renderable(RenderableSource::with_model("models", "quad.ply"))
+        .with_renderable(RenderableSource::Reference { group: "models".into(), name: "quad.ply".into() })
         .submit();
 
     scene
@@ -78,7 +78,7 @@ async fn main() -> anyhow::Result<()> {
                 .with_scale(Vec4::one() * 0.25)
                 .build(),
         )
-        .with_renderable(RenderableSource::with_model("models", "triangle.ply"))
+        .with_renderable(RenderableSource::Reference { group: "models".into(), name: "triangle.ply".into() })
         .submit();
 
     adb.save_asset(&scene, "scenes", "test.cbor").await?;

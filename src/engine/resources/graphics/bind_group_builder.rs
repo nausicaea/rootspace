@@ -8,7 +8,7 @@ pub struct BindGroupBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
     database: &'rt mut Database,
     layout: BindGroupLayoutId,
-    label: Option<&'static str>,
+    label: Option<&'rt str>,
     entries: Vec<(u32, BindingResourceId)>,
 }
 
@@ -23,8 +23,8 @@ impl<'rt> BindGroupBuilder<'rt> {
         }
     }
 
-    pub fn with_label(mut self, label: &'static str) -> Self {
-        self.label = Some(label);
+    pub fn with_label(mut self, label: Option<&'rt str>) -> Self {
+        self.label = label;
         self
     }
 

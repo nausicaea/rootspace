@@ -3,7 +3,7 @@ use super::{ids::SamplerId, runtime::Runtime, Database};
 pub struct SamplerBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
     database: &'rt mut Database,
-    label: Option<&'static str>,
+    label: Option<&'rt str>,
 }
 
 impl<'rt> SamplerBuilder<'rt> {
@@ -15,8 +15,8 @@ impl<'rt> SamplerBuilder<'rt> {
         }
     }
 
-    pub fn with_label(mut self, label: &'static str) -> Self {
-        self.label = Some(label);
+    pub fn with_label(mut self, label: Option<&'rt str>) -> Self {
+        self.label = label;
         self
     }
 

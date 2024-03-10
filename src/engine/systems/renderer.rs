@@ -101,19 +101,19 @@ impl Renderer {
         let world_draw_calls = renderables.len();
         for (i, (_, r)) in renderables.into_iter().enumerate() {
             let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset); // first 0x0, then 0x100
-            if r.0.materials.is_empty() {
+            if r.model.materials.is_empty() {
                 rp.set_pipeline(self.pipeline_wt)
                     .set_bind_group(0, self.transform_bind_group, &[transform_offset])
-                    .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
-                    .set_index_buffer(r.0.mesh.index_buffer)
-                    .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+                    .set_vertex_buffer(0, r.model.mesh.vertex_buffer)
+                    .set_index_buffer(r.model.mesh.index_buffer)
+                    .draw_indexed(0..r.model.mesh.num_indices, 0, 0..1);
             } else {
                 rp.set_pipeline(self.pipeline_wtm)
                     .set_bind_group(0, self.transform_bind_group, &[transform_offset])
-                    .set_bind_group(1, r.0.materials[0].bind_group, &[])
-                    .set_vertex_buffer(0, r.0.mesh.vertex_buffer)
-                    .set_index_buffer(r.0.mesh.index_buffer)
-                    .draw_indexed(0..r.0.mesh.num_indices, 0, 0..1);
+                    .set_bind_group(1, r.model.materials[0].bind_group, &[])
+                    .set_vertex_buffer(0, r.model.mesh.vertex_buffer)
+                    .set_index_buffer(r.model.mesh.index_buffer)
+                    .draw_indexed(0..r.model.mesh.num_indices, 0, 0..1);
             }
         }
         res.write::<Statistics>().update_draw_calls(world_draw_calls, 0);
@@ -225,7 +225,7 @@ impl WithResources for Renderer {
         let tl = gfx.transform_layout();
         let transform_bind_group = gfx
             .create_bind_group(tl)
-            .with_label("transform-bind-group")
+            .with_label(Some("transform-bind-group"))
             .add_buffer(0, 0, binding_size, transform_buffer)
             .submit();
 

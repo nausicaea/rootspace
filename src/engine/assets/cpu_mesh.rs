@@ -1,4 +1,7 @@
+use anyhow::Context;
+
 use crate::engine::resources::graphics::vertex::Vertex;
+use crate::plyers::load_ply;
 use crate::plyers::types::{
     AsSlice, Ply, Primitive, PropertyDescriptor, FACE_ELEMENT, NX_PROPERTY, NY_PROPERTY, NZ_PROPERTY, S_PROPERTY,
     TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, T_PROPERTY, U_PROPERTY, VERTEX_ELEMENT, VERTEX_INDICES_LIST_PROPERTY,
@@ -6,25 +9,39 @@ use crate::plyers::types::{
 };
 use std::collections::HashMap;
 
+use super::private::PrivLoadAsset;
 use super::Error;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct CpuMesh {
     pub label: Option<String>,
+    pub texture_names: Vec<String>,
     pub vertices: Vec<Vertex>,
     pub indices: Vec<u32>,
 }
 
-impl CpuMesh {
-    pub(crate) fn with_ply(ply: &Ply) -> Result<Self, Error> {
-        let label = ply
-            .descriptor
-            .obj_info
-            .iter()
-            .filter(|obj_info| obj_info.0.starts_with("label="))
-            .map(|obj_info| obj_info.0.replace("label=", ""))
-            .next();
+impl PrivLoadAsset for CpuMesh {
+    type Output = Self;
 
+    async fn with_path(
+        _res: &crate::ecs::resources::Resources,
+        path: &std::path::Path,
+    ) -> Result<Self::Output, anyhow::Error> {
+        let label = path.file_stem().and_then(|n| n.to_str()).map(|n| n.to_owned());
+
+        if let Some("ply") = path.extension().and_then(|ext| ext.to_str()) {
+            let ply = load_ply(path)
+                .with_context(|| format!("trying to load a Stanford Ply file from '{}'", path.display()))?;
+            let mesh = Self::with_ply(&ply, label)?;
+            Ok(mesh)
+        } else {
+            Err(Error::UnsupportedFileFormat.into())
+        }
+    }
+}
+
+impl CpuMesh {
+    fn with_ply(ply: &Ply, label: Option<String>) -> Result<Self, Error> {
         let (v_e_id, num_vertices) = ply
             .descriptor
             .elements
@@ -134,10 +151,46 @@ impl CpuMesh {
 
         log::trace!("Loaded {} vertices and {} indices", vertex_data.len(), indices.len());
 
+        let texture_names: Vec<_> = Self::find_texture_names(ply).map(|n| n.to_owned()).collect();
+
+        log::trace!("Located the following texture names: {}", texture_names.join(", "));
+
         Ok(CpuMesh {
             label,
+            texture_names,
             vertices,
             indices,
         })
+    }
+
+    fn find_texture_names(ply: &Ply) -> impl Iterator<Item = &str> {
+        ply.descriptor
+            .comments
+            .iter()
+            .chain(ply.descriptor.elements.values().flat_map(|e| e.comments.iter()))
+            .chain(
+                ply.descriptor
+                    .elements
+                    .values()
+                    .flat_map(|e| e.properties.values().flat_map(|p| p.comments())),
+            )
+            .map(AsRef::<str>::as_ref)
+            .filter(|c| c.starts_with("TextureFile"))
+            .map(|c| c.trim_start_matches("TextureFile "))
+            .chain(
+                ply.descriptor
+                    .obj_info
+                    .iter()
+                    .chain(ply.descriptor.elements.values().flat_map(|e| e.obj_info.iter()))
+                    .chain(
+                        ply.descriptor
+                            .elements
+                            .values()
+                            .flat_map(|e| e.properties.values().flat_map(|p| p.obj_info())),
+                    )
+                    .map(AsRef::<str>::as_ref)
+                    .filter(|c| c.starts_with("texture"))
+                    .map(|c| c.trim_start_matches("texture ")),
+            )
     }
 }
