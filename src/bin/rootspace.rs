@@ -10,12 +10,23 @@ use rootspace::engine::resources::rpc_settings::RpcDeps;
 use rootspace::Reg;
 use winit::event_loop::EventLoop;
 
+fn main() -> anyhow::Result<()> {
+    env_logger::init();
+    let event_loop = EventLoop::new()?;
+    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
+    let rt = Arc::new(rt);
+    let deps = Dependencies::new(rt.clone(), &event_loop);
+    let state =
+        rt.block_on(async move { Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], _>(&deps).await })?;
+    event_loop.run(state.start())?;
+    Ok(())
+}
+
 struct Dependencies<'a, T: 'static> {
     rt: Arc<Runtime>,
     event_loop: &'a EventLoop<T>,
     name: &'a str,
     force_init: bool,
-    within_repo: bool,
     graphics_settings: Settings,
 }
 
@@ -24,9 +35,8 @@ impl<'a, T> Dependencies<'a, T> {
         Dependencies {
             rt,
             event_loop,
-            name: "test",
+            name: "rootspace",
             force_init: false,
-            within_repo: true,
             graphics_settings: Settings::default(),
         }
     }
@@ -54,7 +64,7 @@ impl<'a, T> AssetDatabaseDeps for Dependencies<'a, T> {
     }
 
     fn within_repo(&self) -> bool {
-        self.within_repo
+        cfg!(debug_assertions)
     }
 }
 
@@ -69,21 +79,3 @@ impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
 }
 
 impl<'a, T> RpcDeps for Dependencies<'a, T> {}
-
-fn main() -> anyhow::Result<()> {
-    env_logger::init();
-    let event_loop = EventLoop::new()?;
-
-    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
-
-    let rt = Arc::new(rt);
-
-    let deps = Dependencies::new(rt.clone(), &event_loop);
-
-    let state =
-        rt.block_on(async move { Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], _>(&deps).await })?;
-
-    event_loop.run(state.start())?;
-
-    Ok(())
-}
