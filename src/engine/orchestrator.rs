@@ -33,6 +33,8 @@ use crate::engine::systems::renderer::Renderer;
 use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
 
+use super::registry::FUSRegistry;
+
 const STATS_DISPLAY_INTERVAL: Duration = Duration::from_secs(15);
 const DELTA_TIME: Duration = Duration::from_millis(50);
 const MAX_LOOP_DURATION: Duration = Duration::from_millis(250);
@@ -41,9 +43,11 @@ const MIN_LOOP_DURATION: Duration = Duration::from_millis(32);
 pub struct Orchestrator {
     world: World,
     timers: Timers,
+    window_event_receiver: ReceiverId<WindowEvent>,
     world_event_receiver: ReceiverId<WorldEvent>,
     engine_event_receiver: ReceiverId<EngineEvent>,
     runtime: Arc<Runtime>,
+    enable_editor: bool,
 }
 
 impl Orchestrator {
@@ -56,7 +60,8 @@ impl Orchestrator {
     {
         deps.event_loop().set_control_flow(ControlFlow::Poll);
 
-        let mut world = World::with_dependencies::<RRegistry<RR>, FUSR, USRegistry<USR>, Renderer, _>(deps).await?;
+        let mut world = World::with_dependencies::<RRegistry<RR>, FUSRegistry<FUSR>, USRegistry<USR>, Renderer, _>(deps).await?;
+        let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
@@ -77,9 +82,11 @@ impl Orchestrator {
                 stats_display_interval: deps.stats_display_interval(),
                 ..Default::default()
             },
+            window_event_receiver,
             world_event_receiver,
             engine_event_receiver,
             runtime: deps.runtime(),
+            enable_editor: deps.enable_editor(),
         })
     }
 
@@ -162,6 +169,33 @@ impl Orchestrator {
             event_loop_window_target.exit();
         }
 
+        // Process window events
+        let mut window_interaction_received = false;
+        let events = self
+            .world
+            .get_mut::<EventQueue<WindowEvent>>()
+            .receive(&self.window_event_receiver);
+        for event in events {
+            use WindowEvent::*;
+            match event {
+                Resized(_)
+                    | Moved(_)
+                    | DroppedFile(_)
+                    | Focused(_)
+                    | KeyboardInput { .. }
+                    | MouseWheel { .. }
+                    | MouseInput { .. }
+                    | TouchpadMagnify { .. }
+                    | SmartMagnify { .. }
+                    | TouchpadRotate { .. }
+                    | TouchpadPressure { .. }
+                    | Touch(_)
+                    | ScaleFactorChanged { .. }
+                    | ThemeChanged(_) => window_interaction_received = true,
+                _ => (),
+            }
+        }
+
         // Process world events
         let events = self
             .world
@@ -190,7 +224,7 @@ impl Orchestrator {
             info!("{}", self.world.read::<Statistics>());
         }
 
-        if self.timers.last_loop.elapsed() >= self.timers.min_loop_duration {
+        if (!self.enable_editor && self.timers.last_loop.elapsed() >= self.timers.min_loop_duration) || (self.enable_editor && window_interaction_received) {
             self.world.read::<Graphics>().request_redraw();
         }
     }
@@ -219,6 +253,8 @@ impl Orchestrator {
 
 pub trait OrchestratorDeps {
     fn runtime(&self) -> Arc<Runtime>;
+
+    fn enable_editor(&self) -> bool;
 
     /// Specifies the name of the main scene
     fn main_scene(&self) -> Option<&str>;

@@ -15,6 +15,8 @@ use winit::event_loop::EventLoop;
 struct Args {
     #[arg(short, long, help = "Select the game to run", default_value = "rootspace")]
     game: String,
+    #[arg(short, long, help = "Enable the editor", action = clap::ArgAction::SetTrue)]
+    editor: bool,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -23,7 +25,7 @@ fn main() -> anyhow::Result<()> {
     let event_loop = EventLoop::new()?;
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     let rt = Arc::new(rt);
-    let deps = Dependencies::new(rt.clone(), &event_loop, &args.game);
+    let deps = Dependencies::new(rt.clone(), &event_loop, &args.game, args.editor);
     let state =
         rt.block_on(async move { Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], _>(&deps).await })?;
     event_loop.run(state.start())?;
@@ -34,16 +36,18 @@ struct Dependencies<'a, T: 'static> {
     rt: Arc<Runtime>,
     event_loop: &'a EventLoop<T>,
     name: &'a str,
+    editor: bool,
     force_init: bool,
     graphics_settings: Settings,
 }
 
 impl<'a, T> Dependencies<'a, T> {
-    fn new(rt: Arc<Runtime>, event_loop: &'a EventLoop<T>, name: &'a str) -> Dependencies<'a, T> {
+    fn new(rt: Arc<Runtime>, event_loop: &'a EventLoop<T>, name: &'a str, editor: bool) -> Dependencies<'a, T> {
         Dependencies {
             rt,
             event_loop,
             name,
+            editor,
             force_init: false,
             graphics_settings: Settings::default(),
         }
@@ -79,6 +83,10 @@ impl<'a, T> AssetDatabaseDeps for Dependencies<'a, T> {
 impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
     fn runtime(&self) -> Arc<Runtime> {
         self.rt.clone()
+    }
+
+    fn enable_editor(&self) -> bool {
+        self.editor
     }
 
     fn main_scene(&self) -> Option<&str> {
