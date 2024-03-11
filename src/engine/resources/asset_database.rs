@@ -164,7 +164,10 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
         if !deps.within_repo() && (deps.force_init() && assets.is_dir() || !assets.is_dir()) {
             let source_assets = WITHIN_REPO_ASSETS.join(deps.name());
             if !source_assets.is_dir() {
-                return Err(anyhow::anyhow!("The repository asset directory does not exist: {}", source_assets.display()));
+                return Err(anyhow::anyhow!(
+                    "The repository asset directory does not exist: {}",
+                    source_assets.display()
+                ));
             }
             copy_recursive(&source_assets, &assets).await.with_context(|| {
                 format!(
