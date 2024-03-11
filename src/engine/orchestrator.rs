@@ -117,7 +117,7 @@ impl Orchestrator {
     /// Handles an event from `winit` and the operating system, by:
     /// 1. Initiating window redrawing with
     ///    [`Orchestrator::redraw`](crate::engine::orchestrator::Orchestrator::redraw)
-    /// 2. Running regular maintenance with 
+    /// 2. Running regular maintenance with
     ///    [`Orchestrator::maintain`](crate::engine::orchestrator::Orchestrator::maintain)
     /// 3. Shutting down cleanly at the end of the engine lifecycle with
     ///    [`Orchestrator::on_exiting`](crate::engine::orchestrator::Orchestrator::on_exiting)
