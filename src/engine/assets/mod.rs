@@ -43,6 +43,10 @@ pub enum Error {
     AssetTreeNotFound,
     #[error("Is not within the asset tree: {}", .0.display())]
     OutOfTree(PathBuf),
+    #[error("Could not determine the asset group from path: {}", .0.display())]
+    NoAssetGroup(PathBuf),
+    #[error("Could not determine the asset name from path: {}", .0.display())]
+    NoAssetName(PathBuf),
     #[error("The asset group or name contain disallowed characters: group='{:?}', name='{:?}'", .0, .1)]
     InvalidCharacters(String, String),
     #[error(transparent)]

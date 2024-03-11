@@ -1,4 +1,4 @@
-use crate::ecs::entities::Entities;
+use crate::{ecs::entities::Entities, engine::components::info::Info};
 use crate::ecs::entity::index::Index;
 use crate::ecs::entity::Entity;
 use crate::ecs::resources::Resources;
@@ -19,6 +19,7 @@ use super::{cpu_model::CpuModel, gpu_model::GpuModel, private::PrivLoadAsset};
 pub struct Scene {
     entities: Entities,
     hierarchy: Hierarchy<Index>,
+    infos: BTreeMap<Index, Info>,
     cameras: BTreeMap<Index, Camera>,
     transforms: BTreeMap<Index, Transform>,
     renderables: BTreeMap<Index, RenderableSource>,
@@ -33,6 +34,10 @@ impl Scene {
         Scene {
             entities: res.read::<Entities>().clone(),
             hierarchy: res.read::<Hierarchy<Index>>().clone(),
+            infos: res.read_components::<Info>()
+                .indexed_iter()
+                .map(|(i, info)| (i, Info::builder().with_name(info.name()).with_description(info.description()).build()))
+                .collect(),
             cameras: res
                 .read_components::<Camera>()
                 .indexed_iter()
@@ -112,6 +117,10 @@ impl Scene {
         res: &Resources,
     ) -> Result<(), anyhow::Error> {
         for (&i_prev, &i_new) in map {
+            if let Some(info) = self.infos.get(&i_prev).cloned() {
+                res.write_components::<Info>().insert(i_new, info);
+            }
+
             if let Some(camera) = self.cameras.get(&i_prev).cloned() {
                 res.write_components::<Camera>().insert(i_new, camera);
             }
@@ -147,7 +156,16 @@ impl PrivLoadAsset for Scene {
         let file = std::fs::File::open(path).with_context(|| format!("Opening the file '{}'", path.display()))?;
         let reader = std::io::BufReader::new(file);
 
-        let scene = ciborium::de::from_reader::<Scene, _>(reader).context("Loading the Scene")?;
+        let mut scene = ciborium::de::from_reader::<Scene, _>(reader).context("Loading the Scene")?;
+
+        // Since the Info::origin field is not serialized, make sure to assign it to every entity
+        // based on the scene asset name.
+        let (group, name) = res.read::<AssetDatabase>().find_asset_name(path)?;
+        for entity in &scene.entities {
+            scene.infos.entry(entity.idx())
+                .and_modify(|info| info.set_origin(&group, &name))
+                .or_insert_with(|| Info::builder().with_origin(&group, &name).build());
+        }
 
         scene.load_additive(res).await
     }
@@ -167,6 +185,7 @@ impl PrivSaveAsset for Scene {
 pub struct EntityBuilder<'a> {
     scene: &'a mut Scene,
     parent: Option<Index>,
+    info: Option<Info>,
     camera: Option<Camera>,
     transform: Option<Transform>,
     renderable: Option<RenderableSource>,
@@ -177,6 +196,7 @@ impl<'a> EntityBuilder<'a> {
         EntityBuilder {
             scene,
             parent: None,
+            info: None,
             camera: None,
             transform: None,
             renderable: None,
@@ -185,6 +205,11 @@ impl<'a> EntityBuilder<'a> {
 
     pub fn with_parent<I: Into<Index>>(mut self, parent: I) -> Self {
         self.parent = Some(parent.into());
+        self
+    }
+
+    pub fn with_info(mut self, info: Info) -> Self {
+        self.info = Some(info);
         self
     }
 
@@ -211,6 +236,10 @@ impl<'a> EntityBuilder<'a> {
             self.scene.hierarchy.insert_child(parent, i);
         } else {
             self.scene.hierarchy.insert(i);
+        }
+
+        if let Some(info) = self.info {
+            self.scene.infos.insert(i, info);
         }
 
         if let Some(camera) = self.camera {

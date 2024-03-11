@@ -70,10 +70,16 @@ impl Orchestrator {
             _,
         >(deps)
         .await?;
+
         #[cfg(feature = "editor")]
         let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
+
+        #[cfg(feature = "editor")]
+        {
+            todo!();
+        }
 
         if let Some(main_scene) = deps.main_scene() {
             world

@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 pub struct Info {
     name: String,
     description: String,
+    #[serde(skip)]
+    origin: Option<(String, String)>,
 }
 
 impl Info {
@@ -33,6 +35,14 @@ impl Info {
 
     pub fn set_description<S: AsRef<str>>(&mut self, description: S) {
         self.description = description.as_ref().to_string();
+    }
+
+    pub fn origin(&self) -> Option<(&str, &str)> {
+        self.origin.as_ref().map(|(g, n)| (g.as_str(), n.as_str()))
+    }
+
+    pub fn set_origin<S: AsRef<str>>(&mut self, group: S, name: S) {
+        self.origin = Some((group.as_ref().to_string(), name.as_ref().to_string()));
     }
 }
 
@@ -60,6 +70,7 @@ impl fmt::Display for Info {
 pub struct InfoBuilder {
     name: Option<String>,
     description: Option<String>,
+    origin: Option<(String, String)>,
 }
 
 impl InfoBuilder {
@@ -73,10 +84,16 @@ impl InfoBuilder {
         self
     }
 
+    pub fn with_origin<S: AsRef<str>>(mut self, group: S, name: S) -> Self {
+        self.origin = Some((group.as_ref().to_string(), name.as_ref().to_string()));
+        self
+    }
+
     pub fn build(self) -> Info {
         Info {
             name: self.name.unwrap_or("".to_string()),
             description: self.description.unwrap_or("".to_string()),
+            origin: self.origin,
         }
     }
 }
