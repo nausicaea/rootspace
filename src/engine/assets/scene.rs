@@ -1,4 +1,3 @@
-use crate::{ecs::entities::Entities, engine::components::info::Info};
 use crate::ecs::entity::index::Index;
 use crate::ecs::entity::Entity;
 use crate::ecs::resources::Resources;
@@ -9,6 +8,7 @@ use crate::engine::components::renderable::Renderable;
 use crate::engine::components::transform::Transform;
 use crate::engine::resources::asset_database::AssetDatabase;
 use crate::rose_tree::hierarchy::Hierarchy;
+use crate::{ecs::entities::Entities, engine::components::info::Info};
 use anyhow::Context;
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -34,9 +34,18 @@ impl Scene {
         Scene {
             entities: res.read::<Entities>().clone(),
             hierarchy: res.read::<Hierarchy<Index>>().clone(),
-            infos: res.read_components::<Info>()
+            infos: res
+                .read_components::<Info>()
                 .indexed_iter()
-                .map(|(i, info)| (i, Info::builder().with_name(info.name()).with_description(info.description()).build()))
+                .map(|(i, info)| {
+                    (
+                        i,
+                        Info::builder()
+                            .with_name(info.name())
+                            .with_description(info.description())
+                            .build(),
+                    )
+                })
                 .collect(),
             cameras: res
                 .read_components::<Camera>()
@@ -162,7 +171,9 @@ impl PrivLoadAsset for Scene {
         // based on the scene asset name.
         let (group, name) = res.read::<AssetDatabase>().find_asset_name(path)?;
         for entity in &scene.entities {
-            scene.infos.entry(entity.idx())
+            scene
+                .infos
+                .entry(entity.idx())
                 .and_modify(|info| info.set_origin(&group, &name))
                 .or_insert_with(|| Info::builder().with_origin(&group, &name).build());
         }

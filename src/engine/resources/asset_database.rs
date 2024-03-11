@@ -115,8 +115,17 @@ impl AssetDatabase {
             return Err(Error::OutOfTree(asset_path.to_path_buf()));
         }
 
-        let group = asset_path.parent().and_then(|parent| parent.file_name()).and_then(|file_name| file_name.to_str()).map(|g| g.to_string()).ok_or(Error::NoAssetGroup(asset_path.to_path_buf()))?;
-        let name = asset_path.file_name().and_then(|file_name| file_name.to_str()).map(|n| n.to_string()).ok_or(Error::NoAssetName(asset_path.to_path_buf()))?;
+        let group = asset_path
+            .parent()
+            .and_then(|parent| parent.file_name())
+            .and_then(|file_name| file_name.to_str())
+            .map(|g| g.to_string())
+            .ok_or(Error::NoAssetGroup(asset_path.to_path_buf()))?;
+        let name = asset_path
+            .file_name()
+            .and_then(|file_name| file_name.to_str())
+            .map(|n| n.to_string())
+            .ok_or(Error::NoAssetName(asset_path.to_path_buf()))?;
 
         if !(GROUP_AND_NAME_ALLOWLIST.is_match(&group) && GROUP_AND_NAME_ALLOWLIST.is_match(&name)) {
             return Err(Error::InvalidCharacters(group, name));
