@@ -101,6 +101,11 @@ impl Orchestrator {
         })
     }
 
+    /// Creates and returns a closure that is run by
+    /// [`EventLoop::run`](winit::event_loop::EventLoop::run) every time `winit` received an event
+    /// from the operating system. Internally, the closure instructs the asynchronous runtime to
+    /// block on [`Orchestrator::run`](crate::engine::orchestrator::Orchestrator::run), which does
+    /// the actual work.
     pub fn start(mut self) -> impl 'static + FnMut(Event<()>, &EventLoopWindowTarget<()>) {
         let rt = self.runtime.clone();
 
@@ -109,6 +114,13 @@ impl Orchestrator {
         }
     }
 
+    /// Handles an event from `winit` and the operating system, by:
+    /// 1. Initiating window redrawing with
+    ///    [`Orchestrator::redraw`](crate::engine::orchestrator::Orchestrator::redraw)
+    /// 2. Running regular maintenance with 
+    ///    [`Orchestrator::maintain`](crate::engine::orchestrator::Orchestrator::maintain)
+    /// 3. Shutting down cleanly at the end of the engine lifecycle with
+    ///    [`Orchestrator::on_exiting`](crate::engine::orchestrator::Orchestrator::on_exiting)
     async fn run(&mut self, event: Event<()>, elwt: &EventLoopWindowTarget<()>) {
         #[cfg(feature = "dbg-loop")]
         let mut draw_bottom = false;
@@ -146,9 +158,12 @@ impl Orchestrator {
         }
     }
 
-    /// Update the game state (using [`World::update`](ecs::world::World::update) and
-    /// [`World::fixed_update`](ecs::world::World::fixed_update)) and render the frame (using
-    /// [`World::render`](ecs::world::World::render)).
+    /// Update and render the engine state:
+    /// 1. Call [`World::fixed_update`](crate::ecs::world::World::fixed_update) with fixed
+    ///    time intervals by guaranteeing that missed updates are caught up with.
+    /// 2. Call [`World::update`](crate::ecs::world::World::update) once per redraw event.
+    /// 3. Call [`World::render`](crate::ecs::world::World::render) once per redraw event.
+    /// 4. Update performance statistics in [`Statistics`](crate::engine::resources::statistics::Statistics)
     async fn redraw(&mut self) {
         // Assess the duration of the last frame
         let loop_time = std::cmp::min(self.timers.last_loop.elapsed(), self.timers.max_loop_duration);
@@ -173,7 +188,10 @@ impl Orchestrator {
         self.world.get_mut::<Statistics>().update_redraw_intervals(loop_time);
     }
 
-    /// Perform maintenance tasks necessary in each game loop iteration
+    /// Perform maintenance tasks necessary in each game loop iteration. Also schedules redraw
+    /// events based on loop timing information.
+    /// Calls [`World::maintain`](crate::ecs::world::World::maintain`) after all other events
+    /// have been handled.
     async fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
         // Process window events
         #[cfg(feature = "editor")]
