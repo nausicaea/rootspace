@@ -26,14 +26,13 @@ use crate::engine::events::engine_event::EngineEvent;
 use crate::engine::resources::statistics::Statistics;
 use tarpc::server::incoming::Incoming;
 use tarpc::server::{BaseChannel, Channel};
-use tokio::sync::mpsc::error::TryRecvError;
-use tokio::sync::mpsc::Receiver;
 use tokio::task::JoinHandle;
+use tokio::sync::mpsc;
 
 #[derive(Debug)]
 pub struct Rpc {
-    listener_handle: JoinHandle<()>,
-    mpsc_rx: Receiver<RpcMessage>,
+    rpc_listener: JoinHandle<()>,
+    mpsc_rx: mpsc::Receiver<RpcMessage>,
     receiver: ReceiverId<EngineEvent>,
 }
 
@@ -42,33 +41,28 @@ impl System for Rpc {
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         let events = res.write::<EventQueue<EngineEvent>>().receive(&self.receiver);
         for event in events {
+            #[allow(irrefutable_let_patterns)]
             if let EngineEvent::Exit = event {
                 trace!("Stopping RPC listener");
-                self.listener_handle.abort();
+                self.rpc_listener.abort();
             }
         }
 
-        'recv: loop {
-            match self.mpsc_rx.try_recv() {
-                Ok(msg) => {
-                    trace!("RPC incoming call: {:?}", &msg);
-                    match msg {
-                        RpcMessage::Hello(name, addr) => info!("Hello from {}@{}", name, addr),
-                        RpcMessage::StatsRequest(tx) => {
-                            let stats = res.read::<Statistics>().clone();
-                            tx.send(stats).unwrap();
-                        }
-                        RpcMessage::LoadScene { tx, group, name } => {
-                            let r = res
-                                .read::<AssetDatabase>()
-                                .load_asset::<Scene, _>(res, &group, &name)
-                                .await;
-                            tx.send(r).unwrap();
-                        }
-                        RpcMessage::Exit => res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit),
-                    }
+        while let Ok(msg) = self.mpsc_rx.try_recv() {
+            trace!("RPC incoming call: {:?}", &msg);
+            match msg {
+                RpcMessage::StatsRequest(tx) => {
+                    let stats = res.read::<Statistics>().clone();
+                    tx.send(stats).unwrap();
                 }
-                Err(TryRecvError::Empty | TryRecvError::Disconnected) => break 'recv,
+                RpcMessage::LoadScene { tx, group, name } => {
+                    let r = res
+                        .read::<AssetDatabase>()
+                        .load_asset::<Scene, _>(res, &group, &name)
+                        .await;
+                    tx.send(r).unwrap();
+                }
+                RpcMessage::Exit => res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit),
             }
         }
     }
@@ -92,8 +86,8 @@ impl WithResources for Rpc {
             tarpc::serde_transport::tcp::listen(&ba, tarpc::tokio_serde::formats::Bincode::default).await?;
         info!("RPC binding to {}", listener.local_addr());
         listener.config_mut().max_frame_length(mfl);
-        let (tx, rx) = tokio::sync::mpsc::channel(mcc);
-        let join_handle: JoinHandle<()> = tokio::task::spawn(async move {
+        let (tx, rx) = tokio::sync::mpsc::channel::<RpcMessage>(mcc);
+        let rpc_listener: JoinHandle<()> = tokio::task::spawn(async move {
             trace!("Starting RPC listener");
             listener
                 // Ignore accept errors.
@@ -119,7 +113,7 @@ impl WithResources for Rpc {
         });
 
         Ok(Rpc {
-            listener_handle: join_handle,
+            rpc_listener,
             mpsc_rx: rx,
             receiver,
         })

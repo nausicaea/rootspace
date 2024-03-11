@@ -43,11 +43,11 @@ const MIN_LOOP_DURATION: Duration = Duration::from_millis(32);
 pub struct Orchestrator {
     world: World,
     timers: Timers,
+    #[cfg(feature = "editor")]
     window_event_receiver: ReceiverId<WindowEvent>,
     world_event_receiver: ReceiverId<WorldEvent>,
     engine_event_receiver: ReceiverId<EngineEvent>,
     runtime: Arc<Runtime>,
-    enable_editor: bool,
 }
 
 impl Orchestrator {
@@ -62,6 +62,7 @@ impl Orchestrator {
 
         let mut world =
             World::with_dependencies::<RRegistry<RR>, FUSRegistry<FUSR>, USRegistry<USR>, Renderer, _>(deps).await?;
+        #[cfg(feature = "editor")]
         let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
@@ -78,16 +79,17 @@ impl Orchestrator {
             timers: Timers {
                 delta_time: deps.delta_time(),
                 max_loop_duration: deps.max_loop_duration(),
+                #[cfg(not(feature = "editor"))]
                 min_loop_duration: deps.min_loop_duration(),
                 #[cfg(feature = "dbg-loop")]
                 stats_display_interval: deps.stats_display_interval(),
                 ..Default::default()
             },
+            #[cfg(feature = "editor")]
             window_event_receiver,
             world_event_receiver,
             engine_event_receiver,
             runtime: deps.runtime(),
-            enable_editor: deps.enable_editor(),
         })
     }
 
@@ -171,29 +173,33 @@ impl Orchestrator {
         }
 
         // Process window events
+        #[cfg(feature = "editor")]
         let mut window_interaction_received = false;
-        let events = self
-            .world
-            .get_mut::<EventQueue<WindowEvent>>()
-            .receive(&self.window_event_receiver);
-        for event in events {
-            use WindowEvent::*;
-            match event {
-                Resized(_)
-                | Moved(_)
-                | DroppedFile(_)
-                | Focused(_)
-                | KeyboardInput { .. }
-                | MouseWheel { .. }
-                | MouseInput { .. }
-                | TouchpadMagnify { .. }
-                | SmartMagnify { .. }
-                | TouchpadRotate { .. }
-                | TouchpadPressure { .. }
-                | Touch(_)
-                | ScaleFactorChanged { .. }
-                | ThemeChanged(_) => window_interaction_received = true,
-                _ => (),
+        #[cfg(feature = "editor")]
+        {
+            let events = self
+                .world
+                .get_mut::<EventQueue<WindowEvent>>()
+                .receive(&self.window_event_receiver);
+            for event in events {
+                use WindowEvent::*;
+                match event {
+                    Resized(_)
+                    | Moved(_)
+                    | DroppedFile(_)
+                    | Focused(_)
+                    | KeyboardInput { .. }
+                    | MouseWheel { .. }
+                    | MouseInput { .. }
+                    | TouchpadMagnify { .. }
+                    | SmartMagnify { .. }
+                    | TouchpadRotate { .. }
+                    | TouchpadPressure { .. }
+                    | Touch(_)
+                    | ScaleFactorChanged { .. }
+                    | ThemeChanged(_) => window_interaction_received = true,
+                    _ => (),
+                }
             }
         }
 
@@ -214,6 +220,7 @@ impl Orchestrator {
             .get_mut::<EventQueue<EngineEvent>>()
             .receive(&self.engine_event_receiver);
         for event in events {
+            #[allow(irrefutable_let_patterns)]
             if let EngineEvent::Exit = event {
                 self.on_exit();
             }
@@ -225,9 +232,13 @@ impl Orchestrator {
             info!("{}", self.world.read::<Statistics>());
         }
 
-        if (!self.enable_editor && self.timers.last_loop.elapsed() >= self.timers.min_loop_duration)
-            || (self.enable_editor && window_interaction_received)
-        {
+        #[cfg(feature = "editor")]
+        if window_interaction_received {
+            self.world.read::<Graphics>().request_redraw();
+        }
+
+        #[cfg(not(feature = "editor"))]
+        if self.timers.last_loop.elapsed() >= self.timers.min_loop_duration {
             self.world.read::<Graphics>().request_redraw();
         }
     }
@@ -255,12 +266,13 @@ impl Orchestrator {
 }
 
 pub trait OrchestratorDeps {
+    /// You must supply an asynchronous Runtime so the engine can schedule tasks
     fn runtime(&self) -> Arc<Runtime>;
 
-    fn enable_editor(&self) -> bool;
-
     /// Specifies the name of the main scene
-    fn main_scene(&self) -> Option<&str>;
+    fn main_scene(&self) -> Option<&str> {
+        None
+    }
 
     /// Specifies the name of the asset group scenes are stored in
     fn scene_group(&self) -> &str {
@@ -296,6 +308,7 @@ struct Timers {
     fixed_game_time: Duration,
     delta_time: Duration,
     max_loop_duration: Duration,
+    #[cfg(not(feature = "editor"))]
     min_loop_duration: Duration,
     #[cfg(feature = "dbg-loop")]
     last_stats_display: Instant,
@@ -312,6 +325,7 @@ impl Default for Timers {
             fixed_game_time: Duration::default(),
             delta_time: DELTA_TIME,
             max_loop_duration: MAX_LOOP_DURATION,
+            #[cfg(not(feature = "editor"))]
             min_loop_duration: MIN_LOOP_DURATION,
             #[cfg(feature = "dbg-loop")]
             last_stats_display: Instant::now(),

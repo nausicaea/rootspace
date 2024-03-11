@@ -1,5 +1,4 @@
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone)]
 pub enum EngineEvent {
-    Command(Vec<String>),
-    Exit,
+    Exit
 }

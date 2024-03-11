@@ -49,6 +49,7 @@ impl Renderer {
 
         res.write::<EventQueue<EngineEvent>>()
             .receive_cb(&self.engine_receiver, |e| {
+                #[allow(irrefutable_let_patterns)]
                 if let EngineEvent::Exit = e {
                     self.renderer_enabled = false
                 }

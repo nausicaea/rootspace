@@ -5,6 +5,7 @@ authors = ["Eleanor Young <developer@nausicaea.net>"]
 edition = "2021"
 
 [features]
+editor = []
 dbg-gfx = []
 dbg-loop = []
 test-flaky = []

@@ -2,20 +2,20 @@ use crate::engine::resources::statistics::Statistics;
 use crate::engine::systems::rpc::message::RpcMessage;
 use crate::engine::systems::rpc::service::RpcService;
 use log::trace;
+use tokio::sync::mpsc;
 use std::net::SocketAddr;
 use tarpc::context::Context;
-use tokio::sync::mpsc::Sender;
 
 use super::service::Error;
 
 #[derive(Debug, Clone)]
 pub struct RpcServer {
-    mpsc_tx: Sender<RpcMessage>,
+    mpsc_tx: mpsc::Sender<RpcMessage>,
     socket_address: SocketAddr,
 }
 
 impl RpcServer {
-    pub(crate) fn new(mpsc_tx: Sender<RpcMessage>, socket_address: SocketAddr) -> Self {
+    pub(crate) fn new(mpsc_tx: mpsc::Sender<RpcMessage>, socket_address: SocketAddr) -> Self {
         RpcServer {
             mpsc_tx,
             socket_address,
@@ -26,9 +26,7 @@ impl RpcServer {
 impl RpcService for RpcServer {
     async fn hello(self, _context: Context, name: String) -> Result<String, Error> {
         trace!("RpcService::hello");
-        let output = format!("Hello, {}@{}", &name, self.socket_address);
-        self.mpsc_tx.send(RpcMessage::Hello(name, self.socket_address)).await?;
-        Ok(output)
+        Ok(format!("Hello, {}@{}", &name, self.socket_address))
     }
 
     async fn exit(self, _: Context) -> Result<(), Error> {
