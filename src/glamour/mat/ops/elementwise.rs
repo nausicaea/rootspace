@@ -119,7 +119,7 @@ macro_rules! impl_scalar_binops {
                 let mut mat = Mat4::<$tgt>::zero();
                 for i in 0..4 {
                     for j in 0..4 {
-                        mat[(i, j)] = self.$op(rhs[(i, j)]);
+                        mat[(i, j)] = $Op::$op(self, rhs[(i, j)]);
                     }
                 }
                 mat
@@ -133,12 +133,12 @@ macro_rules! impl_scalar_binops {
     }
 }
 
-impl_scalar_binops!(
+impl_scalar_binops! {
     Add::add, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
     Sub::sub, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
     Mul::mul, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
     Div::div, [u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64];
-);
+}
 
 #[cfg(test)]
 mod tests {

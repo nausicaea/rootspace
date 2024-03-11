@@ -76,7 +76,7 @@ impl Orchestrator {
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        #[cfg(feature = "editor")]
+        //#[cfg(feature = "editor")]
         {
             use crate::engine::assets::scene::RenderableSource;
             let mut editor_scene = Scene::default();
@@ -101,9 +101,9 @@ impl Orchestrator {
                 })
                 .with_renderable(RenderableSource::Reference {
                     group: "models".into(),
-                    name: "suzanne.ply".into(),
+                    name: "cone.ply".into(),
                 })
-                .with_transform(Transform::default())
+                .with_transform(Transform::builder().with_scale(2.0).build())
                 .submit();
             editor_scene.submit(world.resources(), "builtin", "editor").await?;
         }

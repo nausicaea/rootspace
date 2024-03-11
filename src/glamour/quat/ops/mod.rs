@@ -1,4 +1,3 @@
-pub mod dot;
 pub mod elementwise;
-pub mod index;
+pub mod mul;
 pub mod norm;

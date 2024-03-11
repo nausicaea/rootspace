@@ -13,3 +13,17 @@ where
         }
     }
 }
+
+impl<R> From<R> for Vec4<R>
+where
+    R: num_traits::Num + Copy,
+{
+    fn from(value: R) -> Self {
+        Vec4 {
+            x: value,
+            y: value,
+            z: value,
+            w: value,
+        }
+    }
+}

@@ -4,10 +4,11 @@ use crate::glamour::unit::Unit;
 use crate::glamour::vec::Vec4;
 use num_traits::Float;
 
-mod approx;
-mod convert;
-mod ops;
-mod serde;
+pub mod approx;
+pub mod convert;
+pub mod num;
+pub mod ops;
+pub mod serde;
 
 /// Generalized matrix type, with data stored in row-major format.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -103,24 +104,6 @@ where
         }
 
         mat
-    }
-}
-
-impl<R> Zero for Mat4<R>
-where
-    R: Copy + num_traits::Zero,
-{
-    fn zero() -> Self {
-        Mat4([[R::zero(); 4]; 4])
-    }
-}
-
-impl<R> One for Mat4<R>
-where
-    R: Copy + num_traits::One,
-{
-    fn one() -> Self {
-        Mat4([[R::one(); 4]; 4])
     }
 }
 

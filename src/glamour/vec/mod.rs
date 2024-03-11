@@ -2,10 +2,10 @@ use num_traits::Float;
 
 use super::ops::cross::Cross;
 
-mod approx;
-mod convert;
-mod num;
-mod ops;
+pub mod approx;
+pub mod convert;
+pub mod num;
+pub mod ops;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct Vec4<R> {

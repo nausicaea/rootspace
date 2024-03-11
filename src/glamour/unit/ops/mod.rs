@@ -1,7 +1,7 @@
 use super::Unit;
 
-mod cross;
-mod dot;
+pub mod cross;
+pub mod dot;
 
 impl<T> AsRef<T> for Unit<T> {
     fn as_ref(&self) -> &T {

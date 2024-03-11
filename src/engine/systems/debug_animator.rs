@@ -1,3 +1,4 @@
+use crate::glamour::num::ToMatrix;
 use std::time::Duration;
 
 use async_trait::async_trait;
@@ -5,7 +6,7 @@ use async_trait::async_trait;
 use crate::{
     ecs::{resources::Resources, system::System, with_resources::WithResources},
     engine::components::{renderable::Renderable, transform::Transform},
-    glamour::quat::Quat,
+    glamour::{quat::Quat, unit::Unit},
 };
 
 #[derive(Debug)]
@@ -20,10 +21,11 @@ impl WithResources for DebugAnimator {
 #[async_trait]
 impl System for DebugAnimator {
     async fn run(&mut self, res: &Resources, _t: Duration, dt: Duration) {
+        let angle = dt.as_secs_f32() * 0.21;
+        let rotation = Unit::from(Quat::new(angle, 0.0, 1.0, 0.0)).to_matrix();
         for (_, _, t) in res.iter_rw::<Renderable, Transform>() {
-            let rotation = Quat::new(1.0, 0.0, 0.0, dt.as_secs_f32());
-            let o = t.orientation().inner();
-            t.set_orientation(o * rotation)
+            let t_mat = t.orientation().to_matrix();
+            t.set_orientation(Unit::from(Into::<Quat<f32>>::into(t_mat * rotation)))
         }
     }
 }
