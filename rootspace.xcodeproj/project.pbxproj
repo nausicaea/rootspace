@@ -18,7 +18,7 @@
 /* Begin PBXLegacyTarget section */
 		1738B7CD29842E7B00FF246C /* rootspace */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "build --release --bin rootspace";
+			buildArgumentsString = "build --release --features editor --bin rootspace";
 			buildConfigurationList = 1738B7D029842E7B00FF246C /* Build configuration list for PBXLegacyTarget "rootspace" */;
 			buildPhases = (
 			);

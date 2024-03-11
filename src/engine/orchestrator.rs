@@ -41,7 +41,7 @@ const DELTA_TIME: Duration = Duration::from_millis(50);
 const MAX_LOOP_DURATION: Duration = Duration::from_secs(2);
 #[cfg(not(feature = "editor"))]
 const MAX_LOOP_DURATION: Duration = Duration::from_millis(250);
-const MIN_LOOP_DURATION: Option<Duration> = Some(Duration::from_millis(16));
+const MIN_LOOP_DURATION: Option<Duration> = Some(Duration::from_millis(17));
 
 pub struct Orchestrator {
     world: World,
