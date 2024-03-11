@@ -155,25 +155,24 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
             data_local_dir.join("assets")
         };
 
-        if (deps.force_init() && !deps.within_repo()) || !assets.is_dir() {
+        if !deps.within_repo() && deps.force_init() && assets.is_dir() {
             remove_dir_all(&assets)
                 .await
                 .with_context(|| format!("Removing all contents of the path '{}'", assets.display()))?;
+        }
 
+        if !deps.within_repo() && (deps.force_init() && assets.is_dir() || !assets.is_dir()) {
             let source_assets = WITHIN_REPO_ASSETS.join(deps.name());
-            if source_assets.is_dir() {
-                copy_recursive(&source_assets, &assets).await.with_context(|| {
-                    format!(
-                        "Copying the asset database contents from '{}' to '{}'",
-                        source_assets.display(),
-                        assets.display()
-                    )
-                })?;
-            } else {
-                create_dir_all(&assets)
-                    .await
-                    .with_context(|| format!("Creating the asset database directory at '{}'", assets.display()))?;
+            if !source_assets.is_dir() {
+                return Err(anyhow::anyhow!("The repository asset directory does not exist: {}", source_assets.display()));
             }
+            copy_recursive(&source_assets, &assets).await.with_context(|| {
+                format!(
+                    "Copying the asset database contents from '{}' to '{}'",
+                    source_assets.display(),
+                    assets.display()
+                )
+            })?;
         }
 
         Ok(AssetDatabase {
