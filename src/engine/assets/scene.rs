@@ -33,15 +33,7 @@ impl Scene {
             infos: res
                 .read_components::<Info>()
                 .indexed_iter()
-                .map(|(i, info)| {
-                    (
-                        i,
-                        Info::builder()
-                            .with_name(info.name())
-                            .with_description(info.description())
-                            .build(),
-                    )
-                })
+                .map(|(i, info)| (i, Info::new(&info.name, &info.description)))
                 .collect(),
             cameras: res
                 .read_components::<Camera>()
@@ -88,8 +80,11 @@ impl Scene {
                 scene
                     .infos
                     .entry(entity.idx())
-                    .and_modify(|info| info.set_origin(group, name))
-                    .or_insert_with(|| Info::builder().with_origin(group, name).build());
+                    .and_modify(|info| info.origin = Some((group.to_string(), name.to_string())))
+                    .or_insert_with(|| Info {
+                        origin: Some((group.to_string(), name.to_string())),
+                        ..Default::default()
+                    });
             }
         }
 
