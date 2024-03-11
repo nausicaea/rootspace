@@ -1,4 +1,4 @@
-use crate::glamour::num::{One, Zero};
+use crate::glamour::num::Zero;
 use crate::glamour::ops::cross::Cross;
 use crate::glamour::unit::Unit;
 use crate::glamour::vec::Vec4;
