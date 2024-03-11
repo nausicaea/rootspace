@@ -265,12 +265,6 @@ impl Orchestrator {
             }
         }
 
-        #[cfg(feature = "dbg-loop")]
-        if self.timers.last_stats_display.elapsed() >= self.timers.stats_display_interval {
-            self.timers.last_stats_display = Instant::now();
-            info!("{}", self.world.read::<Statistics>());
-        }
-
         #[cfg(feature = "editor")]
         if window_interaction_received {
             self.world.read::<Graphics>().request_redraw();
