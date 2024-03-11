@@ -20,8 +20,6 @@ use crate::rose_tree::hierarchy::Hierarchy;
 use crate::RegAdd;
 use winit::event::WindowEvent;
 
-use super::systems::debug_animator::DebugAnimator;
-
 pub type RRegistry<S> = RegAdd![
     <Camera as Component>::Storage,
     <Info as Component>::Storage,

@@ -25,12 +25,12 @@ impl WithResources for CameraManager {
 }
 
 impl CameraManager {
-    fn on_resize(&self, res: &Resources, dims: (u32, u32)) {
-        debug!("Updating the camera dimensions (dims={:?})", dims);
+    fn on_resize(&self, res: &Resources, width: u32, height: u32) {
+        debug!("Updating the camera dimensions ({width}x{height})");
 
         res.write_components::<Camera>()
             .iter_mut()
-            .for_each(|c| c.set_dimensions(dims));
+            .for_each(|c| c.set_dimensions(width, height));
     }
 }
 
@@ -42,7 +42,7 @@ impl System for CameraManager {
             if let WindowEvent::Resized(dims) = event {
                 let max_dims = res.read::<Graphics>().max_window_size();
                 if dims.width <= max_dims.width && dims.height <= max_dims.height {
-                    self.on_resize(res, (dims.width, dims.height))
+                    self.on_resize(res, dims.width, dims.height)
                 }
             }
         }

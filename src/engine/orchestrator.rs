@@ -32,7 +32,6 @@ use crate::engine::systems::renderer::Renderer;
 use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
 
-use super::assets::scene::RenderableSource;
 use super::registry::{FUSRegistry, MSRegistry};
 
 const STATS_DISPLAY_INTERVAL: Duration = Duration::from_secs(15);
@@ -79,21 +78,31 @@ impl Orchestrator {
 
         #[cfg(feature = "editor")]
         {
+            use crate::engine::assets::scene::RenderableSource;
             let mut editor_scene = Scene::default();
             editor_scene
                 .create_entity()
-                .with_info(Info { name: "editor-camera".into(), ..Default::default()})
+                .with_info(Info {
+                    name: "editor-camera".into(),
+                    ..Default::default()
+                })
                 .with_camera(Camera::default())
                 .with_transform(Transform::look_at_lh(
-                        [0.0, 0.0, -10.0, 1.0],
-                        [0.0, 0.0, 0.0, 1.0],
-                        [0.0, 1.0, 0.0, 0.0],
-                        ))
+                    [0.0, 0.0, -10.0, 1.0],
+                    [0.0, 0.0, 0.0, 1.0],
+                    [0.0, 1.0, 0.0, 0.0],
+                ))
                 .submit();
             editor_scene
                 .create_entity()
-                .with_info(Info { name: "coordinate-diag".into(), ..Default::default()})
-                .with_renderable(RenderableSource::Reference { group: "models".into(), name: "suzanne.ply".into() })
+                .with_info(Info {
+                    name: "coordinate-diag".into(),
+                    ..Default::default()
+                })
+                .with_renderable(RenderableSource::Reference {
+                    group: "models".into(),
+                    name: "suzanne.ply".into(),
+                })
                 .with_transform(Transform::default())
                 .submit();
             editor_scene.submit(world.resources(), "builtin", "editor").await?;

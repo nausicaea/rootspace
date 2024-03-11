@@ -13,7 +13,7 @@ use anyhow::Context;
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use super::{cpu_model::CpuModel, gpu_model::GpuModel, private::PrivLoadAsset};
+use super::private::PrivLoadAsset;
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Scene {
