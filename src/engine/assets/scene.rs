@@ -134,17 +134,7 @@ impl Scene {
                 }
 
                 if let Some(RenderableSource::Reference { group, name }) = scene.renderables.get(&i_prev) {
-                    let cpu_model = res
-                        .read::<AssetDatabase>()
-                        .load_asset::<CpuModel, _>(res, group, name)
-                        .await
-                        .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name,))?;
-                    let model = GpuModel::with_model(res, &cpu_model);
-                    let renderable = Renderable {
-                        model,
-                        group: group.to_string(),
-                        name: name.to_string(),
-                    };
+                    let renderable = Renderable::with_model(res, group, name).await?;
                     res.write_components::<Renderable>().insert(i_new, renderable);
                 }
             }

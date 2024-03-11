@@ -80,6 +80,10 @@ impl<'a, T> OrchestratorDeps for Dependencies<'a, T> {
     fn runtime(&self) -> Arc<Runtime> {
         self.rt.clone()
     }
+
+    fn main_scene(&self) -> Option<&str> {
+        None
+    }
 }
 
 impl<'a, T> RpcDeps for Dependencies<'a, T> {}

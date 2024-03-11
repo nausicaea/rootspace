@@ -91,12 +91,12 @@ impl Renderer {
         let (renderables, transforms) = cam_persp
             .iter()
             .flat_map(|cm| {
-                res.iter_r::<Renderable>()
-                    .map(|(idx, r)| (idx, r, *cm * hier_transform::<Transform>(idx, &hier, &transforms)))
+                res.iter_rr::<Renderable, Transform>()
+                    .map(|(idx, r, _)| (idx, r, *cm * hier_transform::<Transform>(idx, &hier, &transforms)))
             })
             .chain(cam_ortho.iter().flat_map(|cm| {
-                res.iter_r::<Renderable>()
-                    .map(|(idx, r)| (idx, r, *cm * hier_transform::<UiTransform>(idx, &hier, &ui_transforms)))
+                res.iter_rr::<Renderable, UiTransform>()
+                    .map(|(idx, r, _)| (idx, r, *cm * hier_transform::<UiTransform>(idx, &hier, &ui_transforms)))
             }))
             .fold(
                 (Vec::new(), Vec::new()),
