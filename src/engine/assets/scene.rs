@@ -168,7 +168,6 @@ impl Scene {
 
         Ok(())
     }
-
 }
 
 impl PrivLoadAsset for Scene {

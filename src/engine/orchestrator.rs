@@ -80,7 +80,8 @@ impl Orchestrator {
         #[cfg(feature = "editor")]
         {
             let mut editor_scene = Scene::default();
-            editor_scene.create_entity()
+            editor_scene
+                .create_entity()
                 .with_info(Info::builder().with_name("scene-gizmo").build())
                 .submit();
             editor_scene.submit(world.resources(), "builtin", "editor").await?;
@@ -205,7 +206,9 @@ impl Orchestrator {
     /// have been handled.
     async fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
         // Update maintenance statistics
-        self.world.get_mut::<Statistics>().update_maintenance_intervals(self.timers.last_maintenance.elapsed());
+        self.world
+            .get_mut::<Statistics>()
+            .update_maintenance_intervals(self.timers.last_maintenance.elapsed());
         self.timers.last_maintenance = Instant::now();
 
         // Process window events
@@ -291,7 +294,6 @@ impl Orchestrator {
         event_loop_window_target.set_control_flow(ControlFlow::wait_duration(MAX_LOOP_DURATION));
         #[cfg(not(feature = "editor"))]
         event_loop_window_target.set_control_flow(ControlFlow::Poll);
-
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {
