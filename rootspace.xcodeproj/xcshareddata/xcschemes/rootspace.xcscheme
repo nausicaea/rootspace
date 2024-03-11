@@ -44,7 +44,7 @@
       allowLocationSimulation = "YES">
       <PathRunnable
          runnableDebuggingMode = "0"
-         FilePath = "/Users/kitsune/Crypt/Development/personal/rootspace/target/debug/rootspace">
+         FilePath = "/Users/kitsune/Crypt/Development/personal/rootspace/target/release/rootspace">
       </PathRunnable>
    </LaunchAction>
    <ProfileAction

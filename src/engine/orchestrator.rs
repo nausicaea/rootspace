@@ -41,7 +41,7 @@ const DELTA_TIME: Duration = Duration::from_millis(50);
 const MAX_LOOP_DURATION: Duration = Duration::from_secs(2);
 #[cfg(not(feature = "editor"))]
 const MAX_LOOP_DURATION: Duration = Duration::from_millis(250);
-const MIN_LOOP_DURATION: Duration = Duration::from_millis(32);
+const MIN_LOOP_DURATION: Option<Duration> = Some(Duration::from_millis(16));
 
 pub struct Orchestrator {
     world: World,
@@ -274,7 +274,11 @@ impl Orchestrator {
         }
 
         #[cfg(not(feature = "editor"))]
-        if self.timers.last_redraw.elapsed() >= self.timers.min_loop_duration {
+        if let Some(mld) = self.timers.min_loop_duration {
+            if self.timers.last_redraw.elapsed() >= mld {
+                self.world.read::<Graphics>().request_redraw();
+            }
+        } else {
             self.world.read::<Graphics>().request_redraw();
         }
 
@@ -332,7 +336,7 @@ pub trait OrchestratorDeps {
     }
 
     /// Specifies the lower bound for the duration of a loop iteration
-    fn min_loop_duration(&self) -> Duration {
+    fn min_loop_duration(&self) -> Option<Duration> {
         MIN_LOOP_DURATION
     }
 
@@ -357,7 +361,7 @@ struct Timers {
     delta_time: Duration,
     max_loop_duration: Duration,
     #[cfg(not(feature = "editor"))]
-    min_loop_duration: Duration,
+    min_loop_duration: Option<Duration>,
     #[cfg(feature = "dbg-loop")]
     last_stats_display: Instant,
     #[cfg(feature = "dbg-loop")]
