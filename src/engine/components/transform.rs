@@ -2,6 +2,7 @@ use crate::ecs::component::Component;
 use crate::ecs::storage::vec_storage::VecStorage;
 use crate::glamour::affine::{Affine, AffineBuilder};
 use crate::glamour::mat::Mat4;
+use crate::glamour::num::ToMatrix;
 use crate::glamour::quat::Quat;
 use crate::glamour::unit::Unit;
 use crate::glamour::vec::Vec4;
@@ -36,10 +37,6 @@ impl Transform {
         self.as_ref()
     }
 
-    pub fn to_matrix(&self) -> Mat4<f32> {
-        self.0.to_matrix()
-    }
-
     pub fn translation(&self) -> &Vec4<f32> {
         &self.0.t
     }
@@ -72,6 +69,12 @@ impl From<Affine<f32>> for Transform {
 impl AsRef<Affine<f32>> for Transform {
     fn as_ref(&self) -> &Affine<f32> {
         &self.0
+    }
+}
+
+impl ToMatrix<f32> for Transform {
+    fn to_matrix(&self) -> Mat4<f32> {
+        self.0.to_matrix()
     }
 }
 

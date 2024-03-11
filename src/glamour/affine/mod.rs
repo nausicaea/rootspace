@@ -13,6 +13,8 @@ use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::{Float, Inv, NumAssign};
 use serde::{Deserialize, Serialize};
 
+use super::num::ToMatrix;
+
 #[derive(Serialize, Deserialize)]
 #[serde(bound(
     serialize = "R: serde::Serialize",
@@ -159,11 +161,11 @@ where
 //     }
 // }
 
-impl<R> Affine<R>
+impl<R> ToMatrix<R> for Affine<R>
 where
     R: Float + NumAssign,
 {
-    pub fn to_matrix(&self) -> Mat4<R> {
+    fn to_matrix(&self) -> Mat4<R> {
         self.into()
     }
 }

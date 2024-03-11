@@ -1,5 +1,6 @@
 use crate::ecs::component::Component;
 use crate::ecs::entity::index::Index;
+use crate::engine::components::ui_transform::UiTransform;
 use anyhow::Context;
 use async_trait::async_trait;
 use log::{error, trace, warn};
@@ -25,6 +26,7 @@ use crate::engine::resources::graphics::vertex::Vertex;
 use crate::engine::resources::graphics::{Graphics, TransformWrapper};
 use crate::engine::resources::statistics::Statistics;
 use crate::glamour::mat::Mat4;
+use crate::glamour::num::ToMatrix;
 use crate::rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug)]
@@ -57,10 +59,10 @@ impl Renderer {
     }
 
     fn render(&mut self, res: &Resources, mut rp: RenderPass) {
-        fn hier_transform(
+        fn hier_transform<C: Component + ToMatrix<f32>>(
             idx: Index,
             hier: &Hierarchy<Index>,
-            transforms: &<Transform as Component>::Storage,
+            transforms: &C::Storage,
         ) -> Mat4<f32> {
             hier.ancestors(idx)
                 .filter_map(|a| transforms.get(a).map(|at| at.to_matrix()))
@@ -70,18 +72,32 @@ impl Renderer {
         let gfx = res.read::<Graphics>();
         let hier = res.read::<Hierarchy<Index>>();
         let transforms = res.read_components::<Transform>();
+        let ui_transforms = res.read_components::<UiTransform>();
 
-        let cam_data: Vec<_> = res
+        let (cam_ortho, cam_persp) = res
             .iter_r::<Camera>()
-            .map(|(idx, c)| c.as_matrix() * hier_transform(idx, &hier, &transforms))
-            .collect();
+            .map(|(idx, c)| {
+                (
+                    hier_transform::<UiTransform>(idx, &hier, &ui_transforms),
+                    c.as_matrix() * hier_transform::<Transform>(idx, &hier, &transforms),
+                )
+            })
+            .fold((Vec::new(), Vec::new()), |(mut ortho, mut persp), (o, p)| {
+                ortho.push(o);
+                persp.push(p);
+                (ortho, persp)
+            });
 
-        let (renderables, transforms) = cam_data
+        let (renderables, transforms) = cam_persp
             .iter()
             .flat_map(|cm| {
                 res.iter_r::<Renderable>()
-                    .map(|(idx, r)| (idx, r, *cm * hier_transform(idx, &hier, &transforms)))
+                    .map(|(idx, r)| (idx, r, *cm * hier_transform::<Transform>(idx, &hier, &transforms)))
             })
+            .chain(cam_ortho.iter().flat_map(|cm| {
+                res.iter_r::<Renderable>()
+                    .map(|(idx, r)| (idx, r, *cm * hier_transform::<UiTransform>(idx, &hier, &ui_transforms)))
+            }))
             .fold(
                 (Vec::new(), Vec::new()),
                 |(mut renderables, mut transforms), (idx, r, t)| {
