@@ -173,6 +173,7 @@ impl World {
     }
 
     pub fn clear(&mut self) {
+        self.maintenance_systems.clear();
         self.update_systems.clear();
         self.fixed_update_systems.clear();
         Arc::get_mut(&mut self.resources).unwrap().clear();
