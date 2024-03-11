@@ -117,9 +117,8 @@ impl<'a> Iterator for Iter<'a> {
                 let tmp = Entity::new(self.idx, self.gens[self.idx]);
                 self.idx += 1;
                 return Some(tmp);
-            } else {
-                self.idx += 1;
             }
+            self.idx += 1;
         }
 
         None
@@ -156,7 +155,7 @@ mod tests {
 
     #[tokio::test]
     async fn entities_world() {
-        let _w = World::with_dependencies::<Reg![Entities], Reg![], Reg![], (), _>(&())
+        let _w = World::with_dependencies::<Reg![Entities], Reg![], Reg![], (), Reg![], _>(&())
             .await
             .unwrap();
     }

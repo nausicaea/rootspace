@@ -209,7 +209,7 @@ mod tests {
     #[tokio::test]
     async fn asset_database_world() {
         let deps = TDeps::default();
-        let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], (), _>(&deps)
+        let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], (), Reg![], _>(&deps)
             .await
             .unwrap();
     }

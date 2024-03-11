@@ -322,7 +322,7 @@ mod tests {
 
     #[tokio::test]
     async fn hierarchy_world() {
-        let _w = World::with_dependencies::<Reg![Hierarchy<Tk>], Reg![], Reg![], (), _>(&())
+        let _w = World::with_dependencies::<Reg![Hierarchy<Tk>], Reg![], Reg![], (), Reg![], _>(&())
             .await
             .unwrap();
     }

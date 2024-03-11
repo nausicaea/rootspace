@@ -25,7 +25,7 @@ fn main() -> anyhow::Result<()> {
     let rt = Arc::new(rt);
     let deps = Dependencies::new(rt.clone(), &event_loop, &args.game);
     let state =
-        rt.block_on(async move { Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], _>(&deps).await })?;
+        rt.block_on(async move { Orchestrator::with_dependencies::<Reg![], Reg![], Reg![], Reg![], _>(&deps).await })?;
     event_loop.run(state.start())?;
     Ok(())
 }

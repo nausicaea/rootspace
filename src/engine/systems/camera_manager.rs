@@ -72,7 +72,7 @@ mod tests {
 
     #[tokio::test]
     async fn camera_manager_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![CameraManager], (), _>(&())
+        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![CameraManager], (), Reg![], _>(&())
             .await
             .unwrap();
     }

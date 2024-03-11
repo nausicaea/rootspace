@@ -112,7 +112,7 @@ mod tests {
 
     #[tokio::test]
     async fn force_shutdown_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![ForceShutdown], (), _>(&())
+        let _w = World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![ForceShutdown], (), Reg![], _>(&())
             .await
             .unwrap();
     }

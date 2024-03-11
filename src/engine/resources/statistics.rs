@@ -103,7 +103,7 @@ mod tests {
 
     #[tokio::test]
     async fn statistics_world() {
-        let _w = World::with_dependencies::<Reg![Statistics], Reg![], Reg![], (), _>(&())
+        let _w = World::with_dependencies::<Reg![Statistics], Reg![], Reg![], (), Reg![], _>(&())
             .await
             .unwrap();
     }

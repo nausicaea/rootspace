@@ -34,22 +34,25 @@ pub struct World {
     fixed_update_systems: Systems,
     update_systems: Systems,
     render_system: Box<dyn System>,
+    maintenance_systems: Systems,
     receiver: ReceiverId<WorldEvent>,
 }
 
 impl World {
-    pub async fn with_dependencies<RR, FUSR, USR, RS, D>(deps: &D) -> Result<Self, anyhow::Error>
+    pub async fn with_dependencies<RR, FUSR, USR, RS, MS, D>(deps: &D) -> Result<Self, anyhow::Error>
     where
         RR: ResourceRegistry + WithDependencies<D>,
         FUSR: SystemRegistry + WithResources,
         USR: SystemRegistry + WithResources,
         RS: System + WithResources,
+        MS: SystemRegistry + WithResources,
     {
         let mut resources = Resources::with_dependencies::<ResourceTypes<RR>, D>(deps).await?;
 
         let fixed_update_systems = Systems::with_resources::<FUSR>(&resources).await?;
         let update_systems = Systems::with_resources::<USR>(&resources).await?;
         let render_system = RS::with_res(&resources).await?;
+        let maintenance_systems = Systems::with_resources::<MS>(&resources).await?;
 
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
@@ -58,6 +61,7 @@ impl World {
             fixed_update_systems,
             update_systems,
             render_system: Box::new(render_system),
+            maintenance_systems,
             receiver,
         })
     }
@@ -142,7 +146,11 @@ impl World {
     /// handled by the world. If this method returns
     /// [`LoopControl::Continue`](crate::loop_control::LoopControl), the execution of the
     /// main loop shall continue, otherwise it shall abort.
-    pub fn maintain(&mut self) -> LoopControl {
+    pub async fn maintain(&mut self) -> LoopControl {
+        // Run all custom maintenance systems
+        let dummy_time = Duration::new(0, 0);
+        World::run_systems_parallel(&self.maintenance_systems, &self.resources, dummy_time, dummy_time).await;
+
         // Receive all pending events
         let events = Arc::get_mut(&mut self.resources)
             .unwrap()

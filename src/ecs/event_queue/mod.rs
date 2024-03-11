@@ -206,7 +206,7 @@ mod tests {
 
     #[tokio::test]
     async fn event_queue_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![], (), _>(&())
+        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![], (), Reg![], _>(&())
             .await
             .unwrap();
     }

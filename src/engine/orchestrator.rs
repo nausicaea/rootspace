@@ -33,7 +33,7 @@ use crate::engine::systems::renderer::Renderer;
 use winit::event::WindowEvent;
 use winit::event_loop::ControlFlow;
 
-use super::registry::FUSRegistry;
+use super::registry::{FUSRegistry, MSRegistry};
 
 const STATS_DISPLAY_INTERVAL: Duration = Duration::from_secs(15);
 const DELTA_TIME: Duration = Duration::from_millis(50);
@@ -51,17 +51,18 @@ pub struct Orchestrator {
 }
 
 impl Orchestrator {
-    pub async fn with_dependencies<RR, FUSR, USR, D>(deps: &D) -> Result<Self, anyhow::Error>
+    pub async fn with_dependencies<RR, FUSR, USR, MSR, D>(deps: &D) -> Result<Self, anyhow::Error>
     where
         RR: ResourceRegistry + WithDependencies<D>,
         FUSR: SystemRegistry + WithResources,
         USR: SystemRegistry + WithResources,
+        MSR: SystemRegistry + WithResources,
         D: GraphicsDeps + AssetDatabaseDeps + OrchestratorDeps + RpcDeps,
     {
         deps.event_loop().set_control_flow(ControlFlow::Poll);
 
         let mut world =
-            World::with_dependencies::<RRegistry<RR>, FUSRegistry<FUSR>, USRegistry<USR>, Renderer, _>(deps).await?;
+            World::with_dependencies::<RRegistry<RR>, FUSRegistry<FUSR>, USRegistry<USR>, Renderer, MSRegistry<MSR>, _>(deps).await?;
         #[cfg(feature = "editor")]
         let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
@@ -127,7 +128,7 @@ impl Orchestrator {
                 WindowEvent::RedrawRequested => self.redraw().await,
                 e => self.world.get_mut::<EventQueue<WindowEvent>>().send(e),
             },
-            Event::AboutToWait => self.maintain(elwt),
+            Event::AboutToWait => self.maintain(elwt).await,
             Event::LoopExiting => self.on_exiting(),
             _ => (),
         }
@@ -166,12 +167,7 @@ impl Orchestrator {
     }
 
     /// Perform maintenance tasks necessary in each game loop iteration
-    fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
-        // Call the maintenance method of [`World`](ecs::World)
-        if let LoopControl::Abort = self.world.maintain() {
-            event_loop_window_target.exit();
-        }
-
+    async fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
         // Process window events
         #[cfg(feature = "editor")]
         let mut window_interaction_received = false;
@@ -240,6 +236,11 @@ impl Orchestrator {
         #[cfg(not(feature = "editor"))]
         if self.timers.last_loop.elapsed() >= self.timers.min_loop_duration {
             self.world.read::<Graphics>().request_redraw();
+        }
+
+        // Call the maintenance method of World
+        if let LoopControl::Abort = self.world.maintain().await {
+            event_loop_window_target.exit();
         }
     }
 

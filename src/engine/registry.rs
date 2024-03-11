@@ -48,6 +48,10 @@ pub type USRegistry<D> = RegAdd![
     EventMonitor<WindowEvent>,
     EventMonitor<EngineEvent>,
     EventMonitor<WorldEvent>,
+    D
+];
+
+pub type MSRegistry<D> = RegAdd![
     Rpc,
     D
 ];
