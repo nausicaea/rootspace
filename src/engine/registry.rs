@@ -6,7 +6,6 @@ use crate::ecs::world::event::WorldEvent;
 use crate::engine::components::camera::Camera;
 use crate::engine::components::info::Info;
 use crate::engine::components::renderable::Renderable;
-use crate::engine::components::status::Status;
 use crate::engine::components::transform::Transform;
 use crate::engine::components::ui_transform::UiTransform;
 use crate::engine::events::engine_event::EngineEvent;
@@ -28,7 +27,6 @@ pub type RRegistry<S> = RegAdd![
     <Info as Component>::Storage,
     <Transform as Component>::Storage,
     <Renderable as Component>::Storage,
-    <Status as Component>::Storage,
     <UiTransform as Component>::Storage,
     AssetDatabase,
     EventQueue<WindowEvent>,

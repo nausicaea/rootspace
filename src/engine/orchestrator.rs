@@ -19,7 +19,6 @@ use crate::engine::assets::scene::Scene;
 use crate::engine::components::camera::Camera;
 use crate::engine::components::info::Info;
 use crate::engine::components::renderable::Renderable;
-use crate::engine::components::status::Status;
 use crate::engine::components::transform::Transform;
 use crate::engine::components::ui_transform::UiTransform;
 use crate::engine::events::engine_event::EngineEvent;
@@ -291,9 +290,8 @@ impl Orchestrator {
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {
-        trace!("Removing entity from components Status, Info, Transform, UiTransform, Renderable");
+        trace!("Removing entity from components");
         self.world.get_components_mut::<Camera>().remove(entity);
-        self.world.get_components_mut::<Status>().remove(entity);
         self.world.get_components_mut::<Info>().remove(entity);
         self.world.get_components_mut::<Transform>().remove(entity);
         self.world.get_components_mut::<UiTransform>().remove(entity);
