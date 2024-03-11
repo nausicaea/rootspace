@@ -23,9 +23,7 @@ impl Camera {
     }
 
     pub fn set_dimensions(&mut self, width: u32, height: u32) {
-        let aspect = height as f32 / width as f32;
-        log::warn!("Aspect changed to: {aspect}");
-        self.0.set_aspect(aspect);
+        self.0.set_aspect(height as f32 / width as f32);
     }
 }
 
