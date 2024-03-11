@@ -61,8 +61,15 @@ impl Orchestrator {
     {
         deps.event_loop().set_control_flow(ControlFlow::Poll);
 
-        let mut world =
-            World::with_dependencies::<RRegistry<RR>, FUSRegistry<FUSR>, USRegistry<USR>, Renderer, MSRegistry<MSR>, _>(deps).await?;
+        let mut world = World::with_dependencies::<
+            RRegistry<RR>,
+            FUSRegistry<FUSR>,
+            USRegistry<USR>,
+            Renderer,
+            MSRegistry<MSR>,
+            _,
+        >(deps)
+        .await?;
         #[cfg(feature = "editor")]
         let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();

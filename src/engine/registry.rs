@@ -51,7 +51,4 @@ pub type USRegistry<D> = RegAdd![
     D
 ];
 
-pub type MSRegistry<D> = RegAdd![
-    Rpc,
-    D
-];
+pub type MSRegistry<D> = RegAdd![Rpc, D];

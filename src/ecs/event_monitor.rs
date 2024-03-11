@@ -59,8 +59,9 @@ mod tests {
 
     #[tokio::test]
     async fn event_monitor_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![EventMonitor<usize>], (), Reg![], _>(&())
-            .await
-            .unwrap();
+        let _w =
+            World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![EventMonitor<usize>], (), Reg![], _>(&())
+                .await
+                .unwrap();
     }
 }

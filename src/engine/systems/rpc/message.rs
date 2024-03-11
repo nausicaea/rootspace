@@ -11,4 +11,3 @@ pub(crate) enum RpcMessage {
     },
     Exit,
 }
-

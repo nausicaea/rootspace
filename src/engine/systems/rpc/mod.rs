@@ -26,8 +26,8 @@ use crate::engine::events::engine_event::EngineEvent;
 use crate::engine::resources::statistics::Statistics;
 use tarpc::server::incoming::Incoming;
 use tarpc::server::{BaseChannel, Channel};
-use tokio::task::JoinHandle;
 use tokio::sync::mpsc;
+use tokio::task::JoinHandle;
 
 #[derive(Debug)]
 pub struct Rpc {
