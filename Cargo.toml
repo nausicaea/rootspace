@@ -37,6 +37,7 @@ parking_lot = { version = "0.12.1", features = ["send_guard"] }
 futures = { version = "0.3.30", default-features = false, features = ["std"] }
 tokio = { version = "1.36.0", features = ["rt-multi-thread", "macros", "net", "fs", "io-util", "sync"] }
 tarpc = { version = "0.34.0", features = ["serde-transport-bincode", "tcp", "serde-transport"] }
+humantime = "2.1.0"
 
 [dev-dependencies]
 tempfile = "3.0.1"

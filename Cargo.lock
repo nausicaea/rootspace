@@ -2097,6 +2097,7 @@ dependencies = [
  "either",
  "env_logger",
  "futures",
+ "humantime",
  "image",
  "lazy_static",
  "log",

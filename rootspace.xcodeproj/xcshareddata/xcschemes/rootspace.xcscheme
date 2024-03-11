@@ -35,7 +35,8 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
-      useCustomWorkingDirectory = "NO"
+      useCustomWorkingDirectory = "YES"
+      customWorkingDirectory = "/Users/kitsune/Crypt/Development/personal/rootspace"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
@@ -43,7 +44,7 @@
       allowLocationSimulation = "YES">
       <PathRunnable
          runnableDebuggingMode = "0"
-         FilePath = "/Users/kitsune/Crypt/Development/personal/rootspace/target/debug/examples/engine_test">
+         FilePath = "/Users/kitsune/Crypt/Development/personal/rootspace/target/debug/rootspace">
       </PathRunnable>
    </LaunchAction>
    <ProfileAction

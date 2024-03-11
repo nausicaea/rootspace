@@ -37,6 +37,9 @@ use super::registry::{FUSRegistry, MSRegistry};
 
 const STATS_DISPLAY_INTERVAL: Duration = Duration::from_secs(15);
 const DELTA_TIME: Duration = Duration::from_millis(50);
+#[cfg(feature = "editor")]
+const MAX_LOOP_DURATION: Duration = Duration::from_secs(2);
+#[cfg(not(feature = "editor"))]
 const MAX_LOOP_DURATION: Duration = Duration::from_millis(250);
 const MIN_LOOP_DURATION: Duration = Duration::from_millis(32);
 
@@ -59,8 +62,6 @@ impl Orchestrator {
         MSR: SystemRegistry + WithResources,
         D: GraphicsDeps + AssetDatabaseDeps + OrchestratorDeps + RpcDeps,
     {
-        deps.event_loop().set_control_flow(ControlFlow::Poll);
-
         let mut world = World::with_dependencies::<
             RRegistry<RR>,
             FUSRegistry<FUSR>,
@@ -78,7 +79,11 @@ impl Orchestrator {
 
         #[cfg(feature = "editor")]
         {
-            todo!();
+            let mut editor_scene = Scene::default();
+            editor_scene.create_entity()
+                .with_info(Info::builder().with_name("scene-gizmo").build())
+                .submit();
+            editor_scene.submit(world.resources(), "builtin", "editor").await?;
         }
 
         if let Some(main_scene) = deps.main_scene() {
@@ -172,8 +177,8 @@ impl Orchestrator {
     /// 4. Update performance statistics in [`Statistics`](crate::engine::resources::statistics::Statistics)
     async fn redraw(&mut self) {
         // Assess the duration of the last frame
-        let loop_time = std::cmp::min(self.timers.last_loop.elapsed(), self.timers.max_loop_duration);
-        self.timers.last_loop = Instant::now();
+        let loop_time = std::cmp::min(self.timers.last_redraw.elapsed(), self.timers.max_loop_duration);
+        self.timers.last_redraw = Instant::now();
         self.timers.accumulator += loop_time;
         self.timers.dynamic_game_time += loop_time;
 
@@ -199,6 +204,10 @@ impl Orchestrator {
     /// Calls [`World::maintain`](crate::ecs::world::World::maintain`) after all other events
     /// have been handled.
     async fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
+        // Update maintenance statistics
+        self.world.get_mut::<Statistics>().update_maintenance_intervals(self.timers.last_maintenance.elapsed());
+        self.timers.last_maintenance = Instant::now();
+
         // Process window events
         #[cfg(feature = "editor")]
         let mut window_interaction_received = false;
@@ -265,7 +274,7 @@ impl Orchestrator {
         }
 
         #[cfg(not(feature = "editor"))]
-        if self.timers.last_loop.elapsed() >= self.timers.min_loop_duration {
+        if self.timers.last_redraw.elapsed() >= self.timers.min_loop_duration {
             self.world.read::<Graphics>().request_redraw();
         }
 
@@ -273,6 +282,12 @@ impl Orchestrator {
         if let LoopControl::Abort = self.world.maintain().await {
             event_loop_window_target.exit();
         }
+
+        #[cfg(feature = "editor")]
+        event_loop_window_target.set_control_flow(ControlFlow::wait_duration(MAX_LOOP_DURATION));
+        #[cfg(not(feature = "editor"))]
+        event_loop_window_target.set_control_flow(ControlFlow::Poll);
+
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {
@@ -334,7 +349,8 @@ pub trait OrchestratorDeps {
 
 #[derive(Debug)]
 struct Timers {
-    last_loop: Instant,
+    last_maintenance: Instant,
+    last_redraw: Instant,
     accumulator: Duration,
     dynamic_game_time: Duration,
     fixed_game_time: Duration,
@@ -351,7 +367,8 @@ struct Timers {
 impl Default for Timers {
     fn default() -> Self {
         Timers {
-            last_loop: Instant::now(),
+            last_maintenance: Instant::now(),
+            last_redraw: Instant::now(),
             accumulator: Duration::default(),
             dynamic_game_time: Duration::default(),
             fixed_game_time: Duration::default(),

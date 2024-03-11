@@ -26,10 +26,6 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn create_entity(&mut self) -> EntityBuilder {
-        EntityBuilder::new(self)
-    }
-
     pub fn with_resources(res: &Resources) -> Self {
         Scene {
             entities: res.read::<Entities>().clone(),
@@ -73,89 +69,106 @@ impl Scene {
         }
     }
 
-    async fn load_additive(self, res: &Resources) -> Result<(), anyhow::Error> {
-        let map = self.load_hierarchy_additive(&mut res.write(), &mut res.write());
+    pub fn create_entity(&mut self) -> EntityBuilder {
+        EntityBuilder::new(self)
+    }
 
-        if let Err(e) = self.load_components_additive(&map, res).await {
-            Self::unload_entities(res, map.values());
+    pub async fn submit<S: AsRef<str>>(mut self, res: &Resources, group: S, name: S) -> Result<(), anyhow::Error> {
+        fn error_recovery<'a, I: IntoIterator<Item = &'a Index>>(res: &Resources, iter: I) {
+            let mut entities = res.write::<Entities>();
+            let mut hierarchy = res.write::<Hierarchy<Index>>();
+            for &i_new in iter {
+                entities.destroy(i_new);
+                hierarchy.remove(i_new);
+            }
+        }
+
+        fn register_origin(scene: &mut Scene, group: &str, name: &str) {
+            for entity in &scene.entities {
+                scene
+                    .infos
+                    .entry(entity.idx())
+                    .and_modify(|info| info.set_origin(group, name))
+                    .or_insert_with(|| Info::builder().with_origin(group, name).build());
+            }
+        }
+
+        fn load_hierarchy_additive(
+            scene: &Scene,
+            entities: &mut Entities,
+            hierarchy: &mut Hierarchy<Index>,
+        ) -> BTreeMap<Index, Index> {
+            let mut map: BTreeMap<Index, Index> = BTreeMap::new();
+
+            for i_prev in scene.hierarchy.bfs_iter() {
+                if let Some(anc_prev) = scene.hierarchy.ancestors(i_prev).nth(1) {
+                    let i_new = entities.create().idx();
+                    map.insert(i_prev, i_new);
+
+                    let anc_new = map
+                        .get(&anc_prev)
+                        .expect("A (parent) scene-based entity has no corresponding world entity");
+
+                    hierarchy.insert_child(anc_new, i_new);
+                } else {
+                    let i_new = entities.create().idx();
+                    map.insert(i_prev, i_new);
+                    hierarchy.insert(i_new);
+                }
+            }
+
+            map
+        }
+
+        async fn load_components_additive(
+            scene: &Scene,
+            map: &BTreeMap<Index, Index>,
+            res: &Resources,
+        ) -> Result<(), anyhow::Error> {
+            for (&i_prev, &i_new) in map {
+                if let Some(info) = scene.infos.get(&i_prev).cloned() {
+                    res.write_components::<Info>().insert(i_new, info);
+                }
+
+                if let Some(camera) = scene.cameras.get(&i_prev).cloned() {
+                    res.write_components::<Camera>().insert(i_new, camera);
+                }
+
+                if let Some(transform) = scene.transforms.get(&i_prev).cloned() {
+                    res.write_components::<Transform>().insert(i_new, transform);
+                }
+
+                if let Some(RenderableSource::Reference { group, name }) = scene.renderables.get(&i_prev) {
+                    let cpu_model = res
+                        .read::<AssetDatabase>()
+                        .load_asset::<CpuModel, _>(res, group, name)
+                        .await
+                        .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name,))?;
+                    let model = GpuModel::with_model(res, &cpu_model);
+                    let renderable = Renderable {
+                        model,
+                        group: group.to_string(),
+                        name: name.to_string(),
+                    };
+                    res.write_components::<Renderable>().insert(i_new, renderable);
+                }
+            }
+
+            Ok(())
+        }
+
+        register_origin(&mut self, group.as_ref(), name.as_ref());
+
+        let map = load_hierarchy_additive(&self, &mut res.write(), &mut res.write());
+
+        if let Err(e) = load_components_additive(&self, &map, res).await {
+            error_recovery(res, map.values());
             return Err(e).context("Adding the scene's components to the existing loaded components");
         }
 
         Ok(())
     }
 
-    fn unload_entities<'a, I: IntoIterator<Item = &'a Index>>(res: &Resources, iter: I) {
-        let mut entities = res.write::<Entities>();
-        let mut hierarchy = res.write::<Hierarchy<Index>>();
-        for &i_new in iter {
-            entities.destroy(i_new);
-            hierarchy.remove(i_new);
-        }
-    }
-
-    fn load_hierarchy_additive(
-        &self,
-        entities: &mut Entities,
-        hierarchy: &mut Hierarchy<Index>,
-    ) -> BTreeMap<Index, Index> {
-        let mut map: BTreeMap<Index, Index> = BTreeMap::new();
-
-        for i_prev in self.hierarchy.bfs_iter() {
-            if let Some(anc_prev) = self.hierarchy.ancestors(i_prev).nth(1) {
-                let i_new = entities.create().idx();
-                map.insert(i_prev, i_new);
-
-                let anc_new = map
-                    .get(&anc_prev)
-                    .expect("A (parent) scene-based entity has no corresponding world entity");
-
-                hierarchy.insert_child(anc_new, i_new);
-            } else {
-                let i_new = entities.create().idx();
-                map.insert(i_prev, i_new);
-                hierarchy.insert(i_new);
-            }
-        }
-
-        map
-    }
-
-    async fn load_components_additive(
-        &self,
-        map: &BTreeMap<Index, Index>,
-        res: &Resources,
-    ) -> Result<(), anyhow::Error> {
-        for (&i_prev, &i_new) in map {
-            if let Some(info) = self.infos.get(&i_prev).cloned() {
-                res.write_components::<Info>().insert(i_new, info);
-            }
-
-            if let Some(camera) = self.cameras.get(&i_prev).cloned() {
-                res.write_components::<Camera>().insert(i_new, camera);
-            }
-
-            if let Some(transform) = self.transforms.get(&i_prev).cloned() {
-                res.write_components::<Transform>().insert(i_new, transform);
-            }
-
-            if let Some(RenderableSource::Reference { group, name }) = self.renderables.get(&i_prev) {
-                let cpu_model = res
-                    .read::<AssetDatabase>()
-                    .load_asset::<CpuModel, _>(res, group, name)
-                    .await
-                    .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name,))?;
-                let model = GpuModel::with_model(res, &cpu_model);
-                let renderable = Renderable {
-                    model,
-                    group: group.to_string(),
-                    name: name.to_string(),
-                };
-                res.write_components::<Renderable>().insert(i_new, renderable);
-            }
-        }
-
-        Ok(())
-    }
 }
 
 impl PrivLoadAsset for Scene {
@@ -165,20 +178,13 @@ impl PrivLoadAsset for Scene {
         let file = std::fs::File::open(path).with_context(|| format!("Opening the file '{}'", path.display()))?;
         let reader = std::io::BufReader::new(file);
 
-        let mut scene = ciborium::de::from_reader::<Scene, _>(reader).context("Loading the Scene")?;
+        let scene = ciborium::de::from_reader::<Scene, _>(reader).context("Loading the Scene")?;
 
         // Since the Info::origin field is not serialized, make sure to assign it to every entity
         // based on the scene asset name.
         let (group, name) = res.read::<AssetDatabase>().find_asset_name(path)?;
-        for entity in &scene.entities {
-            scene
-                .infos
-                .entry(entity.idx())
-                .and_modify(|info| info.set_origin(&group, &name))
-                .or_insert_with(|| Info::builder().with_origin(&group, &name).build());
-        }
 
-        scene.load_additive(res).await
+        scene.submit(res, group, name).await
     }
 }
 

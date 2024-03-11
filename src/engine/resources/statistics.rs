@@ -8,12 +8,14 @@ use serde::{Deserialize, Serialize};
 const DRAW_CALL_WINDOW: usize = 10;
 const RENDER_DURATION_WINDOW: usize = 10;
 const REDRAW_INTERVAL_WINDOW: usize = 10;
+const MAINTENANCE_INTERVAL_WINDOW: usize = 10;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Statistics {
     draw_calls: VecDeque<(usize, usize)>,
     render_durations: VecDeque<Duration>,
     redraw_intervals: VecDeque<Duration>,
+    maintenance_intervals: VecDeque<Duration>,
 }
 
 impl Statistics {
@@ -31,6 +33,10 @@ impl Statistics {
 
     pub fn mean_redraw_interval(&self) -> Duration {
         self.redraw_intervals.iter().sum::<Duration>() / REDRAW_INTERVAL_WINDOW as u32
+    }
+
+    pub fn mean_maintenance_interval(&self) -> Duration {
+        self.maintenance_intervals.iter().sum::<Duration>() / MAINTENANCE_INTERVAL_WINDOW as u32
     }
 
     pub fn update_draw_calls(&mut self, world_draw_calls: usize, ui_draw_calls: usize) {
@@ -53,6 +59,13 @@ impl Statistics {
             self.redraw_intervals.truncate(REDRAW_INTERVAL_WINDOW);
         }
     }
+
+    pub fn update_maintenance_intervals(&mut self, maintenance_interval: Duration) {
+        self.maintenance_intervals.push_front(maintenance_interval);
+        if self.maintenance_intervals.len() > MAINTENANCE_INTERVAL_WINDOW {
+            self.maintenance_intervals.truncate(MAINTENANCE_INTERVAL_WINDOW);
+        }
+    }
 }
 
 impl Default for Statistics {
@@ -61,16 +74,18 @@ impl Default for Statistics {
             draw_calls: VecDeque::with_capacity(DRAW_CALL_WINDOW),
             render_durations: VecDeque::with_capacity(RENDER_DURATION_WINDOW),
             redraw_intervals: VecDeque::with_capacity(REDRAW_INTERVAL_WINDOW),
+            maintenance_intervals: VecDeque::with_capacity(MAINTENANCE_INTERVAL_WINDOW),
         }
     }
 }
 
 impl Display for Statistics {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Loop and Render Stats:\nWorld draw calls (mean): {}\nRender duration (mean): {} ms\nRedraw interval (mean): {} ms\n\n",
+        writeln!(f, "Loop and Render Stats:\nWorld draw calls (mean): {}\nRender duration (mean): {}\nRedraw interval (mean): {}\nMaintenance interval (mean): {}\n",
                self.mean_world_draw_calls(),
-               self.mean_render_duration().as_millis(),
-               self.mean_redraw_interval().as_millis(),
+               humantime::format_duration(self.mean_render_duration()),
+               humantime::format_duration(self.mean_redraw_interval()),
+               humantime::format_duration(self.mean_maintenance_interval()),
         )
     }
 }

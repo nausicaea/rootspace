@@ -18,16 +18,16 @@
 /* Begin PBXLegacyTarget section */
 		1738B7CD29842E7B00FF246C /* rootspace */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "";
+			buildArgumentsString = "build --features editor --bin rootspace";
 			buildConfigurationList = 1738B7D029842E7B00FF246C /* Build configuration list for PBXLegacyTarget "rootspace" */;
 			buildPhases = (
 			);
-			buildToolPath = /usr/bin/true;
-			buildWorkingDirectory = "";
+			buildToolPath = /Users/kitsune/.cargo/bin/cargo;
+			buildWorkingDirectory = /Users/kitsune/Crypt/Development/personal/rootspace;
 			dependencies = (
 			);
 			name = rootspace;
-			passBuildSettingsInEnvironment = 1;
+			passBuildSettingsInEnvironment = 0;
 			productName = rootspace;
 		};
 /* End PBXLegacyTarget section */
