@@ -40,6 +40,10 @@ where
     pub fn c(&self) -> Self {
         Quat::new(self.w, -self.i, -self.j, -self.k)
     }
+
+    pub fn is_nan(&self) -> bool {
+        self.w.is_nan() || self.i.is_nan() || self.j.is_nan() || self.k.is_nan()
+    }
 }
 
 impl<R> Quat<R>

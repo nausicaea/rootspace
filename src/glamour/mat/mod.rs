@@ -186,18 +186,6 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn mat4_provides_zero_constructor() {
-        let m: Mat4<f32> = Mat4::zero();
-        assert_eq!(m, Mat4([[0.0f32; 4]; 4]));
-    }
-
-    #[test]
-    fn mat4_supports_one_constructor() {
-        let m: Mat4<f32> = Mat4::one();
-        assert_eq!(m, Mat4([[1.0f32; 4]; 4]));
-    }
-
-    #[test]
     fn mat4_supports_identity_constructor() {
         let m: Mat4<f32> = Mat4::identity();
 

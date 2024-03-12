@@ -25,7 +25,7 @@ impl System for DebugAnimator {
         let rotation = Unit::from(Quat::new(angle, 0.0, 1.0, 0.0)).to_matrix();
         for (_, _, t) in res.iter_rw::<Renderable, Transform>() {
             let t_mat = t.orientation().to_matrix();
-            t.set_orientation(Unit::from(Into::<Quat<f32>>::into(t_mat * rotation)))
+            t.set_orientation(Unit::from(Into::<Quat<f32>>::into(rotation * t_mat)))
         }
     }
 }
