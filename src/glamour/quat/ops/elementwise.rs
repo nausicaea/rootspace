@@ -1,6 +1,6 @@
-use std::ops::{Div, Mul, Add, Sub};
-use num_traits::Float;
 use super::super::Quat;
+use num_traits::Float;
+use std::ops::{Add, Div, Mul, Sub};
 
 macro_rules! impl_scalar_binops {
     ($($Op:ident::$op:ident, [$($tgt:ident),+ $(,)*]);+ $(;)*) => {

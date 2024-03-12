@@ -1,4 +1,3 @@
-
 use crate::glamour::{ops::dot::Dot, unit::Unit};
 
 impl<'a, 'b, T> Dot<&'b Unit<T>> for &'a Unit<T>
