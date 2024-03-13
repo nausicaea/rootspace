@@ -197,7 +197,7 @@ where
 
 impl<R> TryFrom<Mat4<R>> for Affine<R>
 where
-    R: Copy + num_traits::One + num_traits::Zero + NumAssign + Float + Sum + std::fmt::Debug,
+    R: Copy + num_traits::One + num_traits::Zero + NumAssign + Float + Sum,
 {
     type Error = ();
 
