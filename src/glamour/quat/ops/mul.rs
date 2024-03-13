@@ -52,8 +52,10 @@ forward_ref_binop!(impl<R: Float> Mul, mul for Quat<R>, Quat<R>, Quat<R>);
 #[cfg(test)]
 mod tests {
 
+    use std::sync::OnceLock;
+
     use approx::relative_eq;
-    use proptest::{collection::vec, num::f32::NORMAL, prelude::*};
+    use proptest::{num::f32::NORMAL, prelude::*};
 
     use crate::glamour::{num::ToMatrix, quat::tests::{quat, unit_quat}, unit::Unit};
 
@@ -89,8 +91,38 @@ mod tests {
         assert_eq!(expected, cgmath_result, "cgmath comparison");
     }
 
-    const MIN_F32: f32 = (2.0).powi(-62);
-    const MAX_F32: f32 = (2.0).powi(63);
+    fn two_pow_minus_62f32() -> f32 {
+        static MIN_POS_F32: OnceLock<f32> = OnceLock::new();
+        *MIN_POS_F32.get_or_init(|| (2.0).powi(-62))
+    }
+
+    fn two_pow_63f32() -> f32 {
+        static MAX_POS_F32: OnceLock<f32> = OnceLock::new();
+        *MAX_POS_F32.get_or_init(|| (2.0).powi(63))
+    }
+
+    fn minus_two_pow_minus_62f32() -> f32 {
+        static MIN_NEG_F32: OnceLock<f32> = OnceLock::new();
+        *MIN_NEG_F32.get_or_init(|| (-2.0).powi(-62))
+    }
+
+    fn minus_two_pow_63f32() -> f32 {
+        static MAX_NEG_F32: OnceLock<f32> = OnceLock::new();
+        *MAX_NEG_F32.get_or_init(|| (-2.0).powi(63))
+    }
+
+    fn pos_f32_range() -> std::ops::Range<f32> {
+        two_pow_minus_62f32()..two_pow_63f32()
+    }
+
+    fn neg_f32_range() -> std::ops::Range<f32> {
+        minus_two_pow_63f32()..minus_two_pow_minus_62f32()
+    }
+
+    fn compound_f32_strat() -> impl Strategy<Value = f32> {
+        proptest::strategy::Union::new([neg_f32_range().boxed(), proptest::num::f32::ZERO.boxed(), pos_f32_range().boxed()])
+    }
+
 
     proptest! {
         #[test]
@@ -119,7 +151,7 @@ mod tests {
 
         #[test]
         //fn nan_test(a in quat(NORMAL), b in quat(NORMAL)) {
-        fn nan_test(a in quat(MIN_F32..MAX_F32), b in quat(MIN_F32..MAX_F32)) {
+        fn nan_test(a in quat(compound_f32_strat()), b in quat(compound_f32_strat())) {
             let result = b * a;
             if result.is_nan() {
                 dbg!(&a);
