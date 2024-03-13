@@ -9,6 +9,7 @@ pub mod approx;
 pub mod convert;
 pub mod num;
 pub mod ops;
+pub mod cmp;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct Quat<R> {
@@ -90,8 +91,21 @@ where
 #[cfg(test)]
 mod tests {
     use serde_test::{assert_tokens, Token};
+    use proptest::{prelude::*, num::f32::Any, collection::vec};
 
     use super::*;
+
+    prop_compose! {
+        pub(crate) fn quat(s: T)(v in vec(s, 4)) -> Quat<f32> {
+            Quat::new(v[0], v[1], v[2], v[3])
+        }
+    }
+
+    prop_compose! {
+        pub(crate) fn unit_quat<T: Strategy>(s: T)(q in quat(s)) -> Unit<Quat<f32>> {
+            Unit::from(q)
+        }
+    }
 
     #[test]
     fn quat_provides_identity_constructor() {

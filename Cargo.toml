@@ -44,9 +44,10 @@ tempfile = "3.0.1"
 serde_test = "1.0.126"
 proptest = "1.0.0"
 proptest-derive = "0.4.0"
-cgmath = "0.18.0"
 rstest = "0.18.2"
 criterion = "0.5.1"
+cgmath = "0.18.0"
+nalgebra = "0.32.4"
 
 [lib]
 name = "rootspace"
