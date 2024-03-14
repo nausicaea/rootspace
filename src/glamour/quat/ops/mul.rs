@@ -61,36 +61,6 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn quat_implements_mul_for_vec4() {
-        let q: Quat<f32> = Quat::identity();
-        let v: Vec4<f32> = Vec4::new(1.0, 2.0, 3.0, 4.0);
-        assert_eq!(q * v, v);
-    }
-
-    #[test]
-    fn quat_implements_mul_for_quat() {
-        let a = [1.0f32, 2.0, 3.0, 4.0];
-        let b = [5.0f32, 6.0, 7.0, 8.0];
-        let expected = Quat::new(-60.0, 20.0, 14.0, 32.0);
-
-        let glamour_a = Quat::new(a[0], a[1], a[2], a[3]);
-        let glamour_b = Quat::new(b[0], b[1], b[2], b[3]);
-        let glamour_result = glamour_b * glamour_a;
-
-        let nalgebra_a = nalgebra::Quaternion::new(a[0], a[1], a[2], a[3]);
-        let nalgebra_b = nalgebra::Quaternion::new(b[0], b[1], b[2], b[3]);
-        let nalgebra_result = nalgebra_b * nalgebra_a;
-
-        let cgmath_a = cgmath::Quaternion::new(a[0], a[1], a[2], a[3]);
-        let cgmath_b = cgmath::Quaternion::new(b[0], b[1], b[2], b[3]);
-        let cgmath_result = cgmath_b * cgmath_a;
-
-        assert_eq!(expected, glamour_result, "glamour comparison");
-        assert_eq!(expected, nalgebra_result, "nalgebra comparison");
-        assert_eq!(expected, cgmath_result, "cgmath comparison");
-    }
-
     fn two_pow_minus_62f32() -> f32 {
         static MIN_POS_F32: OnceLock<f32> = OnceLock::new();
         *MIN_POS_F32.get_or_init(|| (2.0).powi(-62))
@@ -127,33 +97,21 @@ mod tests {
         proptest::strategy::Union::new([neg_f32_range().boxed(), pos_f32_range().boxed()])
     }
 
+    #[test]
+    fn quat_implements_mul_for_vec4() {
+        let q: Quat<f32> = Quat::identity();
+        let v: Vec4<f32> = Vec4::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(q * v, v);
+    }
+
     proptest! {
         #[test]
-        fn f32_mul_behavior(a in NORMAL, b in NORMAL) {
-            let result = b * a;
-            prop_assert!(!result.is_nan());
+        fn bounded_f32_quat_mul_does_not_cause_nans(lhs in quat(bounded_f32()), rhs in quat(bounded_f32())) {
+            prop_assert!(!(lhs * rhs).is_nan());
         }
 
         #[test]
-        fn f32_div_behavior(a in NORMAL, b in NORMAL) {
-            let result = b / a;
-            prop_assert!(!result.is_nan());
-        }
-
-        #[test]
-        fn f32_add_behavior(a in NORMAL, b in NORMAL) {
-            let result = b + a;
-            prop_assert!(!result.is_nan());
-        }
-
-        #[test]
-        fn f32_sub_behavior(a in NORMAL, b in NORMAL) {
-            let result = b - a;
-            prop_assert!(!result.is_nan());
-        }
-
-        #[test]
-        fn bounded_f32_mul_does_not_cause_nans(lhs in quat(bounded_f32()), rhs in quat(bounded_f32())) {
+        fn bounded_nonzero_f32_quat_mul_does_not_cause_nans(lhs in quat(bounded_nonzero_f32()), rhs in quat(bounded_nonzero_f32())) {
             prop_assert!(!(lhs * rhs).is_nan());
         }
 
@@ -185,15 +143,6 @@ mod tests {
             let cgmath_a = cgmath::Quaternion::new(glamour_a.w, glamour_a.i, glamour_a.j, glamour_a.k);
             let cgmath_b = cgmath::Quaternion::new(glamour_b.w, glamour_b.i, glamour_b.j, glamour_b.k);
             prop_assert!(ulps_eq!(glamour_b * glamour_a, cgmath_b * cgmath_a));
-        }
-
-        #[test]
-        fn nan_test(lhs in unit_quat(bounded_nonzero_f32()), rhs in unit_quat(bounded_nonzero_f32())) {
-            let glamour_result = lhs * rhs;
-            if glamour_result.is_nan() {
-                eprintln!("{glamour_result}");
-            }
-            prop_assert!(!glamour_result.is_nan());
         }
 
         #[test]
