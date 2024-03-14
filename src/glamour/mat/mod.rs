@@ -148,11 +148,12 @@ pub(crate) mod tests {
         num::f32::{Any, INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
         prop_assert, prop_assert_eq, prop_compose, proptest,
     };
+    use proptest::strategy::Strategy;
 
     use super::*;
 
     prop_compose! {
-        pub(crate) fn mat4(s: Any)(v in vec(s, 16)) -> Mat4<f32> {
+        pub(crate) fn mat4(s: impl Strategy<Value = f32>)(v in vec(s, 16)) -> Mat4<f32> {
             Mat4::try_from(v).unwrap()
         }
     }
