@@ -54,7 +54,7 @@ mod tests {
 
     use std::sync::OnceLock;
 
-    use approx::relative_eq;
+    use approx::{assert_relative_eq, assert_ulps_eq, relative_eq, ulps_eq};
     use proptest::{num::f32::NORMAL, prelude::*};
 
     use crate::glamour::{num::ToMatrix, quat::tests::{quat, unit_quat}, unit::Unit};
@@ -119,10 +119,13 @@ mod tests {
         minus_two_pow_63f32()..minus_two_pow_minus_62f32()
     }
 
-    fn compound_f32_strat() -> impl Strategy<Value = f32> {
+    fn bounded_f32() -> impl Strategy<Value = f32> {
         proptest::strategy::Union::new([neg_f32_range().boxed(), proptest::num::f32::ZERO.boxed(), pos_f32_range().boxed()])
     }
 
+    fn bounded_nonzero_f32() -> impl Strategy<Value = f32> {
+        proptest::strategy::Union::new([neg_f32_range().boxed(), pos_f32_range().boxed()])
+    }
 
     proptest! {
         #[test]
@@ -150,52 +153,54 @@ mod tests {
         }
 
         #[test]
-        //fn nan_test(a in quat(NORMAL), b in quat(NORMAL)) {
-        fn nan_test(a in quat(compound_f32_strat()), b in quat(compound_f32_strat())) {
-            let result = b * a;
-            if result.is_nan() {
-                dbg!(&a);
-                dbg!(&b);
-                dbg!(&result);
-                dbg!(b.w * a.k + b.i * a.j - b.j * a.i + b.k * a.w);
-                dbg!(b.w * a.k);
-                dbg!(b.i * a.j);
-                dbg!(- b.j * a.i);
-                dbg!(b.k * a.w);
-                // sis is se probleme
-                dbg!(f32::INFINITY + f32::NEG_INFINITY);
-                dbg!(f32::INFINITY - f32::INFINITY);
-            }
-            prop_assert!(!result.is_nan());
+        fn bounded_f32_mul_does_not_cause_nans(lhs in quat(bounded_f32()), rhs in quat(bounded_f32())) {
+            prop_assert!(!(lhs * rhs).is_nan());
         }
 
         #[test]
-        fn quat_mul_with_nalgebra_and_cgmath(glamour_a in quat(NORMAL), glamour_b in quat(NORMAL)) {
-            let glamour_result = glamour_b * glamour_a;
-
+        fn glamour_quat_mul_is_equal_to_nalgebra(glamour_a in quat(bounded_f32()), glamour_b in quat(bounded_f32())) {
             let nalgebra_a = nalgebra::Quaternion::new(glamour_a.w, glamour_a.i, glamour_a.j, glamour_a.k);
             let nalgebra_b = nalgebra::Quaternion::new(glamour_b.w, glamour_b.i, glamour_b.j, glamour_b.k);
-            let nalgebra_result = nalgebra_b * nalgebra_a;
 
-            let cgmath_a = cgmath::Quaternion::new(glamour_a.w, glamour_a.i, glamour_a.j, glamour_a.k);
-            let cgmath_b = cgmath::Quaternion::new(glamour_b.w, glamour_b.i, glamour_b.j, glamour_b.k);
-            let cgmath_result = cgmath_b * cgmath_a;
-
-            prop_assume!(!nalgebra_is_nan(&nalgebra_result));
-
-            prop_assert!(relative_eq!(glamour_result, nalgebra_result), "nalgebra comparison");
-            prop_assert!(relative_eq!(glamour_result, cgmath_result), "cgmath comparison");
+            prop_assert!(ulps_eq!(glamour_b * glamour_a, nalgebra_b * nalgebra_a));
         }
 
         #[test]
-        fn unit_quat_mul_is_the_same_as_rot_mat_mul(a in unit_quat(NORMAL), b in unit_quat(NORMAL)) {
-            let qp = b * a;
-            let mp = Into::<Unit<_>>::into(Into::<Quat<f32>>::into(b.to_matrix() * a.to_matrix()));
+        fn glamour_quat_mul_is_equal_to_reordered_cgmath(glamour_a in quat(bounded_f32()), glamour_b in quat(bounded_f32())) {
+            let cgmath_a = cgmath::Quaternion::new(glamour_a.w, glamour_a.i, glamour_a.j, glamour_a.k);
+            let cgmath_b = cgmath::Quaternion::new(glamour_b.w, glamour_b.i, glamour_b.j, glamour_b.k);
+            let cgmath_result = cgmath::Quaternion::new(
+                cgmath_b.s * cgmath_a.s - cgmath_b.v.x * cgmath_a.v.x - cgmath_b.v.y * cgmath_a.v.y - cgmath_b.v.z * cgmath_a.v.z,
+                cgmath_b.s * cgmath_a.v.x + cgmath_b.v.x * cgmath_a.s + cgmath_b.v.y * cgmath_a.v.z - cgmath_b.v.z * cgmath_a.v.y,
+                cgmath_b.s * cgmath_a.v.y - cgmath_b.v.x * cgmath_a.v.z + cgmath_b.v.y * cgmath_a.s + cgmath_b.v.z * cgmath_a.v.x,
+                cgmath_b.s * cgmath_a.v.z + cgmath_b.v.x * cgmath_a.v.y - cgmath_b.v.y * cgmath_a.v.x + cgmath_b.v.z * cgmath_a.s,
+            );
+            prop_assert!(ulps_eq!(glamour_b * glamour_a, cgmath_result));
+        }
+
+        /// The result of the cgmath-based quaternion multiplication will be different from glamour and nalgebra because the ordering of operands for the j and k components is different, causing different float rounding errors. Therefore, there is an additional test with cgmath that involves manually calculating the product with adjusted operand ordering.
+        #[test]
+        #[should_panic]
+        fn glamour_quat_mul_is_not_equal_to_cgmath(glamour_a in quat(bounded_f32()), glamour_b in quat(bounded_f32())) {
+            let cgmath_a = cgmath::Quaternion::new(glamour_a.w, glamour_a.i, glamour_a.j, glamour_a.k);
+            let cgmath_b = cgmath::Quaternion::new(glamour_b.w, glamour_b.i, glamour_b.j, glamour_b.k);
+            prop_assert!(ulps_eq!(glamour_b * glamour_a, cgmath_b * cgmath_a));
+        }
+
+        #[test]
+        fn nan_test(lhs in unit_quat(bounded_nonzero_f32()), rhs in unit_quat(bounded_nonzero_f32())) {
+            let glamour_result = lhs * rhs;
+            if glamour_result.is_nan() {
+                eprintln!("{glamour_result}");
+            }
+            prop_assert!(!glamour_result.is_nan());
+        }
+
+        #[test]
+        fn unit_quat_mul_is_the_same_as_rot_mat_mul(glamour_a in unit_quat(bounded_nonzero_f32()), glamour_b in unit_quat(bounded_nonzero_f32())) {
+            let qp = glamour_a * glamour_b;
+            let mp = Into::<Unit<_>>::into(Into::<Quat<f32>>::into(glamour_a.to_matrix() * glamour_b.to_matrix()));
             prop_assert!(relative_eq!(qp, mp));
         }
-    }
-
-    pub fn nalgebra_is_nan(input: &nalgebra::Quaternion<f32>) -> bool {
-        input.i.is_nan() || input.j.is_nan() || input.k.is_nan() || input.w.is_nan()
     }
 }
