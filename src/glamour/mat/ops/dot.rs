@@ -141,4 +141,11 @@ mod tests {
 
         assert_eq!(m * v, Vec4::one());
     }
+
+    proptest! {
+        #[test]
+        fn mat4_mul_is_equal_to_nalgebra(glamour_lhs in mat4(bounded_f32(-62, 63)), glamour_rhs in mat4(bounded_f32(-62, 63))) {
+            todo!()
+        }
+    }
 }
