@@ -10,3 +10,5 @@ pub mod quat;
 pub mod ray;
 pub mod unit;
 pub mod vec;
+#[cfg(test)]
+mod test_helpers;

@@ -144,19 +144,13 @@ where
 #[cfg(test)]
 pub(crate) mod tests {
     use proptest::{
-        collection::vec,
-        num::f32::{Any, INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
-        prop_assert, prop_assert_eq, prop_compose, proptest,
+        num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
+        prop_assert, prop_assert_eq, proptest,
     };
-    use proptest::strategy::Strategy;
+
+    use crate::glamour::test_helpers::mat4;
 
     use super::*;
-
-    prop_compose! {
-        pub(crate) fn mat4(s: impl Strategy<Value = f32>)(v in vec(s, 16)) -> Mat4<f32> {
-            Mat4::try_from(v).unwrap()
-        }
-    }
 
     proptest! {
         #[test]

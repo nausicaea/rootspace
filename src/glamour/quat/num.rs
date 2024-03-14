@@ -9,7 +9,7 @@ where
     R: Float,
 {
     fn to_matrix(&self) -> Mat4<R> {
-        self.into()
+        (*self).into()
     }
 }
 

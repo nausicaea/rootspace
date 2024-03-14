@@ -1,6 +1,6 @@
 use num_traits::Float;
 
-use crate::glamour::{mat::Mat4, ops::norm::Norm};
+use crate::glamour::{mat::Mat4, ops::norm::Norm, vec::Vec4};
 
 use super::Quat;
 
@@ -33,17 +33,8 @@ impl<R> From<Quat<R>> for Mat4<R>
 where
     R: Float,
 {
-    fn from(v: Quat<R>) -> Self {
-        From::from(&v)
-    }
-}
-
-impl<'a, R> From<&'a Quat<R>> for Mat4<R>
-where
-    R: Float,
-{
     /// Based on information from the [Euclidean Space Blog](https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm)
-    fn from(v: &'a Quat<R>) -> Self {
+    fn from(v: Quat<R>) -> Self {
         let v_norm = v.norm();
         let w = v.w / v_norm;
         let i = v.i / v_norm;
@@ -72,6 +63,24 @@ where
             z,
             o,
         ])
+    }
+}
+
+impl<R> From<Vec4<R>> for Quat<R>
+where
+    R: num_traits::Zero,
+{
+    fn from(value: Vec4<R>) -> Self {
+        Quat::new(value.w, value.x, value.y, value.z)
+    }
+}
+
+impl<R> From<Quat<R>> for Vec4<R> 
+where
+    R: num_traits::Zero,
+{
+    fn from(value: Quat<R>) -> Self {
+        Vec4::new(value.i, value.j, value.k, value.w)
     }
 }
 

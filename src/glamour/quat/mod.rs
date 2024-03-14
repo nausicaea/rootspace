@@ -91,21 +91,8 @@ where
 #[cfg(test)]
 mod tests {
     use serde_test::{assert_tokens, Token};
-    use proptest::{prelude::*, collection::vec};
 
     use super::*;
-
-    prop_compose! {
-        pub(crate) fn quat(s: impl Strategy<Value = f32>)(v in vec(s, 4)) -> Quat<f32> {
-            Quat::new(v[0], v[1], v[2], v[3])
-        }
-    }
-
-    prop_compose! {
-        pub(crate) fn unit_quat(s: impl Strategy<Value = f32>)(q in quat(s)) -> Unit<Quat<f32>> {
-            Unit::from(q)
-        }
-    }
 
     #[test]
     fn quat_provides_identity_constructor() {
