@@ -2,6 +2,7 @@ use crate::glamour::num::ToMatrix;
 use std::time::Duration;
 
 use async_trait::async_trait;
+use tarpc::serde_transport::new;
 
 use crate::{
     ecs::{resources::Resources, system::System, with_resources::WithResources},
@@ -21,11 +22,12 @@ impl WithResources for DebugAnimator {
 #[async_trait]
 impl System for DebugAnimator {
     async fn run(&mut self, res: &Resources, _t: Duration, dt: Duration) {
-        let angle = dt.as_secs_f32() * 0.21;
-        let rotation = Unit::from(Quat::new(angle, 0.0, 1.0, 0.0)).to_matrix();
+        let angle = dt.as_secs_f32() * 0.20;
+        let rotation = Unit::from(Quat::new(angle, 0.0, 0.0, 1.0));
         for (_, _, t) in res.iter_rw::<Renderable, Transform>() {
-            let t_mat = t.orientation().to_matrix();
-            t.set_orientation(Unit::from(Into::<Quat<f32>>::into(rotation * t_mat)))
+            let t_quat = t.orientation();
+            let new_t_quat = rotation * t_quat;
+            t.set_orientation(new_t_quat);
         }
     }
 }
