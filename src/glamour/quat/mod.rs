@@ -29,7 +29,7 @@ impl<R> Quat<R>
 where
     R: Float + Sum,
 {
-    pub fn look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Self {
+    pub fn look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Unit<Quat<R>> {
         Mat4::look_at_lh(fwd, up).into()
     }
 }

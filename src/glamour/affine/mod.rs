@@ -147,7 +147,7 @@ where
         rot_m[(3, 2)] = R::zero();
         rot_m[(3, 3)] = R::one();
 
-        let o: Unit<Quat<R>> = Unit::from(Quat::from(rot_m));
+        let o: Unit<Quat<R>> = rot_m.into();
 
         Ok(Affine { t, o, s })
     }

@@ -5,7 +5,7 @@ use crate::glamour::{mat::Mat4, vec::Vec4};
 
 use super::Quat;
 
-impl<R> From<Mat4<R>> for Quat<R>
+impl<R> From<Mat4<R>> for Unit<Quat<R>>
 where
     R: Float,
 {
@@ -15,17 +15,17 @@ where
         if v[(2, 2)] < v[(0, 0)] {
             if v[(0, 0)] > v[(1, 1)] {
                 let t = R::one() + v[(0, 0)] - v[(1, 1)] - v[(2, 2)];
-                Quat::new(v[(1, 2)] - v[(2, 1)], t, v[(0, 1)] + v[(1, 0)], v[(2, 0)] + v[(0, 2)]) * (half / t.sqrt())
+                Unit::from(Quat::new(v[(1, 2)] - v[(2, 1)], t, v[(0, 1)] + v[(1, 0)], v[(2, 0)] + v[(0, 2)]) * (half / t.sqrt()))
             } else {
                 let t = R::one() - v[(0, 0)] + v[(1, 1)] - v[(2, 2)];
-                Quat::new(v[(2, 0)] - v[(0, 2)], v[(0, 1)] + v[(1, 0)], t, v[(1, 2)] + v[(2, 1)]) * (half / t.sqrt())
+                Unit::from(Quat::new(v[(2, 0)] - v[(0, 2)], v[(0, 1)] + v[(1, 0)], t, v[(1, 2)] + v[(2, 1)]) * (half / t.sqrt()))
             }
         } else if v[(0, 0)] < -v[(1, 1)] {
             let t = R::one() - v[(0, 0)] - v[(1, 1)] + v[(2, 2)];
-            Quat::new(v[(0, 1)] - v[(1, 0)], v[(2, 0)] + v[(0, 2)], v[(1, 2)] + v[(2, 1)], t) * (half / t.sqrt())
+            Unit::from(Quat::new(v[(0, 1)] - v[(1, 0)], v[(2, 0)] + v[(0, 2)], v[(1, 2)] + v[(2, 1)], t) * (half / t.sqrt()))
         } else {
             let t = R::one() + v[(0, 0)] + v[(1, 1)] + v[(2, 2)];
-            Quat::new(t, v[(1, 2)] - v[(2, 1)], v[(2, 0)] - v[(0, 2)], v[(0, 1)] - v[(1, 0)]) * (half / t.sqrt())
+            Unit::from(Quat::new(t, v[(1, 2)] - v[(2, 1)], v[(2, 0)] - v[(0, 2)], v[(0, 1)] - v[(1, 0)]) * (half / t.sqrt()))
         }
     }
 }
@@ -90,15 +90,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::glamour::test_helpers::{bounded_nonzero_f32, quat, unit_quat, vec4};
-    use approx::{relative_eq, ulps_eq};
+    use crate::glamour::test_helpers::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
+    use approx::{assert_ulps_eq, relative_eq, ulps_eq};
     use proptest::num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
     use proptest::{prop_assert, prop_assert_eq, proptest};
 
     #[test]
     fn quat_implements_from_mat4() {
-        let a: Mat4<f32> = Mat4::identity();
-        assert_eq!(Quat::<f32>::from(a), Quat::<f32>::identity());
+        let a: Unit<Quat<f32>> = Mat4::identity().into();
+        assert_eq!(a, Unit::from(Quat::<f32>::identity()));
     }
 
     #[test]
@@ -110,13 +110,30 @@ mod tests {
 
     proptest! {
         #[test]
-        fn from_mat_for_quat_is_equal_to_nalgebra(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
-            todo!()
+        fn from_mat_for_quat_is_equal_to_nalgebra(glamour_lhs in mat4(bounded_nonzero_f32(-62, 63))) {
+            let glamour_result = Into::<Unit<Quat<f32>>>::into(glamour_lhs);
+            let nalgebra_lhs = nalgebra::Matrix3::new(
+                glamour_lhs[(0, 0)], glamour_lhs[(1, 0)], glamour_lhs[(2, 0)],
+                glamour_lhs[(0, 1)], glamour_lhs[(1, 1)], glamour_lhs[(2, 1)],
+                glamour_lhs[(0, 2)], glamour_lhs[(1, 2)], glamour_lhs[(2, 2)],
+            );
+            let nalgebra_result: nalgebra::UnitQuaternion<f32> = nalgebra::UnitQuaternion::from_matrix_eps(&nalgebra_lhs, f32::EPSILON, 10, nalgebra::UnitQuaternion::identity());
+
+            prop_assert!(ulps_eq!(glamour_result.inner(), *nalgebra_result.quaternion()));
         }
 
         #[test]
-        fn from_mat_for_quat_is_equal_to_cgmath(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
-            todo!()
+        fn from_mat_for_quat_is_equal_to_cgmath(glamour_lhs in mat4(bounded_nonzero_f32(-62, 63))) {
+            let glamour_result = Into::<Unit<Quat<f32>>>::into(glamour_lhs).inner();
+            let cgmath_lhs = cgmath::Matrix3::new(
+                glamour_lhs[(0, 0)], glamour_lhs[(1, 0)], glamour_lhs[(2, 0)],
+                glamour_lhs[(0, 1)], glamour_lhs[(1, 1)], glamour_lhs[(2, 1)],
+                glamour_lhs[(0, 2)], glamour_lhs[(1, 2)], glamour_lhs[(2, 2)],
+            );
+            let cgmath_result = Into::<cgmath::Quaternion<f32>>::into(cgmath_lhs);
+
+            //prop_assert!(ulps_eq!(glamour_result, cgmath_result));
+            assert_ulps_eq!(glamour_result, cgmath_result);
         }
 
         /// Nalgebra likely uses a different conversion algorithm which causes large rounding errors
