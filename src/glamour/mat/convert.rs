@@ -85,12 +85,12 @@ macro_rules! impl_from_1d_array {
 impl_from_1d_array!([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]);
 
 #[cfg(test)]
-impl<R> Into<nalgebra::Matrix4<R>> for Mat4<R> 
+impl<R> From<Mat4<R>> for nalgebra::Matrix4<R> 
 where
     R: Copy + nalgebra::Scalar,
 {
-    fn into(self) -> nalgebra::Matrix4<R> {
-        nalgebra::Matrix4::from(self.t().0)
+    fn from(val: Mat4<R>) -> Self {
+        nalgebra::Matrix4::from(val.t().0)
     }
 }
 
@@ -105,12 +105,12 @@ where
 }
 
 #[cfg(test)]
-impl<R> Into<cgmath::Matrix4<R>> for Mat4<R> 
+impl<R> From<Mat4<R>> for cgmath::Matrix4<R> 
 where
     R: Copy,
 {
-    fn into(self) -> cgmath::Matrix4<R> {
-        cgmath::Matrix4::from(self.t().0)
+    fn from(val: Mat4<R>) -> Self {
+        cgmath::Matrix4::from(val.t().0)
     }
 }
 

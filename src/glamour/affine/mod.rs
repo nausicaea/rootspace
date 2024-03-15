@@ -64,7 +64,7 @@ where
 
         Affine {
             t: eye,
-            o: Quat::look_at_lh(fwd, up).into(),
+            o: Quat::look_at_lh(fwd, up),
             s: Vec4::one(),
         }
     }

@@ -22,7 +22,7 @@ where
     type Output = Unit<T>;
 
     fn mul(self, rhs: Unit<T>) -> Self::Output {
-        Mul::mul(&self, &rhs).into()
+        Mul::mul(&self, &rhs)
     }
 }
 
@@ -34,7 +34,7 @@ where
     type Output = Unit<T>;
 
     fn mul(self, rhs: Unit<T>) -> Self::Output {
-        Mul::mul(self, &rhs).into()
+        Mul::mul(self, &rhs)
     }
 }
 
@@ -46,6 +46,6 @@ where
     type Output = Unit<T>;
 
     fn mul(self, rhs: &'b Unit<T>) -> Self::Output {
-        Mul::mul(&self, rhs).into()
+        Mul::mul(&self, rhs)
     }
 }
