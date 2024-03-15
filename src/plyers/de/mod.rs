@@ -19,13 +19,11 @@ mod header;
 #[derive(Debug, thiserror::Error)]
 pub enum ParseNumError {
     #[error(transparent)]
-    Utf8Error(#[from] std::str::Utf8Error),
+    Utf8(#[from] std::str::Utf8Error),
     #[error(transparent)]
-    ParseIntError(#[from] ParseIntError),
+    ParseInt(#[from] ParseIntError),
     #[error(transparent)]
-    ParseFloatError(#[from] ParseFloatError),
-    #[error("Unable to cast from source to output numeric type")]
-    NumCastError,
+    ParseFloat(#[from] ParseFloatError),
 }
 
 pub fn parse_ply<

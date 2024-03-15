@@ -57,70 +57,70 @@ where
                     .parse::<u8>()
                     .map_err(|e| {
                         error!("Expected a u8, got {}: {}", pd, e);
-                        ParseNumError::ParseIntError(e)
+                        ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::I8 => pd
                     .parse::<i8>()
                     .map_err(|e| {
                         error!("Expected a i8, got {}: {}", pd, e);
-                        ParseNumError::ParseIntError(e)
+                        ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::U16 => pd
                     .parse::<u16>()
                     .map_err(|e| {
                         error!("Expected a u16, got {}: {}", pd, e);
-                        ParseNumError::ParseIntError(e)
+                        ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::I16 => pd
                     .parse::<i16>()
                     .map_err(|e| {
                         error!("Expected a i16, got {}: {}", pd, e);
-                        ParseNumError::ParseIntError(e)
+                        ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::U32 => pd
                     .parse::<u32>()
                     .map_err(|e| {
                         error!("Expected a u32, got {}: {}", pd, e);
-                        ParseNumError::ParseIntError(e)
+                        ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::I32 => pd
                     .parse::<i32>()
                     .map_err(|e| {
                         error!("Expected a i32, got {}: {}", pd, e);
-                        ParseNumError::ParseIntError(e)
+                        ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::U64 => pd
                     .parse::<u64>()
                     .map_err(|e| {
                         error!("Expected a u64, got {}: {}", pd, e);
-                        ParseNumError::ParseIntError(e)
+                        ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::I64 => pd
                     .parse::<i64>()
                     .map_err(|e| {
                         error!("Expected a i64, got {}: {}", pd, e);
-                        ParseNumError::ParseIntError(e)
+                        ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::F32 => pd
                     .parse::<f32>()
                     .map_err(|e| {
                         error!("Expected a f32, got {}: {}", pd, e);
-                        ParseNumError::ParseFloatError(e)
+                        ParseNumError::ParseFloat(e)
                     })
                     .map(Value::from)?,
                 DataType::F64 => pd
                     .parse::<f64>()
                     .map_err(|e| {
                         error!("Expected a f64, got {}: {}", pd, e);
-                        ParseNumError::ParseFloatError(e)
+                        ParseNumError::ParseFloat(e)
                     })
                     .map(Value::from)?,
             };

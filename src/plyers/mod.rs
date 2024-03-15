@@ -46,7 +46,7 @@
 //! Gb -> G'' | F G'' | G'' Gb | F G'' Gb
 //! G -> Ga | Gb
 
-pub mod de;
+mod de;
 mod ser;
 pub mod types;
 
