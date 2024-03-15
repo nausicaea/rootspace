@@ -5,11 +5,11 @@ use crate::glamour::unit::Unit;
 use crate::glamour::vec::Vec4;
 use num_traits::{Float, One, Zero};
 
-pub mod approx;
-pub mod cmp;
-pub mod convert;
-pub mod num;
-pub mod ops;
+mod approx;
+mod cmp;
+mod convert;
+mod num;
+mod ops;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct Quat<R> {
