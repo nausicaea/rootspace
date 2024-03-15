@@ -118,7 +118,7 @@ where
 mod tests {
     use super::*;
     use crate::glamour::test_helpers::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
-    use approx::{assert_ulps_eq, relative_eq, ulps_eq};
+    use approx::{relative_eq, ulps_eq};
     use cgmath::InnerSpace;
     use proptest::num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
     use proptest::{prop_assert, prop_assert_eq, proptest};
