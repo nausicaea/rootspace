@@ -1,6 +1,6 @@
-pub mod approx;
-pub mod convert;
-pub mod ops;
+mod approx;
+mod convert;
+mod ops;
 
 #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
