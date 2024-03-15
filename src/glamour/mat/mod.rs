@@ -4,12 +4,12 @@ use crate::glamour::unit::Unit;
 use crate::glamour::vec::Vec4;
 use num_traits::Float;
 
-pub mod approx;
-pub mod cmp;
-pub mod convert;
-pub mod num;
-pub mod ops;
-pub mod serde;
+mod approx;
+mod cmp;
+mod convert;
+mod num;
+mod ops;
+mod serde;
 
 /// Generalized matrix type, with data stored in row-major format.
 #[derive(Debug, Clone, Copy, PartialEq)]
