@@ -8,7 +8,7 @@ pub mod ortho;
 pub mod persp;
 pub mod quat;
 pub mod ray;
-pub mod unit;
-pub mod vec;
 #[cfg(test)]
 mod test_helpers;
+pub mod unit;
+pub mod vec;

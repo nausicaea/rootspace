@@ -6,10 +6,10 @@ use crate::glamour::vec::Vec4;
 use num_traits::{Float, One, Zero};
 
 pub mod approx;
+pub mod cmp;
 pub mod convert;
 pub mod num;
 pub mod ops;
-pub mod cmp;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct Quat<R> {
@@ -90,10 +90,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use proptest::{prop_assert, proptest, num::f32::QUIET_NAN as NAN};
-    use proptest::num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
-    use serde_test::{assert_tokens, Token};
     use crate::glamour::test_helpers::quat;
+    use proptest::num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
+    use proptest::{num::f32::QUIET_NAN as NAN, prop_assert, proptest};
+    use serde_test::{assert_tokens, Token};
 
     use super::*;
 

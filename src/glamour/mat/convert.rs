@@ -85,7 +85,7 @@ macro_rules! impl_from_1d_array {
 impl_from_1d_array!([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]);
 
 #[cfg(test)]
-impl<R> From<Mat4<R>> for nalgebra::Matrix4<R> 
+impl<R> From<Mat4<R>> for nalgebra::Matrix4<R>
 where
     R: Copy + nalgebra::Scalar,
 {
@@ -95,7 +95,7 @@ where
 }
 
 #[cfg(test)]
-impl<R> From<nalgebra::Matrix4<R>> for Mat4<R> 
+impl<R> From<nalgebra::Matrix4<R>> for Mat4<R>
 where
     R: nalgebra::Scalar,
 {
@@ -105,7 +105,7 @@ where
 }
 
 #[cfg(test)]
-impl<R> From<Mat4<R>> for cgmath::Matrix4<R> 
+impl<R> From<Mat4<R>> for cgmath::Matrix4<R>
 where
     R: Copy,
 {
@@ -115,7 +115,7 @@ where
 }
 
 #[cfg(test)]
-impl<R> From<cgmath::Matrix4<R>> for Mat4<R> 
+impl<R> From<cgmath::Matrix4<R>> for Mat4<R>
 where
     R: cgmath::BaseFloat,
 {

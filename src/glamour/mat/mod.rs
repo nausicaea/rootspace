@@ -5,11 +5,11 @@ use crate::glamour::vec::Vec4;
 use num_traits::Float;
 
 pub mod approx;
+pub mod cmp;
 pub mod convert;
 pub mod num;
 pub mod ops;
 pub mod serde;
-pub mod cmp;
 
 /// Generalized matrix type, with data stored in row-major format.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -67,7 +67,7 @@ where
     }
 }
 
-impl<R> Mat4<R> 
+impl<R> Mat4<R>
 where
     R: Copy,
 {

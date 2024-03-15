@@ -2,10 +2,7 @@ use std::ops::Mul;
 
 use num_traits::Float;
 
-use crate::{
-    forward_ref_binop,
-    glamour::quat::Quat,
-};
+use crate::{forward_ref_binop, glamour::quat::Quat};
 
 impl<'a, 'b, R> Mul<&'b Quat<R>> for &'a Quat<R>
 where
@@ -24,10 +21,10 @@ where
         let k2 = rhs.k;
 
         Quat::new(
-             w1 * w2 - i1 * i2 - j1 * j2 - k1 * k2,
-             w1 * i2 + i1 * w2 + j1 * k2 - k1 * j2,
-             w1 * j2 - i1 * k2 + j1 * w2 + k1 * i2,
-             w1 * k2 + i1 * j2 - j1 * i2 + k1 * w2,
+            w1 * w2 - i1 * i2 - j1 * j2 - k1 * k2,
+            w1 * i2 + i1 * w2 + j1 * k2 - k1 * j2,
+            w1 * j2 - i1 * k2 + j1 * w2 + k1 * i2,
+            w1 * k2 + i1 * j2 - j1 * i2 + k1 * w2,
         )
     }
 }
@@ -36,9 +33,9 @@ forward_ref_binop!(impl<R: Float> Mul, mul for Quat<R>, Quat<R>, Quat<R>);
 
 #[cfg(test)]
 mod tests {
+    use crate::glamour::test_helpers::{bounded_f32, bounded_nonzero_f32, quat, vec4};
     use approx::ulps_eq;
     use proptest::{prop_assert, proptest};
-    use crate::glamour::{test_helpers::{bounded_f32, bounded_nonzero_f32, quat, vec4}};
 
     use super::*;
 

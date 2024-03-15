@@ -24,9 +24,9 @@ where
 
 #[cfg(test)]
 impl<R> AbsDiffEq<nalgebra::Matrix4<R>> for Mat4<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -45,9 +45,9 @@ impl<R> AbsDiffEq<nalgebra::Matrix4<R>> for Mat4<R>
 
 #[cfg(test)]
 impl<R> AbsDiffEq<cgmath::Matrix4<R>> for Mat4<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -84,9 +84,9 @@ where
 
 #[cfg(test)]
 impl<R> RelativeEq<nalgebra::Matrix4<R>> for Mat4<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -103,9 +103,9 @@ impl<R> RelativeEq<nalgebra::Matrix4<R>> for Mat4<R>
 
 #[cfg(test)]
 impl<R> RelativeEq<cgmath::Matrix4<R>> for Mat4<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -140,9 +140,9 @@ where
 
 #[cfg(test)]
 impl<R> UlpsEq<nalgebra::Matrix4<R>> for Mat4<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -159,9 +159,9 @@ impl<R> UlpsEq<nalgebra::Matrix4<R>> for Mat4<R>
 
 #[cfg(test)]
 impl<R> UlpsEq<cgmath::Matrix4<R>> for Mat4<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()

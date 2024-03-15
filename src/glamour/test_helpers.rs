@@ -1,4 +1,9 @@
-use proptest::{num::f32::ZERO, prop_compose, strategy::{Strategy, Union}, collection::vec};
+use proptest::{
+    collection::vec,
+    num::f32::ZERO,
+    prop_compose,
+    strategy::{Strategy, Union},
+};
 
 use super::{mat::Mat4, quat::Quat, unit::Unit, vec::Vec4};
 
@@ -7,7 +12,11 @@ pub fn bounded_f32(lower_exp: i32, upper_exp: i32) -> impl Strategy<Value = f32>
     let neg_upper = -(2.0_f32).powi(lower_exp);
     let pos_lower = (2.0_f32).powi(lower_exp);
     let pos_upper = (2.0_f32).powi(upper_exp);
-    Union::new([(neg_lower..neg_upper).boxed(), ZERO.boxed(), (pos_lower..pos_upper).boxed()])
+    Union::new([
+        (neg_lower..neg_upper).boxed(),
+        ZERO.boxed(),
+        (pos_lower..pos_upper).boxed(),
+    ])
 }
 
 pub fn bounded_nonzero_f32(lower_exp: i32, upper_exp: i32) -> impl Strategy<Value = f32> {

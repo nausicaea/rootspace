@@ -107,11 +107,11 @@ impl<R: IterFloat> Product<Mat4<R>> for Mat4<R> {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_ulps_eq;
-    use proptest::{prop_assert, proptest};
     use super::*;
     use crate::glamour::num::One;
     use crate::glamour::test_helpers::{bounded_f32, bounded_nonzero_f32, mat4};
+    use approx::assert_ulps_eq;
+    use proptest::{prop_assert, proptest};
 
     #[test]
     fn mat4_supports_dot_product_with_mat4() {
