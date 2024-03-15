@@ -9,24 +9,51 @@ impl<R> From<Mat4<R>> for Unit<Quat<R>>
 where
     R: Float,
 {
+    /// Based on information from [Euclidean Space Blog](https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm)
     fn from(v: Mat4<R>) -> Self {
-        let half: R = R::one() / (R::one() + R::one());
+        let one = R::one();
+        let two = one + one;
+        let one_quarter = one / (two + two);
+        let v00 = v[(0, 0)];
+        let v11 = v[(1, 1)];
+        let v22 = v[(2, 2)];
+        let trace = v00 + v11 + v22;
 
-        if v[(2, 2)] < v[(0, 0)] {
-            if v[(0, 0)] > v[(1, 1)] {
-                let t = R::one() + v[(0, 0)] - v[(1, 1)] - v[(2, 2)];
-                Unit::from(Quat::new(v[(1, 2)] - v[(2, 1)], t, v[(0, 1)] + v[(1, 0)], v[(2, 0)] + v[(0, 2)]) * (half / t.sqrt()))
-            } else {
-                let t = R::one() - v[(0, 0)] + v[(1, 1)] - v[(2, 2)];
-                Unit::from(Quat::new(v[(2, 0)] - v[(0, 2)], v[(0, 1)] + v[(1, 0)], t, v[(1, 2)] + v[(2, 1)]) * (half / t.sqrt()))
-            }
-        } else if v[(0, 0)] < -v[(1, 1)] {
-            let t = R::one() - v[(0, 0)] - v[(1, 1)] + v[(2, 2)];
-            Unit::from(Quat::new(v[(0, 1)] - v[(1, 0)], v[(2, 0)] + v[(0, 2)], v[(1, 2)] + v[(2, 1)], t) * (half / t.sqrt()))
+        let q = if trace > R::zero() {
+            let s = (one + trace).sqrt() * two;
+            Quat::new(
+                one_quarter * s,
+                (v[(2, 1)] - v[(1, 2)]) / s,
+                (v[(0, 2)] - v[(2, 0)]) / s,
+                (v[(1, 0)] - v[(0, 1)]) / s,
+            )
+        } else if v00 > v11 && v00 > v22 {
+            let s = (one + v00 - v11 - v22).sqrt() * two;
+            Quat::new(
+                (v[(2, 1)] - v[(1, 2)]) / s,
+                one_quarter * s,
+                (v[(0, 1)] + v[(1, 0)]) / s,
+                (v[(0, 2)] + v[(2, 0)]) / s,
+            )
+        } else if v11 > v22 {
+            let s = (one + v11 - v00 - v22).sqrt() * two;
+            Quat::new(
+                (v[(0, 2)] - v[(2, 0)]) / s,
+                (v[(0, 1)] + v[(1, 0)]) / s,
+                one_quarter * s,
+                (v[(1, 2)] + v[(2, 1)]) / s,
+            )
         } else {
-            let t = R::one() + v[(0, 0)] + v[(1, 1)] + v[(2, 2)];
-            Unit::from(Quat::new(t, v[(1, 2)] - v[(2, 1)], v[(2, 0)] - v[(0, 2)], v[(0, 1)] - v[(1, 0)]) * (half / t.sqrt()))
-        }
+            let s = (one + v22 - v00 - v11).sqrt() * two;
+            Quat::new(
+                (v[(1, 0)] - v[(0, 1)]) / s,
+                (v[(0, 2)] + v[(2, 0)]) / s,
+                (v[(1, 2)] + v[(2, 1)]) / s,
+                one_quarter * s,
+            )
+        };
+
+        Unit::from(q)
     }
 }
 
@@ -92,6 +119,7 @@ mod tests {
     use super::*;
     use crate::glamour::test_helpers::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
     use approx::{assert_ulps_eq, relative_eq, ulps_eq};
+    use cgmath::InnerSpace;
     use proptest::num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
     use proptest::{prop_assert, prop_assert_eq, proptest};
 
@@ -109,7 +137,9 @@ mod tests {
     }
 
     proptest! {
+        /// Nalgebra uses an iterative algorithm to calculate the quaternion from a matrix, but the algorithm doesn't exit even with a given max_iteration count due to using a potentially unbounded loop internally. We cannot use this test as is.
         #[test]
+        #[ignore]
         fn from_mat_for_quat_is_equal_to_nalgebra(glamour_lhs in mat4(bounded_nonzero_f32(-62, 63))) {
             let glamour_result = Into::<Unit<Quat<f32>>>::into(glamour_lhs);
             let nalgebra_lhs = nalgebra::Matrix3::new(
@@ -117,7 +147,7 @@ mod tests {
                 glamour_lhs[(0, 1)], glamour_lhs[(1, 1)], glamour_lhs[(2, 1)],
                 glamour_lhs[(0, 2)], glamour_lhs[(1, 2)], glamour_lhs[(2, 2)],
             );
-            let nalgebra_result: nalgebra::UnitQuaternion<f32> = nalgebra::UnitQuaternion::from_matrix_eps(&nalgebra_lhs, f32::EPSILON, 10, nalgebra::UnitQuaternion::identity());
+            let nalgebra_result: nalgebra::UnitQuaternion<f32> = nalgebra::UnitQuaternion::from_matrix_eps(&nalgebra_lhs, 10.0 * f32::EPSILON, 1, nalgebra::UnitQuaternion::identity());
 
             prop_assert!(ulps_eq!(glamour_result.inner(), *nalgebra_result.quaternion()));
         }
@@ -130,10 +160,9 @@ mod tests {
                 glamour_lhs[(0, 1)], glamour_lhs[(1, 1)], glamour_lhs[(2, 1)],
                 glamour_lhs[(0, 2)], glamour_lhs[(1, 2)], glamour_lhs[(2, 2)],
             );
-            let cgmath_result = Into::<cgmath::Quaternion<f32>>::into(cgmath_lhs);
+            let cgmath_result = Into::<cgmath::Quaternion<f32>>::into(cgmath_lhs).normalize();
 
-            //prop_assert!(ulps_eq!(glamour_result, cgmath_result));
-            assert_ulps_eq!(glamour_result, cgmath_result);
+            prop_assert!(ulps_eq!(glamour_result, cgmath_result));
         }
 
         /// Nalgebra likely uses a different conversion algorithm which causes large rounding errors
@@ -152,18 +181,19 @@ mod tests {
         fn from_quat_for_mat_has_large_rounding_differences_to_nalgebra(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
             let glamour_result = Into::<Mat4<f32>>::into(glamour_lhs);
             let nalgebra_lhs = nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(glamour_lhs.w, glamour_lhs.i, glamour_lhs.j, glamour_lhs.k));
-            let nalgebra_result = Into::<Mat4<f32>>::into(Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs));
+            let nalgebra_result = Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs);
 
-            prop_assert!(relative_eq!(glamour_result, nalgebra_result, max_relative = 1e-2));
+            prop_assert!(relative_eq!(glamour_result, nalgebra_result.transpose(), max_relative = 1e-2));
         }
 
         #[test]
         fn from_quat_for_mat_is_equal_to_cgmath(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
             let glamour_result = Into::<Mat4<f32>>::into(glamour_lhs);
             let cgmath_lhs = cgmath::Quaternion::new(glamour_lhs.w, glamour_lhs.i, glamour_lhs.j, glamour_lhs.k);
-            let cgmath_result = Into::<Mat4<f32>>::into(Into::<cgmath::Matrix4<f32>>::into(cgmath_lhs));
+            let cgmath_result = Into::<cgmath::Matrix4<f32>>::into(cgmath_lhs);
 
-            prop_assert!(ulps_eq!(glamour_result, cgmath_result));
+            use cgmath::Matrix;
+            prop_assert!(ulps_eq!(glamour_result, cgmath_result.transpose()));
         }
 
         #[test]

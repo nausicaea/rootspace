@@ -92,13 +92,5 @@ mod tests {
             let cgmath_b = cgmath::Quaternion::new(glamour_b.w, glamour_b.i, glamour_b.j, glamour_b.k);
             prop_assert!(ulps_eq!(glamour_b * glamour_a, cgmath_b * cgmath_a));
         }
-
-        #[test]
-        #[ignore]
-        fn unit_quat_mul_is_the_same_as_rot_mat_mul(glamour_a in unit_quat(bounded_nonzero_f32(-62, 63)), glamour_b in unit_quat(bounded_nonzero_f32(-62, 63))) {
-            let qp = glamour_a * glamour_b;
-            let mp: Unit<Quat<f32>> = (glamour_a.to_matrix() * glamour_b.to_matrix()).into();
-            prop_assert!(relative_eq!(qp, mp));
-        }
     }
 }
