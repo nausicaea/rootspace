@@ -67,9 +67,24 @@ where
     }
 }
 
+impl<R> Mat4<R> 
+where
+    R: Copy,
+{
+    /// Return a transposed copy
+    pub fn t(&self) -> Mat4<R> {
+        Mat4::new([
+            [self[(0, 0)], self[(1, 0)], self[(2, 0)], self[(3, 0)]],
+            [self[(0, 1)], self[(1, 1)], self[(2, 1)], self[(3, 1)]],
+            [self[(0, 2)], self[(1, 2)], self[(2, 2)], self[(3, 2)]],
+            [self[(0, 3)], self[(1, 3)], self[(2, 3)], self[(3, 3)]],
+        ])
+    }
+}
+
 impl<R> Mat4<R>
 where
-    R: num_traits::Float,
+    R: Float,
 {
     pub fn look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Self {
         let side: Unit<_> = up.cross(fwd);
@@ -178,6 +193,17 @@ pub(crate) mod tests {
         #[test]
         fn mat4_diag_returns_vec4_with_diagonal_elements(a in mat4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL)) {
             prop_assert_eq!(a.diag(), Vec4::new(a[(0, 0)], a[(1, 1)], a[(2, 2)], a[(3, 3)]));
+        }
+
+        #[test]
+        fn mat4_t_returns_the_transpose(a in mat4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL)) {
+            let mut mat = Mat4::zero();
+            for i in 0..4 {
+                for j in 0..4 {
+                    mat[(i, j)] = a[(j, i)];
+                }
+            }
+            prop_assert_eq!(a.t(), mat);
         }
     }
 

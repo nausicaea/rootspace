@@ -34,10 +34,10 @@ impl<R> AbsDiffEq<nalgebra::Vector4<R>> for Vec4<R>
     }
 
     fn abs_diff_eq(&self, rhs: &nalgebra::Vector4<R>, epsilon: R::Epsilon) -> bool {
-        self.w.abs_diff_eq(&rhs.w, epsilon)
-            && self.x.abs_diff_eq(&rhs.x, epsilon)
-            && self.y.abs_diff_eq(&rhs.y, epsilon)
-            && self.z.abs_diff_eq(&rhs.z, epsilon)
+        self.w.abs_diff_eq(&rhs[3], epsilon)
+            && self.x.abs_diff_eq(&rhs[0], epsilon)
+            && self.y.abs_diff_eq(&rhs[1], epsilon)
+            && self.z.abs_diff_eq(&rhs[2], epsilon)
     }
 }
 
@@ -89,10 +89,10 @@ impl<R> RelativeEq<nalgebra::Vector4<R>> for Vec4<R>
     }
 
     fn relative_eq(&self, rhs: &nalgebra::Vector4<R>, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
-        self.w.relative_eq(&rhs.w, epsilon, max_relative)
-            && self.x.relative_eq(&rhs.x, epsilon, max_relative)
-            && self.y.relative_eq(&rhs.y, epsilon, max_relative)
-            && self.z.relative_eq(&rhs.z, epsilon, max_relative)
+        self.w.relative_eq(&rhs[3], epsilon, max_relative)
+            && self.x.relative_eq(&rhs[0], epsilon, max_relative)
+            && self.y.relative_eq(&rhs[1], epsilon, max_relative)
+            && self.z.relative_eq(&rhs[2], epsilon, max_relative)
     }
 }
 
@@ -142,10 +142,10 @@ impl<R> UlpsEq<nalgebra::Vector4<R>> for Vec4<R>
     }
 
     fn ulps_eq(&self, rhs: &nalgebra::Vector4<R>, epsilon: R::Epsilon, max_ulps: u32) -> bool {
-        self.w.ulps_eq(&rhs.w, epsilon, max_ulps)
-            && self.x.ulps_eq(&rhs.x, epsilon, max_ulps)
-            && self.y.ulps_eq(&rhs.y, epsilon, max_ulps)
-            && self.z.ulps_eq(&rhs.z, epsilon, max_ulps)
+        self.w.ulps_eq(&rhs[3], epsilon, max_ulps)
+            && self.x.ulps_eq(&rhs[0], epsilon, max_ulps)
+            && self.y.ulps_eq(&rhs[1], epsilon, max_ulps)
+            && self.z.ulps_eq(&rhs[2], epsilon, max_ulps)
     }
 }
 

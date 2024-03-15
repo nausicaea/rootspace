@@ -108,7 +108,6 @@ impl<R: IterFloat> Product<Mat4<R>> for Mat4<R> {
 #[cfg(test)]
 mod tests {
     use approx::assert_ulps_eq;
-    use cgmath::Matrix;
     use proptest::{prop_assert, proptest};
     use super::*;
     use crate::glamour::num::One;
@@ -159,18 +158,20 @@ mod tests {
 
         /// Nalgebra's memory layout is column-major, while glamour is row-major. Therefore, transposition is necessary
         #[test]
-        fn mat4_mul_is_equal_to_nalgebra_transposed(glamour_lhs in mat4(bounded_f32(-62, 63)), glamour_rhs in mat4(bounded_f32(-62, 63))) {
-            let nalgebra_lhs = nalgebra::Matrix4::from(*glamour_lhs.as_ref()).transpose();
-            let nalgebra_rhs = nalgebra::Matrix4::from(*glamour_rhs.as_ref()).transpose();
-            assert_ulps_eq!(glamour_lhs * glamour_rhs, (nalgebra_lhs * nalgebra_rhs).transpose());
+        fn mat4_mul_is_equal_to_nalgebra(glamour_lhs in mat4(bounded_f32(-62, 63)), glamour_rhs in mat4(bounded_f32(-62, 63))) {
+            let nalgebra_lhs: nalgebra::Matrix4<f32> = glamour_lhs.into();
+            let nalgebra_rhs: nalgebra::Matrix4<f32> = glamour_rhs.into();
+            let nalgebra_result: Mat4<f32> = (nalgebra_lhs * nalgebra_rhs).into();
+            assert_ulps_eq!(glamour_lhs * glamour_rhs, nalgebra_result);
         }
 
         /// Cgmath's memory layout is column-major, while glamour is row-major. Therefore, transposition is necessary
         #[test]
-        fn mat4_mul_is_equal_to_cgmath_transposed(glamour_lhs in mat4(bounded_f32(-62, 63)), glamour_rhs in mat4(bounded_f32(-62, 63))) {
-            let cgmath_lhs = cgmath::Matrix4::from(*glamour_lhs.as_ref()).transpose();
-            let cgmath_rhs = cgmath::Matrix4::from(*glamour_rhs.as_ref()).transpose();
-            assert_ulps_eq!(glamour_lhs * glamour_rhs, (cgmath_lhs * cgmath_rhs).transpose());
+        fn mat4_mul_is_equal_to_cgmath(glamour_lhs in mat4(bounded_f32(-62, 63)), glamour_rhs in mat4(bounded_f32(-62, 63))) {
+            let cgmath_lhs: nalgebra::Matrix4<f32> = glamour_lhs.into();
+            let cgmath_rhs: nalgebra::Matrix4<f32> = glamour_rhs.into();
+            let cgmath_result: Mat4<f32> = (cgmath_lhs * cgmath_rhs).into();
+            assert_ulps_eq!(glamour_lhs * glamour_rhs, cgmath_result);
         }
     }
 }

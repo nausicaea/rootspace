@@ -1,10 +1,10 @@
 use num_traits::Float;
 
-use crate::glamour::{mat::Mat4, num::ToMatrix};
+use crate::glamour::{mat::Mat4, num::ToMatrix, unit::Unit};
 
 use super::Quat;
 
-impl<R> ToMatrix<R> for Quat<R>
+impl<R> ToMatrix<R> for Unit<Quat<R>>
 where
     R: Float,
 {
@@ -21,16 +21,16 @@ mod tests {
 
     #[test]
     fn quat_provides_to_matrix_method() {
-        let q = Quat::<f32>::identity();
+        let q = Unit::from(Quat::<f32>::identity());
         assert_eq!(q.to_matrix(), Mat4::<f32>::identity());
 
-        let q = Quat::new(1.0f32, 1.0, 1.0, 1.0);
+        let q = Unit::from(Quat::new(1.0f32, 1.0, 1.0, 1.0));
         assert_eq!(
             q.to_matrix(),
             Mat4::<f32>::from([0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
         );
 
-        let q = Quat::new(0.0f32, 0.0, 0.0, 0.0);
+        let q = Unit::from(Quat::new(0.0f32, 0.0, 0.0, 0.0));
         assert!(q.to_matrix().is_nan());
     }
 }

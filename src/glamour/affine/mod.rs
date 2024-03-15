@@ -106,7 +106,7 @@ where
     R: Float + NumAssign,
 {
     fn from(v: &'a Affine<R>) -> Self {
-        let mut m: Mat4<R> = v.o.inner().into();
+        let mut m: Mat4<R> = v.o.into();
         m[(0, 0)] *= v.s[0];
         m[(1, 1)] *= v.s[1];
         m[(2, 2)] *= v.s[2];
