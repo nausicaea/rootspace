@@ -1,6 +1,7 @@
 use num_traits::Float;
 
 use crate::glamour::{mat::Mat4, ops::norm::Norm, vec::Vec4};
+use crate::glamour::unit::Unit;
 
 use super::Quat;
 
@@ -35,33 +36,33 @@ where
 {
     /// Based on information from the [Euclidean Space Blog](https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm)
     fn from(v: Quat<R>) -> Self {
-        let v_norm = v.norm();
-        let w = v.w / v_norm;
-        let i = v.i / v_norm;
-        let j = v.j / v_norm;
-        let k = v.k / v_norm;
+        let v = Unit::from(v);
+        let w = v.w;
+        let i = v.i;
+        let j = v.j;
+        let k = v.k;
 
         let z = R::zero();
         let o = R::one();
         let t = o + o;
 
-        Mat4::from([
+        Mat4::from([[
             o - t * j * j - t * k * k,
             t * i * j - t * k * w,
             t * i * k + t * j * w,
-            z,
-            t * i * j + t * k * w,
+            z],
+            [t * i * j + t * k * w,
             o - t * i * i - t * k * k,
             t * j * k - t * i * w,
-            z,
-            t * i * k - t * j * w,
+            z],
+            [t * i * k - t * j * w,
             t * j * k + t * i * w,
             o - t * i * i - t * j * j,
+            z],
+            [z,
             z,
             z,
-            z,
-            z,
-            o,
+            o],
         ])
     }
 }
@@ -86,6 +87,9 @@ where
 
 #[cfg(test)]
 mod tests {
+    use proptest::num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
+    use proptest::{prop_assert_eq, proptest};
+    use crate::glamour::test_helpers::{bounded_nonzero_f32, quat, vec4};
     use super::*;
 
     #[test]
@@ -99,5 +103,26 @@ mod tests {
         let q = Quat::new(0.0f32, 0.0, 0.0, 0.0);
         let m = Mat4::from(q);
         assert!(m.is_nan());
+    }
+
+    proptest! {
+        #[test]
+        fn from_quat_for_mat_is_equal_to_nalgebra(glamour_lhs in quat(bounded_nonzero_f32(-62, 63))) {
+            let nalgebra_lhs = nalgebra::Quaternion::new(glamour_lhs.w, glamour_lhs.i, glamour_lhs.j, glamour_lhs.k);
+            let nalgebra_result = Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs);
+
+        }
+
+        #[test]
+        fn from_vec_for_quat_moves_w_to_the_front(lhs in vec4(NORMAL | SUBNORMAL | POSITIVE | NEGATIVE | ZERO)) {
+            let result = Quat::new(lhs.w, lhs.x, lhs.y, lhs.z);
+            prop_assert_eq!(Into::<Quat<f32>>::into(lhs), result);
+        }
+
+        #[test]
+        fn from_quat_for_vec_moves_w_to_the_back(lhs in quat(NORMAL | SUBNORMAL | POSITIVE | NEGATIVE | ZERO)) {
+            let result = Vec4::new(lhs.i, lhs.j, lhs.k, lhs.w);
+            prop_assert_eq!(Into::<Vec4<f32>>::into(lhs), result);
+        }
     }
 }

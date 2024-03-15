@@ -60,7 +60,7 @@ mod tests {
             let nalgebra_lhs = nalgebra::Quaternion::new(glamour_lhs.w, glamour_lhs.i, glamour_lhs.j, glamour_lhs.k);
             let nalgebra_rhs = nalgebra::Vector4::new(glamour_rhs.x, glamour_rhs.y, glamour_rhs.z, glamour_rhs.w);
             let nalgebra_result = nalgebra_lhs * Into::<nalgebra::Quaternion<f32>>::into(nalgebra_rhs) * nalgebra_lhs.conjugate();
-            approx::assert_ulps_eq!(glamour_result, nalgebra_result);
+            prop_assert!(ulps_eq!(glamour_result, nalgebra_result));
         }
 
         #[test]

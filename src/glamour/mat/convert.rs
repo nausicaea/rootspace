@@ -54,7 +54,7 @@ where
             for j in 0..4 {
                 mat[(i, j)] = iter
                     .next()
-                    .unwrap_or_else(|| panic!("Expected an iterator that provides exactly {} elements", 16));
+                    .unwrap_or_else(|| panic!("Expected an iterator that provides at least {} elements", 16));
             }
         }
         mat

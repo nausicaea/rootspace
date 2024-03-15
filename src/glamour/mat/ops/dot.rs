@@ -107,8 +107,12 @@ impl<R: IterFloat> Product<Mat4<R>> for Mat4<R> {
 
 #[cfg(test)]
 mod tests {
+    use approx::assert_ulps_eq;
+    use cgmath::Matrix;
+    use proptest::{prop_assert, proptest};
     use super::*;
     use crate::glamour::num::One;
+    use crate::glamour::test_helpers::{bounded_f32, bounded_nonzero_f32, mat4};
 
     #[test]
     fn mat4_supports_dot_product_with_mat4() {
@@ -144,8 +148,29 @@ mod tests {
 
     proptest! {
         #[test]
-        fn mat4_mul_is_equal_to_nalgebra(glamour_lhs in mat4(bounded_f32(-62, 63)), glamour_rhs in mat4(bounded_f32(-62, 63))) {
-            todo!()
+        fn bounded_f32_mat_mul_does_not_cause_nans(lhs in mat4(bounded_f32(-62, 63)), rhs in mat4(bounded_f32(-62, 63))) {
+            prop_assert!(!(lhs * rhs).is_nan());
+        }
+
+        #[test]
+        fn bounded_nonzero_f32_mat_mul_does_not_cause_nans(lhs in mat4(bounded_nonzero_f32(-62, 63)), rhs in mat4(bounded_nonzero_f32(-62, 63))) {
+            prop_assert!(!(lhs * rhs).is_nan());
+        }
+
+        /// Nalgebra's memory layout is column-major, while glamour is row-major. Therefore, transposition is necessary
+        #[test]
+        fn mat4_mul_is_equal_to_nalgebra_transposed(glamour_lhs in mat4(bounded_f32(-62, 63)), glamour_rhs in mat4(bounded_f32(-62, 63))) {
+            let nalgebra_lhs = nalgebra::Matrix4::from(*glamour_lhs.as_ref()).transpose();
+            let nalgebra_rhs = nalgebra::Matrix4::from(*glamour_rhs.as_ref()).transpose();
+            assert_ulps_eq!(glamour_lhs * glamour_rhs, (nalgebra_lhs * nalgebra_rhs).transpose());
+        }
+
+        /// Cgmath's memory layout is column-major, while glamour is row-major. Therefore, transposition is necessary
+        #[test]
+        fn mat4_mul_is_equal_to_cgmath_transposed(glamour_lhs in mat4(bounded_f32(-62, 63)), glamour_rhs in mat4(bounded_f32(-62, 63))) {
+            let cgmath_lhs = cgmath::Matrix4::from(*glamour_lhs.as_ref()).transpose();
+            let cgmath_rhs = cgmath::Matrix4::from(*glamour_rhs.as_ref()).transpose();
+            assert_ulps_eq!(glamour_lhs * glamour_rhs, (cgmath_lhs * cgmath_rhs).transpose());
         }
     }
 }

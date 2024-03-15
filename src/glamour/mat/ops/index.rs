@@ -34,6 +34,9 @@ impl<R> IndexMut<(usize, usize)> for Mat4<R> {
 
 #[cfg(test)]
 mod tests {
+    use proptest::num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
+    use proptest::{prop_assert_eq, proptest};
+    use crate::glamour::test_helpers::mat4;
     use super::*;
 
     #[test]
@@ -60,5 +63,12 @@ mod tests {
         let mut m: Mat4<f32> = (0..16).map(|n| n as f32).collect();
         m[(1, 1)] = 8.0f32;
         assert_eq!(m[(1, 1)], 8.0f32);
+    }
+
+    proptest! {
+        #[test]
+        fn mat4_indexing_is_row_major(a in mat4(NORMAL | POSITIVE | NEGATIVE | SUBNORMAL | ZERO), r in 0_usize..4, c in 0_usize..4) {
+            prop_assert_eq!(a[(r, c)], a.0[r][c]);
+        }
     }
 }

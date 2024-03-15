@@ -90,7 +90,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use proptest::{prop_assert, proptest, num::f32::QUIET_NAN as NAN};
+    use proptest::num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
     use serde_test::{assert_tokens, Token};
+    use crate::glamour::test_helpers::quat;
 
     use super::*;
 
@@ -151,5 +154,19 @@ mod tests {
                 Token::StructEnd,
             ],
         );
+    }
+
+    proptest! {
+        // NaN Tests
+        #[test]
+        fn quat_is_nan_returns_true_for_nan_components(a in quat(NAN)) {
+            prop_assert!(a.is_nan())
+        }
+
+        #[test]
+        fn quat_is_nan_returns_false_for_non_nan_components(a in quat(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL)) {
+            prop_assert!(!a.is_nan())
+        }
+
     }
 }

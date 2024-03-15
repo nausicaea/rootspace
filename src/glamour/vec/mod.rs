@@ -6,6 +6,7 @@ pub mod approx;
 pub mod convert;
 pub mod num;
 pub mod ops;
+pub mod cmp;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq)]
 pub struct Vec4<R> {

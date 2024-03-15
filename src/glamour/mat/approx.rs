@@ -22,6 +22,48 @@ where
     }
 }
 
+#[cfg(test)]
+impl<R> AbsDiffEq<nalgebra::Matrix4<R>> for Mat4<R>
+    where
+        R: AbsDiffEq,
+        R::Epsilon: Copy,
+{
+    type Epsilon = R::Epsilon;
+
+    fn default_epsilon() -> R::Epsilon {
+        R::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, rhs: &nalgebra::Matrix4<R>, epsilon: R::Epsilon) -> bool {
+        self.0
+            .iter()
+            .flatten()
+            .zip(rhs.data.0.iter().flatten())
+            .all(|(l, r)| l.abs_diff_eq(r, epsilon))
+    }
+}
+
+#[cfg(test)]
+impl<R> AbsDiffEq<cgmath::Matrix4<R>> for Mat4<R>
+    where
+        R: AbsDiffEq,
+        R::Epsilon: Copy,
+{
+    type Epsilon = R::Epsilon;
+
+    fn default_epsilon() -> R::Epsilon {
+        R::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, rhs: &cgmath::Matrix4<R>, epsilon: R::Epsilon) -> bool {
+        self.0
+            .iter()
+            .flatten()
+            .zip(AsRef::<[[R; 4]; 4]>::as_ref(rhs).iter().flatten())
+            .all(|(l, r)| l.abs_diff_eq(r, epsilon))
+    }
+}
+
 impl<R> RelativeEq for Mat4<R>
 where
     R: RelativeEq,
@@ -40,6 +82,44 @@ where
     }
 }
 
+#[cfg(test)]
+impl<R> RelativeEq<nalgebra::Matrix4<R>> for Mat4<R>
+    where
+        R: RelativeEq,
+        R::Epsilon: Copy,
+{
+    fn default_max_relative() -> R::Epsilon {
+        R::default_max_relative()
+    }
+
+    fn relative_eq(&self, rhs: &nalgebra::Matrix4<R>, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
+        self.0
+            .iter()
+            .flatten()
+            .zip(rhs.data.0.iter().flatten())
+            .all(|(l, r)| l.relative_eq(r, epsilon, max_relative))
+    }
+}
+
+#[cfg(test)]
+impl<R> RelativeEq<cgmath::Matrix4<R>> for Mat4<R>
+    where
+        R: RelativeEq,
+        R::Epsilon: Copy,
+{
+    fn default_max_relative() -> R::Epsilon {
+        R::default_max_relative()
+    }
+
+    fn relative_eq(&self, rhs: &cgmath::Matrix4<R>, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
+        self.0
+            .iter()
+            .flatten()
+            .zip(AsRef::<[[R; 4]; 4]>::as_ref(rhs).iter().flatten())
+            .all(|(l, r)| l.relative_eq(r, epsilon, max_relative))
+    }
+}
+
 impl<R> UlpsEq for Mat4<R>
 where
     R: UlpsEq,
@@ -54,6 +134,44 @@ where
             .iter()
             .flatten()
             .zip(rhs.0.iter().flatten())
+            .all(|(l, r)| l.ulps_eq(r, epsilon, max_ulps))
+    }
+}
+
+#[cfg(test)]
+impl<R> UlpsEq<nalgebra::Matrix4<R>> for Mat4<R>
+    where
+        R: UlpsEq,
+        R::Epsilon: Copy,
+{
+    fn default_max_ulps() -> u32 {
+        R::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, rhs: &nalgebra::Matrix4<R>, epsilon: R::Epsilon, max_ulps: u32) -> bool {
+        self.0
+            .iter()
+            .flatten()
+            .zip(rhs.data.0.iter().flatten())
+            .all(|(l, r)| l.ulps_eq(r, epsilon, max_ulps))
+    }
+}
+
+#[cfg(test)]
+impl<R> UlpsEq<cgmath::Matrix4<R>> for Mat4<R>
+    where
+        R: UlpsEq,
+        R::Epsilon: Copy,
+{
+    fn default_max_ulps() -> u32 {
+        R::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, rhs: &cgmath::Matrix4<R>, epsilon: R::Epsilon, max_ulps: u32) -> bool {
+        self.0
+            .iter()
+            .flatten()
+            .zip(AsRef::<[[R; 4]; 4]>::as_ref(rhs).iter().flatten())
             .all(|(l, r)| l.ulps_eq(r, epsilon, max_ulps))
     }
 }

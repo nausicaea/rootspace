@@ -145,7 +145,7 @@ mod tests {
     #[test]
     fn default_is_identity() {
         let m: Transform = Default::default();
-        assert_ulps_eq!(m.to_matrix(), &Mat4::identity())
+        assert_ulps_eq!(m.to_matrix(), Mat4::identity())
     }
 
     #[test]

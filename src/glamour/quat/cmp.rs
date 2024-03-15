@@ -4,10 +4,10 @@ where
     R: PartialEq,
 {
     fn eq(&self, rhs: &nalgebra::Quaternion<R>) -> bool {
-        self.w.eq(&rhs.coords[3]) 
-            && self.i.eq(&rhs.coords[0]) 
-            && self.j.eq(&rhs.coords[1]) 
-            && self.k.eq(&rhs.coords[2])
+        self.w.eq(&rhs.coords.w)
+            && self.i.eq(&rhs.coords.x)
+            && self.j.eq(&rhs.coords.y)
+            && self.k.eq(&rhs.coords.z)
     }
 }
 

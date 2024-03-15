@@ -9,6 +9,7 @@ pub mod convert;
 pub mod num;
 pub mod ops;
 pub mod serde;
+pub mod cmp;
 
 /// Generalized matrix type, with data stored in row-major format.
 #[derive(Debug, Clone, Copy, PartialEq)]
