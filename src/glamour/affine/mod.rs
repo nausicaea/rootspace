@@ -1,19 +1,20 @@
-use std::iter::Sum;
-
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use num_traits::{Float, Inv, NumAssign};
+use num_traits::{Float, Inv};
 use serde::{Deserialize, Serialize};
+use builder::AffineBuilder;
 
-use super::num::ToMatrix;
 use crate::glamour::{
     iter_float::IterFloat,
-    mat::Mat4,
     num::{One, Zero},
-    ops::{cross::Cross, inv_elem::InvElem, norm::Norm},
+    ops::{cross::Cross, inv_elem::InvElem},
     quat::Quat,
     unit::Unit,
     vec::Vec4,
 };
+
+mod convert;
+mod approx;
+mod num;
+pub mod builder;
 
 #[derive(Serialize, Deserialize)]
 #[serde(bound(
@@ -50,8 +51,8 @@ impl<R> Affine<R>
 where
     R: IterFloat,
 {
-    pub fn look_at_lh(eye: Vec4<R>, cntr: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
-        let fwd: Unit<_> = (cntr - eye).into();
+    pub fn look_at_lh(eye: Vec4<R>, target: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
+        let fwd: Unit<_> = (target - eye).into();
         let side: Unit<_> = up.cross(fwd);
         let rotated_up: Unit<_> = fwd.cross(side);
 
@@ -83,181 +84,12 @@ where
     }
 }
 
-impl<R> ToMatrix<R> for Affine<R>
-where
-    R: Float + NumAssign,
-{
-    fn to_matrix(&self) -> Mat4<R> {
-        self.into()
-    }
-}
-
-impl<R> From<Affine<R>> for Mat4<R>
-where
-    R: Float + NumAssign,
-{
-    fn from(v: Affine<R>) -> Self {
-        From::from(&v)
-    }
-}
-
-impl<'a, R> From<&'a Affine<R>> for Mat4<R>
-where
-    R: Float + NumAssign,
-{
-    fn from(v: &'a Affine<R>) -> Self {
-        let mut m: Mat4<R> = v.o.into();
-        m[(0, 0)] *= v.s[0];
-        m[(1, 1)] *= v.s[1];
-        m[(2, 2)] *= v.s[2];
-        m[(0, 3)] = v.t[0];
-        m[(1, 3)] = v.t[1];
-        m[(2, 3)] = v.t[2];
-        m
-    }
-}
-
-impl<R> TryFrom<Mat4<R>> for Affine<R>
-where
-    R: Copy + num_traits::One + num_traits::Zero + NumAssign + Float + Sum,
-{
-    type Error = ();
-
-    fn try_from(v: Mat4<R>) -> Result<Self, Self::Error> {
-        let mut t: Vec4<R> = v.col(3);
-        t.w = R::zero();
-
-        let s = Vec4::new(v.col(0).norm(), v.col(1).norm(), v.col(2).norm(), R::zero());
-
-        let mut rot_m: Mat4<R> = v;
-        rot_m[(0, 0)] /= s[0];
-        rot_m[(1, 0)] /= s[0];
-        rot_m[(2, 0)] /= s[0];
-        rot_m[(0, 1)] /= s[1];
-        rot_m[(1, 1)] /= s[1];
-        rot_m[(2, 1)] /= s[1];
-        rot_m[(0, 2)] /= s[2];
-        rot_m[(1, 2)] /= s[2];
-        rot_m[(2, 2)] /= s[2];
-        rot_m[(0, 3)] = R::zero();
-        rot_m[(1, 3)] = R::zero();
-        rot_m[(2, 3)] = R::zero();
-        rot_m[(3, 0)] = R::zero();
-        rot_m[(3, 1)] = R::zero();
-        rot_m[(3, 2)] = R::zero();
-        rot_m[(3, 3)] = R::one();
-
-        let o: Unit<Quat<R>> = rot_m.into();
-
-        Ok(Affine { t, o, s })
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct AffineBuilder<R> {
-    t: Option<Vec4<R>>,
-    o: Option<Quat<R>>,
-    s: Option<Vec4<R>>,
-}
-
-impl<R> AffineBuilder<R> {
-    pub fn with_translation(mut self, v: Vec4<R>) -> Self {
-        self.t = Some(v);
-        self
-    }
-
-    pub fn with_orientation(mut self, q: Quat<R>) -> Self {
-        self.o = Some(q);
-        self
-    }
-
-    pub fn with_scale(mut self, v: Vec4<R>) -> Self {
-        self.s = Some(v);
-        self
-    }
-}
-
-impl<R> AffineBuilder<R>
-where
-    R: Float,
-{
-    pub fn build(self) -> Affine<R> {
-        Affine {
-            t: self.t.unwrap_or_else(Vec4::zero),
-            o: self.o.map(Unit::from).unwrap_or_else(|| Unit::from(Quat::identity())),
-            s: self
-                .s
-                .unwrap_or_else(|| Vec4::new(R::one(), R::one(), R::one(), R::zero())),
-        }
-    }
-}
-
-impl<R> Default for AffineBuilder<R> {
-    fn default() -> Self {
-        AffineBuilder {
-            t: None,
-            o: None,
-            s: None,
-        }
-    }
-}
-
-impl<R> AbsDiffEq for Affine<R>
-where
-    R: AbsDiffEq,
-    R::Epsilon: Copy,
-{
-    type Epsilon = R::Epsilon;
-
-    fn default_epsilon() -> R::Epsilon {
-        R::default_epsilon()
-    }
-
-    fn abs_diff_eq(&self, rhs: &Self, epsilon: R::Epsilon) -> bool {
-        self.t.abs_diff_eq(&rhs.t, epsilon)
-            && self.o.abs_diff_eq(&rhs.o, epsilon)
-            && self.s.abs_diff_eq(&rhs.s, epsilon)
-    }
-}
-
-impl<R> RelativeEq for Affine<R>
-where
-    R: RelativeEq,
-    R::Epsilon: Copy,
-{
-    fn default_max_relative() -> R::Epsilon {
-        R::default_max_relative()
-    }
-
-    fn relative_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
-        self.t.relative_eq(&rhs.t, epsilon, max_relative)
-            && self.o.relative_eq(&rhs.o, epsilon, max_relative)
-            && self.s.relative_eq(&rhs.s, epsilon, max_relative)
-    }
-}
-
-impl<R> UlpsEq for Affine<R>
-where
-    R: UlpsEq,
-    R::Epsilon: Copy,
-{
-    fn default_max_ulps() -> u32 {
-        R::default_max_ulps()
-    }
-
-    fn ulps_eq(&self, rhs: &Self, epsilon: R::Epsilon, max_ulps: u32) -> bool {
-        self.t.ulps_eq(&rhs.t, epsilon, max_ulps)
-            && self.o.ulps_eq(&rhs.o, epsilon, max_ulps)
-            && self.s.ulps_eq(&rhs.s, epsilon, max_ulps)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use serde_test::{assert_tokens, Token};
+    use crate::glamour::num::ToMatrix;
 
     use super::*;
-    use crate::glamour::{mat::Mat4, num::Zero, quat::Quat, vec::Vec4};
 
     #[test]
     fn affine_provides_look_at_lh() {
@@ -292,35 +124,6 @@ mod tests {
         assert_eq!(a.o, Unit::from(Quat::<f32>::identity()));
         assert_eq!(a.s, Vec4::<f32>::new(1.0, 1.0, 1.0, 0.0));
     }
-
-    #[test]
-    fn affine_provides_builder() {
-        let a: Affine<f32> = Affine::builder().build();
-        assert_eq!(a, Affine::<f32>::identity());
-
-        let a: Affine<f32> = Affine::builder().with_scale(Vec4::from([1.0, 2.0, 3.0, 0.0])).build();
-
-        assert_eq!(a.s, Vec4::from([1.0, 2.0, 3.0, 0.0]));
-    }
-
-    #[test]
-    fn affine_provides_to_matrix_method() {
-        let a: Affine<f32> = Affine::identity();
-        assert_eq!(a.to_matrix(), Mat4::<f32>::identity());
-    }
-
-    #[test]
-    fn affine_implements_try_from_mat4() {
-        let m: Mat4<f32> = Mat4::identity();
-        assert_eq!(Affine::<f32>::try_from(m), Ok(Affine::<f32>::identity()));
-    }
-
-    // #[test]
-    // fn affine_implements_mul_for_vec4() {
-    //     let a: Affine<f32> = Affine::identity();
-    //     let b: Vec4<f32> = Vec4::new(1.0, 1.0, 1.0, 1.0);
-    //     assert_eq!(&a * &b, b);
-    // }
 
     #[test]
     fn affine_implements_serde() {
