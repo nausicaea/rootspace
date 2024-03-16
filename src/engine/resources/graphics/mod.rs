@@ -127,10 +127,6 @@ impl Graphics {
         RenderPipelineBuilder::new(&self.runtime, &mut self.database)
     }
 
-    pub fn create_bind_group_layout(&mut self) -> BindGroupLayoutBuilder {
-        BindGroupLayoutBuilder::new(&self.runtime, &mut self.database)
-    }
-
     pub fn create_bind_group(&mut self, layout: BindGroupLayoutId) -> BindGroupBuilder {
         BindGroupBuilder::new(&self.runtime, &mut self.database, layout)
     }

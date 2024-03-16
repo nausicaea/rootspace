@@ -73,27 +73,6 @@ where
     }
 }
 
-impl<R> Persp<R>
-where
-    R: Float,
-{
-    pub fn inv(&self) -> Self {
-        let z = R::zero();
-        let o = R::one();
-        let m00 = o / self.0[(0, 0)];
-        let m11 = o / self.0[(1, 1)];
-        let m32 = o / self.0[(2, 3)];
-        let m33 = self.0[(2, 2)] / self.0[(2, 3)];
-
-        Persp(Mat4::from([
-            [m00, z, z, z],
-            [z, m11, z, z],
-            [z, z, z, -o],
-            [z, z, m32, m33],
-        ]))
-    }
-}
-
 impl<R> AsRef<Mat4<R>> for Persp<R> {
     fn as_ref(&self) -> &Mat4<R> {
         &self.0

@@ -111,11 +111,6 @@ impl<'rp> RenderPass<'rp> {
         self
     }
 
-    pub fn draw(&mut self, vert: Range<u32>, inst: Range<u32>) -> &mut Self {
-        self.0.draw(vert, inst);
-        self
-    }
-
     pub fn draw_indexed(&mut self, ind: Range<u32>, base_vert: i32, inst: Range<u32>) -> &mut Self {
         self.0.draw_indexed(ind, base_vert, inst);
         self

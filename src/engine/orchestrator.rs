@@ -34,7 +34,6 @@ use winit::event_loop::ControlFlow;
 
 use super::registry::{FUSRegistry, MSRegistry};
 
-const STATS_DISPLAY_INTERVAL: Duration = Duration::from_secs(15);
 const DELTA_TIME: Duration = Duration::from_millis(50);
 #[cfg(feature = "editor")]
 const MAX_LOOP_DURATION: Duration = Duration::from_secs(2);
@@ -122,8 +121,6 @@ impl Orchestrator {
                 max_loop_duration: deps.max_loop_duration(),
                 #[cfg(not(feature = "editor"))]
                 min_loop_duration: deps.min_loop_duration(),
-                #[cfg(feature = "dbg-loop")]
-                stats_display_interval: deps.stats_display_interval(),
                 ..Default::default()
             },
             #[cfg(feature = "editor")]
@@ -360,11 +357,6 @@ pub trait OrchestratorDeps {
     fn delta_time(&self) -> Duration {
         DELTA_TIME
     }
-
-    /// Specifies the interval at which stats information is shown (only applies with feature 'dbg-loop')
-    fn stats_display_interval(&self) -> Duration {
-        STATS_DISPLAY_INTERVAL
-    }
 }
 
 #[derive(Debug)]
@@ -378,10 +370,6 @@ struct Timers {
     max_loop_duration: Duration,
     #[cfg(not(feature = "editor"))]
     min_loop_duration: Option<Duration>,
-    #[cfg(feature = "dbg-loop")]
-    last_stats_display: Instant,
-    #[cfg(feature = "dbg-loop")]
-    stats_display_interval: Duration,
 }
 
 impl Default for Timers {
@@ -396,10 +384,6 @@ impl Default for Timers {
             max_loop_duration: MAX_LOOP_DURATION,
             #[cfg(not(feature = "editor"))]
             min_loop_duration: MIN_LOOP_DURATION,
-            #[cfg(feature = "dbg-loop")]
-            last_stats_display: Instant::now(),
-            #[cfg(feature = "dbg-loop")]
-            stats_display_interval: STATS_DISPLAY_INTERVAL,
         }
     }
 }

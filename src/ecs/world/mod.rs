@@ -5,7 +5,7 @@ use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
 use log::debug;
-use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard};
+use parking_lot::MappedRwLockReadGuard;
 
 use self::{event::WorldEvent, type_registry::ResourceTypes};
 use super::{
@@ -70,14 +70,6 @@ impl World {
         &self.resources
     }
 
-    /// Returns `true` if a resource of the specified type is present.
-    pub fn contains<R>(&self) -> bool
-    where
-        R: Resource,
-    {
-        self.resources.contains::<R>()
-    }
-
     /// Retrieves a mutable reference to a resource in the world
     pub fn get_mut<R>(&mut self) -> &mut R
     where
@@ -92,14 +84,6 @@ impl World {
         R: Resource,
     {
         self.resources.read::<R>()
-    }
-
-    /// Mutably borrows the requested resource (with a runtime borrow check).
-    pub fn write<R>(&self) -> MappedRwLockWriteGuard<R>
-    where
-        R: Resource,
-    {
-        self.resources.write::<R>()
     }
 
     pub fn get_components_mut<C>(&mut self) -> &mut C::Storage

@@ -9,7 +9,6 @@ pub mod entity;
 pub mod event_monitor;
 pub mod event_queue;
 pub mod loop_control;
-pub mod loop_stage;
 pub mod macros;
 pub mod registry;
 pub mod resource;

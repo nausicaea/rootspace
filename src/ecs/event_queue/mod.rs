@@ -52,16 +52,11 @@ where
         ReceiverId::new(id)
     }
 
+    #[cfg(test)]
     /// Unsubscribe from this event queue.
     pub fn unsubscribe(&mut self, id: ReceiverId<E>) {
         self.receivers.remove(&id.id());
         self.free_ids.push(id.id());
-    }
-
-    /// Return `true` if the receiver is subscribed to this
-    /// [`EventQueue<T>`](crate::event_queue::EventQueue), `false` otherwise.
-    pub fn is_subscribed(&self, id: &ReceiverId<E>) -> bool {
-        self.receivers.contains_key(&id.id())
     }
 
     /// Send an event into the queue.
@@ -115,16 +110,13 @@ where
         self.maintain();
     }
 
-    /// Return `true` if there are no queued events.
-    pub fn is_empty(&self) -> bool {
-        self.events.is_empty()
-    }
-
+    #[cfg(test)]
     /// Return the number of queued events.
     pub fn len(&self) -> usize {
         self.events.len()
     }
 
+    #[cfg(test)]
     /// Return the number of subscribers to this queue.
     pub fn subscribers(&self) -> usize {
         self.receivers.len()
