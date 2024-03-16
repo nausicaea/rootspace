@@ -1,10 +1,7 @@
-use crate::glamour::mat::Mat4;
-use crate::glamour::ops::norm::Norm;
-use crate::glamour::quat::Quat;
-use crate::glamour::vec::Vec4;
 use num_traits::Float;
 
 use super::Unit;
+use crate::glamour::{mat::Mat4, ops::norm::Norm, quat::Quat, vec::Vec4};
 
 impl<R> From<Quat<R>> for Unit<Quat<R>>
 where

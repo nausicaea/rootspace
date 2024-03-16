@@ -1,9 +1,9 @@
 use std::iter::Sum;
 
-use crate::glamour::ops::norm::Norm;
 use num_traits::Float;
 
 use super::super::Mat4;
+use crate::glamour::ops::norm::Norm;
 
 impl<'a, R> Norm for &'a Mat4<R>
 where

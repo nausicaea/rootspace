@@ -1,6 +1,7 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 use rootspace::{load_ply, save_ply, FormatType, PropertyDescriptor};
-use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
 #[command(name = "ply_loader", author, version, about = "Loads files as Stanford PLY model files", long_about = None)]

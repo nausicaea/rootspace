@@ -1,6 +1,6 @@
-use crate::glamour::ops::norm::Norm;
-use crate::glamour::vec::Vec4;
 use num_traits::Float;
+
+use crate::glamour::{ops::norm::Norm, vec::Vec4};
 
 impl<'a, R> Norm for &'a Vec4<R>
 where
@@ -26,10 +26,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::vec::Vec4;
     use approx::assert_ulps_eq;
 
     use super::*;
+    use crate::glamour::vec::Vec4;
 
     #[test]
     fn vec4_provides_norm_method() {

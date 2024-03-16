@@ -1,6 +1,6 @@
-use log::{debug, error, trace};
 use std::collections::BTreeMap;
 
+use log::{debug, error, trace};
 use nom::{
     bytes::complete::take_till1,
     combinator::{map, map_res},
@@ -14,11 +14,11 @@ use nom::{
     IResult,
 };
 
-use super::super::types::{
-    CountType, DataType, ElementDescriptor, ElementId, FormatType, PlyDescriptor, Primitive, PropertyDescriptor,
-    PropertyId, Value, Values,
-};
 use super::{
+    super::types::{
+        CountType, DataType, ElementDescriptor, ElementId, FormatType, PlyDescriptor, Primitive, PropertyDescriptor,
+        PropertyId, Value, Values,
+    },
     common::{fold_exact, is_whitespace, whitespace},
     ParseNumError,
 };

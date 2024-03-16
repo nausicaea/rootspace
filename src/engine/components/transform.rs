@@ -1,12 +1,16 @@
-use crate::ecs::component::Component;
-use crate::ecs::storage::vec_storage::VecStorage;
-use crate::glamour::affine::{Affine, AffineBuilder};
-use crate::glamour::mat::Mat4;
-use crate::glamour::num::ToMatrix;
-use crate::glamour::quat::Quat;
-use crate::glamour::unit::Unit;
-use crate::glamour::vec::Vec4;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    ecs::{component::Component, storage::vec_storage::VecStorage},
+    glamour::{
+        affine::{Affine, AffineBuilder},
+        mat::Mat4,
+        num::ToMatrix,
+        quat::Quat,
+        unit::Unit,
+        vec::Vec4,
+    },
+};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -116,13 +120,15 @@ impl TransformBuilder {
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::num::{One, Zero};
-    use crate::glamour::quat::Quat;
-    use crate::glamour::vec::Vec4;
     use approx::assert_ulps_eq;
     use proptest::{collection::vec, num::f32::NORMAL, prelude::*};
 
     use super::*;
+    use crate::glamour::{
+        num::{One, Zero},
+        quat::Quat,
+        vec::Vec4,
+    };
 
     #[test]
     fn implements_default() {

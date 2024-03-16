@@ -1,33 +1,38 @@
-use crate::ecs::component::Component;
-use crate::ecs::entity::index::Index;
-use crate::engine::components::ui_transform::UiTransform;
+use std::time::{Duration, Instant};
+
 use anyhow::Context;
 use async_trait::async_trait;
 use log::{error, trace, warn};
-use std::time::{Duration, Instant};
 use wgpu::SurfaceError;
-use winit::dpi::PhysicalSize;
-use winit::event::WindowEvent;
+use winit::{dpi::PhysicalSize, event::WindowEvent};
 
-use crate::ecs::event_queue::receiver_id::ReceiverId;
-use crate::ecs::event_queue::EventQueue;
-use crate::ecs::resources::Resources;
-use crate::ecs::storage::Storage;
-use crate::ecs::system::System;
-use crate::ecs::with_resources::WithResources;
-use crate::engine::components::camera::Camera;
-use crate::engine::components::renderable::Renderable;
-use crate::engine::components::transform::Transform;
-use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::resources::asset_database::AssetDatabase;
-use crate::engine::resources::graphics::encoder::RenderPass;
-use crate::engine::resources::graphics::ids::{BindGroupId, BufferId, PipelineId};
-use crate::engine::resources::graphics::vertex::Vertex;
-use crate::engine::resources::graphics::{Graphics, TransformWrapper};
-use crate::engine::resources::statistics::Statistics;
-use crate::glamour::mat::Mat4;
-use crate::glamour::num::ToMatrix;
-use crate::rose_tree::hierarchy::Hierarchy;
+use crate::{
+    ecs::{
+        component::Component,
+        entity::index::Index,
+        event_queue::{receiver_id::ReceiverId, EventQueue},
+        resources::Resources,
+        storage::Storage,
+        system::System,
+        with_resources::WithResources,
+    },
+    engine::{
+        components::{camera::Camera, renderable::Renderable, transform::Transform, ui_transform::UiTransform},
+        events::engine_event::EngineEvent,
+        resources::{
+            asset_database::AssetDatabase,
+            graphics::{
+                encoder::RenderPass,
+                ids::{BindGroupId, BufferId, PipelineId},
+                vertex::Vertex,
+                Graphics, TransformWrapper,
+            },
+            statistics::Statistics,
+        },
+    },
+    glamour::{mat::Mat4, num::ToMatrix},
+    rose_tree::hierarchy::Hierarchy,
+};
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -288,10 +293,8 @@ impl System for Renderer {
 
 #[cfg(test)]
 mod tests {
-    use crate::engine::resources::asset_database::AssetDatabaseDeps;
-    use crate::Reg;
-
     use super::*;
+    use crate::{engine::resources::asset_database::AssetDatabaseDeps, Reg};
 
     struct TDeps<'a> {
         name: &'a str,

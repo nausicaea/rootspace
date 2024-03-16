@@ -1,5 +1,7 @@
-use crate::glamour::num::{One, Zero};
-use crate::glamour::vec::Vec4;
+use crate::glamour::{
+    num::{One, Zero},
+    vec::Vec4,
+};
 
 impl<R> Zero for Vec4<R>
 where

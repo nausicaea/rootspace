@@ -9,7 +9,7 @@ pub struct Vertex {
 }
 
 impl VertexAttributeDescriptor for Vertex {
-    const STEP_MODE: wgpu::VertexStepMode = wgpu::VertexStepMode::Vertex;
     const ATTRS: &'static [wgpu::VertexAttribute] =
         &wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3, 2 => Float32x2];
+    const STEP_MODE: wgpu::VertexStepMode = wgpu::VertexStepMode::Vertex;
 }

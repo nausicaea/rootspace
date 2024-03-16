@@ -1,8 +1,11 @@
-use crate::ecs::resources::Resources;
-use crate::engine::resources::graphics::ids::{SamplerId, TextureId, TextureViewId};
-use crate::engine::resources::graphics::Graphics;
-
 use super::cpu_texture::CpuTexture;
+use crate::{
+    ecs::resources::Resources,
+    engine::resources::graphics::{
+        ids::{SamplerId, TextureId, TextureViewId},
+        Graphics,
+    },
+};
 
 #[derive(Debug)]
 pub struct GpuTexture {

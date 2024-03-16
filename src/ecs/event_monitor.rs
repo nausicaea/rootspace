@@ -1,6 +1,6 @@
-use async_trait::async_trait;
 use std::{fmt, time::Duration};
 
+use async_trait::async_trait;
 use log::trace;
 use serde::{Deserialize, Serialize};
 
@@ -41,8 +41,13 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ecs::{registry::End, registry::SystemRegistry, world::World};
-    use crate::Reg;
+    use crate::{
+        ecs::{
+            registry::{End, SystemRegistry},
+            world::World,
+        },
+        Reg,
+    };
 
     #[test]
     fn event_monitor_reg_macro() {

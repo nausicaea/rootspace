@@ -2,32 +2,30 @@ mod message;
 mod server;
 pub mod service;
 
-use crate::ecs::resources::Resources;
-use crate::ecs::system::System;
-use crate::ecs::with_resources::WithResources;
-use crate::engine::assets::scene::Scene;
-use crate::engine::resources::asset_database::AssetDatabase;
-use anyhow::Error;
+use std::{future::ready, time::Duration};
 
-use crate::engine::resources::rpc_settings::RpcSettings;
-use crate::engine::systems::rpc::server::RpcServer;
-use crate::engine::systems::rpc::service::RpcService;
+use anyhow::Error;
 use async_trait::async_trait;
 use futures::StreamExt;
 use log::{info, trace};
 use message::RpcMessage;
-use std::future::ready;
+use tarpc::server::{incoming::Incoming, BaseChannel, Channel};
+use tokio::{sync::mpsc, task::JoinHandle};
 
-use std::time::Duration;
-
-use crate::ecs::event_queue::receiver_id::ReceiverId;
-use crate::ecs::event_queue::EventQueue;
-use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::resources::statistics::Statistics;
-use tarpc::server::incoming::Incoming;
-use tarpc::server::{BaseChannel, Channel};
-use tokio::sync::mpsc;
-use tokio::task::JoinHandle;
+use crate::{
+    ecs::{
+        event_queue::{receiver_id::ReceiverId, EventQueue},
+        resources::Resources,
+        system::System,
+        with_resources::WithResources,
+    },
+    engine::{
+        assets::scene::Scene,
+        events::engine_event::EngineEvent,
+        resources::{asset_database::AssetDatabase, rpc_settings::RpcSettings, statistics::Statistics},
+        systems::rpc::{server::RpcServer, service::RpcService},
+    },
+};
 
 #[derive(Debug)]
 pub struct Rpc {

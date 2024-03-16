@@ -1,5 +1,4 @@
-use std::mem::MaybeUninit;
-use std::{collections::BTreeSet, marker::PhantomData};
+use std::{collections::BTreeSet, marker::PhantomData, mem::MaybeUninit};
 
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
@@ -7,10 +6,8 @@ use serde::{
     Deserialize, Serialize,
 };
 
-use super::super::{
-    entity::index::Index, resource::Resource, storage::entry::Entry, with_dependencies::WithDependencies,
-};
 use super::{
+    super::{entity::index::Index, resource::Resource, storage::entry::Entry, with_dependencies::WithDependencies},
     iterators::{IndexedRIter, RIter, WIter},
     Storage,
 };
@@ -297,11 +294,16 @@ mod tests {
 
     use serde_test::{assert_tokens, Token};
 
-    use super::super::super::{
-        component::Component, entities::Entities, entity::Entity, registry::End, registry::ResourceRegistry,
-        world::World,
+    use super::{
+        super::super::{
+            component::Component,
+            entities::Entities,
+            entity::Entity,
+            registry::{End, ResourceRegistry},
+            world::World,
+        },
+        *,
     };
-    use super::*;
     use crate::Reg;
 
     struct DropCounter<'a> {

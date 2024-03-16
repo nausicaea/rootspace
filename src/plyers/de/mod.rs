@@ -1,6 +1,6 @@
-use log::debug;
 use std::num::{ParseFloatError, ParseIntError};
 
+use log::debug;
 use nom::{
     combinator::{all_consuming, flat_map, map},
     error::{context, ContextError, FromExternalError, ParseError},
@@ -63,11 +63,13 @@ mod tests {
 
     use nom::error::dbg_dmp;
 
-    use super::super::types::{
-        CommentDescriptor, DataType, ElementDescriptor, FormatType, ObjInfoDescriptor, PlyDescriptor, Primitive,
-        PropertyDescriptor, Values,
+    use super::{
+        super::types::{
+            CommentDescriptor, DataType, ElementDescriptor, FormatType, ObjInfoDescriptor, PlyDescriptor, Primitive,
+            PropertyDescriptor, Values,
+        },
+        *,
     };
-    use super::*;
 
     const EMPTY: &[u8] = b"";
 

@@ -1,11 +1,14 @@
 #![allow(dead_code)]
 
-use crate::ecs::resource::Resource;
-use crate::rose_tree::tree::Tree;
+use std::{
+    collections::VecDeque,
+    fmt::{Debug, Display, Formatter},
+    hash::Hash,
+};
+
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
-use std::fmt::{Debug, Display, Formatter};
-use std::hash::Hash;
+
+use crate::{ecs::resource::Resource, rose_tree::tree::Tree};
 
 #[derive(Serialize, Deserialize)]
 #[serde(
@@ -254,17 +257,20 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::ecs::component::Component;
-    use crate::ecs::entities::Entities;
-    use crate::ecs::entity::index::Index;
-    use crate::ecs::registry::{End, ResourceRegistry};
-    use crate::ecs::storage::vec_storage::VecStorage;
-    use crate::ecs::storage::Storage;
-    use crate::ecs::world::World;
-    use crate::Reg;
     use std::{iter::Product, ops::Mul};
 
     use super::*;
+    use crate::{
+        ecs::{
+            component::Component,
+            entities::Entities,
+            entity::index::Index,
+            registry::{End, ResourceRegistry},
+            storage::{vec_storage::VecStorage, Storage},
+            world::World,
+        },
+        Reg,
+    };
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
     struct Tk(usize);

@@ -140,8 +140,13 @@ mod tests {
     use serde_test::{assert_tokens, Token};
 
     use super::*;
-    use crate::ecs::{registry::End, registry::ResourceRegistry, world::World};
-    use crate::Reg;
+    use crate::{
+        ecs::{
+            registry::{End, ResourceRegistry},
+            world::World,
+        },
+        Reg,
+    };
 
     #[test]
     fn entities_reg_macro() {

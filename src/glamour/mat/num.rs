@@ -1,6 +1,5 @@
-use crate::glamour::num::{One, Zero};
-
 use super::Mat4;
+use crate::glamour::num::{One, Zero};
 
 impl<R> Zero for Mat4<R>
 where

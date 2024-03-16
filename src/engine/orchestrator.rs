@@ -1,38 +1,43 @@
+use std::{
+    sync::Arc,
+    time::{Duration, Instant},
+};
+
 use log::{info, trace};
-use std::sync::Arc;
-use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
-
-use winit::{event::Event, event_loop::EventLoopWindowTarget};
-
-use crate::ecs::entity::Entity;
-use crate::ecs::event_queue::receiver_id::ReceiverId;
-use crate::ecs::event_queue::EventQueue;
-use crate::ecs::loop_control::LoopControl;
-use crate::ecs::registry::{ResourceRegistry, SystemRegistry};
-use crate::ecs::storage::Storage;
-use crate::ecs::with_dependencies::WithDependencies;
-use crate::ecs::with_resources::WithResources;
-use crate::ecs::world::event::WorldEvent;
-use crate::ecs::world::World;
-use crate::engine::assets::scene::Scene;
-use crate::engine::components::camera::Camera;
-use crate::engine::components::info::Info;
-use crate::engine::components::renderable::Renderable;
-use crate::engine::components::transform::Transform;
-use crate::engine::components::ui_transform::UiTransform;
-use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::registry::{RRegistry, USRegistry};
-use crate::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps};
-use crate::engine::resources::graphics::{Graphics, GraphicsDeps};
-use crate::engine::resources::statistics::Statistics;
-
-use crate::engine::resources::rpc_settings::RpcDeps;
-use crate::engine::systems::renderer::Renderer;
-use winit::event::WindowEvent;
-use winit::event_loop::ControlFlow;
+use winit::{
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoopWindowTarget},
+};
 
 use super::registry::{FUSRegistry, MSRegistry};
+use crate::{
+    ecs::{
+        entity::Entity,
+        event_queue::{receiver_id::ReceiverId, EventQueue},
+        loop_control::LoopControl,
+        registry::{ResourceRegistry, SystemRegistry},
+        storage::Storage,
+        with_dependencies::WithDependencies,
+        with_resources::WithResources,
+        world::{event::WorldEvent, World},
+    },
+    engine::{
+        assets::scene::Scene,
+        components::{
+            camera::Camera, info::Info, renderable::Renderable, transform::Transform, ui_transform::UiTransform,
+        },
+        events::engine_event::EngineEvent,
+        registry::{RRegistry, USRegistry},
+        resources::{
+            asset_database::{AssetDatabase, AssetDatabaseDeps},
+            graphics::{Graphics, GraphicsDeps},
+            rpc_settings::RpcDeps,
+            statistics::Statistics,
+        },
+        systems::renderer::Renderer,
+    },
+};
 
 const DELTA_TIME: Duration = Duration::from_millis(50);
 #[cfg(feature = "editor")]

@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 #[cfg(not(test))]
 use std::process;
 use std::{
@@ -9,19 +8,26 @@ use std::{
     time::Duration,
 };
 
-use crate::ecs::event_queue::receiver_id::ReceiverId;
-use crate::ecs::event_queue::EventQueue;
-use crate::ecs::resources::Resources;
-use crate::ecs::system::System;
-use crate::ecs::with_resources::WithResources;
-use crate::engine::events::engine_event::EngineEvent;
+use async_trait::async_trait;
 use log::debug;
 #[cfg(not(test))]
 use log::error;
 #[cfg(not(test))]
 use log::info;
-use winit::event::{ElementState, KeyEvent, WindowEvent};
-use winit::keyboard::NamedKey;
+use winit::{
+    event::{ElementState, KeyEvent, WindowEvent},
+    keyboard::NamedKey,
+};
+
+use crate::{
+    ecs::{
+        event_queue::{receiver_id::ReceiverId, EventQueue},
+        resources::Resources,
+        system::System,
+        with_resources::WithResources,
+    },
+    engine::events::engine_event::EngineEvent,
+};
 
 #[derive(Debug)]
 pub struct ForceShutdown {
@@ -93,9 +99,13 @@ impl System for ForceShutdown {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ecs::registry::{End, SystemRegistry};
-    use crate::ecs::world::World;
-    use crate::Reg;
+    use crate::{
+        ecs::{
+            registry::{End, SystemRegistry},
+            world::World,
+        },
+        Reg,
+    };
 
     #[test]
     fn force_shutdown_reg_macro() {

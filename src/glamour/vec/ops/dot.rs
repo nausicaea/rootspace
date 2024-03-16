@@ -1,9 +1,10 @@
-use crate::glamour::iter_float::IterFloat;
-use crate::glamour::ops::dot::Dot;
-use crate::{abop, forward_ref_binop};
 use std::ops::Mul;
 
 use super::super::Vec4;
+use crate::{
+    abop, forward_ref_binop,
+    glamour::{iter_float::IterFloat, ops::dot::Dot},
+};
 
 impl<'a, 'b, R> Dot<&'b Vec4<R>> for &'a Vec4<R>
 where

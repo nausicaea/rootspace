@@ -1,7 +1,7 @@
-use crate::ecs::component::Component;
-use crate::ecs::storage::vec_storage::VecStorage;
-use crate::glamour::mat::Mat4;
-use crate::glamour::persp::Persp;
+use crate::{
+    ecs::{component::Component, storage::vec_storage::VecStorage},
+    glamour::{mat::Mat4, persp::Persp},
+};
 
 pub mod projection;
 

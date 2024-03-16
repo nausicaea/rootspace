@@ -1,7 +1,11 @@
-use crate::plyers::types::{PlyDescriptor, Primitive, PropertyDescriptor};
-use crate::plyers::PlyError;
-use num_traits::ToBytes;
 use std::io::Write;
+
+use num_traits::ToBytes;
+
+use crate::plyers::{
+    types::{PlyDescriptor, Primitive, PropertyDescriptor},
+    PlyError,
+};
 
 pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(), PlyError> {
     writeln!(f, "ply")?;

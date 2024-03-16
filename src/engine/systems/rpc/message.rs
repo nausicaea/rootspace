@@ -1,5 +1,6 @@
-use crate::engine::resources::statistics::Statistics;
 use tokio::sync::oneshot::Sender;
+
+use crate::engine::resources::statistics::Statistics;
 
 #[derive(Debug)]
 pub enum RpcMessage {

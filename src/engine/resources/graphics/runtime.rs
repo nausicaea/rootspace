@@ -1,8 +1,8 @@
-use crate::engine::resources::graphics::settings::Settings;
 use log::debug;
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
-use winit::event_loop::EventLoopWindowTarget;
-use winit::window::Fullscreen;
+use winit::{event_loop::EventLoopWindowTarget, window::Fullscreen};
+
+use crate::engine::resources::graphics::settings::Settings;
 
 #[derive(Debug)]
 pub struct Runtime<'a> {

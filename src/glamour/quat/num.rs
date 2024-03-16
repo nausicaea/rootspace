@@ -1,8 +1,7 @@
 use num_traits::Float;
 
-use crate::glamour::{mat::Mat4, num::ToMatrix, unit::Unit};
-
 use super::Quat;
+use crate::glamour::{mat::Mat4, num::ToMatrix, unit::Unit};
 
 impl<R> ToMatrix<R> for Unit<Quat<R>>
 where
@@ -15,9 +14,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::{mat::Mat4, num::ToMatrix};
-
     use super::*;
+    use crate::glamour::{mat::Mat4, num::ToMatrix};
 
     #[test]
     fn quat_provides_to_matrix_method() {

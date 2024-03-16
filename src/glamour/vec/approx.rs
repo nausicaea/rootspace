@@ -169,10 +169,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::num::One;
     use approx::{assert_abs_diff_eq, assert_relative_eq, assert_ulps_eq};
 
     use super::*;
+    use crate::glamour::num::One;
 
     #[test]
     fn mat4_implements_abs_diff_eq() {

@@ -1,6 +1,3 @@
-use crate::ecs::resource::Resource;
-use crate::ecs::with_dependencies::WithDependencies;
-use crate::glamour::mat::Mat4;
 use log::warn;
 use winit::event_loop::EventLoopWindowTarget;
 
@@ -15,6 +12,10 @@ use self::{
     sampler_builder::SamplerBuilder,
     settings::Settings,
     texture_builder::TextureBuilder,
+};
+use crate::{
+    ecs::{resource::Resource, with_dependencies::WithDependencies},
+    glamour::mat::Mat4,
 };
 
 pub mod bind_group_builder;

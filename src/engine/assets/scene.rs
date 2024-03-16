@@ -1,19 +1,22 @@
-use crate::ecs::entity::index::Index;
-use crate::ecs::entity::Entity;
-use crate::ecs::resources::Resources;
-use crate::ecs::storage::Storage;
-use crate::engine::assets::private::PrivSaveAsset;
-use crate::engine::components::camera::Camera;
-use crate::engine::components::renderable::Renderable;
-use crate::engine::components::transform::Transform;
-use crate::engine::resources::asset_database::AssetDatabase;
-use crate::rose_tree::hierarchy::Hierarchy;
-use crate::{ecs::entities::Entities, engine::components::info::Info};
+use std::{collections::BTreeMap, path::Path};
+
 use anyhow::Context;
-use std::collections::BTreeMap;
-use std::path::Path;
 
 use super::private::PrivLoadAsset;
+use crate::{
+    ecs::{
+        entities::Entities,
+        entity::{index::Index, Entity},
+        resources::Resources,
+        storage::Storage,
+    },
+    engine::{
+        assets::private::PrivSaveAsset,
+        components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
+        resources::asset_database::AssetDatabase,
+    },
+    rose_tree::hierarchy::Hierarchy,
+};
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Scene {

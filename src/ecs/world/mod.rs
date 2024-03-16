@@ -1,9 +1,6 @@
-use std::sync::Arc;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
-use futures::stream::FuturesUnordered;
-use futures::StreamExt;
-
+use futures::{stream::FuturesUnordered, StreamExt};
 use log::debug;
 use parking_lot::MappedRwLockReadGuard;
 

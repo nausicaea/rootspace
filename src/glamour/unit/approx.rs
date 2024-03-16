@@ -1,5 +1,6 @@
-use super::Unit;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+
+use super::Unit;
 
 impl<T> AbsDiffEq for Unit<T>
 where

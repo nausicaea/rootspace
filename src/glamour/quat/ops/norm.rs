@@ -20,9 +20,8 @@ forward_ref_unop!(impl<R: Float> Norm, norm for Quat<R>, R);
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::ops::norm::Norm;
-
     use super::*;
+    use crate::glamour::ops::norm::Norm;
 
     #[test]
     fn quat_implements_norm() {

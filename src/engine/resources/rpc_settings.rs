@@ -1,7 +1,8 @@
-use crate::ecs::resource::Resource;
-use crate::ecs::with_dependencies::WithDependencies;
-use anyhow::Error;
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
+
+use anyhow::Error;
+
+use crate::ecs::{resource::Resource, with_dependencies::WithDependencies};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RpcSettings {

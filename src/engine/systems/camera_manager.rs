@@ -1,15 +1,18 @@
-use async_trait::async_trait;
 use std::time::Duration;
 
-use crate::ecs::event_queue::receiver_id::ReceiverId;
-use crate::ecs::event_queue::EventQueue;
-use crate::ecs::resources::Resources;
-use crate::ecs::system::System;
-use crate::ecs::with_resources::WithResources;
-use crate::engine::components::camera::Camera;
-use crate::engine::resources::graphics::Graphics;
+use async_trait::async_trait;
 use log::debug;
 use winit::event::WindowEvent;
+
+use crate::{
+    ecs::{
+        event_queue::{receiver_id::ReceiverId, EventQueue},
+        resources::Resources,
+        system::System,
+        with_resources::WithResources,
+    },
+    engine::{components::camera::Camera, resources::graphics::Graphics},
+};
 
 #[derive(Debug)]
 pub struct CameraManager {
@@ -51,11 +54,14 @@ impl System for CameraManager {
 
 #[cfg(test)]
 mod tests {
-    use crate::ecs::registry::{End, SystemRegistry};
-    use crate::ecs::world::World;
-    use crate::Reg;
-
     use super::*;
+    use crate::{
+        ecs::{
+            registry::{End, SystemRegistry},
+            world::World,
+        },
+        Reg,
+    };
 
     #[test]
     fn camera_manager_reg_macro() {

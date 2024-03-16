@@ -1,5 +1,5 @@
-use std::iter::FusedIterator;
-use std::sync::Arc;
+use std::{iter::FusedIterator, sync::Arc};
+
 use tokio::sync::Mutex;
 
 use super::{registry::SystemRegistry, resources::Resources, system::System, with_resources::WithResources};
@@ -74,8 +74,8 @@ impl std::fmt::Debug for Systems {
 }
 
 impl<'a> IntoIterator for &'a Systems {
-    type Item = <SystemsIter<'a> as Iterator>::Item;
     type IntoIter = SystemsIter<'a>;
+    type Item = <SystemsIter<'a> as Iterator>::Item;
 
     fn into_iter(self) -> Self::IntoIter {
         SystemsIter::new(self)

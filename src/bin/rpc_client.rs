@@ -1,6 +1,7 @@
+use std::net::{IpAddr, Ipv6Addr};
+
 use clap::{Parser, Subcommand};
 use rootspace::RpcServiceClient;
-use std::net::{IpAddr, Ipv6Addr};
 
 #[derive(Debug, Parser)]
 struct Args {

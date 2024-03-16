@@ -1,11 +1,10 @@
-use crate::forward_ref_binop;
-use crate::glamour::iter_float::IterFloat;
-use crate::glamour::ops::dot::Dot;
-use crate::glamour::vec::Vec4;
-use std::iter::Product;
-use std::ops::Mul;
+use std::{iter::Product, ops::Mul};
 
 use super::super::Mat4;
+use crate::{
+    forward_ref_binop,
+    glamour::{iter_float::IterFloat, ops::dot::Dot, vec::Vec4},
+};
 
 impl<'a, 'b, R> Dot<&'b Mat4<R>> for &'a Mat4<R>
 where
@@ -107,11 +106,14 @@ impl<R: IterFloat> Product<Mat4<R>> for Mat4<R> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::glamour::num::One;
-    use crate::glamour::test_helpers::{bounded_f32, bounded_nonzero_f32, mat4};
     use approx::assert_ulps_eq;
     use proptest::{prop_assert, proptest};
+
+    use super::*;
+    use crate::glamour::{
+        num::One,
+        test_helpers::{bounded_f32, bounded_nonzero_f32, mat4},
+    };
 
     #[test]
     fn mat4_supports_dot_product_with_mat4() {

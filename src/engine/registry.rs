@@ -1,26 +1,24 @@
-use crate::ecs::component::Component;
-use crate::ecs::entity::index::Index;
-use crate::ecs::event_monitor::EventMonitor;
-use crate::ecs::event_queue::EventQueue;
-use crate::ecs::world::event::WorldEvent;
-use crate::engine::components::camera::Camera;
-use crate::engine::components::info::Info;
-use crate::engine::components::renderable::Renderable;
-use crate::engine::components::transform::Transform;
-use crate::engine::components::ui_transform::UiTransform;
-use crate::engine::events::engine_event::EngineEvent;
-use crate::engine::resources::asset_database::AssetDatabase;
-use crate::engine::resources::graphics::Graphics;
-use crate::engine::resources::rpc_settings::RpcSettings;
-use crate::engine::resources::statistics::Statistics;
-use crate::engine::systems::camera_manager::CameraManager;
-use crate::engine::systems::force_shutdown::ForceShutdown;
-use crate::engine::systems::rpc::Rpc;
-use crate::rose_tree::hierarchy::Hierarchy;
-use crate::RegAdd;
 use winit::event::WindowEvent;
 
 use super::systems::debug_animator::DebugAnimator;
+use crate::{
+    ecs::{
+        component::Component, entity::index::Index, event_monitor::EventMonitor, event_queue::EventQueue,
+        world::event::WorldEvent,
+    },
+    engine::{
+        components::{
+            camera::Camera, info::Info, renderable::Renderable, transform::Transform, ui_transform::UiTransform,
+        },
+        events::engine_event::EngineEvent,
+        resources::{
+            asset_database::AssetDatabase, graphics::Graphics, rpc_settings::RpcSettings, statistics::Statistics,
+        },
+        systems::{camera_manager::CameraManager, force_shutdown::ForceShutdown, rpc::Rpc},
+    },
+    rose_tree::hierarchy::Hierarchy,
+    RegAdd,
+};
 
 pub type RRegistry<S> = RegAdd![
     <Camera as Component>::Storage,

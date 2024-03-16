@@ -1,11 +1,12 @@
 use anyhow::Context;
 
-use crate::ecs::component::Component;
-use crate::ecs::resources::Resources;
-use crate::ecs::storage::vec_storage::VecStorage;
-use crate::engine::assets::cpu_model::CpuModel;
-use crate::engine::assets::gpu_model::GpuModel;
-use crate::engine::resources::asset_database::AssetDatabase;
+use crate::{
+    ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage},
+    engine::{
+        assets::{cpu_model::CpuModel, gpu_model::GpuModel},
+        resources::asset_database::AssetDatabase,
+    },
+};
 
 #[derive(Debug)]
 pub struct Renderable {

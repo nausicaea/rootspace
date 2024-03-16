@@ -1,8 +1,7 @@
 use tokio::sync::{mpsc::error::SendError, oneshot::error::RecvError};
 
-use crate::engine::resources::statistics::Statistics;
-
 use super::message::RpcMessage;
+use crate::engine::resources::statistics::Statistics;
 
 #[tarpc::service]
 pub trait RpcService {

@@ -1,9 +1,8 @@
 use std::iter::Sum;
 
-use crate::glamour::mat::Mat4;
-use crate::glamour::unit::Unit;
-use crate::glamour::vec::Vec4;
 use num_traits::{Float, One, Zero};
+
+use crate::glamour::{mat::Mat4, unit::Unit, vec::Vec4};
 
 mod approx;
 mod cmp;
@@ -90,12 +89,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::test_helpers::quat;
-    use proptest::num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
-    use proptest::{num::f32::QUIET_NAN as NAN, prop_assert, proptest};
+    use proptest::{
+        num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
+        prop_assert, proptest,
+    };
     use serde_test::{assert_tokens, Token};
 
     use super::*;
+    use crate::glamour::test_helpers::quat;
 
     #[test]
     fn quat_provides_identity_constructor() {

@@ -6,8 +6,8 @@ use serde::{
     Deserialize, Serialize,
 };
 
-use super::super::{entity::index::Index, resource::Resource, with_dependencies::WithDependencies};
 use super::{
+    super::{entity::index::Index, resource::Resource, with_dependencies::WithDependencies},
     iterators::{IndexedRIter, RIter, WIter},
     Storage,
 };
@@ -216,8 +216,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::super::super::{registry::End, registry::ResourceRegistry, world::World};
-    use super::*;
+    use super::{
+        super::super::{
+            registry::{End, ResourceRegistry},
+            world::World,
+        },
+        *,
+    };
     use crate::Reg;
 
     #[test]

@@ -1,12 +1,14 @@
-use crate::engine::resources::statistics::Statistics;
-use crate::engine::systems::rpc::message::RpcMessage;
-use crate::engine::systems::rpc::service::RpcService;
-use log::trace;
 use std::net::SocketAddr;
+
+use log::trace;
 use tarpc::context::Context;
 use tokio::sync::mpsc;
 
 use super::service::Error;
+use crate::engine::{
+    resources::statistics::Statistics,
+    systems::rpc::{message::RpcMessage, service::RpcService},
+};
 
 #[derive(Debug, Clone)]
 pub struct RpcServer {

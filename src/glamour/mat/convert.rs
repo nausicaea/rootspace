@@ -1,7 +1,7 @@
-use crate::glamour::num::Zero;
 use thiserror::Error;
 
 use super::Mat4;
+use crate::glamour::num::Zero;
 
 #[derive(Debug, Clone, Copy, PartialEq, Error)]
 pub enum Error {

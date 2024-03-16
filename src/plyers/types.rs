@@ -1,6 +1,9 @@
+use std::{
+    collections::BTreeMap,
+    fmt::{Display, Formatter},
+};
+
 use clap::builder::PossibleValue;
-use std::collections::BTreeMap;
-use std::fmt::{Display, Formatter};
 
 pub const VERTEX_ELEMENT: &str = "vertex";
 pub const FACE_ELEMENT: &str = "face";

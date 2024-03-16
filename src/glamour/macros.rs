@@ -41,8 +41,9 @@ macro_rules! abop {
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::ops::dot::Dot;
     use std::ops::Add;
+
+    use crate::glamour::ops::dot::Dot;
 
     #[test]
     fn abop_operates_correctly_for_two_arrays() {

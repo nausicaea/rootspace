@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
-use std::fmt::{Debug, Display, Formatter};
-use std::hash::Hash;
 use std::{
     collections::{BTreeMap, HashMap, VecDeque},
+    fmt::{Debug, Display, Formatter},
+    hash::Hash,
     iter::FusedIterator,
 };
 

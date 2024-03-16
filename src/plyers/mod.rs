@@ -50,18 +50,24 @@ mod de;
 mod ser;
 pub mod types;
 
-use std::io::BufWriter;
+use std::{
+    fs::File,
+    io::{BufWriter, Read},
+    path::Path,
+};
 
-use std::{fs::File, io::Read, path::Path};
-
-use crate::file_manipulation;
-use crate::file_manipulation::{FilePathBuf, NewOrExFilePathBuf};
-use crate::plyers::de::error::convert_error;
-use crate::plyers::de::parse_ply;
-use crate::plyers::ser::{write_ascii_values, write_be_values, write_header, write_le_values};
-use crate::plyers::types::{AmbiguousMixedPrimitive, FormatType, Ply, Values};
 use log::debug;
 use nom::error::VerboseError;
+
+use crate::{
+    file_manipulation,
+    file_manipulation::{FilePathBuf, NewOrExFilePathBuf},
+    plyers::{
+        de::{error::convert_error, parse_ply},
+        ser::{write_ascii_values, write_be_values, write_header, write_le_values},
+        types::{AmbiguousMixedPrimitive, FormatType, Ply, Values},
+    },
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PlyError {
@@ -197,8 +203,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
-    use std::path::PathBuf;
+    use std::{collections::BTreeMap, path::PathBuf};
 
     use super::*;
     use crate::plyers::types::{

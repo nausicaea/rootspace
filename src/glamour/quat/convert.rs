@@ -1,9 +1,7 @@
 use num_traits::Float;
 
-use crate::glamour::unit::Unit;
-use crate::glamour::{mat::Mat4, vec::Vec4};
-
 use super::Quat;
+use crate::glamour::{mat::Mat4, unit::Unit, vec::Vec4};
 
 impl<R> From<Mat4<R>> for Unit<Quat<R>>
 where
@@ -116,12 +114,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::glamour::test_helpers::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
     use approx::{relative_eq, ulps_eq};
     use cgmath::InnerSpace;
-    use proptest::num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
-    use proptest::{prop_assert, prop_assert_eq, proptest};
+    use proptest::{
+        num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO},
+        prop_assert, prop_assert_eq, proptest,
+    };
+
+    use super::*;
+    use crate::glamour::test_helpers::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
 
     #[test]
     fn quat_implements_from_mat4() {

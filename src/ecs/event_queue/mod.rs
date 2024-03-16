@@ -179,7 +179,10 @@ mod tests {
 
     use super::*;
     use crate::{
-        ecs::{registry::End, registry::ResourceRegistry, world::World},
+        ecs::{
+            registry::{End, ResourceRegistry},
+            world::World,
+        },
         Reg,
     };
 

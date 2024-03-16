@@ -1,9 +1,12 @@
-use std::fmt::{Display, Formatter};
-use std::{collections::VecDeque, time::Duration};
+use std::{
+    collections::VecDeque,
+    fmt::{Display, Formatter},
+    time::Duration,
+};
 
-use crate::ecs::resource::Resource;
-use crate::ecs::with_dependencies::WithDependencies;
 use serde::{Deserialize, Serialize};
+
+use crate::ecs::{resource::Resource, with_dependencies::WithDependencies};
 
 const DRAW_CALL_WINDOW: usize = 10;
 const RENDER_DURATION_WINDOW: usize = 10;
@@ -100,11 +103,14 @@ impl<D> WithDependencies<D> for Statistics {
 
 #[cfg(test)]
 mod tests {
-    use crate::ecs::registry::{End, ResourceRegistry};
-    use crate::ecs::world::World;
-    use crate::Reg;
-
     use super::*;
+    use crate::{
+        ecs::{
+            registry::{End, ResourceRegistry},
+            world::World,
+        },
+        Reg,
+    };
 
     #[test]
     fn statistics_reg_macro() {

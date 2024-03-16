@@ -1,10 +1,9 @@
-use crate::ecs::component::Component;
-use crate::ecs::storage::vec_storage::VecStorage;
-use crate::glamour::affine::Affine;
-use crate::glamour::mat::Mat4;
-use crate::glamour::num::ToMatrix;
-use crate::glamour::vec::Vec4;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    ecs::{component::Component, storage::vec_storage::VecStorage},
+    glamour::{affine::Affine, mat::Mat4, num::ToMatrix, vec::Vec4},
+};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]

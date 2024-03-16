@@ -1,19 +1,19 @@
 use std::iter::Sum;
 
-use crate::glamour::iter_float::IterFloat;
-use crate::glamour::mat::Mat4;
-use crate::glamour::num::{One, Zero};
-use crate::glamour::ops::cross::Cross;
-use crate::glamour::ops::inv_elem::InvElem;
-use crate::glamour::ops::norm::Norm;
-use crate::glamour::quat::Quat;
-use crate::glamour::unit::Unit;
-use crate::glamour::vec::Vec4;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::{Float, Inv, NumAssign};
 use serde::{Deserialize, Serialize};
 
 use super::num::ToMatrix;
+use crate::glamour::{
+    iter_float::IterFloat,
+    mat::Mat4,
+    num::{One, Zero},
+    ops::{cross::Cross, inv_elem::InvElem, norm::Norm},
+    quat::Quat,
+    unit::Unit,
+    vec::Vec4,
+};
 
 #[derive(Serialize, Deserialize)]
 #[serde(bound(
@@ -254,13 +254,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::mat::Mat4;
-    use crate::glamour::num::Zero;
-    use crate::glamour::quat::Quat;
-    use crate::glamour::vec::Vec4;
     use serde_test::{assert_tokens, Token};
 
     use super::*;
+    use crate::glamour::{mat::Mat4, num::Zero, quat::Quat, vec::Vec4};
 
     #[test]
     fn affine_provides_look_at_lh() {

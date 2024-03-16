@@ -12,11 +12,11 @@ use nom::{
     IResult,
 };
 
-use super::super::types::{
-    CommentDescriptor, CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor, PlyDescriptor,
-    PropertyDescriptor, PropertyId,
-};
 use super::{
+    super::types::{
+        CommentDescriptor, CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor,
+        PlyDescriptor, PropertyDescriptor, PropertyId,
+    },
     common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace},
     ParseNumError,
 };

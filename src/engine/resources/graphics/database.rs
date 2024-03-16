@@ -1,9 +1,9 @@
-use crate::urn::Urn;
 use std::collections::HashMap;
 
 use super::ids::{
     BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, ShaderModuleId, TextureId, TextureViewId,
 };
+use crate::urn::Urn;
 
 #[derive(Debug, Default)]
 pub struct Database {

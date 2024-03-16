@@ -1,5 +1,6 @@
-use crate::{file_manipulation, plyers};
 use std::path::PathBuf;
+
+use crate::{file_manipulation, plyers};
 
 pub mod cpu_material;
 pub mod cpu_mesh;
@@ -20,8 +21,9 @@ pub trait SaveAsset: private::PrivSaveAsset {}
 impl<T: private::PrivSaveAsset> SaveAsset for T {}
 
 pub mod private {
-    use crate::ecs::resources::Resources;
     use std::path::Path;
+
+    use crate::ecs::resources::Resources;
 
     pub trait PrivLoadAsset: Sized {
         type Output;

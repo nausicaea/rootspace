@@ -1,6 +1,5 @@
-use crate::ecs::resources::Resources;
-
 use super::{cpu_model::CpuModel, gpu_material::GpuMaterial, gpu_mesh::GpuMesh};
+use crate::ecs::resources::Resources;
 
 #[derive(Debug)]
 pub struct GpuModel {

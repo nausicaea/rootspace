@@ -3,9 +3,8 @@ use std::path::Path;
 use anyhow::Context;
 use log::trace;
 
-use crate::{ecs::resources::Resources, engine::resources::asset_database::AssetDatabase};
-
 use super::{cpu_material::CpuMaterial, cpu_mesh::CpuMesh, private::PrivLoadAsset};
+use crate::{ecs::resources::Resources, engine::resources::asset_database::AssetDatabase};
 
 pub const MATERIAL_ASSET_GROUP: &str = "textures";
 

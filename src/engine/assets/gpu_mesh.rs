@@ -1,7 +1,8 @@
 use super::cpu_mesh::CpuMesh;
-use crate::ecs::resources::Resources;
-use crate::engine::resources::graphics::ids::BufferId;
-use crate::engine::resources::graphics::Graphics;
+use crate::{
+    ecs::resources::Resources,
+    engine::resources::graphics::{ids::BufferId, Graphics},
+};
 
 #[derive(Debug)]
 pub struct GpuMesh {

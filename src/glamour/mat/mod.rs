@@ -1,8 +1,6 @@
-use crate::glamour::num::Zero;
-use crate::glamour::ops::cross::Cross;
-use crate::glamour::unit::Unit;
-use crate::glamour::vec::Vec4;
 use num_traits::Float;
+
+use crate::glamour::{num::Zero, ops::cross::Cross, unit::Unit, vec::Vec4};
 
 mod approx;
 mod cmp;
@@ -164,9 +162,8 @@ mod tests {
         prop_assert, prop_assert_eq, proptest,
     };
 
-    use crate::glamour::test_helpers::mat4;
-
     use super::*;
+    use crate::glamour::test_helpers::mat4;
 
     proptest! {
         #[test]

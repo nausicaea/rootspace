@@ -1,10 +1,9 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use crate::glamour::ops::inv_elem::InvElem;
-use crate::glamour::ops::mul_elem::MulElem;
 use num_traits::{Float, Inv};
 
 use super::super::Mat4;
+use crate::glamour::ops::{inv_elem::InvElem, mul_elem::MulElem};
 
 macro_rules! impl_binops {
     ($($Op:ident::$op:ident => $Deleg:ident::$deleg:ident);+ $(;)*) => {

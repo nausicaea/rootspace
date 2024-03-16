@@ -1,9 +1,8 @@
-use clap::Parser;
-use std::ops::Deref;
-use std::sync::Arc;
-use tokio::runtime::Runtime;
+use std::{ops::Deref, sync::Arc};
 
+use clap::Parser;
 use rootspace::{AssetDatabaseDeps, GraphicsDeps, Orchestrator, OrchestratorDeps, Reg, RpcDeps, Settings};
+use tokio::runtime::Runtime;
 use winit::event_loop::EventLoop;
 
 #[derive(Debug, Parser)]

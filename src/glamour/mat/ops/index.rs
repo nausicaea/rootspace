@@ -34,10 +34,13 @@ impl<R> IndexMut<(usize, usize)> for Mat4<R> {
 
 #[cfg(test)]
 mod tests {
+    use proptest::{
+        num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO},
+        prop_assert_eq, proptest,
+    };
+
     use super::*;
     use crate::glamour::test_helpers::mat4;
-    use proptest::num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO};
-    use proptest::{prop_assert_eq, proptest};
 
     #[test]
     fn mat4_supports_1d_indexing() {

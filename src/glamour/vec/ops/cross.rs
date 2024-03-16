@@ -1,6 +1,6 @@
-use crate::glamour::ops::cross::Cross;
-use crate::glamour::vec::Vec4;
 use num_traits::Float;
+
+use crate::glamour::{ops::cross::Cross, vec::Vec4};
 
 impl<'a, 'b, R> Cross<&'b Vec4<R>> for &'a Vec4<R>
 where

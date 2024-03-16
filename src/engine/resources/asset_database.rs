@@ -1,13 +1,14 @@
 use std::path::{Path, PathBuf};
 
-use crate::ecs::resource::Resource;
-use crate::ecs::resources::Resources;
-use crate::ecs::with_dependencies::WithDependencies;
-use crate::engine::assets::{Error, LoadAsset, SaveAsset};
-use crate::file_manipulation::copy_recursive;
 use anyhow::Context;
 use directories::ProjectDirs;
 use tokio::fs::{create_dir_all, remove_dir_all};
+
+use crate::{
+    ecs::{resource::Resource, resources::Resources, with_dependencies::WithDependencies},
+    engine::assets::{Error, LoadAsset, SaveAsset},
+    file_manipulation::copy_recursive,
+};
 
 const APP_QUALIFIER: &str = "net";
 const APP_ORGANIZATION: &str = "nausicaea";
@@ -189,9 +190,13 @@ impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ecs::registry::{End, ResourceRegistry};
-    use crate::ecs::world::World;
-    use crate::Reg;
+    use crate::{
+        ecs::{
+            registry::{End, ResourceRegistry},
+            world::World,
+        },
+        Reg,
+    };
 
     struct TDeps<'a> {
         name: &'a str,

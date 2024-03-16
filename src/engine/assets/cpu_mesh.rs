@@ -1,16 +1,19 @@
-use anyhow::Context;
-
-use crate::engine::resources::graphics::vertex::Vertex;
-use crate::plyers::load_ply;
-use crate::plyers::types::{
-    AsSlice, Ply, Primitive, PropertyDescriptor, FACE_ELEMENT, NX_PROPERTY, NY_PROPERTY, NZ_PROPERTY, S_PROPERTY,
-    TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, T_PROPERTY, U_PROPERTY, VERTEX_ELEMENT, VERTEX_INDICES_LIST_PROPERTY,
-    V_PROPERTY, X_PROPERTY, Y_PROPERTY, Z_PROPERTY,
-};
 use std::collections::HashMap;
 
-use super::private::PrivLoadAsset;
-use super::Error;
+use anyhow::Context;
+
+use super::{private::PrivLoadAsset, Error};
+use crate::{
+    engine::resources::graphics::vertex::Vertex,
+    plyers::{
+        load_ply,
+        types::{
+            AsSlice, Ply, Primitive, PropertyDescriptor, FACE_ELEMENT, NX_PROPERTY, NY_PROPERTY, NZ_PROPERTY,
+            S_PROPERTY, TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, T_PROPERTY, U_PROPERTY, VERTEX_ELEMENT,
+            VERTEX_INDICES_LIST_PROPERTY, V_PROPERTY, X_PROPERTY, Y_PROPERTY, Z_PROPERTY,
+        },
+    },
+};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct CpuMesh {
