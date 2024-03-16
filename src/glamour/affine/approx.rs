@@ -1,5 +1,5 @@
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use crate::glamour::affine::Affine;
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 impl<R> AbsDiffEq for Affine<R>
 where

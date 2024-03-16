@@ -1,17 +1,10 @@
 use serde::{Deserialize, Serialize};
 
+use crate::glamour::affine::builder::AffineBuilder;
 use crate::{
     ecs::{component::Component, storage::vec_storage::VecStorage},
-    glamour::{
-        affine::Affine,
-        mat::Mat4,
-        num::ToMatrix,
-        quat::Quat,
-        unit::Unit,
-        vec::Vec4,
-    },
+    glamour::{affine::Affine, mat::Mat4, num::ToMatrix, quat::Quat, unit::Unit, vec::Vec4},
 };
-use crate::glamour::affine::builder::AffineBuilder;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]

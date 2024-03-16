@@ -1,12 +1,12 @@
-use num_traits::float::Float;
-use num_traits::{NumAssign};
-use std::iter::Sum;
 use crate::glamour::affine::Affine;
 use crate::glamour::mat::Mat4;
 use crate::glamour::ops::norm::Norm;
 use crate::glamour::quat::Quat;
 use crate::glamour::unit::Unit;
 use crate::Vec4;
+use num_traits::float::Float;
+use num_traits::NumAssign;
+use std::iter::Sum;
 
 impl<R> From<Affine<R>> for Mat4<R>
 where

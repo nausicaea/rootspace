@@ -1,6 +1,6 @@
+use builder::AffineBuilder;
 use num_traits::{Float, Inv};
 use serde::{Deserialize, Serialize};
-use builder::AffineBuilder;
 
 use crate::glamour::{
     iter_float::IterFloat,
@@ -11,10 +11,10 @@ use crate::glamour::{
     vec::Vec4,
 };
 
-mod convert;
 mod approx;
-mod num;
 pub mod builder;
+mod convert;
+mod num;
 
 #[derive(Serialize, Deserialize)]
 #[serde(bound(
@@ -86,8 +86,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use serde_test::{assert_tokens, Token};
     use crate::glamour::num::ToMatrix;
+    use serde_test::{assert_tokens, Token};
 
     use super::*;
 
