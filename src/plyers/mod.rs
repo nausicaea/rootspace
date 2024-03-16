@@ -66,13 +66,13 @@ use nom::error::VerboseError;
 #[derive(Debug, thiserror::Error)]
 pub enum PlyError {
     #[error(transparent)]
-    FileError(#[from] file_manipulation::FileError),
+    File(#[from] file_manipulation::FileError),
     #[error(transparent)]
-    IoError(#[from] std::io::Error),
+    Io(#[from] std::io::Error),
     #[error("{}", .0)]
-    NomError(String),
+    Nom(String),
     #[error("{}", .0)]
-    PrimitiveError(#[from] AmbiguousMixedPrimitive),
+    Primitive(#[from] AmbiguousMixedPrimitive),
 }
 
 pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
@@ -86,8 +86,8 @@ pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
     let r = parse_ply::<VerboseError<_>>(&input)
         .map(|(_, p)| p)
         .map_err(|e| match e {
-            nom::Err::Error(e) | nom::Err::Failure(e) => PlyError::NomError(convert_error(&input, e)),
-            e @ nom::Err::Incomplete(_) => PlyError::NomError(format!("{}", e)),
+            nom::Err::Error(e) | nom::Err::Failure(e) => PlyError::Nom(convert_error(&input, e)),
+            e @ nom::Err::Incomplete(_) => PlyError::Nom(format!("{}", e)),
         })?;
 
     Ok(r)

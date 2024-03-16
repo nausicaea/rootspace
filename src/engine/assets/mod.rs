@@ -50,15 +50,15 @@ pub enum Error {
     #[error("The asset group or name contain disallowed characters: group='{:?}', name='{:?}'", .0, .1)]
     InvalidCharacters(String, String),
     #[error(transparent)]
-    FileError(#[from] file_manipulation::FileError),
+    File(#[from] file_manipulation::FileError),
     #[error(transparent)]
-    IoError(#[from] std::io::Error),
+    Io(#[from] std::io::Error),
     #[error(transparent)]
-    ImageError(#[from] image::ImageError),
+    Image(#[from] image::ImageError),
     #[error(transparent)]
-    SerdeJsonError(#[from] serde_json::Error),
+    SerdeJson(#[from] serde_json::Error),
     #[error(transparent)]
-    PlyError(#[from] plyers::PlyError),
+    Ply(#[from] plyers::PlyError),
     #[error("The specified file format is not supported for loading assets")]
     UnsupportedFileFormat,
     #[error("No element named 'vertex' was found")]

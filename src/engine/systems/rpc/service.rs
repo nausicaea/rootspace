@@ -19,9 +19,9 @@ pub trait RpcService {
 #[derive(Debug, thiserror::Error, serde::Serialize, serde::Deserialize)]
 pub enum Error {
     #[error("When sending data from the RPC server to the engine: {}", .0)]
-    MpscSendError(String),
+    MpscSend(String),
     #[error("When the RPC server expected data from the engine: {}", .0)]
-    OneshotRecvError(String),
+    OneshotRecv(String),
     #[error("{}", .0)]
     Other(String),
 }
@@ -34,12 +34,12 @@ impl From<anyhow::Error> for Error {
 
 impl From<SendError<RpcMessage>> for Error {
     fn from(value: SendError<RpcMessage>) -> Self {
-        Error::MpscSendError(format!("{}", value))
+        Error::MpscSend(format!("{}", value))
     }
 }
 
 impl From<RecvError> for Error {
     fn from(value: RecvError) -> Self {
-        Error::OneshotRecvError(format!("{}", value))
+        Error::OneshotRecv(format!("{}", value))
     }
 }
