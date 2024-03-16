@@ -25,7 +25,7 @@ use super::{
 
 pub mod error;
 pub mod event;
-pub(crate) mod type_registry;
+pub mod type_registry;
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
 /// systems to operate on the stored resources, components and entities.

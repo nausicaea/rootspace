@@ -27,7 +27,7 @@ pub const VERTEX_INDICES_LIST_PROPERTY: &str = "vertex_indices";
 pub struct InconsistentDataTypes;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct ElementId(pub(crate) usize);
+pub struct ElementId(pub usize);
 
 impl From<ElementId> for usize {
     fn from(val: ElementId) -> Self {
@@ -48,7 +48,7 @@ impl std::fmt::Display for ElementId {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct PropertyId(pub(crate) usize);
+pub struct PropertyId(pub usize);
 
 impl From<PropertyId> for usize {
     fn from(val: PropertyId) -> Self {

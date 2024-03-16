@@ -11,7 +11,7 @@ pub struct GpuMesh {
 }
 
 impl GpuMesh {
-    pub(crate) fn with_mesh(res: &Resources, mesh: &CpuMesh) -> Self {
+    pub fn with_mesh(res: &Resources, mesh: &CpuMesh) -> Self {
         let mut gfx = res.write::<Graphics>();
         let vertex_buffer = gfx.create_buffer_init(
             mesh.label.as_ref().map(|l| format!("{}:vertex-buffer", &l)).as_deref(),

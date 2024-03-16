@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 #[serde(from = "(usize, usize, usize)", into = "(usize, usize, usize)")]
-pub(crate) struct ReceiverState<E> {
+pub struct ReceiverState<E> {
     id: usize,
     pub read: usize,
     pub received: usize,
@@ -13,7 +13,7 @@ pub(crate) struct ReceiverState<E> {
 }
 
 impl<E> ReceiverState<E> {
-    pub(crate) fn new(id: usize) -> Self {
+    pub fn new(id: usize) -> Self {
         ReceiverState {
             id,
             read: 0,
@@ -22,7 +22,7 @@ impl<E> ReceiverState<E> {
         }
     }
 
-    pub(crate) fn reset(&mut self) {
+    pub fn reset(&mut self) {
         self.read = 0;
         self.received = 0;
     }

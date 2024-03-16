@@ -3,9 +3,9 @@ use super::descriptors::VertexAttributeDescriptor;
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable, serde::Serialize, serde::Deserialize)]
 #[repr(C)]
 pub struct Vertex {
-    pub(crate) position: [f32; 3],
-    pub(crate) normals: [f32; 3],
-    pub(crate) tex_coords: [f32; 2],
+    pub position: [f32; 3],
+    pub normals: [f32; 3],
+    pub tex_coords: [f32; 2],
 }
 
 impl VertexAttributeDescriptor for Vertex {

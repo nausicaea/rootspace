@@ -19,7 +19,7 @@ pub trait SaveAsset: private::PrivSaveAsset {}
 
 impl<T: private::PrivSaveAsset> SaveAsset for T {}
 
-pub(crate) mod private {
+pub mod private {
     use crate::ecs::resources::Resources;
     use std::path::Path;
 

@@ -30,7 +30,7 @@ macro_rules! impl_joined_iter {
         where
             $ty: $crate::ecs::storage::Storage,
         {
-            pub(crate) fn new($ty: &$tlt $ty) -> Self {
+            pub fn new($ty: &$tlt $ty) -> Self {
                 $name {
                     indices: $ty.indices().iter().cloned().collect(),
                     cursor: 0,
@@ -92,7 +92,7 @@ macro_rules! impl_joined_iter {
         where
             $tym: $crate::ecs::storage::Storage,
         {
-            pub(crate) fn new($tym: &$tltm mut $tym) -> Self {
+            pub fn new($tym: &$tltm mut $tym) -> Self {
                 $name {
                     indices: $tym.indices().iter().cloned().collect(),
                     cursor: 0,
@@ -174,7 +174,7 @@ macro_rules! impl_joined_iter {
                 $tym: $crate::ecs::storage::Storage,
             )*
         {
-            pub(crate) fn new($($ty: &$tlt $ty,)* $($tym: &$tltm mut $tym,)*) -> Self {
+            pub fn new($($ty: &$tlt $ty,)* $($tym: &$tltm mut $tym,)*) -> Self {
                 $name {
                     indices: intersect_many(&[$($ty.indices(),)* $($tym.indices(),)*]),
                     cursor: 0,
@@ -265,7 +265,7 @@ macro_rules! impl_joined_iter_ref {
         where
             $ty: $crate::ecs::storage::Storage,
         {
-            pub(crate) fn new($ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>) -> Self {
+            pub fn new($ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>) -> Self {
                 $name {
                     indices: $ty.indices().iter().cloned().collect(),
                     cursor: 0,
@@ -335,7 +335,7 @@ macro_rules! impl_joined_iter_ref {
         where
             $tym: $crate::ecs::storage::Storage,
         {
-            pub(crate) fn new($tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>) -> Self {
+            pub fn new($tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>) -> Self {
                 $name {
                     indices: $tym.indices().iter().cloned().collect(),
                     cursor: 0,
@@ -423,7 +423,7 @@ macro_rules! impl_joined_iter_ref {
                 $tym: $crate::ecs::storage::Storage,
             )*
         {
-            pub(crate) fn new($($ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>,)* $($tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>,)*) -> Self {
+            pub fn new($($ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>,)* $($tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>,)*) -> Self {
                 $name {
                     indices: intersect_many(&[$($ty.indices(),)* $($tym.indices(),)*]),
                     cursor: 0,
@@ -535,7 +535,7 @@ impl<'a, S> IndexedRIter<'a, S>
 where
     S: super::Storage,
 {
-    pub(crate) fn new(storage: &'a S) -> Self {
+    pub fn new(storage: &'a S) -> Self {
         IndexedRIter {
             indices: storage.indices().iter().cloned().collect(),
             cursor: 0,

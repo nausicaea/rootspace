@@ -15,7 +15,7 @@ pub struct RpcServer {
 }
 
 impl RpcServer {
-    pub(crate) fn new(mpsc_tx: mpsc::Sender<RpcMessage>, socket_address: SocketAddr) -> Self {
+    pub fn new(mpsc_tx: mpsc::Sender<RpcMessage>, socket_address: SocketAddr) -> Self {
         RpcServer {
             mpsc_tx,
             socket_address,

@@ -19,7 +19,7 @@ pub struct Entity {
 
 impl Entity {
     /// Create a new entity by specifying index and generation directly.
-    pub(crate) fn new<I, G>(idx: I, gen: G) -> Entity
+    pub fn new<I, G>(idx: I, gen: G) -> Entity
     where
         I: Into<Index>,
         G: Into<Generation>,
@@ -37,7 +37,7 @@ impl Entity {
 
     /// Returns the integer generation of the entity, which indicates how often an entity has been reused.
     #[cfg(test)]
-    pub(crate) fn gen(&self) -> Generation {
+    pub fn gen(&self) -> Generation {
         self.gen
     }
 }

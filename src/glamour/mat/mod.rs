@@ -158,7 +158,7 @@ where
 }
 
 #[cfg(test)]
-pub(crate) mod tests {
+mod tests {
     use proptest::{
         num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
         prop_assert, prop_assert_eq, proptest,
