@@ -4,7 +4,7 @@
 ///
 /// ```
 /// use serde::{Deserialize, Serialize};
-/// use rootspace::{Reg, ecs::resource::Resource};
+/// use rootspace::{Reg, Resource};
 ///
 /// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
@@ -26,7 +26,7 @@
 #[macro_export]
 macro_rules! Reg {
     () => {
-        $crate::ecs::registry::End
+        $crate::End
     };
     (...$rest:ty) => {
         $rest
@@ -35,7 +35,7 @@ macro_rules! Reg {
         $crate::Reg![$t,]
     };
     ($t:ty, $($rest:tt)*) => {
-        $crate::ecs::registry::Element<$t, $crate::Reg![$($rest)*]>
+        $crate::Element<$t, $crate::Reg![$($rest)*]>
     };
 }
 
@@ -44,7 +44,7 @@ macro_rules! Reg {
 ///
 /// ```
 /// use serde::{Deserialize, Serialize};
-/// use rootspace::{RegAdd, ecs::{registry::Element, registry::End, resource::Resource}};
+/// use rootspace::{RegAdd, Element, End, Resource};
 ///
 /// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
@@ -69,10 +69,10 @@ macro_rules! RegAdd {
         $t
     };
     ($ta:ty, $tb:ty) => {
-        $crate::ecs::registry::Element<$ta, $tb>
+        $crate::Element<$ta, $tb>
     };
     ($t:ty, $($rest:tt)+) => {
-        $crate::ecs::registry::Element<$t, $crate::RegAdd![$($rest)+]>
+        $crate::Element<$t, $crate::RegAdd![$($rest)+]>
     };
 }
 
@@ -82,7 +82,7 @@ macro_rules! RegAdd {
 ///
 /// ```
 /// use serde::{Deserialize, Serialize};
-/// use rootspace::{reg, ecs::resource::{Resource}};
+/// use rootspace::{reg, Resource};
 ///
 /// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
@@ -104,7 +104,7 @@ macro_rules! RegAdd {
 #[macro_export]
 macro_rules! reg {
     () => {
-        $crate::ecs::registry::End
+        $crate::End
     };
     (...$rest:expr) => {
         $rest
@@ -113,7 +113,7 @@ macro_rules! reg {
         $crate::reg![$e,]
     };
     ($e:expr, $($rest:tt)*) => {
-        $crate::ecs::registry::Element::new($e, $crate::reg![$($rest)*])
+        $crate::Element::new($e, $crate::reg![$($rest)*])
     };
 }
 
@@ -123,7 +123,7 @@ macro_rules! reg {
 ///
 /// ```
 /// use serde::{Deserialize, Serialize};
-/// use rootspace::{reg_add, ecs::{registry::Element, registry::End, resource::Resource}};
+/// use rootspace::{reg_add, Element, End, Resource};
 ///
 /// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
@@ -148,10 +148,10 @@ macro_rules! reg_add {
         $e
     };
     ($ea:expr, $eb:expr) => {
-        $crate::ecs::registry::Element::new($ea, $eb)
+        $crate::Element::new($ea, $eb)
     };
     ($t:expr, $($rest:tt)+) => {
-        $crate::ecs::registry::Element::new($t, $crate::reg_add![$($rest)+])
+        $crate::Element::new($t, $crate::reg_add![$($rest)+])
     };
 }
 

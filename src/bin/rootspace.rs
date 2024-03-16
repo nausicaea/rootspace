@@ -3,12 +3,7 @@ use std::ops::Deref;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
 
-use rootspace::engine::orchestrator::{Orchestrator, OrchestratorDeps};
-use rootspace::engine::resources::asset_database::AssetDatabaseDeps;
-use rootspace::engine::resources::graphics::settings::Settings;
-use rootspace::engine::resources::graphics::GraphicsDeps;
-use rootspace::engine::resources::rpc_settings::RpcDeps;
-use rootspace::Reg;
+use rootspace::{AssetDatabaseDeps, GraphicsDeps, Orchestrator, OrchestratorDeps, Reg, RpcDeps, Settings};
 use winit::event_loop::EventLoop;
 
 #[derive(Debug, Parser)]

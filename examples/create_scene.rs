@@ -1,12 +1,5 @@
 use clap::Parser;
-use rootspace::ecs::with_dependencies::WithDependencies;
-use rootspace::engine::assets::scene::RenderableSource;
-use rootspace::engine::assets::scene::Scene;
-use rootspace::engine::components::camera::Camera;
-use rootspace::engine::components::transform::Transform;
-use rootspace::engine::resources::asset_database::{AssetDatabase, AssetDatabaseDeps};
-use rootspace::glamour::num::One;
-use rootspace::glamour::vec::Vec4;
+use rootspace::{AssetDatabase, AssetDatabaseDeps, Camera, One, RenderableSource, Scene, Transform, Vec4, WithDependencies};
 
 #[derive(Debug, Parser)]
 #[command(name = "create_scene", author, version, about = "Creates a new test scene via asset database", long_about = None)]
