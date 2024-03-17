@@ -171,7 +171,7 @@ mod tests {
         #[should_panic]
         fn from_quat_for_mat_is_equal_to_nalgebra(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
             let glamour_result = Into::<Mat4<f32>>::into(glamour_lhs);
-            let nalgebra_lhs = nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(glamour_lhs.w, glamour_lhs.i, glamour_lhs.j, glamour_lhs.k));
+            let nalgebra_lhs: nalgebra::UnitQuaternion<f32> = glamour_lhs.into();
             let nalgebra_result = Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs);
 
             prop_assert!(ulps_eq!(glamour_result, nalgebra_result), "left: {glamour_result:?}\nright: {nalgebra_result:?}");
@@ -181,7 +181,7 @@ mod tests {
         #[test]
         fn from_quat_for_mat_has_large_rounding_differences_to_nalgebra(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
             let glamour_result = Into::<Mat4<f32>>::into(glamour_lhs);
-            let nalgebra_lhs = nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(glamour_lhs.w, glamour_lhs.i, glamour_lhs.j, glamour_lhs.k));
+            let nalgebra_lhs: nalgebra::UnitQuaternion<f32> = glamour_lhs.into();
             let nalgebra_result = Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs);
 
             prop_assert!(relative_eq!(glamour_result, nalgebra_result, max_relative = 1e-2), "left: {glamour_result:?}\nright: {nalgebra_result:?}");
@@ -190,7 +190,7 @@ mod tests {
         #[test]
         fn from_quat_for_mat_is_equal_to_cgmath(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
             let glamour_result = Into::<Mat4<f32>>::into(glamour_lhs);
-            let cgmath_lhs = cgmath::Quaternion::new(glamour_lhs.w, glamour_lhs.i, glamour_lhs.j, glamour_lhs.k);
+            let cgmath_lhs: cgmath::Quaternion<f32> = glamour_lhs.into();
             let cgmath_result = Into::<cgmath::Matrix4<f32>>::into(cgmath_lhs);
 
             prop_assert!(ulps_eq!(glamour_result, cgmath_result), "left: {glamour_result:?}\nright: {cgmath_result:?}");
