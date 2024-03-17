@@ -3,7 +3,6 @@ use num_traits::{Float, Inv};
 use serde::{Deserialize, Serialize};
 
 use crate::glamour::{
-    iter_float::IterFloat,
     num::{One, Zero},
     ops::{cross::Cross, inv_elem::InvElem},
     quat::Quat,
@@ -50,7 +49,7 @@ where
 
 impl<R> Affine<R>
 where
-    R: IterFloat,
+    R: Float,
 {
     pub fn look_at_lh(eye: Vec4<R>, target: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
         let fwd: Unit<_> = (target - eye).into();

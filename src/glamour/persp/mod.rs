@@ -82,7 +82,6 @@ impl<R> AsRef<Mat4<R>> for Persp<R> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,5 +1,4 @@
 pub mod affine;
-mod iter_float;
 mod macros;
 pub mod mat;
 pub mod num;

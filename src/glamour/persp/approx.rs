@@ -1,10 +1,10 @@
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use crate::glamour::persp::Persp;
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 impl<R> AbsDiffEq for Persp<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -18,9 +18,9 @@ impl<R> AbsDiffEq for Persp<R>
 }
 
 impl<R> RelativeEq for Persp<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -32,9 +32,9 @@ impl<R> RelativeEq for Persp<R>
 }
 
 impl<R> UlpsEq for Persp<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()

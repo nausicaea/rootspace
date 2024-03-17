@@ -1,4 +1,3 @@
-#[cfg(test)]
 impl<R> PartialEq<nalgebra::Quaternion<R>> for super::Quat<R>
 where
     R: PartialEq,
@@ -8,7 +7,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> PartialEq<cgmath::Quaternion<R>> for super::Quat<R>
 where
     R: PartialEq,

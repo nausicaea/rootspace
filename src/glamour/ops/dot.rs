@@ -12,7 +12,7 @@ macro_rules! impl_dot_product {
     ($tgt:ty, $tt:tt) => {
         impl<R> Dot for $tgt
         where
-            R: Num + Copy + std::iter::Sum,
+            R: Num + Copy,
         {
             type Output = R;
 
@@ -23,13 +23,17 @@ macro_rules! impl_dot_product {
 
         impl<'a, R> Dot for &'a $tgt
         where
-            R: Num + Copy + std::iter::Sum,
+            R: Num + Copy,
         {
             type Output = R;
 
             fn dot(self, rhs: Self) -> Self::Output {
                 let c = abop!(mul, self, rhs, $tt);
-                c.into_iter().sum()
+                let mut accum = R::zero();
+                for element in c {
+                    accum = accum + element;
+                }
+                accum
             }
         }
     };

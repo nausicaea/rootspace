@@ -1,11 +1,10 @@
-use std::iter::Sum;
-
 use num_traits::{Float, One, Zero};
 
 use crate::glamour::{mat::Mat4, unit::Unit, vec::Vec4};
 
 #[cfg(test)]
 mod approx;
+#[cfg(test)]
 mod cmp;
 mod convert;
 mod num;
@@ -27,7 +26,7 @@ impl<R> Quat<R> {
 
 impl<R> Quat<R>
 where
-    R: Float + Sum,
+    R: Float,
 {
     pub fn look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Unit<Quat<R>> {
         Mat4::look_at_lh(fwd, up).into()

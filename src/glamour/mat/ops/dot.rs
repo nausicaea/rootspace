@@ -1,14 +1,15 @@
+use num_traits::Float;
 use std::{iter::Product, ops::Mul};
 
 use super::super::Mat4;
 use crate::{
     forward_ref_binop,
-    glamour::{iter_float::IterFloat, ops::dot::Dot, vec::Vec4},
+    glamour::{ops::dot::Dot, vec::Vec4},
 };
 
 impl<'a, 'b, R> Dot<&'b Mat4<R>> for &'a Mat4<R>
 where
-    R: IterFloat,
+    R: Float,
 {
     type Output = Mat4<R>;
 
@@ -40,7 +41,7 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: IterFloat> Dot, dot for Mat4<R>, Mat4<R>, Mat4<R>);
+forward_ref_binop!(impl<R: Float> Dot, dot for Mat4<R>, Mat4<R>, Mat4<R>);
 
 impl<'a, 'b, R> Mul<&'b Mat4<R>> for &'a Mat4<R>
 where
@@ -53,11 +54,11 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat4<R>, Mat4<R>, Mat4<R>);
+forward_ref_binop!(impl<R: Float> Mul, mul for Mat4<R>, Mat4<R>, Mat4<R>);
 
 impl<'a, 'b, R> Dot<&'b Vec4<R>> for &'a Mat4<R>
 where
-    R: IterFloat,
+    R: Float,
 {
     type Output = Vec4<R>;
 
@@ -77,7 +78,7 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: IterFloat> Dot, dot for Mat4<R>, Vec4<R>, Vec4<R>);
+forward_ref_binop!(impl<R: Float> Dot, dot for Mat4<R>, Vec4<R>, Vec4<R>);
 
 impl<'a, 'b, R> Mul<&'b Vec4<R>> for &'a Mat4<R>
 where
@@ -90,15 +91,15 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: IterFloat> Mul, mul for Mat4<R>, Vec4<R>, Vec4<R>);
+forward_ref_binop!(impl<R: Float> Mul, mul for Mat4<R>, Vec4<R>, Vec4<R>);
 
-impl<'a, R: IterFloat> Product<&'a Mat4<R>> for Mat4<R> {
+impl<'a, R: Float> Product<&'a Mat4<R>> for Mat4<R> {
     fn product<I: Iterator<Item = &'a Mat4<R>>>(iter: I) -> Self {
         iter.fold(Mat4::identity(), |state, item| state * item)
     }
 }
 
-impl<R: IterFloat> Product<Mat4<R>> for Mat4<R> {
+impl<R: Float> Product<Mat4<R>> for Mat4<R> {
     fn product<I: Iterator<Item = Mat4<R>>>(iter: I) -> Self {
         iter.fold(Mat4::identity(), |state, item| state * item)
     }

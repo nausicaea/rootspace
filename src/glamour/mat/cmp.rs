@@ -1,4 +1,3 @@
-#[cfg(test)]
 impl<R> PartialEq<nalgebra::Matrix4<R>> for super::Mat4<R>
 where
     R: PartialEq,
@@ -8,7 +7,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> PartialEq<cgmath::Matrix4<R>> for super::Mat4<R>
 where
     R: PartialEq,
