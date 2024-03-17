@@ -11,6 +11,7 @@ use crate::glamour::{
     vec::Vec4,
 };
 
+#[cfg(test)]
 mod approx;
 pub mod builder;
 mod convert;

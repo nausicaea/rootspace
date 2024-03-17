@@ -4,6 +4,7 @@ use num_traits::{Float, One, Zero};
 
 use crate::glamour::{mat::Mat4, unit::Unit, vec::Vec4};
 
+#[cfg(test)]
 mod approx;
 mod cmp;
 mod convert;

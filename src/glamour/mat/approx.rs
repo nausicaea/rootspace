@@ -22,7 +22,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> AbsDiffEq<nalgebra::Matrix4<R>> for Mat4<R>
 where
     R: AbsDiffEq,
@@ -43,7 +42,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> AbsDiffEq<cgmath::Matrix4<R>> for Mat4<R>
 where
     R: AbsDiffEq,
@@ -82,7 +80,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> RelativeEq<nalgebra::Matrix4<R>> for Mat4<R>
 where
     R: RelativeEq,
@@ -101,7 +98,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> RelativeEq<cgmath::Matrix4<R>> for Mat4<R>
 where
     R: RelativeEq,
@@ -138,7 +134,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> UlpsEq<nalgebra::Matrix4<R>> for Mat4<R>
 where
     R: UlpsEq,
@@ -157,7 +152,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> UlpsEq<cgmath::Matrix4<R>> for Mat4<R>
 where
     R: UlpsEq,

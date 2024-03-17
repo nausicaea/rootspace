@@ -2,6 +2,7 @@ use num_traits::Float;
 
 use crate::glamour::{num::Zero, ops::cross::Cross, unit::Unit, vec::Vec4};
 
+#[cfg(test)]
 mod approx;
 mod cmp;
 mod convert;

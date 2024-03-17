@@ -21,7 +21,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> AbsDiffEq<nalgebra::Vector4<R>> for Vec4<R>
 where
     R: AbsDiffEq,
@@ -41,7 +40,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> AbsDiffEq<cgmath::Vector4<R>> for Vec4<R>
 where
     R: AbsDiffEq,
@@ -78,7 +76,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> RelativeEq<nalgebra::Vector4<R>> for Vec4<R>
 where
     R: RelativeEq,
@@ -96,7 +93,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> RelativeEq<cgmath::Vector4<R>> for Vec4<R>
 where
     R: RelativeEq,
@@ -131,7 +127,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> UlpsEq<nalgebra::Vector4<R>> for Vec4<R>
 where
     R: UlpsEq,
@@ -149,7 +144,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> UlpsEq<cgmath::Vector4<R>> for Vec4<R>
 where
     R: UlpsEq,
@@ -175,7 +169,7 @@ mod tests {
     use crate::glamour::num::One;
 
     #[test]
-    fn mat4_implements_abs_diff_eq() {
+    fn vec4_implements_abs_diff_eq() {
         let a: Vec4<f32> = Vec4::one();
         let b: Vec4<f32> = Vec4::one() * 2.0;
 
@@ -183,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn mat4_implements_relative_eq() {
+    fn vec4_implements_relative_eq() {
         let a: Vec4<f32> = Vec4::one();
         let b: Vec4<f32> = Vec4::one() * 2.0;
 
@@ -191,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    fn mat4_implements_ulps_eq() {
+    fn vec4_implements_ulps_eq() {
         let a: Vec4<f32> = Vec4::one();
         let b: Vec4<f32> = Vec4::one() * 2.0;
 

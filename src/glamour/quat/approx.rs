@@ -21,7 +21,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> AbsDiffEq<nalgebra::Quaternion<R>> for Quat<R>
 where
     R: AbsDiffEq,
@@ -41,7 +40,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> AbsDiffEq<cgmath::Quaternion<R>> for Quat<R>
 where
     R: AbsDiffEq,
@@ -78,7 +76,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> RelativeEq<nalgebra::Quaternion<R>> for Quat<R>
 where
     R: RelativeEq,
@@ -96,7 +93,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> RelativeEq<cgmath::Quaternion<R>> for Quat<R>
 where
     R: RelativeEq,
@@ -131,7 +127,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> UlpsEq<nalgebra::Quaternion<R>> for Quat<R>
 where
     R: UlpsEq,
@@ -149,7 +144,6 @@ where
     }
 }
 
-#[cfg(test)]
 impl<R> UlpsEq<cgmath::Quaternion<R>> for Quat<R>
 where
     R: UlpsEq,
