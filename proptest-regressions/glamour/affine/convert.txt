@@ -6,3 +6,5 @@
 # everyone who runs the test benefits from these saved cases.
 cc 70f7f628160d42df00a7876afbd8200f245a0f2751b33367e632cc7992565e8d # shrinks to glamour_lhs = Affine { t: Vec4 { x: 7.4268295e29, y: 1.1645412e34, z: 62605930000.0, w: 0.0 }, o: Unit(Quat { w: 0.0, i: 0.0, j: 0.0, k: 0.0 }), s: 1.7659203e37 }
 cc 1caef3faf539ba8bb2bbf8942560f5d3918302cd9f413abd8e6b835107744046 # shrinks to glamour_lhs = Affine { t: Vec4 { x: -2.1684043e-19, y: -2.1684043e-19, z: -2.1684043e-19, w: 0.0 }, o: Unit(Quat { w: NaN, i: NaN, j: NaN, k: NaN }), s: 1.3500943e35 }
+cc fdf3b93be872a514067a72e7bda6e188281c426e6d925276859e973d9cefaa2b # shrinks to glamour_lhs = Affine { t: Vec4 { x: -2.3283064e-10, y: -2.3283064e-10, z: -2.3283064e-10, w: 0.0 }, o: Unit(Quat { w: -0.19760752, i: -0.7017539, j: -0.6792535, k: -0.08430608 }), s: -1515097600.0 }
+cc c23c79161c82e89621947d5368fd068ff5a44a8d5aad76594af06f54d3e8ed4c # shrinks to glamour_lhs = Affine { t: Vec4 { x: -2.3283064e-10, y: -2.3283064e-10, z: -2.3283064e-10, w: 0.0 }, o: Unit(Quat { w: -0.64891654, i: 0.28100818, j: 0.5782879, k: 0.40684727 }), s: -4038131200.0 }
