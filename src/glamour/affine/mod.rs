@@ -3,15 +3,13 @@ use num_traits::{Float, Inv};
 use serde::{Deserialize, Serialize};
 
 use crate::glamour::{
-    num::{One, Zero},
-    ops::{cross::Cross, inv_elem::InvElem},
+    num::Zero,
+    ops::cross::Cross,
     quat::Quat,
     unit::Unit,
     vec::Vec4,
 };
 
-#[cfg(test)]
-mod approx;
 pub mod builder;
 mod convert;
 mod num;
@@ -25,7 +23,7 @@ mod num;
 pub struct Affine<R> {
     pub t: Vec4<R>,
     pub o: Unit<Quat<R>>,
-    pub s: Vec4<R>,
+    pub s: R,
 }
 
 impl<R> Affine<R> {
@@ -42,7 +40,7 @@ where
         Affine {
             t: Vec4::zero(),
             o: Quat::identity().into(),
-            s: Vec4::new(R::one(), R::one(), R::one(), R::zero()),
+            s: R::one(),
         }
     }
 }
@@ -57,16 +55,16 @@ where
         let rotated_up: Unit<_> = fwd.cross(side);
 
         let eye = Vec4::new(
-            -(eye * side.inner()),
-            -(eye * rotated_up.inner()),
-            eye * fwd.inner(),
+            -(eye * side.0),
+            -(eye * rotated_up.0),
+            eye * fwd.0,
             R::zero(),
         );
 
         Affine {
             t: eye,
             o: Quat::look_at_lh(fwd, up),
-            s: Vec4::one(),
+            s: R::one(),
         }
     }
 }
@@ -79,7 +77,7 @@ where
         Affine {
             t: -(&self.t),
             o: self.o.as_ref().c().into(),
-            s: (&self.s).inv_elem(),
+            s: (&self.s).inv(),
         }
     }
 }
@@ -122,7 +120,7 @@ mod tests {
         let a: Affine<f32> = Affine::identity();
         assert_eq!(a.t, Vec4::<f32>::zero());
         assert_eq!(a.o, Unit::from(Quat::<f32>::identity()));
-        assert_eq!(a.s, Vec4::<f32>::new(1.0, 1.0, 1.0, 0.0));
+        assert_eq!(a.s, 1.0f32);
     }
 
     #[test]
@@ -156,16 +154,7 @@ mod tests {
                 Token::F32(0.0),
                 Token::StructEnd,
                 Token::Str("s"),
-                Token::Struct { name: "Vec4", len: 4 },
-                Token::Str("x"),
                 Token::F32(1.0),
-                Token::Str("y"),
-                Token::F32(1.0),
-                Token::Str("z"),
-                Token::F32(1.0),
-                Token::Str("w"),
-                Token::F32(0.0),
-                Token::StructEnd,
                 Token::StructEnd,
             ],
         );

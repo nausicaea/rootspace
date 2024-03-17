@@ -120,9 +120,9 @@ mod tests {
         num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO},
         prop_assert, prop_assert_eq, proptest,
     };
+    use crate::glamour::test_helpers::proptest::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
 
     use super::*;
-    use crate::glamour::test_helpers::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
 
     #[test]
     fn quat_implements_from_mat4() {
@@ -150,12 +150,12 @@ mod tests {
             );
             let nalgebra_result: nalgebra::UnitQuaternion<f32> = nalgebra::UnitQuaternion::from_matrix_eps(&nalgebra_lhs, 10.0 * f32::EPSILON, 1, nalgebra::UnitQuaternion::identity());
 
-            prop_assert!(ulps_eq!(glamour_result.inner(), *nalgebra_result.quaternion()));
+            prop_assert!(ulps_eq!(glamour_result.0, *nalgebra_result.quaternion()));
         }
 
         #[test]
         fn from_mat_for_quat_is_equal_to_cgmath(glamour_lhs in mat4(bounded_nonzero_f32(-62, 63))) {
-            let glamour_result = Into::<Unit<Quat<f32>>>::into(glamour_lhs).inner();
+            let glamour_result = Into::<Unit<Quat<f32>>>::into(glamour_lhs).0;
             let cgmath_lhs = cgmath::Matrix3::new(
                 glamour_lhs[(0, 0)], glamour_lhs[(1, 0)], glamour_lhs[(2, 0)],
                 glamour_lhs[(0, 1)], glamour_lhs[(1, 1)], glamour_lhs[(2, 1)],
@@ -169,12 +169,12 @@ mod tests {
         /// Nalgebra likely uses a different conversion algorithm which causes large rounding errors
         #[test]
         #[should_panic]
-        fn from_quat_for_mat_is_not_equal_to_nalgebra(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
+        fn from_quat_for_mat_is_equal_to_nalgebra(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
             let glamour_result = Into::<Mat4<f32>>::into(glamour_lhs);
             let nalgebra_lhs = nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(glamour_lhs.w, glamour_lhs.i, glamour_lhs.j, glamour_lhs.k));
-            let nalgebra_result = Into::<Mat4<f32>>::into(Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs));
+            let nalgebra_result = Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs);
 
-            prop_assert!(ulps_eq!(glamour_result, nalgebra_result));
+            prop_assert!(ulps_eq!(glamour_result, nalgebra_result), "left: {glamour_result:?}\nright: {nalgebra_result:?}");
         }
 
         /// Nalgebra likely uses a different conversion algorithm which causes large rounding errors
@@ -184,7 +184,7 @@ mod tests {
             let nalgebra_lhs = nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(glamour_lhs.w, glamour_lhs.i, glamour_lhs.j, glamour_lhs.k));
             let nalgebra_result = Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs);
 
-            prop_assert!(relative_eq!(glamour_result, nalgebra_result.transpose(), max_relative = 1e-2));
+            prop_assert!(relative_eq!(glamour_result, nalgebra_result, max_relative = 1e-2), "left: {glamour_result:?}\nright: {nalgebra_result:?}");
         }
 
         #[test]
@@ -193,8 +193,7 @@ mod tests {
             let cgmath_lhs = cgmath::Quaternion::new(glamour_lhs.w, glamour_lhs.i, glamour_lhs.j, glamour_lhs.k);
             let cgmath_result = Into::<cgmath::Matrix4<f32>>::into(cgmath_lhs);
 
-            use cgmath::Matrix;
-            prop_assert!(ulps_eq!(glamour_result, cgmath_result.transpose()));
+            prop_assert!(ulps_eq!(glamour_result, cgmath_result), "left: {glamour_result:?}\nright: {cgmath_result:?}");
         }
 
         #[test]

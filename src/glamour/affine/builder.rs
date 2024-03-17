@@ -8,8 +8,8 @@ use num_traits::Float;
 #[derive(Debug, PartialEq, Clone)]
 pub struct AffineBuilder<R> {
     t: Option<Vec4<R>>,
-    o: Option<Quat<R>>,
-    s: Option<Vec4<R>>,
+    o: Option<Unit<Quat<R>>>,
+    s: Option<R>,
 }
 
 impl<R> AffineBuilder<R> {
@@ -18,13 +18,13 @@ impl<R> AffineBuilder<R> {
         self
     }
 
-    pub fn with_orientation(mut self, q: Quat<R>) -> Self {
-        self.o = Some(q);
+    pub fn with_orientation<Q: Into<Unit<Quat<R>>>>(mut self, q: Q) -> Self {
+        self.o = Some(q.into());
         self
     }
 
-    pub fn with_scale(mut self, v: Vec4<R>) -> Self {
-        self.s = Some(v);
+    pub fn with_scale(mut self, s: R) -> Self {
+        self.s = Some(s);
         self
     }
 }
@@ -36,10 +36,8 @@ where
     pub fn build(self) -> Affine<R> {
         Affine {
             t: self.t.unwrap_or_else(Vec4::zero),
-            o: self.o.map(Unit::from).unwrap_or_else(|| Unit::from(Quat::identity())),
-            s: self
-                .s
-                .unwrap_or_else(|| Vec4::new(R::one(), R::one(), R::one(), R::zero())),
+            o: self.o.unwrap_or_else(|| Unit::from(Quat::identity())),
+            s: self.s.unwrap_or_else(|| R::one()),
         }
     }
 }
@@ -63,8 +61,8 @@ mod tests {
         let a: Affine<f32> = Affine::builder().build();
         assert_eq!(a, Affine::<f32>::identity());
 
-        let a: Affine<f32> = Affine::builder().with_scale(Vec4::from([1.0, 2.0, 3.0, 0.0])).build();
+        let a: Affine<f32> = Affine::builder().with_scale(2.0).build();
 
-        assert_eq!(a.s, Vec4::from([1.0, 2.0, 3.0, 0.0]));
+        assert_eq!(a.s, 2.0f32);
     }
 }

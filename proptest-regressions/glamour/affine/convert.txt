@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 70f7f628160d42df00a7876afbd8200f245a0f2751b33367e632cc7992565e8d # shrinks to glamour_lhs = Affine { t: Vec4 { x: 7.4268295e29, y: 1.1645412e34, z: 62605930000.0, w: 0.0 }, o: Unit(Quat { w: 0.0, i: 0.0, j: 0.0, k: 0.0 }), s: 1.7659203e37 }

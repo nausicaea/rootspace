@@ -1,12 +1,7 @@
 use crate::glamour::affine::Affine;
 use crate::glamour::mat::Mat4;
-use crate::glamour::ops::norm::Norm;
-use crate::glamour::quat::Quat;
-use crate::glamour::unit::Unit;
-use crate::Vec4;
 use num_traits::float::Float;
 use num_traits::NumAssign;
-use std::iter::Sum;
 
 impl<R> From<Affine<R>> for Mat4<R>
 where
@@ -23,9 +18,9 @@ where
 {
     fn from(v: &'a Affine<R>) -> Self {
         let mut m: Mat4<R> = v.o.into();
-        m[(0, 0)] *= v.s[0];
-        m[(1, 1)] *= v.s[1];
-        m[(2, 2)] *= v.s[2];
+        m[(0, 0)] *= v.s;
+        m[(1, 1)] *= v.s;
+        m[(2, 2)] *= v.s;
         m[(0, 3)] = v.t[0];
         m[(1, 3)] = v.t[1];
         m[(2, 3)] = v.t[2];
@@ -33,49 +28,40 @@ where
     }
 }
 
-impl<R> TryFrom<Mat4<R>> for Affine<R>
-where
-    R: Copy + num_traits::One + num_traits::Zero + NumAssign + Float + Sum,
-{
-    type Error = ();
-
-    fn try_from(v: Mat4<R>) -> Result<Self, Self::Error> {
-        let mut t: Vec4<R> = v.col(3);
-        t.w = R::zero();
-
-        let s = Vec4::new(v.col(0).norm(), v.col(1).norm(), v.col(2).norm(), R::zero());
-
-        let mut rot_m: Mat4<R> = v;
-        rot_m[(0, 0)] /= s[0];
-        rot_m[(1, 0)] /= s[0];
-        rot_m[(2, 0)] /= s[0];
-        rot_m[(0, 1)] /= s[1];
-        rot_m[(1, 1)] /= s[1];
-        rot_m[(2, 1)] /= s[1];
-        rot_m[(0, 2)] /= s[2];
-        rot_m[(1, 2)] /= s[2];
-        rot_m[(2, 2)] /= s[2];
-        rot_m[(0, 3)] = R::zero();
-        rot_m[(1, 3)] = R::zero();
-        rot_m[(2, 3)] = R::zero();
-        rot_m[(3, 0)] = R::zero();
-        rot_m[(3, 1)] = R::zero();
-        rot_m[(3, 2)] = R::zero();
-        rot_m[(3, 3)] = R::one();
-
-        let o: Unit<Quat<R>> = rot_m.into();
-
-        Ok(Affine { t, o, s })
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use approx::ulps_eq;
+    use proptest::{prop_assert, proptest};
+    use crate::glamour::test_helpers::proptest::{affine, bounded_f32};
     use super::*;
 
-    #[test]
-    fn affine_implements_try_from_mat4() {
-        let m: Mat4<f32> = Mat4::identity();
-        assert_eq!(Affine::<f32>::try_from(m), Ok(Affine::<f32>::identity()));
+    proptest! {
+        #[test]
+        #[ignore]
+        fn from_affine_for_mat_is_equal_to_nalgebra(glamour_lhs in affine(bounded_f32(-62, 63))) {
+            let glamour_result: Mat4<f32> = glamour_lhs.into();
+            let nalgebra_lhs = nalgebra::Similarity3::from_parts(
+                nalgebra::Translation3::new(glamour_lhs.t.x, glamour_lhs.t.y, glamour_lhs.t.z),
+                nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(glamour_lhs.o.w, glamour_lhs.o.i, glamour_lhs.o.j, glamour_lhs.o.k)),
+                glamour_lhs.s,
+            );
+            let nalgebra_result = nalgebra_lhs.to_homogeneous();
+
+            prop_assert!(ulps_eq!(glamour_result, nalgebra_result), "left\t= {glamour_result:?}\nright (transposed)\t= {:?}", nalgebra_result.transpose());
+        }
+
+        #[test]
+        fn from_affine_for_mat_is_equal_to_cgmath(glamour_lhs in affine(bounded_f32(-62, 63))) {
+            let glamour_result: Mat4<f32> = glamour_lhs.into();
+            let cgmath_lhs = cgmath::Decomposed {
+                disp: cgmath::Vector3::new(glamour_lhs.t.x, glamour_lhs.t.y, glamour_lhs.t.z),
+                rot: Into::<cgmath::Quaternion<f32>>::into(glamour_lhs.o.0),
+                scale: glamour_lhs.s,
+            };
+            let cgmath_result: cgmath::Matrix4<f32> = cgmath_lhs.into();
+
+            use cgmath::Matrix;
+            prop_assert!(ulps_eq!(glamour_result, cgmath_result), "left\t= {glamour_result:?}\nright (transposed)\t= {:?}", cgmath_result.transpose());
+        }
     }
 }

@@ -27,7 +27,7 @@ impl Transform {
         self.0.o = value.into();
     }
 
-    pub fn set_scale(&mut self, value: Vec4<f32>) {
+    pub fn set_scale(&mut self, value: f32) {
         self.0.s = value;
     }
 
@@ -43,8 +43,8 @@ impl Transform {
         &self.0.o
     }
 
-    pub fn scale(&self) -> &Vec4<f32> {
-        &self.0.s
+    pub fn scale(&self) -> f32 {
+        self.0.s
     }
 }
 
@@ -102,8 +102,8 @@ impl TransformBuilder {
         self
     }
 
-    pub fn with_scale<V: Into<Vec4<f32>>>(mut self, s: V) -> Self {
-        self.0 = self.0.with_scale(s.into());
+    pub fn with_scale(mut self, s: f32) -> Self {
+        self.0 = self.0.with_scale(s);
         self
     }
 
@@ -119,7 +119,7 @@ mod tests {
 
     use super::*;
     use crate::glamour::{
-        num::{One, Zero},
+        num::Zero,
         quat::Quat,
         vec::Vec4,
     };
@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn builder_accepts_scale() {
-        let _: TransformBuilder = TransformBuilder::default().with_scale(Vec4::zero());
+        let _: TransformBuilder = TransformBuilder::default().with_scale(0.0f32);
     }
 
     #[test]
@@ -168,12 +168,12 @@ mod tests {
         let m: Transform = TransformBuilder::default()
             .with_translation(Vec4::zero())
             .with_orientation(Quat::identity())
-            .with_scale(Vec4::one())
+            .with_scale(1.0f32)
             .build();
 
         assert_ulps_eq!(m.translation(), &Vec4::zero());
         assert_ulps_eq!(m.orientation(), &Unit::from(Quat::identity()));
-        assert_ulps_eq!(m.scale(), &Vec4::one());
+        assert_ulps_eq!(m.scale(), 1.0f32);
     }
 
     proptest! {
@@ -198,13 +198,12 @@ mod tests {
         }
 
         #[test]
-        fn scale_may_be_changed(num in vec(NORMAL, 3)) {
+        fn scale_may_be_changed(num in NORMAL) {
             let mut m = Transform::default();
 
-            let s = Vec4::new(num[0], num[1], num[2], 0.0);
-            m.set_scale(s);
+            m.set_scale(num);
 
-            prop_assert_eq!(m.scale(), &s);
+            prop_assert_eq!(m.scale(), num);
         }
     }
 }

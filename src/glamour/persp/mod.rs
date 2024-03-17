@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod approx;
-
 use ::approx::{relative_eq, RelativeEq};
 use num_traits::Float;
 
@@ -12,7 +9,7 @@ use super::mat::Mat4;
     deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
 ))]
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Persp<R>(Mat4<R>);
+pub struct Persp<R>(pub(crate) Mat4<R>);
 
 impl<R> Persp<R> {
     pub fn as_matrix(&self) -> &Mat4<R> {

@@ -1,18 +1,10 @@
-#[cfg(test)]
-mod approx;
 mod convert;
 mod ops;
 
 #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
 #[repr(transparent)]
-pub struct Unit<T>(T);
-
-impl<T> Unit<T> {
-    pub fn inner(self) -> T {
-        self.0
-    }
-}
+pub struct Unit<T>(pub(crate) T);
 
 impl<T> std::fmt::Display for Unit<T>
 where

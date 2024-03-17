@@ -113,8 +113,8 @@ mod tests {
     use super::*;
     use crate::glamour::{
         num::One,
-        test_helpers::{bounded_f32, bounded_nonzero_f32, mat4},
     };
+    use crate::glamour::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, mat4};
 
     #[test]
     fn mat4_supports_dot_product_with_mat4() {
@@ -164,8 +164,7 @@ mod tests {
         fn mat4_mul_is_equal_to_nalgebra(glamour_lhs in mat4(bounded_f32(-62, 63)), glamour_rhs in mat4(bounded_f32(-62, 63))) {
             let nalgebra_lhs: nalgebra::Matrix4<f32> = glamour_lhs.into();
             let nalgebra_rhs: nalgebra::Matrix4<f32> = glamour_rhs.into();
-            let nalgebra_result: Mat4<f32> = (nalgebra_lhs * nalgebra_rhs).into();
-            assert_ulps_eq!(glamour_lhs * glamour_rhs, nalgebra_result);
+            assert_ulps_eq!(glamour_lhs * glamour_rhs, nalgebra_lhs * nalgebra_rhs);
         }
 
         /// Cgmath's memory layout is column-major, while glamour is row-major. Therefore, transposition is necessary
@@ -173,8 +172,7 @@ mod tests {
         fn mat4_mul_is_equal_to_cgmath(glamour_lhs in mat4(bounded_f32(-62, 63)), glamour_rhs in mat4(bounded_f32(-62, 63))) {
             let cgmath_lhs: nalgebra::Matrix4<f32> = glamour_lhs.into();
             let cgmath_rhs: nalgebra::Matrix4<f32> = glamour_rhs.into();
-            let cgmath_result: Mat4<f32> = (cgmath_lhs * cgmath_rhs).into();
-            assert_ulps_eq!(glamour_lhs * glamour_rhs, cgmath_result);
+            assert_ulps_eq!(glamour_lhs * glamour_rhs, cgmath_lhs * cgmath_rhs);
         }
     }
 }

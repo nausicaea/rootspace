@@ -1,6 +1,6 @@
 use clap::Parser;
 use rootspace::{
-    AssetDatabase, AssetDatabaseDeps, Camera, One, RenderableSource, Scene, Transform, Vec4, WithDependencies,
+    AssetDatabase, AssetDatabaseDeps, Camera, RenderableSource, Scene, Transform, Vec4, WithDependencies,
 };
 
 #[derive(Debug, Parser)]
@@ -73,7 +73,7 @@ async fn main() -> anyhow::Result<()> {
         .with_transform(
             Transform::builder()
                 .with_translation(Vec4::new(-1.0, 0.0, 0.0, 0.0))
-                .with_scale(Vec4::one() * 0.25)
+                .with_scale(0.25f32)
                 .build(),
         )
         .with_renderable(RenderableSource::Reference {

@@ -2,10 +2,6 @@ use num_traits::{Float, One, Zero};
 
 use crate::glamour::{mat::Mat4, unit::Unit, vec::Vec4};
 
-#[cfg(test)]
-mod approx;
-#[cfg(test)]
-mod cmp;
 mod convert;
 mod num;
 mod ops;
@@ -94,9 +90,9 @@ mod tests {
         prop_assert, proptest,
     };
     use serde_test::{assert_tokens, Token};
+    use crate::glamour::test_helpers::proptest::quat;
 
     use super::*;
-    use crate::glamour::test_helpers::quat;
 
     #[test]
     fn quat_provides_identity_constructor() {

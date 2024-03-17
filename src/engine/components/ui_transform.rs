@@ -14,8 +14,8 @@ impl UiTransform {
         Vec4::new(self.0.t.x, self.0.t.y, 0.0, 0.0)
     }
 
-    pub fn scale(&self) -> Vec4<f32> {
-        Vec4::new(self.0.s.x, self.0.s.y, 0.0, 0.0)
+    pub fn scale(&self) -> f32 {
+        self.0.s
     }
 
     pub fn depth(&self) -> f32 {

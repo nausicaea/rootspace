@@ -2,10 +2,6 @@ use num_traits::Float;
 
 use crate::glamour::{num::Zero, ops::cross::Cross, unit::Unit, vec::Vec4};
 
-#[cfg(test)]
-mod approx;
-#[cfg(test)]
-mod cmp;
 mod convert;
 mod num;
 mod ops;
@@ -163,9 +159,9 @@ mod tests {
         num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
         prop_assert, prop_assert_eq, proptest,
     };
+    use crate::glamour::test_helpers::proptest::mat4;
 
     use super::*;
-    use crate::glamour::test_helpers::mat4;
 
     proptest! {
         #[test]
