@@ -1,3 +1,4 @@
+#[cfg(test)]
 mod approx;
 mod convert;
 mod ops;
