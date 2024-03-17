@@ -66,7 +66,7 @@ where
         Affine {
             t: -(&self.t),
             o: self.o.as_ref().c().into(),
-            s: (&self.s).inv(),
+            s: self.s.inv(),
         }
     }
 }

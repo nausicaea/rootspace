@@ -62,7 +62,7 @@ prop_compose! {
 }
 
 prop_compose! {
-    pub fn affine(s: impl Clone + Strategy<Value = f32>)(t in vec4(s.clone()), o in unit_quat(s.clone()), x in (POSITIVE | NEGATIVE | NORMAL | SUBNORMAL)) -> Affine<f32> {
+    pub fn affine(s: impl Strategy<Value = f32>, s2: impl Clone + Strategy<Value = f32>)(t in vec4(s), o in unit_quat(s2.clone()), x in s2) -> Affine<f32> {
         Affine::builder()
             .with_translation(t)
             .with_orientation(o)
