@@ -32,8 +32,8 @@ impl<R> From<Quat<R>> for cgmath::Quaternion<R> {
 
 #[cfg(test)]
 impl<R> From<Mat4<R>> for nalgebra::Matrix4<R>
-    where
-        R: Copy + nalgebra::Scalar,
+where
+    R: Copy + nalgebra::Scalar,
 {
     /// Nalgebra uses column-major storage, while glamour uses row-major storage. We need to invert the indexes for proper comparison.
     fn from(val: Mat4<R>) -> Self {
@@ -43,12 +43,11 @@ impl<R> From<Mat4<R>> for nalgebra::Matrix4<R>
 
 #[cfg(test)]
 impl<R> From<Mat4<R>> for cgmath::Matrix4<R>
-    where
-        R: Copy,
+where
+    R: Copy,
 {
     /// Cgmath uses column-major storage, while glamour uses row-major storage. We need to invert the indexes for proper comparison.
     fn from(val: Mat4<R>) -> Self {
         cgmath::Matrix4::from(val.t().0)
     }
 }
-

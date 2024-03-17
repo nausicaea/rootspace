@@ -1,7 +1,5 @@
 use clap::Parser;
-use rootspace::{
-    AssetDatabase, AssetDatabaseDeps, Camera, RenderableSource, Scene, Transform, Vec4, WithDependencies,
-};
+use rootspace::{AssetDatabase, AssetDatabaseDeps, Camera, RenderableSource, Scene, Transform, Vec4, WithDependencies};
 
 #[derive(Debug, Parser)]
 #[command(name = "create_scene", author, version, about = "Creates a new test scene via asset database", long_about = None)]

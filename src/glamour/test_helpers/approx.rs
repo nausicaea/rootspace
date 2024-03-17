@@ -1,15 +1,15 @@
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use crate::glamour::affine::Affine;
 use crate::glamour::mat::Mat4;
 use crate::glamour::persp::Persp;
 use crate::glamour::quat::Quat;
 use crate::glamour::unit::Unit;
 use crate::Vec4;
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 impl<R> AbsDiffEq for Vec4<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -26,9 +26,9 @@ impl<R> AbsDiffEq for Vec4<R>
 }
 
 impl<R> AbsDiffEq<nalgebra::Vector4<R>> for Vec4<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -45,9 +45,9 @@ impl<R> AbsDiffEq<nalgebra::Vector4<R>> for Vec4<R>
 }
 
 impl<R> AbsDiffEq<cgmath::Vector4<R>> for Vec4<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -64,9 +64,9 @@ impl<R> AbsDiffEq<cgmath::Vector4<R>> for Vec4<R>
 }
 
 impl<R> RelativeEq for Vec4<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -81,9 +81,9 @@ impl<R> RelativeEq for Vec4<R>
 }
 
 impl<R> RelativeEq<nalgebra::Vector4<R>> for Vec4<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> Self::Epsilon {
         R::default_max_relative()
@@ -98,9 +98,9 @@ impl<R> RelativeEq<nalgebra::Vector4<R>> for Vec4<R>
 }
 
 impl<R> RelativeEq<cgmath::Vector4<R>> for Vec4<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> Self::Epsilon {
         R::default_max_relative()
@@ -115,9 +115,9 @@ impl<R> RelativeEq<cgmath::Vector4<R>> for Vec4<R>
 }
 
 impl<R> UlpsEq for Vec4<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -132,9 +132,9 @@ impl<R> UlpsEq for Vec4<R>
 }
 
 impl<R> UlpsEq<nalgebra::Vector4<R>> for Vec4<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -149,9 +149,9 @@ impl<R> UlpsEq<nalgebra::Vector4<R>> for Vec4<R>
 }
 
 impl<R> UlpsEq<cgmath::Vector4<R>> for Vec4<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -166,9 +166,9 @@ impl<R> UlpsEq<cgmath::Vector4<R>> for Vec4<R>
 }
 
 impl<R> AbsDiffEq for Quat<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -185,9 +185,9 @@ impl<R> AbsDiffEq for Quat<R>
 }
 
 impl<R> AbsDiffEq<nalgebra::Quaternion<R>> for Quat<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -204,9 +204,9 @@ impl<R> AbsDiffEq<nalgebra::Quaternion<R>> for Quat<R>
 }
 
 impl<R> AbsDiffEq<cgmath::Quaternion<R>> for Quat<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -223,9 +223,9 @@ impl<R> AbsDiffEq<cgmath::Quaternion<R>> for Quat<R>
 }
 
 impl<R> RelativeEq for Quat<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -240,9 +240,9 @@ impl<R> RelativeEq for Quat<R>
 }
 
 impl<R> RelativeEq<nalgebra::Quaternion<R>> for Quat<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> Self::Epsilon {
         R::default_max_relative()
@@ -257,9 +257,9 @@ impl<R> RelativeEq<nalgebra::Quaternion<R>> for Quat<R>
 }
 
 impl<R> RelativeEq<cgmath::Quaternion<R>> for Quat<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> Self::Epsilon {
         R::default_max_relative()
@@ -274,9 +274,9 @@ impl<R> RelativeEq<cgmath::Quaternion<R>> for Quat<R>
 }
 
 impl<R> UlpsEq for Quat<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -291,9 +291,9 @@ impl<R> UlpsEq for Quat<R>
 }
 
 impl<R> UlpsEq<nalgebra::Quaternion<R>> for Quat<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -308,9 +308,9 @@ impl<R> UlpsEq<nalgebra::Quaternion<R>> for Quat<R>
 }
 
 impl<R> UlpsEq<cgmath::Quaternion<R>> for Quat<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -325,9 +325,9 @@ impl<R> UlpsEq<cgmath::Quaternion<R>> for Quat<R>
 }
 
 impl<R> AbsDiffEq for Mat4<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -345,9 +345,9 @@ impl<R> AbsDiffEq for Mat4<R>
 }
 
 impl<R> AbsDiffEq<nalgebra::Matrix4<R>> for Mat4<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -369,9 +369,9 @@ impl<R> AbsDiffEq<nalgebra::Matrix4<R>> for Mat4<R>
 }
 
 impl<R> AbsDiffEq<cgmath::Matrix4<R>> for Mat4<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -394,9 +394,9 @@ impl<R> AbsDiffEq<cgmath::Matrix4<R>> for Mat4<R>
 }
 
 impl<R> RelativeEq for Mat4<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -412,9 +412,9 @@ impl<R> RelativeEq for Mat4<R>
 }
 
 impl<R> RelativeEq<nalgebra::Matrix4<R>> for Mat4<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -434,9 +434,9 @@ impl<R> RelativeEq<nalgebra::Matrix4<R>> for Mat4<R>
 }
 
 impl<R> RelativeEq<cgmath::Matrix4<R>> for Mat4<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -457,9 +457,9 @@ impl<R> RelativeEq<cgmath::Matrix4<R>> for Mat4<R>
 }
 
 impl<R> UlpsEq for Mat4<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -475,9 +475,9 @@ impl<R> UlpsEq for Mat4<R>
 }
 
 impl<R> UlpsEq<nalgebra::Matrix4<R>> for Mat4<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -497,9 +497,9 @@ impl<R> UlpsEq<nalgebra::Matrix4<R>> for Mat4<R>
 }
 
 impl<R> UlpsEq<cgmath::Matrix4<R>> for Mat4<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -520,9 +520,9 @@ impl<R> UlpsEq<cgmath::Matrix4<R>> for Mat4<R>
 }
 
 impl<R> AbsDiffEq for Affine<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -538,9 +538,9 @@ impl<R> AbsDiffEq for Affine<R>
 }
 
 impl<R> RelativeEq for Affine<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -554,9 +554,9 @@ impl<R> RelativeEq for Affine<R>
 }
 
 impl<R> UlpsEq for Affine<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -570,9 +570,9 @@ impl<R> UlpsEq for Affine<R>
 }
 
 impl<R> AbsDiffEq for Persp<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -586,9 +586,9 @@ impl<R> AbsDiffEq for Persp<R>
 }
 
 impl<R> RelativeEq for Persp<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -600,9 +600,9 @@ impl<R> RelativeEq for Persp<R>
 }
 
 impl<R> UlpsEq for Persp<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()
@@ -614,9 +614,9 @@ impl<R> UlpsEq for Persp<R>
 }
 
 impl<T> AbsDiffEq for Unit<T>
-    where
-        T: AbsDiffEq,
-        T::Epsilon: Copy,
+where
+    T: AbsDiffEq,
+    T::Epsilon: Copy,
 {
     type Epsilon = T::Epsilon;
 
@@ -630,9 +630,9 @@ impl<T> AbsDiffEq for Unit<T>
 }
 
 impl<T> RelativeEq for Unit<T>
-    where
-        T: RelativeEq,
-        T::Epsilon: Copy,
+where
+    T: RelativeEq,
+    T::Epsilon: Copy,
 {
     fn default_max_relative() -> T::Epsilon {
         T::default_max_relative()
@@ -644,9 +644,9 @@ impl<T> RelativeEq for Unit<T>
 }
 
 impl<T> UlpsEq for Unit<T>
-    where
-        T: UlpsEq,
-        T::Epsilon: Copy,
+where
+    T: UlpsEq,
+    T::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()

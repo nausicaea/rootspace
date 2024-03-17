@@ -3,8 +3,8 @@ use crate::glamour::quat::Quat;
 use crate::Vec4;
 
 impl<R> PartialEq<nalgebra::Vector4<R>> for Vec4<R>
-    where
-        R: PartialEq,
+where
+    R: PartialEq,
 {
     fn eq(&self, rhs: &nalgebra::Vector4<R>) -> bool {
         self.w.eq(&rhs[3]) && self.x.eq(&rhs[0]) && self.y.eq(&rhs[1]) && self.z.eq(&rhs[2])
@@ -12,8 +12,8 @@ impl<R> PartialEq<nalgebra::Vector4<R>> for Vec4<R>
 }
 
 impl<R> PartialEq<cgmath::Vector4<R>> for Vec4<R>
-    where
-        R: PartialEq,
+where
+    R: PartialEq,
 {
     fn eq(&self, rhs: &cgmath::Vector4<R>) -> bool {
         self.w.eq(&rhs.w) && self.x.eq(&rhs.x) && self.y.eq(&rhs.y) && self.z.eq(&rhs.z)
@@ -21,8 +21,8 @@ impl<R> PartialEq<cgmath::Vector4<R>> for Vec4<R>
 }
 
 impl<R> PartialEq<nalgebra::Quaternion<R>> for Quat<R>
-    where
-        R: PartialEq,
+where
+    R: PartialEq,
 {
     fn eq(&self, rhs: &nalgebra::Quaternion<R>) -> bool {
         self.w.eq(&rhs.coords[3]) && self.i.eq(&rhs.coords[0]) && self.j.eq(&rhs.coords[1]) && self.k.eq(&rhs.coords[2])
@@ -30,8 +30,8 @@ impl<R> PartialEq<nalgebra::Quaternion<R>> for Quat<R>
 }
 
 impl<R> PartialEq<cgmath::Quaternion<R>> for Quat<R>
-    where
-        R: PartialEq,
+where
+    R: PartialEq,
 {
     fn eq(&self, rhs: &cgmath::Quaternion<R>) -> bool {
         self.w.eq(&rhs.s) && self.i.eq(&rhs.v.x) && self.j.eq(&rhs.v.y) && self.k.eq(&rhs.v.z)
@@ -39,8 +39,8 @@ impl<R> PartialEq<cgmath::Quaternion<R>> for Quat<R>
 }
 
 impl<R> PartialEq<nalgebra::Matrix4<R>> for Mat4<R>
-    where
-        R: PartialEq,
+where
+    R: PartialEq,
 {
     /// Nalgebra uses column-major storage, while glamour uses row-major storage. We need to invert the indexes for proper comparison.
     fn eq(&self, other: &nalgebra::Matrix4<R>) -> bool {
@@ -56,8 +56,8 @@ impl<R> PartialEq<nalgebra::Matrix4<R>> for Mat4<R>
 }
 
 impl<R> PartialEq<cgmath::Matrix4<R>> for Mat4<R>
-    where
-        R: PartialEq,
+where
+    R: PartialEq,
 {
     /// Cgmath uses column-major storage, while glamour uses row-major storage. We need to invert the indexes for proper comparison.
     fn eq(&self, other: &cgmath::Matrix4<R>) -> bool {

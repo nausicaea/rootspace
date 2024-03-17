@@ -30,10 +30,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::glamour::test_helpers::proptest::{affine, bounded_f32};
     use approx::ulps_eq;
     use proptest::{prop_assert, proptest};
-    use crate::glamour::test_helpers::proptest::{affine, bounded_f32};
-    use super::*;
 
     proptest! {
         #[test]

@@ -114,13 +114,13 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::glamour::test_helpers::proptest::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
     use approx::{relative_eq, ulps_eq};
     use cgmath::InnerSpace;
     use proptest::{
         num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO},
         prop_assert, prop_assert_eq, proptest,
     };
-    use crate::glamour::test_helpers::proptest::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
 
     use super::*;
 

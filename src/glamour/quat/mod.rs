@@ -85,12 +85,12 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::glamour::test_helpers::proptest::quat;
     use proptest::{
         num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
         prop_assert, proptest,
     };
     use serde_test::{assert_tokens, Token};
-    use crate::glamour::test_helpers::proptest::quat;
 
     use super::*;
 

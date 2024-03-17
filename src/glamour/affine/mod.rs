@@ -2,13 +2,7 @@ use builder::AffineBuilder;
 use num_traits::{Float, Inv};
 use serde::{Deserialize, Serialize};
 
-use crate::glamour::{
-    num::Zero,
-    ops::cross::Cross,
-    quat::Quat,
-    unit::Unit,
-    vec::Vec4,
-};
+use crate::glamour::{num::Zero, ops::cross::Cross, quat::Quat, unit::Unit, vec::Vec4};
 
 pub mod builder;
 mod convert;
@@ -54,12 +48,7 @@ where
         let side: Unit<_> = up.cross(fwd);
         let rotated_up: Unit<_> = fwd.cross(side);
 
-        let eye = Vec4::new(
-            -(eye * side.0),
-            -(eye * rotated_up.0),
-            eye * fwd.0,
-            R::zero(),
-        );
+        let eye = Vec4::new(-(eye * side.0), -(eye * rotated_up.0), eye * fwd.0, R::zero());
 
         Affine {
             t: eye,

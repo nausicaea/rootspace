@@ -111,9 +111,7 @@ mod tests {
     use proptest::{prop_assert, proptest};
 
     use super::*;
-    use crate::glamour::{
-        num::One,
-    };
+    use crate::glamour::num::One;
     use crate::glamour::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, mat4};
 
     #[test]

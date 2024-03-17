@@ -118,11 +118,7 @@ mod tests {
     use proptest::{collection::vec, num::f32::NORMAL, prelude::*};
 
     use super::*;
-    use crate::glamour::{
-        num::Zero,
-        quat::Quat,
-        vec::Vec4,
-    };
+    use crate::glamour::{num::Zero, quat::Quat, vec::Vec4};
 
     #[test]
     fn implements_default() {

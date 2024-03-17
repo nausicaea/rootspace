@@ -1,3 +1,8 @@
+use crate::glamour::affine::Affine;
+use crate::glamour::mat::Mat4;
+use crate::glamour::quat::Quat;
+use crate::glamour::unit::Unit;
+use crate::Vec4;
 use ::proptest::{
     collection::vec,
     num::f32::ZERO,
@@ -5,11 +10,6 @@ use ::proptest::{
     strategy::{Strategy, Union},
 };
 use proptest::num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL};
-use crate::glamour::affine::Affine;
-use crate::glamour::mat::Mat4;
-use crate::glamour::quat::Quat;
-use crate::glamour::unit::Unit;
-use crate::Vec4;
 
 pub fn bounded_f32(lower_exp: i32, upper_exp: i32) -> impl Clone + Strategy<Value = f32> {
     let neg_lower = -(2.0_f32).powi(upper_exp);

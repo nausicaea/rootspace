@@ -33,9 +33,9 @@ forward_ref_binop!(impl<R: Float> Mul, mul for Quat<R>, Quat<R>, Quat<R>);
 
 #[cfg(test)]
 mod tests {
+    use crate::glamour::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, quat, vec4};
     use approx::ulps_eq;
     use proptest::{prop_assert, proptest};
-    use crate::glamour::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, quat, vec4};
 
     use super::*;
 
