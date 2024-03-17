@@ -43,7 +43,7 @@ impl<R> Affine<R>
 where
     R: Float,
 {
-    pub fn look_at_lh(eye: Vec4<R>, target: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
+    pub fn with_look_at_lh(eye: Vec4<R>, target: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
         let fwd: Unit<_> = (target - eye).into();
         let side: Unit<_> = up.cross(fwd);
         let rotated_up: Unit<_> = fwd.cross(side);
@@ -52,7 +52,7 @@ where
 
         Affine {
             t: eye,
-            o: Quat::look_at_lh(fwd, up),
+            o: Quat::with_look_at_lh(fwd, up),
             s: R::one(),
         }
     }
@@ -84,7 +84,7 @@ mod tests {
         let cntr = Vec4::from([0.0f32, 0.0, 0.0, 1.0]);
         let up = Vec4::from([0.0f32, 1.0, 0.0, 0.0]);
 
-        let a = Affine::look_at_lh(eye, cntr, Unit::from(up));
+        let a = Affine::with_look_at_lh(eye, cntr, Unit::from(up));
 
         let comparison = cgmath::Matrix4::look_at_lh(
             cgmath::Point3::new(eye.x, eye.y, eye.z),

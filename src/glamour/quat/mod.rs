@@ -24,8 +24,14 @@ impl<R> Quat<R>
 where
     R: Float,
 {
-    pub fn look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Unit<Quat<R>> {
-        Mat4::look_at_lh(fwd, up).into()
+    pub fn with_look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Unit<Quat<R>> {
+        Mat4::with_look_at_lh(fwd, up).into()
+    }
+
+    pub fn with_axis_angle(axis: Unit<Vec4<R>>, angle: R) -> Unit<Quat<R>> {
+        let half = R::one() / (R::one() + R::one());
+        let (sin, cos) = R::sin_cos(angle * half);
+        Unit::from(Quat::new(cos, axis.x * sin, axis.y * sin, axis.z * sin))
     }
 }
 
@@ -85,7 +91,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::test_helpers::proptest::quat;
+    use crate::glamour::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, quat, unit_vec4};
+    use approx::assert_ulps_eq;
     use proptest::{
         num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
         prop_assert, proptest,
@@ -165,5 +172,22 @@ mod tests {
             prop_assert!(!a.is_nan())
         }
 
+        #[test]
+        fn quat_with_angle_axis_is_equal_to_nalgebra(angle in bounded_f32(-62, 63), axis in unit_vec4(bounded_nonzero_f32(-62, 63))) {
+            let glamour_result = Quat::with_axis_angle(axis, angle);
+            let nalgebra_result = nalgebra::UnitQuaternion::from_axis_angle(&axis.into(), angle);
+
+            assert_ulps_eq!(glamour_result, nalgebra_result);
+        }
+
+        #[test]
+        fn quat_with_angle_axis_is_equal_to_cgmath(angle in bounded_f32(-62, 63), axis in unit_vec4(bounded_nonzero_f32(-62, 63))) {
+            use cgmath::Rotation3;
+
+            let glamour_result = Quat::with_axis_angle(axis, angle);
+            let cgmath_result = cgmath::Quaternion::from_axis_angle(axis.into(), cgmath::Rad(angle));
+
+            assert_ulps_eq!(glamour_result, cgmath_result);
+        }
     }
 }

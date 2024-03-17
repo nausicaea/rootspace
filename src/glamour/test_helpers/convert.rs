@@ -1,8 +1,8 @@
-use nalgebra::{RealField, SimdValue};
 use crate::glamour::mat::Mat4;
 use crate::glamour::quat::Quat;
 use crate::glamour::unit::Unit;
 use crate::glamour::vec::Vec4;
+use nalgebra::{RealField, SimdValue};
 
 impl<R> From<Vec4<R>> for nalgebra::Vector4<R> {
     fn from(value: Vec4<R>) -> Self {
@@ -13,6 +13,24 @@ impl<R> From<Vec4<R>> for nalgebra::Vector4<R> {
 impl<R> From<Vec4<R>> for cgmath::Vector4<R> {
     fn from(value: Vec4<R>) -> Self {
         cgmath::Vector4::new(value.x, value.y, value.z, value.w)
+    }
+}
+
+impl<R> From<Unit<Vec4<R>>> for nalgebra::UnitVector3<R>
+where
+    R: Copy + SimdValue + RealField,
+{
+    fn from(value: Unit<Vec4<R>>) -> Self {
+        nalgebra::Unit::new_unchecked(nalgebra::Vector3::new(value.x, value.y, value.z))
+    }
+}
+
+impl<R> From<Unit<Vec4<R>>> for cgmath::Vector3<R>
+where
+    R: Copy,
+{
+    fn from(value: Unit<Vec4<R>>) -> Self {
+        cgmath::Vector3::new(value.x, value.y, value.z)
     }
 }
 

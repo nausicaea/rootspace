@@ -1,7 +1,7 @@
 use crate::glamour::mat::Mat4;
 use crate::glamour::quat::Quat;
+use crate::glamour::unit::Unit;
 use crate::Vec4;
-use nalgebra::Matrix4;
 
 impl<R> PartialEq<nalgebra::Vector4<R>> for Vec4<R>
 where
@@ -31,6 +31,24 @@ where
 }
 
 impl<R> PartialEq<cgmath::Quaternion<R>> for Quat<R>
+where
+    R: PartialEq,
+{
+    fn eq(&self, rhs: &cgmath::Quaternion<R>) -> bool {
+        self.w.eq(&rhs.s) && self.i.eq(&rhs.v.x) && self.j.eq(&rhs.v.y) && self.k.eq(&rhs.v.z)
+    }
+}
+
+impl<R> PartialEq<nalgebra::UnitQuaternion<R>> for Unit<Quat<R>>
+where
+    R: PartialEq,
+{
+    fn eq(&self, rhs: &nalgebra::UnitQuaternion<R>) -> bool {
+        self.w.eq(&rhs.coords[3]) && self.i.eq(&rhs.coords[0]) && self.j.eq(&rhs.coords[1]) && self.k.eq(&rhs.coords[2])
+    }
+}
+
+impl<R> PartialEq<cgmath::Quaternion<R>> for Unit<Quat<R>>
 where
     R: PartialEq,
 {

@@ -9,7 +9,6 @@ use ::proptest::{
     prop_compose,
     strategy::{Strategy, Union},
 };
-use proptest::num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL};
 
 pub fn bounded_f32(lower_exp: i32, upper_exp: i32) -> impl Clone + Strategy<Value = f32> {
     let neg_lower = -(2.0_f32).powi(upper_exp);
@@ -46,6 +45,12 @@ prop_compose! {
 prop_compose! {
     pub fn vec4(s: impl Strategy<Value = f32>)(v in vec(s, 3)) -> Vec4<f32> {
         Vec4::new(v[0], v[1], v[2], 0.0_f32)
+    }
+}
+
+prop_compose! {
+    pub fn unit_vec4(s: impl Strategy<Value = f32>)(v in vec4(s)) -> Unit<Vec4<f32>> {
+        Unit::from(v)
     }
 }
 

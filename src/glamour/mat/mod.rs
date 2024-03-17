@@ -82,7 +82,7 @@ impl<R> Mat4<R>
 where
     R: Float,
 {
-    pub fn look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Self {
+    pub fn with_look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Self {
         let side: Unit<_> = up.cross(fwd);
         let rotated_up = fwd.cross(side);
 

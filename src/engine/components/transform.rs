@@ -16,7 +16,7 @@ impl Transform {
     }
 
     pub fn look_at_lh<V: Into<Vec4<f32>>>(eye: V, cntr: V, up: V) -> Self {
-        Transform(Affine::look_at_lh(eye.into(), cntr.into(), Unit::from(up.into())))
+        Transform(Affine::with_look_at_lh(eye.into(), cntr.into(), Unit::from(up.into())))
     }
 
     pub fn set_translation(&mut self, value: Vec4<f32>) {
