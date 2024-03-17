@@ -21,7 +21,7 @@ impl WithResources for DebugAnimator {
 impl System for DebugAnimator {
     async fn run(&mut self, res: &Resources, _t: Duration, dt: Duration) {
         let angle = dt.as_secs_f32() * 0.20;
-        let rotation = Unit::from(Quat::new(angle, 0.0, 0.0, 1.0));
+        let rotation = Unit::from(Quat::new(angle, 0.0, 1.0, 0.0));
         for (_, _, t) in res.iter_rw::<Renderable, Transform>() {
             let t_quat = t.orientation();
             let new_t_quat = rotation * t_quat;
