@@ -107,7 +107,7 @@ impl Orchestrator {
                     group: "models".into(),
                     name: "cone.ply".into(),
                 })
-                .with_transform(Transform::default())
+                .with_ui_transform(UiTransform::default())
                 .submit();
             editor_scene.submit(world.resources(), "builtin", "editor").await?;
         }

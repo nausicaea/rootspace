@@ -17,6 +17,7 @@ use crate::{
     },
     rose_tree::hierarchy::Hierarchy,
 };
+use crate::engine::components::ui_transform::UiTransform;
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Scene {
@@ -25,6 +26,7 @@ pub struct Scene {
     infos: BTreeMap<Index, Info>,
     cameras: BTreeMap<Index, Camera>,
     transforms: BTreeMap<Index, Transform>,
+    ui_transforms: BTreeMap<Index, UiTransform>,
     renderables: BTreeMap<Index, RenderableSource>,
 }
 
@@ -45,6 +47,11 @@ impl Scene {
                 .collect(),
             transforms: res
                 .read_components::<Transform>()
+                .indexed_iter()
+                .map(|(i, t)| (i, t.clone()))
+                .collect(),
+            ui_transforms: res
+                .read_components::<UiTransform>()
                 .indexed_iter()
                 .map(|(i, t)| (i, t.clone()))
                 .collect(),
@@ -136,6 +143,10 @@ impl Scene {
                     res.write_components::<Transform>().insert(i_new, transform);
                 }
 
+                if let Some(ui_transform) = scene.ui_transforms.get(&i_prev).cloned() {
+                    res.write_components::<UiTransform>().insert(i_new, ui_transform);
+                }
+
                 if let Some(RenderableSource::Reference { group, name }) = scene.renderables.get(&i_prev) {
                     let renderable = Renderable::with_model(res, group, name).await?;
                     res.write_components::<Renderable>().insert(i_new, renderable);
@@ -192,6 +203,7 @@ pub struct EntityBuilder<'a> {
     info: Option<Info>,
     camera: Option<Camera>,
     transform: Option<Transform>,
+    ui_transform: Option<UiTransform>,
     renderable: Option<RenderableSource>,
 }
 
@@ -203,6 +215,7 @@ impl<'a> EntityBuilder<'a> {
             info: None,
             camera: None,
             transform: None,
+            ui_transform: None,
             renderable: None,
         }
     }
@@ -224,6 +237,11 @@ impl<'a> EntityBuilder<'a> {
 
     pub fn with_transform(mut self, trf: Transform) -> Self {
         self.transform = Some(trf);
+        self
+    }
+
+    pub fn with_ui_transform(mut self, trf: UiTransform) -> Self {
+        self.ui_transform = Some(trf);
         self
     }
 
@@ -252,6 +270,10 @@ impl<'a> EntityBuilder<'a> {
 
         if let Some(transform) = self.transform {
             self.scene.transforms.insert(i, transform);
+        }
+
+        if let Some(ui_transform) = self.ui_transform {
+            self.scene.ui_transforms.insert(i, ui_transform);
         }
 
         if let Some(renderable) = self.renderable {
