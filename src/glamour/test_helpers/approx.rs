@@ -1,11 +1,11 @@
 use crate::glamour::affine::Affine;
 use crate::glamour::mat::Mat4;
+use crate::glamour::ortho::Ortho;
 use crate::glamour::persp::Persp;
 use crate::glamour::quat::Quat;
 use crate::glamour::unit::Unit;
 use crate::Vec4;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
-use crate::glamour::ortho::Ortho;
 
 impl<R> AbsDiffEq for Vec4<R>
 where
@@ -721,9 +721,9 @@ where
 }
 
 impl<R> AbsDiffEq for Ortho<R>
-    where
-        R: AbsDiffEq,
-        R::Epsilon: Copy,
+where
+    R: AbsDiffEq,
+    R::Epsilon: Copy,
 {
     type Epsilon = R::Epsilon;
 
@@ -737,9 +737,9 @@ impl<R> AbsDiffEq for Ortho<R>
 }
 
 impl<R> RelativeEq for Ortho<R>
-    where
-        R: RelativeEq,
-        R::Epsilon: Copy,
+where
+    R: RelativeEq,
+    R::Epsilon: Copy,
 {
     fn default_max_relative() -> R::Epsilon {
         R::default_max_relative()
@@ -751,9 +751,9 @@ impl<R> RelativeEq for Ortho<R>
 }
 
 impl<R> UlpsEq for Ortho<R>
-    where
-        R: UlpsEq,
-        R::Epsilon: Copy,
+where
+    R: UlpsEq,
+    R::Epsilon: Copy,
 {
     fn default_max_ulps() -> u32 {
         R::default_max_ulps()

@@ -4,8 +4,8 @@ use super::mat::Mat4;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(bound(
-serialize = "R: serde::Serialize",
-deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
+    serialize = "R: serde::Serialize",
+    deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
 ))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ortho<R>(pub(crate) Mat4<R>);
@@ -55,19 +55,14 @@ impl<R> AsRef<Mat4<R>> for Ortho<R> {
 
 #[cfg(test)]
 mod tests {
-    use approx::ulps_eq;
-    use proptest::{prop_assert, proptest};
+    use super::*;
     use crate::glamour::ortho::Ortho;
     use crate::glamour::test_helpers::proptest::bounded_positive_f32;
-    use super::*;
+    use approx::ulps_eq;
+    use proptest::{prop_assert, proptest};
 
     fn testing_ortho() -> Ortho<f32> {
-        Ortho::new(
-            1.5,
-            std::f32::consts::PI / 4.0,
-            0.1,
-            1000.0,
-        )
+        Ortho::new(1.5, std::f32::consts::PI / 4.0, 0.1, 1000.0)
     }
 
     #[test]
@@ -87,9 +82,16 @@ mod tests {
         let nz = 0.001;
         let dz = 1000.0;
         let glamour_ortho = Ortho::new(width, height, nz, nz + dz);
-        let nalgebra_ortho = nalgebra::Orthographic3::new(-width/2.0, width/2.0, -height/2.0, height/2.0, nz, nz + dz);
-        let cgmath_ortho = cgmath::ortho(-width/2.0, width/2.0, -height/2.0, height/2.0, nz, nz + dz);
-        assert!(ulps_eq!(*glamour_ortho.as_matrix(), nalgebra_ortho.to_homogeneous()), "glamour\t\t\t=    {:?}\nnalgebra (transposed)\t=         {:?}\ncgmath (transposed)\t= {:?}", *glamour_ortho.as_matrix(), nalgebra_ortho.to_homogeneous().transpose(), cgmath_ortho.transpose());
+        let nalgebra_ortho =
+            nalgebra::Orthographic3::new(-width / 2.0, width / 2.0, -height / 2.0, height / 2.0, nz, nz + dz);
+        let cgmath_ortho = cgmath::ortho(-width / 2.0, width / 2.0, -height / 2.0, height / 2.0, nz, nz + dz);
+        assert!(
+            ulps_eq!(*glamour_ortho.as_matrix(), nalgebra_ortho.to_homogeneous()),
+            "glamour\t\t\t=    {:?}\nnalgebra (transposed)\t=         {:?}\ncgmath (transposed)\t= {:?}",
+            *glamour_ortho.as_matrix(),
+            nalgebra_ortho.to_homogeneous().transpose(),
+            cgmath_ortho.transpose()
+        );
     }
 
     proptest! {

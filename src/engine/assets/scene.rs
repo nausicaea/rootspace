@@ -3,6 +3,7 @@ use std::{collections::BTreeMap, path::Path};
 use anyhow::Context;
 
 use super::private::PrivLoadAsset;
+use crate::engine::components::ui_transform::UiTransform;
 use crate::{
     ecs::{
         entities::Entities,
@@ -17,7 +18,6 @@ use crate::{
     },
     rose_tree::hierarchy::Hierarchy,
 };
-use crate::engine::components::ui_transform::UiTransform;
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Scene {

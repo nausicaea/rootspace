@@ -1,6 +1,6 @@
 use crate::{
     ecs::{component::Component, storage::vec_storage::VecStorage},
-    glamour::{mat::Mat4, persp::Persp, ortho::Ortho},
+    glamour::{mat::Mat4, ortho::Ortho, persp::Persp},
 };
 
 pub mod projection;
@@ -14,18 +14,8 @@ pub struct Camera {
 impl Camera {
     pub fn new(width: u32, height: u32, fov_y: f32, frustum_z: (f32, f32)) -> Self {
         Camera {
-            persp: Persp::new(
-                height as f32 / width as f32,
-                fov_y,
-                frustum_z.0,
-                frustum_z.1,
-            ),
-            ortho: Ortho::new(
-                width as f32,
-                height as f32,
-                frustum_z.0,
-                frustum_z.1,
-            ),
+            persp: Persp::new(height as f32 / width as f32, fov_y, frustum_z.0, frustum_z.1),
+            ortho: Ortho::new(width as f32, height as f32, frustum_z.0, frustum_z.1),
         }
     }
 

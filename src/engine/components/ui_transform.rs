@@ -1,7 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{ecs::{component::Component, storage::vec_storage::VecStorage}, glamour::{affine::Affine, mat::Mat4, num::ToMatrix, vec::Vec4}};
 use crate::glamour::unit::Unit;
+use crate::{
+    ecs::{component::Component, storage::vec_storage::VecStorage},
+    glamour::{affine::Affine, mat::Mat4, num::ToMatrix, vec::Vec4},
+};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -46,10 +49,7 @@ impl std::fmt::Display for UiTransform {
         write!(
             f,
             "translation: ({}, {}), depth: {}, scale: {}",
-            self.0.t.x,
-            self.0.t.y,
-            self.0.t.z,
-            self.0.s,
+            self.0.t.x, self.0.t.y, self.0.t.z, self.0.s,
         )
     }
 }

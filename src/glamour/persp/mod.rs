@@ -54,10 +54,10 @@ impl<R> AsRef<Mat4<R>> for Persp<R> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::glamour::test_helpers::proptest::bounded_positive_f32;
     use approx::ulps_eq;
     use proptest::{prop_assert, proptest};
-    use crate::glamour::test_helpers::proptest::bounded_positive_f32;
-    use super::*;
 
     fn testing_persp() -> Persp<f32> {
         Persp::new(1.5, std::f32::consts::PI / 4.0, 0.1, 1000.0)
@@ -82,7 +82,13 @@ mod tests {
         let glamour_persp = Persp::new(a, f, nz, nz + dz);
         let nalgebra_persp = nalgebra::Perspective3::new(a, f, nz, nz + dz);
         let cgmath_persp = cgmath::perspective(cgmath::Rad(f), a, nz, nz + dz);
-        assert!(ulps_eq!(*glamour_persp.as_matrix(), nalgebra_persp.to_homogeneous()), "glamour\t\t\t=    {:?}\nnalgebra (transposed)\t=         {:?}\ncgmath (transposed)\t= {:?}", *glamour_persp.as_matrix(), nalgebra_persp.to_homogeneous().transpose(), cgmath_persp.transpose());
+        assert!(
+            ulps_eq!(*glamour_persp.as_matrix(), nalgebra_persp.to_homogeneous()),
+            "glamour\t\t\t=    {:?}\nnalgebra (transposed)\t=         {:?}\ncgmath (transposed)\t= {:?}",
+            *glamour_persp.as_matrix(),
+            nalgebra_persp.to_homogeneous().transpose(),
+            cgmath_persp.transpose()
+        );
     }
 
     proptest! {

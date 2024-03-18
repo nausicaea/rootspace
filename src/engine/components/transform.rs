@@ -53,9 +53,7 @@ impl std::fmt::Display for Transform {
         write!(
             f,
             "position: {}, orientation: {}, scale: {}",
-            self.0.t,
-            self.0.o,
-            self.0.s,
+            self.0.t, self.0.o, self.0.s,
         )
     }
 }
