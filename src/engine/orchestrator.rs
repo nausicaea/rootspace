@@ -96,11 +96,6 @@ impl Orchestrator {
                     [0.0, 0.0, 0.0, 1.0],
                     [0.0, 1.0, 0.0, 0.0],
                 ))
-                .with_ui_transform(UiTransform::look_at_lh(
-                    [0.0, 0.0, -10.0, 1.0],
-                    [0.0, 0.0, 0.0, 1.0],
-                    [0.0, 1.0, 0.0, 0.0],
-                ))
                 .submit();
             editor_scene
                 .create_entity()

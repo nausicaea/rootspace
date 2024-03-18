@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run Rootspace" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --bin rootspace" />
+    <option name="command" value="run --features editor --bin rootspace" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs>
       <env name="RUST_LOG" value="rootspace=debug" />

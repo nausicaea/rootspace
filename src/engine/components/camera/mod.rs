@@ -37,7 +37,7 @@ impl Default for Camera {
     fn default() -> Self {
         Camera {
             persp: Persp::new(1.0, std::f32::consts::PI / 4.0, 0.1, 1000.0),
-            ortho: Ortho::new(800.0, 600.0, 0.1, 1000.0),
+            ortho: Ortho::new(800.0, 600.0, 0.0, 10.0),
         }
     }
 }

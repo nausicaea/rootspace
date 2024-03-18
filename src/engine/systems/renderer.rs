@@ -79,19 +79,10 @@ impl Renderer {
         let transforms = res.read_components::<Transform>();
         let ui_transforms = res.read_components::<UiTransform>();
 
-        let (cam_ortho, cam_persp) = res
+        let cam_persp = res
             .iter_r::<Camera>()
-            .map(|(idx, c)| {
-                (
-                    c.as_ortho_matrix() * hier_transform::<UiTransform>(idx, &hier, &ui_transforms),
-                    c.as_persp_matrix() * hier_transform::<Transform>(idx, &hier, &transforms),
-                )
-            })
-            .fold((Vec::new(), Vec::new()), |(mut ortho, mut persp), (o, p)| {
-                ortho.push(o);
-                persp.push(p);
-                (ortho, persp)
-            });
+            .map(|(idx, c)| c.as_persp_matrix() * hier_transform::<Transform>(idx, &hier, &transforms))
+            .collect::<Vec<_>>();
 
         let (renderables, transforms) = cam_persp
             .iter()
@@ -99,10 +90,10 @@ impl Renderer {
                 res.iter_rr::<Renderable, Transform>()
                     .map(|(idx, r, _)| (idx, r, *cm * hier_transform::<Transform>(idx, &hier, &transforms)))
             })
-            .chain(cam_ortho.iter().flat_map(|cm| {
+            .chain(
                 res.iter_rr::<Renderable, UiTransform>()
-                    .map(|(idx, r, _)| (idx, r, *cm * hier_transform::<UiTransform>(idx, &hier, &ui_transforms)))
-            }))
+                    .map(|(idx, r, _)| (idx, r, hier_transform::<UiTransform>(idx, &hier, &ui_transforms))),
+            )
             .fold(
                 (Vec::new(), Vec::new()),
                 |(mut renderables, mut transforms), (idx, r, t)| {
