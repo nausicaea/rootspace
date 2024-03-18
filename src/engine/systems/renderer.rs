@@ -83,8 +83,8 @@ impl Renderer {
             .iter_r::<Camera>()
             .map(|(idx, c)| {
                 (
-                    hier_transform::<UiTransform>(idx, &hier, &ui_transforms),
-                    c.as_matrix() * hier_transform::<Transform>(idx, &hier, &transforms),
+                    c.as_ortho_matrix() * hier_transform::<UiTransform>(idx, &hier, &ui_transforms),
+                    c.as_persp_matrix() * hier_transform::<Transform>(idx, &hier, &transforms),
                 )
             })
             .fold((Vec::new(), Vec::new()), |(mut ortho, mut persp), (o, p)| {

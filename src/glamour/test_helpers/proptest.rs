@@ -10,6 +10,12 @@ use ::proptest::{
     strategy::{Strategy, Union},
 };
 
+pub fn bounded_positive_f32(lower_exp: i32, upper_exp: i32) -> impl Clone + Strategy<Value = f32> {
+    let pos_lower = (2.0_f32).powi(lower_exp);
+    let pos_upper = (2.0_f32).powi(upper_exp);
+    pos_lower..pos_upper
+}
+
 pub fn bounded_f32(lower_exp: i32, upper_exp: i32) -> impl Clone + Strategy<Value = f32> {
     let neg_lower = -(2.0_f32).powi(upper_exp);
     let neg_upper = -(2.0_f32).powi(lower_exp);

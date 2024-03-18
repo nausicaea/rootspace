@@ -96,11 +96,16 @@ impl Orchestrator {
                     [0.0, 0.0, 0.0, 1.0],
                     [0.0, 1.0, 0.0, 0.0],
                 ))
+                .with_ui_transform(UiTransform::look_at_lh(
+                    [0.0, 0.0, -10.0, 1.0],
+                    [0.0, 0.0, 0.0, 1.0],
+                    [0.0, 1.0, 0.0, 0.0],
+                ))
                 .submit();
             editor_scene
                 .create_entity()
                 .with_info(Info {
-                    name: "coordinate-diag".into(),
+                    name: "coordinate-diag-ortho".into(),
                     ..Default::default()
                 })
                 .with_renderable(RenderableSource::Reference {
@@ -108,6 +113,18 @@ impl Orchestrator {
                     name: "cone.ply".into(),
                 })
                 .with_ui_transform(UiTransform::default())
+                .submit();
+            editor_scene
+                .create_entity()
+                .with_info(Info {
+                    name: "coordinate-diag-persp".into(),
+                    ..Default::default()
+                })
+                .with_renderable(RenderableSource::Reference {
+                    group: "models".into(),
+                    name: "cone.ply".into(),
+                })
+                .with_transform(Transform::default())
                 .submit();
             editor_scene.submit(world.resources(), "builtin", "editor").await?;
         }

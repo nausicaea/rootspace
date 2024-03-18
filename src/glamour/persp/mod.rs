@@ -1,4 +1,3 @@
-use ::approx::{relative_eq, RelativeEq};
 use num_traits::Float;
 
 use super::mat::Mat4;
@@ -19,56 +18,30 @@ impl<R> Persp<R> {
 
 impl<R> Persp<R>
 where
-    R: Float + RelativeEq,
+    R: Float,
 {
     pub fn new(aspect: R, fov_y: R, near_z: R, far_z: R) -> Self {
-        let z = R::zero();
-        let o = R::one();
-        let t = o + o;
+        let zero = R::zero();
+        let one = R::one();
+        let two = one + one;
 
-        if aspect < z || relative_eq!(aspect, z) {
-            panic!("the 'aspect' parameter must positive and non-zero");
-        }
+        let cot = one / (fov_y / two).tan();
 
-        if relative_eq!(fov_y, z) {
-            panic!("the 'fov_y' parameter must positive and non-zero");
-        }
-
-        if relative_eq!(near_z, far_z) {
-            panic!("the 'near_z' and 'far_z' parameters must not be similar");
-        } else if near_z > far_z {
-            panic!("the 'near_z' parameter must not be larger than 'far_z'");
-        }
-
-        let tan = o / (fov_y / t).tan();
-        let f_rel = -far_z / (far_z - near_z);
-
-        let m00 = aspect * tan;
-        let m11 = tan;
-        let m22 = f_rel;
-        let m23 = near_z * f_rel;
-        let m32 = -o;
+        let r0c0 = cot / aspect;
+        let r1c1 = cot;
+        let r2c2 = (far_z + near_z) / (near_z - far_z);
+        let r2c3 = (two * far_z * near_z) / (near_z - far_z);
+        let r3c2 = -one;
 
         Persp(Mat4::new([
-            [m00, z, z, z],
-            [z, m11, z, z],
-            [z, z, m22, m23],
-            [z, z, m32, z],
+            [r0c0, zero, zero, zero],
+            [zero, r1c1, zero, zero],
+            [zero, zero, r2c2, r2c3],
+            [zero, zero, r3c2, zero],
         ]))
     }
-}
 
-impl<R> Persp<R>
-where
-    R: Float + RelativeEq,
-{
     pub fn set_aspect(&mut self, aspect: R) {
-        let z = R::zero();
-
-        if aspect < z || relative_eq!(aspect, z) {
-            panic!("the 'aspect' parameter must positive and non-zero");
-        }
-
         self.0[(0, 0)] = aspect * self.0[(1, 1)];
     }
 }
@@ -81,6 +54,9 @@ impl<R> AsRef<Mat4<R>> for Persp<R> {
 
 #[cfg(test)]
 mod tests {
+    use approx::ulps_eq;
+    use proptest::{prop_assert, proptest};
+    use crate::glamour::test_helpers::proptest::bounded_positive_f32;
     use super::*;
 
     fn testing_persp() -> Persp<f32> {
@@ -93,5 +69,36 @@ mod tests {
 
         let _: &Mat4<f32> = AsRef::as_ref(&p);
         let _: &Mat4<f32> = p.as_matrix();
+    }
+
+    #[test]
+    fn persp_comparison_to_nalgebra_and_cgmath() {
+        use cgmath::Matrix;
+
+        let a = 0.8_f32;
+        let f = std::f32::consts::PI * 0.75;
+        let nz = 0.001;
+        let dz = 1000.0;
+        let glamour_persp = Persp::new(a, f, nz, nz + dz);
+        let nalgebra_persp = nalgebra::Perspective3::new(a, f, nz, nz + dz);
+        let cgmath_persp = cgmath::perspective(cgmath::Rad(f), a, nz, nz + dz);
+        assert!(ulps_eq!(*glamour_persp.as_matrix(), nalgebra_persp.to_homogeneous()), "glamour\t\t\t=    {:?}\nnalgebra (transposed)\t=         {:?}\ncgmath (transposed)\t= {:?}", *glamour_persp.as_matrix(), nalgebra_persp.to_homogeneous().transpose(), cgmath_persp.transpose());
+    }
+
+    proptest! {
+        #[test]
+        fn persp_is_equal_to_nalgebra(a in bounded_positive_f32(-22, 63), f in (2.0*f32::EPSILON)..(std::f32::consts::PI), nz in bounded_positive_f32(-22, 63), dz in bounded_positive_f32(-22, 63)) {
+            let glamour_persp = Persp::new(a, f, nz, nz + dz);
+            let nalgebra_persp = nalgebra::Perspective3::new(a, f, nz, nz + dz);
+            prop_assert!(ulps_eq!(*glamour_persp.as_matrix(), nalgebra_persp.to_homogeneous()), "glamour = {:?}\nnalgebra = {:?}", *glamour_persp.as_matrix(), nalgebra_persp.to_homogeneous());
+        }
+
+        #[test]
+        fn persp_is_equal_to_cgmath(a in bounded_positive_f32(-22, 63), f in (2.0*f32::EPSILON)..(std::f32::consts::PI), nz in bounded_positive_f32(-22, 63), dz in bounded_positive_f32(-22, 63)) {
+            let glamour_persp = Persp::new(a, f, nz, nz + dz);
+            let cgmath_persp = cgmath::perspective(cgmath::Rad(f), a, nz, nz + dz);
+
+            prop_assert!(ulps_eq!(*glamour_persp.as_matrix(), cgmath_persp), "glamour = {:?}\ncgmath = {:?}", *glamour_persp.as_matrix(), cgmath_persp);
+        }
     }
 }

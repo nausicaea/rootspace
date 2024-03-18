@@ -32,8 +32,7 @@ mod tests {
     use super::*;
     use crate::glamour::quat::Quat;
     use crate::glamour::test_helpers::proptest::{affine, bounded_f32, bounded_nonzero_f32};
-    use crate::Vec4;
-    use approx::{assert_ulps_eq, relative_eq, ulps_eq};
+    use approx::{relative_eq, ulps_eq};
     use proptest::{prop_assert, proptest};
 
     #[test]

@@ -8,7 +8,7 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Transform(Affine<f32>);
+pub struct Transform(pub(crate) Affine<f32>);
 
 impl Transform {
     pub fn builder() -> TransformBuilder {
@@ -17,34 +17,6 @@ impl Transform {
 
     pub fn look_at_lh<V: Into<Vec4<f32>>>(eye: V, cntr: V, up: V) -> Self {
         Transform(Affine::with_look_at_lh(eye.into(), cntr.into(), Unit::from(up.into())))
-    }
-
-    pub fn set_translation(&mut self, value: Vec4<f32>) {
-        self.0.t = value;
-    }
-
-    pub fn set_orientation<Q: Into<Unit<Quat<f32>>>>(&mut self, value: Q) {
-        self.0.o = value.into();
-    }
-
-    pub fn set_scale(&mut self, value: f32) {
-        self.0.s = value;
-    }
-
-    pub fn as_affine(&self) -> &Affine<f32> {
-        self.as_ref()
-    }
-
-    pub fn translation(&self) -> &Vec4<f32> {
-        &self.0.t
-    }
-
-    pub fn orientation(&self) -> &Unit<Quat<f32>> {
-        &self.0.o
-    }
-
-    pub fn scale(&self) -> f32 {
-        self.0.s
     }
 }
 
@@ -81,9 +53,9 @@ impl std::fmt::Display for Transform {
         write!(
             f,
             "position: {}, orientation: {}, scale: {}",
-            self.translation(),
-            self.orientation(),
-            self.scale(),
+            self.0.t,
+            self.0.o,
+            self.0.s,
         )
     }
 }
@@ -115,7 +87,6 @@ impl TransformBuilder {
 #[cfg(test)]
 mod tests {
     use approx::assert_ulps_eq;
-    use proptest::{collection::vec, num::f32::NORMAL, prelude::*};
 
     use super::*;
     use crate::glamour::{num::Zero, quat::Quat, vec::Vec4};
@@ -167,39 +138,8 @@ mod tests {
             .with_scale(1.0f32)
             .build();
 
-        assert_ulps_eq!(m.translation(), &Vec4::zero());
-        assert_ulps_eq!(m.orientation(), &Unit::from(Quat::identity()));
-        assert_ulps_eq!(m.scale(), 1.0f32);
-    }
-
-    proptest! {
-        #[test]
-        fn position_may_be_changed(num in vec(NORMAL, 3)) {
-            let mut m = Transform::default();
-
-            let p = Vec4::new(num[0], num[1], num[2], 0.0);
-            m.set_translation(p);
-
-            prop_assert_eq!(m.translation(), &p);
-        }
-
-        #[test]
-        fn orientation_may_be_changed(num in vec(NORMAL, 4)) {
-            let mut m = Transform::default();
-
-            let o = Unit::from(Quat::new(num[0], num[1], num[2], num[3]));
-            m.set_orientation(o);
-
-            prop_assert_eq!(m.orientation(), &o);
-        }
-
-        #[test]
-        fn scale_may_be_changed(num in NORMAL) {
-            let mut m = Transform::default();
-
-            m.set_scale(num);
-
-            prop_assert_eq!(m.scale(), num);
-        }
+        assert_ulps_eq!(m.0.t, Vec4::zero());
+        assert_ulps_eq!(m.0.o, Unit::from(Quat::identity()));
+        assert_ulps_eq!(m.0.s, 1.0f32);
     }
 }

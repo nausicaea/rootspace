@@ -24,9 +24,9 @@ impl System for DebugAnimator {
         let angle = dt.as_secs_f32() * 0.20;
         let rotation = Quat::with_axis_angle(Unit::from(Vec4::new(0.0, 1.0, 0.0, 0.0)), angle);
         for (_, _, t) in res.iter_rw::<Renderable, Transform>() {
-            let t_quat = t.orientation();
+            let t_quat = t.0.o;
             let new_t_quat = rotation * t_quat;
-            t.set_orientation(new_t_quat);
+            t.0.o = new_t_quat;
         }
     }
 }
