@@ -345,9 +345,13 @@ impl Orchestrator {
             })
             .with_renderable(RenderableSource::Reference {
                 group: "models".into(),
-                name: "cone.ply".into(),
+                name: "coordinate-diag.ply".into(),
             })
-            .with_ui_transform(UiTransform::default())
+            .with_ui_transform({
+                let mut uit = UiTransform::default();
+                uit.0.s = 0.1_f32;
+                uit
+            })
             .submit();
         editor_scene
             .create_entity()
@@ -357,7 +361,7 @@ impl Orchestrator {
             })
             .with_renderable(RenderableSource::Reference {
                 group: "models".into(),
-                name: "cone.ply".into(),
+                name: "coordinate-diag.ply".into(),
             })
             .with_transform(Transform::default())
             .submit();
