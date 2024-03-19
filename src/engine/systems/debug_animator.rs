@@ -21,6 +21,7 @@ impl WithResources for DebugAnimator {
 
 #[async_trait]
 impl System for DebugAnimator {
+    #[tracing::instrument(skip_all)]
     async fn run(&mut self, res: &Resources, _t: Duration, dt: Duration) {
         let angle = dt.as_secs_f32() * 0.20;
         let rotation = Quat::with_axis_angle(Unit::from(Vec4::new(0.0, 1.0, 0.0, 0.0)), angle);

@@ -35,6 +35,7 @@ pub struct Rpc {
 
 #[async_trait]
 impl System for Rpc {
+    #[tracing::instrument(skip_all)]
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         let events = res.write::<EventQueue<EngineEvent>>().receive(&self.receiver);
         for event in events {

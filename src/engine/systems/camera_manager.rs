@@ -28,6 +28,7 @@ impl WithResources for CameraManager {
 }
 
 impl CameraManager {
+    #[tracing::instrument(skip_all)]
     fn on_resize(&self, res: &Resources, width: u32, height: u32) {
         tracing::debug!("Updating the camera dimensions ({width}x{height})");
 
@@ -39,6 +40,7 @@ impl CameraManager {
 
 #[async_trait]
 impl System for CameraManager {
+    #[tracing::instrument(skip_all)]
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         let events = res.write::<EventQueue<WindowEvent>>().receive(&self.receiver);
         for event in events {

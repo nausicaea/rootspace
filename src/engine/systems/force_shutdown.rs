@@ -60,6 +60,7 @@ impl WithResources for ForceShutdown {
 
 #[async_trait]
 impl System for ForceShutdown {
+    #[tracing::instrument(skip_all)]
     async fn run(&mut self, res: &Resources, _: Duration, _: Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             tracing::debug!("User requested to exit by SIGINT");

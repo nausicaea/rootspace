@@ -105,6 +105,7 @@ impl World {
     ///
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `fixed_update`.
+    #[tracing::instrument(skip_all)]
     pub async fn fixed_update(&mut self, t: Duration, dt: Duration) {
         World::run_systems_parallel(&self.fixed_update_systems, &self.resources, t, dt).await
     }
@@ -116,6 +117,7 @@ impl World {
     ///
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `update`.
+    #[tracing::instrument(skip_all)]
     pub async fn update(&mut self, t: Duration, dt: Duration) {
         World::run_systems_parallel(&self.update_systems, &self.resources, t, dt).await
     }
@@ -127,6 +129,7 @@ impl World {
     ///
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `render`.
+    #[tracing::instrument(skip_all)]
     pub async fn render(&mut self, t: Duration, dt: Duration) {
         self.render_system.run(&self.resources, t, dt).await;
     }
@@ -135,6 +138,7 @@ impl World {
     /// handled by the world. If this method returns
     /// [`LoopControl::Continue`](crate::loop_control::LoopControl), the execution of the
     /// main loop shall continue, otherwise it shall abort.
+    #[tracing::instrument(skip_all)]
     pub async fn maintain(&mut self) -> LoopControl {
         // Run all custom maintenance systems
         let dummy_time = Duration::new(0, 0);
@@ -161,6 +165,7 @@ impl World {
         LoopControl::Continue
     }
 
+    #[tracing::instrument(skip_all)]
     pub fn clear(&mut self) {
         self.maintenance_systems.clear();
         self.update_systems.clear();
@@ -168,6 +173,7 @@ impl World {
         Arc::get_mut(&mut self.resources).unwrap().clear();
     }
 
+    #[tracing::instrument(skip_all)]
     async fn run_systems_parallel(systems: &Systems, resources: &Arc<Resources>, t: Duration, dt: Duration) {
         let mut fut = systems
             .into_iter()
@@ -180,6 +186,7 @@ impl World {
         while let Some(()) = fut.next().await.transpose().unwrap() {}
     }
 
+    #[tracing::instrument(skip_all)]
     fn on_create_entity(&mut self) {
         let entity = self.get_mut::<Entities>().create();
         tracing::debug!("Created the entity {}", entity.idx());
@@ -187,6 +194,7 @@ impl World {
             .send(WorldEvent::EntityCreated(entity));
     }
 
+    #[tracing::instrument(skip_all)]
     fn on_destroy_entity(&mut self, entity: Entity) {
         self.get_mut::<Entities>().destroy(entity);
         tracing::debug!("Destroyed the entity {}", entity);

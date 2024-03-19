@@ -45,6 +45,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
+    #[tracing::instrument(skip_all)]
     fn handle_events(&mut self, res: &Resources) {
         res.write::<EventQueue<WindowEvent>>()
             .receive_cb(&self.window_receiver, |e| {
@@ -62,6 +63,7 @@ impl Renderer {
             });
     }
 
+    #[tracing::instrument(skip_all)]
     fn render(&mut self, res: &Resources, mut rp: RenderPass) {
         fn hier_transform<C: Component + ToMatrix<f32>>(
             idx: Index,
@@ -131,25 +133,30 @@ impl Renderer {
         res.write::<Statistics>().update_draw_calls(world_draw_calls, 0);
     }
 
+    #[tracing::instrument(skip_all)]
     fn on_window_resized(&self, res: &Resources, ps: PhysicalSize<u32>) {
         tracing::trace!("Resizing surface");
         res.write::<Graphics>().resize(ps)
     }
 
+    #[tracing::instrument(skip_all)]
     fn on_surface_outdated(&self, res: &Resources) {
         tracing::trace!("Surface is outdated");
         res.write::<Graphics>().reconfigure()
     }
 
+    #[tracing::instrument(skip_all)]
     fn on_out_of_memory(&self, res: &Resources) {
         tracing::error!("surface is out of memory");
         res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit)
     }
 
+    #[tracing::instrument(skip_all)]
     fn on_timeout(&self) {
         tracing::warn!("Surface timed out")
     }
 
+    #[tracing::instrument(skip_all)]
     fn crp_with_transform(
         adb: &AssetDatabase,
         gfx: &mut Graphics,
@@ -179,6 +186,7 @@ impl Renderer {
         Ok(pipeline)
     }
 
+    #[tracing::instrument(skip_all)]
     fn crp_with_transform_and_material(
         adb: &AssetDatabase,
         gfx: &mut Graphics,
@@ -256,6 +264,7 @@ impl WithResources for Renderer {
 
 #[async_trait]
 impl System for Renderer {
+    #[tracing::instrument(skip_all)]
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         let frame_start = Instant::now();
         self.handle_events(res);
