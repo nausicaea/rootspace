@@ -75,7 +75,7 @@ impl Scene {
         EntityBuilder::new(self)
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     pub async fn submit<S>(mut self, res: &Resources, group: S, name: S) -> Result<(), anyhow::Error>
     where
         S: AsRef<str> + std::fmt::Debug,
@@ -129,7 +129,7 @@ impl Scene {
             map
         }
 
-        #[tracing::instrument]
+        #[tracing::instrument(skip_all)]
         async fn load_components_additive(
             scene: &Scene,
             map: &BTreeMap<Index, Index>,

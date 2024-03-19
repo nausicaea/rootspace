@@ -142,7 +142,7 @@ where
 impl<E> Resource for EventQueue<E> where E: fmt::Debug + 'static + Send + Sync {}
 
 impl<D, E> WithDependencies<D> for EventQueue<E> {
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
         Ok(EventQueue::default())
     }

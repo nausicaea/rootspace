@@ -35,7 +35,7 @@ pub struct World {
 }
 
 impl World {
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     pub async fn with_dependencies<RR, FUSR, USR, RS, MS, D>(deps: &D) -> Result<Self, anyhow::Error>
     where
         D: std::fmt::Debug,
@@ -47,10 +47,17 @@ impl World {
     {
         let mut resources = Resources::with_dependencies::<ResourceTypes<RR>, D>(deps).await?;
 
-        let fixed_update_systems = Systems::with_resources::<FUSR>(&resources).await?;
-        let update_systems = Systems::with_resources::<USR>(&resources).await?;
-        let render_system = RS::with_res(&resources).await?;
-        let maintenance_systems = Systems::with_resources::<MS>(&resources).await?;
+        let join_result = tokio::join! {
+            Systems::with_resources::<FUSR>(&resources),
+            Systems::with_resources::<USR>(&resources),
+            RS::with_res(&resources),
+            Systems::with_resources::<MS>(&resources),
+        };
+
+        let fixed_update_systems = join_result.0?;
+        let update_systems = join_result.1?;
+        let render_system = join_result.2?;
+        let maintenance_systems = join_result.3?;
 
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 

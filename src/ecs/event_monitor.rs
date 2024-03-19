@@ -19,7 +19,7 @@ impl<E> WithResources for EventMonitor<E>
 where
     E: 'static + Clone + std::fmt::Debug + Send + Sync,
 {
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
         let receiver = res.write::<EventQueue<E>>().subscribe::<Self>();
 

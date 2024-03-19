@@ -19,7 +19,7 @@ impl<D> WithDependencies<D> for RpcSettings
 where
     D: RpcDeps + std::fmt::Debug,
 {
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     async fn with_deps(deps: &D) -> Result<Self, Error> {
         Ok(RpcSettings {
             bind_address: deps.bind_address(),

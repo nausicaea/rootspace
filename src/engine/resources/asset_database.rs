@@ -39,7 +39,7 @@ pub struct AssetDatabase {
 }
 
 impl AssetDatabase {
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     pub async fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> Result<A::Output, anyhow::Error>
     where
         A: LoadAsset,
@@ -63,7 +63,7 @@ impl AssetDatabase {
         Ok(asset)
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     pub async fn save_asset<A, S>(&self, asset: &A, group: S, name: S) -> Result<(), anyhow::Error>
     where
         A: SaveAsset + std::fmt::Debug,
@@ -144,7 +144,7 @@ impl<D> WithDependencies<D> for AssetDatabase
 where
     D: AssetDatabaseDeps + std::fmt::Debug,
 {
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     async fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
         let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, deps.name()).with_context(|| {
             format!(

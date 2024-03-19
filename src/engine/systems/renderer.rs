@@ -212,7 +212,7 @@ impl Renderer {
 }
 
 impl WithResources for Renderer {
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
         let window_receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let engine_receiver = res.write::<EventQueue<EngineEvent>>().subscribe::<Self>();

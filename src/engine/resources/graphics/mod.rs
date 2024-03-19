@@ -198,7 +198,7 @@ impl<D> WithDependencies<D> for Graphics
 where
     D: GraphicsDeps + std::fmt::Debug,
 {
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     async fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
         let settings = deps.settings();
         let runtime = Runtime::new(deps.event_loop(), settings).await;

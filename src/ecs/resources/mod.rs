@@ -78,25 +78,25 @@ impl Resources {
     /// In a similar fashion to Resources::deserialize, the following method uses the types stored
     /// in the registry to initialize those resources that have a default, parameterless
     /// constructor.
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     pub async fn with_dependencies<RR, D>(deps: &D) -> Result<Self, Error>
     where
         D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,
     {
-        fn recursor<R: ResourceRegistry>(res: &mut Resources, reg: R) {
+        fn recursive_insert<R: ResourceRegistry>(res: &mut Resources, reg: R) {
             if R::LEN == 0 {
                 return;
             }
 
             let (head, tail) = reg.unzip();
             res.insert(head);
-            recursor(res, tail);
+            recursive_insert(res, tail);
         }
 
         let rr = RR::with_deps(deps).await?;
         let mut res = Resources::with_capacity(RR::LEN);
-        recursor(&mut res, rr);
+        recursive_insert(&mut res, rr);
 
         Ok(res)
     }

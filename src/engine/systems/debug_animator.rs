@@ -13,7 +13,7 @@ use crate::{
 pub struct DebugAnimator;
 
 impl WithResources for DebugAnimator {
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     async fn with_res(_res: &crate::ecs::resources::Resources) -> Result<Self, anyhow::Error> {
         Ok(DebugAnimator)
     }

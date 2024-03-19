@@ -96,7 +96,7 @@ impl Display for Statistics {
 impl Resource for Statistics {}
 
 impl<D> WithDependencies<D> for Statistics {
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
         Ok(Statistics::default())
     }
