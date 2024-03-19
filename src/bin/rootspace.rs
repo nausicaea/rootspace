@@ -28,6 +28,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[derive(Debug)]
 struct Dependencies<'a, T: 'static> {
     rt: Arc<Runtime>,
     event_loop: &'a EventLoop<T>,

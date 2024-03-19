@@ -78,8 +78,10 @@ impl Resources {
     /// In a similar fashion to Resources::deserialize, the following method uses the types stored
     /// in the registry to initialize those resources that have a default, parameterless
     /// constructor.
+    #[tracing::instrument]
     pub async fn with_dependencies<RR, D>(deps: &D) -> Result<Self, Error>
     where
+        D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,
     {
         fn recursor<R: ResourceRegistry>(res: &mut Resources, reg: R) {

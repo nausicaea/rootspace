@@ -45,6 +45,7 @@ const MAX_LOOP_DURATION: Duration = Duration::from_secs(2);
 const MAX_LOOP_DURATION: Duration = Duration::from_millis(250);
 const MIN_LOOP_DURATION: Option<Duration> = Some(Duration::from_millis(17));
 
+#[derive(Debug)]
 pub struct Orchestrator {
     world: World,
     timers: Timers,
@@ -56,8 +57,10 @@ pub struct Orchestrator {
 }
 
 impl Orchestrator {
+    #[tracing::instrument]
     pub async fn with_dependencies<RR, FUSR, USR, MSR, D>(deps: &D) -> Result<Self, anyhow::Error>
     where
+        D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,
         FUSR: SystemRegistry + WithResources,
         USR: SystemRegistry + WithResources,
@@ -152,6 +155,7 @@ impl Orchestrator {
     /// from the operating system. Internally, the closure instructs the asynchronous runtime to
     /// block on [`Orchestrator::run`](crate::engine::orchestrator::Orchestrator::run), which does
     /// the actual work.
+    #[tracing::instrument]
     pub fn start(mut self) -> impl 'static + FnMut(Event<()>, &EventLoopWindowTarget<()>) {
         let rt = self.runtime.clone();
 
@@ -167,6 +171,7 @@ impl Orchestrator {
     ///    [`Orchestrator::maintain`](crate::engine::orchestrator::Orchestrator::maintain)
     /// 3. Shutting down cleanly at the end of the engine lifecycle with
     ///    [`Orchestrator::on_exiting`](crate::engine::orchestrator::Orchestrator::on_exiting)
+    #[tracing::instrument]
     async fn run(&mut self, event: Event<()>, elwt: &EventLoopWindowTarget<()>) {
         #[cfg(feature = "dbg-loop")]
         let mut draw_bottom = false;
@@ -210,6 +215,7 @@ impl Orchestrator {
     /// 2. Call [`World::update`](crate::ecs::world::World::update) once per redraw event.
     /// 3. Call [`World::render`](crate::ecs::world::World::render) once per redraw event.
     /// 4. Update performance statistics in [`Statistics`](crate::engine::resources::statistics::Statistics)
+    #[tracing::instrument]
     async fn redraw(&mut self) {
         // Assess the duration of the last frame
         let loop_time = std::cmp::min(self.timers.last_redraw.elapsed(), self.timers.max_loop_duration);
@@ -238,6 +244,7 @@ impl Orchestrator {
     /// events based on loop timing information.
     /// Calls [`World::maintain`](crate::ecs::world::World::maintain`) after all other events
     /// have been handled.
+    #[tracing::instrument]
     async fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
         // Update maintenance statistics
         self.world
@@ -324,6 +331,7 @@ impl Orchestrator {
         event_loop_window_target.set_control_flow(ControlFlow::Poll);
     }
 
+    #[tracing::instrument]
     fn on_entity_destroyed(&mut self, entity: Entity) {
         tracing::trace!("Removing entity from components");
         self.world.get_components_mut::<Camera>().remove(entity);
@@ -333,12 +341,14 @@ impl Orchestrator {
         self.world.get_components_mut::<Renderable>().remove(entity);
     }
 
+    #[tracing::instrument]
     fn on_exit(&mut self) {
         tracing::info!("Exit requested");
         self.world.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Exiting);
         self.world.read::<Graphics>().request_redraw();
     }
 
+    #[tracing::instrument]
     fn on_exiting(&mut self) {
         tracing::info!("Exiting");
         self.world.clear();

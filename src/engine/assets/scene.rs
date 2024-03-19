@@ -75,7 +75,11 @@ impl Scene {
         EntityBuilder::new(self)
     }
 
-    pub async fn submit<S: AsRef<str>>(mut self, res: &Resources, group: S, name: S) -> Result<(), anyhow::Error> {
+    #[tracing::instrument]
+    pub async fn submit<S>(mut self, res: &Resources, group: S, name: S) -> Result<(), anyhow::Error>
+    where
+        S: AsRef<str> + std::fmt::Debug,
+    {
         fn error_recovery<'a, I: IntoIterator<Item = &'a Index>>(res: &Resources, iter: I) {
             let mut entities = res.write::<Entities>();
             let mut hierarchy = res.write::<Hierarchy<Index>>();
@@ -125,6 +129,7 @@ impl Scene {
             map
         }
 
+        #[tracing::instrument]
         async fn load_components_additive(
             scene: &Scene,
             map: &BTreeMap<Index, Index>,

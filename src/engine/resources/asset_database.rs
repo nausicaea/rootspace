@@ -39,10 +39,11 @@ pub struct AssetDatabase {
 }
 
 impl AssetDatabase {
+    #[tracing::instrument]
     pub async fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> Result<A::Output, anyhow::Error>
     where
         A: LoadAsset,
-        S: AsRef<str>,
+        S: AsRef<str> + std::fmt::Debug,
     {
         let path = self.find_asset(&group, &name).with_context(|| {
             format!(
@@ -62,10 +63,11 @@ impl AssetDatabase {
         Ok(asset)
     }
 
+    #[tracing::instrument]
     pub async fn save_asset<A, S>(&self, asset: &A, group: S, name: S) -> Result<(), anyhow::Error>
     where
-        A: SaveAsset,
-        S: AsRef<str>,
+        A: SaveAsset + std::fmt::Debug,
+        S: AsRef<str> + std::fmt::Debug,
     {
         let path = self.find_asset(&group, &name).with_context(|| {
             format!(
@@ -198,6 +200,7 @@ mod tests {
         Reg,
     };
 
+    #[derive(Debug)]
     struct TDeps<'a> {
         name: &'a str,
         force_init: bool,

@@ -12,6 +12,7 @@ impl Systems {
         Systems(Vec::with_capacity(cap))
     }
 
+    #[tracing::instrument]
     pub async fn with_resources<SR>(res: &Resources) -> Result<Self, anyhow::Error>
     where
         SR: SystemRegistry + WithResources,
