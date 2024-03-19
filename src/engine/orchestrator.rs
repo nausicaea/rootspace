@@ -3,7 +3,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-use log::{info, trace};
 use tokio::runtime::Runtime;
 use winit::{
     event::{Event, WindowEvent},
@@ -175,14 +174,14 @@ impl Orchestrator {
         {
             match &event {
                 Event::NewEvents(_) => {
-                    trace!("⬇");
+                    tracing::trace!("⬇");
                 }
                 Event::AboutToWait | Event::LoopExiting => {
                     draw_bottom = true;
                 }
                 _ => (),
             }
-            trace!("Event trace: {:?}", &event);
+            tracing::trace!("Event trace: {:?}", &event);
         }
 
         let main_window_id = self.world.read::<Graphics>().window_id();
@@ -201,7 +200,7 @@ impl Orchestrator {
 
         #[cfg(feature = "dbg-loop")]
         if draw_bottom {
-            trace!("⬆\n\n");
+            tracing::trace!("⬆\n\n");
         }
     }
 
@@ -326,7 +325,7 @@ impl Orchestrator {
     }
 
     fn on_entity_destroyed(&mut self, entity: Entity) {
-        trace!("Removing entity from components");
+        tracing::trace!("Removing entity from components");
         self.world.get_components_mut::<Camera>().remove(entity);
         self.world.get_components_mut::<Info>().remove(entity);
         self.world.get_components_mut::<Transform>().remove(entity);
@@ -335,13 +334,13 @@ impl Orchestrator {
     }
 
     fn on_exit(&mut self) {
-        info!("Exit requested");
+        tracing::info!("Exit requested");
         self.world.get_mut::<EventQueue<WorldEvent>>().send(WorldEvent::Exiting);
         self.world.read::<Graphics>().request_redraw();
     }
 
     fn on_exiting(&mut self) {
-        info!("Exiting");
+        tracing::info!("Exiting");
         self.world.clear();
     }
 }

@@ -56,7 +56,6 @@ use std::{
     path::Path,
 };
 
-use log::debug;
 use nom::error::VerboseError;
 
 use crate::{
@@ -83,10 +82,10 @@ pub enum PlyError {
 
 pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
     let path = FilePathBuf::try_from(path.as_ref())?;
-    debug!("Opening PLY file at {}", path.display());
+    tracing::debug!("Opening PLY file at {}", path.display());
     let mut file = File::open(path.clone())?;
     let mut input = Vec::new();
-    debug!("Reading entire contents of file at {}", path.display());
+    tracing::debug!("Reading entire contents of file at {}", path.display());
     file.read_to_end(&mut input)?;
 
     let r = parse_ply::<VerboseError<_>>(&input)
@@ -101,11 +100,11 @@ pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
 
 pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
     let path = NewOrExFilePathBuf::try_from(path.as_ref())?;
-    debug!("Creating PLY file at {}", path.display());
+    tracing::debug!("Creating PLY file at {}", path.display());
     let file = File::create(path.clone())?;
     let mut f = BufWriter::new(file);
 
-    debug!("Writing PLY header to file at {}", path.display());
+    tracing::debug!("Writing PLY header to file at {}", path.display());
     write_header(&mut f, &ply.descriptor)?;
 
     match ply.descriptor.format_type {
@@ -808,7 +807,6 @@ mod tests {
 
     #[rstest::rstest]
     fn roundtrip_save_ply_succeeds_for_test_files(#[files("tests/valid/*.ply")] path: PathBuf) {
-        let _ = env_logger::builder().is_test(true).try_init();
         let ply = load_ply(&path).unwrap();
         let tmp = tempfile::Builder::new()
             .prefix(path.file_stem().unwrap())

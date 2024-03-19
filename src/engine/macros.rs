@@ -6,7 +6,7 @@ macro_rules! trace_gfx {
     (target: $target:expr, $($arg:tt)+) => {
         #[cfg(feature = "dbg-gfx")]
         {
-            log::log!(target: $target, log::Level::Trace, $($arg)+)
+            tracing::log::log!(target: $target, tracing::log::Level::Trace, $($arg)+)
         }
     };
 
@@ -14,7 +14,7 @@ macro_rules! trace_gfx {
     ($($arg:tt)+) => {
         #[cfg(feature = "dbg-gfx")]
         {
-            log::log!(log::Level::Trace, $($arg)+)
+            tracing::log::log!(tracing::log::Level::Trace, $($arg)+)
         }
     };
 }
@@ -27,7 +27,7 @@ macro_rules! trace_loop {
     (target: $target:expr, $($arg:tt)+) => {
         #[cfg(feature = "dbg-loop")]
         {
-            log::log!(target: $target, log::Level::Trace, $($arg)+)
+            tracing::log::log!(target: $target, tracing::log::Level::Trace, $($arg)+)
         }
     };
 
@@ -35,7 +35,7 @@ macro_rules! trace_loop {
     ($($arg:tt)+) => {
         #[cfg(feature = "dbg-loop")]
         {
-            log::log!(log::Level::Trace, $($arg)+)
+            tracing::log::log!(tracing::log::Level::Trace, $($arg)+)
         }
     };
 }

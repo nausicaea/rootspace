@@ -1,6 +1,5 @@
 use std::net::SocketAddr;
 
-use log::trace;
 use tarpc::context::Context;
 use tokio::sync::mpsc;
 
@@ -27,18 +26,18 @@ impl RpcServer {
 
 impl RpcService for RpcServer {
     async fn hello(self, _context: Context, name: String) -> Result<String, Error> {
-        trace!("RpcService::hello");
+        tracing::trace!("RpcService::hello");
         Ok(format!("Hello, {}@{}", &name, self.socket_address))
     }
 
     async fn exit(self, _: Context) -> Result<(), Error> {
-        trace!("RpcService::exit");
+        tracing::trace!("RpcService::exit");
         self.mpsc_tx.send(RpcMessage::Exit).await?;
         Ok(())
     }
 
     async fn perf(self, _: Context) -> Result<Statistics, Error> {
-        trace!("RpcService::perf");
+        tracing::trace!("RpcService::perf");
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.mpsc_tx.send(RpcMessage::StatsRequest(tx)).await?;
         let stats = rx.await?;
@@ -46,7 +45,7 @@ impl RpcService for RpcServer {
     }
 
     async fn load_scene(self, _: Context, group: String, name: String) -> Result<(), Error> {
-        trace!("RpcService::load_scene");
+        tracing::trace!("RpcService::load_scene");
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.mpsc_tx.send(RpcMessage::LoadScene { tx, group, name }).await?;
         rx.await??;

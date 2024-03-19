@@ -7,7 +7,6 @@ use std::{
 };
 
 use anyhow::anyhow;
-use log::trace;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::{
@@ -53,7 +52,7 @@ pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> a
 
     // As long as there are directories on the stack, proceed
     while let Some(working_path) = stack.pop() {
-        trace!("Processing: {}", working_path.display());
+        tracing::trace!("Processing: {}", working_path.display());
 
         // Generate a relative path
         let src: PathBuf = working_path.components().skip(num_input_components).collect();
@@ -68,7 +67,7 @@ pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> a
         // Create the destination if it is missing
         // Why don't they use `dest.is_dir()` or `dest.exists()`?
         if metadata(&dest).await.is_err() {
-            trace!("Creating directory: {}", dest.display());
+            tracing::trace!("Creating directory: {}", dest.display());
             create_dir_all(&dest).await?;
         }
 
@@ -96,7 +95,7 @@ pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> a
                 match path.file_name() {
                     Some(filename) => {
                         let dest_path = dest.join(filename);
-                        trace!("Copying file: {} -> {}", path.display(), dest_path.display());
+                        tracing::trace!("Copying file: {} -> {}", path.display(), dest_path.display());
                         copy(&path, &dest_path).await.map_err(|e| {
                             anyhow!(
                                 "Cannot copy the file {} -> {}: {}",

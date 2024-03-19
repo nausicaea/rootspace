@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
 
-use log::{debug, error, trace};
 use nom::{
     bytes::complete::take_till1,
     combinator::{map, map_res},
@@ -30,11 +29,11 @@ where
     context(
         "plyers::de::body::ascii_count_fct",
         map_res(terminated(take_till1(is_whitespace), whitespace), |cd| {
-            trace!("Parsing ASCII count data as utf8: {:?}", cd);
+            tracing::trace!("Parsing ASCII count data as utf8: {:?}", cd);
             let cd = std::str::from_utf8(cd)?;
-            trace!("Parsing ASCII count data as usize: {:?}", cd);
+            tracing::trace!("Parsing ASCII count data as usize: {:?}", cd);
             let cd = cd.parse::<usize>().map_err(|e| {
-                error!("Expected a usize, got {}: {}", cd, e);
+                tracing::error!("Expected a usize, got {}: {}", cd, e);
                 e
             })?;
             Result::<_, ParseNumError>::Ok(cd)
@@ -49,77 +48,77 @@ where
     context(
         "plyers::de::body::ascii_number_fct",
         map_res(terminated(recognize_float, whitespace), move |pd| {
-            trace!("Parsing ASCII property data as utf8: {:?}", pd);
+            tracing::trace!("Parsing ASCII property data as utf8: {:?}", pd);
             let pd = std::str::from_utf8(pd)?;
-            trace!("Parsing ASCII property data as {}: {:?}", data_type, pd);
+            tracing::trace!("Parsing ASCII property data as {}: {:?}", data_type, pd);
             let pd = match data_type {
                 DataType::U8 => pd
                     .parse::<u8>()
                     .map_err(|e| {
-                        error!("Expected a u8, got {}: {}", pd, e);
+                        tracing::error!("Expected a u8, got {}: {}", pd, e);
                         ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::I8 => pd
                     .parse::<i8>()
                     .map_err(|e| {
-                        error!("Expected a i8, got {}: {}", pd, e);
+                        tracing::error!("Expected a i8, got {}: {}", pd, e);
                         ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::U16 => pd
                     .parse::<u16>()
                     .map_err(|e| {
-                        error!("Expected a u16, got {}: {}", pd, e);
+                        tracing::error!("Expected a u16, got {}: {}", pd, e);
                         ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::I16 => pd
                     .parse::<i16>()
                     .map_err(|e| {
-                        error!("Expected a i16, got {}: {}", pd, e);
+                        tracing::error!("Expected a i16, got {}: {}", pd, e);
                         ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::U32 => pd
                     .parse::<u32>()
                     .map_err(|e| {
-                        error!("Expected a u32, got {}: {}", pd, e);
+                        tracing::error!("Expected a u32, got {}: {}", pd, e);
                         ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::I32 => pd
                     .parse::<i32>()
                     .map_err(|e| {
-                        error!("Expected a i32, got {}: {}", pd, e);
+                        tracing::error!("Expected a i32, got {}: {}", pd, e);
                         ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::U64 => pd
                     .parse::<u64>()
                     .map_err(|e| {
-                        error!("Expected a u64, got {}: {}", pd, e);
+                        tracing::error!("Expected a u64, got {}: {}", pd, e);
                         ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::I64 => pd
                     .parse::<i64>()
                     .map_err(|e| {
-                        error!("Expected a i64, got {}: {}", pd, e);
+                        tracing::error!("Expected a i64, got {}: {}", pd, e);
                         ParseNumError::ParseInt(e)
                     })
                     .map(Value::from)?,
                 DataType::F32 => pd
                     .parse::<f32>()
                     .map_err(|e| {
-                        error!("Expected a f32, got {}: {}", pd, e);
+                        tracing::error!("Expected a f32, got {}: {}", pd, e);
                         ParseNumError::ParseFloat(e)
                     })
                     .map(Value::from)?,
                 DataType::F64 => pd
                     .parse::<f64>()
                     .map_err(|e| {
-                        error!("Expected a f64, got {}: {}", pd, e);
+                        tracing::error!("Expected a f64, got {}: {}", pd, e);
                         ParseNumError::ParseFloat(e)
                     })
                     .map(Value::from)?,
@@ -135,7 +134,7 @@ where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
     context("plyers::de::body::le_count_fct", move |input| {
-        trace!("Parsing LE count data as {} and casting to usize", count_type);
+        tracing::trace!("Parsing LE count data as {} and casting to usize", count_type);
         match count_type {
             CountType::U8 => map(le_u8, |n| n as usize)(input),
             CountType::U16 => map(le_u16, |n| n as usize)(input),
@@ -150,7 +149,7 @@ where
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
 {
     context("plyers::de::body::le_number_fct", move |input| {
-        trace!("Parsing LE property data as {}", data_type);
+        tracing::trace!("Parsing LE property data as {}", data_type);
         match data_type {
             DataType::U8 => map(le_u8, Value::from)(input),
             DataType::I8 => map(le_i8, Value::from)(input),
@@ -171,7 +170,7 @@ where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
     context("plyers::de::body::be_count_fct", move |input| {
-        trace!("Parsing BE count data as {} and casting to usize", count_type);
+        tracing::trace!("Parsing BE count data as {} and casting to usize", count_type);
         match count_type {
             CountType::U8 => map(be_u8, |n| n as usize)(input),
             CountType::U16 => map(be_u16, |n| n as usize)(input),
@@ -186,7 +185,7 @@ where
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
 {
     context("plyers::de::body::be_number_fct", move |input| {
-        trace!("Parsing BE property data as {}", data_type);
+        tracing::trace!("Parsing BE property data as {}", data_type);
         match data_type {
             DataType::U8 => map(be_u8, Value::from)(input),
             DataType::I8 => map(be_i8, Value::from)(input),
@@ -255,7 +254,7 @@ where
 
                 match p_desc {
                     PropertyDescriptor::Scalar { data_type, name, .. } => {
-                        trace!("Parsing property {} as scalar data with type {}", name, data_type);
+                        tracing::trace!("Parsing property {} as scalar data with type {}", name, data_type);
                         map(property_scalar_fct(num_fn, *data_type), |p| {
                             (p_id, Primitive::Single, *data_type, vec![p])
                         })(input)
@@ -266,7 +265,7 @@ where
                         name,
                         ..
                     } => {
-                        trace!(
+                        tracing::trace!(
                             "Parsing property {} as list data with type {} and count type {}",
                             name,
                             data_type,
@@ -317,7 +316,7 @@ where
             elements.len(),
             move |input: &'a [u8]| {
                 let (_, e_desc) = e_iter.next().unwrap();
-                trace!("Parsing data for element {}", e_desc.name);
+                tracing::trace!("Parsing data for element {}", e_desc.name);
                 context(
                     "plyers::de::body::elements_fct#1",
                     properties_fct(cnt_fn, num_fn, &e_desc.properties, e_desc.count),
@@ -340,15 +339,15 @@ pub fn body_fct<
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, Values)>, E> {
     context("plyers::de::body::body_fct", move |input| match ply.format_type {
         FormatType::Ascii => {
-            debug!("Parsing PLY data as ASCII");
+            tracing::debug!("Parsing PLY data as ASCII");
             elements_fct(&ascii_count_fct, &ascii_number_fct, &ply.elements)(input)
         }
         FormatType::BinaryLittleEndian => {
-            debug!("Parsing PLY data as binary little endian");
+            tracing::debug!("Parsing PLY data as binary little endian");
             elements_fct(&le_count_fct, &le_number_fct, &ply.elements)(input)
         }
         FormatType::BinaryBigEndian => {
-            debug!("Parsing PLY data as binary big endian");
+            tracing::debug!("Parsing PLY data as binary big endian");
             elements_fct(&be_count_fct, &be_number_fct, &ply.elements)(input)
         }
     })

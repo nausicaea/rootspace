@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use log::debug;
 use winit::event::WindowEvent;
 
 use crate::{
@@ -29,7 +28,7 @@ impl WithResources for CameraManager {
 
 impl CameraManager {
     fn on_resize(&self, res: &Resources, width: u32, height: u32) {
-        debug!("Updating the camera dimensions ({width}x{height})");
+        tracing::debug!("Updating the camera dimensions ({width}x{height})");
 
         res.write_components::<Camera>()
             .iter_mut()

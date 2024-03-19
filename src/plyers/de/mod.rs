@@ -1,6 +1,5 @@
 use std::num::{ParseFloatError, ParseIntError};
 
-use log::debug;
 use nom::{
     combinator::{all_consuming, flat_map, map},
     error::{context, ContextError, FromExternalError, ParseError},
@@ -40,11 +39,11 @@ pub fn parse_ply<
     let r = context(
         "plyers::de::parse_ply#0",
         all_consuming(flat_map(header_fct(e_urn_ref, p_urn_ref), |descriptor| {
-            debug!("Completed PLY header parsing, continuing to the body");
+            tracing::debug!("Completed PLY header parsing, continuing to the body");
             context(
                 "plyers::de::parse_ply#1",
                 map(body_fct(descriptor.clone()), move |data| {
-                    debug!("Completed PLY body parsing, assembling output data");
+                    tracing::debug!("Completed PLY body parsing, assembling output data");
                     Ply {
                         descriptor: descriptor.clone(),
                         data,

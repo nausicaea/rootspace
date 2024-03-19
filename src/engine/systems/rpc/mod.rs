@@ -7,7 +7,6 @@ use std::{future::ready, time::Duration};
 use anyhow::Error;
 use async_trait::async_trait;
 use futures::StreamExt;
-use log::{info, trace};
 use message::RpcMessage;
 use tarpc::server::{incoming::Incoming, BaseChannel, Channel};
 use tokio::{sync::mpsc, task::JoinHandle};
@@ -41,13 +40,13 @@ impl System for Rpc {
         for event in events {
             #[allow(irrefutable_let_patterns)]
             if let EngineEvent::Exit = event {
-                trace!("Stopping RPC listener");
+                tracing::trace!("Stopping RPC listener");
                 self.rpc_listener.abort();
             }
         }
 
         while let Ok(msg) = self.mpsc_rx.try_recv() {
-            trace!("RPC incoming call: {:?}", &msg);
+            tracing::trace!("RPC incoming call: {:?}", &msg);
             match msg {
                 RpcMessage::StatsRequest(tx) => {
                     let stats = res.read::<Statistics>().clone();
@@ -82,11 +81,11 @@ impl WithResources for Rpc {
 
         let mut listener =
             tarpc::serde_transport::tcp::listen(&ba, tarpc::tokio_serde::formats::Bincode::default).await?;
-        info!("RPC binding to {}", listener.local_addr());
+        tracing::info!("RPC binding to {}", listener.local_addr());
         listener.config_mut().max_frame_length(mfl);
         let (tx, rx) = tokio::sync::mpsc::channel::<RpcMessage>(mcc);
         let rpc_listener: JoinHandle<()> = tokio::task::spawn(async move {
-            trace!("Starting RPC listener");
+            tracing::trace!("Starting RPC listener");
             listener
                 // Ignore accept errors.
                 .filter_map(|r| ready(r.ok()))

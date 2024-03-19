@@ -6,7 +6,6 @@ use std::{
     fmt,
 };
 
-use log::debug;
 use receiver_state::ReceiverState;
 use serde::{Deserialize, Serialize};
 
@@ -48,7 +47,7 @@ where
 
         let stnt = type_name::<T>();
         let stns = type_name::<Self>();
-        debug!("Adding subscriber {} to queue {}", stnt, stns);
+        tracing::debug!("Adding subscriber {} to queue {}", stnt, stns);
         ReceiverId::new(id)
     }
 

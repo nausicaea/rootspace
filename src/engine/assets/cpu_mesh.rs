@@ -54,7 +54,7 @@ impl CpuMesh {
             .next()
             .ok_or(Error::NoVertexElement)?;
 
-        log::trace!("Located vertex element {} with {} vertices", v_e_id, num_vertices);
+        tracing::trace!("Located vertex element {} with {} vertices", v_e_id, num_vertices);
 
         let f_e_id = ply
             .descriptor
@@ -65,7 +65,7 @@ impl CpuMesh {
             .next()
             .ok_or(Error::NoFaceElement)?;
 
-        log::trace!("Located face element {}", f_e_id);
+        tracing::trace!("Located face element {}", f_e_id);
 
         let v_p_index: HashMap<_, _> = ply.descriptor.elements[&v_e_id]
             .properties
@@ -86,7 +86,7 @@ impl CpuMesh {
             })
             .collect();
 
-        log::trace!("Located {} vertex element properties", v_p_index.len());
+        tracing::trace!("Located {} vertex element properties", v_p_index.len());
 
         let vertex_indices_id = ply.descriptor.elements[&f_e_id]
             .properties
@@ -100,7 +100,7 @@ impl CpuMesh {
             })
             .ok_or(Error::NoVertexIndices)?;
 
-        log::trace!("Located vertex indices property {}", vertex_indices_id);
+        tracing::trace!("Located vertex indices property {}", vertex_indices_id);
 
         if ply.primitive() != Some(Primitive::Triangles) {
             return Err(Error::NoTriangleFaces);
@@ -152,11 +152,11 @@ impl CpuMesh {
             .copied()
             .collect();
 
-        log::trace!("Loaded {} vertices and {} indices", vertex_data.len(), indices.len());
+        tracing::trace!("Loaded {} vertices and {} indices", vertex_data.len(), indices.len());
 
         let texture_names: Vec<_> = Self::find_texture_names(ply).map(|n| n.to_owned()).collect();
 
-        log::trace!("Located the following texture names: {}", texture_names.join(", "));
+        tracing::trace!("Located the following texture names: {}", texture_names.join(", "));
 
         Ok(CpuMesh {
             label,

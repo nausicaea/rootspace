@@ -2,7 +2,6 @@ use std::time::{Duration, Instant};
 
 use anyhow::Context;
 use async_trait::async_trait;
-use log::{error, trace, warn};
 use wgpu::SurfaceError;
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
@@ -133,22 +132,22 @@ impl Renderer {
     }
 
     fn on_window_resized(&self, res: &Resources, ps: PhysicalSize<u32>) {
-        trace!("Resizing surface");
+        tracing::trace!("Resizing surface");
         res.write::<Graphics>().resize(ps)
     }
 
     fn on_surface_outdated(&self, res: &Resources) {
-        trace!("Surface is outdated");
+        tracing::trace!("Surface is outdated");
         res.write::<Graphics>().reconfigure()
     }
 
     fn on_out_of_memory(&self, res: &Resources) {
-        error!("surface is out of memory");
+        tracing::error!("surface is out of memory");
         res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit)
     }
 
     fn on_timeout(&self) {
-        warn!("Surface timed out")
+        tracing::warn!("Surface timed out")
     }
 
     fn crp_with_transform(

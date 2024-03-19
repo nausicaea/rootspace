@@ -1,7 +1,6 @@
 use std::path::Path;
 
 use anyhow::Context;
-use log::trace;
 
 use super::{cpu_material::CpuMaterial, cpu_mesh::CpuMesh, private::PrivLoadAsset};
 use crate::{ecs::resources::Resources, engine::resources::asset_database::AssetDatabase};
@@ -21,7 +20,7 @@ impl PrivLoadAsset for CpuModel {
         let mesh = CpuMesh::with_path(res, path)
             .await
             .with_context(|| format!("Loading a CpuMesh from '{}'", path.display()))?;
-        trace!("Loaded CpuMesh with size {} bytes", std::mem::size_of_val(&mesh));
+        tracing::trace!("Loaded CpuMesh with size {} bytes", std::mem::size_of_val(&mesh));
 
         let mut materials = Vec::new();
         for name in &mesh.texture_names {
@@ -35,7 +34,7 @@ impl PrivLoadAsset for CpuModel {
                         MATERIAL_ASSET_GROUP, name
                     )
                 })?;
-            trace!("Loaded CpuMaterial with size {} bytes", std::mem::size_of_val(&cpu_mat));
+            tracing::trace!("Loaded CpuMaterial with size {} bytes", std::mem::size_of_val(&cpu_mat));
 
             materials.push(cpu_mat);
         }

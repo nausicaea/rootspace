@@ -30,7 +30,11 @@ impl<'a> AssetDatabaseDeps for Dependencies<'a> {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    env_logger::init();
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .finish();
+    tracing::subscriber::set_global_default(subscriber)?;
+
     let matches = Args::parse();
 
     let deps = Dependencies {

@@ -1,7 +1,6 @@
 use std::{fmt, time::Duration};
 
 use async_trait::async_trait;
-use log::trace;
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -34,7 +33,7 @@ where
 {
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         res.write::<EventQueue<E>>()
-            .receive_cb(&self.receiver, |e| trace!("Received {:?}", e))
+            .receive_cb(&self.receiver, |e| tracing::trace!("Received {:?}", e))
     }
 }
 

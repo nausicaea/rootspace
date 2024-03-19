@@ -1,4 +1,3 @@
-use log::debug;
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
 use winit::{event_loop::EventLoopWindowTarget, window::Fullscreen};
 
@@ -26,7 +25,7 @@ impl<'a> Runtime<'a> {
         );
 
         let size = window.inner_size();
-        debug!("Physical window size: {:?}", &size);
+        tracing::debug!("Physical window size: {:?}", &size);
 
         let max_size = window.current_monitor().unwrap().size();
 
@@ -44,7 +43,7 @@ impl<'a> Runtime<'a> {
             })
             .await
             .unwrap();
-        debug!("Supported adapter features: {:?}", adapter.features());
+        tracing::debug!("Supported adapter features: {:?}", adapter.features());
 
         let (device, queue) = adapter
             .request_device(
@@ -59,16 +58,16 @@ impl<'a> Runtime<'a> {
             .unwrap();
 
         let capabilities = surface.get_capabilities(&adapter);
-        debug!("Supported texture formats: {:?}", &capabilities.formats);
+        tracing::debug!("Supported texture formats: {:?}", &capabilities.formats);
 
         let texture_format = capabilities
             .formats
             .iter()
             .find(|&tf| tf == &settings.preferred_texture_format)
             .unwrap_or(&capabilities.formats[0]);
-        debug!("Choosing texture format: {:?}", &texture_format);
+        tracing::debug!("Choosing texture format: {:?}", &texture_format);
 
-        debug!("Supported present modes: {:?}", &capabilities.present_modes);
+        tracing::debug!("Supported present modes: {:?}", &capabilities.present_modes);
 
         let config = wgpu::SurfaceConfiguration {
             usage: TextureUsages::RENDER_ATTACHMENT,

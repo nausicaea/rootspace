@@ -38,7 +38,7 @@ impl<'rt> BindGroupLayoutBuilder<'rt> {
     }
 
     pub fn submit(self) -> BindGroupLayoutId {
-        log::trace!("Creating bind group layout '{}'", self.label.unwrap_or("unnamed"));
+        tracing::trace!("Creating bind group layout '{}'", self.label.unwrap_or("unnamed"));
         let bgl = self
             .runtime
             .device

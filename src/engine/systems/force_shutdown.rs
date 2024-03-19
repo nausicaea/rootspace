@@ -9,11 +9,6 @@ use std::{
 };
 
 use async_trait::async_trait;
-use log::debug;
-#[cfg(not(test))]
-use log::error;
-#[cfg(not(test))]
-use log::info;
 use winit::{
     event::{ElementState, KeyEvent, WindowEvent},
     keyboard::NamedKey,
@@ -44,12 +39,12 @@ impl WithResources for ForceShutdown {
             let result = ctrlc::set_handler(move || {
                 let previous = trigger.fetch_add(1, Ordering::SeqCst);
                 if previous > 0 {
-                    info!("Force-quitting the application");
+                    tracing::info!("Force-quitting the application");
                     process::exit(1);
                 }
             });
             if let Err(e) = result {
-                error!("Unable to set a Ctrl-C handler: {}", e);
+                tracing::error!("Unable to set a Ctrl-C handler: {}", e);
             }
         }
 
@@ -66,7 +61,7 @@ impl WithResources for ForceShutdown {
 impl System for ForceShutdown {
     async fn run(&mut self, res: &Resources, _: Duration, _: Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
-            debug!("User requested to exit by SIGINT");
+            tracing::debug!("User requested to exit by SIGINT");
             res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit);
             self.ctrlc_triggered.store(0, Ordering::SeqCst);
         }
@@ -75,7 +70,7 @@ impl System for ForceShutdown {
         for event in events {
             match event {
                 WindowEvent::CloseRequested => {
-                    debug!("User requested to exit by closing the window");
+                    tracing::debug!("User requested to exit by closing the window");
                     res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit);
                 }
                 WindowEvent::KeyboardInput {
@@ -87,7 +82,7 @@ impl System for ForceShutdown {
                         },
                     ..
                 } => {
-                    debug!("User requested to exit by pressing Cmd-Q");
+                    tracing::debug!("User requested to exit by pressing Cmd-Q");
                     res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit);
                 }
                 _ => (),

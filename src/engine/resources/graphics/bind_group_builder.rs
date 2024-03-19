@@ -81,7 +81,7 @@ impl<'rt> BindGroupBuilder<'rt> {
             })
             .collect();
 
-        log::trace!("Creating bind group '{}'", self.label.unwrap_or("unnamed"));
+        tracing::trace!("Creating bind group '{}'", self.label.unwrap_or("unnamed"));
         let bg = self.runtime.device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: self.label,
             layout,

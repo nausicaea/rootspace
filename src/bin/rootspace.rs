@@ -12,7 +12,11 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
-    env_logger::init();
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .finish();
+    tracing::subscriber::set_global_default(subscriber)?;
+
     let args = Args::parse();
     let event_loop = EventLoop::new()?;
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;

@@ -27,6 +27,11 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .finish();
+    tracing::subscriber::set_global_default(subscriber)?;
+
     let matches = Args::parse();
 
     if let Some(save) = &matches.save {

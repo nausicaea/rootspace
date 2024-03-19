@@ -79,7 +79,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
 
         // Pipeline layout definition
         let label_pipeline_layout = self.label.map(|lbl| format!("{}:pipeline-layout", lbl));
-        log::trace!(
+        tracing::trace!(
             "Creating pipeline layout '{}'",
             label_pipeline_layout.as_deref().unwrap_or("unnamed")
         );
@@ -93,7 +93,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
             });
 
         // Pipeline definition
-        log::trace!("Creating render pipeline '{}'", self.label.unwrap_or("unnamed"));
+        tracing::trace!("Creating render pipeline '{}'", self.label.unwrap_or("unnamed"));
         let pipeline = self
             .runtime
             .device

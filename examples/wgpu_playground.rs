@@ -2,7 +2,6 @@
 
 use std::sync::Arc;
 
-use log::debug;
 use wgpu::{
     Backends, CompositeAlphaMode, Device, DeviceDescriptor, Features, Instance, Limits, PowerPreference, PresentMode,
     Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, TextureUsages,
@@ -15,7 +14,11 @@ use winit::{
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).unwrap();
+
     let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
@@ -60,7 +63,7 @@ impl<'a> State<'a> {
             })
             .await
             .unwrap();
-        debug!("Supported adapter features: {:?}", adapter.features());
+        tracing::debug!("Supported adapter features: {:?}", adapter.features());
 
         let (device, queue) = adapter
             .request_device(
@@ -75,17 +78,17 @@ impl<'a> State<'a> {
             .unwrap();
 
         let size = window.inner_size();
-        debug!("Physical window size: {:?}", &size);
+        tracing::debug!("Physical window size: {:?}", &size);
 
         let capabilities = surface.get_capabilities(&adapter);
         let texture_formats = capabilities.formats;
-        debug!("Supported texture formats: {:?}", &texture_formats);
+        tracing::debug!("Supported texture formats: {:?}", &texture_formats);
 
         let texture_format = texture_formats[0];
-        debug!("Choosing texture format: {:?}", &texture_format);
+        tracing::debug!("Choosing texture format: {:?}", &texture_format);
 
         let present_modes = capabilities.present_modes;
-        debug!("Supported present modes: {:?}", &present_modes);
+        tracing::debug!("Supported present modes: {:?}", &present_modes);
 
         let surface_config = SurfaceConfiguration {
             usage: TextureUsages::RENDER_ATTACHMENT,

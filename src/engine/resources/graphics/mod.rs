@@ -1,4 +1,3 @@
-use log::warn;
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
@@ -74,9 +73,12 @@ impl Graphics {
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > self.runtime.max_size.width || new_size.height > self.runtime.max_size.height {
-            warn!(
+            tracing::warn!(
                 "Ignoring requested physical dimensions {}x{} because they exceed maximum dimensions {}x{}",
-                new_size.width, new_size.height, self.runtime.max_size.width, self.runtime.max_size.height
+                new_size.width,
+                new_size.height,
+                self.runtime.max_size.width,
+                self.runtime.max_size.height
             );
             return;
         }
@@ -111,7 +113,7 @@ impl Graphics {
         label: Option<&'a str>,
         source: S,
     ) -> ShaderModuleId {
-        log::trace!("Creating shader module '{}'", label.unwrap_or("unnamed"));
+        tracing::trace!("Creating shader module '{}'", label.unwrap_or("unnamed"));
         let sm = self.runtime.device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label,
             source: wgpu::ShaderSource::Wgsl(source.into()),
@@ -138,7 +140,7 @@ impl Graphics {
         size: wgpu::BufferAddress,
         usage: wgpu::BufferUsages,
     ) -> BufferId {
-        log::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
+        tracing::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
         let buf = self.runtime.device.create_buffer(&wgpu::BufferDescriptor {
             label,
             size,
@@ -157,7 +159,7 @@ impl Graphics {
     ) -> BufferId {
         use wgpu::util::DeviceExt;
 
-        log::trace!("Creating and initializing buffer '{}'", label.unwrap_or("unnamed"));
+        tracing::trace!("Creating and initializing buffer '{}'", label.unwrap_or("unnamed"));
         let buf = self
             .runtime
             .device
@@ -177,7 +179,7 @@ impl Graphics {
     pub fn create_texture_view(&mut self, label: Option<&str>, texture: TextureId) -> TextureViewId {
         let texture = &self.database.textures[&texture];
 
-        log::trace!("Creating texture view '{}'", label.unwrap_or("unnamed"));
+        tracing::trace!("Creating texture view '{}'", label.unwrap_or("unnamed"));
         let view = texture.create_view(&wgpu::TextureViewDescriptor {
             label,
             ..Default::default()
