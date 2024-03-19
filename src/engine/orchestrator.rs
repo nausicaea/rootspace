@@ -10,6 +10,7 @@ use winit::{
 };
 
 use super::registry::{FUSRegistry, MSRegistry};
+use crate::ecs::resources::Resources;
 use crate::{
     ecs::{
         entity::Entity,
@@ -82,49 +83,7 @@ impl Orchestrator {
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        //#[cfg(feature = "editor")]
-        {
-            use crate::engine::assets::scene::RenderableSource;
-            let mut editor_scene = Scene::default();
-            editor_scene
-                .create_entity()
-                .with_info(Info {
-                    name: "editor-camera".into(),
-                    ..Default::default()
-                })
-                .with_camera(Camera::default())
-                .with_transform(Transform::look_at_lh(
-                    [0.0, 0.0, -10.0, 1.0],
-                    [0.0, 0.0, 0.0, 1.0],
-                    [0.0, 1.0, 0.0, 0.0],
-                ))
-                .submit();
-            editor_scene
-                .create_entity()
-                .with_info(Info {
-                    name: "coordinate-diag-ortho".into(),
-                    ..Default::default()
-                })
-                .with_renderable(RenderableSource::Reference {
-                    group: "models".into(),
-                    name: "cone.ply".into(),
-                })
-                .with_ui_transform(UiTransform::default())
-                .submit();
-            editor_scene
-                .create_entity()
-                .with_info(Info {
-                    name: "coordinate-diag-persp".into(),
-                    ..Default::default()
-                })
-                .with_renderable(RenderableSource::Reference {
-                    group: "models".into(),
-                    name: "cone.ply".into(),
-                })
-                .with_transform(Transform::default())
-                .submit();
-            editor_scene.submit(world.resources(), "builtin", "editor").await?;
-        }
+        Self::load_builtins(world.resources()).await?;
 
         if let Some(main_scene) = deps.main_scene() {
             world
@@ -352,6 +311,60 @@ impl Orchestrator {
     fn on_exiting(&mut self) {
         tracing::info!("Exiting");
         self.world.clear();
+    }
+
+    #[tracing::instrument]
+    async fn load_builtins(res: &Resources) -> anyhow::Result<()> {
+        #[cfg(feature = "editor")]
+        Self::load_editor_builtins(res).await?;
+
+        Ok(())
+    }
+
+    #[tracing::instrument]
+    async fn load_editor_builtins(res: &Resources) -> anyhow::Result<()> {
+        use crate::engine::assets::scene::RenderableSource;
+        let mut editor_scene = Scene::default();
+        editor_scene
+            .create_entity()
+            .with_info(Info {
+                name: "editor-camera".into(),
+                ..Default::default()
+            })
+            .with_camera(Camera::default())
+            .with_transform(Transform::look_at_lh(
+                [0.0, 0.0, -10.0, 1.0],
+                [0.0, 0.0, 0.0, 1.0],
+                [0.0, 1.0, 0.0, 0.0],
+            ))
+            .submit();
+        editor_scene
+            .create_entity()
+            .with_info(Info {
+                name: "coordinate-diag-ortho".into(),
+                ..Default::default()
+            })
+            .with_renderable(RenderableSource::Reference {
+                group: "models".into(),
+                name: "cone.ply".into(),
+            })
+            .with_ui_transform(UiTransform::default())
+            .submit();
+        editor_scene
+            .create_entity()
+            .with_info(Info {
+                name: "coordinate-diag-persp".into(),
+                ..Default::default()
+            })
+            .with_renderable(RenderableSource::Reference {
+                group: "models".into(),
+                name: "cone.ply".into(),
+            })
+            .with_transform(Transform::default())
+            .submit();
+        editor_scene.submit(res, "builtin", "editor").await?;
+
+        Ok(())
     }
 }
 
