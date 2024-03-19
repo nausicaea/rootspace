@@ -1,3 +1,4 @@
+#![recursion_limit = "256"]
 use std::{ops::Deref, sync::Arc};
 
 use clap::Parser;

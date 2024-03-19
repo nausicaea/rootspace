@@ -15,7 +15,11 @@ pub struct RpcSettings {
 
 impl Resource for RpcSettings {}
 
-impl<D: RpcDeps> WithDependencies<D> for RpcSettings {
+impl<D> WithDependencies<D> for RpcSettings
+where
+    D: RpcDeps + std::fmt::Debug,
+{
+    #[tracing::instrument]
     async fn with_deps(deps: &D) -> Result<Self, Error> {
         Ok(RpcSettings {
             bind_address: deps.bind_address(),

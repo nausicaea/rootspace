@@ -140,7 +140,11 @@ impl AssetDatabase {
 
 impl Resource for AssetDatabase {}
 
-impl<D: AssetDatabaseDeps> WithDependencies<D> for AssetDatabase {
+impl<D> WithDependencies<D> for AssetDatabase
+where
+    D: AssetDatabaseDeps + std::fmt::Debug,
+{
+    #[tracing::instrument]
     async fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
         let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, deps.name()).with_context(|| {
             format!(

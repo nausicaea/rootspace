@@ -117,6 +117,7 @@ where
 impl<K> Resource for Hierarchy<K> where K: 'static + Send + Sync {}
 
 impl<D, K: Ord> crate::ecs::with_dependencies::WithDependencies<D> for Hierarchy<K> {
+    #[tracing::instrument]
     async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
         Ok(Hierarchy::default())
     }

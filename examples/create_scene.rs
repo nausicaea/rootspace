@@ -8,6 +8,7 @@ struct Args {
     within_repo: bool,
 }
 
+#[derive(Debug)]
 struct Dependencies<'a> {
     name: &'a str,
     force_init: bool,

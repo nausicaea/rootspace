@@ -194,7 +194,11 @@ impl Graphics {
 
 impl Resource for Graphics {}
 
-impl<D: GraphicsDeps> WithDependencies<D> for Graphics {
+impl<D> WithDependencies<D> for Graphics
+where
+    D: GraphicsDeps + std::fmt::Debug,
+{
+    #[tracing::instrument]
     async fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
         let settings = deps.settings();
         let runtime = Runtime::new(deps.event_loop(), settings).await;

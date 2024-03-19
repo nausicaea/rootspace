@@ -7,6 +7,7 @@ pub trait WithResources: Sized + Send {
 }
 
 impl WithResources for () {
+    #[tracing::instrument]
     async fn with_res(_: &Resources) -> Result<Self, Error> {
         Ok(())
     }

@@ -122,6 +122,7 @@ where
 }
 
 impl<D, T: Default> WithDependencies<D> for ZstStorage<T> {
+    #[tracing::instrument]
     async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
         Ok(ZstStorage::default())
     }

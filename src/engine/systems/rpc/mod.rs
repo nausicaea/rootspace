@@ -66,6 +66,7 @@ impl System for Rpc {
 }
 
 impl WithResources for Rpc {
+    #[tracing::instrument]
     async fn with_res(res: &Resources) -> Result<Self, Error> {
         let (ba, mfl, mcc, mcpk, rcc) = {
             let settings = res.read::<RpcSettings>();

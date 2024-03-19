@@ -26,6 +26,7 @@ where
     H: WithResources,
     T: WithResources,
 {
+    #[tracing::instrument]
     async fn with_res(res: &Resources) -> Result<Self, Error> {
         Ok(Self {
             head: H::with_res(res).await?,
@@ -36,9 +37,11 @@ where
 
 impl<D, H, T> WithDependencies<D> for Element<H, T>
 where
+    D: std::fmt::Debug,
     H: WithDependencies<D>,
     T: WithDependencies<D>,
 {
+    #[tracing::instrument]
     async fn with_deps(deps: &D) -> Result<Self, Error> {
         Ok(Self {
             head: H::with_deps(deps).await?,
@@ -52,12 +55,14 @@ where
 pub struct End;
 
 impl WithResources for End {
+    #[tracing::instrument]
     async fn with_res(_: &Resources) -> Result<Self, Error> {
         Ok(Self)
     }
 }
 
 impl<D> WithDependencies<D> for End {
+    #[tracing::instrument]
     async fn with_deps(_: &D) -> Result<Self, Error> {
         Ok(Self)
     }

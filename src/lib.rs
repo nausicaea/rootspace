@@ -1,4 +1,5 @@
 //#![warn(clippy::unwrap_used)]
+#![recursion_limit = "256"]
 
 mod ecs;
 mod engine;
