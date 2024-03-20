@@ -2,6 +2,7 @@ use std::{sync::Arc, time::Duration};
 
 use futures::{stream::FuturesUnordered, StreamExt};
 use parking_lot::MappedRwLockReadGuard;
+use tracing::Instrument;
 
 use self::{event::WorldEvent, type_registry::ResourceTypes};
 use super::{
@@ -178,8 +179,15 @@ impl World {
         let mut fut = systems
             .into_iter()
             .map(|s| {
+                let span = tracing::info_span!("system_spawn_task");
                 let r = resources.clone();
-                tokio::task::spawn(async move { s.lock().await.run(&r, t, dt).await })
+                tokio::task::spawn(async move {
+                    let span = tracing::info_span!("system_acquire_lock");
+                    let mut sys = s.lock().instrument(span).await;
+                    let span = tracing::info_span!("system_run", system = sys.name());
+                    sys.run(&r, t, dt).instrument(span).await
+                })
+                .instrument(span)
             })
             .collect::<FuturesUnordered<_>>();
 
