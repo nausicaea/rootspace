@@ -10,6 +10,9 @@ dbg-gfx = []
 dbg-loop = []
 test-flaky = []
 
+[profile.release]
+panic = "abort"
+
 [dependencies]
 winit = { version = "0.29", features = ["serde"] }
 wgpu = { version = "0.19", features = ["serde", "trace", "replay"] }
