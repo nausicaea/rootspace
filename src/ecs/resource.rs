@@ -1,5 +1,7 @@
 //! Provides the resource downcastable trait.
 
+#![allow(clippy::multiple_bound_locations)]
+
 use downcast_rs::{impl_downcast, DowncastSync};
 
 /// A resource is a data structure that is not coupled to a specific entity. Resources can be used

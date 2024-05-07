@@ -13,12 +13,7 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
-    let subscriber = tracing_subscriber::FmtSubscriber::builder()
-        .compact()
-        .with_target(false)
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .finish();
-    tracing::subscriber::set_global_default(subscriber)?;
+    console_subscriber::init();
 
     let args = Args::parse();
     let event_loop = EventLoop::new()?;

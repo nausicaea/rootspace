@@ -113,7 +113,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
                 let e_count = e_desc.count;
                 for e_idx in 0..e_count {
                     for (p_id, p_desc) in &e_desc.properties {
-                        let (p_prim, p_values) = &ply.data[&p_id];
+                        let (p_prim, p_values) = &ply.data[p_id];
                         match p_values {
                             Values::I8(values) => write_le_values(&mut f, p_prim, p_desc, values, e_idx)?,
                             Values::U8(values) => write_le_values(&mut f, p_prim, p_desc, values, e_idx)?,
@@ -135,7 +135,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
                 let e_count = e_desc.count;
                 for e_idx in 0..e_count {
                     for (p_id, p_desc) in &e_desc.properties {
-                        let (p_prim, p_values) = &ply.data[&p_id];
+                        let (p_prim, p_values) = &ply.data[p_id];
                         match p_values {
                             Values::I8(values) => write_be_values(&mut f, p_prim, p_desc, values, e_idx)?,
                             Values::U8(values) => write_be_values(&mut f, p_prim, p_desc, values, e_idx)?,
@@ -158,7 +158,7 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
                 for e_idx in 0..e_count {
                     for (p_idx, (p_id, p_desc)) in e_desc.properties.iter().enumerate() {
                         let is_last_property = p_idx == e_desc.properties.len() - 1;
-                        let (p_prim, p_values) = &ply.data[&p_id];
+                        let (p_prim, p_values) = &ply.data[p_id];
                         match p_values {
                             Values::I8(values) => {
                                 write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
