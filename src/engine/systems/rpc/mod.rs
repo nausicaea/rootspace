@@ -10,6 +10,7 @@ use futures::StreamExt;
 use message::RpcMessage;
 use tarpc::server::{incoming::Incoming, BaseChannel, Channel};
 use tokio::{sync::mpsc, task::JoinHandle};
+use tracing::error;
 
 use crate::{
     ecs::{
@@ -51,14 +52,18 @@ impl System for Rpc {
             match msg {
                 RpcMessage::StatsRequest(tx) => {
                     let stats = res.read::<Statistics>().clone();
-                    tx.send(stats).unwrap();
+                    if let Err(_) = tx.send(stats) {
+                        error!("unable to send statistics data to the RPC server");
+                    }
                 }
                 RpcMessage::LoadScene { tx, group, name } => {
                     let r = res
                         .read::<AssetDatabase>()
                         .load_asset::<Scene, _>(res, &group, &name)
                         .await;
-                    tx.send(r).unwrap();
+                    if let Err(_) = tx.send(r) {
+                        error!("unable to send the result of asset loading to the RPC server");
+                    }
                 }
                 RpcMessage::Exit => res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit),
             }
