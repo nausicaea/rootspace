@@ -63,7 +63,7 @@ cargo-check:
   cache:
     key: sccache-cache
     paths:
-      - .cargo/sscache
+      - .cargo/sccache
 
 rustfmt-check:
   stage: check
@@ -83,7 +83,7 @@ cargo-clippy:
   cache:
     key: sccache-cache
     paths:
-      - .cargo/sscache
+      - .cargo/sccache
 
 rust-latest:
   stage: build
@@ -94,7 +94,7 @@ rust-latest:
   cache:
     key: sccache-cache
     paths:
-      - .cargo/sscache
+      - .cargo/sccache
 
 cargo-test:
   stage: test
@@ -105,4 +105,4 @@ cargo-test:
   cache:
     key: sccache-cache
     paths:
-      - .cargo/sscache
+      - .cargo/sccache
