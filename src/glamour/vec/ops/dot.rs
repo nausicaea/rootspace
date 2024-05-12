@@ -1,5 +1,6 @@
-use num_traits::Float;
 use std::ops::Mul;
+
+use num_traits::Float;
 
 use super::super::Vec4;
 use crate::{abop, forward_ref_binop, glamour::ops::dot::Dot};

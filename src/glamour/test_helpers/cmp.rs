@@ -1,7 +1,7 @@
-use crate::glamour::mat::Mat4;
-use crate::glamour::quat::Quat;
-use crate::glamour::unit::Unit;
-use crate::Vec4;
+use crate::{
+    glamour::{mat::Mat4, quat::Quat, unit::Unit},
+    Vec4,
+};
 
 impl<R> PartialEq<nalgebra::Vector4<R>> for Vec4<R>
 where

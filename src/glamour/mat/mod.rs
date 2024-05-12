@@ -155,13 +155,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::test_helpers::proptest::mat4;
     use proptest::{
         num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
         prop_assert, prop_assert_eq, proptest,
     };
 
     use super::*;
+    use crate::glamour::test_helpers::proptest::mat4;
 
     proptest! {
         #[test]

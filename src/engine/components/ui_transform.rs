@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::glamour::unit::Unit;
 use crate::{
     ecs::{component::Component, storage::vec_storage::VecStorage},
-    glamour::{affine::Affine, mat::Mat4, num::ToMatrix, vec::Vec4},
+    glamour::{affine::Affine, mat::Mat4, num::ToMatrix, unit::Unit, vec::Vec4},
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -55,11 +55,11 @@ impl<R> AsRef<Mat4<R>> for Ortho<R> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::glamour::ortho::Ortho;
-    use crate::glamour::test_helpers::proptest::bounded_positive_f32;
     use approx::ulps_eq;
     use proptest::{prop_assert, proptest};
+
+    use super::*;
+    use crate::glamour::{ortho::Ortho, test_helpers::proptest::bounded_positive_f32};
 
     fn testing_ortho() -> Ortho<f32> {
         Ortho::new(1.5, std::f32::consts::PI / 4.0, 0.1, 1000.0)

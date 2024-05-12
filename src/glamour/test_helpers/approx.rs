@@ -1,11 +1,9 @@
-use crate::glamour::affine::Affine;
-use crate::glamour::mat::Mat4;
-use crate::glamour::ortho::Ortho;
-use crate::glamour::persp::Persp;
-use crate::glamour::quat::Quat;
-use crate::glamour::unit::Unit;
-use crate::Vec4;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+
+use crate::{
+    glamour::{affine::Affine, mat::Mat4, ortho::Ortho, persp::Persp, quat::Quat, unit::Unit},
+    Vec4,
+};
 
 impl<R> AbsDiffEq for Vec4<R>
 where

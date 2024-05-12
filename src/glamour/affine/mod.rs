@@ -73,10 +73,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::num::ToMatrix;
     use serde_test::{assert_tokens, Token};
 
     use super::*;
+    use crate::glamour::num::ToMatrix;
 
     #[test]
     fn affine_provides_look_at_lh() {

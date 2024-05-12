@@ -1,7 +1,6 @@
-use crate::glamour::affine::Affine;
-use crate::glamour::mat::Mat4;
-use num_traits::float::Float;
-use num_traits::NumAssign;
+use num_traits::{float::Float, NumAssign};
+
+use crate::glamour::{affine::Affine, mat::Mat4};
 
 impl<R> From<Affine<R>> for Mat4<R>
 where
@@ -29,11 +28,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::glamour::quat::Quat;
-    use crate::glamour::test_helpers::proptest::{affine, bounded_f32, bounded_nonzero_f32};
     use approx::{relative_eq, ulps_eq};
     use proptest::{prop_assert, proptest};
+
+    use super::*;
+    use crate::glamour::{
+        quat::Quat,
+        test_helpers::proptest::{affine, bounded_f32, bounded_nonzero_f32},
+    };
 
     #[test]
     fn from_affine_for_mat_comparison() {

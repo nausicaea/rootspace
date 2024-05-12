@@ -1,5 +1,6 @@
-use num_traits::Float;
 use std::{iter::Product, ops::Mul};
+
+use num_traits::Float;
 
 use super::super::Mat4;
 use crate::{
@@ -111,8 +112,10 @@ mod tests {
     use proptest::{prop_assert, proptest};
 
     use super::*;
-    use crate::glamour::num::One;
-    use crate::glamour::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, mat4};
+    use crate::glamour::{
+        num::One,
+        test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, mat4},
+    };
 
     #[test]
     fn mat4_supports_dot_product_with_mat4() {

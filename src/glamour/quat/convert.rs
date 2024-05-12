@@ -114,7 +114,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::test_helpers::proptest::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
     use approx::{relative_eq, ulps_eq};
     use cgmath::InnerSpace;
     use proptest::{
@@ -123,6 +122,7 @@ mod tests {
     };
 
     use super::*;
+    use crate::glamour::test_helpers::proptest::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
 
     #[test]
     fn quat_implements_from_mat4() {

@@ -1,9 +1,9 @@
-use crate::glamour::affine::Affine;
-use crate::glamour::num::Zero;
-use crate::glamour::quat::Quat;
-use crate::glamour::unit::Unit;
-use crate::Vec4;
 use num_traits::Float;
+
+use crate::{
+    glamour::{affine::Affine, num::Zero, quat::Quat, unit::Unit},
+    Vec4,
+};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct AffineBuilder<R> {

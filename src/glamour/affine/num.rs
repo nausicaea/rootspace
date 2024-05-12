@@ -1,7 +1,6 @@
-use crate::glamour::affine::Affine;
-use crate::glamour::mat::Mat4;
-use crate::glamour::num::ToMatrix;
 use num_traits::{Float, NumAssign};
+
+use crate::glamour::{affine::Affine, mat::Mat4, num::ToMatrix};
 
 impl<R> ToMatrix<R> for Affine<R>
 where

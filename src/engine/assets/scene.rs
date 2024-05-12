@@ -3,7 +3,6 @@ use std::{collections::BTreeMap, path::Path};
 use anyhow::Context;
 
 use super::private::PrivLoadAsset;
-use crate::engine::components::ui_transform::UiTransform;
 use crate::{
     ecs::{
         entities::Entities,
@@ -13,7 +12,9 @@ use crate::{
     },
     engine::{
         assets::private::PrivSaveAsset,
-        components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
+        components::{
+            camera::Camera, info::Info, renderable::Renderable, transform::Transform, ui_transform::UiTransform,
+        },
         resources::asset_database::AssetDatabase,
     },
     rose_tree::hierarchy::Hierarchy,

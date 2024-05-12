@@ -91,7 +91,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::glamour::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, quat, unit_vec4};
     use approx::assert_ulps_eq;
     use proptest::{
         num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
@@ -100,6 +99,7 @@ mod tests {
     use serde_test::{assert_tokens, Token};
 
     use super::*;
+    use crate::glamour::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, quat, unit_vec4};
 
     #[test]
     fn quat_provides_identity_constructor() {

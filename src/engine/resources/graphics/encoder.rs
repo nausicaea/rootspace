@@ -1,6 +1,5 @@
 use std::ops::Range;
 
-use crate::engine::resources::graphics::ids::TextureViewId;
 use wgpu::{LoadOp, StoreOp};
 
 use super::{
@@ -9,6 +8,7 @@ use super::{
     settings::Settings,
     Database,
 };
+use crate::engine::resources::graphics::ids::TextureViewId;
 
 #[derive(Debug)]
 pub struct Encoder<'rt> {

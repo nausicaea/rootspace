@@ -1,13 +1,13 @@
-use crate::glamour::affine::Affine;
-use crate::glamour::mat::Mat4;
-use crate::glamour::quat::Quat;
-use crate::glamour::unit::Unit;
-use crate::Vec4;
 use ::proptest::{
     collection::vec,
     num::f32::ZERO,
     prop_compose,
     strategy::{Strategy, Union},
+};
+
+use crate::{
+    glamour::{affine::Affine, mat::Mat4, quat::Quat, unit::Unit},
+    Vec4,
 };
 
 pub fn bounded_positive_f32(lower_exp: i32, upper_exp: i32) -> impl Clone + Strategy<Value = f32> {

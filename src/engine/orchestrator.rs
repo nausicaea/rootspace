@@ -10,13 +10,13 @@ use winit::{
 };
 
 use super::registry::{FUSRegistry, MSRegistry};
-use crate::ecs::resources::Resources;
 use crate::{
     ecs::{
         entity::Entity,
         event_queue::{receiver_id::ReceiverId, EventQueue},
         loop_control::LoopControl,
         registry::{ResourceRegistry, SystemRegistry},
+        resources::Resources,
         storage::Storage,
         with_dependencies::WithDependencies,
         with_resources::WithResources,
