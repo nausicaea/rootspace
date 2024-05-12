@@ -11,8 +11,9 @@ variables:
 
 sccache:
   stage: ci-deps
+  image: alpine:latest
   script:
-    - curl -L -o $SCCACHE_TARBALL "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/sccache-${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+    - wget -O $SCCACHE_TARBALL "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/sccache-${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz"
     - echo "$SCCACHE_SHA256  $SCCACHE_TARBALL" > ${SCCACHE_TARBALL}.sha256
     - sha256sum --check $SCCACHE_TARBALL.sha256
     - mkdir -p .gitlab
@@ -21,6 +22,10 @@ sccache:
     SCCACHE_TARBALL: sccache.tgz
     SCCACHE_VERSION: v0.8.0
     SCCACHE_SHA256: 2e0e7df61bc7dcf61fd65c1b345d05cd1f832598a15c6f42e7e21f86b8d39b1f
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - .gitlab/sccache
   cache:
     key: sccache-$SCCACHE_VERSION
     paths: 
@@ -33,6 +38,11 @@ cache-latest:
     - mkdir -p .cargo
     - cargo fetch --locked
     - cargo vendor --locked >> .cargo/config.toml
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - .cargo/config.toml
+      - vendor
   cache:
     key:
       files:
@@ -60,6 +70,10 @@ rustfmt-check:
     - rustup component add rustfmt
     - cargo --frozen --offline fmt -- --check
   interruptible: true
+  cache:
+    key: sccache-cache
+    paths:
+      - .cargo/sscache
 
 cargo-clippy:
   stage: check
@@ -68,6 +82,10 @@ cargo-clippy:
     - rustup component add clippy
     - cargo clippy --frozen --offline --all-targets --all-features -- -Dwarnings
   interruptible: true
+  cache:
+    key: sccache-cache
+    paths:
+      - .cargo/sscache
 
 rust-latest:
   stage: build
@@ -75,6 +93,10 @@ rust-latest:
   script:
     - cargo build --frozen --offline
   interruptible: true
+  cache:
+    key: sccache-cache
+    paths:
+      - .cargo/sscache
 
 cargo-test:
   stage: test
@@ -82,3 +104,7 @@ cargo-test:
   script:
     - cargo test --frozen --offline
   interruptible: true
+  cache:
+    key: sccache-cache
+    paths:
+      - .cargo/sscache
