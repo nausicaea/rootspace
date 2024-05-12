@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use wgpu::StoreOp;
+use wgpu::{LoadOp, StoreOp};
 
 use super::{
     ids::{BindGroupId, BufferId, PipelineId},
@@ -14,8 +14,9 @@ pub struct Encoder<'rt> {
     runtime: &'rt Runtime<'rt>,
     settings: &'rt Settings,
     database: &'rt Database,
+    depth_texture_view: &'rt wgpu::TextureView,
     output: wgpu::SurfaceTexture,
-    view: wgpu::TextureView,
+    surface_view: wgpu::TextureView,
     encoder: wgpu::CommandEncoder,
 }
 
@@ -25,12 +26,13 @@ impl<'rt> Encoder<'rt> {
         runtime: &'rt Runtime,
         settings: &'rt Settings,
         database: &'rt Database,
+        depth_texture_view: &'rt wgpu::TextureView,
     ) -> Result<Self, wgpu::SurfaceError> {
         crate::trace_gfx!("Getting surface texture");
         let output = runtime.surface.get_current_texture()?;
 
         crate::trace_gfx!("Creating surface texture view '{}'", label.unwrap_or("unnamed"));
-        let view = output.texture.create_view(&wgpu::TextureViewDescriptor {
+        let surface_view = output.texture.create_view(&wgpu::TextureViewDescriptor {
             label: label.map(|lbl| format!("{}:surface-texture-view", lbl)).as_deref(),
             ..Default::default()
         });
@@ -44,8 +46,9 @@ impl<'rt> Encoder<'rt> {
             runtime,
             settings,
             database,
+            depth_texture_view,
             output,
-            view,
+            surface_view,
             encoder,
         })
     }
@@ -55,14 +58,23 @@ impl<'rt> Encoder<'rt> {
         let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label,
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &self.view,
+                view: &self.surface_view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(self.settings.clear_color),
+                    load: LoadOp::Clear(self.settings.clear_color),
                     store: StoreOp::Store,
                 },
             })],
-            depth_stencil_attachment: None,
+            depth_stencil_attachment: Some(
+                wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_texture_view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: LoadOp::Clear(1.0),
+                        store: StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                } 
+            ),
             timestamp_writes: None,
             occlusion_query_set: None,
         });
