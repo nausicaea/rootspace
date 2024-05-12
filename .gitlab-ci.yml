@@ -12,21 +12,15 @@ variables:
 sccache:
   stage: ci-deps
   script:
-    - curl -L -o $SCCACHE_TARBALL "https://github.com/mozilla/sccache/releases/download/$SCCACHE_VERSION/sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl.tar.gz"
-    - echo "$SCCACHE_SHA256  $SCCACHE_TARBALL" > $SCCACHE_TARBALL.sha256sum
-    - sha256sum --check $SCCACHE_TARBALL.sha256sum
-    - tar -C gitlab --strip-components 1 --include "*sccache" -xf $SCCACHE_TARBALL
+    - curl -L -o $SCCACHE_TARBALL "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/sccache-dist-${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+    - echo "$SCCACHE_SHA256  $SCCACHE_TARBALL" > ${SCCACHE_TARBALL}.sha256
+    - sha256sum --check $SCCACHE_TARBALL.sha256
+    - mkdir -p .gitlab
+    - tar -C .gitlab --strip-components 1 --include "*sccache" -xf $SCCACHE_TARBALL
   variables:
     SCCACHE_TARBALL: sccache.tgz
-    SCCACHE_VERSION: 0.8.0
-    SCCACHE_SHA256: 2e0e7df61bc7dcf61fd65c1b345d05cd1f832598a15c6f42e7e21f86b8d39b1f
-  artifacts:
-    untracked: false
-    when: always
-    access: all
-    expire_in: 30 days
-    paths:
-      - .gitlab
+    SCCACHE_VERSION: v0.8.0
+    SCCACHE_SHA256: 5a1b2b6fe8276f82d7ea52e49b43040ac6427ecd8d21bc76854be30746a951de
   cache:
     key: sccache-$SCCACHE_VERSION
     paths: 
