@@ -25,8 +25,7 @@
     key: cargo-cache-$CARGO_UPDATE_POLICY
     paths:
       - .cargo-cache
-
-    interruptible: true
+  interruptible: true
 
 .cargo_clippy_job:
   stage: build
@@ -52,7 +51,7 @@
       - .cargo
       - Cargo.lock
       - target
-    interruptible: true
+  interruptible: true
 
 .cargo_test_job:
   stage: test
