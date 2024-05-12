@@ -58,6 +58,7 @@ cargo-check:
   image: rust:latest
   script:
     - cargo check --frozen --offline
+    - ".gitlab/sccache --show-stats"
   interruptible: true
   cache:
     key: sccache-cache
