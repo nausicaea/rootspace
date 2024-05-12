@@ -16,6 +16,7 @@ sccache:
     - echo "$SCCACHE_SHA256  $SCCACHE_TARBALL" > ${SCCACHE_TARBALL}.sha256
     - sha256sum --check $SCCACHE_TARBALL.sha256
     - mkdir -p .gitlab
+    - tar --help
     - tar -C .gitlab --strip-components 1 --include "*sccache" -xf $SCCACHE_TARBALL
   variables:
     SCCACHE_TARBALL: sccache.tgz
