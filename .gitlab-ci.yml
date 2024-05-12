@@ -1,12 +1,29 @@
-# Ideas for later: https://doc.rust-lang.org/cargo/guide/continuous-integration.html
 stages:
+  - ci-deps
   - prep
   - check
   - build
   - test
 
 variables:
-  CARGO_HOME: .cargo/cache
+  SCCACHE_DIR: $PWD/.cargo/sccache
+  RUSTC_WRAPPER: $PWD/.gitlab/sccache
+
+sccache:
+  stage: ci-deps
+  script:
+    - curl -L -o $SCCACHE_TARBALL "https://github.com/mozilla/sccache/releases/download/$SCCACHE_VERSION/sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl.tar.gz"
+    - echo "$SCCACHE_SHA256  $SCCACHE_TARBALL" > $SCCACHE_TARBALL.sha256sum
+    - sha256sum --check $SCCACHE_TARBALL.sha256sum
+    - tar -C gitlab --strip-components 1 --include "*sccache" -xf $SCCACHE_TARBALL
+  variables:
+    SCCACHE_TARBALL: sccache.tgz
+    SCCACHE_VERSION: 0.8.0
+    SCCACHE_SHA256: 2e0e7df61bc7dcf61fd65c1b345d05cd1f832598a15c6f42e7e21f86b8d39b1f
+  cache:
+    key: sccache-$SCCACHE_VERSION
+    paths: 
+      - .gitlab/sccache
 
 cache-latest:
   stage: prep
@@ -14,17 +31,14 @@ cache-latest:
   script:
     - mkdir -p .cargo
     - cargo fetch --locked
-    - cargo vendor --locked .cargo/vendor >> .cargo/config.toml
-  artifacts:
-    expire_in: 24h
-    paths:
-      - Cargo.lock
-      - .cargo/config.toml
-      - .cargo/vendor
+    - cargo vendor --locked >> .cargo/config.toml
   cache:
-    key: cargo-cache-$CARGO_UPDATE_POLICY
+    key:
+      files:
+        - Cargo.lock
     paths:
-      - .cargo/cache
+      - .cargo/config.toml
+      - vendor
   interruptible: true
 
 cargo-check:
@@ -47,9 +61,7 @@ cargo-clippy:
   image: rust:latest
   script:
     - rustup component add clippy
-    - cargo clippy --frozen --offline --all-targets --all-features
-  variables:
-    RUSTFLAGS: "-Dwarnings"
+    - cargo clippy --frozen --offline --all-targets --all-features -- -Dwarnings
   interruptible: true
 
 rust-latest:
@@ -57,9 +69,17 @@ rust-latest:
   image: rust:latest
   script:
     - cargo build --frozen --offline
+  interruptible: true
+  cache:
+    key:
+      files:
+        - Cargo.lock
+    paths:
+      - .cargo/sscache
 
 cargo-test:
   stage: test
   image: rust:latest
   script:
     - cargo test --frozen --offline
+  interruptible: true
