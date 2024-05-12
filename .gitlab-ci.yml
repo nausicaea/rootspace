@@ -13,8 +13,8 @@ cache-latest:
   image: rust:latest
   script:
     - mkdir -p .cargo
-    - cargo fetch --frozen
-    - cargo vendor --frozen .cargo/vendor >> .cargo/config.toml
+    - cargo fetch --locked
+    - cargo vendor --locked .cargo/vendor >> .cargo/config.toml
   artifacts:
     expire_in: 24h
     paths:
