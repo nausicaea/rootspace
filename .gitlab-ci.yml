@@ -58,12 +58,15 @@ cargo-check:
   image: rust:latest
   script:
     - cargo check --frozen --offline
-    - ".gitlab/sccache --show-stats"
+    - .gitlab/sccache --show-stats
   interruptible: true
   cache:
-    key: sccache-cache
+    key: sccache-cargo-check-cache
     paths:
       - .cargo/sccache
+  needs:
+    - sccache
+    - cache-latest
 
 rustfmt-check:
   stage: check
@@ -72,6 +75,9 @@ rustfmt-check:
     - rustup component add rustfmt
     - cargo --frozen --offline fmt -- --check
   interruptible: true
+  needs:
+    - sccache
+    - cache-latest
 
 cargo-clippy:
   stage: check
@@ -79,30 +85,42 @@ cargo-clippy:
   script:
     - rustup component add clippy
     - cargo clippy --frozen --offline --all-targets --all-features -- -Dwarnings
+    - .gitlab/sccache --show-stats
   interruptible: true
   cache:
-    key: sccache-cache
+    key: sccache-cargo-clippy-cache
     paths:
       - .cargo/sccache
+  needs:
+    - sccache
+    - cache-latest
 
 rust-latest:
   stage: build
   image: rust:latest
   script:
     - cargo build --frozen --offline
+    - .gitlab/sccache --show-stats
   interruptible: true
   cache:
-    key: sccache-cache
+    key: sccache-cargo-build-cache
     paths:
       - .cargo/sccache
+  needs:
+    - sccache
+    - cache-latest
 
 cargo-test:
   stage: test
   image: rust:latest
   script:
     - cargo test --frozen --offline
+    - .gitlab/sccache --show-stats
   interruptible: true
   cache:
-    key: sccache-cache
+    key: sccache-cargo-test-cache
     paths:
       - .cargo/sccache
+  needs:
+    - sccache
+    - cache-latest
