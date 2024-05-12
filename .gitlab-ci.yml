@@ -1,217 +1,65 @@
----
-include:
-  # Metadata shared by many jobs
-  - local: .gitlab/rules.yml
-  - local: .gitlab/artifacts.yml
-
-  # Builds.
-  - local: .gitlab/cargo.yml
-
+# Ideas for later: https://doc.rust-lang.org/cargo/guide/continuous-integration.html
 stages:
   - prep
+  - check
   - build
   - test
 
-.rust_minimum:
-  image: "rust:1.60"
+variables:
+  CARGO_HOME: .cargo/cache
 
+cache-latest:
+  stage: prep
+  image: rust:latest
+  script:
+    - mkdir -p .cargo
+    - cargo fetch --frozen
+    - cargo vendor --frozen .cargo/vendor >> .cargo/config.toml
+  artifacts:
+    expire_in: 24h
+    paths:
+      - Cargo.lock
+      - .cargo/config.toml
+      - .cargo/vendor
+  cache:
+    key: cargo-cache-$CARGO_UPDATE_POLICY
+    paths:
+      - .cargo/cache
+  interruptible: true
+
+cargo-check:
+  stage: check
+  image: rust:latest
+  script:
+    - cargo check --frozen --offline
+  interruptible: true
+
+rustfmt-check:
+  stage: check
+  image: rust:latest
+  script:
+    - rustup component add rustfmt
+    - cargo --frozen --offline fmt -- --check
+  interruptible: true
+
+cargo-clippy:
+  stage: check
+  image: rust:latest
+  script:
+    - rustup component add clippy
+    - cargo clippy --frozen --offline --all-targets --all-features
   variables:
-    CARGO_UPDATE_POLICY: newest
-    GIT_CLONE_PATH: $CI_BUILDS_DIR/rust
+    RUSTFLAGS: "-Dwarnings"
+  interruptible: true
 
-.rust_stable:
-  extends: .rust_minimum
-  image: "rust:latest"
+rust-latest:
+  stage: build
+  image: rust:latest
+  script:
+    - cargo build --frozen --offline
 
-.rust_nightly:
-  extends: .rust_minimum
-  image: "rustlang/rust:nightly"
-
-cache-newest:prep:
-  extends:
-    - .rust_stable
-    - .cargo_fetch_job
-    - .cargo_build_tags
-    - .cargo_fetch_artifacts
-    - .run_automatically
-
-cache-mindeps:prep:
-  extends:
-    - .rust_nightly
-    - .cargo_fetch_job
-    - .cargo_build_tags
-    - .cargo_fetch_artifacts
-    - .run_automatically
-  variables:
-    GENERATE_LOCKFILE_ARGS: "-Z minimal-versions"
-    CARGO_UPDATE_POLICY: mindeps
-
-clippy:build:
-  extends:
-    - .rust_stable
-    - .cargo_clippy_job
-    - .cargo_build_tags
-    - .run_automatically
-  dependencies:
-    - cache-newest:prep
-  needs:
-    - cache-newest:prep
-
-audit-mindeps:build:
-  extends:
-    - .rust_minimum
-    - .cargo_audit_job
-    - .cargo_build_tags
-    - .run_automatically
-  dependencies:
-    - cache-mindeps:prep
-  needs:
-    - cache-mindeps:prep
-  variables:
-    CARGO_UPDATE_POLICY: mindeps
-
-audit-newest:build:
-  extends:
-    - .rust_stable
-    - .cargo_audit_job
-    - .cargo_build_tags
-    - .run_automatically
-  dependencies:
-    - cache-newest:prep
-  needs:
-    - cache-newest:prep
-
-stable:build:
-  extends:
-    - .rust_stable
-    - .cargo_build_job
-    - .cargo_build_tags
-    - .cargo_build_artifacts
-    - .run_automatically
-  dependencies:
-    - cache-newest:prep
-  needs:
-    - cache-newest:prep
-
-stable:test:
-  extends:
-    - .rust_stable
-    - .cargo_test_job
-    - .cargo_build_tags
-    - .cargo_test_artifacts
-    - .run_automatically
-  dependencies:
-    - stable:build
-  needs:
-    - stable:build
-
-tarpaulin:build:
-  extends:
-    - .rust_stable
-    - .cargo_tarpaulin_build_job
-    - .cargo_build_tags
-    - .cargo_build_artifacts
-    - .run_automatically
-  dependencies:
-    - cache-newest:prep
-  needs:
-    - cache-newest:prep
-
-tarpaulin:test:
-  extends:
-    - .rust_stable
-    - .cargo_tarpaulin_test_job
-    - .cargo_privileged_tags
-    - .run_automatically
-  dependencies:
-    - tarpaulin:build
-  needs:
-    - tarpaulin:build
-
-nightly:build:
-  extends:
-    - .rust_nightly
-    - .cargo_build_job
-    - .cargo_build_tags
-    - .cargo_build_artifacts
-    - .run_automatically
-  dependencies:
-    - cache-newest:prep
-  needs:
-    - cache-newest:prep
-
-nightly:test:
-  extends:
-    - .rust_nightly
-    - .cargo_test_job
-    - .cargo_build_tags
-    - .cargo_test_artifacts
-    - .run_automatically
-  dependencies:
-    - nightly:build
-  needs:
-    - nightly:build
-
-mindeps:build:
-  extends:
-    - .rust_minimum
-    - .cargo_build_job
-    - .cargo_build_tags
-    - .cargo_build_artifacts
-    - .run_automatically
-  dependencies:
-    - cache-mindeps:prep
-  needs:
-    - cache-mindeps:prep
-
-mindeps:test:
-  extends:
-    - .rust_minimum
-    - .cargo_test_job
-    - .cargo_build_tags
-    - .cargo_test_artifacts
-    - .run_automatically
-  dependencies:
-    - mindeps:build
-  needs:
-    - mindeps:build
-
-# rust-latest:
-#   stage: build
-#   image: rust:latest
-#   script:
-#     - cargo build
-# 
-# rust-nightly:
-#   stage: build
-#   image: rustlang/rust:nightly
-#   allow_failure: true
-#   script:
-#     - cargo build
-# 
-# cargo_test:
-#   stage: test
-#   image: rust:latest
-#   script:
-#     - curl -LsSf https://get.nexte.st/latest/linux | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin
-#     - cargo nextest run
-# 
-# cargo_check:
-#   stage: test
-#   image: rust:latest
-#   script:
-#     - cargo check
-# 
-# rustfmt_check:
-#   stage: test
-#   image: rust:latest
-#   script:
-#     - rustup component add rustfmt
-#     - cargo fmt -- --check
-# 
-# clippy_check:
-#   stage: test
-#   image: rust:latest
-#   script:
-#     - rustup component add clippy
-#     - cargo clippy --all-targets --all-features
+cargo-test:
+  stage: test
+  image: rust:latest
+  script:
+    - cargo test --frozen --offline
