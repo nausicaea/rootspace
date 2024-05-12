@@ -6,8 +6,8 @@ stages:
   - test
 
 variables:
-  SCCACHE_DIR: $PWD/.cargo/sccache
-  RUSTC_WRAPPER: $PWD/.gitlab/sccache
+  SCCACHE_DIR: .cargo/sccache
+  RUSTC_WRAPPER: .gitlab/sccache
 
 sccache:
   stage: ci-deps
