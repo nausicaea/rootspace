@@ -16,8 +16,7 @@ sccache:
     - echo "$SCCACHE_SHA256  $SCCACHE_TARBALL" > ${SCCACHE_TARBALL}.sha256
     - sha256sum --check $SCCACHE_TARBALL.sha256
     - mkdir -p .gitlab
-    - tar --help
-    - tar -C .gitlab --strip-components 1 -xf $SCCACHE_TARBALL sccache
+    - tar -C .gitlab --strip-components 1 -xf $SCCACHE_TARBALL sccache-${SCCACHE_VERSION}-x86_64-unknown-linux-musl/sccache
   variables:
     SCCACHE_TARBALL: sccache.tgz
     SCCACHE_VERSION: v0.8.0
@@ -49,6 +48,10 @@ cargo-check:
   script:
     - cargo check --frozen --offline
   interruptible: true
+  cache:
+    key: sccache-cache
+    paths:
+      - .cargo/sscache
 
 rustfmt-check:
   stage: check
@@ -72,12 +75,6 @@ rust-latest:
   script:
     - cargo build --frozen --offline
   interruptible: true
-  cache:
-    key:
-      files:
-        - Cargo.lock
-    paths:
-      - .cargo/sscache
 
 cargo-test:
   stage: test
