@@ -30,6 +30,7 @@ sccache:
     key: sccache-$SCCACHE_VERSION
     paths: 
       - .gitlab/sccache
+  interruptible: true
 
 cache-latest:
   stage: prep
