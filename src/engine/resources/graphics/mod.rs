@@ -1,3 +1,4 @@
+use wgpu::TextureUsages;
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
@@ -30,6 +31,9 @@ pub mod settings;
 pub mod texture_builder;
 pub mod vertex;
 
+const DEPTH_TEXTURE_LABEL: Option<&str> = Some("depth-stencil:texture");
+const DEPTH_TEXTURE_VIEW_LABEL: Option<&str> = Some("depth-stencil:view");
+
 pub trait GraphicsDeps {
     type CustomEvent: 'static;
 
@@ -44,6 +48,8 @@ pub struct Graphics {
     database: Database,
     transform_layout: BindGroupLayoutId,
     material_layout: BindGroupLayoutId,
+    depth_texture: TextureId,
+    depth_texture_view: TextureViewId,
 }
 
 impl Graphics {
@@ -89,6 +95,9 @@ impl Graphics {
         self.runtime
             .surface
             .configure(&self.runtime.device, &self.runtime.config);
+
+        self.depth_texture = Self::create_depth_texture_int(&self.runtime, &mut self.database, &self.settings, DEPTH_TEXTURE_LABEL);
+        self.depth_texture_view = Self::create_texture_view_int(&mut self.database, DEPTH_TEXTURE_VIEW_LABEL, self.depth_texture);
     }
 
     pub fn transform_layout(&self) -> BindGroupLayoutId {
@@ -123,11 +132,11 @@ impl Graphics {
     }
 
     pub fn create_encoder(&self, label: Option<&str>) -> Result<Encoder, wgpu::SurfaceError> {
-        Encoder::new(label, &self.runtime, &self.settings, &self.database)
+        Encoder::new(label, &self.runtime, &self.settings, &self.database, self.depth_texture_view)
     }
 
     pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {
-        RenderPipelineBuilder::new(&self.runtime, &mut self.database)
+        RenderPipelineBuilder::new(&self.runtime, &mut self.database, &self.settings)
     }
 
     pub fn create_bind_group(&mut self, layout: BindGroupLayoutId) -> BindGroupBuilder {
@@ -173,22 +182,33 @@ impl Graphics {
     }
 
     pub fn create_texture(&mut self) -> TextureBuilder {
-        TextureBuilder::new(&self.runtime, &mut self.database)
+        TextureBuilder::new(&self.runtime, &mut self.database, &self.settings)
     }
 
     pub fn create_texture_view(&mut self, label: Option<&str>, texture: TextureId) -> TextureViewId {
-        let texture = &self.database.textures[&texture];
+        Self::create_texture_view_int(&mut self.database, label, texture)
+    }
+
+    pub fn create_sampler(&mut self) -> SamplerBuilder {
+        SamplerBuilder::new(&self.runtime, &mut self.database)
+    }
+
+    fn create_depth_texture_int(runtime: &Runtime, database: &mut Database, settings: &Settings, label: Option<&str>) -> TextureId {
+        TextureBuilder::new(runtime, database, settings)
+            .with_label(label)
+            .with_depth_texture()
+            .submit()
+    }
+
+    fn create_texture_view_int(database: &mut Database, label: Option<&str>, texture: TextureId) -> TextureViewId {
+        let texture = &database.textures[&texture];
 
         tracing::trace!("Creating texture view '{}'", label.unwrap_or("unnamed"));
         let view = texture.create_view(&wgpu::TextureViewDescriptor {
             label,
             ..Default::default()
         });
-        self.database.insert_texture_view(view)
-    }
-
-    pub fn create_sampler(&mut self) -> SamplerBuilder {
-        SamplerBuilder::new(&self.runtime, &mut self.database)
+        database.insert_texture_view(view)
     }
 }
 
@@ -237,12 +257,17 @@ where
             )
             .submit();
 
+        let depth_texture = Self::create_depth_texture_int(&runtime, &mut database, &settings, DEPTH_TEXTURE_LABEL);
+        let depth_texture_view = Self::create_texture_view_int(&mut database, DEPTH_TEXTURE_VIEW_LABEL, depth_texture);
+
         Ok(Graphics {
             settings: settings.clone(),
             runtime,
             database,
             transform_layout,
             material_layout,
+            depth_texture,
+            depth_texture_view,
         })
     }
 }

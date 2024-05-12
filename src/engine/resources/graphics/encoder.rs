@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use wgpu::{LoadOp, StoreOp};
+use crate::engine::resources::graphics::ids::TextureViewId;
 
 use super::{
     ids::{BindGroupId, BufferId, PipelineId},
@@ -14,7 +15,7 @@ pub struct Encoder<'rt> {
     runtime: &'rt Runtime<'rt>,
     settings: &'rt Settings,
     database: &'rt Database,
-    depth_texture_view: &'rt wgpu::TextureView,
+    depth_texture_view: TextureViewId,
     output: wgpu::SurfaceTexture,
     surface_view: wgpu::TextureView,
     encoder: wgpu::CommandEncoder,
@@ -26,7 +27,7 @@ impl<'rt> Encoder<'rt> {
         runtime: &'rt Runtime,
         settings: &'rt Settings,
         database: &'rt Database,
-        depth_texture_view: &'rt wgpu::TextureView,
+        depth_texture_view: TextureViewId,
     ) -> Result<Self, wgpu::SurfaceError> {
         crate::trace_gfx!("Getting surface texture");
         let output = runtime.surface.get_current_texture()?;
@@ -54,6 +55,11 @@ impl<'rt> Encoder<'rt> {
     }
 
     pub fn begin(&mut self, label: Option<&str>) -> RenderPass {
+        crate::trace_gfx!("Obtain ref. for depth texture view");
+        let dtv = self.database.texture_views
+            .get(&self.depth_texture_view)
+            .unwrap_or_else(|| panic!("Developer error: found no depth texture with ID {:?}", self.depth_texture_view));
+
         crate::trace_gfx!("Beginning render pass '{}'", label.unwrap_or("unnamed"));
         let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label,
@@ -67,7 +73,7 @@ impl<'rt> Encoder<'rt> {
             })],
             depth_stencil_attachment: Some(
                 wgpu::RenderPassDepthStencilAttachment {
-                    view: &self.depth_texture_view,
+                    view: dtv,
                     depth_ops: Some(wgpu::Operations {
                         load: LoadOp::Clear(1.0),
                         store: StoreOp::Store,
