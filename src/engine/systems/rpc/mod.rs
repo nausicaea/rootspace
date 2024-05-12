@@ -52,7 +52,7 @@ impl System for Rpc {
             match msg {
                 RpcMessage::StatsRequest(tx) => {
                     let stats = res.read::<Statistics>().clone();
-                    if let Err(_) = tx.send(stats) {
+                    if tx.send(stats).is_err() {
                         error!("unable to send statistics data to the RPC server");
                     }
                 }
@@ -61,7 +61,7 @@ impl System for Rpc {
                         .read::<AssetDatabase>()
                         .load_asset::<Scene, _>(res, &group, &name)
                         .await;
-                    if let Err(_) = tx.send(r) {
+                    if tx.send(r).is_err() {
                         error!("unable to send the result of asset loading to the RPC server");
                     }
                 }

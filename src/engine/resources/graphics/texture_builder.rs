@@ -1,5 +1,5 @@
-use wgpu::util::TextureDataOrder;
 use crate::Settings;
+use wgpu::util::TextureDataOrder;
 
 use super::{ids::TextureId, runtime::Runtime, Database};
 

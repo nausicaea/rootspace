@@ -1,10 +1,10 @@
-use crate::Settings;
 use super::{
     descriptors::VertexAttributeDescriptor,
     ids::{BindGroupLayoutId, PipelineId, ShaderModuleId},
     runtime::Runtime,
     Database,
 };
+use crate::Settings;
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
@@ -133,15 +133,13 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                     unclipped_depth: false,
                     conservative: false,
                 },
-                depth_stencil: Some(
-                    wgpu::DepthStencilState {
-                        format: self.depth_texture_format,
-                        depth_write_enabled: true,
-                        depth_compare: wgpu::CompareFunction::Less,
-                        stencil: wgpu::StencilState::default(),
-                        bias: wgpu::DepthBiasState::default(),
-                    }
-                ),
+                depth_stencil: Some(wgpu::DepthStencilState {
+                    format: self.depth_texture_format,
+                    depth_write_enabled: true,
+                    depth_compare: wgpu::CompareFunction::Less,
+                    stencil: wgpu::StencilState::default(),
+                    bias: wgpu::DepthBiasState::default(),
+                }),
                 multisample: wgpu::MultisampleState {
                     count: 1,
                     mask: !0,

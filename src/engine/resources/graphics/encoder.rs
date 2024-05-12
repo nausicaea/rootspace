@@ -1,7 +1,7 @@
 use std::ops::Range;
 
-use wgpu::{LoadOp, StoreOp};
 use crate::engine::resources::graphics::ids::TextureViewId;
+use wgpu::{LoadOp, StoreOp};
 
 use super::{
     ids::{BindGroupId, BufferId, PipelineId},
@@ -56,9 +56,16 @@ impl<'rt> Encoder<'rt> {
 
     pub fn begin(&mut self, label: Option<&str>) -> RenderPass {
         crate::trace_gfx!("Obtain ref. for depth texture view");
-        let dtv = self.database.texture_views
+        let dtv = self
+            .database
+            .texture_views
             .get(&self.depth_texture_view)
-            .unwrap_or_else(|| panic!("Developer error: found no depth texture with ID {:?}", self.depth_texture_view));
+            .unwrap_or_else(|| {
+                panic!(
+                    "Developer error: found no depth texture with ID {:?}",
+                    self.depth_texture_view
+                )
+            });
 
         crate::trace_gfx!("Beginning render pass '{}'", label.unwrap_or("unnamed"));
         let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -71,16 +78,14 @@ impl<'rt> Encoder<'rt> {
                     store: StoreOp::Store,
                 },
             })],
-            depth_stencil_attachment: Some(
-                wgpu::RenderPassDepthStencilAttachment {
-                    view: dtv,
-                    depth_ops: Some(wgpu::Operations {
-                        load: LoadOp::Clear(1.0),
-                        store: StoreOp::Store,
-                    }),
-                    stencil_ops: None,
-                } 
-            ),
+            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                view: dtv,
+                depth_ops: Some(wgpu::Operations {
+                    load: LoadOp::Clear(1.0),
+                    store: StoreOp::Store,
+                }),
+                stencil_ops: None,
+            }),
             timestamp_writes: None,
             occlusion_query_set: None,
         });

@@ -1,4 +1,3 @@
-use wgpu::TextureUsages;
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
@@ -96,8 +95,10 @@ impl Graphics {
             .surface
             .configure(&self.runtime.device, &self.runtime.config);
 
-        self.depth_texture = Self::create_depth_texture_int(&self.runtime, &mut self.database, &self.settings, DEPTH_TEXTURE_LABEL);
-        self.depth_texture_view = Self::create_texture_view_int(&mut self.database, DEPTH_TEXTURE_VIEW_LABEL, self.depth_texture);
+        self.depth_texture =
+            Self::create_depth_texture_int(&self.runtime, &mut self.database, &self.settings, DEPTH_TEXTURE_LABEL);
+        self.depth_texture_view =
+            Self::create_texture_view_int(&mut self.database, DEPTH_TEXTURE_VIEW_LABEL, self.depth_texture);
     }
 
     pub fn transform_layout(&self) -> BindGroupLayoutId {
@@ -132,7 +133,13 @@ impl Graphics {
     }
 
     pub fn create_encoder(&self, label: Option<&str>) -> Result<Encoder, wgpu::SurfaceError> {
-        Encoder::new(label, &self.runtime, &self.settings, &self.database, self.depth_texture_view)
+        Encoder::new(
+            label,
+            &self.runtime,
+            &self.settings,
+            &self.database,
+            self.depth_texture_view,
+        )
     }
 
     pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {
@@ -193,7 +200,12 @@ impl Graphics {
         SamplerBuilder::new(&self.runtime, &mut self.database)
     }
 
-    fn create_depth_texture_int(runtime: &Runtime, database: &mut Database, settings: &Settings, label: Option<&str>) -> TextureId {
+    fn create_depth_texture_int(
+        runtime: &Runtime,
+        database: &mut Database,
+        settings: &Settings,
+        label: Option<&str>,
+    ) -> TextureId {
         TextureBuilder::new(runtime, database, settings)
             .with_label(label)
             .with_depth_texture()
@@ -257,7 +269,7 @@ where
             )
             .submit();
 
-        let depth_texture = Self::create_depth_texture_int(&runtime, &mut database, &settings, DEPTH_TEXTURE_LABEL);
+        let depth_texture = Self::create_depth_texture_int(&runtime, &mut database, settings, DEPTH_TEXTURE_LABEL);
         let depth_texture_view = Self::create_texture_view_int(&mut database, DEPTH_TEXTURE_VIEW_LABEL, depth_texture);
 
         Ok(Graphics {
