@@ -3,10 +3,6 @@ stages:
   - build
   - test
 
-variables:
-  SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
-  RUSTC_WRAPPER: .gitlab/sccache
-
 sccache:
   stage: prep
   image: alpine:latest
@@ -65,6 +61,9 @@ rust-latest:
   needs:
     - sccache
     - cache-latest
+  variables:
+    SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
+    RUSTC_WRAPPER: .gitlab/sccache
 
 cargo-check:
   stage: test
@@ -80,6 +79,9 @@ cargo-check:
   needs:
     - sccache
     - cache-latest
+  variables:
+    SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
+    RUSTC_WRAPPER: .gitlab/sccache
 
 rustfmt-check:
   stage: test
@@ -89,7 +91,6 @@ rustfmt-check:
     - cargo --frozen --offline fmt -- --check
   interruptible: true
   needs:
-    - sccache
     - cache-latest
 
 cargo-clippy:
@@ -107,6 +108,9 @@ cargo-clippy:
   needs:
     - sccache
     - cache-latest
+  variables:
+    SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
+    RUSTC_WRAPPER: .gitlab/sccache
 
 cargo-test:
   stage: test
@@ -122,3 +126,6 @@ cargo-test:
   needs:
     - sccache
     - cache-latest
+  variables:
+    SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
+    RUSTC_WRAPPER: .gitlab/sccache
