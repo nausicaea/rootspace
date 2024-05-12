@@ -16,6 +16,7 @@ use crate::{
     ecs::{resource::Resource, with_dependencies::WithDependencies},
     glamour::mat::Mat4,
 };
+use crate::engine::resources::graphics::runtime_data::RuntimeData;
 
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
@@ -46,10 +47,7 @@ pub struct Graphics {
     settings: Settings,
     runtime: Runtime<'static>,
     database: Database,
-    transform_layout: BindGroupLayoutId,
-    material_layout: BindGroupLayoutId,
-    depth_texture: TextureId,
-    depth_texture_view: TextureViewId,
+    runtime_data: RuntimeData,
 }
 
 impl Graphics {
@@ -96,18 +94,18 @@ impl Graphics {
             .surface
             .configure(&self.runtime.device, &self.runtime.config);
 
-        self.depth_texture =
+        self.runtime_data.depth_texture =
             Self::create_depth_texture_int(&self.runtime, &mut self.database, &self.settings, DEPTH_TEXTURE_LABEL);
-        self.depth_texture_view =
-            Self::create_texture_view_int(&mut self.database, DEPTH_TEXTURE_VIEW_LABEL, self.depth_texture);
+        self.runtime_data.depth_texture_view =
+            Self::create_texture_view_int(&mut self.database, DEPTH_TEXTURE_VIEW_LABEL, self.runtime_data.depth_texture);
     }
 
     pub fn transform_layout(&self) -> BindGroupLayoutId {
-        self.transform_layout
+        self.runtime_data.transform_layout
     }
 
     pub fn material_layout(&self) -> BindGroupLayoutId {
-        self.material_layout
+        self.runtime_data.material_layout
     }
 
     pub fn write_buffer<T>(&self, buffer: BufferId, data: &[T])
@@ -139,7 +137,7 @@ impl Graphics {
             &self.runtime,
             &self.settings,
             &self.database,
-            self.depth_texture_view,
+            self.runtime_data.depth_texture_view,
         )
     }
 
@@ -277,10 +275,12 @@ where
             settings: settings.clone(),
             runtime,
             database,
-            transform_layout,
-            material_layout,
-            depth_texture,
-            depth_texture_view,
+            runtime_data: RuntimeData {
+                transform_layout,
+                material_layout,
+                depth_texture,
+                depth_texture_view,
+            },
         })
     }
 }
