@@ -6,7 +6,7 @@ stages:
   - test
 
 variables:
-  SCCACHE_DIR: .cargo/sccache
+  SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
   RUSTC_WRAPPER: .gitlab/sccache
 
 sccache:
@@ -37,19 +37,19 @@ cache-latest:
   script:
     - mkdir -p .cargo
     - cargo fetch --locked
-    - cargo vendor --locked >> .cargo/config.toml
+    - cargo vendor --locked .cargo/vendor >> .cargo/config.toml
   artifacts:
     expire_in: 1 day
     paths:
       - .cargo/config.toml
-      - vendor
+      - .cargo/vendor
   cache:
     key:
       files:
         - Cargo.lock
     paths:
       - .cargo/config.toml
-      - vendor
+      - .cargo/vendor
   interruptible: true
 
 cargo-check:
@@ -70,10 +70,6 @@ rustfmt-check:
     - rustup component add rustfmt
     - cargo --frozen --offline fmt -- --check
   interruptible: true
-  cache:
-    key: sccache-cache
-    paths:
-      - .cargo/sscache
 
 cargo-clippy:
   stage: check
