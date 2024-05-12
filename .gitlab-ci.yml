@@ -38,7 +38,7 @@ cache-latest:
   script:
     - mkdir -p .cargo
     - cargo fetch --locked
-    - cargo vendor --locked .cargo/vendor >> .cargo/config.toml
+    - cargo vendor --locked .cargo/vendor > .cargo/config.toml
   artifacts:
     expire_in: 1 day
     paths:
