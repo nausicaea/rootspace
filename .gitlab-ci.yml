@@ -20,6 +20,13 @@ sccache:
     SCCACHE_TARBALL: sccache.tgz
     SCCACHE_VERSION: 0.8.0
     SCCACHE_SHA256: 2e0e7df61bc7dcf61fd65c1b345d05cd1f832598a15c6f42e7e21f86b8d39b1f
+  artifacts:
+    untracked: false
+    when: always
+    access: all
+    expire_in: 30 days
+    paths:
+      - .gitlab
   cache:
     key: sccache-$SCCACHE_VERSION
     paths: 
