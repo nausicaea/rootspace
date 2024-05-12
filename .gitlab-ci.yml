@@ -1,0 +1,47 @@
+# Ideas for later: https://doc.rust-lang.org/cargo/guide/continuous-integration.html
+stages:
+  - build
+  - test
+
+# Make sure CI fails on all warnings, including Clippy lints
+variables:
+  RUSTFLAGS: "-Dwarnings"
+
+rust-latest:
+  stage: build
+  image: rust:latest
+  script:
+    - cargo build
+
+rust-nightly:
+  stage: build
+  image: rustlang/rust:nightly
+  allow_failure: true
+  script:
+    - cargo build
+
+cargo_test:
+  stage: test
+  image: rust:latest
+  script:
+    - cargo nextest run
+
+cargo_check:
+  stage: test
+  image: rust:latest
+  script:
+    - cargo check
+
+rustfmt_check:
+  stage: test
+  image: rust:latest
+  script:
+    - rustup component add rustfmt
+    - cargo fmt -- --check
+
+clippy_check:
+  stage: test
+  image: rust:latest
+  script:
+    - rustup component add clippy
+    - cargo clippy --all-targets --all-features
