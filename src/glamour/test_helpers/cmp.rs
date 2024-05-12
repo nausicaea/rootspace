@@ -82,6 +82,7 @@ where
     fn eq(&self, other: &cgmath::Matrix4<R>) -> bool {
         let cgmath_mat: &[[R; 4]; 4] = other.as_ref();
         for r in 0..4 {
+            #[allow(clippy::needless_range_loop)]
             for c in 0..4 {
                 if self.0[r][c].ne(&cgmath_mat[c][r]) {
                     return false;

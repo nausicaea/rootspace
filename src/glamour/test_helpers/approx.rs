@@ -488,6 +488,7 @@ where
     fn abs_diff_eq(&self, rhs: &cgmath::Matrix4<R>, epsilon: R::Epsilon) -> bool {
         let cgmath_mat: &[[R; 4]; 4] = rhs.as_ref();
         for r in 0..4 {
+            #[allow(clippy::needless_range_loop)]
             for c in 0..4 {
                 if self.0[r][c].abs_diff_ne(&cgmath_mat[c][r], epsilon) {
                     return false;
@@ -551,6 +552,7 @@ where
     fn relative_eq(&self, rhs: &cgmath::Matrix4<R>, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
         let cgmath_mat: &[[R; 4]; 4] = rhs.as_ref();
         for r in 0..4 {
+            #[allow(clippy::needless_range_loop)]
             for c in 0..4 {
                 if self.0[r][c].relative_ne(&cgmath_mat[c][r], epsilon, max_relative) {
                     return false;
@@ -614,6 +616,7 @@ where
     fn ulps_eq(&self, rhs: &cgmath::Matrix4<R>, epsilon: R::Epsilon, max_ulps: u32) -> bool {
         let cgmath_mat: &[[R; 4]; 4] = rhs.as_ref();
         for r in 0..4 {
+            #[allow(clippy::needless_range_loop)]
             for c in 0..4 {
                 if self.0[r][c].ulps_ne(&cgmath_mat[c][r], epsilon, max_ulps) {
                     return false;
