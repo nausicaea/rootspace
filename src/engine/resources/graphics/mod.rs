@@ -12,11 +12,11 @@ use self::{
     settings::Settings,
     texture_builder::TextureBuilder,
 };
+use crate::engine::resources::graphics::runtime_data::RuntimeData;
 use crate::{
     ecs::{resource::Resource, with_dependencies::WithDependencies},
     glamour::mat::Mat4,
 };
-use crate::engine::resources::graphics::runtime_data::RuntimeData;
 
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
@@ -96,8 +96,11 @@ impl Graphics {
 
         self.runtime_data.depth_texture =
             Self::create_depth_texture_int(&self.runtime, &mut self.database, &self.settings, DEPTH_TEXTURE_LABEL);
-        self.runtime_data.depth_texture_view =
-            Self::create_texture_view_int(&mut self.database, DEPTH_TEXTURE_VIEW_LABEL, self.runtime_data.depth_texture);
+        self.runtime_data.depth_texture_view = Self::create_texture_view_int(
+            &mut self.database,
+            DEPTH_TEXTURE_VIEW_LABEL,
+            self.runtime_data.depth_texture,
+        );
     }
 
     pub fn transform_layout(&self) -> BindGroupLayoutId {
