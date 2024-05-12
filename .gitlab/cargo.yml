@@ -8,6 +8,7 @@
 .cargo_build_tags:
   tags:
     - build
+    - gitlab-org-docker
 
 .cargo_privileged_tags:
   tags:
