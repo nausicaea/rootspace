@@ -1,7 +1,5 @@
 stages:
-  - ci-deps
   - prep
-  - check
   - build
   - test
 
@@ -10,7 +8,7 @@ variables:
   RUSTC_WRAPPER: .gitlab/sccache
 
 sccache:
-  stage: ci-deps
+  stage: prep
   image: alpine:latest
   script:
     - wget -O $SCCACHE_TARBALL "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/sccache-${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz"
@@ -53,8 +51,23 @@ cache-latest:
       - .cargo/vendor
   interruptible: true
 
+rust-latest:
+  stage: build
+  image: rust:latest
+  script:
+    - cargo build --frozen --offline
+    - .gitlab/sccache --show-stats
+  interruptible: true
+  cache:
+    key: sccache-cargo-build-cache
+    paths:
+      - .cargo/sccache
+  needs:
+    - sccache
+    - cache-latest
+
 cargo-check:
-  stage: check
+  stage: test
   image: rust:latest
   script:
     - cargo check --frozen --offline
@@ -69,7 +82,7 @@ cargo-check:
     - cache-latest
 
 rustfmt-check:
-  stage: check
+  stage: test
   image: rust:latest
   script:
     - rustup component add rustfmt
@@ -80,7 +93,7 @@ rustfmt-check:
     - cache-latest
 
 cargo-clippy:
-  stage: check
+  stage: test
   image: rust:latest
   script:
     - rustup component add clippy
@@ -89,21 +102,6 @@ cargo-clippy:
   interruptible: true
   cache:
     key: sccache-cargo-clippy-cache
-    paths:
-      - .cargo/sccache
-  needs:
-    - sccache
-    - cache-latest
-
-rust-latest:
-  stage: build
-  image: rust:latest
-  script:
-    - cargo build --frozen --offline
-    - .gitlab/sccache --show-stats
-  interruptible: true
-  cache:
-    key: sccache-cargo-build-cache
     paths:
       - .cargo/sccache
   needs:
