@@ -1,3 +1,4 @@
+use crate::Settings;
 use super::{
     descriptors::VertexAttributeDescriptor,
     ids::{BindGroupLayoutId, PipelineId, ShaderModuleId},
@@ -13,11 +14,12 @@ pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
     fragment_shader_module: Option<(ShaderModuleId, &'ep str)>,
     bind_group_layouts: Vec<BindGroupLayoutId>,
     vertex_buffer_layouts: Vec<wgpu::VertexBufferLayout<'vbl>>,
+    depth_texture_format: wgpu::TextureFormat,
     label: Option<&'static str>,
 }
 
 impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database, settings: &'rt Settings) -> Self {
         RenderPipelineBuilder {
             runtime,
             database,
@@ -25,6 +27,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
             fragment_shader_module: None,
             bind_group_layouts: Vec::new(),
             vertex_buffer_layouts: Vec::new(),
+            depth_texture_format: settings.depth_texture_format,
             label: None,
         }
     }
@@ -130,7 +133,15 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                     unclipped_depth: false,
                     conservative: false,
                 },
-                depth_stencil: None,
+                depth_stencil: Some(
+                    wgpu::DepthStencilState {
+                        format: self.depth_texture_format,
+                        depth_write_enabled: true,
+                        depth_compare: wgpu::CompareFunction::Less,
+                        stencil: wgpu::StencilState::default(),
+                        bias: wgpu::DepthBiasState::default(),
+                    }
+                ),
                 multisample: wgpu::MultisampleState {
                     count: 1,
                     mask: !0,
