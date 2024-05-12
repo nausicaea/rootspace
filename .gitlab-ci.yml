@@ -21,7 +21,7 @@ sccache:
   variables:
     SCCACHE_TARBALL: sccache.tgz
     SCCACHE_VERSION: v0.8.0
-    SCCACHE_SHA256: 5a1b2b6fe8276f82d7ea52e49b43040ac6427ecd8d21bc76854be30746a951de
+    SCCACHE_SHA256: 2e0e7df61bc7dcf61fd65c1b345d05cd1f832598a15c6f42e7e21f86b8d39b1f
   cache:
     key: sccache-$SCCACHE_VERSION
     paths: 
