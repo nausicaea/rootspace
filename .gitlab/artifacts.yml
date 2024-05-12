@@ -1,0 +1,30 @@
+---
+.cargo_fetch_artifacts:
+  artifacts:
+    expire_in: 24h
+    paths:
+      - .cargo
+      - Cargo.lock
+
+.cargo_build_artifacts:
+  artifacts:
+    expire_in: 24h
+    paths:
+      - .cargo
+      - Cargo.lock
+      - target
+
+.cargo_test_artifacts:
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - target/nextest/ci/junit.xml
+
+.cargo_coverage_artifacts:
+  artifacts:
+    expose_as: "Coverage report"
+    expire_in: 1 week
+    paths:
+      - tarpaulin-report.html
+
