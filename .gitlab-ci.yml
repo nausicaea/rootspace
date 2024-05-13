@@ -3,6 +3,16 @@ stages:
   - build
   - test
 
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+default:
+  image: rust:latest
+  interruptible: true
+
 variables:
   SCCACHE_DIR: ${CI_PROJECT_DIR}/.cargo/sccache
   RUSTC_WRAPPER: ${CI_PROJECT_DIR}/.gitlab/sccache
@@ -28,7 +38,6 @@ sccache:
     key: sccache-$VERSION
     paths: 
       - .gitlab/sccache
-  interruptible: true
 
 nextest:
   stage: prep
@@ -51,11 +60,9 @@ nextest:
     key: nextest-$VERSION
     paths: 
       - .gitlab/cargo-nextest
-  interruptible: true
 
 cargo-vendor:
   stage: prep
-  image: rust:latest
   script:
     - mkdir -p .cargo
     - cargo fetch --locked
@@ -72,17 +79,14 @@ cargo-vendor:
     paths:
       - .cargo/config.toml
       - .cargo/vendor
-  interruptible: true
   needs:
     - sccache
 
 rust-latest:
   stage: build
-  image: rust:latest
   script:
     - cargo build --frozen --offline
     - .gitlab/sccache --show-stats
-  interruptible: true
   cache:
     key: sccache-cargo-build-cache
     paths:
@@ -93,11 +97,9 @@ rust-latest:
 
 cargo-check:
   stage: test
-  image: rust:latest
   script:
     - cargo check --frozen --offline --workspace
     - .gitlab/sccache --show-stats
-  interruptible: true
   cache:
     key: sccache-cargo-check-cache
     paths:
@@ -108,22 +110,18 @@ cargo-check:
 
 rustfmt-check:
   stage: test
-  image: rust:latest
   script:
     - rustup component add rustfmt
     - cargo --frozen --offline fmt -- --check
-  interruptible: true
   needs:
     - cargo-vendor
 
 cargo-clippy:
   stage: test
-  image: rust:latest
   script:
     - rustup component add clippy
     - cargo clippy --frozen --offline --all-targets --all-features -- -Dwarnings
     - .gitlab/sccache --show-stats
-  interruptible: true
   cache:
     key: sccache-cargo-clippy-cache
     paths:
@@ -134,12 +132,10 @@ cargo-clippy:
 
 cargo-test:
   stage: test
-  image: rust:latest
   script:
     - export PATH=${CI_PROJECT_DIR}/.gitlab:$PATH
     - cargo nextest run --profile ci --frozen --offline --workspace
     - .gitlab/sccache --show-stats
-  interruptible: true
   cache:
     key: sccache-cargo-test-cache
     paths:
