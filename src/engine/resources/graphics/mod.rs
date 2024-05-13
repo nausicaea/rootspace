@@ -24,6 +24,7 @@ mod database;
 pub mod descriptors;
 pub mod encoder;
 pub mod ids;
+pub mod instance;
 pub mod render_pipeline_builder;
 mod runtime;
 mod runtime_data;

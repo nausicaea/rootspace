@@ -23,6 +23,7 @@ use crate::{
             graphics::{
                 encoder::RenderPass,
                 ids::{BindGroupId, BufferId, PipelineId},
+                instance::Instance,
                 vertex::Vertex,
                 Graphics, TransformWrapper,
             },
@@ -181,6 +182,7 @@ impl Renderer {
             .with_vertex_shader_module(vertex_shader_module, "main")
             .with_fragment_shader_module(fragment_shader_module, "main")
             .add_vertex_buffer_layout::<Vertex>()
+            .add_vertex_buffer_layout::<Instance>()
             .submit();
 
         Ok(pipeline)
@@ -213,6 +215,7 @@ impl Renderer {
             .with_vertex_shader_module(vertex_shader_module, "main")
             .with_fragment_shader_module(fragment_shader_module, "main")
             .add_vertex_buffer_layout::<Vertex>()
+            .add_vertex_buffer_layout::<Instance>()
             .submit();
 
         Ok(pipeline)
