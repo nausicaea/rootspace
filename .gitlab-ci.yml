@@ -95,7 +95,7 @@ cargo-check:
   stage: test
   image: rust:latest
   script:
-    - cargo check --frozen --offline
+    - cargo check --frozen --offline --workspace
     - .gitlab/sccache --show-stats
   interruptible: true
   cache:
@@ -137,7 +137,7 @@ cargo-test:
   image: rust:latest
   script:
     - export PATH=${CI_PROJECT_DIR}/.gitlab:$PATH
-    - cargo nextest run --profile ci --frozen --offline
+    - cargo nextest run --profile ci --frozen --offline --workspace
     - .gitlab/sccache --show-stats
   interruptible: true
   cache:
