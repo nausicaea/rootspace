@@ -3,6 +3,10 @@ stages:
   - build
   - test
 
+variables:
+  SCCACHE_DIR: ${CI_PROJECT_DIR}/.cargo/sccache
+  RUSTC_WRAPPER: ${CI_PROJECT_DIR}/.gitlab/sccache
+
 sccache:
   stage: prep
   image: alpine:latest
@@ -69,6 +73,7 @@ cargo-vendor:
       - .cargo/config.toml
       - .cargo/vendor
   interruptible: true
+  variables: []
 
 rust-latest:
   stage: build
@@ -84,9 +89,6 @@ rust-latest:
   needs:
     - sccache
     - cargo-vendor
-  variables:
-    SCCACHE_DIR: .cargo/sccache
-    RUSTC_WRAPPER: .gitlab/sccache
 
 cargo-check:
   stage: test
@@ -102,9 +104,6 @@ cargo-check:
   needs:
     - sccache
     - cargo-vendor
-  variables:
-    SCCACHE_DIR: .cargo/sccache
-    RUSTC_WRAPPER: .gitlab/sccache
 
 rustfmt-check:
   stage: test
@@ -131,15 +130,12 @@ cargo-clippy:
   needs:
     - sccache
     - cargo-vendor
-  variables:
-    SCCACHE_DIR: .cargo/sccache
-    RUSTC_WRAPPER: .gitlab/sccache
 
 cargo-test:
   stage: test
   image: rust:latest
   script:
-    - export PATH=$PWD/.gitlab:$PATH
+    - export PATH=${CI_PROJECT_DIR}/.gitlab:$PATH
     - cargo nextest run --profile ci --frozen --offline
     - .gitlab/sccache --show-stats
   interruptible: true
@@ -151,11 +147,9 @@ cargo-test:
     - sccache
     - nextest
     - cargo-vendor
-  variables:
-    SCCACHE_DIR: .cargo/sccache
-    RUSTC_WRAPPER: .gitlab/sccache
   artifacts:
     when: always
     reports:
       junit:
         - target/nextest/ci/junit.xml
+
