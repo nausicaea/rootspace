@@ -9,6 +9,7 @@ pub struct Settings {
     pub alpha_mode: wgpu::CompositeAlphaMode,
     pub clear_color: wgpu::Color,
     pub max_objects: u32,
+    pub max_instances: u64,
     pub depth_texture_format: wgpu::TextureFormat,
 }
 
@@ -29,6 +30,7 @@ impl Default for Settings {
                 a: 1.0,
             },
             max_objects: 1 << 10,
+            max_instances: 1 << 8,
             depth_texture_format: wgpu::TextureFormat::Depth32Float,
         }
     }

@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
@@ -17,6 +18,7 @@ use crate::{
     ecs::{resource::Resource, with_dependencies::WithDependencies},
     glamour::mat::Mat4,
 };
+use crate::engine::resources::graphics::instance::Instance;
 
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
@@ -58,6 +60,10 @@ impl Graphics {
 
     pub fn max_objects(&self) -> u32 {
         self.settings.max_objects
+    }
+
+    pub fn max_instances(&self) -> u64 {
+        self.settings.max_instances
     }
 
     pub fn limits(&self) -> wgpu::Limits {
