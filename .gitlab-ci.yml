@@ -154,3 +154,8 @@ cargo-test:
   variables:
     SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
     RUSTC_WRAPPER: .gitlab/sccache
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - target/nextest/ci/junit.xml
