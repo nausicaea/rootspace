@@ -7,23 +7,46 @@ sccache:
   stage: prep
   image: alpine:latest
   script:
-    - wget -O $SCCACHE_TARBALL "https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/sccache-${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz"
-    - echo "$SCCACHE_SHA256  $SCCACHE_TARBALL" > ${SCCACHE_TARBALL}.sha256
-    - sha256sum -c $SCCACHE_TARBALL.sha256
+    - wget -O $TARBALL "https://github.com/mozilla/sccache/releases/download/${VERSION}/sccache-${VERSION}-x86_64-unknown-linux-musl.tar.gz"
+    - echo "$SHA256  $TARBALL" > ${TARBALL}.sha256
+    - sha256sum -c $TARBALL.sha256
     - mkdir -p .gitlab
-    - tar -C .gitlab --strip-components 1 -xf $SCCACHE_TARBALL sccache-${SCCACHE_VERSION}-x86_64-unknown-linux-musl/sccache
+    - tar -C .gitlab --strip-components 1 -xf $TARBALL sccache-${VERSION}-x86_64-unknown-linux-musl/sccache
   variables:
-    SCCACHE_TARBALL: sccache.tgz
-    SCCACHE_VERSION: v0.8.0
-    SCCACHE_SHA256: 2e0e7df61bc7dcf61fd65c1b345d05cd1f832598a15c6f42e7e21f86b8d39b1f
+    TARBALL: sccache.tgz
+    VERSION: v0.8.0
+    SHA256: 2e0e7df61bc7dcf61fd65c1b345d05cd1f832598a15c6f42e7e21f86b8d39b1f
   artifacts:
     expire_in: 1 day
     paths:
       - .gitlab/sccache
   cache:
-    key: sccache-$SCCACHE_VERSION
+    key: sccache-$VERSION
     paths: 
       - .gitlab/sccache
+  interruptible: true
+
+nextest:
+  stage: prep
+  image: alpine:latest
+  script:
+    - wget -O $TARBALL "https://get.nexte.st/${VERSION}/linux"
+    - echo "$SHA256  $TARBALL" > ${TARBALL}.sha256
+    - sha256sum -c ${TARBALL}.sha256
+    - mkdir -p .gitlab
+    - tar -C .gitlab -xf $TARBALL cargo-nextest
+  variables:
+    TARBALL: nextest.tgz
+    VERSION: 0.9.70
+    SHA256: c2d76b2608ce7c92d95aa016889498f273ecacbb3fcffb83db3385f643aa1a9a
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - .gitlab/cargo-nextest
+  cache:
+    key: nextest-$VERSION
+    paths: 
+      - .gitlab/cargo-nextest
   interruptible: true
 
 cargo-vendor:
@@ -116,7 +139,8 @@ cargo-test:
   stage: test
   image: rust:latest
   script:
-    - cargo test --frozen --offline
+    - export PATH=$PWD/.gitlab:$PATH
+    - cargo nextest run --profile ci --frozen --offline
     - .gitlab/sccache --show-stats
   interruptible: true
   cache:
@@ -125,6 +149,7 @@ cargo-test:
       - .cargo/sccache
   needs:
     - sccache
+    - nextest
     - cargo-vendor
   variables:
     SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
