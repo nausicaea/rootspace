@@ -73,7 +73,8 @@ cargo-vendor:
       - .cargo/config.toml
       - .cargo/vendor
   interruptible: true
-  variables: {}
+  needs:
+    - sccache
 
 rust-latest:
   stage: build
