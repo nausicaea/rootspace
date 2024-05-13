@@ -90,7 +90,10 @@ impl<'rt> Encoder<'rt> {
             occlusion_query_set: None,
         });
 
-        RenderPass(render_pass, self.database)
+        RenderPass {
+            render_pass: render_pass,
+            database: self.database
+        }
     }
 
     pub fn submit(self) {
@@ -106,11 +109,14 @@ impl<'rt> Encoder<'rt> {
 }
 
 #[derive(Debug)]
-pub struct RenderPass<'rp>(wgpu::RenderPass<'rp>, &'rp Database);
+pub struct RenderPass<'rp> {
+    render_pass: wgpu::RenderPass<'rp>,
+    database: &'rp Database,
+}
 
 impl<'rp> RenderPass<'rp> {
     pub fn set_pipeline(&mut self, pipeline: PipelineId) -> &mut Self {
-        self.0.set_pipeline(&self.1.render_pipelines[&pipeline]);
+        self.render_pass.set_pipeline(&self.database.render_pipelines[&pipeline]);
         self
     }
 
@@ -120,23 +126,23 @@ impl<'rp> RenderPass<'rp> {
         bind_group: BindGroupId,
         offsets: &[wgpu::DynamicOffset],
     ) -> &mut Self {
-        self.0.set_bind_group(index, &self.1.bind_groups[&bind_group], offsets);
+        self.render_pass.set_bind_group(index, &self.database.bind_groups[&bind_group], offsets);
         self
     }
 
     pub fn set_vertex_buffer(&mut self, slot: u32, buffer: BufferId) -> &mut Self {
-        self.0.set_vertex_buffer(slot, self.1.buffers[&buffer].slice(..));
+        self.render_pass.set_vertex_buffer(slot, self.database.buffers[&buffer].slice(..));
         self
     }
 
     pub fn set_index_buffer(&mut self, buffer: BufferId) -> &mut Self {
-        self.0
-            .set_index_buffer(self.1.buffers[&buffer].slice(..), wgpu::IndexFormat::Uint32);
+        self.render_pass
+            .set_index_buffer(self.database.buffers[&buffer].slice(..), wgpu::IndexFormat::Uint32);
         self
     }
 
     pub fn draw_indexed(&mut self, ind: Range<u32>, base_vert: i32, inst: Range<u32>) -> &mut Self {
-        self.0.draw_indexed(ind, base_vert, inst);
+        self.render_pass.draw_indexed(ind, base_vert, inst);
         self
     }
 }
