@@ -85,7 +85,7 @@ rust-latest:
     - sccache
     - cargo-vendor
   variables:
-    SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
+    SCCACHE_DIR: .cargo/sccache
     RUSTC_WRAPPER: .gitlab/sccache
 
 cargo-check:
@@ -103,7 +103,7 @@ cargo-check:
     - sccache
     - cargo-vendor
   variables:
-    SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
+    SCCACHE_DIR: .cargo/sccache
     RUSTC_WRAPPER: .gitlab/sccache
 
 rustfmt-check:
@@ -132,7 +132,7 @@ cargo-clippy:
     - sccache
     - cargo-vendor
   variables:
-    SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
+    SCCACHE_DIR: .cargo/sccache
     RUSTC_WRAPPER: .gitlab/sccache
 
 cargo-test:
@@ -152,7 +152,7 @@ cargo-test:
     - nextest
     - cargo-vendor
   variables:
-    SCCACHE_DIR: /builds/nausicaea/rootspace/.cargo/sccache
+    SCCACHE_DIR: .cargo/sccache
     RUSTC_WRAPPER: .gitlab/sccache
   artifacts:
     when: always
