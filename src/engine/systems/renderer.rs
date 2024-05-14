@@ -1,8 +1,10 @@
+use std::cmp::{max, min};
 use std::time::{Duration, Instant};
 
 use anyhow::Context;
 use async_trait::async_trait;
-use wgpu::SurfaceError;
+use itertools::Itertools;
+use wgpu::{DynamicOffset, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
 use crate::{
@@ -33,6 +35,8 @@ use crate::{
     glamour::{mat::Mat4, num::ToMatrix},
     rose_tree::hierarchy::Hierarchy,
 };
+use crate::engine::assets::gpu_mesh::GpuMesh;
+use crate::engine::assets::gpu_model::GpuModel;
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -81,56 +85,98 @@ impl Renderer {
         let transforms = res.read_components::<Transform>();
         let ui_transforms = res.read_components::<UiTransform>();
 
-        let cam_persp = res
-            .iter_r::<Camera>()
-            .map(|(idx, c)| c.as_persp_matrix() * hier_transform::<Transform>(idx, &hier, &transforms))
-            .collect::<Vec<_>>();
-
-        let (renderables, transforms) = cam_persp
-            .iter()
-            .flat_map(|cm| {
-                res.iter_rr::<Renderable, Transform>()
-                    .map(|(idx, r, _)| (idx, r, *cm * hier_transform::<Transform>(idx, &hier, &transforms)))
-            })
-            .chain(
-                res.iter_rr::<Renderable, UiTransform>()
-                    .map(|(idx, r, _)| (idx, r, hier_transform::<UiTransform>(idx, &hier, &ui_transforms))),
-            )
-            .fold(
-                (Vec::new(), Vec::new()),
-                |(mut renderables, mut transforms), (idx, r, t)| {
-                    renderables.push((idx, r));
-                    transforms.push(TransformWrapper(t));
-                    (renderables, transforms)
-                },
-            );
-
+        // Calculate all camera transforms and the respective buffer offset
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256 bytes
+        let (offsets, cam_persp) = res
+            .iter_r::<Camera>()
+            .enumerate()
+            .map(|(i, (idx, c))| (i, c.as_persp_matrix() * hier_transform::<Transform>(idx, &hier, &transforms)))
+            .map(|(i, trf)| {
+                let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset); // first 0x0, then 0x100
+                (transform_offset, TransformWrapper(trf))
+            })
+            .fold((Vec::<DynamicOffset>::new(), Vec::<TransformWrapper>::new()), |mut state, elem| {
+                state.0.push(elem.0);
+                state.1.push(elem.1);
+                state
+            });
+
+        // Write the camera transforms to the corresponding uniform buffer
         gfx.write_buffer(self.transform_buffer, unsafe {
             std::slice::from_raw_parts(
-                transforms.as_ptr() as *const u8,
-                transforms.len() * uniform_alignment as usize,
+                cam_persp.as_ptr() as *const u8,
+                cam_persp.len() * uniform_alignment as usize,
             )
         });
 
-        let world_draw_calls = renderables.len();
-        for (i, (_, r)) in renderables.into_iter().enumerate() {
-            let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset); // first 0x0, then 0x100
-            if r.model.materials.is_empty() {
-                rp.set_pipeline(self.pipeline_wt)
-                    .set_bind_group(0, self.transform_bind_group, &[transform_offset])
-                    .set_vertex_buffer(0, r.model.mesh.vertex_buffer)
-                    .set_index_buffer(r.model.mesh.index_buffer)
-                    .draw_indexed(0..r.model.mesh.num_indices, 0, 0..1);
-            } else {
-                rp.set_pipeline(self.pipeline_wtm)
-                    .set_bind_group(0, self.transform_bind_group, &[transform_offset])
-                    .set_bind_group(1, r.model.materials[0].bind_group, &[])
-                    .set_vertex_buffer(0, r.model.mesh.vertex_buffer)
-                    .set_index_buffer(r.model.mesh.index_buffer)
-                    .draw_indexed(0..r.model.mesh.num_indices, 0, 0..1);
+        // Iterate through all entities with a renderable and transform
+        // Extract all fields of Renderable that are shared across instances
+        // Group the rest by instance buffer ID
+        // Sort by instance ID
+        // Convert the transforms to instances
+        // Write the instance buffers
+        // Issue the draw call
+        let mut world_draw_calls = 0;
+        let res_groups = res.iter_rr::<Renderable, Transform>().group_by(|(_, ren, _)| ren.model.mesh.instance_buffer);
+        for (instance_buffer, data) in &res_groups {
+            let mut vertex_buffer = None;
+            let mut index_buffer = None;
+            let mut num_indices = None;
+            let mut materials = None;
+            let mut min_instance_id = u32::MAX;
+            let mut max_instance_id = u32::MIN;
+            let instance_data: Vec<_> = data.sorted_by_key(|(_, ren, _)| ren.model.mesh.instance_id)
+                .map(|(idx, ren, _)| {
+                    if vertex_buffer.is_none() {
+                        vertex_buffer = Some(ren.model.mesh.vertex_buffer);
+                    }
+                    if index_buffer.is_none() {
+                        index_buffer = Some(ren.model.mesh.index_buffer);
+                    }
+                    if num_indices.is_none() {
+                        num_indices = Some(ren.model.mesh.num_indices);
+                    }
+                    if materials.is_none() {
+                        materials = Some(&ren.model.materials);
+                    }
+                    min_instance_id = min(min_instance_id, ren.model.mesh.instance_id);
+                    max_instance_id = max(max_instance_id, ren.model.mesh.instance_id + 1);
+                    Instance { model: hier_transform::<Transform>(idx, &hier, &transforms).0 }
+                })
+                .collect();
+            gfx.write_buffer(instance_buffer, unsafe {
+                std::slice::from_raw_parts(
+                    instance_data.as_ptr() as *const u8,
+                    instance_data.len() * std::mem::size_of::<Instance>(),
+                )
+            });
+
+            let vertex_buffer = vertex_buffer.unwrap();
+            let index_buffer = index_buffer.unwrap();
+            let num_indices = num_indices.unwrap();
+            let materials = materials.unwrap();
+
+            for transform_offset in &offsets {
+                world_draw_calls += 1;
+                if materials.is_empty() {
+                    rp.set_pipeline(self.pipeline_wt)
+                        .set_bind_group(0, self.transform_bind_group, &[*transform_offset])
+                        .set_vertex_buffer(0, vertex_buffer)
+                        .set_vertex_buffer(1, instance_buffer)
+                        .set_index_buffer(index_buffer)
+                        .draw_indexed(0..num_indices, 0, min_instance_id..max_instance_id);
+                } else {
+                    rp.set_pipeline(self.pipeline_wtm)
+                        .set_bind_group(0, self.transform_bind_group, &[*transform_offset])
+                        .set_bind_group(1, materials[0].bind_group, &[])
+                        .set_vertex_buffer(0, vertex_buffer)
+                        .set_vertex_buffer(1, instance_buffer)
+                        .set_index_buffer(index_buffer)
+                        .draw_indexed(0..num_indices, 0, min_instance_id..max_instance_id);
+                }
             }
         }
+
         res.write::<Statistics>().update_draw_calls(world_draw_calls, 0);
     }
 

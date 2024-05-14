@@ -12,6 +12,7 @@ pub struct GpuMesh {
     pub instance_buffer: BufferId,
     pub index_buffer: BufferId,
     pub num_indices: u32,
+    pub instance_id: u32,
 }
 
 impl GpuMesh {
@@ -43,6 +44,7 @@ impl GpuMesh {
             instance_buffer,
             index_buffer,
             num_indices: mesh.indices.len() as u32,
+            instance_id: 0,
         }
     }
 }

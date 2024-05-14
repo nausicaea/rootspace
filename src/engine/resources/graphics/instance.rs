@@ -7,7 +7,7 @@ pub struct Instance {
 }
 
 impl VertexAttributeDescriptor for Instance {
-    const ATTRS: &'static [wgpu::VertexAttribute] =
-        &wgpu::vertex_attr_array![0 => Float32x4, 1 => Float32x4, 2 => Float32x4, 3 => Float32x4];
     const STEP_MODE: wgpu::VertexStepMode = wgpu::VertexStepMode::Instance;
+    const ATTRS: &'static [wgpu::VertexAttribute] =
+        &wgpu::vertex_attr_array![4 => Float32x4, 5 => Float32x4, 6 => Float32x4, 7 => Float32x4];
 }
