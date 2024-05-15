@@ -91,8 +91,8 @@ impl<'rt> Encoder<'rt> {
         });
 
         RenderPass {
-            render_pass: render_pass,
-            database: self.database
+            render_pass,
+            database: self.database,
         }
     }
 
@@ -116,7 +116,8 @@ pub struct RenderPass<'rp> {
 
 impl<'rp> RenderPass<'rp> {
     pub fn set_pipeline(&mut self, pipeline: PipelineId) -> &mut Self {
-        self.render_pass.set_pipeline(&self.database.render_pipelines[&pipeline]);
+        self.render_pass
+            .set_pipeline(&self.database.render_pipelines[&pipeline]);
         self
     }
 
@@ -126,12 +127,14 @@ impl<'rp> RenderPass<'rp> {
         bind_group: BindGroupId,
         offsets: &[wgpu::DynamicOffset],
     ) -> &mut Self {
-        self.render_pass.set_bind_group(index, &self.database.bind_groups[&bind_group], offsets);
+        self.render_pass
+            .set_bind_group(index, &self.database.bind_groups[&bind_group], offsets);
         self
     }
 
     pub fn set_vertex_buffer(&mut self, slot: u32, buffer: BufferId) -> &mut Self {
-        self.render_pass.set_vertex_buffer(slot, self.database.buffers[&buffer].slice(..));
+        self.render_pass
+            .set_vertex_buffer(slot, self.database.buffers[&buffer].slice(..));
         self
     }
 

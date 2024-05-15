@@ -30,7 +30,7 @@ repos:
 
       - id: cargo-fmt-check
         name: Cargo Format (check)
-        entry: cargo fmt -- --check
+        entry: cargo +nightly fmt -- --check
         pass_filenames: false
         language: system
         types: [rust]
@@ -46,7 +46,7 @@ repos:
 
       - id: cargo-fmt
         name: Cargo Format
-        entry: cargo fmt
+        entry: cargo +nightly fmt
         pass_filenames: false
         language: system
         types: [rust]

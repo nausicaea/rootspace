@@ -7,9 +7,7 @@ use crate::{
         world::event::WorldEvent,
     },
     engine::{
-        components::{
-            camera::Camera, info::Info, renderable::Renderable, transform::Transform,
-        },
+        components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
         events::engine_event::EngineEvent,
         resources::{
             asset_database::AssetDatabase, graphics::Graphics, rpc_settings::RpcSettings, statistics::Statistics,

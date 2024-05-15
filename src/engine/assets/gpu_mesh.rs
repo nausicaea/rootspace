@@ -1,10 +1,10 @@
 use wgpu::{BufferAddress, BufferUsages};
+
 use super::cpu_mesh::CpuMesh;
 use crate::{
     ecs::resources::Resources,
-    engine::resources::graphics::{ids::BufferId, Graphics},
+    engine::resources::graphics::{ids::BufferId, instance::Instance, Graphics},
 };
-use crate::engine::resources::graphics::instance::Instance;
 
 #[derive(Debug)]
 pub struct GpuMesh {
@@ -28,7 +28,10 @@ impl GpuMesh {
             let buffer_alignment = std::mem::size_of::<Instance>() as u64;
             let buffer_size = (max_instances * buffer_alignment) as BufferAddress;
             gfx.create_buffer(
-                mesh.label.as_ref().map(|l| format!("{}:instance-buffer", &l)).as_deref(),
+                mesh.label
+                    .as_ref()
+                    .map(|l| format!("{}:instance-buffer", &l))
+                    .as_deref(),
                 buffer_size,
                 BufferUsages::VERTEX | BufferUsages::COPY_DST,
             )

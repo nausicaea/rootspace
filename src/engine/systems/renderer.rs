@@ -1,7 +1,9 @@
-use std::cmp::{max, min};
-use std::collections::HashMap;
-use std::ops::Range;
-use std::time::{Duration, Instant};
+use std::{
+    cmp::{max, min},
+    collections::HashMap,
+    ops::Range,
+    time::{Duration, Instant},
+};
 
 use anyhow::Context;
 use async_trait::async_trait;
@@ -20,6 +22,7 @@ use crate::{
         with_resources::WithResources,
     },
     engine::{
+        assets::gpu_material::GpuMaterial,
         components::{camera::Camera, renderable::Renderable, transform::Transform},
         events::engine_event::EngineEvent,
         resources::{
@@ -37,7 +40,6 @@ use crate::{
     glamour::{mat::Mat4, num::ToMatrix},
     rose_tree::hierarchy::Hierarchy,
 };
-use crate::engine::assets::gpu_material::GpuMaterial;
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -90,16 +92,24 @@ impl Renderer {
         let (uniform_buffer_offsets, cam_persp) = res
             .iter_r::<Camera>()
             .enumerate()
-            .map(|(i, (idx, c))| (i, c.as_persp_matrix() * hier_transform::<Transform>(idx, &hier, &transforms)))
+            .map(|(i, (idx, c))| {
+                (
+                    i,
+                    c.as_persp_matrix() * hier_transform::<Transform>(idx, &hier, &transforms),
+                )
+            })
             .map(|(i, trf)| {
                 let transform_offset = (i as DynamicOffset) * (uniform_alignment as DynamicOffset); // first 0x0, then 0x100
                 (transform_offset, TransformWrapper(trf))
             })
-            .fold((Vec::<DynamicOffset>::new(), Vec::<TransformWrapper>::new()), |mut state, elem| {
-                state.0.push(elem.0);
-                state.1.push(elem.1);
-                state
-            });
+            .fold(
+                (Vec::<DynamicOffset>::new(), Vec::<TransformWrapper>::new()),
+                |mut state, elem| {
+                    state.0.push(elem.0);
+                    state.1.push(elem.1);
+                    state
+                },
+            );
 
         // Iterate through all entities with a renderable and transform
         // Extract all fields of Renderable that are shared across instances
@@ -108,7 +118,9 @@ impl Renderer {
         // Convert the transforms to instances
         let mut instance_draw_data: Vec<InstanceDrawData> = Vec::new();
         let mut instance_buffer_data: HashMap<BufferId, Vec<Instance>> = HashMap::new();
-        let res_groups = res.iter_rr::<Renderable, Transform>().group_by(|(_, ren, _)| ren.model.mesh.instance_buffer);
+        let res_groups = res
+            .iter_rr::<Renderable, Transform>()
+            .group_by(|(_, ren, _)| ren.model.mesh.instance_buffer);
         for (instance_buffer, data) in &res_groups {
             let mut vertex_buffer = None;
             let mut index_buffer = None;
@@ -117,7 +129,8 @@ impl Renderer {
             let mut min_instance_id = u32::MAX;
             let mut max_instance_id = u32::MIN;
 
-            let instance_data: Vec<_> = data.sorted_by_key(|(_, ren, _)| ren.model.mesh.instance_id)
+            let instance_data: Vec<_> = data
+                .sorted_by_key(|(_, ren, _)| ren.model.mesh.instance_id)
                 .map(|(idx, ren, trf)| {
                     if vertex_buffer.is_none() {
                         vertex_buffer = Some(ren.model.mesh.vertex_buffer);

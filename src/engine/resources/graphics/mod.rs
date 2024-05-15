@@ -12,9 +12,9 @@ use self::{
     settings::Settings,
     texture_builder::TextureBuilder,
 };
-use crate::engine::resources::graphics::runtime_data::RuntimeData;
 use crate::{
     ecs::{resource::Resource, with_dependencies::WithDependencies},
+    engine::resources::graphics::runtime_data::RuntimeData,
     glamour::mat::Mat4,
 };
 

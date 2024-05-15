@@ -24,7 +24,10 @@ impl Transform {
     }
 
     pub fn look_at_lh<V: Into<Vec4<f32>>>(eye: V, cntr: V, up: V) -> Self {
-        Transform { affine: Affine::with_look_at_lh(eye.into(), cntr.into(), Unit::from(up.into())), ui: false }
+        Transform {
+            affine: Affine::with_look_at_lh(eye.into(), cntr.into(), Unit::from(up.into())),
+            ui: false,
+        }
     }
 }
 
@@ -40,7 +43,10 @@ impl Component for Transform {
 
 impl From<Affine<f32>> for Transform {
     fn from(value: Affine<f32>) -> Self {
-        Transform { affine: value, ui: false }
+        Transform {
+            affine: value,
+            ui: false,
+        }
     }
 }
 
@@ -94,7 +100,10 @@ impl TransformBuilder {
     }
 
     pub fn build(self) -> Transform {
-        Transform { affine: self.affine_builder.build(), ui: self.ui }
+        Transform {
+            affine: self.affine_builder.build(),
+            ui: self.ui,
+        }
     }
 }
 

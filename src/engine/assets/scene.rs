@@ -12,9 +12,7 @@ use crate::{
     },
     engine::{
         assets::private::PrivSaveAsset,
-        components::{
-            camera::Camera, info::Info, renderable::Renderable, transform::Transform,
-        },
+        components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
         resources::asset_database::AssetDatabase,
     },
     rose_tree::hierarchy::Hierarchy,
