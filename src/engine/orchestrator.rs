@@ -344,7 +344,7 @@ impl Orchestrator {
                 group: "models".into(),
                 name: "coordinate-diag.ply".into(),
             })
-            .with_transform({ Transform::builder().with_ui(true).with_scale(0.1).build() })
+            .with_transform(Transform::builder().with_ui(true).with_scale(0.1).build())
             .submit();
         editor_scene
             .create_entity()

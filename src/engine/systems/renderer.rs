@@ -148,7 +148,7 @@ impl Renderer {
                     max_instance_id = max(max_instance_id, ren.model.mesh.instance_id);
                     Instance {
                         model: hier_transform::<Transform>(idx, &hier, &transforms).0,
-                        with_camera: trf.ui.then_some(0.0).unwrap_or(1.0),
+                        with_camera: if trf.ui { 0.0 } else { 1.0 },
                     }
                 })
                 .collect();
