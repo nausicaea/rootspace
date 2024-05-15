@@ -15,19 +15,15 @@ const MAINTENANCE_INTERVAL_WINDOW: usize = 10;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Statistics {
-    draw_calls: VecDeque<(usize, usize)>,
+    draw_calls: VecDeque<usize>,
     render_durations: VecDeque<Duration>,
     redraw_intervals: VecDeque<Duration>,
     maintenance_intervals: VecDeque<Duration>,
 }
 
 impl Statistics {
-    pub fn mean_world_draw_calls(&self) -> f32 {
-        self.draw_calls.iter().map(|(wdc, _)| wdc).sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
-    }
-
-    pub fn mean_ui_draw_calls(&self) -> f32 {
-        self.draw_calls.iter().map(|(_, udc)| udc).sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
+    pub fn mean_draw_calls(&self) -> f32 {
+        self.draw_calls.iter().sum::<usize>() as f32 / DRAW_CALL_WINDOW as f32
     }
 
     pub fn mean_render_duration(&self) -> Duration {
@@ -42,8 +38,8 @@ impl Statistics {
         self.maintenance_intervals.iter().sum::<Duration>() / MAINTENANCE_INTERVAL_WINDOW as u32
     }
 
-    pub fn update_draw_calls(&mut self, world_draw_calls: usize, ui_draw_calls: usize) {
-        self.draw_calls.push_front((world_draw_calls, ui_draw_calls));
+    pub fn update_draw_calls(&mut self, draw_calls: usize) {
+        self.draw_calls.push_front(draw_calls);
         if self.draw_calls.len() > DRAW_CALL_WINDOW {
             self.draw_calls.truncate(DRAW_CALL_WINDOW);
         }
@@ -84,8 +80,8 @@ impl Default for Statistics {
 
 impl Display for Statistics {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Loop and Render Stats:\nWorld draw calls (mean): {}\nRender duration (mean): {}\nRedraw interval (mean): {}\nMaintenance interval (mean): {}\n",
-               self.mean_world_draw_calls(),
+        writeln!(f, "Loop and Render Stats:\nDraw calls (mean): {}\nRender duration (mean): {}\nRedraw interval (mean): {}\nMaintenance interval (mean): {}\n",
+               self.mean_draw_calls(),
                humantime::format_duration(self.mean_render_duration()),
                humantime::format_duration(self.mean_redraw_interval()),
                humantime::format_duration(self.mean_maintenance_interval()),

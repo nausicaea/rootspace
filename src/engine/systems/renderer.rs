@@ -1,4 +1,5 @@
 use std::cmp::{max, min};
+use std::collections::HashMap;
 use std::ops::Range;
 use std::time::{Duration, Instant};
 
@@ -19,7 +20,7 @@ use crate::{
         with_resources::WithResources,
     },
     engine::{
-        components::{camera::Camera, renderable::Renderable, transform::Transform, ui_transform::UiTransform},
+        components::{camera::Camera, renderable::Renderable, transform::Transform},
         events::engine_event::EngineEvent,
         resources::{
             asset_database::AssetDatabase,
@@ -83,7 +84,6 @@ impl Renderer {
         let gfx = res.read::<Graphics>();
         let hier = res.read::<Hierarchy<Index>>();
         let transforms = res.read_components::<Transform>();
-        let _ui_transforms = res.read_components::<UiTransform>();
 
         // Calculate all camera transforms and the respective buffer offset
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256 bytes
@@ -92,7 +92,7 @@ impl Renderer {
             .enumerate()
             .map(|(i, (idx, c))| (i, c.as_persp_matrix() * hier_transform::<Transform>(idx, &hier, &transforms)))
             .map(|(i, trf)| {
-                let transform_offset = (i as wgpu::DynamicOffset) * (uniform_alignment as wgpu::DynamicOffset); // first 0x0, then 0x100
+                let transform_offset = (i as DynamicOffset) * (uniform_alignment as DynamicOffset); // first 0x0, then 0x100
                 (transform_offset, TransformWrapper(trf))
             })
             .fold((Vec::<DynamicOffset>::new(), Vec::<TransformWrapper>::new()), |mut state, elem| {
@@ -101,22 +101,13 @@ impl Renderer {
                 state
             });
 
-        // Write the camera transforms to the corresponding uniform buffer
-        gfx.write_buffer(self.transform_buffer, unsafe {
-            std::slice::from_raw_parts(
-                cam_persp.as_ptr() as *const u8,
-                cam_persp.len() * uniform_alignment as usize,
-            )
-        });
-
         // Iterate through all entities with a renderable and transform
         // Extract all fields of Renderable that are shared across instances
         // Group the rest by instance buffer ID
         // Sort by instance ID
         // Convert the transforms to instances
-        // Write the instance buffers
-        // Issue the draw call
         let mut instance_draw_data: Vec<InstanceDrawData> = Vec::new();
+        let mut instance_buffer_data: HashMap<BufferId, Vec<Instance>> = HashMap::new();
         let res_groups = res.iter_rr::<Renderable, Transform>().group_by(|(_, ren, _)| ren.model.mesh.instance_buffer);
         for (instance_buffer, data) in &res_groups {
             let mut vertex_buffer = None;
@@ -155,13 +146,25 @@ impl Renderer {
                 instance_ids: min_instance_id..(max_instance_id + 1),
             });
 
+            instance_buffer_data.insert(instance_buffer, instance_data);
+        }
+
+        // Write the camera transforms to the corresponding uniform buffer
+        gfx.write_buffer(self.transform_buffer, unsafe {
+            std::slice::from_raw_parts(
+                cam_persp.as_ptr() as *const u8,
+                cam_persp.len() * uniform_alignment as usize,
+            )
+        });
+
+        // Update the instance buffers
+        for (instance_buffer, instance_data) in instance_buffer_data {
             gfx.write_buffer(instance_buffer, unsafe {
                 std::slice::from_raw_parts(
                     instance_data.as_ptr() as *const u8,
                     instance_data.len() * std::mem::size_of::<Instance>(),
                 )
             });
-
         }
 
         DrawData {
@@ -171,12 +174,12 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn draw(&mut self, draw_data: &DrawData, mut rp: RenderPass) -> (usize, usize) {
-        let mut world_draw_calls = 0;
+    fn draw(&mut self, draw_data: &DrawData, mut rp: RenderPass) -> usize {
+        let mut draw_calls = 0;
 
         for instance_data in &draw_data.instance_draw_data {
             for &transform_offset in &draw_data.uniform_buffer_offsets {
-                world_draw_calls += 1;
+                draw_calls += 1;
                 if instance_data.materials.is_empty() {
                     rp.set_pipeline(self.pipeline_wt)
                         .set_bind_group(0, self.transform_bind_group, &[transform_offset])
@@ -196,7 +199,7 @@ impl Renderer {
             }
         }
 
-        (world_draw_calls, 0)
+        draw_calls
     }
 
     #[tracing::instrument(skip_all)]
@@ -351,9 +354,9 @@ impl System for Renderer {
             Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
             Err(SurfaceError::Timeout) => self.on_timeout(),
             Ok(mut enc) => {
-                let (world_draw_calls, ui_draw_calls) = self.draw(&draw_data, enc.begin(Some("main-render-pass")));
+                let draw_calls = self.draw(&draw_data, enc.begin(Some("main-render-pass")));
                 enc.submit();
-                res.write::<Statistics>().update_draw_calls(world_draw_calls, ui_draw_calls);
+                res.write::<Statistics>().update_draw_calls(draw_calls);
             }
         }
 
