@@ -6,7 +6,7 @@ use super::ids::{
 use crate::urn::Urn;
 
 #[derive(Debug, Default)]
-pub struct Database {
+pub struct GpuObjectDatabase {
     pub shader_module_index: Urn<ShaderModuleId>,
     pub shader_modules: HashMap<ShaderModuleId, wgpu::ShaderModule>,
     pub bind_group_layout_index: Urn<BindGroupLayoutId>,
@@ -25,7 +25,7 @@ pub struct Database {
     pub render_pipelines: HashMap<PipelineId, wgpu::RenderPipeline>,
 }
 
-impl Database {
+impl GpuObjectDatabase {
     pub fn insert_shader_module(&mut self, obj: wgpu::ShaderModule) -> ShaderModuleId {
         let id = self.shader_module_index.take();
         self.shader_modules.insert(id, obj);

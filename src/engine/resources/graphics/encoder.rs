@@ -6,7 +6,7 @@ use super::{
     ids::{BindGroupId, BufferId, PipelineId},
     runtime::Runtime,
     settings::Settings,
-    Database,
+    GpuObjectDatabase,
 };
 use crate::engine::resources::graphics::ids::TextureViewId;
 
@@ -14,7 +14,7 @@ use crate::engine::resources::graphics::ids::TextureViewId;
 pub struct Encoder<'rt> {
     runtime: &'rt Runtime<'rt>,
     settings: &'rt Settings,
-    database: &'rt Database,
+    database: &'rt GpuObjectDatabase,
     depth_texture_view: TextureViewId,
     output: wgpu::SurfaceTexture,
     surface_view: wgpu::TextureView,
@@ -26,7 +26,7 @@ impl<'rt> Encoder<'rt> {
         label: Option<&str>,
         runtime: &'rt Runtime,
         settings: &'rt Settings,
-        database: &'rt Database,
+        database: &'rt GpuObjectDatabase,
         depth_texture_view: TextureViewId,
     ) -> Result<Self, wgpu::SurfaceError> {
         crate::trace_gfx!("Getting surface texture");
@@ -111,7 +111,7 @@ impl<'rt> Encoder<'rt> {
 #[derive(Debug)]
 pub struct RenderPass<'rp> {
     render_pass: wgpu::RenderPass<'rp>,
-    database: &'rp Database,
+    database: &'rp GpuObjectDatabase,
 }
 
 impl<'rp> RenderPass<'rp> {

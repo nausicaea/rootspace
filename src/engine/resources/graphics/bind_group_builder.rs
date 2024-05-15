@@ -1,19 +1,19 @@
 use super::{
     ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureViewId},
     runtime::Runtime,
-    Database,
+    GpuObjectDatabase,
 };
 
 pub struct BindGroupBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
-    database: &'rt mut Database,
+    database: &'rt mut GpuObjectDatabase,
     layout: BindGroupLayoutId,
     label: Option<&'rt str>,
     entries: Vec<(u32, BindingResourceId)>,
 }
 
 impl<'rt> BindGroupBuilder<'rt> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database, layout: BindGroupLayoutId) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, layout: BindGroupLayoutId) -> Self {
         BindGroupBuilder {
             runtime,
             database,

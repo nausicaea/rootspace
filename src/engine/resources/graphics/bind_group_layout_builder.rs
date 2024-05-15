@@ -1,14 +1,14 @@
-use super::{ids::BindGroupLayoutId, runtime::Runtime, Database};
+use super::{ids::BindGroupLayoutId, runtime::Runtime, GpuObjectDatabase};
 
 pub struct BindGroupLayoutBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
-    database: &'rt mut Database,
+    database: &'rt mut GpuObjectDatabase,
     label: Option<&'static str>,
     entries: Vec<wgpu::BindGroupLayoutEntry>,
 }
 
 impl<'rt> BindGroupLayoutBuilder<'rt> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase) -> Self {
         Self {
             runtime,
             database,

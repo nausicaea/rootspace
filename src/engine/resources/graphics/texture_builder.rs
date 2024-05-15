@@ -1,11 +1,11 @@
 use wgpu::util::TextureDataOrder;
 
-use super::{ids::TextureId, runtime::Runtime, Database};
+use super::{ids::TextureId, runtime::Runtime, GpuObjectDatabase};
 use crate::Settings;
 
 pub struct TextureBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
-    database: &'rt mut Database,
+    database: &'rt mut GpuObjectDatabase,
     settings: &'rt Settings,
     label: Option<&'rt str>,
     image: Option<&'rt image::DynamicImage>,
@@ -13,7 +13,7 @@ pub struct TextureBuilder<'rt> {
 }
 
 impl<'rt> TextureBuilder<'rt> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database, settings: &'rt Settings) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
         Self {
             runtime,
             database,

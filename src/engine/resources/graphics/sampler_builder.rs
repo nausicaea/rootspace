@@ -1,13 +1,13 @@
-use super::{ids::SamplerId, runtime::Runtime, Database};
+use super::{ids::SamplerId, runtime::Runtime, GpuObjectDatabase};
 
 pub struct SamplerBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
-    database: &'rt mut Database,
+    database: &'rt mut GpuObjectDatabase,
     label: Option<&'rt str>,
 }
 
 impl<'rt> SamplerBuilder<'rt> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase) -> Self {
         Self {
             runtime,
             database,

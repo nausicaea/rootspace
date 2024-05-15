@@ -1,9 +1,10 @@
+use wgpu::{BufferAddress, BufferUsages};
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
     bind_group_builder::BindGroupBuilder,
     bind_group_layout_builder::BindGroupLayoutBuilder,
-    database::Database,
+    gpu_object_database::GpuObjectDatabase,
     encoder::Encoder,
     ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
     render_pipeline_builder::RenderPipelineBuilder,
@@ -14,20 +15,29 @@ use self::{
 };
 use crate::{
     ecs::{resource::Resource, with_dependencies::WithDependencies},
-    engine::resources::graphics::runtime_data::RuntimeData,
+    engine::resources::graphics::internal_runtime_data::InternalRuntimeData,
     glamour::mat::Mat4,
 };
+use crate::engine::assets::cpu_material::CpuMaterial;
+use crate::engine::assets::cpu_mesh::CpuMesh;
+use crate::engine::assets::cpu_model::CpuModel;
+use crate::engine::assets::cpu_texture::CpuTexture;
+use crate::engine::resources::graphics::gpu_material::GpuMaterial;
+use crate::engine::resources::graphics::gpu_mesh::GpuMesh;
+use crate::engine::resources::graphics::gpu_model::GpuModel;
+use crate::engine::resources::graphics::gpu_texture::GpuTexture;
+use crate::engine::resources::graphics::instance::Instance;
 
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
-mod database;
+mod gpu_object_database;
 pub mod descriptors;
 pub mod encoder;
 pub mod ids;
 pub mod instance;
 pub mod render_pipeline_builder;
 mod runtime;
-mod runtime_data;
+mod internal_runtime_data;
 pub mod sampler_builder;
 pub mod settings;
 pub mod texture_builder;
@@ -51,8 +61,8 @@ pub trait GraphicsDeps {
 pub struct Graphics {
     settings: Settings,
     runtime: Runtime<'static>,
-    database: Database,
-    runtime_data: RuntimeData,
+    database: GpuObjectDatabase,
+    internal: InternalRuntimeData,
 }
 
 impl Graphics {
@@ -103,21 +113,21 @@ impl Graphics {
             .surface
             .configure(&self.runtime.device, &self.runtime.config);
 
-        self.runtime_data.depth_texture =
+        self.internal.depth_texture =
             Self::create_depth_texture_int(&self.runtime, &mut self.database, &self.settings, DEPTH_TEXTURE_LABEL);
-        self.runtime_data.depth_texture_view = Self::create_texture_view_int(
+        self.internal.depth_texture_view = Self::create_texture_view_int(
             &mut self.database,
             DEPTH_TEXTURE_VIEW_LABEL,
-            self.runtime_data.depth_texture,
+            self.internal.depth_texture,
         );
     }
 
     pub fn transform_layout(&self) -> BindGroupLayoutId {
-        self.runtime_data.transform_layout
+        self.internal.transform_layout
     }
 
     pub fn material_layout(&self) -> BindGroupLayoutId {
-        self.runtime_data.material_layout
+        self.internal.material_layout
     }
 
     pub fn write_buffer<T>(&self, buffer: BufferId, data: &[T])
@@ -149,7 +159,7 @@ impl Graphics {
             &self.runtime,
             &self.settings,
             &self.database,
-            self.runtime_data.depth_texture_view,
+            self.internal.depth_texture_view,
         )
     }
 
@@ -199,21 +209,89 @@ impl Graphics {
         self.database.insert_buffer(buf)
     }
 
-    pub fn create_texture(&mut self) -> TextureBuilder {
-        TextureBuilder::new(&self.runtime, &mut self.database, &self.settings)
+    #[tracing::instrument(skip_all)]
+    pub fn create_texture(&mut self, t: &CpuTexture) -> GpuTexture {
+        let texture = TextureBuilder::new(&self.runtime, &mut self.database, &self.settings)
+            .with_label(t.label.as_ref().map(|l| format!("{}:texture", &l)).as_deref())
+            .with_image(&t.image)
+            .submit();
+        let view = Self::create_texture_view_int(
+            &mut self.database,
+            t.label.as_ref().map(|l| format!("{}:texture-view", &l)).as_deref(),
+            texture,
+        );
+        let sampler = SamplerBuilder::new(&self.runtime, &mut self.database)
+            .with_label(t.label.as_ref().map(|l| format!("{}:texture-sampler", &l)).as_deref())
+            .submit();
+
+        GpuTexture { texture, view, sampler }
     }
 
-    pub fn create_texture_view(&mut self, label: Option<&str>, texture: TextureId) -> TextureViewId {
-        Self::create_texture_view_int(&mut self.database, label, texture)
+    #[tracing::instrument(skip_all)]
+    pub fn create_material(&mut self, m: &CpuMaterial) -> GpuMaterial {
+        let texture = self.create_texture(&m.texture);
+
+        let layout = self.material_layout();
+        let bind_group = self
+            .create_bind_group(layout)
+            .with_label(m.label.as_ref().map(|l| format!("{}:bind-group", &l)).as_deref())
+            .add_texture_view(0, texture.view)
+            .add_sampler(1, texture.sampler)
+            .submit();
+
+        GpuMaterial { texture, bind_group }
     }
 
-    pub fn create_sampler(&mut self) -> SamplerBuilder {
-        SamplerBuilder::new(&self.runtime, &mut self.database)
+    #[tracing::instrument(skip_all)]
+    pub fn create_mesh(&mut self, m: &CpuMesh) -> GpuMesh {
+        let vertex_buffer = self.create_buffer_init(
+            m.label.as_ref().map(|l| format!("{}:vertex-buffer", &l)).as_deref(),
+            BufferUsages::VERTEX,
+            &m.vertices,
+        );
+        let instance_buffer = {
+            let max_instances = self.max_instances();
+            let buffer_alignment = std::mem::size_of::<Instance>() as u64;
+            let buffer_size = (max_instances * buffer_alignment) as BufferAddress;
+            self.create_buffer(
+                m.label
+                    .as_ref()
+                    .map(|l| format!("{}:instance-buffer", &l))
+                    .as_deref(),
+                buffer_size,
+                BufferUsages::VERTEX | BufferUsages::COPY_DST,
+            )
+        };
+        let index_buffer = self.create_buffer_init(
+            m.label.as_ref().map(|l| format!("{}:index-buffer", &l)).as_deref(),
+            BufferUsages::INDEX,
+            &m.indices,
+        );
+
+        GpuMesh {
+            vertex_buffer,
+            instance_buffer,
+            index_buffer,
+            num_indices: m.indices.len() as u32,
+            instance_id: 0,
+        }
+    }
+
+    #[tracing::instrument(skip_all)]
+    pub fn create_model(&mut self, m: &CpuModel) -> GpuModel {
+        GpuModel {
+            mesh: self.create_mesh(&m.mesh),
+            materials: m
+                .materials
+                .iter()
+                .map(|mat| self.create_material(mat))
+                .collect(),
+        }
     }
 
     fn create_depth_texture_int(
         runtime: &Runtime,
-        database: &mut Database,
+        database: &mut GpuObjectDatabase,
         settings: &Settings,
         label: Option<&str>,
     ) -> TextureId {
@@ -223,7 +301,7 @@ impl Graphics {
             .submit()
     }
 
-    fn create_texture_view_int(database: &mut Database, label: Option<&str>, texture: TextureId) -> TextureViewId {
+    fn create_texture_view_int(database: &mut GpuObjectDatabase, label: Option<&str>, texture: TextureId) -> TextureViewId {
         let texture = &database.textures[&texture];
 
         tracing::trace!("Creating texture view '{}'", label.unwrap_or("unnamed"));
@@ -246,7 +324,7 @@ where
         let settings = deps.settings();
         let runtime = Runtime::new(deps.event_loop(), settings).await;
 
-        let mut database = Database::default();
+        let mut database = GpuObjectDatabase::default();
 
         let min_binding_size = wgpu::BufferSize::new(std::mem::size_of::<TransformWrapper>() as _); // 64 bytes
         let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
@@ -287,7 +365,7 @@ where
             settings: settings.clone(),
             runtime,
             database,
-            runtime_data: RuntimeData {
+            internal: InternalRuntimeData {
                 transform_layout,
                 material_layout,
                 depth_texture,

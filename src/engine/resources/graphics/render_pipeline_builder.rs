@@ -2,14 +2,14 @@ use super::{
     descriptors::VertexAttributeDescriptor,
     ids::{BindGroupLayoutId, PipelineId, ShaderModuleId},
     runtime::Runtime,
-    Database,
+    GpuObjectDatabase,
 };
 use crate::Settings;
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
     runtime: &'rt Runtime<'rt>,
-    database: &'rt mut Database,
+    database: &'rt mut GpuObjectDatabase,
     vertex_shader_module: Option<(ShaderModuleId, &'ep str)>,
     fragment_shader_module: Option<(ShaderModuleId, &'ep str)>,
     bind_group_layouts: Vec<BindGroupLayoutId>,
@@ -19,7 +19,7 @@ pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
 }
 
 impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut Database, settings: &'rt Settings) -> Self {
+    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
         RenderPipelineBuilder {
             runtime,
             database,

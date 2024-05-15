@@ -8,6 +8,7 @@ use crate::{
     },
 };
 use crate::engine::resources::graphics::gpu_model::GpuModel;
+use crate::engine::resources::graphics::Graphics;
 
 #[derive(Debug)]
 pub struct Renderable {
@@ -17,7 +18,8 @@ pub struct Renderable {
 }
 
 impl Renderable {
-    pub async fn with_model<S: AsRef<str>>(res: &Resources, group: S, name: S) -> Result<Self, anyhow::Error> {
+    #[tracing::instrument(skip_all)]
+    pub async fn with_model<S: AsRef<str> + std::fmt::Debug>(res: &Resources, group: S, name: S) -> Result<Self, anyhow::Error> {
         let group = group.as_ref();
         let name = name.as_ref();
         let cpu_model = res
@@ -25,7 +27,8 @@ impl Renderable {
             .load_asset::<CpuModel, _>(res, group, name)
             .await
             .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name))?;
-        let model = GpuModel::with_model(res, &cpu_model);
+        let model = res.write::<Graphics>()
+            .create_model(&cpu_model);
         Ok(Renderable {
             model,
             group: group.to_string(),
