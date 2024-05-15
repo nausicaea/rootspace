@@ -1,4 +1,5 @@
-use super::{cpu_material::CpuMaterial, gpu_texture::GpuTexture};
+use crate::engine::assets::cpu_material::CpuMaterial;
+use super::gpu_texture::GpuTexture;
 use crate::engine::resources::graphics::{ids::BindGroupId, Graphics};
 
 #[derive(Debug)]

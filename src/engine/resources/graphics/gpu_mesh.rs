@@ -1,10 +1,10 @@
 use wgpu::{BufferAddress, BufferUsages};
 
-use super::cpu_mesh::CpuMesh;
 use crate::{
     ecs::resources::Resources,
     engine::resources::graphics::{ids::BufferId, instance::Instance, Graphics},
 };
+use crate::engine::assets::cpu_mesh::CpuMesh;
 
 #[derive(Debug)]
 pub struct GpuMesh {

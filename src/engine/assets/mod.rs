@@ -6,10 +6,6 @@ pub mod cpu_material;
 pub mod cpu_mesh;
 pub mod cpu_model;
 pub mod cpu_texture;
-pub mod gpu_material;
-pub mod gpu_mesh;
-pub mod gpu_model;
-pub mod gpu_texture;
 pub mod scene;
 
 pub trait LoadAsset: private::PrivLoadAsset {}

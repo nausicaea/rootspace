@@ -3,10 +3,11 @@ use anyhow::Context;
 use crate::{
     ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage},
     engine::{
-        assets::{cpu_model::CpuModel, gpu_model::GpuModel},
+        assets::{cpu_model::CpuModel},
         resources::asset_database::AssetDatabase,
     },
 };
+use crate::engine::resources::graphics::gpu_model::GpuModel;
 
 #[derive(Debug)]
 pub struct Renderable {

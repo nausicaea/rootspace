@@ -22,7 +22,6 @@ use crate::{
         with_resources::WithResources,
     },
     engine::{
-        assets::gpu_material::GpuMaterial,
         components::{camera::Camera, renderable::Renderable, transform::Transform},
         events::engine_event::EngineEvent,
         resources::{
@@ -40,6 +39,7 @@ use crate::{
     glamour::{mat::Mat4, num::ToMatrix},
     rose_tree::hierarchy::Hierarchy,
 };
+use crate::engine::resources::graphics::gpu_material::GpuMaterial;
 
 #[derive(Debug)]
 pub struct Renderer {

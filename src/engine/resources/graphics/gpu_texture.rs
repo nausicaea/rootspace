@@ -1,4 +1,3 @@
-use super::cpu_texture::CpuTexture;
 use crate::{
     ecs::resources::Resources,
     engine::resources::graphics::{
@@ -6,6 +5,7 @@ use crate::{
         Graphics,
     },
 };
+use crate::engine::assets::cpu_texture::CpuTexture;
 
 #[derive(Debug)]
 pub struct GpuTexture {

@@ -32,6 +32,10 @@ pub mod sampler_builder;
 pub mod settings;
 pub mod texture_builder;
 pub mod vertex;
+pub mod gpu_material;
+pub mod gpu_mesh;
+pub mod gpu_model;
+pub mod gpu_texture;
 
 const DEPTH_TEXTURE_LABEL: Option<&str> = Some("depth-stencil:texture");
 const DEPTH_TEXTURE_VIEW_LABEL: Option<&str> = Some("depth-stencil:view");
