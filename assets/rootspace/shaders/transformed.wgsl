@@ -1,3 +1,5 @@
+// Shader pre-processing hint: https://elyshaffir.github.io/Taiga-Blog/2022/01/08/using_include_statements_in_wgsl.html
+
 struct VertexInput {
     @location(0) position: vec3<f32>,
     @location(1) normals: vec3<f32>,
