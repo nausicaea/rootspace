@@ -69,7 +69,7 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn render(&mut self, res: &Resources, mut rp: RenderPass) {
+    fn prepare(&mut self, res: &Resources) {
         fn hier_transform<C: Component + ToMatrix<f32>>(
             idx: Index,
             hier: &Hierarchy<Index>,
@@ -79,11 +79,6 @@ impl Renderer {
                 .filter_map(|a| transforms.get(a).map(|at| at.to_matrix()))
                 .product::<Mat4<f32>>()
         }
-
-        let gfx = res.read::<Graphics>();
-        let hier = res.read::<Hierarchy<Index>>();
-        let transforms = res.read_components::<Transform>();
-        let ui_transforms = res.read_components::<UiTransform>();
 
         // Calculate all camera transforms and the respective buffer offset
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256 bytes
@@ -108,6 +103,25 @@ impl Renderer {
                 cam_persp.len() * uniform_alignment as usize,
             )
         });
+
+    }
+
+    #[tracing::instrument(skip_all)]
+    fn draw(&mut self, res: &Resources, mut rp: RenderPass) {
+        fn hier_transform<C: Component + ToMatrix<f32>>(
+            idx: Index,
+            hier: &Hierarchy<Index>,
+            transforms: &C::Storage,
+        ) -> Mat4<f32> {
+            hier.ancestors(idx)
+                .filter_map(|a| transforms.get(a).map(|at| at.to_matrix()))
+                .product::<Mat4<f32>>()
+        }
+
+        let gfx = res.read::<Graphics>();
+        let hier = res.read::<Hierarchy<Index>>();
+        let transforms = res.read_components::<Transform>();
+        let ui_transforms = res.read_components::<UiTransform>();
 
         // Iterate through all entities with a renderable and transform
         // Extract all fields of Renderable that are shared across instances
@@ -319,25 +333,30 @@ impl System for Renderer {
         self.handle_events(res);
 
         if !self.renderer_enabled {
+            res.write::<Statistics>().update_render_durations(frame_start.elapsed());
             return;
         }
 
+        self.prepare(res);
+
         let gfx = res.read::<Graphics>();
-
         let encoder = gfx.create_encoder(Some("main-encoder"));
-
         match encoder {
             Err(SurfaceError::Lost | SurfaceError::Outdated) => self.on_surface_outdated(res),
             Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
             Err(SurfaceError::Timeout) => self.on_timeout(),
             Ok(mut enc) => {
-                self.render(res, enc.begin(Some("main-render-pass")));
+                self.draw(res, enc.begin(Some("main-render-pass")));
                 enc.submit();
             }
         }
 
         res.write::<Statistics>().update_render_durations(frame_start.elapsed());
     }
+}
+
+struct DrawData<'a> {
+
 }
 
 #[cfg(test)]
