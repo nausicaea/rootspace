@@ -118,7 +118,7 @@ impl Renderer {
             let mut max_instance_id = u32::MIN;
 
             let instance_data: Vec<_> = data.sorted_by_key(|(_, ren, _)| ren.model.mesh.instance_id)
-                .map(|(idx, ren, _)| {
+                .map(|(idx, ren, trf)| {
                     if vertex_buffer.is_none() {
                         vertex_buffer = Some(ren.model.mesh.vertex_buffer);
                     }
@@ -133,7 +133,10 @@ impl Renderer {
                     }
                     min_instance_id = min(min_instance_id, ren.model.mesh.instance_id);
                     max_instance_id = max(max_instance_id, ren.model.mesh.instance_id);
-                    Instance { model: hier_transform::<Transform>(idx, &hier, &transforms).0 }
+                    Instance {
+                        model: hier_transform::<Transform>(idx, &hier, &transforms).0,
+                        with_camera: trf.ui.then_some(0.0).unwrap_or(1.0),
+                    }
                 })
                 .collect();
 

@@ -9,6 +9,7 @@ struct InstanceInput {
     @location(5) transform_1: vec4<f32>,
     @location(6) transform_2: vec4<f32>,
     @location(7) transform_3: vec4<f32>,
+    @location(8) with_camera: f32,
 }
 
 struct VertexOutput {
@@ -32,12 +33,16 @@ fn main(
         instance.transform_3,
     );
 
+    let world_position = vec4<f32>(vertex.position, 1.0);
+    let with_camera = clamp(instance.with_camera, 0.0, 1.0);
+    let clip_position = world_position * model_transform * camera_transform * with_camera + world_position * model_transform * (1.0 - with_camera);
+
     let front = vec4(1.0, 1.0, 1.0, 0.0);
     let normals = vec4<f32>(vertex.normals, 0.0);
     let s = dot(front, normals) / (length(front) * length(normals));
 
     return VertexOutput(
-        vec4<f32>(vertex.position, 1.0) * model_transform * camera_transform,
+        clip_position,
         vertex.tex_coords,
         s,
     );

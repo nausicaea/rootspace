@@ -25,7 +25,7 @@ use crate::{
     engine::{
         assets::scene::Scene,
         components::{
-            camera::Camera, info::Info, renderable::Renderable, transform::Transform, ui_transform::UiTransform,
+            camera::Camera, info::Info, renderable::Renderable, transform::Transform,
         },
         events::engine_event::EngineEvent,
         registry::{RRegistry, USRegistry},
@@ -295,7 +295,6 @@ impl Orchestrator {
         self.world.get_components_mut::<Camera>().remove(entity);
         self.world.get_components_mut::<Info>().remove(entity);
         self.world.get_components_mut::<Transform>().remove(entity);
-        self.world.get_components_mut::<UiTransform>().remove(entity);
         self.world.get_components_mut::<Renderable>().remove(entity);
     }
 
@@ -347,10 +346,11 @@ impl Orchestrator {
                 group: "models".into(),
                 name: "coordinate-diag.ply".into(),
             })
-            .with_ui_transform({
-                let mut uit = UiTransform::default();
-                uit.0.s = 0.1_f32;
-                uit
+            .with_transform({
+                Transform::builder()
+                    .with_ui(true)
+                    .with_scale(0.1)
+                    .build()
             })
             .submit();
         editor_scene

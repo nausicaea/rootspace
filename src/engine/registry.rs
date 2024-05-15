@@ -8,7 +8,7 @@ use crate::{
     },
     engine::{
         components::{
-            camera::Camera, info::Info, renderable::Renderable, transform::Transform, ui_transform::UiTransform,
+            camera::Camera, info::Info, renderable::Renderable, transform::Transform,
         },
         events::engine_event::EngineEvent,
         resources::{
@@ -25,7 +25,6 @@ pub type RRegistry<S> = RegAdd![
     <Info as Component>::Storage,
     <Transform as Component>::Storage,
     <Renderable as Component>::Storage,
-    <UiTransform as Component>::Storage,
     AssetDatabase,
     EventQueue<WindowEvent>,
     EventQueue<EngineEvent>,

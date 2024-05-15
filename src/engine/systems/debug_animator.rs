@@ -14,7 +14,7 @@ pub struct DebugAnimator;
 
 impl WithResources for DebugAnimator {
     #[tracing::instrument(skip_all)]
-    async fn with_res(_res: &crate::ecs::resources::Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(_res: &Resources) -> Result<Self, anyhow::Error> {
         Ok(DebugAnimator)
     }
 }
@@ -25,10 +25,10 @@ impl System for DebugAnimator {
     async fn run(&mut self, res: &Resources, _t: Duration, dt: Duration) {
         let angle = dt.as_secs_f32() * 0.20;
         let rotation = Quat::with_axis_angle(Unit::from(Vec4::new(0.0, 1.0, 0.0, 0.0)), angle);
-        for (_, _, t) in res.iter_rw::<Renderable, Transform>() {
-            let t_quat = t.0.o;
+        for (_, _, t) in res.iter_rw::<Renderable, Transform>().filter(|(_, _, t)| !t.ui) {
+            let t_quat = t.affine.o;
             let new_t_quat = rotation * t_quat;
-            t.0.o = new_t_quat;
+            t.affine.o = new_t_quat;
         }
     }
 }

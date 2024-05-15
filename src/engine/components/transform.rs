@@ -13,8 +13,10 @@ use crate::{
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct Transform(pub(crate) Affine<f32>);
+pub struct Transform {
+    pub(crate) affine: Affine<f32>,
+    pub(crate) ui: bool,
+}
 
 impl Transform {
     pub fn builder() -> TransformBuilder {
@@ -22,7 +24,7 @@ impl Transform {
     }
 
     pub fn look_at_lh<V: Into<Vec4<f32>>>(eye: V, cntr: V, up: V) -> Self {
-        Transform(Affine::with_look_at_lh(eye.into(), cntr.into(), Unit::from(up.into())))
+        Transform { affine: Affine::with_look_at_lh(eye.into(), cntr.into(), Unit::from(up.into())), ui: false }
     }
 }
 
@@ -38,19 +40,19 @@ impl Component for Transform {
 
 impl From<Affine<f32>> for Transform {
     fn from(value: Affine<f32>) -> Self {
-        Transform(value)
+        Transform { affine: value, ui: false }
     }
 }
 
 impl AsRef<Affine<f32>> for Transform {
     fn as_ref(&self) -> &Affine<f32> {
-        &self.0
+        &self.affine
     }
 }
 
 impl ToMatrix<f32> for Transform {
     fn to_matrix(&self) -> Mat4<f32> {
-        self.0.to_matrix()
+        self.affine.to_matrix()
     }
 }
 
@@ -59,32 +61,40 @@ impl std::fmt::Display for Transform {
         write!(
             f,
             "position: {}, orientation: {}, scale: {}",
-            self.0.t, self.0.o, self.0.s,
+            self.affine.t, self.affine.o, self.affine.s,
         )
     }
 }
 
 #[derive(Debug, Default, PartialEq, Clone)]
-pub struct TransformBuilder(AffineBuilder<f32>);
+pub struct TransformBuilder {
+    affine_builder: AffineBuilder<f32>,
+    ui: bool,
+}
 
 impl TransformBuilder {
     pub fn with_translation<V: Into<Vec4<f32>>>(mut self, t: V) -> Self {
-        self.0 = self.0.with_translation(t.into());
+        self.affine_builder = self.affine_builder.with_translation(t.into());
         self
     }
 
     pub fn with_orientation<Q: Into<Quat<f32>>>(mut self, o: Q) -> Self {
-        self.0 = self.0.with_orientation(o.into());
+        self.affine_builder = self.affine_builder.with_orientation(o.into());
         self
     }
 
     pub fn with_scale(mut self, s: f32) -> Self {
-        self.0 = self.0.with_scale(s);
+        self.affine_builder = self.affine_builder.with_scale(s);
+        self
+    }
+
+    pub fn with_ui(mut self, ui: bool) -> Self {
+        self.ui = ui;
         self
     }
 
     pub fn build(self) -> Transform {
-        Transform(self.0.build())
+        Transform { affine: self.affine_builder.build(), ui: self.ui }
     }
 }
 
@@ -142,8 +152,8 @@ mod tests {
             .with_scale(1.0f32)
             .build();
 
-        assert_ulps_eq!(m.0.t, Vec4::zero());
-        assert_ulps_eq!(m.0.o, Unit::from(Quat::identity()));
-        assert_ulps_eq!(m.0.s, 1.0f32);
+        assert_ulps_eq!(m.affine.t, Vec4::zero());
+        assert_ulps_eq!(m.affine.o, Unit::from(Quat::identity()));
+        assert_ulps_eq!(m.affine.s, 1.0f32);
     }
 }
