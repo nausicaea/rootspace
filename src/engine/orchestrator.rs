@@ -221,6 +221,7 @@ impl Orchestrator {
                 use WindowEvent::*;
                 match event {
                     Resized(_)
+                    | CloseRequested
                     | Moved(_)
                     | DroppedFile(_)
                     | Focused(_)
