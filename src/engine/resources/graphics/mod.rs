@@ -4,19 +4,14 @@ use winit::event_loop::EventLoopWindowTarget;
 use self::{
     bind_group_builder::BindGroupBuilder,
     bind_group_layout_builder::BindGroupLayoutBuilder,
-    gpu_object_database::GpuObjectDatabase,
     encoder::Encoder,
+    gpu_object_database::GpuObjectDatabase,
     ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
     render_pipeline_builder::RenderPipelineBuilder,
     runtime::Runtime,
     sampler_builder::SamplerBuilder,
     settings::Settings,
     texture_builder::TextureBuilder,
-};
-use crate::{
-    ecs::{resource::Resource, with_dependencies::WithDependencies},
-    engine::resources::graphics::internal_runtime_data::InternalRuntimeData,
-    glamour::mat::Mat4,
 };
 use crate::engine::assets::cpu_material::CpuMaterial;
 use crate::engine::assets::cpu_mesh::CpuMesh;
@@ -28,25 +23,30 @@ use crate::engine::resources::graphics::gpu_model::GpuModel;
 use crate::engine::resources::graphics::gpu_texture::GpuTexture;
 use crate::engine::resources::graphics::instance::Instance;
 use crate::urn::Urn;
+use crate::{
+    ecs::{resource::Resource, with_dependencies::WithDependencies},
+    engine::resources::graphics::internal_runtime_data::InternalRuntimeData,
+    glamour::mat::Mat4,
+};
 
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
-mod gpu_object_database;
 pub mod descriptors;
 pub mod encoder;
+pub mod gpu_material;
+pub mod gpu_mesh;
+pub mod gpu_model;
+mod gpu_object_database;
+pub mod gpu_texture;
 pub mod ids;
 pub mod instance;
+mod internal_runtime_data;
 pub mod render_pipeline_builder;
 mod runtime;
-mod internal_runtime_data;
 pub mod sampler_builder;
 pub mod settings;
 pub mod texture_builder;
 pub mod vertex;
-pub mod gpu_material;
-pub mod gpu_mesh;
-pub mod gpu_model;
-pub mod gpu_texture;
 
 const DEPTH_TEXTURE_LABEL: Option<&str> = Some("depth-stencil:texture");
 const DEPTH_TEXTURE_VIEW_LABEL: Option<&str> = Some("depth-stencil:view");
@@ -255,10 +255,7 @@ impl Graphics {
             let buffer_alignment = std::mem::size_of::<Instance>() as u64;
             let buffer_size = (max_instances * buffer_alignment) as BufferAddress;
             self.create_buffer(
-                m.label
-                    .as_ref()
-                    .map(|l| format!("{}:instance-buffer", &l))
-                    .as_deref(),
+                m.label.as_ref().map(|l| format!("{}:instance-buffer", &l)).as_deref(),
                 buffer_size,
                 BufferUsages::VERTEX | BufferUsages::COPY_DST,
             )
@@ -293,11 +290,7 @@ impl Graphics {
     pub fn create_model(&mut self, m: &CpuModel) -> GpuModel {
         GpuModel {
             mesh: self.create_mesh(&m.mesh),
-            materials: m
-                .materials
-                .iter()
-                .map(|mat| self.create_material(mat))
-                .collect(),
+            materials: m.materials.iter().map(|mat| self.create_material(mat)).collect(),
         }
     }
 
@@ -321,7 +314,11 @@ impl Graphics {
             .submit()
     }
 
-    fn create_texture_view_int(database: &mut GpuObjectDatabase, label: Option<&str>, texture: TextureId) -> TextureViewId {
+    fn create_texture_view_int(
+        database: &mut GpuObjectDatabase,
+        label: Option<&str>,
+        texture: TextureId,
+    ) -> TextureViewId {
         let texture = &database.textures[&texture];
 
         tracing::trace!("Creating texture view '{}'", label.unwrap_or("unnamed"));

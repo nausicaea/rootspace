@@ -1,10 +1,10 @@
-use crate::Settings;
 use super::{
     descriptors::VertexAttributeDescriptor,
     ids::{BindGroupLayoutId, PipelineId, ShaderModuleId},
     runtime::Runtime,
     GpuObjectDatabase,
 };
+use crate::Settings;
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {

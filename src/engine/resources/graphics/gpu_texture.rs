@@ -1,8 +1,4 @@
-use crate::{
-    engine::resources::graphics::{
-        ids::{SamplerId, TextureId, TextureViewId},
-    },
-};
+use crate::engine::resources::graphics::ids::{SamplerId, TextureId, TextureViewId};
 
 #[derive(Debug, Clone)]
 pub struct GpuTexture {

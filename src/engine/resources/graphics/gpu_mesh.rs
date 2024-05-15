@@ -1,6 +1,4 @@
-use crate::{
-    engine::resources::graphics::ids::BufferId,
-};
+use crate::engine::resources::graphics::ids::BufferId;
 use crate::engine::resources::graphics::ids::InstanceId;
 
 #[derive(Debug)]

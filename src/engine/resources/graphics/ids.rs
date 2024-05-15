@@ -34,8 +34,8 @@ impl_id! {
 pub struct InstanceId(u32);
 
 impl InstanceId {
-    pub fn to_u32(&self) -> u32 {
-        Into::into(*self)
+    pub fn to_u32(self) -> u32 {
+        Into::into(self)
     }
 }
 

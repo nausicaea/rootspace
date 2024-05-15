@@ -11,6 +11,7 @@ use itertools::Itertools;
 use wgpu::{DynamicOffset, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
+use crate::engine::resources::graphics::gpu_material::GpuMaterial;
 use crate::{
     ecs::{
         component::Component,
@@ -39,7 +40,6 @@ use crate::{
     glamour::{mat::Mat4, num::ToMatrix},
     rose_tree::hierarchy::Hierarchy,
 };
-use crate::engine::resources::graphics::gpu_material::GpuMaterial;
 
 #[derive(Debug)]
 pub struct Renderer {

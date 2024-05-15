@@ -1,5 +1,5 @@
-use crate::urn::Urn;
 use super::ids::{BindGroupLayoutId, InstanceId, TextureId, TextureViewId};
+use crate::urn::Urn;
 
 #[derive(Debug)]
 pub struct InternalRuntimeData {
