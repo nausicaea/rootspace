@@ -27,6 +27,7 @@ use crate::engine::resources::graphics::gpu_mesh::GpuMesh;
 use crate::engine::resources::graphics::gpu_model::GpuModel;
 use crate::engine::resources::graphics::gpu_texture::GpuTexture;
 use crate::engine::resources::graphics::instance::Instance;
+use crate::urn::Urn;
 
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
@@ -210,7 +211,7 @@ impl Graphics {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn create_texture(&mut self, t: &CpuTexture) -> GpuTexture {
+    fn create_texture(&mut self, t: &CpuTexture) -> GpuTexture {
         let texture = TextureBuilder::new(&self.runtime, &mut self.database, &self.settings)
             .with_label(t.label.as_ref().map(|l| format!("{}:texture", &l)).as_deref())
             .with_image(&t.image)
@@ -228,7 +229,7 @@ impl Graphics {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn create_material(&mut self, m: &CpuMaterial) -> GpuMaterial {
+    fn create_material(&mut self, m: &CpuMaterial) -> GpuMaterial {
         let texture = self.create_texture(&m.texture);
 
         let layout = self.material_layout();
@@ -243,7 +244,7 @@ impl Graphics {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn create_mesh(&mut self, m: &CpuMesh) -> GpuMesh {
+    fn create_mesh(&mut self, m: &CpuMesh) -> GpuMesh {
         let vertex_buffer = self.create_buffer_init(
             m.label.as_ref().map(|l| format!("{}:vertex-buffer", &l)).as_deref(),
             BufferUsages::VERTEX,
@@ -273,7 +274,18 @@ impl Graphics {
             instance_buffer,
             index_buffer,
             num_indices: m.indices.len() as u32,
-            instance_id: 0,
+            instance_id: self.internal.instances.take(),
+        }
+    }
+
+    #[tracing::instrument(skip_all)]
+    fn create_instanced_mesh(&mut self, m: &GpuMesh) -> GpuMesh {
+        GpuMesh {
+            vertex_buffer: m.vertex_buffer,
+            instance_buffer: m.instance_buffer,
+            index_buffer: m.index_buffer,
+            num_indices: m.num_indices,
+            instance_id: self.internal.instances.take(),
         }
     }
 
@@ -286,6 +298,14 @@ impl Graphics {
                 .iter()
                 .map(|mat| self.create_material(mat))
                 .collect(),
+        }
+    }
+
+    #[tracing::instrument(skip_all)]
+    pub fn create_instanced_model(&mut self, m: &GpuModel) -> GpuModel {
+        GpuModel {
+            mesh: self.create_instanced_mesh(&m.mesh),
+            materials: m.materials.clone(),
         }
     }
 
@@ -370,6 +390,7 @@ where
                 material_layout,
                 depth_texture,
                 depth_texture_view,
+                instances: Urn::default(),
             },
         })
     }

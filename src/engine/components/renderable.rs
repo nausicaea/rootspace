@@ -22,13 +22,22 @@ impl Renderable {
     pub async fn with_model<S: AsRef<str> + std::fmt::Debug>(res: &Resources, group: S, name: S) -> Result<Self, anyhow::Error> {
         let group = group.as_ref();
         let name = name.as_ref();
-        let cpu_model = res
-            .read::<AssetDatabase>()
-            .load_asset::<CpuModel, _>(res, group, name)
-            .await
-            .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name))?;
-        let model = res.write::<Graphics>()
-            .create_model(&cpu_model);
+        let instancing_candidate = res.iter_r::<Renderable>()
+            .filter(|(_, ren)| ren.group == group && ren.name == name)
+            .next();
+        let model = if let Some((_, ren)) = instancing_candidate {
+            res.write::<Graphics>()
+                .create_instanced_model(&ren.model)
+        } else {
+            let cpu_model = res
+                .read::<AssetDatabase>()
+                .load_asset::<CpuModel, _>(res, group, name)
+                .await
+                .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name))?;
+            res.write::<Graphics>()
+                .create_model(&cpu_model)
+        };
+
         Ok(Renderable {
             model,
             group: group.to_string(),

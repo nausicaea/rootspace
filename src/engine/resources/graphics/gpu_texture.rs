@@ -4,7 +4,7 @@ use crate::{
     },
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GpuTexture {
     pub texture: TextureId,
     pub view: TextureViewId,

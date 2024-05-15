@@ -1,7 +1,7 @@
 use super::gpu_texture::GpuTexture;
 use crate::engine::resources::graphics::ids::BindGroupId;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GpuMaterial {
     pub texture: GpuTexture,
     pub bind_group: BindGroupId,

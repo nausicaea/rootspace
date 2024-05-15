@@ -144,8 +144,8 @@ impl Renderer {
                     if materials.is_none() {
                         materials = Some(&ren.model.materials);
                     }
-                    min_instance_id = min(min_instance_id, ren.model.mesh.instance_id);
-                    max_instance_id = max(max_instance_id, ren.model.mesh.instance_id);
+                    min_instance_id = min(min_instance_id, ren.model.mesh.instance_id.to_u32());
+                    max_instance_id = max(max_instance_id, ren.model.mesh.instance_id.to_u32());
                     Instance {
                         model: hier_transform::<Transform>(idx, &hier, &transforms).0,
                         with_camera: if trf.ui { 0.0 } else { 1.0 },
