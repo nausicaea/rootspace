@@ -357,26 +357,44 @@ impl System for Renderer {
         self.handle_events(res);
 
         if !self.renderer_enabled {
-            res.write::<Statistics>().update_render_durations(frame_start.elapsed());
+            res.write::<Statistics>().update_render_stats(0, frame_start.elapsed(), Duration::ZERO, Duration::ZERO);
             return;
         }
 
+        let prepare_start = Instant::now();
         let draw_data = self.prepare(res);
+        let prepare_duration = prepare_start.elapsed();
 
         let gfx = res.read::<Graphics>();
         let encoder = gfx.create_encoder(Some("main-encoder"));
-        match encoder {
-            Err(SurfaceError::Lost | SurfaceError::Outdated) => self.on_surface_outdated(res),
-            Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
-            Err(SurfaceError::Timeout) => self.on_timeout(),
+        let (draw_calls, draw_duration) = match encoder {
+            Err(SurfaceError::Lost | SurfaceError::Outdated) => {
+                self.on_surface_outdated(res);
+                (0, Duration::ZERO)
+            },
+            Err(SurfaceError::OutOfMemory) => {
+                self.on_out_of_memory(res);
+                (0, Duration::ZERO)
+            },
+            Err(SurfaceError::Timeout) => {
+                self.on_timeout();
+                (0, Duration::ZERO)
+            },
             Ok(mut enc) => {
+                let draw_start = Instant::now();
                 let draw_calls = self.draw(&draw_data, enc.begin(Some("main-render-pass")));
+                let draw_duration = draw_start.elapsed();
                 enc.submit();
-                res.write::<Statistics>().update_draw_calls(draw_calls);
+                (draw_calls, draw_duration)
             }
-        }
+        };
 
-        res.write::<Statistics>().update_render_durations(frame_start.elapsed());
+        res.write::<Statistics>().update_render_stats(
+            draw_calls,
+            frame_start.elapsed(),
+            prepare_duration,
+            draw_duration,
+        );
     }
 }
 
