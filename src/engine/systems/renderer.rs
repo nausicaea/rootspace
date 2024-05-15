@@ -1,4 +1,5 @@
 use std::cmp::{max, min};
+use std::ops::Range;
 use std::time::{Duration, Instant};
 
 use anyhow::Context;
@@ -35,8 +36,7 @@ use crate::{
     glamour::{mat::Mat4, num::ToMatrix},
     rose_tree::hierarchy::Hierarchy,
 };
-use crate::engine::assets::gpu_mesh::GpuMesh;
-use crate::engine::assets::gpu_model::GpuModel;
+use crate::engine::assets::gpu_material::GpuMaterial;
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -69,7 +69,7 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn prepare(&mut self, res: &Resources) {
+    fn prepare<'a>(&mut self, res: &'a Resources) -> DrawData<'a> {
         fn hier_transform<C: Component + ToMatrix<f32>>(
             idx: Index,
             hier: &Hierarchy<Index>,
@@ -80,9 +80,14 @@ impl Renderer {
                 .product::<Mat4<f32>>()
         }
 
+        let gfx = res.read::<Graphics>();
+        let hier = res.read::<Hierarchy<Index>>();
+        let transforms = res.read_components::<Transform>();
+        let _ui_transforms = res.read_components::<UiTransform>();
+
         // Calculate all camera transforms and the respective buffer offset
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256 bytes
-        let (offsets, cam_persp) = res
+        let (uniform_buffer_offsets, cam_persp) = res
             .iter_r::<Camera>()
             .enumerate()
             .map(|(i, (idx, c))| (i, c.as_persp_matrix() * hier_transform::<Transform>(idx, &hier, &transforms)))
@@ -104,25 +109,6 @@ impl Renderer {
             )
         });
 
-    }
-
-    #[tracing::instrument(skip_all)]
-    fn draw(&mut self, res: &Resources, mut rp: RenderPass) {
-        fn hier_transform<C: Component + ToMatrix<f32>>(
-            idx: Index,
-            hier: &Hierarchy<Index>,
-            transforms: &C::Storage,
-        ) -> Mat4<f32> {
-            hier.ancestors(idx)
-                .filter_map(|a| transforms.get(a).map(|at| at.to_matrix()))
-                .product::<Mat4<f32>>()
-        }
-
-        let gfx = res.read::<Graphics>();
-        let hier = res.read::<Hierarchy<Index>>();
-        let transforms = res.read_components::<Transform>();
-        let ui_transforms = res.read_components::<UiTransform>();
-
         // Iterate through all entities with a renderable and transform
         // Extract all fields of Renderable that are shared across instances
         // Group the rest by instance buffer ID
@@ -130,7 +116,7 @@ impl Renderer {
         // Convert the transforms to instances
         // Write the instance buffers
         // Issue the draw call
-        let mut world_draw_calls = 0;
+        let mut instance_draw_data: Vec<InstanceDrawData> = Vec::new();
         let res_groups = res.iter_rr::<Renderable, Transform>().group_by(|(_, ren, _)| ren.model.mesh.instance_buffer);
         for (instance_buffer, data) in &res_groups {
             let mut vertex_buffer = None;
@@ -139,6 +125,7 @@ impl Renderer {
             let mut materials = None;
             let mut min_instance_id = u32::MAX;
             let mut max_instance_id = u32::MIN;
+
             let instance_data: Vec<_> = data.sorted_by_key(|(_, ren, _)| ren.model.mesh.instance_id)
                 .map(|(idx, ren, _)| {
                     if vertex_buffer.is_none() {
@@ -154,10 +141,20 @@ impl Renderer {
                         materials = Some(&ren.model.materials);
                     }
                     min_instance_id = min(min_instance_id, ren.model.mesh.instance_id);
-                    max_instance_id = max(max_instance_id, ren.model.mesh.instance_id + 1);
+                    max_instance_id = max(max_instance_id, ren.model.mesh.instance_id);
                     Instance { model: hier_transform::<Transform>(idx, &hier, &transforms).0 }
                 })
                 .collect();
+
+            instance_draw_data.push(InstanceDrawData {
+                vertex_buffer: vertex_buffer.unwrap(),
+                instance_buffer,
+                index_buffer: index_buffer.unwrap(),
+                num_indices: num_indices.unwrap(),
+                materials: materials.unwrap(),
+                instance_ids: min_instance_id..(max_instance_id + 1),
+            });
+
             gfx.write_buffer(instance_buffer, unsafe {
                 std::slice::from_raw_parts(
                     instance_data.as_ptr() as *const u8,
@@ -165,33 +162,41 @@ impl Renderer {
                 )
             });
 
-            let vertex_buffer = vertex_buffer.unwrap();
-            let index_buffer = index_buffer.unwrap();
-            let num_indices = num_indices.unwrap();
-            let materials = materials.unwrap();
+        }
 
-            for transform_offset in &offsets {
+        DrawData {
+            uniform_buffer_offsets,
+            instance_draw_data,
+        }
+    }
+
+    #[tracing::instrument(skip_all)]
+    fn draw(&mut self, draw_data: &DrawData, mut rp: RenderPass) -> (usize, usize) {
+        let mut world_draw_calls = 0;
+
+        for instance_data in &draw_data.instance_draw_data {
+            for &transform_offset in &draw_data.uniform_buffer_offsets {
                 world_draw_calls += 1;
-                if materials.is_empty() {
+                if instance_data.materials.is_empty() {
                     rp.set_pipeline(self.pipeline_wt)
-                        .set_bind_group(0, self.transform_bind_group, &[*transform_offset])
-                        .set_vertex_buffer(0, vertex_buffer)
-                        .set_vertex_buffer(1, instance_buffer)
-                        .set_index_buffer(index_buffer)
-                        .draw_indexed(0..num_indices, 0, min_instance_id..max_instance_id);
+                        .set_bind_group(0, self.transform_bind_group, &[transform_offset])
+                        .set_vertex_buffer(0, instance_data.vertex_buffer)
+                        .set_vertex_buffer(1, instance_data.instance_buffer)
+                        .set_index_buffer(instance_data.index_buffer)
+                        .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
                 } else {
                     rp.set_pipeline(self.pipeline_wtm)
-                        .set_bind_group(0, self.transform_bind_group, &[*transform_offset])
-                        .set_bind_group(1, materials[0].bind_group, &[])
-                        .set_vertex_buffer(0, vertex_buffer)
-                        .set_vertex_buffer(1, instance_buffer)
-                        .set_index_buffer(index_buffer)
-                        .draw_indexed(0..num_indices, 0, min_instance_id..max_instance_id);
+                        .set_bind_group(0, self.transform_bind_group, &[transform_offset])
+                        .set_bind_group(1, instance_data.materials[0].bind_group, &[])
+                        .set_vertex_buffer(0, instance_data.vertex_buffer)
+                        .set_vertex_buffer(1, instance_data.instance_buffer)
+                        .set_index_buffer(instance_data.index_buffer)
+                        .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
                 }
             }
         }
 
-        res.write::<Statistics>().update_draw_calls(world_draw_calls, 0);
+        (world_draw_calls, 0)
     }
 
     #[tracing::instrument(skip_all)]
@@ -337,7 +342,7 @@ impl System for Renderer {
             return;
         }
 
-        self.prepare(res);
+        let draw_data = self.prepare(res);
 
         let gfx = res.read::<Graphics>();
         let encoder = gfx.create_encoder(Some("main-encoder"));
@@ -346,8 +351,9 @@ impl System for Renderer {
             Err(SurfaceError::OutOfMemory) => self.on_out_of_memory(res),
             Err(SurfaceError::Timeout) => self.on_timeout(),
             Ok(mut enc) => {
-                self.draw(res, enc.begin(Some("main-render-pass")));
+                let (world_draw_calls, ui_draw_calls) = self.draw(&draw_data, enc.begin(Some("main-render-pass")));
                 enc.submit();
+                res.write::<Statistics>().update_draw_calls(world_draw_calls, ui_draw_calls);
             }
         }
 
@@ -355,8 +361,20 @@ impl System for Renderer {
     }
 }
 
+#[derive(Debug)]
 struct DrawData<'a> {
+    uniform_buffer_offsets: Vec<DynamicOffset>,
+    instance_draw_data: Vec<InstanceDrawData<'a>>,
+}
 
+#[derive(Debug)]
+struct InstanceDrawData<'a> {
+    vertex_buffer: BufferId,
+    instance_buffer: BufferId,
+    index_buffer: BufferId,
+    num_indices: u32,
+    materials: &'a [GpuMaterial],
+    instance_ids: Range<u32>,
 }
 
 #[cfg(test)]

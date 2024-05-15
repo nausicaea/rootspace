@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
@@ -18,7 +17,6 @@ use crate::{
     ecs::{resource::Resource, with_dependencies::WithDependencies},
     glamour::mat::Mat4,
 };
-use crate::engine::resources::graphics::instance::Instance;
 
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
