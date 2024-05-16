@@ -357,7 +357,13 @@ impl System for Renderer {
         self.handle_events(res);
 
         if !self.renderer_enabled {
-            res.write::<Statistics>().update_render_stats(0, frame_start.elapsed(), Duration::ZERO, Duration::ZERO, Duration::ZERO);
+            res.write::<Statistics>().update_render_stats(
+                0,
+                frame_start.elapsed(),
+                Duration::ZERO,
+                Duration::ZERO,
+                Duration::ZERO,
+            );
             return;
         }
 
@@ -371,15 +377,15 @@ impl System for Renderer {
             Err(SurfaceError::Lost | SurfaceError::Outdated) => {
                 self.on_surface_outdated(res);
                 (0, Duration::ZERO, Duration::ZERO)
-            },
+            }
             Err(SurfaceError::OutOfMemory) => {
                 self.on_out_of_memory(res);
                 (0, Duration::ZERO, Duration::ZERO)
-            },
+            }
             Err(SurfaceError::Timeout) => {
                 self.on_timeout();
                 (0, Duration::ZERO, Duration::ZERO)
-            },
+            }
             Ok(mut enc) => {
                 let draw_start = Instant::now();
                 let draw_calls = self.draw(&draw_data, enc.begin(Some("main-render-pass")));

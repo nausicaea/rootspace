@@ -27,35 +27,54 @@ impl Statistics {
     }
 
     pub fn mean_render_duration(&self) -> Duration {
-        self.render_durations.iter().sum::<Duration>().div_f32(WINDOW_SIZE as f32)
+        self.render_durations
+            .iter()
+            .sum::<Duration>()
+            .div_f32(WINDOW_SIZE as f32)
     }
 
     pub fn mean_render_prepare_duration(&self) -> Duration {
-        self.render_prepare_durations.iter().sum::<Duration>().div_f32(WINDOW_SIZE as f32)
+        self.render_prepare_durations
+            .iter()
+            .sum::<Duration>()
+            .div_f32(WINDOW_SIZE as f32)
     }
 
     pub fn mean_render_draw_duration(&self) -> Duration {
-        self.render_draw_durations.iter().sum::<Duration>().div_f32(WINDOW_SIZE as f32)
+        self.render_draw_durations
+            .iter()
+            .sum::<Duration>()
+            .div_f32(WINDOW_SIZE as f32)
     }
 
     pub fn mean_render_submit_duration(&self) -> Duration {
-        self.render_submit_durations.iter().sum::<Duration>().div_f32(WINDOW_SIZE as f32)
+        self.render_submit_durations
+            .iter()
+            .sum::<Duration>()
+            .div_f32(WINDOW_SIZE as f32)
     }
 
     pub fn mean_redraw_interval(&self) -> Duration {
-        self.redraw_intervals.iter().sum::<Duration>().div_f32(WINDOW_SIZE as f32)
+        self.redraw_intervals
+            .iter()
+            .sum::<Duration>()
+            .div_f32(WINDOW_SIZE as f32)
     }
 
     pub fn mean_maintenance_interval(&self) -> Duration {
-        self.maintenance_intervals.iter().sum::<Duration>().div_f32(WINDOW_SIZE as f32)
+        self.maintenance_intervals
+            .iter()
+            .sum::<Duration>()
+            .div_f32(WINDOW_SIZE as f32)
     }
 
-    pub fn update_render_stats(&mut self,
-       draw_calls: usize,
-       frame_duration: Duration,
-       prepare_duration: Duration,
-       draw_duration: Duration,
-       submit_duration: Duration,
+    pub fn update_render_stats(
+        &mut self,
+        draw_calls: usize,
+        frame_duration: Duration,
+        prepare_duration: Duration,
+        draw_duration: Duration,
+        submit_duration: Duration,
     ) {
         self.draw_calls.push_front(draw_calls);
         self.render_durations.push_front(frame_duration);
