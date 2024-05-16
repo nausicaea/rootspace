@@ -16,6 +16,7 @@ pub struct Statistics {
     render_durations: VecDeque<Duration>,
     render_prepare_durations: VecDeque<Duration>,
     render_draw_durations: VecDeque<Duration>,
+    render_submit_durations: VecDeque<Duration>,
     redraw_intervals: VecDeque<Duration>,
     maintenance_intervals: VecDeque<Duration>,
 }
@@ -37,6 +38,10 @@ impl Statistics {
         self.render_draw_durations.iter().sum::<Duration>().div_f32(WINDOW_SIZE as f32)
     }
 
+    pub fn mean_render_submit_duration(&self) -> Duration {
+        self.render_submit_durations.iter().sum::<Duration>().div_f32(WINDOW_SIZE as f32)
+    }
+
     pub fn mean_redraw_interval(&self) -> Duration {
         self.redraw_intervals.iter().sum::<Duration>().div_f32(WINDOW_SIZE as f32)
     }
@@ -50,11 +55,13 @@ impl Statistics {
        frame_duration: Duration,
        prepare_duration: Duration,
        draw_duration: Duration,
+       submit_duration: Duration,
     ) {
         self.draw_calls.push_front(draw_calls);
         self.render_durations.push_front(frame_duration);
         self.render_prepare_durations.push_front(prepare_duration);
         self.render_draw_durations.push_front(draw_duration);
+        self.render_submit_durations.push_front(submit_duration);
 
         if self.draw_calls.len() > WINDOW_SIZE {
             self.draw_calls.truncate(WINDOW_SIZE);
@@ -67,6 +74,9 @@ impl Statistics {
         }
         if self.render_draw_durations.len() > WINDOW_SIZE {
             self.render_draw_durations.truncate(WINDOW_SIZE);
+        }
+        if self.render_submit_durations.len() > WINDOW_SIZE {
+            self.render_submit_durations.truncate(WINDOW_SIZE);
         }
     }
 
@@ -92,6 +102,7 @@ impl Default for Statistics {
             render_durations: VecDeque::with_capacity(WINDOW_SIZE),
             render_prepare_durations: VecDeque::with_capacity(WINDOW_SIZE),
             render_draw_durations: VecDeque::with_capacity(WINDOW_SIZE),
+            render_submit_durations: VecDeque::with_capacity(WINDOW_SIZE),
             redraw_intervals: VecDeque::with_capacity(WINDOW_SIZE),
             maintenance_intervals: VecDeque::with_capacity(WINDOW_SIZE),
         }
@@ -100,11 +111,12 @@ impl Default for Statistics {
 
 impl Display for Statistics {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Loop and Render Stats:\nDraw calls (mean): {}\nRender duration (mean): {}\nPrepare duration (mean): {}\nDraw duration (mean): {}\nRedraw interval (mean): {}\nMaintenance interval (mean): {}\n",
+        writeln!(f, "Loop and Render Stats:\nDraw calls (mean): {}\nRender duration (mean): {}\nPrepare duration (mean): {}\nDraw duration (mean): {}\nSubmit duration (mean): {}\nRedraw interval (mean): {}\nMaintenance interval (mean): {}\n",
                self.mean_draw_calls(),
                humantime::format_duration(self.mean_render_duration()),
                humantime::format_duration(self.mean_render_prepare_duration()),
                humantime::format_duration(self.mean_render_draw_duration()),
+               humantime::format_duration(self.mean_render_submit_duration()),
                humantime::format_duration(self.mean_redraw_interval()),
                humantime::format_duration(self.mean_maintenance_interval()),
         )
