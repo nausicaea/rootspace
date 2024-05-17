@@ -1,19 +1,21 @@
 use std::ops::{Index, IndexMut};
 
+use crate::glamour::mat::to_2d_idx;
+
 use super::super::Mat4;
 
 impl<R> Index<usize> for Mat4<R> {
     type Output = R;
 
     fn index(&self, index: usize) -> &Self::Output {
-        let (i, j) = Self::to_2d_idx(index);
+        let (i, j) = to_2d_idx(index);
         Index::<(usize, usize)>::index(self, (i, j))
     }
 }
 
 impl<R> IndexMut<usize> for Mat4<R> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        let (i, j) = Self::to_2d_idx(index);
+        let (i, j) = to_2d_idx(index);
         IndexMut::<(usize, usize)>::index_mut(self, (i, j))
     }
 }
