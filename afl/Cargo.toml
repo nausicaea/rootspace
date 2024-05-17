@@ -1,0 +1,21 @@
+[package]
+name = "rootspace-afl"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+afl = "0.15.5"
+
+[dependencies.rootspace]
+path = ".."
+
+[[bin]]
+name = "parse_ply"
+path = "fuzz_targets/parse_ply.rs"
+test = false
+doc = false
+bench = false
