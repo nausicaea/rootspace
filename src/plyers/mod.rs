@@ -62,7 +62,7 @@ use crate::{
     file_manipulation,
     file_manipulation::{FilePathBuf, NewOrExFilePathBuf},
     plyers::{
-        de::{error::convert_error, parse_ply},
+        de::error::convert_error,
         ser::{write_ascii_values, write_be_values, write_header, write_le_values},
         types::{AmbiguousMixedPrimitive, FormatType, Ply, Values},
     },
@@ -80,6 +80,15 @@ pub enum PlyError {
     Primitive(#[from] AmbiguousMixedPrimitive),
 }
 
+pub fn parse_ply(input: &[u8]) -> Result<Ply, PlyError> {
+    de::parse_ply::<VerboseError<_>>(input)
+        .map(|(_, p)| p)
+        .map_err(|e| match e {
+            nom::Err::Error(e) | nom::Err::Failure(e) => PlyError::Nom(convert_error(&input, e)),
+            e @ nom::Err::Incomplete(_) => PlyError::Nom(format!("{}", e)),
+        })
+}
+
 pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
     let path = FilePathBuf::try_from(path.as_ref())?;
     tracing::debug!("Opening PLY file at {}", path.display());
@@ -88,14 +97,7 @@ pub fn load_ply<P: AsRef<Path>>(path: P) -> Result<Ply, PlyError> {
     tracing::debug!("Reading entire contents of file at {}", path.display());
     file.read_to_end(&mut input)?;
 
-    let r = parse_ply::<VerboseError<_>>(&input)
-        .map(|(_, p)| p)
-        .map_err(|e| match e {
-            nom::Err::Error(e) | nom::Err::Failure(e) => PlyError::Nom(convert_error(&input, e)),
-            e @ nom::Err::Incomplete(_) => PlyError::Nom(format!("{}", e)),
-        })?;
-
-    Ok(r)
+    parse_ply(&input)
 }
 
 pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
