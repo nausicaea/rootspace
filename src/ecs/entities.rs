@@ -108,6 +108,7 @@ pub struct Iter<'a> {
 impl<'a> Iterator for Iter<'a> {
     type Item = Entity;
 
+    #[cfg_attr(test, mutants::skip)] // Mutating anything with self.idx causes hangs
     fn next(&mut self) -> Option<Self::Item> {
         if self.idx >= self.gens.len() {
             return None;

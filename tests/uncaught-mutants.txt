@@ -1,0 +1,10 @@
+src/plyers/types.rs:224:9: replace <impl AsRef for ObjInfoDescriptor>::as_ref -> &str with "xyzzy"
+src/ecs/event_queue/receiver_state.rs:26:9: replace ReceiverState<E>::reset with ()
+src/ecs/storage/bit_indices.rs:13:49: replace - with / in BitIndices::with_capacity
+src/ecs/entity/generation.rs:43:9: replace <impl PartialEq for Generation>::eq -> bool with true
+src/glamour/vec/ops/cross.rs:14:40: replace * with + in <impl Cross for &'a Vec4<R>>::cross
+src/ecs/storage/zst_storage.rs:44:9: replace ZstStorage<T>::with_capacity -> Self with Default::default()
+src/engine/systems/renderer.rs:162:65: replace + with * in Renderer::prepare
+src/engine/systems/force_shutdown.rs:42:29: replace > with == in <impl WithResources for ForceShutdown>::with_res
+src/plyers/de/error.rs:33:78: replace + with * in convert_error
+src/engine/orchestrator.rs:183:39: replace >= with < in Orchestrator::redraw

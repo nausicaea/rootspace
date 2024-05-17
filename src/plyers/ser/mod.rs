@@ -162,6 +162,7 @@ fn write_be_lists<const N: usize, W: Write, T: ToBytes<Bytes = [u8; N]>>(
     Ok(())
 }
 
+#[cfg_attr(test, mutants::skip)] // Mutations cause hangs
 fn write_ascii_lists<W: Write, T: std::fmt::Display>(
     f: &mut W,
     primitive: Primitive,

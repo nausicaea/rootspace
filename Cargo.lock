@@ -1664,6 +1664,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "mutants"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc0287524726960e07b119cebd01678f852f147742ae0d925e6a520dca956126"
+
+[[package]]
 name = "naga"
 version = "0.19.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2445,6 +2451,7 @@ dependencies = [
  "image",
  "itertools 0.12.1",
  "lazy_static",
+ "mutants",
  "nalgebra",
  "nom",
  "num-traits",

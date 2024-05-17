@@ -554,6 +554,7 @@ where
 {
     type Item = (super::super::entity::index::Index, &'a S::Item);
 
+    #[cfg_attr(test, mutants::skip)] // Mutations cause hangs
     fn next(&mut self) -> Option<Self::Item> {
         if self.cursor >= self.indices.len() {
             return None;

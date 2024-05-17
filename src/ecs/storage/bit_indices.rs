@@ -137,6 +137,7 @@ impl<'a> Iter<'a> {
 impl<'a> Iterator for Iter<'a> {
     type Item = u32;
 
+    #[cfg_attr(test, mutants::skip)] // Mutations cause hangs
     fn next(&mut self) -> Option<Self::Item> {
         if self.entry_cursor >= self.num_entries {
             return None;
@@ -168,6 +169,7 @@ impl<'a> Iterator for Iter<'a> {
 }
 
 impl<'a> DoubleEndedIterator for Iter<'a> {
+    #[cfg_attr(test, mutants::skip)] // Mutations cause hangs
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.entry_cursor >= self.num_entries {
             return None;
