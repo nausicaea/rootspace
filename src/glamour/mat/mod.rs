@@ -15,7 +15,6 @@ impl<R> Mat4<R> {
     pub const fn new(v: [[R; 4]; 4]) -> Self {
         Mat4(v)
     }
-
 }
 
 impl<R> Mat4<R>

@@ -172,12 +172,7 @@ impl Graphics {
         BindGroupBuilder::new(&self.runtime, &mut self.database, layout)
     }
 
-    pub fn create_buffer(
-        &mut self,
-        label: Option<&str>,
-        size: BufferAddress,
-        usage: BufferUsages,
-    ) -> BufferId {
+    pub fn create_buffer(&mut self, label: Option<&str>, size: BufferAddress, usage: BufferUsages) -> BufferId {
         tracing::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
         let buf = self.runtime.device.create_buffer(&wgpu::BufferDescriptor {
             label,
