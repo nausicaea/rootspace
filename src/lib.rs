@@ -10,6 +10,11 @@ mod plyers;
 mod rose_tree;
 mod urn;
 
+#[cfg(fuzzing)]
+pub mod fuzzing {
+    pub use self::plyers::parse_ply;
+}
+
 pub use ecs::{
     registry::{Element, End},
     resource::Resource,
