@@ -75,8 +75,8 @@ impl std::fmt::Debug for Systems {
 }
 
 impl<'a> IntoIterator for &'a Systems {
-    type IntoIter = SystemsIter<'a>;
     type Item = <SystemsIter<'a> as Iterator>::Item;
+    type IntoIter = SystemsIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
         SystemsIter::new(self)

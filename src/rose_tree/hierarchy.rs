@@ -37,7 +37,7 @@ impl<K> Hierarchy<K> {
 
 impl<K> Hierarchy<K>
 where
-    K: Eq + std::hash::Hash,
+    K: Eq + Hash,
 {
     pub fn has_children<J: AsRef<K>>(&self, key: J) -> bool {
         self.0.has_children(key)
@@ -63,7 +63,7 @@ where
 
 impl<K> Hierarchy<K>
 where
-    K: Eq + std::hash::Hash,
+    K: Eq + Hash,
 {
     pub fn contains_key<J: AsRef<K>>(&self, key: J) -> bool {
         self.0.contains_key(key)
@@ -72,7 +72,7 @@ where
 
 impl<K> Hierarchy<K>
 where
-    K: Clone + Ord + std::hash::Hash,
+    K: Clone + Ord + Hash,
 {
     pub fn insert<I: Into<K>>(&mut self, key: I) -> bool {
         self.0.insert(key, ())
@@ -107,7 +107,7 @@ where
 
 impl<K> PartialEq for Hierarchy<K>
 where
-    K: Eq + std::hash::Hash,
+    K: Eq + Hash,
 {
     fn eq(&self, other: &Self) -> bool {
         self.0.eq(&other.0)
@@ -142,7 +142,7 @@ where
 
 impl<'a, K> Iterator for AncestorsIter<'a, K>
 where
-    K: Clone + Ord + Eq + std::hash::Hash,
+    K: Clone + Ord + Eq + Hash,
 {
     type Item = K;
 
@@ -185,7 +185,7 @@ where
 
 impl<'a, K> Iterator for BfsIter<'a, K>
 where
-    K: Clone + Eq + std::hash::Hash,
+    K: Clone + Eq + Hash,
 {
     type Item = K;
 
@@ -234,7 +234,7 @@ where
 
 impl<'a, K> Iterator for DfsIter<'a, K>
 where
-    K: Clone + Eq + std::hash::Hash,
+    K: Clone + Eq + Hash,
 {
     type Item = K;
 

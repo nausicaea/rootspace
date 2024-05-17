@@ -52,6 +52,7 @@ impl<R> AsRef<Mat4<R>> for Persp<R> {
     }
 }
 
+#[allow(unused_parens)]
 #[cfg(test)]
 mod tests {
     use approx::ulps_eq;

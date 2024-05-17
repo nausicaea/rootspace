@@ -129,8 +129,8 @@ impl<D, T: Default> WithDependencies<D> for ZstStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a ZstStorage<T> {
-    type IntoIter = RIter<'a, ZstStorage<T>>;
     type Item = &'a T;
+    type IntoIter = RIter<'a, ZstStorage<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
         RIter::new(self)
@@ -138,8 +138,8 @@ impl<'a, T> IntoIterator for &'a ZstStorage<T> {
 }
 
 impl<'a, T> IntoIterator for &'a mut ZstStorage<T> {
-    type IntoIter = WIter<'a, ZstStorage<T>>;
     type Item = &'a mut T;
+    type IntoIter = WIter<'a, ZstStorage<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
         WIter::new(self)

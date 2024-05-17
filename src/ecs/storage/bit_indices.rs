@@ -92,8 +92,8 @@ impl BitIndices {
 }
 
 impl<'a> IntoIterator for &'a BitIndices {
-    type IntoIter = Iter<'a>;
     type Item = u32;
+    type IntoIter = Iter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
         Iter::new(self)

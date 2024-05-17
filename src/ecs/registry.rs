@@ -37,7 +37,7 @@ where
 
 impl<D, H, T> WithDependencies<D> for Element<H, T>
 where
-    D: std::fmt::Debug,
+    D: Debug,
     H: WithDependencies<D>,
     T: WithDependencies<D>,
 {

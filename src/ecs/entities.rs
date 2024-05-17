@@ -86,8 +86,8 @@ impl<D> WithDependencies<D> for Entities {
 }
 
 impl<'a> IntoIterator for &'a Entities {
-    type IntoIter = Iter<'a>;
     type Item = Entity;
+    type IntoIter = Iter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
         Iter {

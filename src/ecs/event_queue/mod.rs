@@ -148,11 +148,11 @@ impl<D, E> WithDependencies<D> for EventQueue<E> {
     }
 }
 
-impl<E> std::fmt::Debug for EventQueue<E>
+impl<E> fmt::Debug for EventQueue<E>
 where
-    E: std::fmt::Debug,
+    E: fmt::Debug,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
             "EventQueue {{ events: {:?}, receivers: {:?}, max_id: {:?}, free_ids: {:?} }}",

@@ -16,11 +16,6 @@ impl<R> Mat4<R> {
         Mat4(v)
     }
 
-    /// Given a one-dimensional array index, return the corresponding two-dimensional indices for
-    /// this particular matrix' dimensions
-    fn as_2d_idx(idx: usize) -> (usize, usize) {
-        (idx / 4, idx % 4)
-    }
 }
 
 impl<R> Mat4<R>
@@ -151,6 +146,12 @@ where
         }
         write!(f, "]")
     }
+}
+
+/// Given a one-dimensional array index, return the corresponding two-dimensional indices for
+/// this particular matrix' dimensions
+fn to_2d_idx(idx: usize) -> (usize, usize) {
+    (idx / 4, idx % 4)
 }
 
 #[cfg(test)]

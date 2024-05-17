@@ -37,7 +37,7 @@ impl<K, V> Tree<K, V> {
 
 impl<K, V> Tree<K, V>
 where
-    K: Eq + std::hash::Hash,
+    K: Eq + Hash,
 {
     pub fn has_children<J: AsRef<K>>(&self, key: J) -> bool {
         self.edges.get(key.as_ref()).map(|e| !e.is_empty()).unwrap_or(false)
@@ -63,7 +63,7 @@ where
 
 impl<K, V> Tree<K, V>
 where
-    K: Eq + std::hash::Hash,
+    K: Eq + Hash,
 {
     pub fn contains_key<J: AsRef<K>>(&self, key: J) -> bool {
         self.nodes.contains_key(key.as_ref())
@@ -76,7 +76,7 @@ where
 
 impl<K, V> Tree<K, V>
 where
-    K: Clone + Ord + std::hash::Hash,
+    K: Clone + Ord + Hash,
 {
     pub fn insert<I: Into<K>>(&mut self, key: I, value: V) -> bool {
         let key = key.into();
@@ -202,7 +202,7 @@ where
 
 impl<K, V> PartialEq for Tree<K, V>
 where
-    K: Eq + std::hash::Hash,
+    K: Eq + Hash,
     V: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
@@ -229,7 +229,7 @@ where
 
 impl<'a, K, V> Iterator for AncestorsIter<'a, K, V>
 where
-    K: Clone + Ord + Eq + std::hash::Hash,
+    K: Clone + Ord + Eq + Hash,
 {
     type Item = (&'a K, &'a V);
 
@@ -246,7 +246,7 @@ where
     }
 }
 
-impl<'a, K, V> FusedIterator for AncestorsIter<'a, K, V> where K: Clone + Ord + Eq + std::hash::Hash {}
+impl<'a, K, V> FusedIterator for AncestorsIter<'a, K, V> where K: Clone + Ord + Eq + Hash {}
 
 pub struct BfsIter<'a, K, V> {
     queue: VecDeque<K>,
@@ -273,7 +273,7 @@ where
 
 impl<'a, K, V> Iterator for BfsIter<'a, K, V>
 where
-    K: Clone + Eq + std::hash::Hash,
+    K: Clone + Eq + Hash,
 {
     type Item = (&'a K, &'a V);
 
@@ -320,7 +320,7 @@ where
 
 impl<'a, K, V> Iterator for DfsIter<'a, K, V>
 where
-    K: Clone + Eq + std::hash::Hash,
+    K: Clone + Eq + Hash,
 {
     type Item = (&'a K, &'a V);
 

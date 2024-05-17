@@ -90,7 +90,7 @@ impl WithResources for Rpc {
             tarpc::serde_transport::tcp::listen(&ba, tarpc::tokio_serde::formats::Bincode::default).await?;
         tracing::info!("RPC binding to {}", listener.local_addr());
         listener.config_mut().max_frame_length(mfl);
-        let (tx, rx) = tokio::sync::mpsc::channel::<RpcMessage>(mcc);
+        let (tx, rx) = mpsc::channel::<RpcMessage>(mcc);
         let rpc_listener: JoinHandle<()> = tokio::task::spawn(async move {
             tracing::trace!("Starting RPC listener");
             listener

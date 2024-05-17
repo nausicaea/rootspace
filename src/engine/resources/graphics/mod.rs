@@ -175,8 +175,8 @@ impl Graphics {
     pub fn create_buffer(
         &mut self,
         label: Option<&str>,
-        size: wgpu::BufferAddress,
-        usage: wgpu::BufferUsages,
+        size: BufferAddress,
+        usage: BufferUsages,
     ) -> BufferId {
         tracing::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
         let buf = self.runtime.device.create_buffer(&wgpu::BufferDescriptor {
@@ -192,7 +192,7 @@ impl Graphics {
     pub fn create_buffer_init<T: bytemuck::NoUninit>(
         &mut self,
         label: Option<&str>,
-        usage: wgpu::BufferUsages,
+        usage: BufferUsages,
         contents: &[T],
     ) -> BufferId {
         use wgpu::util::DeviceExt;

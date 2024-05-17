@@ -1,4 +1,4 @@
-/// Construct the type signature of a `ResourceRegistry`.
+#![allow(non_snake_case)] /// Construct the type signature of a `ResourceRegistry`.
 ///
 /// # Examples
 ///

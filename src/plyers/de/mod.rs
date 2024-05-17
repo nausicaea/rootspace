@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn parse_ply_fails_with_incomplete_header() {
         let input = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/incomplete_header.ply"));
-        let r = nom::error::dbg_dmp(parse_ply::<nom::error::Error<_>>, "INCOMPLETE HEADER")(&input[..]);
+        let r = dbg_dmp(parse_ply::<nom::error::Error<_>>, "INCOMPLETE HEADER")(&input[..]);
         assert!(r.is_err(), "{:?}", r.unwrap());
         print!("{:?}", r.unwrap_err())
     }

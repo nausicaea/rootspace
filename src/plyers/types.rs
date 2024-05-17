@@ -40,8 +40,8 @@ impl From<usize> for ElementId {
     }
 }
 
-impl std::fmt::Display for ElementId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for ElementId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
@@ -61,8 +61,8 @@ impl From<usize> for PropertyId {
     }
 }
 
-impl std::fmt::Display for PropertyId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for PropertyId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
@@ -94,7 +94,7 @@ impl clap::ValueEnum for FormatType {
 }
 
 impl Display for FormatType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             FormatType::Ascii => write!(f, "ascii"),
             FormatType::BinaryLittleEndian => write!(f, "binary_little_endian"),
@@ -209,8 +209,8 @@ impl AsRef<str> for CommentDescriptor {
     }
 }
 
-impl std::fmt::Display for CommentDescriptor {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Display for CommentDescriptor {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
@@ -225,8 +225,8 @@ impl AsRef<str> for ObjInfoDescriptor {
     }
 }
 
-impl std::fmt::Display for ObjInfoDescriptor {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Display for ObjInfoDescriptor {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
