@@ -48,7 +48,7 @@ pub fn convert_error(input: &[u8], e: VerboseError<&[u8]>) -> String {
                 .unwrap_or(&input[line_begin..]);
             // Unstable: .trim_ascii_end();
 
-            let line_str = std::str::from_utf8(line).unwrap();
+            let line_str = String::from_utf8_lossy(line);
 
             // The (1-indexed) column number is the offset of our substring into that line
             let column_number = offset_fn(line, substring) + 1;
