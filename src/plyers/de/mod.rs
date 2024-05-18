@@ -27,7 +27,11 @@ pub enum ParseNumError {
 
 pub fn parse_ply<
     'a,
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount> + ContextError<&'a [u8]> + 'a,
+    E: ParseError<&'a [u8]>
+        + FromExternalError<&'a [u8], ParseNumError>
+        + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount>
+        + ContextError<&'a [u8]>
+        + 'a,
 >(
     input: &'a [u8],
 ) -> IResult<&'a [u8], Ply, E> {

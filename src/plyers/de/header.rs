@@ -248,7 +248,11 @@ fn element_rpt_fct<'a, 'b, E>(
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], ElementDescriptor, E> + 'b
 where
     'a: 'b,
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount> + ContextError<&'a [u8]> + 'b,
+    E: ParseError<&'a [u8]>
+        + FromExternalError<&'a [u8], ParseNumError>
+        + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount>
+        + ContextError<&'a [u8]>
+        + 'b,
 {
     context(
         "plyers::de::header::element_rpt_fct",
@@ -279,7 +283,11 @@ fn element_blk_fct<'a, 'b, E>(
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<ElementId, ElementDescriptor>, E> + 'b
 where
     'a: 'b,
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount> + ContextError<&'a [u8]> + 'b,
+    E: ParseError<&'a [u8]>
+        + FromExternalError<&'a [u8], ParseNumError>
+        + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount>
+        + ContextError<&'a [u8]>
+        + 'b,
 {
     context(
         "plyers::de::header::element_blk_fct",
@@ -300,7 +308,11 @@ pub fn header_fct<'a, 'b, E>(
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], PlyDescriptor, E> + 'b
 where
     'a: 'b,
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount> + ContextError<&'a [u8]> + 'b,
+    E: ParseError<&'a [u8]>
+        + FromExternalError<&'a [u8], ParseNumError>
+        + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount>
+        + ContextError<&'a [u8]>
+        + 'b,
 {
     context(
         "plyers::de::header::header_fct",
