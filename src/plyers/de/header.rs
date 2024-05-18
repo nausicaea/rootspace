@@ -20,7 +20,7 @@ use super::{
     common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace},
     ParseNumError,
 };
-use crate::urn::Urn;
+use crate::{plyers::types::OverflowElementCountOrPropertyCount, urn::Urn};
 
 const PLY: &[u8] = b"ply";
 const END_HEADER: &[u8] = b"end_header";
@@ -248,22 +248,26 @@ fn element_rpt_fct<'a, 'b, E>(
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], ElementDescriptor, E> + 'b
 where
     'a: 'b,
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'b,
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount> + ContextError<&'a [u8]> + 'b,
 {
     context(
         "plyers::de::header::element_rpt_fct",
-        map(
+        map_res(
             tuple((comment_blk, element_decl, property_blk_fct(p_urn))),
             |(cmt, (name, count), properties)| {
                 let (comments, obj_info) = split_vecs_of_either(cmt);
 
-                ElementDescriptor {
+                if count.checked_mul(properties.len()).is_none() {
+                    return Err(OverflowElementCountOrPropertyCount(count, properties.len()));
+                }
+
+                Result::<_, OverflowElementCountOrPropertyCount>::Ok(ElementDescriptor {
                     name,
                     count,
                     properties,
                     comments,
                     obj_info,
-                }
+                })
             },
         ),
     )
@@ -275,7 +279,7 @@ fn element_blk_fct<'a, 'b, E>(
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<ElementId, ElementDescriptor>, E> + 'b
 where
     'a: 'b,
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'b,
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount> + ContextError<&'a [u8]> + 'b,
 {
     context(
         "plyers::de::header::element_blk_fct",
@@ -296,7 +300,7 @@ pub fn header_fct<'a, 'b, E>(
 ) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], PlyDescriptor, E> + 'b
 where
     'a: 'b,
-    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'b,
+    E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + FromExternalError<&'a [u8], OverflowElementCountOrPropertyCount> + ContextError<&'a [u8]> + 'b,
 {
     context(
         "plyers::de::header::header_fct",

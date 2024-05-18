@@ -275,6 +275,10 @@ impl From<usize> for Primitive {
 }
 
 #[derive(Debug, Clone, Copy, thiserror::Error)]
+#[error("the element count '{}' or number of properties '{}' is so high it would cause a multiplication overflow", .0, .1)]
+pub struct OverflowElementCountOrPropertyCount(pub usize, pub usize);
+
+#[derive(Debug, Clone, Copy, thiserror::Error)]
 #[error("mixed primitives are ambiguous")]
 pub struct AmbiguousMixedPrimitive;
 

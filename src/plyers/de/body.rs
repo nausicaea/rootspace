@@ -248,7 +248,7 @@ where
     context(
         "plyers::de::body::properties_fct",
         fold_exact(
-            properties.len() * repetitions,
+            properties.len().checked_mul(repetitions).unwrap_or(0),
             move |input| {
                 let (&p_id, p_desc) = p_iter.next().unwrap();
 

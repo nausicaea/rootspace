@@ -78,6 +78,8 @@ pub enum PlyError {
     Nom(String),
     #[error("{}", .0)]
     Primitive(#[from] AmbiguousMixedPrimitive),
+    #[error("{}", .0)]
+    Overflow(String),
 }
 
 pub fn parse_ply(input: &[u8]) -> Result<Ply, PlyError> {
