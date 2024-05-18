@@ -1,0 +1,13 @@
+ply
+format binary_little_endian 1.0
+obj_info 0
+element e 0
+property float32 x
+property float y
+property float32 n
+comment 0
+element e 10000000000000000000
+property list uint int x
+obj_info 0
+property list uint int x
+end_header
