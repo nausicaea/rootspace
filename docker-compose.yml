@@ -18,7 +18,6 @@ services:
     command: "-S s1 -c - -a text -- /fuzz/parse_ply"
     environment:
       AFL_USE_ASAN: 1 
-      AFL_USE_UBSAN: 1
       AFL_USE_CFISAN: 1
     volumes:
       - ./afl/in:/in:ro
