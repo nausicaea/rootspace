@@ -1,56 +1,59 @@
 services:
-  afl-m1:
-    image: rootspace-afl
+  afl-main:
+    image: rootspace-fuzz:latest
     build:
-      dockerfile: ./afl.Dockerfile
+      dockerfile: ./fuzz/afl.Dockerfile
       context: ../
-    command: "-M m1 -c - -- /fuzz/parse_ply"
+    command: "-M main -c - -- /fuzz/parse_ply"
     environment:
       AFL_FINAL_SYNC: 1
     volumes:
-      - ./afl/in:/in:ro
+      - ./in:/in:ro
       - out:/out
     networks:
-      - afl
-  afl-s1:
-    image: rootspace-afl
+      - fuzz
+  afl-san:
+    image: rootspace-fuzz:sanitizer
     build:
-      dockerfile: ./afl.Dockerfile
+      dockerfile: ./fuzz/afl-san.Dockerfile
       context: ../
-    command: "-S s1 -c - -a text -- /fuzz/parse_ply"
-    environment:
-      AFL_USE_ASAN: 1 
-      AFL_USE_CFISAN: 1
+    command: "-S sanitizer -c - -a binary -- /fuzz/parse_ply"
     volumes:
-      - ./afl/in:/in:ro
+      - ./in:/in:ro
       - out:/out
     networks:
-      - afl
-  afl-s2:
-    image: rootspace-afl
+      - fuzz
+    depends_on:
+      - afl-main
+  afl-cmplog:
+    image: rootspace-fuzz:cmplog
     build:
-      dockerfile: ./afl.Dockerfile
+      dockerfile: ./fuzz/afl-cmplog.Dockerfile
       context: ../
-    command: "-S s2 -l 2AT -a binary -- /fuzz/parse_ply"
+    command: "-S cmplog -l 2AT -a binary -c /fuzz/parse_ply.cmplog -- /fuzz/parse_ply"
     volumes:
-      - ./afl/in:/in:ro
+      - ./in:/in:ro
       - out:/out
     networks:
-      - afl
-  afl-s3:
-    image: rootspace-afl
+      - fuzz
+    depends_on:
+      - afl-main
+  afl-compcov:
+    image: rootspace-fuzz:compcov
     build:
-      dockerfile: ./afl.Dockerfile
+      dockerfile: ./fuzz/afl-compcov.Dockerfile
       context: ../
-    command: "-S s3 -c - -a binary -- /fuzz/parse_ply"
+    command: "-S compcov -c - -a text -- /fuzz/parse_ply"
     volumes:
-      - ./afl/in:/in:ro
+      - ./in:/in:ro
       - out:/out
     networks:
-      - afl
+      - fuzz
+    depends_on:
+      - afl-main
 
 volumes:
   out: {}
 
 networks:
-  afl: {}
+  fuzz: {}
