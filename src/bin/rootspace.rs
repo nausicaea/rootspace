@@ -13,7 +13,10 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
+    #[cfg(feature = "tokio-console")]
     console_subscriber::init();
+    #[cfg(not(feature = "tokio-console"))]
+    tracing_subscriber::fmt::init();
 
     let args = Args::parse();
     let event_loop = EventLoop::new()?;

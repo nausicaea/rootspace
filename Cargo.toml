@@ -8,6 +8,7 @@ edition = "2021"
 editor = []
 dbg-gfx = []
 dbg-loop = []
+tokio-console = ["console-subscriber"]
 test-flaky = []
 
 [profile.release]
@@ -41,7 +42,7 @@ tarpc = { version = "0.34.0", features = ["serde-transport-bincode", "tcp", "ser
 humantime = "2.1.0"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-console-subscriber = "0.2.0"
+console-subscriber = { version = "0.2.0", optional = true }
 itertools = "0.12.1"
 
 [dev-dependencies]
