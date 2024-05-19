@@ -1,9 +1,11 @@
 services:
   afl-main:
-    image: rootspace-fuzz:latest
+    image: nausicaea/rootspace-fuzz:latest
     build:
       dockerfile: ./fuzz/afl.Dockerfile
       context: ../
+      args:
+        FUZZ_TARGET: parse_ply
     command: "-M main -c - -- /fuzz/parse_ply"
     environment:
       AFL_FINAL_SYNC: 1
@@ -12,12 +14,22 @@ services:
       - out:/out
     networks:
       - fuzz
+    deploy:
+      mode: global
+      resources:
+        limits:
+          cpus: "1"
+        reservations:
+          cpus: "1"
+          memory: "50M"
   afl-san:
-    image: rootspace-fuzz:sanitizer
+    image: nausicaea/rootspace-fuzz:sanitizer
     build:
       dockerfile: ./fuzz/afl-san.Dockerfile
       context: ../
-    command: "-S sanitizer -c - -a binary -- /fuzz/parse_ply"
+      args:
+        FUZZ_TARGET: parse_ply
+    command: "-c - -a binary -- /fuzz/parse_ply"
     volumes:
       - ./in:/in:ro
       - out:/out
@@ -25,12 +37,23 @@ services:
       - fuzz
     depends_on:
       - afl-main
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          cpus: "1"
+        reservations:
+          cpus: "1"
+          memory: "50M"
   afl-cmplog:
-    image: rootspace-fuzz:cmplog
+    image: nausicaea/rootspace-fuzz:cmplog
     build:
       dockerfile: ./fuzz/afl-cmplog.Dockerfile
       context: ../
-    command: "-S cmplog -l 2AT -a binary -c /fuzz/parse_ply.cmplog -- /fuzz/parse_ply"
+      args:
+        FUZZ_TARGET: parse_ply
+    command: "-l 2AT -a binary -c /fuzz/parse_ply.cmplog -- /fuzz/parse_ply"
     volumes:
       - ./in:/in:ro
       - out:/out
@@ -38,12 +61,23 @@ services:
       - fuzz
     depends_on:
       - afl-main
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          cpus: "1"
+        reservations:
+          cpus: "1"
+          memory: "250M"
   afl-compcov:
-    image: rootspace-fuzz:compcov
+    image: nausicaea/rootspace-fuzz:compcov
     build:
       dockerfile: ./fuzz/afl-compcov.Dockerfile
       context: ../
-    command: "-S compcov -c - -a text -- /fuzz/parse_ply"
+      args:
+        FUZZ_TARGET: parse_ply
+    command: "-c - -a text -- /fuzz/parse_ply"
     volumes:
       - ./in:/in:ro
       - out:/out
@@ -51,6 +85,15 @@ services:
       - fuzz
     depends_on:
       - afl-main
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          cpus: "1"
+        reservations:
+          cpus: "1"
+          memory: "50M"
 
 volumes:
   out: {}
