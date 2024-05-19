@@ -1,0 +1,9 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc dec27c5b378b83aa48ba9bf5d82ce720512d38add1e49d81c50c936504ae7c07 # shrinks to angle = -2.1684043e-19, axis = Unit(Vec4 { x: -0.57735026, y: -0.57735026, z: -0.57735026, w: 0.0 })
+cc 647d9b8bf4a459a44d935b03c750a88fe8b1424c6e17ed690ccb473de7655e91 # shrinks to angle = -2.1684043e-19, axis = Unit(Vec4 { x: NaN, y: NaN, z: NaN, w: NaN })
+cc 596eb5bc3a23d09047c89bf2d1591252b6b3c35e36cac81119c5275b4998c5c5 # shrinks to angle = -2.1684043e-19, axis = Unit(Vec4 { x: NaN, y: NaN, z: NaN, w: NaN })

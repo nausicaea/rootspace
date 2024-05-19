@@ -1,0 +1,32 @@
+[package]
+name = "plyers"
+version = "0.1.0"
+authors = ["Eleanor Young <developer@nausicaea.net>"]
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.0.0", default-features = false, features = ["std"] }
+either = "1.0"
+file-manipulation = { path = "../file-manipulation" }
+nom = "7.0.0"
+num-traits = "0.2.14"
+thiserror = "1.0.0"
+tracing = "0.1.40"
+urn = { path = "../urn" }
+
+[dev-dependencies]
+anyhow = { version = "1.0.0" }
+criterion = "0.5.1"
+mutants = "0.0.3"
+proptest = "1.0.0"
+proptest-derive = "0.4.0"
+rstest = "0.18.2"
+tempfile = "3.0.1"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+
+[[example]]
+name = "ply_loader"
+
+[[bench]]
+name = "plyers_benchmarks"
+harness = false

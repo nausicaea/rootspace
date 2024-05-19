@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 45e93656f3c6d14a81ea592640aa7cdc0764037aff3deefe9e98d61d53193bdb # shrinks to glamour_lhs = Mat4([[-2.1684043e-19, -2.1684043e-19, -2.1684043e-19, -2.1684043e-19], [-2.1684043e-19, -2.1684043e-19, -2.1684043e-19, -2.1684043e-19], [-2.1684043e-19, -2.1684043e-19, -2.1684043e-19, -2.1684043e-19], [-2.1684043e-19, -2.1684043e-19, -2.1684043e-19, -2.1684043e-19]]), glamour_rhs = Mat4([[-2.1684043e-19, -2.1684043e-19, -2.1684043e-19, -2.1684043e-19], [-2.1684043e-19, -2.1684043e-19, -2.1684043e-19, -2.1684043e-19], [-2.1684043e-19, -2.1684043e-19, -2.1684043e-19, -2.1684043e-19], [-2.1684043e-19, -2.1684043e-19, -2.1684043e-19, 7.4363847e18]])

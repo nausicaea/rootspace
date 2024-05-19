@@ -1,0 +1,18 @@
+[package]
+name = "rose-tree"
+version = "0.1.0"
+authors = ["Eleanor Young <developer@nausicaea.net>"]
+edition = "2021"
+
+[features]
+test-flaky = []
+
+[dependencies]
+anyhow = { version = "1.0.0" }
+ecs = { path = "../ecs" }
+serde = { version = "1.0.0", features = ["derive"] }
+tracing = "0.1.40"
+
+[dev-dependencies]
+serde_test = "1.0.126"
+tokio = { version = "1.36.0", features = ["rt", "macros"] }

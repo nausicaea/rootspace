@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/ecs/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ecs/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/file-manipulation/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/file-manipulation/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/file-manipulation/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/hierarchy/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ply/src" isTestSource="false" />
@@ -24,6 +25,9 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/plyers/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/rootspace/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rose-tree/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/affine-transform/target" />
       <excludeFolder url="file://$MODULE_DIR$/ecs/target" />

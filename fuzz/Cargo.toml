@@ -1,0 +1,18 @@
+[package]
+name = "fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+afl = "0.15.5"
+plyers = { path = "../plyers" }
+
+[[bin]]
+name = "parse_ply"
+test = false
+doc = false
+bench = false

@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc cbdbad876a4a2be97e259c49ab13a0e06497c9906cabd8be3a21eec67ca8b456 # shrinks to glamour_lhs = Unit(Quat { w: 0.38997915, i: -0.8115492, j: -0.13905351, k: 0.41227233 })

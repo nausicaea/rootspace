@@ -1,0 +1,18 @@
+[package]
+name = "glamour"
+version = "0.1.0"
+authors = ["Eleanor Young <developer@nausicaea.net>"]
+edition = "2021"
+
+[dependencies]
+forward-ref = { path = "../forward-ref" }
+num-traits = "0.2.14"
+serde = { version = "1.0.0", features = ["derive"] }
+thiserror = "1.0.0"
+
+[dev-dependencies]
+approx = "0.5.0"
+cgmath = "0.18.0"
+nalgebra = "0.32.4"
+proptest = "1.0.0"
+serde_test = "1.0.126"

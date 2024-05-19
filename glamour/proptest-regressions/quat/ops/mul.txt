@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 2cac47bcd6bd62930c318bc1caf8ab179c6dac64fb2b9aff8b312abe0c2344ec # shrinks to glamour_a = Quat { w: 4.327613e18, i: -2.1684043e-19, j: 4.3910748e18, k: -3.589828e18 }, glamour_b = Quat { w: -2.1722129e18, i: -6.146216e18, j: -2.1684043e-19, k: 4.8643747e18 }

@@ -1,0 +1,12 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 48530afa925171b459946442d290ba802e488363878d8704a9d6bf38bb9fc549 # shrinks to glamour_lhs = Unit(Quat { w: -0.8936279, i: -4.4389697e-38, j: -4.4389697e-38, k: -0.44880873 })
+cc bdce3e4a37395980f65f445785d5414f377cde726c01289c00cb91053fce07ca # shrinks to glamour_lhs = Unit(Quat { w: 0.3097827, i: 0.6238732, j: -0.5341596, k: 0.47905156 })
+cc 54637f1e6c6d12b08d45bf0569d704b10619d589cc95db200b3922b51511edcc # shrinks to glamour_lhs = Unit(Quat { w: -0.7240575, i: -0.099198215, j: -0.46917647, k: 0.495756 })
+cc 3481959e7192f1a69844af3c045aa97f2217045b804f36e36d77187d62f13348 # shrinks to glamour_lhs = Unit(Quat { w: 0.57278824, i: 0.64465445, j: -0.4210536, k: 0.2811548 })
+cc 014876a0e126b780054881d57afba8d1d28f67d803e91c1fb2a38f9d3919f0c2 # shrinks to glamour_lhs = Unit(Quat { w: -0.68226105, i: 0.60485846, j: 0.36494628, k: 0.18836266 })
+cc 8e8dcd0600de7a86b9e5463e0dd838914adf1ceb4df21e6de97c0c72f8ea503c # shrinks to glamour_lhs = Unit(Quat { w: -0.19267148, i: -0.6920117, j: 0.68036413, k: -0.14526634 })
