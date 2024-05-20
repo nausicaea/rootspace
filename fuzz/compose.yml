@@ -13,7 +13,6 @@ services:
     volumes:
       - ./in:/in:ro
       - out:/out
-        #cpuset: "0"
     deploy:
       mode: global
       resources:
@@ -21,13 +20,14 @@ services:
           cpus: "1"
         reservations:
           cpus: "1"
-  afl-san:
-    image: nausicaea/rootspace-fuzz:sanitizer
+  afl-asan:
+    image: nausicaea/rootspace-fuzz:asan
     build:
-      dockerfile: ./fuzz/afl-san.Dockerfile
+      dockerfile: ./fuzz/afl-asan.Dockerfile
       context: ../
       args:
         FUZZ_TARGET: parse_ply
+        HOST_TARGET: aarch64-unknown-linux-gnu
     command: "-c - -a binary -- /fuzz/parse_ply"
     environment:
       AFL_NO_AFFINITY: 1
@@ -36,7 +36,6 @@ services:
       - out:/out
     depends_on:
       - afl-main
-        #cpuset: "1-2"
     deploy:
       mode: replicated
       replicas: 1
@@ -60,7 +59,6 @@ services:
       - out:/out
     depends_on:
       - afl-main
-        #cpuset: "3-4"
     deploy:
       mode: replicated
       replicas: 1
@@ -84,7 +82,6 @@ services:
       - out:/out
     depends_on:
       - afl-main
-        #cpuset: "5-6"
     deploy:
       mode: replicated
       replicas: 1
