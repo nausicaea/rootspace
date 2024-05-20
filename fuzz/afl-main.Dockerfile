@@ -18,6 +18,6 @@ VOLUME ["/in", "/out"]
 COPY --chmod=0755 <<-"EOF" /bin/afl-fuzz
     #!/bin/bash
     set -ex
-    exec /afl/bin/afl-fuzz -i /in -o /out "$@"
+    exec /afl/bin/afl-fuzz -M main-${HOSTNAME} -i /in -o /out "$@"
 EOF
 ENTRYPOINT ["/bin/bash", "/bin/afl-fuzz"]

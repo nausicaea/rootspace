@@ -6,10 +6,10 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked cargo ins
 WORKDIR /src
 COPY . .
 WORKDIR /src/fuzz
-RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked cargo afl build --locked
+RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked cargo afl build --locked --bin $FUZZ_TARGET
 RUN --network=none mv /src/fuzz/target/debug/$FUZZ_TARGET /src/fuzz/target/debug/$FUZZ_TARGET.regular
 ENV AFL_LLVM_CMPLOG=1
-RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked cargo afl build --locked
+RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked cargo afl build --locked --bin $FUZZ_TARGET
 RUN --network=none mv /src/fuzz/target/debug/$FUZZ_TARGET /src/fuzz/target/debug/$FUZZ_TARGET.cmplog
 
 FROM docker.io/library/debian:stable-slim
