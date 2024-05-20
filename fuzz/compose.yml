@@ -51,7 +51,7 @@ services:
       context: ../
       args:
         FUZZ_TARGET: parse_ply
-    command: "-l 2AT -a binary -c /fuzz/parse_ply.cmplog -- /fuzz/parse_ply"
+    command: "-l 2AT -a binary -- /fuzz/parse_ply"
     environment:
       AFL_NO_AFFINITY: 1
     volumes:
