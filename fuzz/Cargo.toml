@@ -9,10 +9,18 @@ cargo-fuzz = true
 
 [dependencies]
 afl = "0.15.5"
+ciborium = "^0.2.0"
 plyers = { path = "../plyers" }
+serde = { version = "1.0.0", features = ["derive"] }
 
 [[bin]]
 name = "parse_ply"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_cbor"
 test = false
 doc = false
 bench = false
