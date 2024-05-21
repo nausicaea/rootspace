@@ -361,8 +361,8 @@ where
         let light_buffer_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
             .with_label("light-buffer-layout")
             .add_bind_group_layout_entry(
-                0, 
-                ShaderStages::VERTEX | ShaderStages::FRAGMENT, 
+                0,
+                ShaderStages::VERTEX | ShaderStages::FRAGMENT,
                 BindingType::Buffer {
                     ty: BufferBindingType::Uniform,
                     has_dynamic_offset: false,

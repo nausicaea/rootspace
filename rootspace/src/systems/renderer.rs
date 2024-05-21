@@ -1,5 +1,10 @@
 use std::{
-    cmp::{max, min}, collections::HashMap, mem::size_of, ops::Range, slice::from_raw_parts, time::{Duration, Instant}
+    cmp::{max, min},
+    collections::HashMap,
+    mem::size_of,
+    ops::Range,
+    slice::from_raw_parts,
+    time::{Duration, Instant},
 };
 
 use anyhow::Context;
@@ -8,7 +13,9 @@ use itertools::Itertools;
 use wgpu::{BufferAddress, BufferSize, BufferUsages, DynamicOffset, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
-use crate::resources::graphics::{camera_uniform::CameraUniform, gpu_material::GpuMaterial, light_uniform::LightUniform};
+use crate::resources::graphics::{
+    camera_uniform::CameraUniform, gpu_material::GpuMaterial, light_uniform::LightUniform,
+};
 use crate::{
     components::{camera::Camera, renderable::Renderable, transform::Transform},
     events::engine_event::EngineEvent,
@@ -320,8 +327,8 @@ impl WithResources for Renderer {
 
         let pipeline_wtm = Self::crp_with_camera_and_material(&adb, &mut gfx, "with-camera-material")
             .context("Creating the render pipeline 'with-camera-material'")?;
-        let pipeline_wt =
-            Self::crp_with_camera(&adb, &mut gfx, "with-camera").context("Creating the render pipeline 'with-camera'")?;
+        let pipeline_wt = Self::crp_with_camera(&adb, &mut gfx, "with-camera")
+            .context("Creating the render pipeline 'with-camera'")?;
 
         let max_cameras = gfx.max_cameras();
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256
@@ -342,8 +349,8 @@ impl WithResources for Renderer {
 
         let buffer_size = (1 * uniform_alignment) as BufferAddress;
         let light_buffer = gfx.create_buffer(
-            Some("light-buffer"), 
-            buffer_size, 
+            Some("light-buffer"),
+            buffer_size,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
         let binding_size = BufferSize::new(size_of::<LightUniform>() as _);
