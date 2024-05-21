@@ -11,7 +11,7 @@ use self::{
     runtime::Runtime,
     sampler_builder::SamplerBuilder,
     settings::Settings,
-    texture_builder::TextureBuilder,
+    texture_builder::TextureBuilder, camera_uniform::CameraUniform,
 };
 use crate::assets::cpu_material::CpuMaterial;
 use crate::assets::cpu_mesh::CpuMesh;
@@ -25,7 +25,6 @@ use crate::resources::graphics::instance::Instance;
 use urn::Urn;
 use ecs::{resource::Resource, with_dependencies::WithDependencies};
 use crate::resources::graphics::internal_runtime_data::InternalRuntimeData;
-use glamour::mat::Mat4;
 
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
@@ -44,6 +43,7 @@ mod runtime;
 pub mod sampler_builder;
 pub mod settings;
 pub mod texture_builder;
+pub mod camera_uniform;
 pub mod vertex;
 
 const DEPTH_TEXTURE_LABEL: Option<&str> = Some("depth-stencil:texture");
@@ -336,7 +336,7 @@ where
 
         let mut database = GpuObjectDatabase::default();
 
-        let min_binding_size = wgpu::BufferSize::new(std::mem::size_of::<TransformWrapper>() as _); // 64 bytes
+        let min_binding_size = wgpu::BufferSize::new(std::mem::size_of::<CameraUniform>() as _); // 64 bytes
         let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
             .with_label("transform-layout")
             .add_bind_group_layout_entry(
@@ -383,16 +383,6 @@ where
                 instances: Urn::default(),
             },
         })
-    }
-}
-
-#[repr(C, align(256))]
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct TransformWrapper(pub Mat4<f32>);
-
-impl From<Mat4<f32>> for TransformWrapper {
-    fn from(value: Mat4<f32>) -> Self {
-        TransformWrapper(value)
     }
 }
 

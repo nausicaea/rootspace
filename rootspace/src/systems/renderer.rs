@@ -11,7 +11,7 @@ use itertools::Itertools;
 use wgpu::{DynamicOffset, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
-use crate::resources::graphics::gpu_material::GpuMaterial;
+use crate::resources::graphics::{gpu_material::GpuMaterial, camera_uniform::CameraUniform};
 use ecs::{
     component::Component,
     entity::index::Index,
@@ -31,7 +31,7 @@ use crate::{
             ids::{BindGroupId, BufferId, PipelineId},
             instance::Instance,
             vertex::Vertex,
-            Graphics, TransformWrapper,
+            Graphics,
         },
         statistics::Statistics,
     },
@@ -98,10 +98,10 @@ impl Renderer {
             })
             .map(|(i, trf)| {
                 let transform_offset = (i as DynamicOffset) * (uniform_alignment as DynamicOffset); // first 0x0, then 0x100
-                (transform_offset, TransformWrapper(trf))
+                (transform_offset, CameraUniform(trf))
             })
             .fold(
-                (Vec::<DynamicOffset>::new(), Vec::<TransformWrapper>::new()),
+                (Vec::<DynamicOffset>::new(), Vec::<CameraUniform>::new()),
                 |mut state, elem| {
                     state.0.push(elem.0);
                     state.1.push(elem.1);
@@ -327,7 +327,7 @@ impl WithResources for Renderer {
             wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         );
 
-        let binding_size = wgpu::BufferSize::new(std::mem::size_of::<TransformWrapper>() as _);
+        let binding_size = wgpu::BufferSize::new(std::mem::size_of::<CameraUniform>() as _);
         let tl = gfx.transform_layout();
         let transform_bind_group = gfx
             .create_bind_group(tl)
