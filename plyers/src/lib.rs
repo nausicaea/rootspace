@@ -83,7 +83,7 @@ pub fn parse_ply(input: &[u8]) -> Result<Ply, PlyError> {
     de::parse_ply::<VerboseError<_>>(input)
         .map(|(_, p)| p)
         .map_err(|e| match e {
-            nom::Err::Error(e) | nom::Err::Failure(e) => PlyError::Nom(convert_error(&input, e)),
+            nom::Err::Error(e) | nom::Err::Failure(e) => PlyError::Nom(convert_error(input, e)),
             e @ nom::Err::Incomplete(_) => PlyError::Nom(format!("{}", e)),
         })
 }
