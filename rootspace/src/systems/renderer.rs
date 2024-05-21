@@ -1,17 +1,14 @@
 use std::{
-    cmp::{max, min},
-    collections::HashMap,
-    ops::Range,
-    time::{Duration, Instant},
+    cmp::{max, min}, collections::HashMap, mem::size_of, ops::Range, slice::from_raw_parts, time::{Duration, Instant}
 };
 
 use anyhow::Context;
 use async_trait::async_trait;
 use itertools::Itertools;
-use wgpu::{DynamicOffset, SurfaceError};
+use wgpu::{BufferAddress, BufferSize, BufferUsages, DynamicOffset, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
-use crate::resources::graphics::{camera_uniform::CameraUniform, gpu_material::GpuMaterial};
+use crate::resources::graphics::{camera_uniform::CameraUniform, gpu_material::GpuMaterial, light_uniform::LightUniform};
 use crate::{
     components::{camera::Camera, renderable::Renderable, transform::Transform},
     events::engine_event::EngineEvent,
@@ -46,6 +43,8 @@ pub struct Renderer {
     renderer_enabled: bool,
     transform_buffer: BufferId,
     transform_bind_group: BindGroupId,
+    light_buffer: BufferId,
+    light_bind_group: BindGroupId,
     pipeline_wt: PipelineId,
     pipeline_wtm: PipelineId,
 }
@@ -165,7 +164,7 @@ impl Renderer {
 
         // Write the camera transforms to the corresponding uniform buffer
         gfx.write_buffer(self.transform_buffer, unsafe {
-            std::slice::from_raw_parts(
+            from_raw_parts(
                 cam_persp.as_ptr() as *const u8,
                 cam_persp.len() * uniform_alignment as usize,
             )
@@ -174,9 +173,9 @@ impl Renderer {
         // Update the instance buffers
         for (instance_buffer, instance_data) in instance_buffer_data {
             gfx.write_buffer(instance_buffer, unsafe {
-                std::slice::from_raw_parts(
+                from_raw_parts(
                     instance_data.as_ptr() as *const u8,
-                    instance_data.len() * std::mem::size_of::<Instance>(),
+                    instance_data.len() * size_of::<Instance>(),
                 )
             });
         }
@@ -204,7 +203,7 @@ impl Renderer {
                 } else {
                     rp.set_pipeline(self.pipeline_wtm)
                         .set_bind_group(0, self.transform_bind_group, &[transform_offset])
-                        .set_bind_group(1, instance_data.materials[0].bind_group, &[])
+                        .set_bind_group(2, instance_data.materials[0].bind_group, &[])
                         .set_vertex_buffer(0, instance_data.vertex_buffer)
                         .set_vertex_buffer(1, instance_data.instance_buffer)
                         .set_index_buffer(instance_data.index_buffer)
@@ -256,11 +255,13 @@ impl Renderer {
         let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
 
         let tl = gfx.transform_layout();
+        let ll = gfx.light_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
             .with_label(label)
             .add_bind_group_layout(tl)
+            .add_bind_group_layout(ll)
             .with_vertex_shader_module(vertex_shader_module, "main")
             .with_fragment_shader_module(fragment_shader_module, "main")
             .add_vertex_buffer_layout::<Vertex>()
@@ -287,12 +288,14 @@ impl Renderer {
         let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
 
         let tl = gfx.transform_layout();
+        let ll = gfx.light_layout();
         let ml = gfx.material_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
             .with_label(label)
             .add_bind_group_layout(tl)
+            .add_bind_group_layout(ll)
             .add_bind_group_layout(ml)
             .with_vertex_shader_module(vertex_shader_module, "main")
             .with_fragment_shader_module(fragment_shader_module, "main")
@@ -320,19 +323,33 @@ impl WithResources for Renderer {
 
         let max_objects = gfx.max_objects();
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256
-        let buffer_size = (max_objects * uniform_alignment) as wgpu::BufferAddress; // 268'435'456
+        let buffer_size = (max_objects * uniform_alignment) as BufferAddress; // 268'435'456
         let transform_buffer = gfx.create_buffer(
             Some("transform-buffer"),
             buffer_size,
-            wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
-        let binding_size = wgpu::BufferSize::new(std::mem::size_of::<CameraUniform>() as _);
+        let binding_size = BufferSize::new(size_of::<CameraUniform>() as _);
         let tl = gfx.transform_layout();
         let transform_bind_group = gfx
             .create_bind_group(tl)
             .with_label(Some("transform-bind-group"))
             .add_buffer(0, 0, binding_size, transform_buffer)
+            .submit();
+
+        let buffer_size = (1 * uniform_alignment) as BufferAddress;
+        let light_buffer = gfx.create_buffer(
+            Some("light-buffer"), 
+            buffer_size, 
+            BufferUsages::UNIFORM | BufferUsages::COPY_DST,
+        );
+        let binding_size = BufferSize::new(size_of::<LightUniform>() as _);
+        let ll = gfx.light_layout();
+        let light_bind_group = gfx
+            .create_bind_group(ll)
+            .with_label(Some("light-bind-group"))
+            .add_buffer(0, 0, binding_size, light_buffer)
             .submit();
 
         Ok(Renderer {
@@ -341,6 +358,8 @@ impl WithResources for Renderer {
             renderer_enabled: true,
             transform_buffer,
             transform_bind_group,
+            light_buffer,
+            light_bind_group,
             pipeline_wtm,
             pipeline_wt,
         })

@@ -1,4 +1,4 @@
-use wgpu::{BufferAddress, BufferUsages};
+use wgpu::{BindingType, BufferAddress, BufferBindingType, BufferUsages, ShaderStages};
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
@@ -40,6 +40,7 @@ pub mod gpu_texture;
 pub mod ids;
 pub mod instance;
 mod internal_runtime_data;
+pub mod light_uniform;
 pub mod render_pipeline_builder;
 mod runtime;
 pub mod sampler_builder;
@@ -124,6 +125,10 @@ impl Graphics {
 
     pub fn transform_layout(&self) -> BindGroupLayoutId {
         self.internal.transform_layout
+    }
+
+    pub fn light_layout(&self) -> BindGroupLayoutId {
+        self.internal.light_layout
     }
 
     pub fn material_layout(&self) -> BindGroupLayoutId {
@@ -342,11 +347,24 @@ where
             .with_label("transform-layout")
             .add_bind_group_layout_entry(
                 0,
-                wgpu::ShaderStages::VERTEX,
-                wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
+                ShaderStages::VERTEX,
+                BindingType::Buffer {
+                    ty: BufferBindingType::Uniform,
                     has_dynamic_offset: true,
                     min_binding_size,
+                },
+            )
+            .submit();
+
+        let light_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
+            .with_label("light-layout")
+            .add_bind_group_layout_entry(
+                0, 
+                ShaderStages::VERTEX | ShaderStages::FRAGMENT, 
+                BindingType::Buffer {
+                    ty: BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
                 },
             )
             .submit();
@@ -355,8 +373,8 @@ where
             .with_label("material-layout")
             .add_bind_group_layout_entry(
                 0,
-                wgpu::ShaderStages::FRAGMENT,
-                wgpu::BindingType::Texture {
+                ShaderStages::FRAGMENT,
+                BindingType::Texture {
                     sample_type: wgpu::TextureSampleType::Float { filterable: true },
                     view_dimension: wgpu::TextureViewDimension::D2,
                     multisampled: false,
@@ -364,8 +382,8 @@ where
             )
             .add_bind_group_layout_entry(
                 1,
-                wgpu::ShaderStages::FRAGMENT,
-                wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                ShaderStages::FRAGMENT,
+                BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
             )
             .submit();
 
@@ -378,6 +396,7 @@ where
             database,
             internal: InternalRuntimeData {
                 transform_layout,
+                light_layout,
                 material_layout,
                 depth_texture,
                 depth_texture_view,
