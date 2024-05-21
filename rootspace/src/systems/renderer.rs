@@ -249,10 +249,7 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn crp_with_camera(
-        adb: &AssetDatabase,
-        gfx: &mut Graphics,
-    ) -> Result<PipelineId, anyhow::Error> {
+    fn crp_with_camera(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
         let shader_path = adb.find_asset("shaders", "with_camera.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
@@ -276,10 +273,7 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn crp_with_camera_and_material(
-        adb: &AssetDatabase,
-        gfx: &mut Graphics,
-    ) -> Result<PipelineId, anyhow::Error> {
+    fn crp_with_camera_and_material(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
         let shader_path = adb.find_asset("shaders", "with_camera_and_material.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
@@ -316,8 +310,8 @@ impl WithResources for Renderer {
 
         let pipeline_wcm = Self::crp_with_camera_and_material(&adb, &mut gfx)
             .context("Creating the render pipeline 'with-camera-material'")?;
-        let pipeline_wc = Self::crp_with_camera(&adb, &mut gfx)
-            .context("Creating the render pipeline 'with-camera'")?;
+        let pipeline_wc =
+            Self::crp_with_camera(&adb, &mut gfx).context("Creating the render pipeline 'with-camera'")?;
 
         let max_cameras = gfx.max_cameras();
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256
