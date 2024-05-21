@@ -110,6 +110,7 @@ where
     }
 
     #[cfg(test)]
+    #[allow(clippy::len_without_is_empty)]
     /// Return the number of queued events.
     pub fn len(&self) -> usize {
         self.events.len()

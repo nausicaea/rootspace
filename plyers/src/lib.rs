@@ -834,7 +834,7 @@ mod tests {
 
     #[rstest::rstest]
     fn parse_ply_crashes(#[files("tests/crashes/*.afl")] path: PathBuf) {
-        let mut file = File::open(&path).unwrap();
+        let mut file = File::open(path).unwrap();
         let mut input = Vec::new();
         file.read_to_end(&mut input).unwrap();
         let _ = parse_ply(&input);

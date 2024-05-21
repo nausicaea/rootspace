@@ -6,7 +6,7 @@ repos:
     hooks:
       - id: cargo-nextest
         name: Cargo Nextest
-        entry: cargo nextest run
+        entry: cargo nextest run --profile ci --workspace
         pass_filenames: false
         language: system
         types: [rust]
@@ -22,7 +22,7 @@ repos:
 
       - id: cargo-clippy
         name: Cargo Clippy (with warnings)
-        entry: cargo clippy -- -D warnings
+        entry: cargo clippy --all-targets --all-features -- -D warnings
         pass_filenames: false
         language: system
         types: [rust]
@@ -38,7 +38,7 @@ repos:
 
       - id: cargo-clippy-fix
         name: Cargo Clippy
-        entry: cargo clippy --fix
+        entry: cargo clippy --all-targets --all-features --fix -- -D warnings
         pass_filenames: false
         language: system
         types: [rust]
