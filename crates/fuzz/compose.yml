@@ -2,8 +2,8 @@ services:
   afl-main:
     image: nausicaea/rootspace-fuzz:latest
     build:
-      dockerfile: ./fuzz/afl-main.Dockerfile
-      context: ../
+      dockerfile: ./crates/fuzz/afl-main.Dockerfile
+      context: ../../
       args:
         FUZZ_TARGET: ${FUZZ_TARGET}
     command: "-c - -- /fuzz/${FUZZ_TARGET}"
@@ -23,8 +23,8 @@ services:
   afl-asan:
     image: nausicaea/rootspace-fuzz:asan
     build:
-      dockerfile: ./fuzz/afl-asan.Dockerfile
-      context: ../
+      dockerfile: ./crates/fuzz/afl-asan.Dockerfile
+      context: ../../
       args:
         FUZZ_TARGET: ${FUZZ_TARGET}
         HOST_TARGET: ${HOST_TARGET}
@@ -47,8 +47,8 @@ services:
   afl-cmplog:
     image: nausicaea/rootspace-fuzz:cmplog
     build:
-      dockerfile: ./fuzz/afl-cmplog.Dockerfile
-      context: ../
+      dockerfile: ./crates/fuzz/afl-cmplog.Dockerfile
+      context: ../../
       args:
         FUZZ_TARGET: ${FUZZ_TARGET}
     command: "-l 2AT -a binary -- /fuzz/${FUZZ_TARGET}"
@@ -70,8 +70,8 @@ services:
   afl-compcov:
     image: nausicaea/rootspace-fuzz:compcov
     build:
-      dockerfile: ./fuzz/afl-compcov.Dockerfile
-      context: ../
+      dockerfile: ./crates/fuzz/afl-compcov.Dockerfile
+      context: ../../
       args:
         FUZZ_TARGET: ${FUZZ_TARGET}
     command: "-c - -a text -- /fuzz/${FUZZ_TARGET}"

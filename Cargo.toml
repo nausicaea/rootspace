@@ -1,17 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
-  "ecs",
-  "file-manipulation", 
-  "forward-ref",
-  "glamour",
-  "plyers",
-  "rootspace",
-  "rose-tree", 
-  "urn",
+  "crates/*",
 ]
 exclude = [
-  "fuzz",
+  "crates/fuzz",
 ]
 
 [profile.release]

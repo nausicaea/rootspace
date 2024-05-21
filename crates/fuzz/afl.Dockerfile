@@ -5,7 +5,7 @@ ARG FUZZ_TARGET
 RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked cargo install --locked cargo-afl
 WORKDIR /src
 COPY . .
-WORKDIR /src/fuzz
+WORKDIR /src/crates/fuzz
 RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked cargo afl build --locked --bin $FUZZ_TARGET
 
 FROM docker.io/library/debian:stable-slim
@@ -13,11 +13,11 @@ ARG FUZZ_TARGET
 WORKDIR /afl
 COPY --from=build /root/.local/share/afl.rs/rustc-*/afl.rs-*/afl/ ./
 WORKDIR /fuzz
-COPY --from=build /src/fuzz/target/debug/$FUZZ_TARGET ./
+COPY --from=build /src/crates/fuzz/target/debug/$FUZZ_TARGET ./
 VOLUME ["/in", "/out"]
 COPY --chmod=0755 <<-"EOF" /bin/afl-fuzz
     #!/bin/bash
     set -ex
-    exec /afl/bin/afl-fuzz -M main-${HOSTNAME} -i /in -o /out "$@"
+    exec /afl/bin/afl-fuzz -i /in -o /out "$@"
 EOF
 ENTRYPOINT ["/bin/bash", "/bin/afl-fuzz"]

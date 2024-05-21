@@ -12,7 +12,11 @@ const APP_QUALIFIER: &str = "net";
 const APP_ORGANIZATION: &str = "nausicaea";
 
 lazy_static::lazy_static! {
-    static ref WITHIN_REPO_ASSETS: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().join("assets");
+    static ref WITHIN_REPO_ASSETS: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|crates| crates.parent())
+        .map(|workspace_root| workspace_root.join("assets"))
+        .unwrap();
     static ref GROUP_AND_NAME_ALLOWLIST: regex::Regex = regex::RegexBuilder::new("^[-._0-9a-zA-Z]+$")
         .multi_line(true)
         .build()
