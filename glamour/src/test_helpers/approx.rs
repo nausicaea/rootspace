@@ -1,9 +1,6 @@
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
-use crate::{
-    affine::Affine, mat::Mat4, ortho::Ortho, persp::Persp, quat::Quat, unit::Unit,
-    vec::Vec4,
-};
+use crate::{affine::Affine, mat::Mat4, ortho::Ortho, persp::Persp, quat::Quat, unit::Unit, vec::Vec4};
 
 impl<R> AbsDiffEq for Vec4<R>
 where

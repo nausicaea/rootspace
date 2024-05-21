@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 
-use ecs::{resources::Resources, system::System, with_resources::WithResources};
 use crate::components::{renderable::Renderable, transform::Transform};
+use ecs::{resources::Resources, system::System, with_resources::WithResources};
 use glamour::{quat::Quat, unit::Unit, vec::Vec4};
 
 #[derive(Debug)]

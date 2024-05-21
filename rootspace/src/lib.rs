@@ -10,11 +10,6 @@ mod registry;
 pub mod resources;
 pub mod systems;
 
-pub use ecs::{
-    registry::{Element, End},
-    resource::Resource,
-    with_dependencies::WithDependencies,
-};
 pub use crate::{
     assets::scene::{RenderableSource, Scene},
     components::{camera::Camera, transform::Transform},
@@ -25,4 +20,9 @@ pub use crate::{
         rpc_settings::RpcDeps,
     },
     systems::rpc::service::RpcServiceClient,
+};
+pub use ecs::{
+    registry::{Element, End},
+    resource::Resource,
+    with_dependencies::WithDependencies,
 };

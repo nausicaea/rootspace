@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use plyers::{load_ply, save_ply};
-use plyers::types::PropertyDescriptor;
 use plyers::types::FormatType;
+use plyers::types::PropertyDescriptor;
+use plyers::{load_ply, save_ply};
 
 #[derive(Debug, Parser)]
 #[command(name = "ply_loader", author, version, about = "Loads files as Stanford PLY model files", long_about = None)]

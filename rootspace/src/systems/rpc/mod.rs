@@ -12,17 +12,17 @@ use tarpc::server::{incoming::Incoming, BaseChannel, Channel};
 use tokio::{sync::mpsc, task::JoinHandle};
 use tracing::error;
 
-use ecs::{
-    event_queue::{receiver_id::ReceiverId, EventQueue},
-    resources::Resources,
-    system::System,
-    with_resources::WithResources,
-};
 use crate::{
     assets::scene::Scene,
     events::engine_event::EngineEvent,
     resources::{asset_database::AssetDatabase, rpc_settings::RpcSettings, statistics::Statistics},
     systems::rpc::{server::RpcServer, service::RpcService},
+};
+use ecs::{
+    event_queue::{receiver_id::ReceiverId, EventQueue},
+    resources::Resources,
+    system::System,
+    with_resources::WithResources,
 };
 
 #[derive(Debug)]

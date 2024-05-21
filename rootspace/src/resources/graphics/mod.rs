@@ -4,6 +4,7 @@ use winit::event_loop::EventLoopWindowTarget;
 use self::{
     bind_group_builder::BindGroupBuilder,
     bind_group_layout_builder::BindGroupLayoutBuilder,
+    camera_uniform::CameraUniform,
     encoder::Encoder,
     gpu_object_database::GpuObjectDatabase,
     ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
@@ -11,7 +12,7 @@ use self::{
     runtime::Runtime,
     sampler_builder::SamplerBuilder,
     settings::Settings,
-    texture_builder::TextureBuilder, camera_uniform::CameraUniform,
+    texture_builder::TextureBuilder,
 };
 use crate::assets::cpu_material::CpuMaterial;
 use crate::assets::cpu_mesh::CpuMesh;
@@ -22,12 +23,13 @@ use crate::resources::graphics::gpu_mesh::GpuMesh;
 use crate::resources::graphics::gpu_model::GpuModel;
 use crate::resources::graphics::gpu_texture::GpuTexture;
 use crate::resources::graphics::instance::Instance;
-use urn::Urn;
-use ecs::{resource::Resource, with_dependencies::WithDependencies};
 use crate::resources::graphics::internal_runtime_data::InternalRuntimeData;
+use ecs::{resource::Resource, with_dependencies::WithDependencies};
+use urn::Urn;
 
 pub mod bind_group_builder;
 pub mod bind_group_layout_builder;
+pub mod camera_uniform;
 pub mod descriptors;
 pub mod encoder;
 pub mod gpu_material;
@@ -43,7 +45,6 @@ mod runtime;
 pub mod sampler_builder;
 pub mod settings;
 pub mod texture_builder;
-pub mod camera_uniform;
 pub mod vertex;
 
 const DEPTH_TEXTURE_LABEL: Option<&str> = Some("depth-stencil:texture");

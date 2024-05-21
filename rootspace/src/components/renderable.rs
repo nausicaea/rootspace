@@ -2,8 +2,8 @@ use anyhow::Context;
 
 use crate::resources::graphics::gpu_model::GpuModel;
 use crate::resources::graphics::Graphics;
-use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};
 use crate::{assets::cpu_model::CpuModel, resources::asset_database::AssetDatabase};
+use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};
 
 #[derive(Debug)]
 pub struct Renderable {

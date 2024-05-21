@@ -3,9 +3,7 @@ use std::{iter::Product, ops::Mul};
 use num_traits::Float;
 
 use super::super::Mat4;
-use crate::{
-    ops::dot::Dot, vec::Vec4,
-};
+use crate::{ops::dot::Dot, vec::Vec4};
 use forward_ref::forward_ref_binop;
 
 impl<'a, 'b, R> Dot<&'b Mat4<R>> for &'a Mat4<R>

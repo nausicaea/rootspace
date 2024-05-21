@@ -5,10 +5,7 @@ use ::proptest::{
     strategy::{Strategy, Union},
 };
 
-use crate::{
-    affine::Affine, mat::Mat4, quat::Quat, unit::Unit,
-    vec::Vec4,
-};
+use crate::{affine::Affine, mat::Mat4, quat::Quat, unit::Unit, vec::Vec4};
 
 pub fn bounded_positive_f32(lower_exp: i32, upper_exp: i32) -> impl Clone + Strategy<Value = f32> {
     let pos_lower = 2.0_f32.powi(lower_exp);

@@ -11,16 +11,7 @@ use itertools::Itertools;
 use wgpu::{DynamicOffset, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
-use crate::resources::graphics::{gpu_material::GpuMaterial, camera_uniform::CameraUniform};
-use ecs::{
-    component::Component,
-    entity::index::Index,
-    event_queue::{receiver_id::ReceiverId, EventQueue},
-    resources::Resources,
-    storage::Storage,
-    system::System,
-    with_resources::WithResources,
-};
+use crate::resources::graphics::{camera_uniform::CameraUniform, gpu_material::GpuMaterial};
 use crate::{
     components::{camera::Camera, renderable::Renderable, transform::Transform},
     events::engine_event::EngineEvent,
@@ -35,6 +26,15 @@ use crate::{
         },
         statistics::Statistics,
     },
+};
+use ecs::{
+    component::Component,
+    entity::index::Index,
+    event_queue::{receiver_id::ReceiverId, EventQueue},
+    resources::Resources,
+    storage::Storage,
+    system::System,
+    with_resources::WithResources,
 };
 use glamour::{mat::Mat4, num::ToMatrix};
 use rose_tree::hierarchy::Hierarchy;

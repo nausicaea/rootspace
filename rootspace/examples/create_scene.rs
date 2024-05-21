@@ -1,6 +1,6 @@
 use clap::Parser;
-use rootspace::{AssetDatabase, AssetDatabaseDeps, Camera, RenderableSource, Scene, Transform, WithDependencies};
 use glamour::vec::Vec4;
+use rootspace::{AssetDatabase, AssetDatabaseDeps, Camera, RenderableSource, Scene, Transform, WithDependencies};
 
 #[derive(Debug, Parser)]
 #[command(name = "create_scene", author, version, about = "Creates a new test scene via asset database", long_about = None)]

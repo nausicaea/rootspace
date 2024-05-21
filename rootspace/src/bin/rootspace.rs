@@ -2,8 +2,8 @@
 use std::{ops::Deref, sync::Arc};
 
 use clap::Parser;
-use rootspace::{AssetDatabaseDeps, GraphicsDeps, Orchestrator, OrchestratorDeps, RpcDeps, Settings};
 use ecs::Reg;
+use rootspace::{AssetDatabaseDeps, GraphicsDeps, Orchestrator, OrchestratorDeps, RpcDeps, Settings};
 use tokio::runtime::Runtime;
 use winit::event_loop::EventLoop;
 

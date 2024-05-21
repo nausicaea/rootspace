@@ -4,8 +4,8 @@ use anyhow::Context;
 use directories::ProjectDirs;
 use tokio::fs::{create_dir_all, remove_dir_all};
 
-use ecs::{resource::Resource, resources::Resources, with_dependencies::WithDependencies};
 use crate::assets::{Error, LoadAsset, SaveAsset};
+use ecs::{resource::Resource, resources::Resources, with_dependencies::WithDependencies};
 use file_manipulation::copy_recursive;
 
 const APP_QUALIFIER: &str = "net";

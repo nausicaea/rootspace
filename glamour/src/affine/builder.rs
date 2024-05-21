@@ -1,9 +1,6 @@
 use num_traits::Float;
 
-use crate::{
-    affine::Affine, num::Zero, quat::Quat, unit::Unit,
-    vec::Vec4,
-};
+use crate::{affine::Affine, num::Zero, quat::Quat, unit::Unit, vec::Vec4};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct AffineBuilder<R> {

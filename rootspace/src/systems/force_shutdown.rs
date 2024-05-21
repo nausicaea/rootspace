@@ -14,13 +14,13 @@ use winit::{
     keyboard::NamedKey,
 };
 
+use crate::events::engine_event::EngineEvent;
 use ecs::{
     event_queue::{receiver_id::ReceiverId, EventQueue},
     resources::Resources,
     system::System,
     with_resources::WithResources,
 };
-use crate::events::engine_event::EngineEvent;
 
 #[derive(Debug)]
 pub struct ForceShutdown {

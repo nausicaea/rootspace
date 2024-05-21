@@ -11,10 +11,7 @@ pub struct CpuMaterial {
 impl PrivLoadAsset for CpuMaterial {
     type Output = Self;
 
-    async fn with_path(
-        res: &ecs::resources::Resources,
-        path: &std::path::Path,
-    ) -> Result<Self::Output, anyhow::Error> {
+    async fn with_path(res: &ecs::resources::Resources, path: &std::path::Path) -> Result<Self::Output, anyhow::Error> {
         let label = path.file_stem().and_then(|n| n.to_str()).map(|n| n.to_owned());
         let texture = CpuTexture::with_path(res, path)
             .await

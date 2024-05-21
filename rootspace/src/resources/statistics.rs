@@ -1,9 +1,9 @@
+use humantime::format_duration;
 use std::{
     collections::VecDeque,
     fmt::{Display, Formatter},
     time::Duration,
 };
-use humantime::format_duration;
 
 use serde::{Deserialize, Serialize};
 

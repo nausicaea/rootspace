@@ -1,7 +1,4 @@
-use crate::{
-    mat::Mat4, quat::Quat, unit::Unit,
-    vec::Vec4,
-};
+use crate::{mat::Mat4, quat::Quat, unit::Unit, vec::Vec4};
 
 impl<R> PartialEq<nalgebra::Vector4<R>> for Vec4<R>
 where

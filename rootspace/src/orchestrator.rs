@@ -10,17 +10,6 @@ use winit::{
 };
 
 use super::registry::{FUSRegistry, MSRegistry};
-use ecs::{
-    entity::Entity,
-    event_queue::{receiver_id::ReceiverId, EventQueue},
-    loop_control::LoopControl,
-    registry::{ResourceRegistry, SystemRegistry},
-    resources::Resources,
-    storage::Storage,
-    with_dependencies::WithDependencies,
-    with_resources::WithResources,
-    world::{event::WorldEvent, World},
-};
 use crate::{
     assets::scene::Scene,
     components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
@@ -33,6 +22,17 @@ use crate::{
         statistics::Statistics,
     },
     systems::renderer::Renderer,
+};
+use ecs::{
+    entity::Entity,
+    event_queue::{receiver_id::ReceiverId, EventQueue},
+    loop_control::LoopControl,
+    registry::{ResourceRegistry, SystemRegistry},
+    resources::Resources,
+    storage::Storage,
+    with_dependencies::WithDependencies,
+    with_resources::WithResources,
+    world::{event::WorldEvent, World},
 };
 
 const DELTA_TIME: Duration = Duration::from_millis(50);

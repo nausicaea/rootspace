@@ -1,8 +1,6 @@
 use num_traits::Float;
 
-use crate::{
-    ops::norm::Norm, quat::Quat,
-};
+use crate::{ops::norm::Norm, quat::Quat};
 use forward_ref::forward_ref_unop;
 
 impl<'a, R> Norm for &'a Quat<R>

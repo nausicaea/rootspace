@@ -3,16 +3,16 @@ use std::{collections::BTreeMap, path::Path};
 use anyhow::Context;
 
 use super::private::PrivLoadAsset;
+use crate::{
+    assets::private::PrivSaveAsset,
+    components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
+    resources::asset_database::AssetDatabase,
+};
 use ecs::{
     entities::Entities,
     entity::{index::Index, Entity},
     resources::Resources,
     storage::Storage,
-};
-use crate::{
-    assets::private::PrivSaveAsset,
-    components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
-    resources::asset_database::AssetDatabase,
 };
 use rose_tree::hierarchy::Hierarchy;
 

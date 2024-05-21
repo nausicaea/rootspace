@@ -9,4 +9,3 @@ impl From<Mat4<f32>> for CameraUniform {
         CameraUniform(value)
     }
 }
-
