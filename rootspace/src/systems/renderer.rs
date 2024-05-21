@@ -41,8 +41,8 @@ pub struct Renderer {
     window_receiver: ReceiverId<WindowEvent>,
     engine_receiver: ReceiverId<EngineEvent>,
     renderer_enabled: bool,
-    transform_buffer: BufferId,
-    transform_bind_group: BindGroupId,
+    camera_buffer: BufferId,
+    camera_bind_group: BindGroupId,
     light_buffer: BufferId,
     light_bind_group: BindGroupId,
     pipeline_wt: PipelineId,
@@ -86,7 +86,7 @@ impl Renderer {
 
         // Calculate all camera transforms and the respective buffer offset
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256 bytes
-        let (uniform_buffer_offsets, cam_persp) = res
+        let (camera_buffer_offsets, camera_uniforms) = res
             .iter_r::<Camera>()
             .enumerate()
             .map(|(i, (idx, c))| {
@@ -96,8 +96,8 @@ impl Renderer {
                 )
             })
             .map(|(i, trf)| {
-                let transform_offset = (i as DynamicOffset) * (uniform_alignment as DynamicOffset); // first 0x0, then 0x100
-                (transform_offset, CameraUniform(trf))
+                let camera_buffer_offset = (i as DynamicOffset) * (uniform_alignment as DynamicOffset); // first 0x0, then 0x100
+                (camera_buffer_offset, CameraUniform(trf))
             })
             .fold(
                 (Vec::<DynamicOffset>::new(), Vec::<CameraUniform>::new()),
@@ -163,10 +163,10 @@ impl Renderer {
         }
 
         // Write the camera transforms to the corresponding uniform buffer
-        gfx.write_buffer(self.transform_buffer, unsafe {
+        gfx.write_buffer(self.camera_buffer, unsafe {
             from_raw_parts(
-                cam_persp.as_ptr() as *const u8,
-                cam_persp.len() * uniform_alignment as usize,
+                camera_uniforms.as_ptr() as *const u8,
+                camera_uniforms.len() * uniform_alignment as usize,
             )
         });
 
@@ -181,7 +181,7 @@ impl Renderer {
         }
 
         DrawData {
-            uniform_buffer_offsets,
+            camera_buffer_offsets,
             instance_draw_data,
         }
     }
@@ -191,11 +191,11 @@ impl Renderer {
         let mut draw_calls = 0;
 
         for instance_data in &draw_data.instance_draw_data {
-            for &transform_offset in &draw_data.uniform_buffer_offsets {
+            for &camera_buffer_offset in &draw_data.camera_buffer_offsets {
                 draw_calls += 1;
                 if instance_data.materials.is_empty() {
                     rp.set_pipeline(self.pipeline_wt)
-                        .set_bind_group(0, self.transform_bind_group, &[transform_offset])
+                        .set_bind_group(0, self.camera_bind_group, &[camera_buffer_offset])
                         .set_bind_group(1, self.light_bind_group, &[])
                         .set_vertex_buffer(0, instance_data.vertex_buffer)
                         .set_vertex_buffer(1, instance_data.instance_buffer)
@@ -203,7 +203,7 @@ impl Renderer {
                         .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
                 } else {
                     rp.set_pipeline(self.pipeline_wtm)
-                        .set_bind_group(0, self.transform_bind_group, &[transform_offset])
+                        .set_bind_group(0, self.camera_bind_group, &[camera_buffer_offset])
                         .set_bind_group(1, self.light_bind_group, &[])
                         .set_bind_group(2, instance_data.materials[0].bind_group, &[])
                         .set_vertex_buffer(0, instance_data.vertex_buffer)
@@ -241,7 +241,7 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn crp_with_transform(
+    fn crp_with_camera(
         adb: &AssetDatabase,
         gfx: &mut Graphics,
         label: &'static str,
@@ -256,8 +256,8 @@ impl Renderer {
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
 
-        let tl = gfx.transform_layout();
-        let ll = gfx.light_layout();
+        let tl = gfx.camera_buffer_layout();
+        let ll = gfx.light_buffer_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
@@ -274,7 +274,7 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn crp_with_transform_and_material(
+    fn crp_with_camera_and_material(
         adb: &AssetDatabase,
         gfx: &mut Graphics,
         label: &'static str,
@@ -289,9 +289,9 @@ impl Renderer {
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
 
-        let tl = gfx.transform_layout();
-        let ll = gfx.light_layout();
-        let ml = gfx.material_layout();
+        let tl = gfx.camera_buffer_layout();
+        let ll = gfx.light_buffer_layout();
+        let ml = gfx.material_buffer_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
@@ -318,26 +318,26 @@ impl WithResources for Renderer {
         let adb = res.read::<AssetDatabase>();
         let mut gfx = res.write::<Graphics>();
 
-        let pipeline_wtm = Self::crp_with_transform_and_material(&adb, &mut gfx, "wtm")
-            .context("Creating the render pipeline 'wtm'")?;
+        let pipeline_wtm = Self::crp_with_camera_and_material(&adb, &mut gfx, "with-camera-material")
+            .context("Creating the render pipeline 'with-camera-material'")?;
         let pipeline_wt =
-            Self::crp_with_transform(&adb, &mut gfx, "wt").context("Creating the render pipeline 'wt'")?;
+            Self::crp_with_camera(&adb, &mut gfx, "with-camera").context("Creating the render pipeline 'with-camera'")?;
 
-        let max_objects = gfx.max_objects();
+        let max_cameras = gfx.max_cameras();
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256
-        let buffer_size = (max_objects * uniform_alignment) as BufferAddress; // 268'435'456
-        let transform_buffer = gfx.create_buffer(
-            Some("transform-buffer"),
+        let buffer_size = (max_cameras * uniform_alignment) as BufferAddress; // 1'024
+        let camera_buffer = gfx.create_buffer(
+            Some("camera-buffer"),
             buffer_size,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
         let binding_size = BufferSize::new(size_of::<CameraUniform>() as _);
-        let tl = gfx.transform_layout();
-        let transform_bind_group = gfx
+        let tl = gfx.camera_buffer_layout();
+        let camera_bind_group = gfx
             .create_bind_group(tl)
-            .with_label(Some("transform-bind-group"))
-            .add_buffer(0, 0, binding_size, transform_buffer)
+            .with_label(Some("camera-bind-group"))
+            .add_buffer(0, 0, binding_size, camera_buffer)
             .submit();
 
         let buffer_size = (1 * uniform_alignment) as BufferAddress;
@@ -347,7 +347,7 @@ impl WithResources for Renderer {
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
         let binding_size = BufferSize::new(size_of::<LightUniform>() as _);
-        let ll = gfx.light_layout();
+        let ll = gfx.light_buffer_layout();
         let light_bind_group = gfx
             .create_bind_group(ll)
             .with_label(Some("light-bind-group"))
@@ -358,8 +358,8 @@ impl WithResources for Renderer {
             window_receiver,
             engine_receiver,
             renderer_enabled: true,
-            transform_buffer,
-            transform_bind_group,
+            camera_buffer,
+            camera_bind_group,
             light_buffer,
             light_bind_group,
             pipeline_wtm,
@@ -428,7 +428,7 @@ impl System for Renderer {
 
 #[derive(Debug)]
 struct DrawData<'a> {
-    uniform_buffer_offsets: Vec<DynamicOffset>,
+    camera_buffer_offsets: Vec<DynamicOffset>,
     instance_draw_data: Vec<InstanceDrawData<'a>>,
 }
 

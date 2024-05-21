@@ -1,3 +1,5 @@
+use std::mem::size_of;
+
 use wgpu::{BindingType, BufferAddress, BufferBindingType, BufferUsages, ShaderStages};
 use winit::event_loop::EventLoopWindowTarget;
 
@@ -71,8 +73,8 @@ impl Graphics {
         self.runtime.max_size
     }
 
-    pub fn max_objects(&self) -> u32 {
-        self.settings.max_objects
+    pub fn max_cameras(&self) -> u32 {
+        self.settings.max_cameras
     }
 
     pub fn max_instances(&self) -> u64 {
@@ -123,16 +125,16 @@ impl Graphics {
         );
     }
 
-    pub fn transform_layout(&self) -> BindGroupLayoutId {
-        self.internal.transform_layout
+    pub fn camera_buffer_layout(&self) -> BindGroupLayoutId {
+        self.internal.camera_buffer_layout
     }
 
-    pub fn light_layout(&self) -> BindGroupLayoutId {
-        self.internal.light_layout
+    pub fn light_buffer_layout(&self) -> BindGroupLayoutId {
+        self.internal.light_buffer_layout
     }
 
-    pub fn material_layout(&self) -> BindGroupLayoutId {
-        self.internal.material_layout
+    pub fn material_buffer_layout(&self) -> BindGroupLayoutId {
+        self.internal.material_buffer_layout
     }
 
     pub fn write_buffer<T>(&self, buffer: BufferId, data: &[T])
@@ -231,7 +233,7 @@ impl Graphics {
     fn create_material(&mut self, m: &CpuMaterial) -> GpuMaterial {
         let texture = self.create_texture(&m.texture);
 
-        let layout = self.material_layout();
+        let layout = self.material_buffer_layout();
         let bind_group = self
             .create_bind_group(layout)
             .with_label(m.label.as_ref().map(|l| format!("{}:bind-group", &l)).as_deref())
@@ -251,7 +253,7 @@ impl Graphics {
         );
         let instance_buffer = {
             let max_instances = self.max_instances();
-            let buffer_alignment = std::mem::size_of::<Instance>() as u64;
+            let buffer_alignment = size_of::<Instance>() as u64;
             let buffer_size = (max_instances * buffer_alignment) as BufferAddress;
             self.create_buffer(
                 m.label.as_ref().map(|l| format!("{}:instance-buffer", &l)).as_deref(),
@@ -342,9 +344,9 @@ where
 
         let mut database = GpuObjectDatabase::default();
 
-        let min_binding_size = wgpu::BufferSize::new(std::mem::size_of::<CameraUniform>() as _); // 64 bytes
-        let transform_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
-            .with_label("transform-layout")
+        let min_binding_size = wgpu::BufferSize::new(size_of::<CameraUniform>() as _); // 64 bytes
+        let camera_buffer_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
+            .with_label("camera-buffer-layout")
             .add_bind_group_layout_entry(
                 0,
                 ShaderStages::VERTEX,
@@ -356,8 +358,8 @@ where
             )
             .submit();
 
-        let light_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
-            .with_label("light-layout")
+        let light_buffer_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
+            .with_label("light-buffer-layout")
             .add_bind_group_layout_entry(
                 0, 
                 ShaderStages::VERTEX | ShaderStages::FRAGMENT, 
@@ -369,8 +371,8 @@ where
             )
             .submit();
 
-        let material_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
-            .with_label("material-layout")
+        let material_buffer_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
+            .with_label("material-buffer-layout")
             .add_bind_group_layout_entry(
                 0,
                 ShaderStages::FRAGMENT,
@@ -395,9 +397,9 @@ where
             runtime,
             database,
             internal: InternalRuntimeData {
-                transform_layout,
-                light_layout,
-                material_layout,
+                camera_buffer_layout,
+                light_buffer_layout,
+                material_buffer_layout,
                 depth_texture,
                 depth_texture_view,
                 instances: Urn::default(),
