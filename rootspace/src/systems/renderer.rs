@@ -91,8 +91,9 @@ impl Renderer {
         let hier = res.read::<Hierarchy<Index>>();
         let transforms = res.read_components::<Transform>();
 
-        // Calculate all camera transforms and the respective buffer offset
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256 bytes
+
+        // Calculate all camera transforms and the respective buffer offset
         let (camera_buffer_offsets, camera_uniforms) = res
             .iter_r::<Camera>()
             .enumerate()
