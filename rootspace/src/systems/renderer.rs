@@ -196,6 +196,7 @@ impl Renderer {
                 if instance_data.materials.is_empty() {
                     rp.set_pipeline(self.pipeline_wt)
                         .set_bind_group(0, self.transform_bind_group, &[transform_offset])
+                        .set_bind_group(1, self.light_bind_group, &[])
                         .set_vertex_buffer(0, instance_data.vertex_buffer)
                         .set_vertex_buffer(1, instance_data.instance_buffer)
                         .set_index_buffer(instance_data.index_buffer)
@@ -203,6 +204,7 @@ impl Renderer {
                 } else {
                     rp.set_pipeline(self.pipeline_wtm)
                         .set_bind_group(0, self.transform_bind_group, &[transform_offset])
+                        .set_bind_group(1, self.light_bind_group, &[])
                         .set_bind_group(2, instance_data.materials[0].bind_group, &[])
                         .set_vertex_buffer(0, instance_data.vertex_buffer)
                         .set_vertex_buffer(1, instance_data.instance_buffer)
