@@ -23,8 +23,14 @@ struct VertexOutput {
 @group(0) @binding(0)
 var<uniform> camera_transform: mat4x4<f32>;
 
+@group(2) @binding(0)
+var t_diffuse: texture_2d<f32>;
+
+@group(2) @binding(1)
+var s_diffuse: sampler;
+
 @vertex
-fn main(
+fn vertex_main(
     vertex: VertexInput,
     instance: InstanceInput,
 ) -> VertexOutput {
@@ -48,4 +54,11 @@ fn main(
         vertex.tex_coords,
         s,
     );
+}
+
+@fragment
+fn fragment_main(
+    in: VertexOutput
+) -> @location(0) vec4<f32> {
+    return in.scalar * textureSample(t_diffuse, s_diffuse, in.tex_coords);
 }

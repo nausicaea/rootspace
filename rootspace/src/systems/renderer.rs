@@ -252,28 +252,22 @@ impl Renderer {
     fn crp_with_camera(
         adb: &AssetDatabase,
         gfx: &mut Graphics,
-        label: &'static str,
     ) -> Result<PipelineId, anyhow::Error> {
-        let shader_path = adb.find_asset("shaders", "transformed.wgsl")?;
+        let shader_path = adb.find_asset("shaders", "with_camera.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
-        let vertex_shader_module = gfx.create_shader_module(Some("vertex-shader"), shader_data);
-
-        let shader_path = adb.find_asset("shaders", "with_static_color.wgsl")?;
-        let shader_data = std::fs::read_to_string(&shader_path)
-            .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
-        let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
+        let shader_module = gfx.create_shader_module(Some("with-camera:shader"), &shader_data);
 
         let tl = gfx.camera_buffer_layout();
         let ll = gfx.light_buffer_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
-            .with_label(label)
+            .with_label("with-camera:pipeline")
             .add_bind_group_layout(tl)
             .add_bind_group_layout(ll)
-            .with_vertex_shader_module(vertex_shader_module, "main")
-            .with_fragment_shader_module(fragment_shader_module, "main")
+            .with_vertex_shader_module(shader_module, "vertex_main")
+            .with_fragment_shader_module(shader_module, "fragment_main")
             .add_vertex_buffer_layout::<Vertex>()
             .add_vertex_buffer_layout::<Instance>()
             .submit();
@@ -285,17 +279,11 @@ impl Renderer {
     fn crp_with_camera_and_material(
         adb: &AssetDatabase,
         gfx: &mut Graphics,
-        label: &'static str,
     ) -> Result<PipelineId, anyhow::Error> {
-        let shader_path = adb.find_asset("shaders", "transformed.wgsl")?;
+        let shader_path = adb.find_asset("shaders", "with_camera_and_material.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
-        let vertex_shader_module = gfx.create_shader_module(Some("vertex-shader"), shader_data);
-
-        let shader_path = adb.find_asset("shaders", "textured.wgsl")?;
-        let shader_data = std::fs::read_to_string(&shader_path)
-            .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
-        let fragment_shader_module = gfx.create_shader_module(Some("fragment-shader"), shader_data);
+        let shader_module = gfx.create_shader_module(Some("with-camera-material:shader"), &shader_data);
 
         let tl = gfx.camera_buffer_layout();
         let ll = gfx.light_buffer_layout();
@@ -303,12 +291,12 @@ impl Renderer {
 
         let pipeline = gfx
             .create_render_pipeline()
-            .with_label(label)
+            .with_label("with-camera-material:pipeline")
             .add_bind_group_layout(tl)
             .add_bind_group_layout(ll)
             .add_bind_group_layout(ml)
-            .with_vertex_shader_module(vertex_shader_module, "main")
-            .with_fragment_shader_module(fragment_shader_module, "main")
+            .with_vertex_shader_module(shader_module, "vertex_main")
+            .with_fragment_shader_module(shader_module, "fragment_main")
             .add_vertex_buffer_layout::<Vertex>()
             .add_vertex_buffer_layout::<Instance>()
             .submit();
@@ -326,9 +314,9 @@ impl WithResources for Renderer {
         let adb = res.read::<AssetDatabase>();
         let mut gfx = res.write::<Graphics>();
 
-        let pipeline_wcm = Self::crp_with_camera_and_material(&adb, &mut gfx, "with-camera-material")
+        let pipeline_wcm = Self::crp_with_camera_and_material(&adb, &mut gfx)
             .context("Creating the render pipeline 'with-camera-material'")?;
-        let pipeline_wc = Self::crp_with_camera(&adb, &mut gfx, "with-camera")
+        let pipeline_wc = Self::crp_with_camera(&adb, &mut gfx)
             .context("Creating the render pipeline 'with-camera'")?;
 
         let max_cameras = gfx.max_cameras();
