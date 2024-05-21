@@ -4,17 +4,7 @@ use wgpu::{BindingType, BufferAddress, BufferBindingType, BufferUsages, ShaderSt
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
-    bind_group_builder::BindGroupBuilder,
-    bind_group_layout_builder::BindGroupLayoutBuilder,
-    camera_uniform::CameraUniform,
-    encoder::Encoder,
-    gpu_object_database::GpuObjectDatabase,
-    ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
-    render_pipeline_builder::RenderPipelineBuilder,
-    runtime::Runtime,
-    sampler_builder::SamplerBuilder,
-    settings::Settings,
-    texture_builder::TextureBuilder,
+    bind_group_builder::BindGroupBuilder, bind_group_layout_builder::BindGroupLayoutBuilder, camera_uniform::CameraUniform, encoder::Encoder, gpu_object_database::GpuObjectDatabase, ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId}, light_uniform::LightUniform, render_pipeline_builder::RenderPipelineBuilder, runtime::Runtime, sampler_builder::SamplerBuilder, settings::Settings, texture_builder::TextureBuilder
 };
 use crate::assets::cpu_material::CpuMaterial;
 use crate::assets::cpu_mesh::CpuMesh;
@@ -75,6 +65,10 @@ impl Graphics {
 
     pub fn max_cameras(&self) -> u32 {
         self.settings.max_cameras
+    }
+
+    pub fn max_lights(&self) -> u32 {
+        self.settings.max_lights
     }
 
     pub fn max_instances(&self) -> u64 {
@@ -358,6 +352,7 @@ where
             )
             .submit();
 
+        let min_binding_size = wgpu::BufferSize::new(size_of::<LightUniform>() as _); // 64 bytes
         let light_buffer_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
             .with_label("light-buffer-layout")
             .add_bind_group_layout_entry(
@@ -366,7 +361,7 @@ where
                 BindingType::Buffer {
                     ty: BufferBindingType::Uniform,
                     has_dynamic_offset: false,
-                    min_binding_size: None,
+                    min_binding_size,
                 },
             )
             .submit();

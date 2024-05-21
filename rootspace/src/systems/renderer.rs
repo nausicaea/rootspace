@@ -52,8 +52,8 @@ pub struct Renderer {
     camera_bind_group: BindGroupId,
     light_buffer: BufferId,
     light_bind_group: BindGroupId,
-    pipeline_wt: PipelineId,
-    pipeline_wtm: PipelineId,
+    pipeline_wc: PipelineId,
+    pipeline_wcm: PipelineId,
 }
 
 impl Renderer {
@@ -201,7 +201,7 @@ impl Renderer {
             for &camera_buffer_offset in &draw_data.camera_buffer_offsets {
                 draw_calls += 1;
                 if instance_data.materials.is_empty() {
-                    rp.set_pipeline(self.pipeline_wt)
+                    rp.set_pipeline(self.pipeline_wc)
                         .set_bind_group(0, self.camera_bind_group, &[camera_buffer_offset])
                         .set_bind_group(1, self.light_bind_group, &[])
                         .set_vertex_buffer(0, instance_data.vertex_buffer)
@@ -209,7 +209,7 @@ impl Renderer {
                         .set_index_buffer(instance_data.index_buffer)
                         .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
                 } else {
-                    rp.set_pipeline(self.pipeline_wtm)
+                    rp.set_pipeline(self.pipeline_wcm)
                         .set_bind_group(0, self.camera_bind_group, &[camera_buffer_offset])
                         .set_bind_group(1, self.light_bind_group, &[])
                         .set_bind_group(2, instance_data.materials[0].bind_group, &[])
@@ -325,9 +325,9 @@ impl WithResources for Renderer {
         let adb = res.read::<AssetDatabase>();
         let mut gfx = res.write::<Graphics>();
 
-        let pipeline_wtm = Self::crp_with_camera_and_material(&adb, &mut gfx, "with-camera-material")
+        let pipeline_wcm = Self::crp_with_camera_and_material(&adb, &mut gfx, "with-camera-material")
             .context("Creating the render pipeline 'with-camera-material'")?;
-        let pipeline_wt = Self::crp_with_camera(&adb, &mut gfx, "with-camera")
+        let pipeline_wc = Self::crp_with_camera(&adb, &mut gfx, "with-camera")
             .context("Creating the render pipeline 'with-camera'")?;
 
         let max_cameras = gfx.max_cameras();
@@ -347,12 +347,13 @@ impl WithResources for Renderer {
             .add_buffer(0, 0, binding_size, camera_buffer)
             .submit();
 
-        let buffer_size = (1 * uniform_alignment) as BufferAddress;
+        let buffer_size = uniform_alignment as BufferAddress;
         let light_buffer = gfx.create_buffer(
             Some("light-buffer"),
             buffer_size,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
+
         let binding_size = BufferSize::new(size_of::<LightUniform>() as _);
         let ll = gfx.light_buffer_layout();
         let light_bind_group = gfx
@@ -369,8 +370,8 @@ impl WithResources for Renderer {
             camera_bind_group,
             light_buffer,
             light_bind_group,
-            pipeline_wtm,
-            pipeline_wt,
+            pipeline_wcm,
+            pipeline_wc,
         })
     }
 }
