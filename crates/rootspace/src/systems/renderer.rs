@@ -10,7 +10,7 @@ use std::{
 use anyhow::Context;
 use async_trait::async_trait;
 use itertools::Itertools;
-use wgpu::{BufferAddress, BufferSize, BufferUsages, DynamicOffset, SurfaceError};
+use wgpu::{BufferAddress, BufferSize, BufferUsages, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
 use crate::{
@@ -93,30 +93,30 @@ impl Renderer {
         let hier = res.read::<Hierarchy<Index>>();
         let transforms = res.read_components::<Transform>();
 
+        // 1. Allow only a single camera
+        // 2. Obtain the camera projection matrix and write it to the corresponding uniform buffer
+        // 3. Obtain the camera model matrix, calculate the inverse resulting in the view matrix, then
+        //    use in the next step
+        // 4. For each instance, multiply the view and the model matrix and write to the instance
+        //    buffer
+        // 5. Doe the same as step 4 for each light  
+
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256 bytes
 
         // Calculate all camera transforms and the respective buffer offset
-        let (camera_buffer_offsets, camera_uniforms) = res
-            .iter_r::<Camera>()
-            .enumerate()
-            .map(|(i, (idx, c))| {
+        let camera_uniforms: Vec<_> = res.iter_r::<Camera>()
+            .map(|(idx, cam)| {
+                let camera_transform = hier_transform::<Transform>(idx, &hier, &transforms);
+                let camera_view = camera_transform.inv();
+
                 (
-                    i,
-                    c.as_persp_matrix() * hier_transform::<Transform>(idx, &hier, &transforms),
+                    CameraUniform {
+                        projection: *cam.as_persp_matrix(),
+                    },
+                    camera_view,
                 )
             })
-            .map(|(i, trf)| {
-                let camera_buffer_offset = (i as DynamicOffset) * (uniform_alignment as DynamicOffset); // first 0x0, then 0x100
-                (camera_buffer_offset, CameraUniform { view_projection: trf })
-            })
-            .fold(
-                (Vec::<DynamicOffset>::new(), Vec::<CameraUniform>::new()),
-                |mut state, elem| {
-                    state.0.push(elem.0);
-                    state.1.push(elem.1);
-                    state
-                },
-            );
+            .collect();
 
         let (light_draw_data, light_buffer_data) = res
             .iter_r::<Light>()
@@ -222,7 +222,6 @@ impl Renderer {
         }
 
         DrawData {
-            camera_buffer_offsets,
             lights: light_draw_data,
             instances: instance_draw_data,
         }
@@ -232,37 +231,35 @@ impl Renderer {
     fn draw(&mut self, draw_data: &DrawData, mut rp: RenderPass) -> usize {
         let mut draw_calls = 0;
 
-        for &camera_buffer_offset in &draw_data.camera_buffer_offsets {
-            for light in &draw_data.lights {
-                draw_calls += 1;
-                rp.set_pipeline(self.pipeline_ldb)
-                    .set_bind_group(0, self.camera_bind_group, &[camera_buffer_offset])
-                    .set_bind_group(1, self.light_bind_group, &[])
-                    .set_vertex_buffer(0, light.vertex_buffer)
-                    .set_index_buffer(light.index_buffer)
-                    .draw_indexed(0..light.num_indices, 0, 0..1);
-            }
+        for light in &draw_data.lights {
+            draw_calls += 1;
+            rp.set_pipeline(self.pipeline_ldb)
+                .set_bind_group(0, self.camera_bind_group, &[])
+                .set_bind_group(1, self.light_bind_group, &[])
+                .set_vertex_buffer(0, light.vertex_buffer)
+                .set_index_buffer(light.index_buffer)
+                .draw_indexed(0..light.num_indices, 0, 0..1);
+        }
 
-            for instance_data in &draw_data.instances {
-                draw_calls += 1;
-                if instance_data.materials.is_empty() {
-                    rp.set_pipeline(self.pipeline_wc)
-                        .set_bind_group(0, self.camera_bind_group, &[camera_buffer_offset])
-                        .set_bind_group(1, self.light_bind_group, &[])
-                        .set_vertex_buffer(0, instance_data.vertex_buffer)
-                        .set_vertex_buffer(1, instance_data.instance_buffer)
-                        .set_index_buffer(instance_data.index_buffer)
-                        .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
-                } else {
-                    rp.set_pipeline(self.pipeline_wcm)
-                        .set_bind_group(0, self.camera_bind_group, &[camera_buffer_offset])
-                        .set_bind_group(1, self.light_bind_group, &[])
-                        .set_bind_group(2, instance_data.materials[0].bind_group, &[])
-                        .set_vertex_buffer(0, instance_data.vertex_buffer)
-                        .set_vertex_buffer(1, instance_data.instance_buffer)
-                        .set_index_buffer(instance_data.index_buffer)
-                        .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
-                }
+        for instance_data in &draw_data.instances {
+            draw_calls += 1;
+            if instance_data.materials.is_empty() {
+                rp.set_pipeline(self.pipeline_wc)
+                    .set_bind_group(0, self.camera_bind_group, &[])
+                    .set_bind_group(1, self.light_bind_group, &[])
+                    .set_vertex_buffer(0, instance_data.vertex_buffer)
+                    .set_vertex_buffer(1, instance_data.instance_buffer)
+                    .set_index_buffer(instance_data.index_buffer)
+                    .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
+            } else {
+                rp.set_pipeline(self.pipeline_wcm)
+                    .set_bind_group(0, self.camera_bind_group, &[])
+                    .set_bind_group(1, self.light_bind_group, &[])
+                    .set_bind_group(2, instance_data.materials[0].bind_group, &[])
+                    .set_vertex_buffer(0, instance_data.vertex_buffer)
+                    .set_vertex_buffer(1, instance_data.instance_buffer)
+                    .set_index_buffer(instance_data.index_buffer)
+                    .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
             }
         }
 
@@ -299,14 +296,14 @@ impl Renderer {
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let shader_module = gfx.create_shader_module(Some("light-debug:shader"), &shader_data);
 
-        let cl = gfx.camera_buffer_layout();
-        let ll = gfx.light_buffer_layout();
+        let cbl = gfx.camera_buffer_layout();
+        let lbl = gfx.light_buffer_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
             .with_label("light-debug:pipeline")
-            .add_bind_group_layout(cl)
-            .add_bind_group_layout(ll)
+            .add_bind_group_layout(cbl)
+            .add_bind_group_layout(lbl)
             .with_vertex_shader_module(shader_module, "vertex_main")
             .with_fragment_shader_module(shader_module, "fragment_main")
             .add_vertex_buffer_layout::<Vertex>()
@@ -322,14 +319,14 @@ impl Renderer {
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let shader_module = gfx.create_shader_module(Some("with-camera:shader"), &shader_data);
 
-        let cl = gfx.camera_buffer_layout();
-        let ll = gfx.light_buffer_layout();
+        let cbl = gfx.camera_buffer_layout();
+        let lbl = gfx.light_buffer_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
             .with_label("with-camera:pipeline")
-            .add_bind_group_layout(cl)
-            .add_bind_group_layout(ll)
+            .add_bind_group_layout(cbl)
+            .add_bind_group_layout(lbl)
             .with_vertex_shader_module(shader_module, "vertex_main")
             .with_fragment_shader_module(shader_module, "fragment_main")
             .add_vertex_buffer_layout::<Vertex>()
@@ -346,16 +343,16 @@ impl Renderer {
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let shader_module = gfx.create_shader_module(Some("with-camera-material:shader"), &shader_data);
 
-        let cl = gfx.camera_buffer_layout();
-        let ll = gfx.light_buffer_layout();
-        let ml = gfx.material_buffer_layout();
+        let cbl = gfx.camera_buffer_layout();
+        let lbl = gfx.light_buffer_layout();
+        let mbl = gfx.material_buffer_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
             .with_label("with-camera-material:pipeline")
-            .add_bind_group_layout(cl)
-            .add_bind_group_layout(ll)
-            .add_bind_group_layout(ml)
+            .add_bind_group_layout(cbl)
+            .add_bind_group_layout(lbl)
+            .add_bind_group_layout(mbl)
             .with_vertex_shader_module(shader_module, "vertex_main")
             .with_fragment_shader_module(shader_module, "fragment_main")
             .add_vertex_buffer_layout::<Vertex>()
@@ -382,36 +379,32 @@ impl WithResources for Renderer {
         let pipeline_wc =
             Self::crp_with_camera(&adb, &mut gfx).context("Creating the render pipeline 'with-camera'")?;
 
-        let max_cameras = gfx.max_cameras();
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256
-        let buffer_size = (max_cameras * uniform_alignment) as BufferAddress; // 1'024
+
         let camera_buffer = gfx.create_buffer(
             Some("camera-buffer"),
-            buffer_size,
+            uniform_alignment as BufferAddress,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
-        let binding_size = BufferSize::new(size_of::<CameraUniform>() as _);
-        let tl = gfx.camera_buffer_layout();
+        let cbl = gfx.camera_buffer_layout();
         let camera_bind_group = gfx
-            .create_bind_group(tl)
+            .create_bind_group(cbl)
             .with_label(Some("camera-bind-group"))
-            .add_buffer(0, 0, binding_size, camera_buffer)
+            .add_buffer(0, 0, BufferSize::new(size_of::<CameraUniform>() as _), camera_buffer)
             .submit();
 
-        let buffer_size = uniform_alignment as BufferAddress;
         let light_buffer = gfx.create_buffer(
             Some("light-buffer"),
-            buffer_size,
+            uniform_alignment as BufferAddress,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
-        let binding_size = BufferSize::new(size_of::<LightUniform>() as _);
         let ll = gfx.light_buffer_layout();
         let light_bind_group = gfx
             .create_bind_group(ll)
             .with_label(Some("light-bind-group"))
-            .add_buffer(0, 0, binding_size, light_buffer)
+            .add_buffer(0, 0, BufferSize::new(size_of::<LightUniform>() as _), light_buffer)
             .submit();
 
         Ok(Renderer {
@@ -489,7 +482,6 @@ impl System for Renderer {
 
 #[derive(Debug)]
 struct DrawData<'a> {
-    camera_buffer_offsets: Vec<DynamicOffset>,
     lights: Vec<LightDrawData>,
     instances: Vec<InstanceDrawData<'a>>,
 }

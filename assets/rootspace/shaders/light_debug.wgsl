@@ -10,7 +10,7 @@ struct VertexOutput {
 }
 
 struct Camera {
-    view_projection: mat4x4<f32>,
+    projection: mat4x4<f32>,
 }
 
 struct Light {

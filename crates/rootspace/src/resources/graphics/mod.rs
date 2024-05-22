@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use wgpu::{BindingType, BufferAddress, BufferBindingType, BufferUsages, ShaderStages};
+use wgpu::{BindingType, BufferAddress, BufferBindingType, BufferSize, BufferUsages, ShaderStages};
 use winit::event_loop::EventLoopWindowTarget;
 
 use self::{
@@ -363,7 +363,6 @@ where
 
         let mut database = GpuObjectDatabase::default();
 
-        let min_binding_size = wgpu::BufferSize::new(size_of::<CameraUniform>() as _); // 64 bytes
         let camera_buffer_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
             .with_label("camera-buffer-layout")
             .add_bind_group_layout_entry(
@@ -371,13 +370,12 @@ where
                 ShaderStages::VERTEX,
                 BindingType::Buffer {
                     ty: BufferBindingType::Uniform,
-                    has_dynamic_offset: true,
-                    min_binding_size,
+                    has_dynamic_offset: false,
+                    min_binding_size: BufferSize::new(size_of::<CameraUniform>() as _),
                 },
             )
             .submit();
 
-        let min_binding_size = wgpu::BufferSize::new(size_of::<LightUniform>() as _); // 64 bytes
         let light_buffer_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
             .with_label("light-buffer-layout")
             .add_bind_group_layout_entry(
@@ -386,7 +384,7 @@ where
                 BindingType::Buffer {
                     ty: BufferBindingType::Uniform,
                     has_dynamic_offset: false,
-                    min_binding_size,
+                    min_binding_size: BufferSize::new(size_of::<LightUniform>() as _),
                 },
             )
             .submit();
