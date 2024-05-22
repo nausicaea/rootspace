@@ -1,11 +1,12 @@
 use std::{collections::BTreeMap, path::Path};
 
 use anyhow::Context;
+use glamour::vec::Vec4;
 
 use super::private::PrivLoadAsset;
 use crate::{
     assets::private::PrivSaveAsset,
-    components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
+    components::{camera::Camera, info::Info, light::Light, renderable::Renderable, transform::Transform},
     resources::asset_database::AssetDatabase,
 };
 use ecs::{
@@ -24,6 +25,7 @@ pub struct Scene {
     cameras: BTreeMap<Index, Camera>,
     transforms: BTreeMap<Index, Transform>,
     renderables: BTreeMap<Index, RenderableSource>,
+    lights: BTreeMap<Index, LightSource>,
 }
 
 impl Scene {
@@ -55,6 +57,21 @@ impl Scene {
                         RenderableSource::Reference {
                             group: r.group.clone(),
                             name: r.name.clone(),
+                        },
+                    )
+                })
+                .collect(),
+            lights: res
+                .read_components::<Light>()
+                .indexed_iter()
+                .map(|(i, r)| {
+                    (
+                        i,
+                        LightSource::Reference {
+                            group: r.group.clone(),
+                            name: r.name.clone(),
+                            position: r.position,
+                            color: r.color,
                         },
                     )
                 })
@@ -143,6 +160,11 @@ impl Scene {
                     let renderable = Renderable::with_model(res, group, name).await?;
                     res.write_components::<Renderable>().insert(i_new, renderable);
                 }
+
+                if let Some(LightSource::Reference { group, name, position, color }) = scene.lights.get(&i_prev) {
+                    let light = Light::with_model(res, group, name, *position, *color).await?;
+                    res.write_components::<Light>().insert(i_new, light);
+                }
             }
 
             Ok(())
@@ -196,6 +218,7 @@ pub struct EntityBuilder<'a> {
     camera: Option<Camera>,
     transform: Option<Transform>,
     renderable: Option<RenderableSource>,
+    light: Option<LightSource>,
 }
 
 impl<'a> EntityBuilder<'a> {
@@ -207,6 +230,7 @@ impl<'a> EntityBuilder<'a> {
             camera: None,
             transform: None,
             renderable: None,
+            light: None,
         }
     }
 
@@ -232,6 +256,11 @@ impl<'a> EntityBuilder<'a> {
 
     pub fn with_renderable(mut self, rdb: RenderableSource) -> Self {
         self.renderable = Some(rdb);
+        self
+    }
+
+    pub fn with_light(mut self, lght: LightSource) -> Self {
+        self.light = Some(lght);
         self
     }
 
@@ -261,6 +290,10 @@ impl<'a> EntityBuilder<'a> {
             self.scene.renderables.insert(i, renderable);
         }
 
+        if let Some(light) = self.light {
+            self.scene.lights.insert(i, light);
+        }
+
         e
     }
 }
@@ -268,4 +301,9 @@ impl<'a> EntityBuilder<'a> {
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum RenderableSource {
     Reference { group: String, name: String },
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub enum LightSource {
+    Reference { group: String, name: String, position: Vec4<f32>, color: Vec4<f32>},
 }

@@ -11,8 +11,8 @@ use winit::{
 
 use super::registry::{FUSRegistry, MSRegistry};
 use crate::{
-    assets::scene::Scene,
-    components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
+    assets::scene::{LightSource, Scene},
+    components::{camera::Camera, info::Info, light::Light, renderable::Renderable, transform::Transform},
     events::engine_event::EngineEvent,
     registry::{RRegistry, USRegistry},
     resources::{
@@ -332,6 +332,19 @@ impl Orchestrator {
                 [0.0, 0.0, 0.0, 1.0],
                 [0.0, 1.0, 0.0, 0.0],
             ))
+            .submit();
+        editor_scene
+            .create_entity()
+            .with_info(Info {
+                name: "editor-light".into(),
+                ..Default::default()
+            })
+            .with_light(LightSource::Reference { 
+                group: "models".into(),
+                name: "cube.ply".into(),
+                position: [2.0, 2.0, 2.0, 1.0].into(), 
+                color: [1.0, 1.0, 1.0, 1.0].into(),
+            })
             .submit();
         editor_scene
             .create_entity()

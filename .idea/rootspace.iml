@@ -27,6 +27,18 @@
       <sourceFolder url="file://$MODULE_DIR$/benches" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/plyers/benches" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/rootspace/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/ecs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/file-manipulation/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/forward-ref/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/glamour/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/plyers/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/plyers/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/plyers/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/plyers/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/rootspace/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/rootspace/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/rose-tree/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/urn/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/rose-tree/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/affine-transform/target" />
