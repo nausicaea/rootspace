@@ -6,6 +6,7 @@ edition = "2021"
 
 [features]
 editor = []
+renormalize = []
 dbg-gfx = []
 dbg-loop = []
 tokio-console = ["console-subscriber"]

@@ -139,6 +139,18 @@ impl CpuMesh {
             if let Some(p_idx) = v_p_index.get(TEXTURE_V_PROPERTY) {
                 vertex.tex_coords[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
+
+            #[cfg(feature = "renormalize")]
+            {
+                // Normalize the normal vector
+                let norm_sq = vertex.normal[0].powi(2) + vertex.normal[1].powi(2) + vertex.normal[2].powi(2);
+                if norm_sq > 0.0 {
+                    let norm = norm_sq.sqrt();
+                    vertex.normal[0] /= norm;
+                    vertex.normal[1] /= norm;
+                    vertex.normal[2] /= norm;
+                }
+            }
         }
 
         let indices: Vec<u32> = ply.data[&vertex_indices_id]

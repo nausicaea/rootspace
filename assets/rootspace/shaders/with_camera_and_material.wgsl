@@ -1,4 +1,5 @@
 // Shader pre-processing hint: https://elyshaffir.github.io/Taiga-Blog/2022/01/08/using_include_statements_in_wgsl.html
+// Function reference: https://webgpufundamentals.org/webgpu/lessons/webgpu-wgsl-function-reference.html
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
@@ -56,10 +57,12 @@ fn vertex_main(
     let with_camera = clamp(instance.with_camera, 0.0, 1.0);
     let clip_position = world_position * camera_transform * with_camera + world_position * (1.0 - with_camera);
 
+    let world_normal = normalize(vec4<f32>(vertex.normal, 0.0) * model_transform);
+
     return VertexOutput(
         clip_position,
         world_position.xyz,
-        vertex.normal,
+        world_normal.xyz,
         vertex.tex_coords,
         light.color,
     );
