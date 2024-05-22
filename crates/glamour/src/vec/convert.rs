@@ -14,6 +14,20 @@ where
     }
 }
 
+impl<R> From<Vec4<R>> for [R; 4]
+where
+    R: Copy,
+{
+    fn from(value: Vec4<R>) -> Self {
+        [
+            value.x,
+            value.y,
+            value.z,
+            value.w,
+        ]
+    }
+}
+
 impl<R> From<R> for Vec4<R>
 where
     R: num_traits::Num + Copy,

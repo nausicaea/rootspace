@@ -2,7 +2,7 @@ use winit::event::WindowEvent;
 
 use super::systems::debug_animator::DebugAnimator;
 use crate::{
-    components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
+    components::{camera::Camera, info::Info, light::Light, renderable::Renderable, transform::Transform},
     events::engine_event::EngineEvent,
     resources::{asset_database::AssetDatabase, graphics::Graphics, rpc_settings::RpcSettings, statistics::Statistics},
     systems::{camera_manager::CameraManager, force_shutdown::ForceShutdown, rpc::Rpc},
@@ -18,6 +18,7 @@ pub type RRegistry<S> = RegAdd![
     <Info as Component>::Storage,
     <Transform as Component>::Storage,
     <Renderable as Component>::Storage,
+    <Light as Component>::Storage,
     AssetDatabase,
     EventQueue<WindowEvent>,
     EventQueue<EngineEvent>,

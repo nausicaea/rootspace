@@ -151,6 +151,7 @@ impl Graphics {
             .write_buffer(&self.database.buffers[&buffer], 0, bytemuck::cast_slice(data));
     }
 
+    #[must_use]
     pub fn create_shader_module<'a, 's, S: Into<std::borrow::Cow<'s, str>>>(
         &mut self,
         label: Option<&'a str>,
@@ -165,6 +166,7 @@ impl Graphics {
         self.database.insert_shader_module(sm)
     }
 
+    #[must_use]
     pub fn create_encoder(&self, label: Option<&str>) -> Result<Encoder, wgpu::SurfaceError> {
         Encoder::new(
             label,
@@ -175,14 +177,17 @@ impl Graphics {
         )
     }
 
+    #[must_use]
     pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {
         RenderPipelineBuilder::new(&self.runtime, &mut self.database, &self.settings)
     }
 
+    #[must_use]
     pub fn create_bind_group(&mut self, layout: BindGroupLayoutId) -> BindGroupBuilder {
         BindGroupBuilder::new(&self.runtime, &mut self.database, layout)
     }
 
+    #[must_use]
     pub fn create_buffer(&mut self, label: Option<&str>, size: BufferAddress, usage: BufferUsages) -> BufferId {
         tracing::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
         let buf = self.runtime.device.create_buffer(&wgpu::BufferDescriptor {
@@ -195,6 +200,7 @@ impl Graphics {
         self.database.insert_buffer(buf)
     }
 
+    #[must_use]
     pub fn create_buffer_init<T: bytemuck::NoUninit>(
         &mut self,
         label: Option<&str>,
@@ -217,6 +223,7 @@ impl Graphics {
     }
 
     #[tracing::instrument(skip_all)]
+    #[must_use]
     fn create_texture(&mut self, t: &CpuTexture) -> GpuTexture {
         let texture = TextureBuilder::new(&self.runtime, &mut self.database, &self.settings)
             .with_label(t.label.as_ref().map(|l| format!("{}:texture", &l)).as_deref())
@@ -235,6 +242,7 @@ impl Graphics {
     }
 
     #[tracing::instrument(skip_all)]
+    #[must_use]
     fn create_material(&mut self, m: &CpuMaterial) -> GpuMaterial {
         let texture = self.create_texture(&m.texture);
 
@@ -250,6 +258,7 @@ impl Graphics {
     }
 
     #[tracing::instrument(skip_all)]
+    #[must_use]
     fn create_mesh(&mut self, m: &CpuMesh) -> GpuMesh {
         let vertex_buffer = self.create_buffer_init(
             m.label.as_ref().map(|l| format!("{}:vertex-buffer", &l)).as_deref(),
@@ -282,6 +291,7 @@ impl Graphics {
     }
 
     #[tracing::instrument(skip_all)]
+    #[must_use]
     fn create_instanced_mesh(&mut self, m: &GpuMesh) -> GpuMesh {
         GpuMesh {
             vertex_buffer: m.vertex_buffer,
@@ -293,6 +303,7 @@ impl Graphics {
     }
 
     #[tracing::instrument(skip_all)]
+    #[must_use]
     pub fn create_model(&mut self, m: &CpuModel) -> GpuModel {
         GpuModel {
             mesh: self.create_mesh(&m.mesh),
@@ -301,6 +312,7 @@ impl Graphics {
     }
 
     #[tracing::instrument(skip_all)]
+    #[must_use]
     pub fn create_instanced_model(&mut self, m: &GpuModel) -> GpuModel {
         GpuModel {
             mesh: self.create_instanced_mesh(&m.mesh),
@@ -308,6 +320,7 @@ impl Graphics {
         }
     }
 
+    #[must_use]
     fn create_depth_texture_int(
         runtime: &Runtime,
         database: &mut GpuObjectDatabase,
@@ -320,6 +333,7 @@ impl Graphics {
             .submit()
     }
 
+    #[must_use]
     fn create_texture_view_int(
         database: &mut GpuObjectDatabase,
         label: Option<&str>,

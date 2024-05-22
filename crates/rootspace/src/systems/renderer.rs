@@ -13,8 +13,9 @@ use itertools::Itertools;
 use wgpu::{BufferAddress, BufferSize, BufferUsages, DynamicOffset, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
-use crate::resources::graphics::{
-    camera_uniform::CameraUniform, gpu_material::GpuMaterial, light_uniform::LightUniform,
+use crate::{
+    components::light::Light,
+    resources::graphics::{camera_uniform::CameraUniform, gpu_material::GpuMaterial, light_uniform::LightUniform},
 };
 use crate::{
     components::{camera::Camera, renderable::Renderable, transform::Transform},
@@ -52,6 +53,7 @@ pub struct Renderer {
     camera_bind_group: BindGroupId,
     light_buffer: BufferId,
     light_bind_group: BindGroupId,
+    pipeline_ldb: PipelineId,
     pipeline_wc: PipelineId,
     pipeline_wcm: PipelineId,
 }
@@ -109,6 +111,30 @@ impl Renderer {
             })
             .fold(
                 (Vec::<DynamicOffset>::new(), Vec::<CameraUniform>::new()),
+                |mut state, elem| {
+                    state.0.push(elem.0);
+                    state.1.push(elem.1);
+                    state
+                },
+            );
+
+        let (light_draw_data, light_buffer_data) = res
+            .iter_r::<Light>()
+            .map(|(_, lght)| {
+                let ldd = LightDrawData {
+                    vertex_buffer: lght.model.mesh.vertex_buffer,
+                    index_buffer: lght.model.mesh.index_buffer,
+                    num_indices: lght.model.mesh.num_indices,
+                };
+                let lu = LightUniform {
+                    position: lght.position.into(),
+                    color: lght.color.into(),
+                };
+
+                (ldd, lu)
+            })
+            .fold(
+                (Vec::<LightDrawData>::new(), Vec::<LightUniform>::new()),
                 |mut state, elem| {
                     state.0.push(elem.0);
                     state.1.push(elem.1);
@@ -178,6 +204,13 @@ impl Renderer {
             )
         });
 
+        gfx.write_buffer(self.light_buffer, unsafe {
+            from_raw_parts(
+                light_buffer_data.as_ptr() as *const u8,
+                light_buffer_data.len() * uniform_alignment as usize,
+            )
+        });
+
         // Update the instance buffers
         for (instance_buffer, instance_data) in instance_buffer_data {
             gfx.write_buffer(instance_buffer, unsafe {
@@ -190,7 +223,8 @@ impl Renderer {
 
         DrawData {
             camera_buffer_offsets,
-            instance_draw_data,
+            lights: light_draw_data,
+            instances: instance_draw_data,
         }
     }
 
@@ -198,8 +232,18 @@ impl Renderer {
     fn draw(&mut self, draw_data: &DrawData, mut rp: RenderPass) -> usize {
         let mut draw_calls = 0;
 
-        for instance_data in &draw_data.instance_draw_data {
-            for &camera_buffer_offset in &draw_data.camera_buffer_offsets {
+        for &camera_buffer_offset in &draw_data.camera_buffer_offsets {
+            for light in &draw_data.lights {
+                draw_calls += 1;
+                rp.set_pipeline(self.pipeline_ldb)
+                    .set_bind_group(0, self.camera_bind_group, &[camera_buffer_offset])
+                    .set_bind_group(1, self.light_bind_group, &[])
+                    .set_vertex_buffer(0, light.vertex_buffer)
+                    .set_index_buffer(light.index_buffer)
+                    .draw_indexed(0..light.num_indices, 0, 0..1);
+            }
+
+            for instance_data in &draw_data.instances {
                 draw_calls += 1;
                 if instance_data.materials.is_empty() {
                     rp.set_pipeline(self.pipeline_wc)
@@ -249,19 +293,42 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
+    fn crp_light_debug(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
+        let shader_path = adb.find_asset("shaders", "light_debug.wgsl")?;
+        let shader_data = std::fs::read_to_string(&shader_path)
+            .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
+        let shader_module = gfx.create_shader_module(Some("light-debug:shader"), &shader_data);
+
+        let cl = gfx.camera_buffer_layout();
+        let ll = gfx.light_buffer_layout();
+
+        let pipeline = gfx
+            .create_render_pipeline()
+            .with_label("light-debug:pipeline")
+            .add_bind_group_layout(cl)
+            .add_bind_group_layout(ll)
+            .with_vertex_shader_module(shader_module, "vertex_main")
+            .with_fragment_shader_module(shader_module, "fragment_main")
+            .add_vertex_buffer_layout::<Vertex>()
+            .submit();
+
+        Ok(pipeline)
+    }
+
+    #[tracing::instrument(skip_all)]
     fn crp_with_camera(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
         let shader_path = adb.find_asset("shaders", "with_camera.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let shader_module = gfx.create_shader_module(Some("with-camera:shader"), &shader_data);
 
-        let tl = gfx.camera_buffer_layout();
+        let cl = gfx.camera_buffer_layout();
         let ll = gfx.light_buffer_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
             .with_label("with-camera:pipeline")
-            .add_bind_group_layout(tl)
+            .add_bind_group_layout(cl)
             .add_bind_group_layout(ll)
             .with_vertex_shader_module(shader_module, "vertex_main")
             .with_fragment_shader_module(shader_module, "fragment_main")
@@ -279,14 +346,14 @@ impl Renderer {
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let shader_module = gfx.create_shader_module(Some("with-camera-material:shader"), &shader_data);
 
-        let tl = gfx.camera_buffer_layout();
+        let cl = gfx.camera_buffer_layout();
         let ll = gfx.light_buffer_layout();
         let ml = gfx.material_buffer_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
             .with_label("with-camera-material:pipeline")
-            .add_bind_group_layout(tl)
+            .add_bind_group_layout(cl)
             .add_bind_group_layout(ll)
             .add_bind_group_layout(ml)
             .with_vertex_shader_module(shader_module, "vertex_main")
@@ -308,6 +375,8 @@ impl WithResources for Renderer {
         let adb = res.read::<AssetDatabase>();
         let mut gfx = res.write::<Graphics>();
 
+        let pipeline_ldb =
+            Self::crp_light_debug(&adb, &mut gfx).context("Creating the light debugging render pipeline")?;
         let pipeline_wcm = Self::crp_with_camera_and_material(&adb, &mut gfx)
             .context("Creating the render pipeline 'with-camera-material'")?;
         let pipeline_wc =
@@ -353,6 +422,7 @@ impl WithResources for Renderer {
             camera_bind_group,
             light_buffer,
             light_bind_group,
+            pipeline_ldb,
             pipeline_wcm,
             pipeline_wc,
         })
@@ -420,7 +490,15 @@ impl System for Renderer {
 #[derive(Debug)]
 struct DrawData<'a> {
     camera_buffer_offsets: Vec<DynamicOffset>,
-    instance_draw_data: Vec<InstanceDrawData<'a>>,
+    lights: Vec<LightDrawData>,
+    instances: Vec<InstanceDrawData<'a>>,
+}
+
+#[derive(Debug)]
+struct LightDrawData {
+    vertex_buffer: BufferId,
+    index_buffer: BufferId,
+    num_indices: u32,
 }
 
 #[derive(Debug)]
