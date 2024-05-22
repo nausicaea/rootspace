@@ -2,7 +2,7 @@
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
-    @location(1) normals: vec3<f32>,
+    @location(1) normal: vec3<f32>,
     @location(2) tex_coords: vec2<f32>,
 }
 
@@ -16,12 +16,22 @@ struct InstanceInput {
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
-    @location(0) tex_coords: vec2<f32>,
-    @location(1) scalar: f32,
+    @location(0) world_position: vec3<f32>,
+    @location(1) world_normal: vec3<f32>,
+    @location(2) tex_coords: vec2<f32>,
+    @location(3) color: vec3<f32>,
+}
+
+struct Light {
+    position: vec3<f32>,
+    color: vec3<f32>,
 }
 
 @group(0) @binding(0)
 var<uniform> camera_transform: mat4x4<f32>;
+
+@group(1) @binding(0)
+var<uniform> light: Light;
 
 @vertex
 fn vertex_main(
@@ -35,18 +45,17 @@ fn vertex_main(
         instance.transform_3,
     );
 
-    let world_position = vec4<f32>(vertex.position, 1.0);
+    let local_position = vec4<f32>(vertex.position, 1.0);
+    let world_position = local_position * model_transform;
     let with_camera = clamp(instance.with_camera, 0.0, 1.0);
-    let clip_position = world_position * model_transform * camera_transform * with_camera + world_position * model_transform * (1.0 - with_camera);
-
-    let front = vec4(1.0, 1.0, 1.0, 0.0);
-    let normals = vec4<f32>(vertex.normals, 0.0);
-    let s = dot(front, normals) / (length(front) * length(normals));
+    let clip_position = world_position * camera_transform * with_camera + world_position * (1.0 - with_camera);
 
     return VertexOutput(
         clip_position,
+        world_position.xyz,
+        vertex.normal,
         vertex.tex_coords,
-        s,
+        light.color,
     );
 }
 
@@ -54,5 +63,17 @@ fn vertex_main(
 fn fragment_main(
     in: VertexOutput
 ) -> @location(0) vec4<f32> {
-    return vec4<f32>(0.34, 0.34, 0.87, 1.0) * in.scalar;
+    let object_color = vec4<f32>(0.34, 0.34, 0.87, 1.0);
+
+    let ambient_strength = 0.1;
+    let ambient_color = light.color * ambient_strength;
+
+    let light_dir = normalize(light.position - in.world_position);
+    let diffuse_strength = max(dot(in.world_normal, light_dir), 0.0);
+    let diffuse_color = light.color * diffuse_strength;
+
+    return vec4<f32>(
+        (ambient_color + diffuse_color) * object_color.xyz, 
+        object_color.a,
+    );
 }

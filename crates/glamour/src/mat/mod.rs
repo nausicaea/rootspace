@@ -2,6 +2,7 @@ use num_traits::Float;
 
 use crate::{num::Zero, ops::cross::Cross, unit::Unit, vec::Vec4};
 
+mod approx;
 mod convert;
 mod num;
 mod ops;
@@ -76,12 +77,12 @@ impl<R> Mat4<R>
 where
     R: Float,
 {
-    pub fn with_look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Self {
-        let side: Unit<_> = up.cross(fwd);
-        let rotated_up = fwd.cross(side);
+    pub fn with_look_at_rh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Self {
+        let right: Unit<_> = Unit::from(-up.cross(fwd).0);
+        let rotated_up = fwd.cross(right);
 
         Mat4([
-            [side.x, side.y, side.z, R::zero()],
+            [right.x, right.y, right.z, R::zero()],
             [rotated_up.x, rotated_up.y, rotated_up.z, R::zero()],
             [fwd.x, fwd.y, fwd.z, R::zero()],
             [R::zero(), R::zero(), R::zero(), R::one()],

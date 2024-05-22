@@ -51,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
     scene
         .create_entity()
         .with_camera(Camera::default())
-        .with_transform(Transform::look_at_lh(
+        .with_transform(Transform::look_at_rh(
             [0.0, 0.0, -10.0, 1.0],
             [0.0, 0.0, 0.0, 1.0],
             [0.0, 1.0, 0.0, 0.0],

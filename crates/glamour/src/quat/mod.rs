@@ -2,6 +2,7 @@ use num_traits::{Float, One, Zero};
 
 use crate::{mat::Mat4, unit::Unit, vec::Vec4};
 
+mod approx;
 mod convert;
 mod num;
 mod ops;
@@ -24,8 +25,8 @@ impl<R> Quat<R>
 where
     R: Float,
 {
-    pub fn with_look_at_lh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Unit<Quat<R>> {
-        Mat4::with_look_at_lh(fwd, up).into()
+    pub fn with_look_at_rh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Unit<Quat<R>> {
+        Mat4::with_look_at_rh(fwd, up).into()
     }
 
     pub fn with_axis_angle(axis: Unit<Vec4<R>>, angle: R) -> Unit<Quat<R>> {
@@ -91,7 +92,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_ulps_eq;
+    use ::approx::assert_ulps_eq;
     use proptest::{
         num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
         prop_assert, proptest,

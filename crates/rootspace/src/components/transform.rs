@@ -21,9 +21,9 @@ impl Transform {
         TransformBuilder::default()
     }
 
-    pub fn look_at_lh<V: Into<Vec4<f32>>>(eye: V, cntr: V, up: V) -> Self {
+    pub fn look_at_rh<V: Into<Vec4<f32>>>(eye: V, cntr: V, up: V) -> Self {
         Transform {
-            affine: Affine::with_look_at_lh(eye.into(), cntr.into(), Unit::from(up.into())),
+            affine: Affine::with_look_at_rh(eye.into(), cntr.into(), Unit::from(up.into())),
             ui: false,
         }
     }
@@ -82,7 +82,7 @@ impl TransformBuilder {
         self
     }
 
-    pub fn with_orientation<Q: Into<Quat<f32>>>(mut self, o: Q) -> Self {
+    pub fn with_orientation<Q: Into<Unit<Quat<f32>>>>(mut self, o: Q) -> Self {
         self.affine_builder = self.affine_builder.with_orientation(o.into());
         self
     }

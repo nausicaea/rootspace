@@ -121,15 +121,15 @@ impl CpuMesh {
             }
 
             if let Some(p_idx) = v_p_index.get(NX_PROPERTY) {
-                vertex.normals[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.normal[0] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
 
             if let Some(p_idx) = v_p_index.get(NY_PROPERTY) {
-                vertex.normals[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.normal[1] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
 
             if let Some(p_idx) = v_p_index.get(NZ_PROPERTY) {
-                vertex.normals[2] = vertex_data[p_idx].1.as_slice().unwrap()[i];
+                vertex.normal[2] = vertex_data[p_idx].1.as_slice().unwrap()[i];
             }
 
             if let Some(p_idx) = v_p_index.get(TEXTURE_U_PROPERTY) {

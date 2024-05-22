@@ -13,6 +13,7 @@ test-flaky = ["ecs/test-flaky", "rose-tree/test-flaky"]
 
 [dependencies]
 anyhow = { version = "1.0.0" }
+approx = "0.5.0"
 async-trait = "0.1.77"
 bytemuck = { version = "1.0", features = [ "derive" ] }
 ciborium = "^0.2.0"
@@ -28,6 +29,7 @@ humantime = "2.1.0"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 itertools = "0.12.1"
 lazy_static = "1.0"
+num-traits = "0.2.14"
 plyers = { path = "../plyers" }
 regex = "1.0"
 rose-tree = { path = "../rose-tree" }

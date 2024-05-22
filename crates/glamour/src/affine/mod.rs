@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{num::Zero, ops::cross::Cross, quat::Quat, unit::Unit, vec::Vec4};
 
+mod approx;
 pub mod builder;
 mod convert;
 mod num;
@@ -43,16 +44,16 @@ impl<R> Affine<R>
 where
     R: Float,
 {
-    pub fn with_look_at_lh(eye: Vec4<R>, target: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
+    pub fn with_look_at_rh(eye: Vec4<R>, target: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
         let fwd: Unit<_> = (target - eye).into();
-        let side: Unit<_> = up.cross(fwd);
-        let rotated_up: Unit<_> = fwd.cross(side);
+        let right: Unit<_> = Unit::from(-up.cross(fwd).0);
+        let rotated_up: Unit<_> = fwd.cross(right);
 
-        let eye = Vec4::new(-(eye * side.0), -(eye * rotated_up.0), eye * fwd.0, R::zero());
+        let eye = Vec4::new(-(eye * right.0), -(eye * rotated_up.0), eye * fwd.0, R::zero());
 
         Affine {
             t: eye,
-            o: Quat::with_look_at_lh(fwd, up),
+            o: Quat::with_look_at_rh(fwd, up),
             s: R::one(),
         }
     }
@@ -79,12 +80,12 @@ mod tests {
     use crate::num::ToMatrix;
 
     #[test]
-    fn affine_provides_look_at_lh() {
+    fn affine_provides_look_at_rh() {
         let eye = Vec4::from([0.0f32, 1.0, 2.0, 1.0]);
         let cntr = Vec4::from([0.0f32, 0.0, 0.0, 1.0]);
         let up = Vec4::from([0.0f32, 1.0, 0.0, 0.0]);
 
-        let a = Affine::with_look_at_lh(eye, cntr, Unit::from(up));
+        let a = Affine::with_look_at_rh(eye, cntr, Unit::from(up));
 
         let comparison = cgmath::Matrix4::look_at_lh(
             cgmath::Point3::new(eye.x, eye.y, eye.z),

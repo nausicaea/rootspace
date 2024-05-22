@@ -2,6 +2,8 @@ use num_traits::Float;
 
 use super::mat::Mat4;
 
+mod approx;
+
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(bound(
     serialize = "R: serde::Serialize",
@@ -55,7 +57,7 @@ impl<R> AsRef<Mat4<R>> for Ortho<R> {
 
 #[cfg(test)]
 mod tests {
-    use approx::ulps_eq;
+    use ::approx::ulps_eq;
     use proptest::{prop_assert, proptest};
 
     use super::*;

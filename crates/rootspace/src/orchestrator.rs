@@ -3,6 +3,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+use glamour::{quat::Quat, vec::Vec4};
 use tokio::runtime::Runtime;
 use winit::{
     event::{Event, WindowEvent},
@@ -12,7 +13,7 @@ use winit::{
 use super::registry::{FUSRegistry, MSRegistry};
 use crate::{
     assets::scene::{LightSource, Scene},
-    components::{camera::Camera, info::Info, light::Light, renderable::Renderable, transform::Transform},
+    components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
     events::engine_event::EngineEvent,
     registry::{RRegistry, USRegistry},
     resources::{
@@ -21,7 +22,7 @@ use crate::{
         rpc_settings::RpcDeps,
         statistics::Statistics,
     },
-    systems::renderer::Renderer,
+    systems::renderer::Renderer, RenderableSource,
 };
 use ecs::{
     entity::Entity,
@@ -313,30 +314,24 @@ impl Orchestrator {
         #[cfg(feature = "editor")]
         Self::load_editor_builtins(res).await?;
 
-        Ok(())
-    }
-
-    #[tracing::instrument(skip_all)]
-    async fn load_editor_builtins(res: &Resources) -> anyhow::Result<()> {
-        use crate::assets::scene::RenderableSource;
-        let mut editor_scene = Scene::default();
-        editor_scene
+        let mut builtins_scene = Scene::default();
+        builtins_scene
             .create_entity()
             .with_info(Info {
-                name: "editor-camera".into(),
+                name: "camera-1".into(),
                 ..Default::default()
             })
             .with_camera(Camera::default())
-            .with_transform(Transform::look_at_lh(
-                [0.0, 0.0, -10.0, 1.0],
+            .with_transform(Transform::look_at_rh(
+                [0.0, 5.0, -10.0, 1.0],
                 [0.0, 0.0, 0.0, 1.0],
                 [0.0, 1.0, 0.0, 0.0],
             ))
             .submit();
-        editor_scene
+        builtins_scene
             .create_entity()
             .with_info(Info {
-                name: "editor-light".into(),
+                name: "light-1".into(),
                 ..Default::default()
             })
             .with_light(LightSource::Reference { 
@@ -346,6 +341,54 @@ impl Orchestrator {
                 color: [1.0, 1.0, 1.0, 1.0].into(),
             })
             .submit();
+
+        const SPACE_BETWEEN: f32 = 3.0;
+        const NUM_INSTANCES_PER_ROW: usize = 16;
+        for i in 0..NUM_INSTANCES_PER_ROW {
+            for j in 0..NUM_INSTANCES_PER_ROW {
+                let x = SPACE_BETWEEN * (i as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
+                let z = SPACE_BETWEEN * (j as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
+
+                let position = Vec4::new(x, 0.0, z, 0.0);
+
+                use glamour::num::Zero;
+                use approx::relative_eq;
+
+                let (axis, angle) = if relative_eq!(position, Vec4::zero()) {
+                    (Vec4::new(0.0, 0.0, 1.0, 0.0), 0.0)
+                } else {
+                    (position, std::f32::consts::PI / 4.0)
+                };
+
+                builtins_scene
+                    .create_entity()
+                    .with_info(Info {
+                        name: format!("cube-{i}x{j}"),
+                        ..Default::default()
+                    })
+                    .with_renderable(RenderableSource::Reference {
+                        group: "models".into(),
+                        name: "textured-cube.ply".into(),
+                    })
+                    .with_transform(
+                        Transform::builder()
+                            .with_translation(position)
+                            .with_scale(0.5)
+                            .with_orientation(Quat::with_axis_angle(axis.into(), angle))
+                            .build()
+                    )
+                    .submit();
+            }
+        }
+
+        builtins_scene.submit(res, "builtin", "main").await?;
+
+        Ok(())
+    }
+
+    #[tracing::instrument(skip_all)]
+    async fn load_editor_builtins(res: &Resources) -> anyhow::Result<()> {
+        let mut editor_scene = Scene::default();
         editor_scene
             .create_entity()
             .with_info(Info {
