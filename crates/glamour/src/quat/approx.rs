@@ -54,4 +54,3 @@ where
             && self.k.ulps_eq(&rhs.k, epsilon, max_ulps)
     }
 }
-

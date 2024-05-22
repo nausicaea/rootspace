@@ -45,4 +45,3 @@ where
         self.0.ulps_eq(&rhs.0, epsilon, max_ulps)
     }
 }
-

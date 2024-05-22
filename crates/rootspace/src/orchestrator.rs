@@ -22,7 +22,8 @@ use crate::{
         rpc_settings::RpcDeps,
         statistics::Statistics,
     },
-    systems::renderer::Renderer, RenderableSource,
+    systems::renderer::Renderer,
+    RenderableSource,
 };
 use ecs::{
     entity::Entity,
@@ -334,10 +335,10 @@ impl Orchestrator {
                 name: "light-1".into(),
                 ..Default::default()
             })
-            .with_light(LightSource::Reference { 
+            .with_light(LightSource::Reference {
                 group: "models".into(),
                 name: "cube.ply".into(),
-                position: [2.0, 2.0, 2.0, 1.0].into(), 
+                position: [2.0, 2.0, 2.0, 1.0].into(),
                 color: [1.0, 1.0, 1.0, 1.0].into(),
             })
             .submit();
@@ -351,8 +352,8 @@ impl Orchestrator {
 
                 let position = Vec4::new(x, 0.0, z, 0.0);
 
-                use glamour::num::Zero;
                 use approx::relative_eq;
+                use glamour::num::Zero;
 
                 let (axis, angle) = if relative_eq!(position, Vec4::zero()) {
                     (Vec4::new(0.0, 0.0, 1.0, 0.0), 0.0)
@@ -375,7 +376,7 @@ impl Orchestrator {
                             .with_translation(position)
                             .with_scale(0.5)
                             .with_orientation(Quat::with_axis_angle(axis.into(), angle))
-                            .build()
+                            .build(),
                     )
                     .submit();
             }

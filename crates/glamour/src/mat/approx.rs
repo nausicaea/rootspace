@@ -57,4 +57,3 @@ where
             .all(|(l, r)| l.ulps_eq(r, epsilon, max_ulps))
     }
 }
-

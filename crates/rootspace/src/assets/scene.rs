@@ -161,7 +161,13 @@ impl Scene {
                     res.write_components::<Renderable>().insert(i_new, renderable);
                 }
 
-                if let Some(LightSource::Reference { group, name, position, color }) = scene.lights.get(&i_prev) {
+                if let Some(LightSource::Reference {
+                    group,
+                    name,
+                    position,
+                    color,
+                }) = scene.lights.get(&i_prev)
+                {
                     let light = Light::with_model(res, group, name, *position, *color).await?;
                     res.write_components::<Light>().insert(i_new, light);
                 }
@@ -305,5 +311,10 @@ pub enum RenderableSource {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum LightSource {
-    Reference { group: String, name: String, position: Vec4<f32>, color: Vec4<f32>},
+    Reference {
+        group: String,
+        name: String,
+        position: Vec4<f32>,
+        color: Vec4<f32>,
+    },
 }

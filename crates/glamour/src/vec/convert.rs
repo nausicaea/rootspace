@@ -19,12 +19,7 @@ where
     R: Copy,
 {
     fn from(value: Vec4<R>) -> Self {
-        [
-            value.x,
-            value.y,
-            value.z,
-            value.w,
-        ]
+        [value.x, value.y, value.z, value.w]
     }
 }
 
