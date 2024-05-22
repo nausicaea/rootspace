@@ -9,13 +9,17 @@ struct VertexOutput {
     @location(0) color: vec3<f32>,
 }
 
+struct Camera {
+    view_projection: mat4x4<f32>,
+}
+
 struct Light {
     position: vec3<f32>,
     color: vec3<f32>,
 }
 
 @group(0) @binding(0)
-var<uniform> camera_transform: mat4x4<f32>;
+var<uniform> camera_transform: Camera;
 
 @group(1) @binding(0)
 var<uniform> light: Light;
@@ -26,7 +30,7 @@ fn vertex_main(
 ) -> VertexOutput {
     let scale = 0.25;
     let world_position = vec4<f32>(vertex.position.xyz * scale + light.position.xyz, 1.0);
-    let clip_position = world_position * camera_transform;
+    let clip_position = world_position * camera_transform.view_projection;
 
     return VertexOutput(
         clip_position,
@@ -40,3 +44,5 @@ fn fragment_main(
 ) -> @location(0) vec4<f32> {
     return vec4<f32>(in.color, 1.0);
 }
+
+// vim: set filetype=wgsl :

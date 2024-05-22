@@ -107,7 +107,7 @@ impl Renderer {
             })
             .map(|(i, trf)| {
                 let camera_buffer_offset = (i as DynamicOffset) * (uniform_alignment as DynamicOffset); // first 0x0, then 0x100
-                (camera_buffer_offset, CameraUniform(trf))
+                (camera_buffer_offset, CameraUniform { view_projection: trf })
             })
             .fold(
                 (Vec::<DynamicOffset>::new(), Vec::<CameraUniform>::new()),
