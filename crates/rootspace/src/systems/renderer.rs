@@ -193,7 +193,7 @@ impl Renderer {
 
                 let light_transform = AffineBuilder::default()
                     .with_scale(0.25)
-                    .with_translation([2.0, 2.0, 2.0, 0.0].into())
+                    .with_translation(lght.position)
                     .build();
                 let model_view = camera_view * light_transform;
 
