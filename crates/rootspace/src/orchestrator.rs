@@ -323,11 +323,15 @@ impl Orchestrator {
                 ..Default::default()
             })
             .with_camera(Camera::default())
-            .with_transform(Transform::look_at_rh(
-                [0.0, 5.0, -10.0, 1.0],
-                [0.0, 0.0, 0.0, 1.0],
-                [0.0, 1.0, 0.0, 0.0],
-            ))
+            .with_transform(
+                Transform::builder()
+                    .with_translation([0.0, 5.0, -10.0, 1.0])
+                    .with_orientation(Quat::with_axis_angle(
+                        Vec4::new(1.0, 0.0, 0.0, 0.0).into(),
+                        -std::f32::consts::PI / 4.0,
+                    ))
+                    .build(),
+            )
             .submit();
         builtins_scene
             .create_entity()
