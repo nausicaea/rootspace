@@ -26,6 +26,15 @@ where
     }
 }
 
+impl<'a, R> From<&'a Affine<R>> for [[R; 4]; 4]
+where
+    R: Float + NumAssign,
+{
+    fn from(value: &'a Affine<R>) -> Self {
+        Into::<Mat4<R>>::into(value).0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use approx::{relative_eq, ulps_eq};

@@ -1,7 +1,5 @@
-use glamour::mat::Mat4;
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-#[repr(C, align(256))]
+#[derive(Debug, Clone, Copy, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
+#[repr(C)]
 pub struct CameraUniform { 
-    pub projection: Mat4<f32>,
+    pub projection: [[f32; 4]; 4],
 }

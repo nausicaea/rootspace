@@ -41,7 +41,7 @@ use ecs::{
     system::System,
     with_resources::WithResources,
 };
-use glamour::{mat::Mat4, num::ToMatrix};
+use glamour::{affine::{builder::AffineBuilder, Affine}, num::ToMatrix};
 use rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug)]
@@ -79,14 +79,14 @@ impl Renderer {
 
     #[tracing::instrument(skip_all)]
     fn prepare<'a>(&mut self, res: &'a Resources) -> DrawData<'a> {
-        fn hier_transform<C: Component + ToMatrix<f32>>(
+        fn hier_transform(
             idx: Index,
             hier: &Hierarchy<Index>,
-            transforms: &C::Storage,
-        ) -> Mat4<f32> {
+            transforms: &<Transform as Component>::Storage,
+        ) -> Affine<f32> {
             hier.ancestors(idx)
-                .filter_map(|a| transforms.get(a).map(|at| at.to_matrix()))
-                .product::<Mat4<f32>>()
+                .filter_map(|a| transforms.get(a).map(|at| &at.affine))
+                .product::<Affine<f32>>()
         }
 
         let gfx = res.read::<Graphics>();
@@ -101,46 +101,23 @@ impl Renderer {
         //    buffer
         // 5. Doe the same as step 4 for each light  
 
-        let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256 bytes
-
         // Calculate all camera transforms and the respective buffer offset
-        let camera_uniforms: Vec<_> = res.iter_r::<Camera>()
+        let (camera_uniform, camera_view) = res.iter_r::<Camera>()
             .map(|(idx, cam)| {
-                let camera_transform = hier_transform::<Transform>(idx, &hier, &transforms);
+                use num_traits::Inv;
+
+                let camera_transform = hier_transform(idx, &hier, &transforms);
                 let camera_view = camera_transform.inv();
 
                 (
                     CameraUniform {
-                        projection: *cam.as_persp_matrix(),
+                        projection: cam.as_persp_matrix().0,
                     },
                     camera_view,
                 )
             })
-            .collect();
-
-        let (light_draw_data, light_buffer_data) = res
-            .iter_r::<Light>()
-            .map(|(_, lght)| {
-                let ldd = LightDrawData {
-                    vertex_buffer: lght.model.mesh.vertex_buffer,
-                    index_buffer: lght.model.mesh.index_buffer,
-                    num_indices: lght.model.mesh.num_indices,
-                };
-                let lu = LightUniform {
-                    position: lght.position.into(),
-                    color: lght.color.into(),
-                };
-
-                (ldd, lu)
-            })
-            .fold(
-                (Vec::<LightDrawData>::new(), Vec::<LightUniform>::new()),
-                |mut state, elem| {
-                    state.0.push(elem.0);
-                    state.1.push(elem.1);
-                    state
-                },
-            );
+            .next()
+            .expect("exactly one camera must be present");
 
         // Iterate through all entities with a renderable and transform
         // Extract all fields of Renderable that are shared across instances
@@ -177,8 +154,13 @@ impl Renderer {
                     }
                     min_instance_id = min(min_instance_id, ren.model.mesh.instance_id.to_u32());
                     max_instance_id = max(max_instance_id, ren.model.mesh.instance_id.to_u32());
+
+                    let instance_transform = hier_transform(idx, &hier, &transforms);
+                    let model_view = camera_view * instance_transform;
+
                     Instance {
-                        model: hier_transform::<Transform>(idx, &hier, &transforms).0,
+                        model_view: model_view.to_matrix().0,
+                        normal: model_view.inv_t().0,
                         with_camera: if trf.ui { 0.0 } else { 1.0 },
                     }
                 })
@@ -196,20 +178,33 @@ impl Renderer {
             instance_buffer_data.insert(instance_buffer, instance_data);
         }
 
-        // Write the camera transforms to the corresponding uniform buffer
-        gfx.write_buffer(self.camera_buffer, unsafe {
-            from_raw_parts(
-                camera_uniforms.as_ptr() as *const u8,
-                camera_uniforms.len() * uniform_alignment as usize,
-            )
-        });
+        let (light_draw_data, light_buffer_data) = res
+            .iter_r::<Light>()
+            .map(|(_, lght)| {
+                let ldd = LightDrawData {
+                    vertex_buffer: lght.model.mesh.vertex_buffer,
+                    index_buffer: lght.model.mesh.index_buffer,
+                    num_indices: lght.model.mesh.num_indices,
+                };
 
-        gfx.write_buffer(self.light_buffer, unsafe {
-            from_raw_parts(
-                light_buffer_data.as_ptr() as *const u8,
-                light_buffer_data.len() * uniform_alignment as usize,
-            )
-        });
+                let light_transform = AffineBuilder::default()
+                    .with_scale(0.25)
+                    .with_translation([2.0, 2.0, 2.0, 0.0].into())
+                    .build();
+                let model_view = camera_view * light_transform;
+
+                let lu = LightUniform {
+                    model_view: model_view.to_matrix().0,
+                    color: lght.color.into(),
+                };
+
+                (ldd, lu)
+            })
+            .next()
+            .expect("currently, only one light is supported");
+
+        // Write the camera uniform data to the corresponding uniform buffer
+        gfx.write_buffer(self.camera_buffer, &[camera_uniform]);
 
         // Update the instance buffers
         for (instance_buffer, instance_data) in instance_buffer_data {
@@ -221,8 +216,11 @@ impl Renderer {
             });
         }
 
+        // Write the light buffer data to the corresponding uniform buffer
+        gfx.write_buffer(self.light_buffer, &[light_buffer_data]);
+
         DrawData {
-            lights: light_draw_data,
+            lights: vec![light_draw_data],
             instances: instance_draw_data,
         }
     }

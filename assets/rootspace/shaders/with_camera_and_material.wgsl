@@ -8,17 +8,21 @@ struct VertexInput {
 }
 
 struct InstanceInput {
-    @location(4) transform_0: vec4<f32>,
-    @location(5) transform_1: vec4<f32>,
-    @location(6) transform_2: vec4<f32>,
-    @location(7) transform_3: vec4<f32>,
-    @location(8) with_camera: f32,
+    @location(4) model_view_0: vec4<f32>,
+    @location(5) model_view_1: vec4<f32>,
+    @location(6) model_view_2: vec4<f32>,
+    @location(7) model_view_3: vec4<f32>,
+    @location(8) normal_0: vec4<f32>,
+    @location(9) normal_1: vec4<f32>,
+    @location(10) normal_2: vec4<f32>,
+    @location(11) normal_3: vec4<f32>,
+    @location(12) with_camera: f32,
 }
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
-    @location(0) world_position: vec3<f32>,
-    @location(1) world_normal: vec3<f32>,
+    @location(0) view_position: vec3<f32>,
+    @location(1) view_normal: vec3<f32>,
     @location(2) tex_coords: vec2<f32>,
     @location(3) color: vec3<f32>,
 }
@@ -28,12 +32,12 @@ struct Camera {
 }
 
 struct Light {
-    position: vec3<f32>,
+    model_view: mat4x4<f32>,
     color: vec3<f32>,
 }
 
 @group(0) @binding(0)
-var<uniform> camera_transform: Camera;
+var<uniform> camera: Camera;
 
 @group(1) @binding(0)
 var<uniform> light: Light;
@@ -49,24 +53,31 @@ fn vertex_main(
     vertex: VertexInput,
     instance: InstanceInput,
 ) -> VertexOutput {
-    let model_transform = mat4x4<f32>(
-        instance.transform_0,
-        instance.transform_1,
-        instance.transform_2,
-        instance.transform_3,
+    let model_view = mat4x4<f32>(
+        instance.model_view_0,
+        instance.model_view_1,
+        instance.model_view_2,
+        instance.model_view_3,
     );
 
-    let local_position = vec4<f32>(vertex.position, 1.0);
-    let world_position = local_position * model_transform;
-    let with_camera = clamp(instance.with_camera, 0.0, 1.0);
-    let clip_position = world_position * camera_transform.view_projection * with_camera + world_position * (1.0 - with_camera);
+    let normal = mat4x4<f32>(
+        instance.normal_0,
+        instance.normal_1,
+        instance.normal_2,
+        instance.normal_3,
+    );
 
-    let world_normal = normalize(vec4<f32>(vertex.normal, 0.0) * model_transform);
+    let with_camera = clamp(instance.with_camera, 0.0, 1.0);
+    let local_position = vec4<f32>(vertex.position, 1.0);
+    let view_position = local_position * model_view;
+    let clip_position = view_position * camera.projection * with_camera + view_position * (1.0 - with_camera);
+
+    let view_normal = normalize(vec4<f32>(vertex.normal, 0.0) * normal);
 
     return VertexOutput(
         clip_position,
-        world_position.xyz,
-        world_normal.xyz,
+        view_position.xyz,
+        view_normal.xyz,
         vertex.tex_coords,
         light.color,
     );
@@ -81,8 +92,10 @@ fn fragment_main(
     let ambient_strength = 0.1;
     let ambient_color = light.color * ambient_strength;
 
-    let light_dir = normalize(light.position - in.world_position);
-    let diffuse_strength = max(dot(in.world_normal, light_dir), 0.0);
+    let light_local_position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+    let light_view_position = light_local_position * light.model_view;
+    let light_dir = normalize(light_view_position.xyz - in.view_position);
+    let diffuse_strength = max(dot(in.view_normal, light_dir), 0.0);
     let diffuse_color = light.color * diffuse_strength;
 
     return vec4<f32>(
