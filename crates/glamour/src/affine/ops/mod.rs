@@ -1,3 +1,3 @@
-mod inv;
 mod dot;
+mod inv;
 mod mul;

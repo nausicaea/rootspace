@@ -41,7 +41,10 @@ use ecs::{
     system::System,
     with_resources::WithResources,
 };
-use glamour::{affine::{builder::AffineBuilder, Affine}, num::ToMatrix};
+use glamour::{
+    affine::{builder::AffineBuilder, Affine},
+    num::ToMatrix,
+};
 use rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug)]
@@ -99,10 +102,11 @@ impl Renderer {
         //    use in the next step
         // 4. For each instance, multiply the view and the model matrix and write to the instance
         //    buffer
-        // 5. Doe the same as step 4 for each light  
+        // 5. Doe the same as step 4 for each light
 
         // Calculate all camera transforms and the respective buffer offset
-        let (camera_uniform, camera_view) = res.iter_r::<Camera>()
+        let (camera_uniform, camera_view) = res
+            .iter_r::<Camera>()
             .map(|(idx, cam)| {
                 use num_traits::Inv;
 

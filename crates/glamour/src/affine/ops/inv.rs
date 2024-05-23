@@ -2,7 +2,7 @@ use num_traits::{Float, Inv};
 
 use crate::affine::Affine;
 
-impl<R> Inv for Affine<R> 
+impl<R> Inv for Affine<R>
 where
     R: Float,
 {

@@ -4,7 +4,7 @@ use num_traits::Float;
 
 use crate::affine::Affine;
 
-impl<R> Product for Affine<R> 
+impl<R> Product for Affine<R>
 where
     R: Float,
 {

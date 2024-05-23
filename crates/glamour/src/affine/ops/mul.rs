@@ -4,7 +4,7 @@ use std::ops::Mul;
 
 use crate::{affine::Affine, ops::dot::Dot};
 
-impl<'a, 'b, R> Dot<&'b Affine<R>> for &'a Affine<R> 
+impl<'a, 'b, R> Dot<&'b Affine<R>> for &'a Affine<R>
 where
     R: Float,
 {
@@ -33,4 +33,3 @@ where
 }
 
 forward_ref_binop!(impl<R: Float> Mul, mul for Affine<R>, Affine<R>, Affine<R>);
-
