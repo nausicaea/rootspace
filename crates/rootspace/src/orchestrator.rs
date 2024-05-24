@@ -360,7 +360,7 @@ impl Orchestrator {
                 use glamour::num::Zero;
 
                 let (axis, angle) = if relative_eq!(position, Vec4::zero()) {
-                    (Vec4::new(0.0, 0.0, 1.0, 0.0), 0.0)
+                    (Vec4::z(), 0.0)
                 } else {
                     (position, std::f32::consts::PI / 4.0)
                 };
