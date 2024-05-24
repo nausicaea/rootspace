@@ -6,7 +6,7 @@ use glamour::vec::Vec4;
 use super::private::PrivLoadAsset;
 use crate::{
     assets::private::PrivSaveAsset,
-    components::{camera::Camera, info::Info, light::Light, renderable::Renderable, transform::Transform},
+    components::{camera::Camera, debug_animate::DebugAnimate, info::Info, light::Light, renderable::Renderable, transform::Transform},
     resources::asset_database::AssetDatabase,
 };
 use ecs::{
@@ -22,6 +22,7 @@ pub struct Scene {
     entities: Entities,
     hierarchy: Hierarchy<Index>,
     infos: BTreeMap<Index, Info>,
+    debug_animates: BTreeMap<Index, DebugAnimate>,
     cameras: BTreeMap<Index, Camera>,
     transforms: BTreeMap<Index, Transform>,
     renderables: BTreeMap<Index, RenderableSource>,
@@ -37,6 +38,11 @@ impl Scene {
                 .read_components::<Info>()
                 .indexed_iter()
                 .map(|(i, info)| (i, Info::new(&info.name, &info.description)))
+                .collect(),
+            debug_animates: res
+                .read_components::<DebugAnimate>()
+                .indexed_iter()
+                .map(|(i, da)| (i, *da))
                 .collect(),
             cameras: res
                 .read_components::<Camera>()
@@ -148,6 +154,10 @@ impl Scene {
                     res.write_components::<Info>().insert(i_new, info);
                 }
 
+                if scene.debug_animates.contains_key(&i_prev) {
+                    res.write_components::<DebugAnimate>().insert(i_new, DebugAnimate);
+                }
+
                 if let Some(camera) = scene.cameras.get(&i_prev).cloned() {
                     res.write_components::<Camera>().insert(i_new, camera);
                 }
@@ -221,6 +231,7 @@ pub struct EntityBuilder<'a> {
     scene: &'a mut Scene,
     parent: Option<Index>,
     info: Option<Info>,
+    debug_animate: bool,
     camera: Option<Camera>,
     transform: Option<Transform>,
     renderable: Option<RenderableSource>,
@@ -233,6 +244,7 @@ impl<'a> EntityBuilder<'a> {
             scene,
             parent: None,
             info: None,
+            debug_animate: false,
             camera: None,
             transform: None,
             renderable: None,
@@ -247,6 +259,11 @@ impl<'a> EntityBuilder<'a> {
 
     pub fn with_info(mut self, info: Info) -> Self {
         self.info = Some(info);
+        self
+    }
+
+    pub fn with_debug_animate(mut self) -> Self {
+        self.debug_animate = true;
         self
     }
 
@@ -282,6 +299,10 @@ impl<'a> EntityBuilder<'a> {
 
         if let Some(info) = self.info {
             self.scene.infos.insert(i, info);
+        }
+
+        if self.debug_animate {
+            self.scene.debug_animates.insert(i, DebugAnimate);
         }
 
         if let Some(camera) = self.camera {

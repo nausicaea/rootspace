@@ -1,3 +1,5 @@
+use crate::unit::Unit;
+
 mod approx;
 mod convert;
 mod num;
@@ -14,6 +16,35 @@ pub struct Vec4<R> {
 impl<R> Vec4<R> {
     pub const fn new(x: R, y: R, z: R, w: R) -> Self {
         Vec4 { x, y, z, w }
+    }
+}
+
+impl<R: num_traits::ConstOne + num_traits::ConstZero> Vec4<R> {
+    pub const fn x() -> Unit<Vec4<R>> {
+        Unit(Vec4 {
+            x: R::ONE,
+            y: R::ZERO,
+            z: R::ZERO,
+            w: R::ZERO,
+        })
+    }
+
+    pub const fn y() -> Unit<Vec4<R>> {
+        Unit(Vec4 {
+            x: R::ZERO,
+            y: R::ONE,
+            z: R::ZERO,
+            w: R::ZERO,
+        })
+    }
+
+    pub const fn z() -> Unit<Vec4<R>> {
+        Unit(Vec4 {
+            x: R::ZERO,
+            y: R::ZERO,
+            z: R::ONE,
+            w: R::ZERO,
+        })
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::{
-    num::{One, Zero},
+    num::{ConstOne, ConstZero, One, Zero},
     vec::Vec4,
 };
 
@@ -17,6 +17,18 @@ where
     }
 }
 
+impl<R> ConstZero for Vec4<R>
+where
+    R: num_traits::ConstZero,
+{
+    const ZERO: Self = Vec4 {
+        x: R::ZERO,
+        y: R::ZERO,
+        z: R::ZERO,
+        w: R::ZERO,
+    };
+}
+
 impl<R> One for Vec4<R>
 where
     R: num_traits::One,
@@ -30,3 +42,16 @@ where
         }
     }
 }
+
+impl<R> ConstOne for Vec4<R>
+where
+    R: num_traits::ConstOne,
+{
+    const ONE: Vec4<R> = Vec4 {
+        x: R::ONE,
+        y: R::ONE,
+        z: R::ONE,
+        w: R::ONE,
+    };
+}
+

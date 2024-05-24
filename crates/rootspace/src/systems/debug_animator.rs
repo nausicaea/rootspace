@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 
-use crate::components::{renderable::Renderable, transform::Transform};
+use crate::components::{debug_animate::DebugAnimate, transform::Transform};
 use ecs::{resources::Resources, system::System, with_resources::WithResources};
 use glamour::{quat::Quat, unit::Unit, vec::Vec4};
 
@@ -22,7 +22,7 @@ impl System for DebugAnimator {
     async fn run(&mut self, res: &Resources, _t: Duration, dt: Duration) {
         let angle = dt.as_secs_f32() * 0.20;
         let rotation = Quat::with_axis_angle(Unit::from(Vec4::new(0.0, 1.0, 0.0, 0.0)), angle);
-        for (_, _, t) in res.iter_rw::<Renderable, Transform>().filter(|(_, _, t)| !t.ui) {
+        for (_, _, t) in res.iter_rw::<DebugAnimate, Transform>().filter(|(_, _, t)| !t.ui) {
             let t_quat = t.affine.o;
             let new_t_quat = rotation * t_quat;
             t.affine.o = new_t_quat;
