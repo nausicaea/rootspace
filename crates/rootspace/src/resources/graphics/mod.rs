@@ -166,7 +166,6 @@ impl Graphics {
         self.database.insert_shader_module(sm)
     }
 
-    #[must_use]
     pub fn create_encoder(&self, label: Option<&str>) -> Result<Encoder, wgpu::SurfaceError> {
         Encoder::new(
             label,

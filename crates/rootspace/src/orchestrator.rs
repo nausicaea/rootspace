@@ -3,7 +3,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use glamour::{quat::Quat, vec::Vec4};
+use glamour::{quat::Quat, unit::Unit, vec::Vec4};
 use tokio::runtime::Runtime;
 use winit::{
     event::{Event, WindowEvent},
@@ -362,7 +362,7 @@ impl Orchestrator {
                 let (axis, angle) = if relative_eq!(position, Vec4::zero()) {
                     (Vec4::z(), 0.0)
                 } else {
-                    (position, std::f32::consts::PI / 4.0)
+                    (Unit::from(position), std::f32::consts::PI / 4.0)
                 };
 
                 builtins_scene
@@ -380,7 +380,7 @@ impl Orchestrator {
                         Transform::builder()
                             .with_translation(position)
                             .with_scale(0.5)
-                            .with_orientation(Quat::with_axis_angle(axis.into(), angle))
+                            .with_orientation(Quat::with_axis_angle(axis, angle))
                             .build(),
                     )
                     .submit();
