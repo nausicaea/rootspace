@@ -6,7 +6,10 @@ use glamour::vec::Vec4;
 use super::private::PrivLoadAsset;
 use crate::{
     assets::private::PrivSaveAsset,
-    components::{camera::Camera, debug_animate::DebugAnimate, info::Info, light::Light, renderable::Renderable, transform::Transform},
+    components::{
+        camera::Camera, debug_animate::DebugAnimate, info::Info, light::Light, renderable::Renderable,
+        transform::Transform,
+    },
     resources::asset_database::AssetDatabase,
 };
 use ecs::{

@@ -54,4 +54,3 @@ where
         w: R::ONE,
     };
 }
-

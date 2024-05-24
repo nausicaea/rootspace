@@ -1,9 +1,17 @@
 use std::{collections::HashMap, time::Duration};
 
 use async_trait::async_trait;
-use ecs::{event_queue::{receiver_id::ReceiverId, EventQueue}, resources::Resources, system::System, with_resources::WithResources};
+use ecs::{
+    event_queue::{receiver_id::ReceiverId, EventQueue},
+    resources::Resources,
+    system::System,
+    with_resources::WithResources,
+};
 use glamour::{affine::Affine, quat::Quat, vec::Vec4};
-use winit::{event::{KeyEvent, WindowEvent}, keyboard::{KeyCode, PhysicalKey}};
+use winit::{
+    event::{KeyEvent, WindowEvent},
+    keyboard::{KeyCode, PhysicalKey},
+};
 
 use crate::{Camera, Transform};
 
@@ -25,14 +33,15 @@ impl WithResources for CameraController {
                 (PhysicalKey::Code(KeyCode::KeyD), (Signum::Positive, DoF::X)),
                 (PhysicalKey::Code(KeyCode::KeyZ), (Signum::Negative, DoF::Y)),
                 (PhysicalKey::Code(KeyCode::KeyC), (Signum::Positive, DoF::Y)),
-
                 (PhysicalKey::Code(KeyCode::KeyQ), (Signum::Positive, DoF::ZX)),
                 (PhysicalKey::Code(KeyCode::KeyE), (Signum::Negative, DoF::ZX)),
                 (PhysicalKey::Code(KeyCode::ArrowLeft), (Signum::Negative, DoF::XY)),
                 (PhysicalKey::Code(KeyCode::ArrowRight), (Signum::Positive, DoF::XY)),
                 (PhysicalKey::Code(KeyCode::ArrowUp), (Signum::Positive, DoF::YZ)),
                 (PhysicalKey::Code(KeyCode::ArrowDown), (Signum::Negative, DoF::YZ)),
-            ].into_iter().collect(),
+            ]
+            .into_iter()
+            .collect(),
         })
     }
 }
@@ -43,12 +52,15 @@ impl System for CameraController {
     async fn run(&mut self, res: &Resources, _t: Duration, dt: Duration) {
         let dx = dt.as_secs_f32() * 1.00;
 
-        let events = res.write::<EventQueue<WindowEvent>>()
-            .receive(&self.receiver);
+        let events = res.write::<EventQueue<WindowEvent>>().receive(&self.receiver);
 
         let mut delta_transform: Affine<f32> = Affine::identity();
         for event in events {
-            if let WindowEvent::KeyboardInput { event: KeyEvent { physical_key,  .. }, .. } = event {
+            if let WindowEvent::KeyboardInput {
+                event: KeyEvent { physical_key, .. },
+                ..
+            } = event
+            {
                 if let Some((signum, dof)) = self.physical_key_to_dof.get(&physical_key) {
                     match (signum, dof) {
                         (Signum::Positive, DoF::X) => delta_transform.t.x = dx,

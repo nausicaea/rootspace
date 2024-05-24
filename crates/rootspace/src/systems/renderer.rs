@@ -496,11 +496,7 @@ struct InstanceDrawData<'a> {
 }
 
 #[tracing::instrument(skip_all)]
-fn hier_transform(
-    idx: Index,
-    hier: &Hierarchy<Index>,
-    transforms: &<Transform as Component>::Storage,
-    ) -> Affine<f32> {
+fn hier_transform(idx: Index, hier: &Hierarchy<Index>, transforms: &<Transform as Component>::Storage) -> Affine<f32> {
     hier.ancestors(idx)
         .filter_map(|a| transforms.get(a).map(|at| &at.affine))
         .product::<Affine<f32>>()
