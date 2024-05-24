@@ -371,7 +371,7 @@ impl Orchestrator {
                         name: format!("cube-{i}x{j}"),
                         ..Default::default()
                     })
-                    .with_debug_animate()
+                    //.with_debug_animate()
                     .with_renderable(RenderableSource::Reference {
                         group: "models".into(),
                         name: "textured-cube.ply".into(),
