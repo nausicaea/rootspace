@@ -82,16 +82,6 @@ impl Renderer {
 
     #[tracing::instrument(skip_all)]
     fn prepare<'a>(&mut self, res: &'a Resources) -> DrawData<'a> {
-        fn hier_transform(
-            idx: Index,
-            hier: &Hierarchy<Index>,
-            transforms: &<Transform as Component>::Storage,
-        ) -> Affine<f32> {
-            hier.ancestors(idx)
-                .filter_map(|a| transforms.get(a).map(|at| &at.affine))
-                .product::<Affine<f32>>()
-        }
-
         let gfx = res.read::<Graphics>();
         let hier = res.read::<Hierarchy<Index>>();
         let transforms = res.read_components::<Transform>();
@@ -205,7 +195,7 @@ impl Renderer {
                 (ldd, lu)
             })
             .next()
-            .expect("currently, only one light is supported");
+            .unwrap_or_else(|| todo!("currently, only one light is supported"));
 
         // Write the camera uniform data to the corresponding uniform buffer
         gfx.write_buffer(self.camera_buffer, &[camera_uniform]);
@@ -503,6 +493,17 @@ struct InstanceDrawData<'a> {
     num_indices: u32,
     materials: &'a [GpuMaterial],
     instance_ids: Range<u32>,
+}
+
+#[tracing::instrument(skip_all)]
+fn hier_transform(
+    idx: Index,
+    hier: &Hierarchy<Index>,
+    transforms: &<Transform as Component>::Storage,
+    ) -> Affine<f32> {
+    hier.ancestors(idx)
+        .filter_map(|a| transforms.get(a).map(|at| &at.affine))
+        .product::<Affine<f32>>()
 }
 
 #[cfg(test)]
