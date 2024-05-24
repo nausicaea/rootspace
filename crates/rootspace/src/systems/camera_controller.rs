@@ -8,12 +8,13 @@ use ecs::{
     with_resources::WithResources,
 };
 use glamour::{affine::Affine, quat::Quat, vec::Vec4};
+use tracing::trace;
 use winit::{
     event::{KeyEvent, WindowEvent},
     keyboard::{KeyCode, PhysicalKey},
 };
 
-use crate::{Camera, Transform};
+use crate::{components::info::Info, Camera, Transform};
 
 #[derive(Debug)]
 pub struct CameraController {
@@ -33,8 +34,8 @@ impl WithResources for CameraController {
                 (PhysicalKey::Code(KeyCode::KeyD), (Signum::Positive, DoF::X)),
                 (PhysicalKey::Code(KeyCode::KeyZ), (Signum::Negative, DoF::Y)),
                 (PhysicalKey::Code(KeyCode::KeyC), (Signum::Positive, DoF::Y)),
-                (PhysicalKey::Code(KeyCode::KeyQ), (Signum::Positive, DoF::ZX)),
-                (PhysicalKey::Code(KeyCode::KeyE), (Signum::Negative, DoF::ZX)),
+                (PhysicalKey::Code(KeyCode::KeyQ), (Signum::Negative, DoF::ZX)),
+                (PhysicalKey::Code(KeyCode::KeyE), (Signum::Positive, DoF::ZX)),
                 (PhysicalKey::Code(KeyCode::ArrowLeft), (Signum::Negative, DoF::XY)),
                 (PhysicalKey::Code(KeyCode::ArrowRight), (Signum::Positive, DoF::XY)),
                 (PhysicalKey::Code(KeyCode::ArrowUp), (Signum::Positive, DoF::YZ)),
