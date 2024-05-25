@@ -114,7 +114,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::{relative_eq, ulps_eq};
+    use approx::ulps_eq;
     use cgmath::InnerSpace;
     use proptest::{
         num::f32::{NEGATIVE, NORMAL, POSITIVE, SUBNORMAL, ZERO},

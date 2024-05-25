@@ -572,7 +572,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn new_file_path_serde() {
         let fstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/nonex-file");
         let nfp = NewOrExFilePathBuf::try_from(fstr).unwrap();
@@ -586,7 +585,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn file_path_serde() {
         let fstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/empty-file");
         let fp = FilePathBuf::try_from(fstr).unwrap();
@@ -595,7 +593,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn dir_path_serde() {
         let dstr = concat!(env!("CARGO_MANIFEST_DIR"), "/tests");
         let dp = DirPathBuf::try_from(dstr).unwrap();
