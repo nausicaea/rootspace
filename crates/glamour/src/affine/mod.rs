@@ -91,35 +91,46 @@ where
 
 #[cfg(test)]
 mod tests {
+    use ::approx::ulps_eq;
+    use proptest::{prop_assert, proptest};
     use serde_test::{assert_tokens, Token};
 
     use super::*;
-    use crate::num::ToMatrix;
+    use crate::{
+        num::ToMatrix,
+        test_helpers::proptest::{bounded_f32, vec4},
+    };
 
-    #[test]
-    fn affine_provides_look_at_rh() {
-        let eye = Vec4::from([0.0f32, 1.0, 2.0, 1.0]);
-        let cntr = Vec4::from([0.0f32, 0.0, 0.0, 1.0]);
-        let up = Vec4::from([0.0f32, 1.0, 0.0, 0.0]);
+    proptest! {
+        #[test]
+        fn with_look_at_rh_is_equal_to_cgmath(eye in vec4(bounded_f32(-24, 24)), cntr in vec4(bounded_f32(-32, 32))) {
+            let up: Unit<Vec4<f32>> = Vec4::y();
 
-        let a = Affine::with_look_at_rh(eye, cntr, Unit::from(up));
+            let glamour_look_at = Affine::with_look_at_rh(eye, cntr, up).to_matrix();
 
-        let comparison = cgmath::Matrix4::look_at_lh(
-            cgmath::Point3::new(eye.x, eye.y, eye.z),
-            cgmath::Point3::new(cntr.x, cntr.y, cntr.z),
-            cgmath::Vector3::new(up.x, up.y, up.z),
-        );
+            let cgmath_look_at = cgmath::Matrix4::look_at_rh(
+                cgmath::Point3::new(eye.x, eye.y, eye.z),
+                cgmath::Point3::new(cntr.x, cntr.y, cntr.z),
+                cgmath::Vector3::new(up.x, up.y, up.z),
+            );
 
-        eprintln!("{} = {:?}", a.to_matrix(), comparison);
+            prop_assert!(ulps_eq!(glamour_look_at, cgmath_look_at), "\nleft\t=    {glamour_look_at:?}\nright\t= {:?}", cgmath_look_at);
+        }
 
-        // let expected = Mat4::new([
-        //     [-1.0000001f32, -0.0, 0.0, -0.0],
-        //     [0.0, 0.8944272, -0.44721365, -0.0],
-        //     [0.0, -0.44721365, -0.8944273, -2.236068],
-        //     [0.0, 0.0, 0.0, 1.0],
-        // ]);
+        #[test]
+        fn with_look_at_rh_is_equal_to_nalgebra(eye in vec4(bounded_f32(-24, 24)), cntr in vec4(bounded_f32(-32, 32))) {
+            let up: Unit<Vec4<f32>> = Vec4::y();
 
-        // assert_ulps_eq!(a.to_matrix(), expected);
+            let glamour_look_at = Affine::with_look_at_rh(eye, cntr, up).to_matrix();
+
+            let nalgebra_look_at = nalgebra::Matrix4::look_at_rh(
+                &nalgebra::Point3::new(eye.x, eye.y, eye.z),
+                &nalgebra::Point3::new(cntr.x, cntr.y, cntr.z),
+                &nalgebra::Vector3::new(up.x, up.y, up.z),
+            );
+
+            prop_assert!(ulps_eq!(glamour_look_at, nalgebra_look_at), "\nleft\t= {glamour_look_at:?}\nright\t= {:?}", nalgebra_look_at);
+        }
     }
 
     #[test]

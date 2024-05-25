@@ -138,9 +138,8 @@ mod tests {
     }
 
     proptest! {
-        /// Nalgebra uses an iterative algorithm to calculate the quaternion from a matrix, but the algorithm doesn't exit even with a given max_iteration count due to using a potentially unbounded loop internally. We cannot use this test as is.
         #[test]
-        #[ignore]
+        #[ignore = "Nalgebra uses an iterative algorithm to calculate the quaternion from a matrix, but the algorithm doesn't exit even with a given max_iteration count due to using a potentially unbounded loop internally. We cannot use this test as is."]
         fn from_mat_for_quat_is_equal_to_nalgebra(glamour_lhs in mat4(bounded_nonzero_f32(-62, 63))) {
             let glamour_result = Into::<Unit<Quat<f32>>>::into(glamour_lhs);
             let nalgebra_lhs = nalgebra::Matrix3::new(
@@ -168,23 +167,12 @@ mod tests {
 
         /// Nalgebra likely uses a different conversion algorithm which causes large rounding errors
         #[test]
-        #[should_panic]
         fn from_quat_for_mat_is_equal_to_nalgebra(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
             let glamour_result = Into::<Mat4<f32>>::into(glamour_lhs);
             let nalgebra_lhs: nalgebra::UnitQuaternion<f32> = glamour_lhs.into();
             let nalgebra_result = Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs);
 
             prop_assert!(ulps_eq!(glamour_result, nalgebra_result), "left: {glamour_result:?}\nright: {nalgebra_result:?}");
-        }
-
-        /// Nalgebra likely uses a different conversion algorithm which causes large rounding errors
-        #[test]
-        fn from_quat_for_mat_has_large_rounding_differences_to_nalgebra(glamour_lhs in unit_quat(bounded_nonzero_f32(-62, 63))) {
-            let glamour_result = Into::<Mat4<f32>>::into(glamour_lhs);
-            let nalgebra_lhs: nalgebra::UnitQuaternion<f32> = glamour_lhs.into();
-            let nalgebra_result = Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs);
-
-            prop_assert!(relative_eq!(glamour_result, nalgebra_result, max_relative = 1e-2), "left: {glamour_result:?}\nright: {nalgebra_result:?}");
         }
 
         #[test]

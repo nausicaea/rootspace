@@ -77,8 +77,6 @@ mod tests {
 
     #[test]
     fn ortho_comparison_to_nalgebra_and_cgmath() {
-        use cgmath::Matrix;
-
         let width = 800.0_f32;
         let height = 600.0;
         let nz = 0.001;
@@ -89,10 +87,10 @@ mod tests {
         let cgmath_ortho = cgmath::ortho(-width / 2.0, width / 2.0, -height / 2.0, height / 2.0, nz, nz + dz);
         assert!(
             ulps_eq!(*glamour_ortho.as_matrix(), nalgebra_ortho.to_homogeneous()),
-            "glamour\t\t\t=    {:?}\nnalgebra (transposed)\t=         {:?}\ncgmath (transposed)\t= {:?}",
+            "glamour\t\t\t=    {:?}\nnalgebra\t=         {:?}\ncgmath\t= {:?}",
             *glamour_ortho.as_matrix(),
-            nalgebra_ortho.to_homogeneous().transpose(),
-            cgmath_ortho.transpose()
+            nalgebra_ortho.to_homogeneous(),
+            cgmath_ortho,
         );
     }
 

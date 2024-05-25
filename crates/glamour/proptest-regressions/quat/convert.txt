@@ -5,3 +5,4 @@
 # It is recommended to check this file in to source control so that
 # everyone who runs the test benefits from these saved cases.
 cc cbdbad876a4a2be97e259c49ab13a0e06497c9906cabd8be3a21eec67ca8b456 # shrinks to glamour_lhs = Unit(Quat { w: 0.38997915, i: -0.8115492, j: -0.13905351, k: 0.41227233 })
+cc 22d6612350d7a676b7a3cddda0041cdf69d6b58010a10a863af966dad1c7ec06 # shrinks to glamour_lhs = Unit(Quat { w: -0.16003288, i: -0.68875295, j: -0.35419565, k: -0.61200833 })

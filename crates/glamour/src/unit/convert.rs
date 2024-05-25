@@ -35,3 +35,23 @@ where
         Unit(v / norm)
     }
 }
+
+impl<R> From<Unit<Self>> for Quat<R> {
+    fn from(value: Unit<Self>) -> Self {
+        value.0
+    }
+}
+
+impl<R> From<Unit<Self>> for Mat4<R> {
+    fn from(value: Unit<Self>) -> Self {
+        value.0
+    }
+}
+
+impl<R> From<Unit<Self>> for Vec4<R> {
+    fn from(value: Unit<Self>) -> Self {
+        value.0
+    }
+}
+
+

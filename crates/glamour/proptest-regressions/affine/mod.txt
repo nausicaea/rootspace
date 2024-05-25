@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 588eac8171d8fa719f27f97501db0dddf90c991c96fb1e3720ed54bc7f7e1047 # shrinks to eye = Vec4 { x: -2.3283064e-10, y: -2.3283064e-10, z: -2.3283064e-10, w: 0.0 }, cntr = Vec4 { x: -2.3283064e-10, y: -2.3283064e-10, z: -2.3283064e-10, w: 0.0 }

@@ -37,7 +37,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::{relative_eq, ulps_eq};
+    use approx::ulps_eq;
     use proptest::{prop_assert, proptest};
 
     use super::*;
@@ -74,17 +74,15 @@ mod tests {
         );
         let nalgebra_result = nalgebra_lhs.to_homogeneous();
 
-        use cgmath::Matrix;
         assert!(
             ulps_eq!(glamour_result, cgmath_result),
-            "glamour\t\t\t=    {glamour_result:?}\ncgmath (transposed)\t= {:?}\nnalgebra (transposed)\t=         {:?}",
-            cgmath_result.transpose(),
-            nalgebra_result.transpose()
+            "glamour\t\t\t=    {glamour_result:?}\ncgmath\t= {:?}\nnalgebra\t=         {:?}",
+            cgmath_result,
+            nalgebra_result,
         );
     }
 
     proptest! {
-        /// Nalgebra likely uses a different conversion algorithm which causes large rounding errors
         #[test]
         fn from_affine_for_mat_is_equal_to_nalgebra(glamour_lhs in affine(bounded_f32(-32, 32), bounded_nonzero_f32(-32, 32))) {
             let glamour_result: Mat4<f32> = glamour_lhs.into();
@@ -95,7 +93,7 @@ mod tests {
             );
             let nalgebra_result = nalgebra_lhs.to_homogeneous();
 
-            prop_assert!(relative_eq!(glamour_result, nalgebra_result, max_relative = 1e-2), "left\t= {glamour_result:?}\nright (transposed)\t= {:?}", nalgebra_result.transpose());
+            prop_assert!(ulps_eq!(glamour_result, nalgebra_result), "left\t= {glamour_result:?}\nright\t= {:?}", nalgebra_result);
         }
 
         #[test]
@@ -108,8 +106,7 @@ mod tests {
             };
             let cgmath_result: cgmath::Matrix4<f32> = cgmath_lhs.into();
 
-            use cgmath::Matrix;
-            prop_assert!(ulps_eq!(glamour_result, cgmath_result), "left\t= {glamour_result:?}\nright (transposed)\t= {:?}", cgmath_result.transpose());
+            prop_assert!(ulps_eq!(glamour_result, cgmath_result), "left\t= {glamour_result:?}\nright (transposed)\t= {:?}", cgmath_result);
         }
     }
 }

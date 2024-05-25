@@ -96,11 +96,11 @@ impl Renderer {
 
         // Calculate all camera transforms and the respective buffer offset
         let (camera_uniform, camera_view) = res
-            .iter_r::<Camera>()
-            .map(|(idx, cam)| {
+            .iter_rr::<Camera, Transform>()
+            .map(|(idx, cam, trf)| {
                 use num_traits::Inv;
 
-                let camera_transform = hier_transform(idx, &hier, &transforms);
+                let camera_transform = trf.affine; //hier_transform(idx, &hier, &transforms);
                 let camera_view = camera_transform.inv();
 
                 (
@@ -149,7 +149,7 @@ impl Renderer {
                     min_instance_id = min(min_instance_id, ren.model.mesh.instance_id.to_u32());
                     max_instance_id = max(max_instance_id, ren.model.mesh.instance_id.to_u32());
 
-                    let instance_transform = hier_transform(idx, &hier, &transforms);
+                    let instance_transform = trf.affine; //hier_transform(idx, &hier, &transforms);
                     let model_view = camera_view * instance_transform;
 
                     Instance {

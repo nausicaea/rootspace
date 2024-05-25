@@ -21,9 +21,26 @@ impl Transform {
         TransformBuilder::default()
     }
 
-    pub fn look_at_rh<V: Into<Vec4<f32>>>(eye: V, cntr: V, up: V) -> Self {
+    pub fn look_at_rh<V1, V2, V3>(eye: V1, cntr: V2, up: V3) -> Self 
+    where
+        V1: Into<Vec4<f32>>,
+        V2: Into<Vec4<f32>>,
+        V3: Into<Vec4<f32>>,
+    {
         Transform {
             affine: Affine::with_look_at_rh(eye.into(), cntr.into(), Unit::from(up.into())),
+            ui: false,
+        }
+    }
+
+    pub fn look_at_rh_inv<V1, V2, V3>(eye: V1, cntr: V2, up: V3) -> Self 
+    where
+        V1: Into<Vec4<f32>>,
+        V2: Into<Vec4<f32>>,
+        V3: Into<Vec4<f32>>,
+    {
+        Transform {
+            affine: Affine::with_look_at_rh(eye.into(), cntr.into(), Unit::from(up.into())).inv(),
             ui: false,
         }
     }
