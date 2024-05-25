@@ -92,6 +92,7 @@ where
 #[cfg(test)]
 mod tests {
     use ::approx::ulps_eq;
+    use cgmath::Matrix;
     use proptest::{prop_assert, proptest};
     use serde_test::{assert_tokens, Token};
 
@@ -114,7 +115,11 @@ mod tests {
                 cgmath::Vector3::new(up.x, up.y, up.z),
             );
 
-            prop_assert!(ulps_eq!(glamour_look_at, cgmath_look_at), "\nleft\t=    {glamour_look_at:?}\nright\t= {:?}", cgmath_look_at);
+            prop_assert!(
+                ulps_eq!(glamour_look_at, cgmath_look_at), 
+                "\nglamour =   {glamour_look_at:?}\ncgmath = {:?}",
+                cgmath_look_at.transpose(),
+            );
         }
 
         #[test]
@@ -129,7 +134,11 @@ mod tests {
                 &nalgebra::Vector3::new(up.x, up.y, up.z),
             );
 
-            prop_assert!(ulps_eq!(glamour_look_at, nalgebra_look_at), "\nleft\t= {glamour_look_at:?}\nright\t= {:?}", nalgebra_look_at);
+            prop_assert!(
+                ulps_eq!(glamour_look_at, nalgebra_look_at), 
+                "\nglamour = {glamour_look_at:?}\nnalgebra =     {:?}",
+                nalgebra_look_at.transpose(),
+            );
         }
     }
 
