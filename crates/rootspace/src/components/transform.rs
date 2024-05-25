@@ -39,6 +39,7 @@ impl Transform {
         V2: Into<Vec4<f32>>,
         V3: Into<Vec4<f32>>,
     {
+        use num_traits::Inv;
         Transform {
             affine: Affine::with_look_at_rh(eye.into(), cntr.into(), Unit::from(up.into())).inv(),
             ui: false,

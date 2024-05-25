@@ -8,13 +8,12 @@ use ecs::{
     with_resources::WithResources,
 };
 use glamour::{affine::Affine, quat::Quat, vec::Vec4};
-use tracing::trace;
 use winit::{
     event::{KeyEvent, WindowEvent},
     keyboard::{KeyCode, PhysicalKey},
 };
 
-use crate::{components::info::Info, Camera, Transform};
+use crate::{Camera, Transform};
 
 #[derive(Debug)]
 pub struct CameraController {

@@ -1,5 +1,5 @@
 use builder::AffineBuilder;
-use num_traits::{Float, Inv, NumAssign};
+use num_traits::{Float, NumAssign};
 use serde::{Deserialize, Serialize};
 
 use crate::{mat::Mat4, num::Zero, ops::cross::Cross, quat::Quat, unit::Unit, vec::Vec4};
@@ -72,19 +72,6 @@ where
             t: eye,
             o: Quat::with_look_at_rh(fwd, up),
             s: R::one(),
-        }
-    }
-}
-
-impl<R> Affine<R>
-where
-    R: Float + Inv<Output = R>,
-{
-    pub fn inv(&self) -> Self {
-        Affine {
-            t: -(&self.t),
-            o: self.o.as_ref().c().into(),
-            s: self.s.inv(),
         }
     }
 }

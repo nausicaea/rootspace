@@ -53,15 +53,6 @@ impl<R> Quat<R>
 where
     R: Float,
 {
-    pub fn inv(&self) -> Self {
-        self.c() / self.abssq()
-    }
-}
-
-impl<R> Quat<R>
-where
-    R: Float,
-{
     pub fn abssq(&self) -> R {
         self.w.powi(2) + self.i.powi(2) + self.j.powi(2) + self.k.powi(2)
     }
@@ -93,6 +84,7 @@ where
 #[cfg(test)]
 mod tests {
     use ::approx::assert_ulps_eq;
+    use num_traits::Inv;
     use proptest::{
         num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
         prop_assert, proptest,
