@@ -25,10 +25,6 @@ impl<R> Quat<R>
 where
     R: Float,
 {
-    pub fn with_look_at_rh(fwd: Unit<Vec4<R>>, up: Unit<Vec4<R>>) -> Unit<Quat<R>> {
-        Mat4::with_look_at_rh(fwd, up).into()
-    }
-
     pub fn with_axis_angle(axis: Unit<Vec4<R>>, angle: R) -> Unit<Quat<R>> {
         let half = R::one() / (R::one() + R::one());
         let (sin, cos) = R::sin_cos(angle * half);

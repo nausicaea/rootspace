@@ -122,7 +122,7 @@ mod tests {
     };
 
     use super::*;
-    use crate::test_helpers::proptest::{bounded_nonzero_f32, mat4, quat, unit_quat, vec4};
+    use crate::test_helpers::proptest::{bounded_nonzero_f32, mat4, quat, rot_mat4, unit_quat, vec4};
 
     #[test]
     fn quat_implements_from_mat4() {
@@ -139,22 +139,28 @@ mod tests {
 
     proptest! {
         #[test]
-        #[ignore = "Nalgebra uses an iterative algorithm to calculate the quaternion from a matrix, but the algorithm doesn't exit even with a given max_iteration count due to using a potentially unbounded loop internally"]
-        fn from_mat_for_quat_is_equal_to_nalgebra(glamour_lhs in mat4(bounded_nonzero_f32(-62, 63))) {
+        #[ignore = "Nalgebra's conversion from a rotation matrix to a quaternion does not normalize the result (even though it should), and somehow, the result is conjugated to that of glamour."]
+        fn from_mat_for_quat_is_equal_to_nalgebra(glamour_lhs in rot_mat4()) {
             let glamour_result = Into::<Unit<Quat<f32>>>::into(glamour_lhs);
             let nalgebra_lhs = nalgebra::Matrix3::new(
                 glamour_lhs[(0, 0)], glamour_lhs[(1, 0)], glamour_lhs[(2, 0)],
                 glamour_lhs[(0, 1)], glamour_lhs[(1, 1)], glamour_lhs[(2, 1)],
                 glamour_lhs[(0, 2)], glamour_lhs[(1, 2)], glamour_lhs[(2, 2)],
             );
-            let nalgebra_result: nalgebra::UnitQuaternion<f32> = nalgebra::UnitQuaternion::from_matrix_eps(&nalgebra_lhs, 10.0 * f32::EPSILON, 1, nalgebra::UnitQuaternion::identity());
+            let nalgebra_lhs = nalgebra::Rotation3::from_matrix_unchecked(nalgebra_lhs);
+            let nalgebra_result: nalgebra::UnitQuaternion<f32> = nalgebra::UnitQuaternion::from_rotation_matrix(&nalgebra_lhs);
 
-            prop_assert!(ulps_eq!(glamour_result.0, *nalgebra_result.quaternion()));
+            prop_assert!(
+                ulps_eq!(glamour_result.0, *nalgebra_result.quaternion()),
+                "\nglamour  =            {}\nnalgebra = {}",
+                glamour_result.0,
+                nalgebra_result.quaternion(),
+            );
         }
 
         #[test]
-        fn from_mat_for_quat_is_equal_to_cgmath(glamour_lhs in mat4(bounded_nonzero_f32(-62, 63))) {
-            let glamour_result = Into::<Unit<Quat<f32>>>::into(glamour_lhs).0;
+        fn from_mat_for_quat_is_equal_to_cgmath(glamour_lhs in rot_mat4()) {
+            let glamour_result = Into::<Unit<Quat<f32>>>::into(glamour_lhs);
             let cgmath_lhs = cgmath::Matrix3::new(
                 glamour_lhs[(0, 0)], glamour_lhs[(1, 0)], glamour_lhs[(2, 0)],
                 glamour_lhs[(0, 1)], glamour_lhs[(1, 1)], glamour_lhs[(2, 1)],
@@ -162,7 +168,12 @@ mod tests {
             );
             let cgmath_result = Into::<cgmath::Quaternion<f32>>::into(cgmath_lhs).normalize();
 
-            prop_assert!(ulps_eq!(glamour_result, cgmath_result));
+            prop_assert!(
+                ulps_eq!(glamour_result.0, cgmath_result),
+                "\nglamour  =            {}\ncgmath = {:?}",
+                glamour_result.0, //.c() / 2.0,
+                cgmath_result,
+            );
         }
 
         #[test]

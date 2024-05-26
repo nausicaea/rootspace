@@ -2,7 +2,7 @@ use builder::AffineBuilder;
 use num_traits::{Float, NumAssign};
 use serde::{Deserialize, Serialize};
 
-use crate::{mat::Mat4, num::Zero, ops::cross::Cross, quat::Quat, unit::Unit, vec::Vec4};
+use crate::{mat::Mat4, num::{One, Zero}, ops::cross::Cross, quat::Quat, unit::Unit, vec::Vec4};
 
 mod approx;
 pub mod builder;
@@ -63,14 +63,19 @@ where
 {
     pub fn with_look_at_rh(eye: Vec4<R>, target: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
         let fwd: Unit<_> = (target - eye).into();
-        let right: Unit<_> = Unit::from(-up.cross(fwd).0);
-        let rotated_up: Unit<_> = fwd.cross(right);
+        let right: Unit<_> = fwd.cross(up);
+        let rotated_up: Unit<_> = right.cross(fwd);
 
-        let eye = Vec4::new(-(eye * right.0), -(eye * rotated_up.0), eye * fwd.0, R::zero());
+        let mat = Mat4([
+            [right.x, right.y, right.z, R::zero()],
+            [rotated_up.x, rotated_up.y, rotated_up.z, R::zero()],
+            [-fwd.x, -fwd.y, -fwd.z, R::zero()],
+            [R::zero(), R::zero(), R::zero(), R::one()],
+        ]);
 
-        Affine {
-            t: eye,
-            o: Quat::with_look_at_rh(fwd, up),
+        Affine { 
+            t: Vec4::new(-(eye * right.0), -(eye * rotated_up.0), eye * fwd.0, R::zero()), 
+            o: mat.into(), 
             s: R::one(),
         }
     }

@@ -4,6 +4,7 @@ use ::proptest::{
     prop_compose,
     strategy::{Strategy, Union},
 };
+use std::f32::consts::PI;
 
 use crate::{affine::Affine, mat::Mat4, quat::Quat, unit::Unit, vec::Vec4};
 
@@ -66,6 +67,27 @@ prop_compose! {
 prop_compose! {
     pub fn mat4(s: impl Strategy<Value = f32>)(v in vec(s, 16)) -> Mat4<f32> {
         Mat4::try_from(v).unwrap()
+    }
+}
+
+prop_compose! {
+    pub fn rot_mat4()(mij in vec(-1.0_f32..=1.0, 9)) -> Mat4<f32> {
+        let m00 = mij[0];
+        let m01 = mij[1];
+        let m02 = mij[2];
+        let m10 = mij[3];
+        let m11 = mij[4];
+        let m12 = mij[5];
+        let m20 = mij[6];
+        let m21 = mij[7];
+        let m22 = mij[8];
+
+        Mat4([
+            [m00, m01, m02, 0.0],
+            [m10, m11, m12, 0.0],
+            [m20, m21, m22, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
     }
 }
 

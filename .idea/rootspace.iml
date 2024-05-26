@@ -39,6 +39,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/rootspace/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/rose-tree/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/urn/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/file-manipulation/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/rose-tree/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/affine-transform/target" />

@@ -345,7 +345,6 @@ where
 mod tests {
     use std::ops::Mul;
 
-    #[cfg(feature = "test-flaky")]
     use serde_test::{assert_tokens, Token};
 
     use super::{BfsIter, DfsIter, Tree};
@@ -582,8 +581,8 @@ mod tests {
         assert_ne!(&rt, &rt3);
     }
 
-    #[cfg(feature = "test-flaky")]
     #[test]
+    #[ignore = "serde maps do not guarantee stable ordering, so this test may fail"]
     fn impl_serde() {
         let mut rt: Tree<Tk, Tvm> = Tree::default();
         rt.insert(Tk(0), Tvm(2));

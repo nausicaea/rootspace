@@ -10,7 +10,6 @@ renormalize = []
 dbg-gfx = []
 dbg-loop = []
 tokio-console = ["console-subscriber"]
-test-flaky = ["ecs/test-flaky", "rose-tree/test-flaky"]
 
 [dependencies]
 anyhow = { version = "1.0.0" }

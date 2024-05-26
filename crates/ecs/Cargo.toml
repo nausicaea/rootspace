@@ -4,9 +4,6 @@ version = "0.1.0"
 authors = ["Eleanor Young <developer@nausicaea.net>"]
 edition = "2021"
 
-[features]
-test-flaky = []
-
 [dependencies]
 anyhow = { version = "1.0.0" }
 async-trait = "0.1.77"
