@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc ccdd1d5546403feaa25a46881dc4568aaec551bf98d6997459045aa357cecbf8 # shrinks to lhs = Vec4 { x: 0.0, y: 0.0, z: 0.0, w: 0.0 }, rhs = Vec4 { x: 0.0, y: NaN, z: 0.0, w: 0.0 }
