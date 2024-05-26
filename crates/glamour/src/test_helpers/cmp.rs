@@ -92,20 +92,20 @@ where
 
 impl PartialEq<nalgebra::Similarity3<f32>> for Affine<f32> {
     fn eq(&self, other: &nalgebra::Similarity3<f32>) -> bool {
-        self.t.x == other.isometry.translation.x &&
-            self.t.y == other.isometry.translation.y &&
-            self.t.z == other.isometry.translation.z &&
-            self.o == other.isometry.rotation &&
-            self.s == other.scaling()
+        self.t.x == other.isometry.translation.x
+            && self.t.y == other.isometry.translation.y
+            && self.t.z == other.isometry.translation.z
+            && self.o == other.isometry.rotation
+            && self.s == other.scaling()
     }
 }
 
 impl PartialEq<cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>> for Affine<f32> {
     fn eq(&self, other: &cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>) -> bool {
-        self.t.x == other.disp.x &&
-            self.t.y == other.disp.y &&
-            self.t.z == other.disp.z &&
-            self.o == other.rot &&
-            self.s == other.scale
+        self.t.x == other.disp.x
+            && self.t.y == other.disp.y
+            && self.t.z == other.disp.z
+            && self.o == other.rot
+            && self.s == other.scale
     }
 }
