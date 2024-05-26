@@ -323,13 +323,11 @@ impl Orchestrator {
                 ..Default::default()
             })
             .with_camera(Camera::default())
-            .with_transform(
-                Transform::look_at_rh_inv(
-                    [0.0, 5.0, -10.0, 1.0], 
-                    [0.0, 0.0, 0.0, 1.0], 
-                    Vec4::y(),
-                )
-            )
+            .with_transform(Transform::look_at_rh_inv(
+                [0.0, 5.0, -10.0, 1.0],
+                [0.0, 0.0, 0.0, 1.0],
+                Vec4::y(),
+            ))
             .submit();
         builtins_scene
             .create_entity()

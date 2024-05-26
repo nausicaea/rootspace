@@ -183,7 +183,7 @@ mod tests {
             let nalgebra_result = Into::<nalgebra::Matrix4<f32>>::into(nalgebra_lhs);
 
             prop_assert!(
-                ulps_eq!(glamour_result, nalgebra_result), 
+                ulps_eq!(glamour_result, nalgebra_result),
                 "\nglamour  = {glamour_result:?}\nnalgebra =      {:?}",
                 nalgebra_result.transpose(),
             );

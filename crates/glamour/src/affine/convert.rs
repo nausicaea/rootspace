@@ -44,7 +44,8 @@ mod tests {
     use super::*;
     use crate::{
         quat::Quat,
-        test_helpers::proptest::{affine, bounded_f32, bounded_nonzero_f32}, vec::Vec4,
+        test_helpers::proptest::{affine, bounded_f32, bounded_nonzero_f32},
+        vec::Vec4,
     };
 
     #[test]
@@ -113,8 +114,8 @@ mod tests {
             let cgmath_result: cgmath::Matrix4<f32> = cgmath_lhs.into();
 
             prop_assert!(
-                ulps_eq!(glamour_result, cgmath_result), 
-                "\nglamour =   {glamour_result:?}\ncgmath = {:?}", 
+                ulps_eq!(glamour_result, cgmath_result),
+                "\nglamour =   {glamour_result:?}\ncgmath = {:?}",
                 cgmath_result.transpose(),
             );
         }

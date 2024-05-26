@@ -53,5 +53,3 @@ impl<R> From<Unit<Self>> for Vec4<R> {
         value.0
     }
 }
-
-

@@ -21,7 +21,7 @@ impl Transform {
         TransformBuilder::default()
     }
 
-    pub fn look_at_rh<V1, V2, V3>(eye: V1, cntr: V2, up: V3) -> Self 
+    pub fn look_at_rh<V1, V2, V3>(eye: V1, cntr: V2, up: V3) -> Self
     where
         V1: Into<Vec4<f32>>,
         V2: Into<Vec4<f32>>,
@@ -33,7 +33,7 @@ impl Transform {
         }
     }
 
-    pub fn look_at_rh_inv<V1, V2, V3>(eye: V1, cntr: V2, up: V3) -> Self 
+    pub fn look_at_rh_inv<V1, V2, V3>(eye: V1, cntr: V2, up: V3) -> Self
     where
         V1: Into<Vec4<f32>>,
         V2: Into<Vec4<f32>>,

@@ -2,7 +2,14 @@ use builder::AffineBuilder;
 use num_traits::{Float, NumAssign};
 use serde::{Deserialize, Serialize};
 
-use crate::{mat::Mat4, num::{One, Zero}, ops::cross::Cross, quat::Quat, unit::Unit, vec::Vec4};
+use crate::{
+    mat::Mat4,
+    num::{One, Zero},
+    ops::cross::Cross,
+    quat::Quat,
+    unit::Unit,
+    vec::Vec4,
+};
 
 mod approx;
 pub mod builder;
@@ -73,9 +80,9 @@ where
             [R::zero(), R::zero(), R::zero(), R::one()],
         ]);
 
-        Affine { 
-            t: Vec4::new(-(eye * right.0), -(eye * rotated_up.0), eye * fwd.0, R::zero()), 
-            o: mat.into(), 
+        Affine {
+            t: Vec4::new(-(eye * right.0), -(eye * rotated_up.0), eye * fwd.0, R::zero()),
+            o: mat.into(),
             s: R::one(),
         }
     }
@@ -108,7 +115,7 @@ mod tests {
             );
 
             prop_assert!(
-                ulps_eq!(glamour_look_at, cgmath_look_at), 
+                ulps_eq!(glamour_look_at, cgmath_look_at),
                 "\nglamour =   {glamour_look_at:?}\ncgmath = {:?}",
                 cgmath_look_at.transpose(),
             );
@@ -127,7 +134,7 @@ mod tests {
             );
 
             prop_assert!(
-                ulps_eq!(glamour_look_at, nalgebra_look_at), 
+                ulps_eq!(glamour_look_at, nalgebra_look_at),
                 "\nglamour = {glamour_look_at:?}\nnalgebra =     {:?}",
                 nalgebra_look_at.transpose(),
             );

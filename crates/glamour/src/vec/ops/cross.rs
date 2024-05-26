@@ -25,7 +25,10 @@ mod tests {
     use approx::ulps_eq;
     use proptest::{prop_assert, proptest};
 
-    use crate::{ops::cross::Cross, test_helpers::proptest::{bounded_f32, vec4}};
+    use crate::{
+        ops::cross::Cross,
+        test_helpers::proptest::{bounded_f32, vec4},
+    };
 
     proptest! {
         #[test]

@@ -101,8 +101,8 @@ prop_compose! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use proptest::{prop_assert, proptest};
     use approx::ulps_eq;
+    use proptest::{prop_assert, proptest};
 
     proptest! {
         #[test]
