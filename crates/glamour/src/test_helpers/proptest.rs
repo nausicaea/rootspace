@@ -71,21 +71,18 @@ prop_compose! {
 }
 
 prop_compose! {
-    pub fn rot_mat4()(mij in vec(-1.0_f32..=1.0, 9)) -> Mat4<f32> {
-        let m00 = mij[0];
-        let m01 = mij[1];
-        let m02 = mij[2];
-        let m10 = mij[3];
-        let m11 = mij[4];
-        let m12 = mij[5];
-        let m20 = mij[6];
-        let m21 = mij[7];
-        let m22 = mij[8];
+    pub fn rot_mat4()(angles in vec(-PI..=PI, 4)) -> Mat4<f32> {
+        let sin_a = angles[0].sin();
+        let cos_a = angles[0].cos();
+        let sin_b = angles[1].sin();
+        let cos_b = angles[1].cos();
+        let sin_c = angles[2].sin();
+        let cos_c = angles[2].cos();
 
         Mat4([
-            [m00, m01, m02, 0.0],
-            [m10, m11, m12, 0.0],
-            [m20, m21, m22, 0.0],
+            [cos_b * cos_c, sin_a * sin_b * cos_c - cos_a * sin_c, cos_a * sin_b * cos_c + sin_a * sin_c, 0.0],
+            [cos_b * sin_c, sin_a * sin_b * sin_c + cos_a * cos_c, cos_a * sin_b * sin_c - sin_a * cos_c, 0.0],
+            [-sin_b, sin_a * cos_b, cos_a * cos_b, 0.0],
             [0.0, 0.0, 0.0, 1.0],
         ])
     }
@@ -98,5 +95,22 @@ prop_compose! {
             .with_orientation(o)
             .with_scale(x)
             .build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proptest::{prop_assert, proptest};
+    use approx::ulps_eq;
+
+    proptest! {
+        #[test]
+        fn verify_rot_mat4(m in rot_mat4()) {
+            let result = m * m.t();
+            let identity: Mat4<f32> = Mat4::identity();
+
+            prop_assert!(ulps_eq!(identity, result));
+        }
     }
 }

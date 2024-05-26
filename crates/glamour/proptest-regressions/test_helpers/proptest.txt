@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 8409e6e58c60c021dbcf7bf0ed31f594a894b883f3d4d63f47895766e25c9d2b # shrinks to m = Mat4([[-0.4963949, -0.03883187, -0.8672279, 0.0], [0.019290492, -0.99924576, 0.0337015, 0.0], [-0.8678825, 0.0, 0.49676958, 0.0], [0.0, 0.0, 0.0, 1.0]])
