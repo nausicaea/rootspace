@@ -122,7 +122,7 @@ mod tests {
     };
 
     use super::*;
-    use crate::test_helpers::proptest::{bounded_nonzero_f32, mat4, quat, rot_mat4, unit_quat, vec4};
+    use crate::test_helpers::proptest::{bounded_nonzero_f32, quat, rot_mat4, unit_quat, vec4};
 
     #[test]
     fn quat_implements_from_mat4() {

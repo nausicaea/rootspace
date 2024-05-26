@@ -1,6 +1,6 @@
 use num_traits::{Float, One, Zero};
 
-use crate::{mat::Mat4, unit::Unit, vec::Vec4};
+use crate::{unit::Unit, vec::Vec4};
 
 mod approx;
 mod convert;

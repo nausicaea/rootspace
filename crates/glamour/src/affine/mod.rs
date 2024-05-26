@@ -90,14 +90,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ::approx::{relative_eq, ulps_eq};
-    use cgmath::{Matrix, Transform};
+    use ::approx::{ulps_eq};
+    use cgmath::{Transform};
     use proptest::{prop_assert, proptest};
     use serde_test::{assert_tokens, Token};
 
     use super::*;
     use crate::{
-        num::ToMatrix,
         test_helpers::proptest::{bounded_f32, vec4},
     };
 
