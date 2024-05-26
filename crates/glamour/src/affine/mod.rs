@@ -69,19 +69,19 @@ where
     R: Float,
 {
     pub fn with_look_at_rh(eye: Vec4<R>, target: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
-        let fwd: Unit<_> = (target - eye).into();
-        let right: Unit<_> = fwd.cross(up);
-        let rotated_up: Unit<_> = right.cross(fwd);
+        let dir: Unit<_> = (target - eye).into();
+        let right: Unit<_> = dir.cross(up);
+        let rotated_up: Unit<_> = right.cross(dir);
 
         let mat = Mat4([
             [right.x, right.y, right.z, R::zero()],
             [rotated_up.x, rotated_up.y, rotated_up.z, R::zero()],
-            [-fwd.x, -fwd.y, -fwd.z, R::zero()],
+            [-dir.x, -dir.y, -dir.z, R::zero()],
             [R::zero(), R::zero(), R::zero(), R::one()],
         ]);
 
         Affine {
-            t: Vec4::new(-(eye * right.0), -(eye * rotated_up.0), eye * fwd.0, R::zero()),
+            t: Vec4::new(-(eye * right.0), -(eye * rotated_up.0), eye * dir.0, R::zero()),
             o: mat.into(),
             s: R::one(),
         }
@@ -90,8 +90,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ::approx::ulps_eq;
-    use cgmath::Matrix;
+    use ::approx::{relative_eq, ulps_eq};
+    use cgmath::{Matrix, Transform};
     use proptest::{prop_assert, proptest};
     use serde_test::{assert_tokens, Token};
 
@@ -106,9 +106,9 @@ mod tests {
         fn with_look_at_rh_is_equal_to_cgmath(eye in vec4(bounded_f32(-24, 24)), cntr in vec4(bounded_f32(-32, 32))) {
             let up: Unit<Vec4<f32>> = Vec4::y();
 
-            let glamour_look_at = Affine::with_look_at_rh(eye, cntr, up).to_matrix();
+            let glamour_look_at = Affine::with_look_at_rh(eye, cntr, up);
 
-            let cgmath_look_at = cgmath::Matrix4::look_at_rh(
+            let cgmath_look_at = cgmath::Decomposed::look_at_rh(
                 cgmath::Point3::new(eye.x, eye.y, eye.z),
                 cgmath::Point3::new(cntr.x, cntr.y, cntr.z),
                 cgmath::Vector3::new(up.x, up.y, up.z),
@@ -117,7 +117,7 @@ mod tests {
             prop_assert!(
                 ulps_eq!(glamour_look_at, cgmath_look_at),
                 "\nglamour =   {glamour_look_at:?}\ncgmath = {:?}",
-                cgmath_look_at.transpose(),
+                cgmath_look_at,
             );
         }
 
@@ -125,18 +125,19 @@ mod tests {
         fn with_look_at_rh_is_equal_to_nalgebra(eye in vec4(bounded_f32(-24, 24)), cntr in vec4(bounded_f32(-32, 32))) {
             let up: Unit<Vec4<f32>> = Vec4::y();
 
-            let glamour_look_at = Affine::with_look_at_rh(eye, cntr, up).to_matrix();
+            let glamour_look_at = Affine::with_look_at_rh(eye, cntr, up);
 
-            let nalgebra_look_at = nalgebra::Matrix4::look_at_rh(
+            let nalgebra_look_at = nalgebra::Similarity3::look_at_rh(
                 &nalgebra::Point3::new(eye.x, eye.y, eye.z),
                 &nalgebra::Point3::new(cntr.x, cntr.y, cntr.z),
                 &nalgebra::Vector3::new(up.x, up.y, up.z),
+                1.0,
             );
 
             prop_assert!(
                 ulps_eq!(glamour_look_at, nalgebra_look_at),
                 "\nglamour = {glamour_look_at:?}\nnalgebra =     {:?}",
-                nalgebra_look_at.transpose(),
+                nalgebra_look_at,
             );
         }
     }

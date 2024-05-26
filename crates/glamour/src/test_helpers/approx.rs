@@ -1,6 +1,6 @@
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
-use crate::{mat::Mat4, quat::Quat, unit::Unit, vec::Vec4};
+use crate::{affine::Affine, mat::Mat4, quat::Quat, unit::Unit, vec::Vec4};
 
 impl<R> AbsDiffEq<nalgebra::Vector4<R>> for Vec4<R>
 where
@@ -459,5 +459,93 @@ where
             }
         }
         true
+    }
+}
+
+impl AbsDiffEq<nalgebra::Similarity3<f32>> for Affine<f32> {
+    fn abs_diff_eq(&self, other: &nalgebra::Similarity3<f32>, epsilon: Self::Epsilon) -> bool {
+        self.t.x.abs_diff_eq(&other.isometry.translation.x, epsilon) &&
+            self.t.y.abs_diff_eq(&other.isometry.translation.y, epsilon) &&
+            self.t.z.abs_diff_eq(&other.isometry.translation.z, epsilon) &&
+            self.o.abs_diff_eq(&other.isometry.rotation, epsilon) &&
+            self.s.abs_diff_eq(&other.scaling(), epsilon)
+    }
+
+    type Epsilon = <f32 as approx::AbsDiffEq>::Epsilon;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f32::default_epsilon()
+    }
+}
+
+impl AbsDiffEq<cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>> for Affine<f32> {
+    fn abs_diff_eq(&self, other: &cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>, epsilon: Self::Epsilon) -> bool {
+        self.t.x.abs_diff_eq(&other.disp.x, epsilon) &&
+            self.t.y.abs_diff_eq(&other.disp.y, epsilon) &&
+            self.t.z.abs_diff_eq(&other.disp.z, epsilon) &&
+            self.o.abs_diff_eq(&other.rot, epsilon) &&
+            self.s.abs_diff_eq(&other.scale, epsilon)
+    }
+
+    type Epsilon = <f32 as approx::AbsDiffEq>::Epsilon;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f32::default_epsilon()
+    }
+}
+
+impl RelativeEq<nalgebra::Similarity3<f32>> for Affine<f32> {
+    fn relative_eq(&self, other: &nalgebra::Similarity3<f32>, epsilon: Self::Epsilon, max_relative: Self::Epsilon) -> bool {
+        self.t.x.relative_eq(&other.isometry.translation.x, epsilon, max_relative) &&
+            self.t.y.relative_eq(&other.isometry.translation.y, epsilon, max_relative) &&
+            self.t.z.relative_eq(&other.isometry.translation.z, epsilon, max_relative) &&
+            self.o.relative_eq(&other.isometry.rotation, epsilon, max_relative) &&
+            self.s.relative_eq(&other.scaling(), epsilon, max_relative)
+    }
+
+    fn default_max_relative() -> Self::Epsilon {
+        f32::default_max_relative()
+    }
+}
+
+impl RelativeEq<cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>> for Affine<f32> {
+    fn relative_eq(&self, other: &cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>, epsilon: Self::Epsilon, max_relative: Self::Epsilon) -> bool {
+        self.t.x.relative_eq(&other.disp.x, epsilon, max_relative) &&
+            self.t.y.relative_eq(&other.disp.y, epsilon, max_relative) &&
+            self.t.z.relative_eq(&other.disp.z, epsilon, max_relative) &&
+            self.o.relative_eq(&other.rot, epsilon, max_relative) &&
+            self.s.relative_eq(&other.scale, epsilon, max_relative)
+    }
+
+    fn default_max_relative() -> Self::Epsilon {
+        f32::default_max_relative()
+    }
+}
+
+impl UlpsEq<nalgebra::Similarity3<f32>> for Affine<f32> {
+    fn ulps_eq(&self, other: &nalgebra::Similarity3<f32>, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        self.t.x.ulps_eq(&other.isometry.translation.x, epsilon, max_ulps) &&
+            self.t.y.ulps_eq(&other.isometry.translation.y, epsilon, max_ulps) &&
+            self.t.z.ulps_eq(&other.isometry.translation.z, epsilon, max_ulps) &&
+            self.o.ulps_eq(&other.isometry.rotation, epsilon, max_ulps) &&
+            self.s.ulps_eq(&other.scaling(), epsilon, max_ulps)
+    }
+
+    fn default_max_ulps() -> u32 {
+        f32::default_max_ulps()
+    }
+}
+
+impl UlpsEq<cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>> for Affine<f32> {
+    fn ulps_eq(&self, other: &cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        self.t.x.ulps_eq(&other.disp.x, epsilon, max_ulps) &&
+            self.t.y.ulps_eq(&other.disp.y, epsilon, max_ulps) &&
+            self.t.z.ulps_eq(&other.disp.z, epsilon, max_ulps) &&
+            self.o.ulps_eq(&other.rot, epsilon, max_ulps) &&
+            self.s.ulps_eq(&other.scale, epsilon, max_ulps)
+    }
+
+    fn default_max_ulps() -> u32 {
+        f32::default_max_ulps()
     }
 }
