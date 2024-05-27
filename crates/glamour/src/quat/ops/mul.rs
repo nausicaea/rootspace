@@ -81,10 +81,9 @@ mod tests {
             prop_assert!(ulps_eq!(glamour_b * glamour_a, cgmath_result));
         }
 
-        /// The result of the cgmath-based quaternion multiplication will be different from glamour and nalgebra because the ordering of operands for the j and k components is different, causing different float rounding errors. Therefore, there is an additional test with cgmath that involves manually calculating the product with adjusted operand ordering.
         #[test]
-        #[should_panic]
-        fn glamour_quat_mul_is_not_equal_to_cgmath(glamour_a in quat(bounded_f32(-62, 63)), glamour_b in quat(bounded_f32(-62, 63))) {
+        #[ignore = "The result of the cgmath-based quaternion multiplication will be different from glamour and nalgebra because the ordering of operands for the j and k components is different, causing different float rounding errors."]
+        fn glamour_quat_mul_is_equal_to_cgmath(glamour_a in quat(bounded_f32(-62, 63)), glamour_b in quat(bounded_f32(-62, 63))) {
             let cgmath_a = cgmath::Quaternion::new(glamour_a.w, glamour_a.i, glamour_a.j, glamour_a.k);
             let cgmath_b = cgmath::Quaternion::new(glamour_b.w, glamour_b.i, glamour_b.j, glamour_b.k);
             prop_assert!(ulps_eq!(glamour_b * glamour_a, cgmath_b * cgmath_a));

@@ -95,7 +95,10 @@ impl PartialEq<nalgebra::Similarity3<f32>> for Affine<f32> {
         self.t.x == other.isometry.translation.x
             && self.t.y == other.isometry.translation.y
             && self.t.z == other.isometry.translation.z
-            && self.o == other.isometry.rotation
+            && self.o.w == other.isometry.rotation.w
+            && self.o.i == other.isometry.rotation.i
+            && self.o.j == other.isometry.rotation.j
+            && self.o.k == other.isometry.rotation.k
             && self.s == other.scaling()
     }
 }
@@ -105,7 +108,10 @@ impl PartialEq<cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>
         self.t.x == other.disp.x
             && self.t.y == other.disp.y
             && self.t.z == other.disp.z
-            && self.o == other.rot
+            && self.o.w == other.rot.s
+            && self.o.i == other.rot.v.x
+            && self.o.j == other.rot.v.y
+            && self.o.k == other.rot.v.z
             && self.s == other.scale
     }
 }

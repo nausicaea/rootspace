@@ -467,7 +467,10 @@ impl AbsDiffEq<nalgebra::Similarity3<f32>> for Affine<f32> {
         self.t.x.abs_diff_eq(&other.isometry.translation.x, epsilon)
             && self.t.y.abs_diff_eq(&other.isometry.translation.y, epsilon)
             && self.t.z.abs_diff_eq(&other.isometry.translation.z, epsilon)
-            && self.o.abs_diff_eq(&other.isometry.rotation, epsilon)
+            && self.o.w.abs_diff_eq(&other.isometry.rotation.w, epsilon)
+            && self.o.i.abs_diff_eq(&other.isometry.rotation.i, epsilon)
+            && self.o.j.abs_diff_eq(&other.isometry.rotation.j, epsilon)
+            && self.o.k.abs_diff_eq(&other.isometry.rotation.k, epsilon)
             && self.s.abs_diff_eq(&other.scaling(), epsilon)
     }
 
@@ -487,7 +490,10 @@ impl AbsDiffEq<cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>
         self.t.x.abs_diff_eq(&other.disp.x, epsilon)
             && self.t.y.abs_diff_eq(&other.disp.y, epsilon)
             && self.t.z.abs_diff_eq(&other.disp.z, epsilon)
-            && self.o.abs_diff_eq(&other.rot, epsilon)
+            && self.o.w.abs_diff_eq(&other.rot.s, epsilon)
+            && self.o.i.abs_diff_eq(&other.rot.v.x, epsilon)
+            && self.o.j.abs_diff_eq(&other.rot.v.y, epsilon)
+            && self.o.k.abs_diff_eq(&other.rot.v.z, epsilon)
             && self.s.abs_diff_eq(&other.scale, epsilon)
     }
 
@@ -516,7 +522,10 @@ impl RelativeEq<nalgebra::Similarity3<f32>> for Affine<f32> {
                 .t
                 .z
                 .relative_eq(&other.isometry.translation.z, epsilon, max_relative)
-            && self.o.relative_eq(&other.isometry.rotation, epsilon, max_relative)
+            && self.o.w.relative_eq(&other.isometry.rotation.w, epsilon, max_relative)
+            && self.o.i.relative_eq(&other.isometry.rotation.i, epsilon, max_relative)
+            && self.o.j.relative_eq(&other.isometry.rotation.j, epsilon, max_relative)
+            && self.o.k.relative_eq(&other.isometry.rotation.k, epsilon, max_relative)
             && self.s.relative_eq(&other.scaling(), epsilon, max_relative)
     }
 
@@ -535,7 +544,10 @@ impl RelativeEq<cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>
         self.t.x.relative_eq(&other.disp.x, epsilon, max_relative)
             && self.t.y.relative_eq(&other.disp.y, epsilon, max_relative)
             && self.t.z.relative_eq(&other.disp.z, epsilon, max_relative)
-            && self.o.relative_eq(&other.rot, epsilon, max_relative)
+            && self.o.w.relative_eq(&other.rot.s, epsilon, max_relative)
+            && self.o.i.relative_eq(&other.rot.v.x, epsilon, max_relative)
+            && self.o.j.relative_eq(&other.rot.v.y, epsilon, max_relative)
+            && self.o.k.relative_eq(&other.rot.v.z, epsilon, max_relative)
             && self.s.relative_eq(&other.scale, epsilon, max_relative)
     }
 
@@ -549,7 +561,10 @@ impl UlpsEq<nalgebra::Similarity3<f32>> for Affine<f32> {
         self.t.x.ulps_eq(&other.isometry.translation.x, epsilon, max_ulps)
             && self.t.y.ulps_eq(&other.isometry.translation.y, epsilon, max_ulps)
             && self.t.z.ulps_eq(&other.isometry.translation.z, epsilon, max_ulps)
-            && self.o.ulps_eq(&other.isometry.rotation, epsilon, max_ulps)
+            && self.o.w.ulps_eq(&other.isometry.rotation.w, epsilon, max_ulps)
+            && self.o.i.ulps_eq(&other.isometry.rotation.i, epsilon, max_ulps)
+            && self.o.j.ulps_eq(&other.isometry.rotation.j, epsilon, max_ulps)
+            && self.o.k.ulps_eq(&other.isometry.rotation.k, epsilon, max_ulps)
             && self.s.ulps_eq(&other.scaling(), epsilon, max_ulps)
     }
 
@@ -568,7 +583,10 @@ impl UlpsEq<cgmath::Decomposed<cgmath::Vector3<f32>, cgmath::Quaternion<f32>>> f
         self.t.x.ulps_eq(&other.disp.x, epsilon, max_ulps)
             && self.t.y.ulps_eq(&other.disp.y, epsilon, max_ulps)
             && self.t.z.ulps_eq(&other.disp.z, epsilon, max_ulps)
-            && self.o.ulps_eq(&other.rot, epsilon, max_ulps)
+            && self.o.w.ulps_eq(&other.rot.s, epsilon, max_ulps)
+            && self.o.i.ulps_eq(&other.rot.v.x, epsilon, max_ulps)
+            && self.o.j.ulps_eq(&other.rot.v.y, epsilon, max_ulps)
+            && self.o.k.ulps_eq(&other.rot.v.z, epsilon, max_ulps)
             && self.s.ulps_eq(&other.scale, epsilon, max_ulps)
     }
 
