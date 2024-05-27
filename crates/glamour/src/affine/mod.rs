@@ -92,11 +92,7 @@ where
         let qt = Quat::from(t);
         let t: Vec4<R> = (o.0 * qt * o.0.c()).into();
 
-        Affine {
-            t,
-            o,
-            s: R::one(),
-        }
+        Affine { t, o, s: R::one() }
     }
 }
 
