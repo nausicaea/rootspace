@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     mat::Mat4,
     num::{One, Zero},
-    ops::{cross::Cross},
+    ops::cross::Cross,
     quat::Quat,
     unit::Unit,
     vec::Vec4,
