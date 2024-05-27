@@ -2,14 +2,7 @@ use builder::AffineBuilder;
 use num_traits::{Float, NumAssign};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    mat::Mat4,
-    num::{One, Zero},
-    ops::cross::Cross,
-    quat::Quat,
-    unit::Unit,
-    vec::Vec4,
-};
+use crate::{mat::Mat4, num::Zero, ops::cross::Cross, quat::Quat, unit::Unit, vec::Vec4};
 
 mod approx;
 pub mod builder;
@@ -97,7 +90,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ::approx::ulps_eq;
+    use ::approx::relative_eq;
     use cgmath::Transform;
     use proptest::{prop_assert, proptest};
     use serde_test::{assert_tokens, Token};

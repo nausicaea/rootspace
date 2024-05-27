@@ -27,7 +27,7 @@ futures = { version = "0.3.30", default-features = false, features = ["std"] }
 glamour = { path = "../glamour" }
 humantime = "2.1.0"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
-itertools = "0.13.0"
+itertools = "0.10.5"
 lazy_static = "1.0"
 num-traits = "0.2.14"
 plyers = { path = "../plyers" }

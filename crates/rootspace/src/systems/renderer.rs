@@ -83,8 +83,8 @@ impl Renderer {
     #[tracing::instrument(skip_all)]
     fn prepare<'a>(&mut self, res: &'a Resources) -> DrawData<'a> {
         let gfx = res.read::<Graphics>();
-        let hier = res.read::<Hierarchy<Index>>();
-        let transforms = res.read_components::<Transform>();
+        let _hier = res.read::<Hierarchy<Index>>();
+        let _transforms = res.read_components::<Transform>();
 
         // 1. Allow only a single camera
         // 2. Obtain the camera projection matrix and write it to the corresponding uniform buffer
@@ -97,7 +97,7 @@ impl Renderer {
         // Calculate all camera transforms and the respective buffer offset
         let (camera_uniform, camera_view) = res
             .iter_rr::<Camera, Transform>()
-            .map(|(idx, cam, trf)| {
+            .map(|(_idx, cam, trf)| {
                 use num_traits::Inv;
 
                 let camera_transform = trf.affine; //hier_transform(idx, &hier, &transforms);
@@ -133,7 +133,7 @@ impl Renderer {
 
             let instance_data: Vec<_> = data
                 .sorted_by_key(|(_, ren, _)| ren.model.mesh.instance_id)
-                .map(|(idx, ren, trf)| {
+                .map(|(_idx, ren, trf)| {
                     if vertex_buffer.is_none() {
                         vertex_buffer = Some(ren.model.mesh.vertex_buffer);
                     }
