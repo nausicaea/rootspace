@@ -1,4 +1,3 @@
-use ::approx::relative_eq;
 use builder::AffineBuilder;
 use num_traits::{Float, NumAssign};
 use serde::{Deserialize, Serialize};
@@ -6,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     mat::Mat4,
     num::{One, Zero},
-    ops::{cross::Cross, dot::Dot},
+    ops::{cross::Cross},
     quat::Quat,
     unit::Unit,
     vec::Vec4,
