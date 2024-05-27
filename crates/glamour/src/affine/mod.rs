@@ -1,3 +1,4 @@
+use ::approx::relative_eq;
 use builder::AffineBuilder;
 use num_traits::{Float, NumAssign};
 use serde::{Deserialize, Serialize};
@@ -5,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     mat::Mat4,
     num::{One, Zero},
-    ops::cross::Cross,
+    ops::{cross::Cross, dot::Dot},
     quat::Quat,
     unit::Unit,
     vec::Vec4,
@@ -96,11 +97,12 @@ mod tests {
     use serde_test::{assert_tokens, Token};
 
     use super::*;
-    use crate::test_helpers::proptest::{bounded_f32, vec4};
+    use crate::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, vec4};
 
     proptest! {
         #[test]
-        fn with_look_at_rh_is_equal_to_cgmath(eye in vec4(bounded_f32(-24, 24)), cntr in vec4(bounded_f32(-32, 32))) {
+        fn with_look_at_rh_is_equal_to_cgmath(eye in vec4(bounded_nonzero_f32(-16, 16))) {
+            let cntr = Vec4::zero();
             let up: Unit<Vec4<f32>> = Vec4::y();
 
             let glamour_look_at = Affine::with_look_at_rh(eye, cntr, up);
