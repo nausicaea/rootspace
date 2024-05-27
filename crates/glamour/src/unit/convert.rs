@@ -60,7 +60,10 @@ mod tests {
     use cgmath::InnerSpace;
     use proptest::{prop_assert, proptest};
 
-    use crate::{test_helpers::proptest::{bounded_nonzero_f32, vec4}, unit::Unit};
+    use crate::{
+        test_helpers::proptest::{bounded_nonzero_f32, vec4},
+        unit::Unit,
+    };
 
     proptest! {
         #[test]
