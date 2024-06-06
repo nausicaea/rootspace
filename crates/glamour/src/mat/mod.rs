@@ -4,6 +4,7 @@ use crate::{num::Zero, vec::Vec4};
 
 mod approx;
 mod convert;
+mod iter;
 mod num;
 mod ops;
 mod serde;
@@ -15,6 +16,12 @@ pub struct Mat4<R>(pub [[R; 4]; 4]);
 impl<R> Mat4<R> {
     pub const fn new(v: [[R; 4]; 4]) -> Self {
         Mat4(v)
+    }
+}
+
+impl<R: Float> Mat4<R> {
+    pub fn nan() -> Self {
+        Mat4::new([[R::nan(); 4]; 4])
     }
 }
 

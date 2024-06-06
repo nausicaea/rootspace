@@ -1,4 +1,4 @@
-use std::{iter::Product, ops::Mul};
+use std::ops::Mul;
 
 use num_traits::Float;
 
@@ -91,18 +91,6 @@ where
 }
 
 forward_ref_binop!(impl<R: Float> Mul, mul for Mat4<R>, Vec4<R>, Vec4<R>);
-
-impl<'a, R: Float> Product<&'a Mat4<R>> for Mat4<R> {
-    fn product<I: Iterator<Item = &'a Mat4<R>>>(iter: I) -> Self {
-        iter.fold(Mat4::identity(), |state, item| state * item)
-    }
-}
-
-impl<R: Float> Product<Mat4<R>> for Mat4<R> {
-    fn product<I: Iterator<Item = Mat4<R>>>(iter: I) -> Self {
-        iter.fold(Mat4::identity(), |state, item| state * item)
-    }
-}
 
 #[cfg(test)]
 mod tests {

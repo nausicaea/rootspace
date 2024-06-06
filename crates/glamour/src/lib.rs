@@ -1,3 +1,6 @@
+extern crate lapack;
+extern crate lapack_src;
+
 pub mod affine;
 mod macros;
 pub mod mat;

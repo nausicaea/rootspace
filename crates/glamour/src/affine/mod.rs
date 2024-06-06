@@ -1,5 +1,5 @@
 use builder::AffineBuilder;
-use num_traits::{Float, NumAssign};
+use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::{mat::Mat4, num::Zero, ops::cross::Cross, quat::Quat, unit::Unit, vec::Vec4};
@@ -7,7 +7,6 @@ use crate::{mat::Mat4, num::Zero, ops::cross::Cross, quat::Quat, unit::Unit, vec
 mod approx;
 pub mod builder;
 mod convert;
-mod iter;
 mod num;
 mod ops;
 
@@ -39,21 +38,6 @@ where
             o: Quat::identity().into(),
             s: R::one(),
         }
-    }
-}
-
-impl<R> Affine<R>
-where
-    R: Float + NumAssign,
-{
-    pub fn inv_t(&self) -> Mat4<R> {
-        let tmp = Affine {
-            t: Vec4::zero(),
-            o: self.o,
-            s: R::one() / self.s,
-        };
-
-        tmp.into()
     }
 }
 

@@ -4,7 +4,7 @@ use crate::{affine::Affine, mat::Mat4};
 
 impl<R> From<Affine<R>> for Mat4<R>
 where
-    R: Float + NumAssign,
+    R: Float,
 {
     fn from(v: Affine<R>) -> Self {
         From::from(&v)
@@ -13,7 +13,7 @@ where
 
 impl<'a, R> From<&'a Affine<R>> for Mat4<R>
 where
-    R: Float + NumAssign,
+    R: Float,
 {
     fn from(v: &'a Affine<R>) -> Self {
         let mut m: Mat4<R> = v.o.into();

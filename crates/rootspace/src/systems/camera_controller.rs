@@ -81,7 +81,9 @@ impl System for CameraController {
         }
 
         for (_, _, trf) in res.iter_rw::<Camera, Transform>() {
-            trf.affine = delta_transform * trf.affine;
+            trf.affine.t = delta_transform.t + trf.affine.t;
+            trf.affine.o = delta_transform.o * trf.affine.o;
+            trf.affine.s = delta_transform.s * trf.affine.s;
         }
     }
 }

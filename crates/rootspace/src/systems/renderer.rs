@@ -7,6 +7,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+use num_traits::Inv;
+
 use anyhow::Context;
 use async_trait::async_trait;
 use itertools::Itertools;
@@ -42,8 +44,7 @@ use ecs::{
     with_resources::WithResources,
 };
 use glamour::{
-    affine::{builder::AffineBuilder, Affine},
-    num::ToMatrix,
+    affine::builder::AffineBuilder, mat::Mat4,
 };
 use rose_tree::hierarchy::Hierarchy;
 
@@ -153,8 +154,8 @@ impl Renderer {
                     let model_view = camera_view * instance_transform;
 
                     Instance {
-                        model_view: model_view.to_matrix().0,
-                        normal: model_view.inv_t().0,
+                        model_view: model_view.0,
+                        normal: model_view.inv().t().0,
                         with_camera: if trf.ui { 0.0 } else { 1.0 },
                     }
                 })
@@ -188,7 +189,7 @@ impl Renderer {
                 let model_view = camera_view * light_transform;
 
                 let lu = LightUniform {
-                    model_view: model_view.to_matrix().0,
+                    model_view: model_view.0,
                     color: lght.color.into(),
                 };
 
@@ -496,10 +497,10 @@ struct InstanceDrawData<'a> {
 }
 
 #[tracing::instrument(skip_all)]
-fn hier_transform(idx: Index, hier: &Hierarchy<Index>, transforms: &<Transform as Component>::Storage) -> Affine<f32> {
+fn hier_transform(idx: Index, hier: &Hierarchy<Index>, transforms: &<Transform as Component>::Storage) -> Mat4<f32> {
     hier.ancestors(idx)
-        .filter_map(|a| transforms.get(a).map(|at| &at.affine))
-        .product::<Affine<f32>>()
+        .filter_map(|a| transforms.get(a).map(|at| Into::<Mat4<f32>>::into(at.affine)))
+        .product::<Mat4<f32>>()
 }
 
 #[cfg(test)]
