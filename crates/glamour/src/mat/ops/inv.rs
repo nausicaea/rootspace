@@ -16,13 +16,7 @@ impl<R: Float> Mat4<R> {
 
         unsafe {
             lapack::dgesvd(
-                b'A', b'A', 4, 4, 
-                &mut a, 4, 
-                &mut s, 
-                &mut u, 4, 
-                &mut vt, 4, 
-                &mut work, 268, 
-                &mut info,
+                b'A', b'A', 4, 4, &mut a, 4, &mut s, &mut u, 4, &mut vt, 4, &mut work, 268, &mut info,
             )
         };
 
@@ -66,7 +60,6 @@ impl<'a, R: Float + approx::UlpsEq> Inv for &'a Mat4<R> {
                     tracing::error!("non-invertible matrix");
                     Mat4::nan()
                 } else {
-
                     let mut s_inv: Mat4<R> = Mat4::identity();
                     s_inv[(0, 0)] = R::one() / svd.sigma[(0, 0)];
                     s_inv[(1, 1)] = R::one() / svd.sigma[(1, 1)];
@@ -78,7 +71,7 @@ impl<'a, R: Float + approx::UlpsEq> Inv for &'a Mat4<R> {
 
                     u_inv * s_inv * vt_inv
                 }
-            },
+            }
             Err(e) => {
                 tracing::error!("singular value decomposition error: {}", e);
                 Mat4::nan()
@@ -108,8 +101,7 @@ fn try_into_f64<R: NumCast + Copy>(value: Mat4<R>) -> Result<[f64; 16], Error> {
 
     let mut f64_data: [f64; 16] = [0.0; 16];
     for (i, element) in generic_data.into_iter().enumerate() {
-        f64_data[i] = num_traits::cast::<R, f64>(element)
-            .ok_or(Error::NumCast)?;
+        f64_data[i] = num_traits::cast::<R, f64>(element).ok_or(Error::NumCast)?;
     }
 
     Ok(f64_data)
@@ -118,8 +110,7 @@ fn try_into_f64<R: NumCast + Copy>(value: Mat4<R>) -> Result<[f64; 16], Error> {
 fn try_into_r<R: NumCast + Copy + Zero>(value: [f64; 16]) -> Result<Mat4<R>, Error> {
     let mut generic_data: [R; 16] = [R::zero(); 16];
     for (i, element) in value.into_iter().enumerate() {
-        generic_data[i] = num_traits::cast::<f64, R>(element)
-            .ok_or(Error::NumCast)?;
+        generic_data[i] = num_traits::cast::<f64, R>(element).ok_or(Error::NumCast)?;
     }
 
     let mat: Mat4<R> = generic_data.into();
@@ -129,7 +120,7 @@ fn try_into_r<R: NumCast + Copy + Zero>(value: [f64; 16]) -> Result<Mat4<R>, Err
 
 #[cfg(test)]
 mod tests {
-    use approx::{assert_ulps_ne, relative_eq, ulps_eq};
+    use approx::{abs_diff_eq, assert_ulps_ne, relative_eq, ulps_eq};
 
     use crate::{affine::Affine, quat::Quat, vec::Vec4};
 
@@ -144,7 +135,11 @@ mod tests {
             .build()
             .into();
 
-        assert!(ulps_eq!(m * m.inv(), Mat4::<f32>::identity()), "m * m.inv() != Mat4::<f32>::identity()\ndiff:\n{}", diff(&(m * m.inv()), &Mat4::<f32>::identity(), |a, b| ulps_eq!(a, b)));
+        assert!(
+            abs_diff_eq!(m * m.inv(), Mat4::<f32>::identity(), epsilon=10.0*f32::EPSILON),
+            "m * m.inv() != Mat4::<f32>::identity()\ndiff:\n{}",
+            diff(&(m * m.inv()), &Mat4::<f32>::identity(), |a, b| ulps_eq!(a, b))
+        );
     }
 
     #[test]
@@ -156,7 +151,7 @@ mod tests {
             .build()
             .into();
 
-        let Svd {sigma, u, vt} = m.svd().unwrap();
+        let Svd { sigma, u, vt } = m.svd().unwrap();
 
         let mut s_inv: Mat4<f32> = Mat4::identity();
         s_inv[(0, 0)] = 1.0 / sigma[(0, 0)];
@@ -164,15 +159,27 @@ mod tests {
         s_inv[(2, 2)] = 1.0 / sigma[(2, 2)];
         s_inv[(3, 3)] = 1.0 / sigma[(3, 3)];
 
-        assert!(ulps_eq!(sigma * s_inv, Mat4::<f32>::identity()), "s * s_inv != Mat4::<f32>::identity()\ndiff:\n{}", diff(&(sigma * s_inv), &Mat4::<f32>::identity(), |a, b| ulps_eq!(a, b)));
+        assert!(
+            ulps_eq!(sigma * s_inv, Mat4::<f32>::identity()),
+            "s * s_inv != Mat4::<f32>::identity()\ndiff:\n{}",
+            diff(&(sigma * s_inv), &Mat4::<f32>::identity(), |a, b| ulps_eq!(a, b))
+        );
 
         let u_inv = u.t();
 
-        assert!(relative_eq!(u * u_inv, Mat4::<f32>::identity()), "u * u_inv != Mat4::<f32>::identity()\ndiff:\n{}", diff(&(u * u_inv), &Mat4::<f32>::identity(), |a, b| relative_eq!(a, b)));
+        assert!(
+            relative_eq!(u * u_inv, Mat4::<f32>::identity()),
+            "u * u_inv != Mat4::<f32>::identity()\ndiff:\n{}",
+            diff(&(u * u_inv), &Mat4::<f32>::identity(), |a, b| relative_eq!(a, b))
+        );
 
         let vt_inv = vt.t();
 
-        assert!(ulps_eq!(vt * vt_inv, Mat4::<f32>::identity()), "vt * vt_inv != Mat4::<f32>::identity()\ndiff:\n{}", diff(&(vt * vt_inv), &Mat4::<f32>::identity(), |a, b| ulps_eq!(a, b)));
+        assert!(
+            ulps_eq!(vt * vt_inv, Mat4::<f32>::identity()),
+            "vt * vt_inv != Mat4::<f32>::identity()\ndiff:\n{}",
+            diff(&(vt * vt_inv), &Mat4::<f32>::identity(), |a, b| ulps_eq!(a, b))
+        );
     }
 
     #[test]

@@ -43,9 +43,7 @@ use ecs::{
     system::System,
     with_resources::WithResources,
 };
-use glamour::{
-    affine::builder::AffineBuilder, mat::Mat4,
-};
+use glamour::{affine::builder::AffineBuilder, mat::Mat4};
 use rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug)]

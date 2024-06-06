@@ -15,4 +15,3 @@ where
 }
 
 forward_ref_binop!(impl<R: Float> Dot, dot for Affine<R>, Affine<R>, Mat4<R>);
-

@@ -15,4 +15,3 @@ impl<R: Float> Product<Mat4<R>> for Mat4<R> {
         iter.fold(Mat4::identity(), |state, item| state * item)
     }
 }
-
