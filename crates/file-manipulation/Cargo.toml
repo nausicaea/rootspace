@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = { version = "1.0.0" }
-directories = "5.0"
-serde = { version = "1.0.0", features = ["derive"] }
-thiserror = "1.0.0"
-tokio = { version = "1.36.0", features = ["fs", "io-util"] }
-tracing = "0.1.40"
+anyhow = { version = "^1.0.0" }
+directories = "^5.0"
+serde = { version = "^1.0.0", features = ["derive"] }
+thiserror = "^1.0.0"
+tokio = { version = "^1.36.0", features = ["fs", "io-util"] }
+tracing = "^0.1.40"
 
 [dev-dependencies]
-serde_test = "1.0.126"
-tempfile = "3.0.1"
+serde_test = "^1.0.126"
+tempfile = "^3.0.1"

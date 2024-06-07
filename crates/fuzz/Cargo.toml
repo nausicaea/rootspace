@@ -8,10 +8,10 @@ edition = "2021"
 cargo-fuzz = true
 
 [dependencies]
-afl = "0.15.5"
+afl = "^0.15.5"
 ciborium = "^0.2.0"
 plyers = { path = "../plyers" }
-serde = { version = "1.0.0", features = ["derive"] }
+serde = { version = "^1.0.0", features = ["derive"] }
 
 [[bin]]
 name = "parse_ply"
