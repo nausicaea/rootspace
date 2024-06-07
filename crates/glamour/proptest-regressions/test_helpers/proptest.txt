@@ -5,3 +5,4 @@
 # It is recommended to check this file in to source control so that
 # everyone who runs the test benefits from these saved cases.
 cc 8409e6e58c60c021dbcf7bf0ed31f594a894b883f3d4d63f47895766e25c9d2b # shrinks to m = Mat4([[-0.4963949, -0.03883187, -0.8672279, 0.0], [0.019290492, -0.99924576, 0.0337015, 0.0], [-0.8678825, 0.0, 0.49676958, 0.0], [0.0, 0.0, 0.0, 1.0]])
+cc bd9412a11b08c9308384a88eda1f9ffa40520d3b6114667d18222ec9ab77a77b # shrinks to m = Mat4([[0.121867225, 0.776242, -0.61854404, 0.0], [-0.30320165, -0.5642853, -0.76788735, 0.0], [-0.9451017, 0.2811239, 0.16658999, 0.0], [0.0, 0.0, 0.0, 1.0]])
