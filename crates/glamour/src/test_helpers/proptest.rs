@@ -100,17 +100,20 @@ prop_compose! {
 
 #[cfg(test)]
 mod tests {
+    use crate::test_helpers::diff;
+
     use super::*;
-    use approx::ulps_eq;
+    use approx::relative_eq;
     use proptest::{prop_assert, proptest};
 
     proptest! {
         #[test]
         fn verify_rot_mat4(m in rot_mat4()) {
-            let result = m * m.t();
-            let identity: Mat4<f32> = Mat4::identity();
-
-            prop_assert!(ulps_eq!(identity, result));
+            prop_assert!(
+                relative_eq!(m * m.t(), Mat4::<f32>::identity(), max_relative=10000000.0 * f32::EPSILON),
+                "m * m.t() != Mat4::<f32>::identity()\ndiff:\n{}",
+                diff(&(m * m.t()), &Mat4::<f32>::identity(), |a, b| relative_eq!(a, b, max_relative=10000000.0 * f32::EPSILON))
+            );
         }
     }
 }

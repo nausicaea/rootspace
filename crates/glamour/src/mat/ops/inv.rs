@@ -122,7 +122,7 @@ fn try_into_r<R: NumCast + Copy + Zero>(value: [f64; 16]) -> Result<Mat4<R>, Err
 mod tests {
     use approx::{abs_diff_eq, assert_ulps_ne, relative_eq, ulps_eq};
 
-    use crate::{affine::Affine, quat::Quat, vec::Vec4};
+    use crate::{affine::Affine, quat::Quat, test_helpers::diff, vec::Vec4};
 
     use super::*;
 
@@ -138,7 +138,7 @@ mod tests {
         assert!(
             abs_diff_eq!(m * m.inv(), Mat4::<f32>::identity(), epsilon=10.0*f32::EPSILON),
             "m * m.inv() != Mat4::<f32>::identity()\ndiff:\n{}",
-            diff(&(m * m.inv()), &Mat4::<f32>::identity(), |a, b| ulps_eq!(a, b))
+            diff(&(m * m.inv()), &Mat4::<f32>::identity(), |a, b| abs_diff_eq!(a, b, epsilon=10.0*f32::EPSILON))
         );
     }
 
@@ -196,21 +196,4 @@ mod tests {
         assert_ulps_ne!(svd.det_abs(), 0.0f32);
     }
 
-    fn diff<R, F>(lhs: &Mat4<R>, rhs: &Mat4<R>, eq: F) -> impl std::fmt::Display
-    where
-        R: std::fmt::Display,
-        F: Fn(&R, &R) -> bool,
-    {
-        let mut diff_buff = String::new();
-        for r in 0..4 {
-            for c in 0..4 {
-                let lhsv = &lhs[(r, c)];
-                let rhsv = &rhs[(r, c)];
-                if !eq(lhsv, rhsv) {
-                    diff_buff.push_str(&format!("(r={}, c={}): {} != {}\n", r, c, lhsv, rhsv));
-                }
-            }
-        }
-        diff_buff
-    }
 }
