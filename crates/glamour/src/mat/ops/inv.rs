@@ -136,9 +136,13 @@ mod tests {
             .into();
 
         assert!(
-            abs_diff_eq!(m * m.inv(), Mat4::<f32>::identity(), epsilon=10.0*f32::EPSILON),
+            abs_diff_eq!(m * m.inv(), Mat4::<f32>::identity(), epsilon = 10.0 * f32::EPSILON),
             "m * m.inv() != Mat4::<f32>::identity()\ndiff:\n{}",
-            diff(&(m * m.inv()), &Mat4::<f32>::identity(), |a, b| abs_diff_eq!(a, b, epsilon=10.0*f32::EPSILON))
+            diff(&(m * m.inv()), &Mat4::<f32>::identity(), |a, b| abs_diff_eq!(
+                a,
+                b,
+                epsilon = 10.0 * f32::EPSILON
+            ))
         );
     }
 
@@ -195,5 +199,4 @@ mod tests {
 
         assert_ulps_ne!(svd.det_abs(), 0.0f32);
     }
-
 }
