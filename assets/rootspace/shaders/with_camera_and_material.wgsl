@@ -98,8 +98,14 @@ fn fragment_main(
     let diffuse_strength = max(dot(in.view_normal, light_dir), 0.0);
     let diffuse_color = light.color * diffuse_strength;
 
+    let view_dir = normalize(-in.view_position);
+    let reflect_dir = reflect(-light_dir, in.view_normal);
+    let specular_strength = pow(max(dot(view_dir, reflect_dir), 0.0), 32.0);
+    let specular_color = light.color * specular_strength;
+
     return vec4<f32>(
-        (ambient_color + diffuse_color) * object_color.xyz, 
+        //(ambient_color + diffuse_color + specular_color) * object_color.xyz, 
+        (specular_color) * object_color.xyz, 
         object_color.a,
     );
 }
