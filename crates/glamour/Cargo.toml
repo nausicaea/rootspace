@@ -7,8 +7,8 @@ edition = "2021"
 [dependencies]
 approx = "^0.5.0"
 forward-ref = { path = "../forward-ref" }
-lapack = "^0.19.0"
-lapack-src = { version = "^0.10", features = ["accelerate"] }
+lapack = "^0.20.0"
+lapack-src = { version = "^0.13.0", features = ["accelerate"] }
 num-traits = "^0.2.14"
 serde = { version = "^1.0.0", features = ["derive"] }
 thiserror = "^2.0.17"
