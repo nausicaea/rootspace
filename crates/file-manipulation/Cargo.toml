@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 anyhow = { version = "^1.0.0" }
-directories = "^5.0"
+directories = "^6.0"
 serde = { version = "^1.0.0", features = ["derive"] }
-thiserror = "^1.0.0"
+thiserror = "^2.0.17"
 tokio = { version = "^1.36.0", features = ["fs", "io-util"] }
 tracing = "^0.1.40"
 

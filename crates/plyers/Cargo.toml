@@ -10,7 +10,7 @@ either = "^1.0"
 file-manipulation = { path = "../file-manipulation" }
 nom = "^7.0.0"
 num-traits = "^0.2.14"
-thiserror = "^1.0.0"
+thiserror = "^2.0.17"
 tracing = "^0.1.40"
 urn = { path = "../urn" }
 
