@@ -35,7 +35,7 @@ regex = "^1.0"
 rose-tree = { path = "../rose-tree" }
 serde = { version = "^1.0.0", features = ["derive"] }
 serde_json = "^1.0.0"
-tarpc = { version = "^0.34.0", features = ["serde-transport-bincode", "tcp", "serde-transport"] }
+tarpc = { version = "^0.37.0", features = ["serde-transport-bincode", "tcp", "serde-transport"] }
 thiserror = "^2.0.17"
 tokio = { version = "^1.36.0", features = ["full"] }
 tracing = "^0.1.40"
