@@ -1,3 +1,13 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:77e90bf8ec69305442638fbf86d42728313c45de93281d8ad92466492f0561da
-size 331
+ply
+format ascii 1.0
+obj_info 2. ObjInfo are allowed here
+comment 3. Comments are allowed here
+comment 4. Comments are allowed here
+obj_info 3. ObjInfo are allowed here
+element vertex 1
+comment 5. Comments are allowed here
+obj_info 4. ObjInfo are allowed here
+comment 6. Comments are allowed here
+property float32 x
+end_header
+1.0

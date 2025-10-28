@@ -1,3 +1,12 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:441faf31aa86c134c073bc32527d9f9a292123d0f53aefcbeeb5fb48293f8b73
-size 235
+ply
+format ascii 1.0
+comment TextureFile d_rgb1.bmp
+element vertex 0
+property float x
+property float y
+property float z
+property float texture_u
+property float texture_v
+element face 0
+property list uchar int vertex_indices
+end_header

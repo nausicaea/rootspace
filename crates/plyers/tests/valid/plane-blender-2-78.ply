@@ -1,3 +1,21 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:37b6f7f35955970505ee72688a912e3640a5c5e326fca73fff4c8350cd52c508
-size 626
+ply
+format ascii 1.0
+comment Created by Blender 2.78 (sub 0) - www.blender.org, source file: ''
+element vertex 4
+property float x
+property float y
+property float z
+property float nx
+property float ny
+property float nz
+property float s
+property float t
+element face 2
+property list uchar uint vertex_indices
+end_header
+1.000000 -1.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000
+-1.000000 1.000000 0.000000 0.000000 0.000000 1.000000 1.000000 1.000000
+-1.000000 -1.000000 0.000000 0.000000 0.000000 1.000000 0.000000 1.000000
+1.000000 1.000000 0.000000 0.000000 0.000000 1.000000 1.000000 0.000000
+3 0 1 2
+3 0 3 1

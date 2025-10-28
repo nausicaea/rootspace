@@ -1,3 +1,24 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3795b05357008ddde37cd829d5ae8a53ae4fdc93e91889f422dca117bb189c72
-size 559
+ply
+format binary_little_endian 1.0
+comment PCL generated
+obj_info is_cyberware_data 0
+obj_info is_mesh 0
+obj_info is_warped 0
+obj_info is_interlaced 0
+obj_info num_cols 2
+obj_info num_rows 1
+obj_info echo_rgb_offset_x 0
+obj_info echo_rgb_offset_y 0
+obj_info echo_rgb_offset_z 0
+obj_info echo_rgb_frontfocus 0.0
+obj_info echo_rgb_backfocus 0.0
+obj_info echo_rgb_pixelsize 0.0
+obj_info echo_rgb_centerpixel 0
+obj_info echo_frames 1
+obj_info echo_lgincr 0.0
+element vertex 2
+property float x
+property float y
+property float z
+end_header
+pµp¾3l+?5Z¿L+z¾4+?èU¿

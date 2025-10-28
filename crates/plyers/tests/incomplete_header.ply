@@ -1,3 +1,7 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:c04e8b9a9f61a1ec5191f99a160b952603caecf2eb4840306890355acc56321b
-size 105
+ply
+format ascii 1.0
+comment A cube
+element vertex 24
+property float x
+property float y
+property float z

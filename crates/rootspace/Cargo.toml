@@ -37,7 +37,7 @@ serde = { version = "^1.0.0", features = ["derive"] }
 serde_json = "^1.0.0"
 tarpc = { version = "^0.34.0", features = ["serde-transport-bincode", "tcp", "serde-transport"] }
 thiserror = "^1.0.0"
-tokio = { version = "^1.36.0", features = ["rt-multi-thread", "macros", "net", "fs", "io-util", "sync", "tracing"] }
+tokio = { version = "^1.36.0", features = ["full"] }
 tracing = "^0.1.40"
 tracing-subscriber = { version = "^0.3.18", features = ["env-filter"] }
 urn = { path = "../urn" }

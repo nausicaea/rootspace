@@ -1,3 +1,22 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5084c5d0cd68e1fa854b2312d2190acb03c69a7e46ca8d8f143fb207ac801463
-size 468
+ply
+format ascii 1.0
+comment A quad
+obj_info label=quad
+element vertex 4
+property float x
+property float y
+property float z
+property float texture_u
+property float texture_v
+property float nx
+property float ny
+property float nz
+element face 2
+property list uchar uint vertex_indices
+end_header
+-0.5  0.5 0.0 0.0 1.0 0.0 0.0 1.0
+-0.5 -0.5 0.0 0.0 0.0 0.0 0.0 1.0
+ 0.5 -0.5 0.0 1.0 0.0 0.0 0.0 1.0
+ 0.5  0.5 0.0 1.0 1.0 0.0 0.0 1.0
+3 0 1 2
+3 2 3 0

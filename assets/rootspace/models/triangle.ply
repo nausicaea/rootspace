@@ -1,3 +1,20 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e1b8c87d36a00b3c78292196bb287d5bb894a6adf977dc33cacb5f9ba6e47955
-size 416
+ply
+format ascii 1.0
+comment A single triangle
+obj_info label=triangle
+element vertex 3
+property float x
+property float y
+property float z
+property float texture_u
+property float texture_v
+property float nx
+property float ny
+property float nz
+element face 1
+property list uchar uint vertex_indices
+end_header
+0.0 0.5 0.5 0.0 1.0 0.0 0.0 1.0
+-0.5 -0.5 0.0 0.0 0.0 0.0 0.0 1.0
+0.5 -0.5 0.0 1.0 0.0 0.0 0.0 1.0
+3 0 1 2
