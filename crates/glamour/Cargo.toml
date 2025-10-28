@@ -16,6 +16,6 @@ tracing = "^0.1.40"
 
 [dev-dependencies]
 cgmath = "^0.18.0"
-nalgebra = "^0.32.4"
+nalgebra = "^0.34.1"
 proptest = "^1.0.0"
 serde_test = "^1.0.126"
