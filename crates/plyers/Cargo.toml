@@ -20,7 +20,7 @@ criterion = "^0.7.0"
 mutants = "^0.0.3"
 proptest = "^1.0.0"
 proptest-derive = "^0.7.0"
-rstest = "^0.21.0"
+rstest = "^0.26.1"
 tempfile = "^3.0.1"
 tracing-subscriber = { version = "^0.3.18", features = ["env-filter"] }
 
