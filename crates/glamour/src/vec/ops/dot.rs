@@ -6,7 +6,7 @@ use super::super::Vec4;
 use crate::{abop, ops::dot::Dot};
 use forward_ref::forward_ref_binop;
 
-impl<'a, 'b, R> Dot<&'b Vec4<R>> for &'a Vec4<R>
+impl<'b, R> Dot<&'b Vec4<R>> for &Vec4<R>
 where
     R: Float,
 {

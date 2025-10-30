@@ -5,7 +5,7 @@ use num_traits::Float;
 use crate::quat::Quat;
 use forward_ref::forward_ref_binop;
 
-impl<'a, 'b, R> Mul<&'b Quat<R>> for &'a Quat<R>
+impl<'b, R> Mul<&'b Quat<R>> for &Quat<R>
 where
     R: Float,
 {

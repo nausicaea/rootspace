@@ -2,7 +2,7 @@ use num_traits::Float;
 
 use crate::{ops::norm::Norm, vec::Vec4};
 
-impl<'a, R> Norm for &'a Vec4<R>
+impl<R> Norm for &Vec4<R>
 where
     R: Float,
 {

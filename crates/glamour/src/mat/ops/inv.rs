@@ -50,7 +50,7 @@ impl<R: std::ops::Mul<R, Output = R> + Copy> Svd<R> {
     }
 }
 
-impl<'a, R: Float + approx::UlpsEq> Inv for &'a Mat4<R> {
+impl<R: Float + approx::UlpsEq> Inv for &Mat4<R> {
     type Output = Mat4<R>;
 
     fn inv(self) -> Self::Output {

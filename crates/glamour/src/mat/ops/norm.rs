@@ -5,7 +5,7 @@ use num_traits::Float;
 use super::super::Mat4;
 use crate::ops::norm::Norm;
 
-impl<'a, R> Norm for &'a Mat4<R>
+impl<R> Norm for &Mat4<R>
 where
     R: Float + Sum,
 {

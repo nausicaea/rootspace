@@ -6,7 +6,7 @@ use super::super::Mat4;
 use crate::{ops::dot::Dot, vec::Vec4};
 use forward_ref::forward_ref_binop;
 
-impl<'a, 'b, R> Dot<&'b Mat4<R>> for &'a Mat4<R>
+impl<'b, R> Dot<&'b Mat4<R>> for &Mat4<R>
 where
     R: Float,
 {
@@ -55,7 +55,7 @@ where
 
 forward_ref_binop!(impl<R: Float> Mul, mul for Mat4<R>, Mat4<R>, Mat4<R>);
 
-impl<'a, 'b, R> Dot<&'b Vec4<R>> for &'a Mat4<R>
+impl<'b, R> Dot<&'b Vec4<R>> for &Mat4<R>
 where
     R: Float,
 {

@@ -3,7 +3,7 @@ use num_traits::Float;
 
 use crate::{affine::Affine, mat::Mat4, ops::dot::Dot};
 
-impl<'a, 'b, R> Dot<&'b Affine<R>> for &'a Affine<R>
+impl<'b, R> Dot<&'b Affine<R>> for &Affine<R>
 where
     R: Float,
 {

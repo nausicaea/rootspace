@@ -2,7 +2,7 @@ use num_traits::Float;
 
 use crate::{ops::cross::Cross, vec::Vec4};
 
-impl<'a, 'b, R> Cross<&'b Vec4<R>> for &'a Vec4<R>
+impl<'b, R> Cross<&'b Vec4<R>> for &Vec4<R>
 where
     R: Copy + num_traits::Zero + std::ops::Mul<R, Output = R> + std::ops::Sub<R, Output = R>,
 {
