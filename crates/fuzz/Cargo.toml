@@ -8,19 +8,21 @@ edition = "2021"
 cargo-fuzz = true
 
 [dependencies]
-afl = "^0.15.5"
+libfuzzer-sys = "0.4"
 ciborium = "^0.2.0"
 plyers = { path = "../plyers" }
 serde = { version = "^1.0.0", features = ["derive"] }
 
 [[bin]]
 name = "parse_ply"
+path = "fuzz_targets/parse_ply.rs"
 test = false
 doc = false
 bench = false
 
 [[bin]]
 name = "parse_cbor"
+path = "fuzz_targets/parse_cbor.rs"
 test = false
 doc = false
 bench = false
