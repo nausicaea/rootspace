@@ -28,15 +28,15 @@ impl<T> VecStorage<T> {
         }
     }
 
-    pub fn iter(&self) -> RIter<Self> {
+    pub fn iter(&self) -> RIter<'_, Self> {
         self.into_iter()
     }
 
-    pub fn iter_mut(&mut self) -> WIter<Self> {
+    pub fn iter_mut(&mut self) -> WIter<'_, Self> {
         self.into_iter()
     }
 
-    pub fn indexed_iter(&self) -> IndexedRIter<Self> {
+    pub fn indexed_iter(&self) -> IndexedRIter<'_, Self> {
         IndexedRIter::new(self)
     }
 
@@ -152,17 +152,17 @@ impl<T> Storage for VecStorage<T> {
         &self.index
     }
 
-    unsafe fn get_unchecked<I: Into<Index>>(&self, index: I) -> &T {
+    unsafe fn get_unchecked<I: Into<Index>>(&self, index: I) -> &T { unsafe {
         let idx: Index = index.into();
         let idx_usize: usize = idx.into();
         self.data.get_unchecked(idx_usize).assume_init_ref()
-    }
+    }}
 
-    unsafe fn get_unchecked_mut<I: Into<Index>>(&mut self, index: I) -> &mut T {
+    unsafe fn get_unchecked_mut<I: Into<Index>>(&mut self, index: I) -> &mut T { unsafe {
         let idx: Index = index.into();
         let idx_usize: usize = idx.into();
         self.data.get_unchecked_mut(idx_usize).assume_init_mut()
-    }
+    }}
 }
 
 impl<T> Resource for VecStorage<T> where T: 'static + Send + Sync {}

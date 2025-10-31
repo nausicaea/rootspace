@@ -54,7 +54,7 @@ impl<'rt> Encoder<'rt> {
         })
     }
 
-    pub fn begin(&mut self, label: Option<&str>) -> RenderPass {
+    pub fn begin(&mut self, label: Option<&str>) -> RenderPass<'_> {
         crate::trace_gfx!("Obtain ref. for depth texture view");
         let dtv = self
             .database

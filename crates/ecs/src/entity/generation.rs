@@ -8,8 +8,8 @@ pub struct Generation(u32);
 
 impl Generation {
     #[cfg(test)]
-    pub fn new(gen: u32) -> Generation {
-        Generation(gen)
+    pub fn new(r#gen: u32) -> Generation {
+        Generation(r#gen)
     }
 
     /// Activates the current generation. Panics if the generation is already active.
@@ -66,8 +66,8 @@ impl std::str::FromStr for Generation {
     type Err = std::num::ParseIntError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let gen: u32 = s.parse()?;
-        Ok(Generation(gen))
+        let r#gen: u32 = s.parse()?;
+        Ok(Generation(r#gen))
     }
 }
 

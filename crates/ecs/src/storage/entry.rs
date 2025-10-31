@@ -9,8 +9,8 @@ pub enum Entry<'a, T: 'a, S: Storage<Item = T>> {
 impl<'a, T: 'a, S: Storage<Item = T>> Entry<'a, T, S> {
     pub fn index(&self) -> &Index {
         match self {
-            Entry::Occupied(_, ref i) => i,
-            Entry::Vacant(_, ref i) => i,
+            Entry::Occupied(_, i) => i,
+            Entry::Vacant(_, i) => i,
         }
     }
 

@@ -14,19 +14,19 @@ pub struct Entity {
     /// Holds the entity index.
     idx: Index,
     /// Holds the entity generation.
-    gen: Generation,
+    r#gen: Generation,
 }
 
 impl Entity {
     /// Create a new entity by specifying index and generation directly.
-    pub fn new<I, G>(idx: I, gen: G) -> Entity
+    pub fn new<I, G>(idx: I, r#gen: G) -> Entity
     where
         I: Into<Index>,
         G: Into<Generation>,
     {
         Entity {
             idx: idx.into(),
-            gen: gen.into(),
+            r#gen: r#gen.into(),
         }
     }
 
@@ -37,8 +37,8 @@ impl Entity {
 
     /// Returns the integer generation of the entity, which indicates how often an entity has been reused.
     #[cfg(test)]
-    pub fn gen(&self) -> Generation {
-        self.gen
+    pub fn r#gen(&self) -> Generation {
+        self.r#gen
     }
 }
 
@@ -74,7 +74,7 @@ impl AsRef<Index> for Entity {
 
 impl AsRef<Generation> for Entity {
     fn as_ref(&self) -> &Generation {
-        &self.gen
+        &self.r#gen
     }
 }
 
@@ -88,15 +88,15 @@ impl std::str::FromStr for Entity {
             .collect();
 
         let idx = parts[0].parse::<Index>()?;
-        let gen = parts[1].parse::<Generation>()?;
+        let r#gen = parts[1].parse::<Generation>()?;
 
-        Ok(Entity { idx, gen })
+        Ok(Entity { idx, r#gen })
     }
 }
 
 impl From<Entity> for (Index, Generation) {
     fn from(value: Entity) -> Self {
-        (value.idx, value.gen)
+        (value.idx, value.r#gen)
     }
 }
 
@@ -104,7 +104,7 @@ impl From<(Index, Generation)> for Entity {
     fn from(value: (Index, Generation)) -> Entity {
         Entity {
             idx: value.0,
-            gen: value.1,
+            r#gen: value.1,
         }
     }
 }
@@ -129,6 +129,6 @@ impl From<Entity> for Generation {
 
 impl From<&Entity> for Generation {
     fn from(value: &Entity) -> Self {
-        value.gen
+        value.r#gen
     }
 }

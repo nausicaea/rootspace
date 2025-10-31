@@ -36,9 +36,9 @@ impl Entities {
             self.generations.resize(idx.idx() as usize + 1, Generation::default());
         }
 
-        let gen = self.generations[idx.idx() as usize].activate();
+        let r#gen = self.generations[idx.idx() as usize].activate();
 
-        Entity::new(idx, gen)
+        Entity::new(idx, r#gen)
     }
 
     /// Destroy the specified `Entity`.
@@ -67,11 +67,11 @@ impl Entities {
     pub fn get<I: Into<Index>>(&self, index: I) -> Option<Entity> {
         let idx = index.into();
         let idx_usize: usize = idx.into();
-        self.generations.get(idx_usize).map(|gen| Entity::new(idx, *gen))
+        self.generations.get(idx_usize).map(|r#gen| Entity::new(idx, *r#gen))
     }
 
     /// Create an iterator over all active entities.
-    pub fn iter(&self) -> Iter {
+    pub fn iter(&self) -> Iter<'_> {
         self.into_iter()
     }
 }
@@ -222,16 +222,16 @@ mod tests {
 
         let a = r.create();
         assert_eq!(a.idx(), Index::new(0));
-        assert_eq!(a.gen(), Generation::new(1));
+        assert_eq!(a.r#gen(), Generation::new(1));
 
         let b = r.create();
         assert_eq!(b.idx(), Index::new(1));
-        assert_eq!(b.gen(), Generation::new(1));
+        assert_eq!(b.r#gen(), Generation::new(1));
 
         r.destroy(a);
         let c = r.create();
         assert_eq!(c.idx(), Index::new(0));
-        assert_eq!(c.gen(), Generation::new(3));
+        assert_eq!(c.r#gen(), Generation::new(3));
     }
 
     #[test]

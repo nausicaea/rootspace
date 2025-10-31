@@ -69,7 +69,7 @@ impl CpuMesh {
             .properties
             .iter()
             .filter_map(|(&p_id, p)| match p {
-                PropertyDescriptor::Scalar { ref name, .. } => match name.as_ref() {
+                PropertyDescriptor::Scalar { name, .. } => match name.as_ref() {
                     X_PROPERTY => Some((X_PROPERTY, p_id)),
                     Y_PROPERTY => Some((Y_PROPERTY, p_id)),
                     Z_PROPERTY => Some((Z_PROPERTY, p_id)),
@@ -90,7 +90,7 @@ impl CpuMesh {
             .properties
             .iter()
             .find_map(|(&p_id, p)| match p {
-                PropertyDescriptor::List { ref name, .. } => match name.as_ref() {
+                PropertyDescriptor::List { name, .. } => match name.as_ref() {
                     VERTEX_INDICES_LIST_PROPERTY => Some(p_id),
                     _ => None,
                 },

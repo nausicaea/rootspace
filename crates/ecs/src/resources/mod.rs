@@ -25,7 +25,7 @@ macro_rules! impl_iter_ref {
     ($name:ident, $iter:ident, #reads: $($type:ident),*, #writes: $($type_mut:ident),* $(,)?) => {
         /// Creates a joined iterator over the specified group of components. In other words, only
         /// entities that have all the specified components will be iterated over.
-        pub fn $name<$($type,)* $($type_mut,)*>(&self) -> $crate::storage::iterators::$iter<$($type::Storage,)* $($type_mut::Storage,)*>
+        pub fn $name<'s, $($type,)* $($type_mut,)*>(&'s self) -> $crate::storage::iterators::$iter<'s, $($type::Storage,)* $($type_mut::Storage,)*>
         where
             $(
                 $type: Component,
@@ -139,7 +139,7 @@ impl Resources {
     }
 
     /// Borrows the requested resource.
-    pub fn read<R>(&self) -> MappedRwLockReadGuard<R>
+    pub fn read<R>(&self) -> MappedRwLockReadGuard<'_, R>
     where
         R: Resource,
     {
@@ -157,7 +157,7 @@ impl Resources {
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
-    pub fn write<R>(&self) -> MappedRwLockWriteGuard<R>
+    pub fn write<R>(&self) -> MappedRwLockWriteGuard<'_, R>
     where
         R: Resource,
     {
@@ -190,7 +190,7 @@ impl Resources {
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
-    pub fn read_components<C>(&self) -> MappedRwLockReadGuard<C::Storage>
+    pub fn read_components<C>(&self) -> MappedRwLockReadGuard<'_, C::Storage>
     where
         C: Component,
     {
@@ -199,7 +199,7 @@ impl Resources {
 
     /// Mutably borrows the requested component storage (this is a convenience method to
     /// `borrow_mut`).
-    pub fn write_components<C>(&self) -> MappedRwLockWriteGuard<C::Storage>
+    pub fn write_components<C>(&self) -> MappedRwLockWriteGuard<'_, C::Storage>
     where
         C: Component,
     {
@@ -207,7 +207,7 @@ impl Resources {
     }
 
     /// Mutably borrows the requested component storage (with a compile-time borrow check).
-    pub fn get_components_mut<C>(&mut self) -> &mut C::Storage
+    pub fn get_components_mut<C>(&mut self) -> &'_ mut C::Storage
     where
         C: Component,
     {

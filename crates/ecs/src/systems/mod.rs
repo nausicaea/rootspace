@@ -53,7 +53,7 @@ impl Systems {
         self.0.push(Arc::new(Mutex::new(Box::new(sys))))
     }
 
-    pub fn iter(&self) -> SystemsIter {
+    pub fn iter(&self) -> SystemsIter<'_> {
         self.into_iter()
     }
 }

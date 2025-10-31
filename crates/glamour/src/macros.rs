@@ -2,37 +2,37 @@
 #[macro_export(local_inner_macros)]
 macro_rules! abop {
     // Support right-sided scalar binary operations
-    ($op:ident, $lhs:expr, [$($i:literal),+ $(,)*], $rhs:expr) => {
+    ($op:ident, $lhs:expr_2021, [$($i:literal),+ $(,)*], $rhs:expr_2021) => {
         [$($lhs[$i].$op($rhs)),+]
     };
     // Support left-sided scalar binary operations
-    ($op:ident, $lhs:expr, $rhs:expr, [$($j:literal),+ $(,)*]) => {
+    ($op:ident, $lhs:expr_2021, $rhs:expr_2021, [$($j:literal),+ $(,)*]) => {
         [$($lhs.$op($rhs[$j])),+]
     };
     // Support both-sided element-wise matrix binary operations
-    ($op:ident, $lhs:expr, $rhs:expr, [$(($i:literal, $j:literal)),+ $(,)*]) => {
+    ($op:ident, $lhs:expr_2021, $rhs:expr_2021, [$(($i:literal, $j:literal)),+ $(,)*]) => {
         [$($lhs[$i].$op($rhs[$j])),+]
     };
     // Support both-sided Nx1 X 1xM binary operations
-    ($op:ident, $lhs:expr, $rhs:expr, [$((($i0:literal), ($j0:literal))),+ $(,)*]) => {
+    ($op:ident, $lhs:expr_2021, $rhs:expr_2021, [$((($i0:literal), ($j0:literal))),+ $(,)*]) => {
         [$(
             [$lhs[$i0]].$op([$rhs[$j0]])
         ),+]
     };
     // Support both-sided Nx2 X 2xM binary operations
-    ($op:ident, $lhs:expr, $rhs:expr, [$((($i0:literal, $i1:literal), ($j0:literal, $j1:literal))),+ $(,)*]) => {
+    ($op:ident, $lhs:expr_2021, $rhs:expr_2021, [$((($i0:literal, $i1:literal), ($j0:literal, $j1:literal))),+ $(,)*]) => {
         [$(
             [$lhs[$i0], $lhs[$i1]].$op([$rhs[$j0], $rhs[$j1]])
         ),+]
     };
     // Support both-sided Nx3 X 3xM binary operations
-    ($op:ident, $lhs:expr, $rhs:expr, [$((($i0:literal, $i1:literal, $i2:literal), ($j0:literal, $j1:literal, $j2:literal))),+ $(,)*]) => {
+    ($op:ident, $lhs:expr_2021, $rhs:expr_2021, [$((($i0:literal, $i1:literal, $i2:literal), ($j0:literal, $j1:literal, $j2:literal))),+ $(,)*]) => {
         [$(
             [$lhs[$i0], $lhs[$i1], $lhs[$i2]].$op([$rhs[$j0], $rhs[$j1], $rhs[$j2]])
         ),+]
     };
     // Support both-sided Nx4 X 4xM binary operations
-    ($op:ident, $lhs:expr, $rhs:expr, [$((($i0:literal, $i1:literal, $i2:literal, $i3:literal), ($j0:literal, $j1:literal, $j2:literal, $j3:literal))),+ $(,)*]) => {
+    ($op:ident, $lhs:expr_2021, $rhs:expr_2021, [$((($i0:literal, $i1:literal, $i2:literal, $i3:literal), ($j0:literal, $j1:literal, $j2:literal, $j3:literal))),+ $(,)*]) => {
         [$(
             [$lhs[$i0], $lhs[$i1], $lhs[$i2], $lhs[$i3]].$op([$rhs[$j0], $rhs[$j1], $rhs[$j2], $rhs[$j3]])
         ),+]

@@ -388,6 +388,7 @@ impl Orchestrator {
         Ok(())
     }
 
+    #[cfg(feature = "editor")]
     #[tracing::instrument(skip_all)]
     async fn load_editor_builtins(res: &Resources) -> anyhow::Result<()> {
         let mut editor_scene = Scene::default();

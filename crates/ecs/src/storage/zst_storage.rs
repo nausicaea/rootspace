@@ -23,15 +23,15 @@ impl<T> ZstStorage<T> {
         self.index.insert(idx);
     }
 
-    pub fn iter(&self) -> RIter<Self> {
+    pub fn iter(&self) -> RIter<'_, Self> {
         self.into_iter()
     }
 
-    pub fn iter_mut(&mut self) -> WIter<Self> {
+    pub fn iter_mut(&mut self) -> WIter<'_, Self> {
         self.into_iter()
     }
 
-    pub fn indexed_iter(&self) -> IndexedRIter<Self> {
+    pub fn indexed_iter(&self) -> IndexedRIter<'_, Self> {
         IndexedRIter::new(self)
     }
 }

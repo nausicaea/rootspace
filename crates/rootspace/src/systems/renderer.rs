@@ -121,7 +121,7 @@ impl Renderer {
         let mut instance_buffer_data: HashMap<BufferId, Vec<Instance>> = HashMap::new();
         let res_groups = res
             .iter_rr::<Renderable, Transform>()
-            .group_by(|(_, ren, _)| ren.model.mesh.instance_buffer);
+            .chunk_by(|(_, ren, _)| ren.model.mesh.instance_buffer);
         for (instance_buffer, data) in &res_groups {
             let mut vertex_buffer = None;
             let mut index_buffer = None;

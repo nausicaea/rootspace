@@ -65,7 +65,7 @@ fn main() -> anyhow::Result<()> {
             for element in ply.descriptor.elements.values() {
                 for property in element.properties.values() {
                     match property {
-                        PropertyDescriptor::Scalar { ref name, .. } | PropertyDescriptor::List { ref name, .. } => {
+                        PropertyDescriptor::Scalar { name, .. } | PropertyDescriptor::List { name, .. } => {
                             println!("{}.{}", &element.name, name)
                         }
                     }
@@ -89,10 +89,10 @@ fn main() -> anyhow::Result<()> {
                 for property in element.properties.values() {
                     match property {
                         PropertyDescriptor::Scalar {
-                            ref name, ref comments, ..
+                            name, comments, ..
                         }
                         | PropertyDescriptor::List {
-                            ref name, ref comments, ..
+                            name, comments, ..
                         } => {
                             for comment in comments {
                                 println!("{}.{}: {}", &element.name, name, comment);
@@ -114,10 +114,10 @@ fn main() -> anyhow::Result<()> {
                 for property in element.properties.values() {
                     match property {
                         PropertyDescriptor::Scalar {
-                            ref name, ref obj_info, ..
+                            name, obj_info, ..
                         }
                         | PropertyDescriptor::List {
-                            ref name, ref obj_info, ..
+                            name, obj_info, ..
                         } => {
                             for oinf in obj_info {
                                 println!("{}.{}: {}", &element.name, name, oinf);

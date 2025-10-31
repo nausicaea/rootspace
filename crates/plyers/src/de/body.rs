@@ -282,7 +282,7 @@ where
             |mut p_acc, (p_id, prim, dt, p)| {
                 if let std::collections::btree_map::Entry::Vacant(e) = p_acc.entry(p_id) {
                     e.insert((prim, (dt, p).try_into().unwrap()));
-                } else if let Some((prim_acc, ref mut p_acc)) = p_acc.get_mut(&p_id) {
+                } else if let Some((prim_acc, p_acc)) = p_acc.get_mut(&p_id) {
                     if prim_acc != &prim {
                         *prim_acc = Primitive::Mixed;
                     }

@@ -85,7 +85,7 @@ impl World {
     }
 
     /// Borrows the requested resource.
-    pub fn read<R>(&self) -> MappedRwLockReadGuard<R>
+    pub fn read<R>(&self) -> MappedRwLockReadGuard<'_, R>
     where
         R: Resource,
     {

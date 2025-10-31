@@ -16,21 +16,21 @@ where
 }
 
 macro_rules! impl_joined_iter {
-    ($name:ident, #reads: &$tlt:lifetime $ty:ident $(,)?) => {
+    ($name:ident, #reads: $ty:ident $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
-        pub struct $name<$tlt, $ty> {
+        pub struct $name<'a, $ty> {
             indices: Vec<$crate::entity::index::Index>,
             cursor: usize,
-            $ty: &$tlt $ty,
+            $ty: &'a $ty,
         }
 
-        impl<$tlt, $ty> $name<$tlt, $ty>
+        impl<'a, $ty> $name<'a, $ty>
         where
             $ty: $crate::storage::Storage,
         {
-            pub fn new($ty: &$tlt $ty) -> Self {
+            pub fn new($ty: &'a $ty) -> Self {
                 $name {
                     indices: $ty.indices().iter().cloned().collect(),
                     cursor: 0,
@@ -39,21 +39,21 @@ macro_rules! impl_joined_iter {
             }
         }
 
-        impl<$tlt, $ty> ExactSizeIterator for $name<$tlt, $ty>
+        impl<'a, $ty> ExactSizeIterator for $name<'a, $ty>
         where
             $ty: $crate::storage::Storage,
         {}
 
-        impl<$tlt, $ty> std::iter::FusedIterator for $name<$tlt, $ty>
+        impl<'a, $ty> std::iter::FusedIterator for $name<'a, $ty>
         where
             $ty: $crate::storage::Storage,
         {}
 
-        impl<$tlt, $ty> Iterator for $name<$tlt, $ty>
+        impl<'a, $ty> Iterator for $name<'a, $ty>
         where
             $ty: $crate::storage::Storage,
         {
-            type Item = &$tlt $ty::Item;
+            type Item = &'a $ty::Item;
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.cursor >= self.indices.len() {
@@ -78,21 +78,21 @@ macro_rules! impl_joined_iter {
         }
     };
 
-    ($name:ident, #writes: &$tltm:lifetime mut $tym:ident $(,)?) => {
+    ($name:ident, #writes: $tym:ident $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
-        pub struct $name<$tltm, $tym> {
+        pub struct $name<'a, $tym> {
             indices: Vec<$crate::entity::index::Index>,
             cursor: usize,
-            $tym: &$tltm mut $tym,
+            $tym: &'a mut $tym,
         }
 
-        impl<$tltm, $tym> $name<$tltm, $tym>
+        impl<'a, $tym> $name<'a, $tym>
         where
             $tym: $crate::storage::Storage,
         {
-            pub fn new($tym: &$tltm mut $tym) -> Self {
+            pub fn new($tym: &'a mut $tym) -> Self {
                 $name {
                     indices: $tym.indices().iter().cloned().collect(),
                     cursor: 0,
@@ -101,21 +101,21 @@ macro_rules! impl_joined_iter {
             }
         }
 
-        impl<$tltm, $tym> ExactSizeIterator for $name<$tltm, $tym>
+        impl<'a, $tym> ExactSizeIterator for $name<'a, $tym>
         where
             $tym: $crate::storage::Storage,
         {}
 
-        impl<$tltm, $tym> std::iter::FusedIterator for $name<$tltm, $tym>
+        impl<'a, $tym> std::iter::FusedIterator for $name<'a, $tym>
         where
             $tym: $crate::storage::Storage,
         {}
 
-        impl<$tltm, $tym> Iterator for $name<$tltm, $tym>
+        impl<'a, $tym> Iterator for $name<'a, $tym>
         where
             $tym: $crate::storage::Storage,
         {
-            type Item = &$tltm mut $tym::Item;
+            type Item = &'a mut $tym::Item;
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.cursor >= self.indices.len() {
@@ -142,30 +142,30 @@ macro_rules! impl_joined_iter {
         }
     };
 
-    ($name:ident, #reads: $(&$tlt:lifetime $ty:ident),* $(,)?) => {
-        impl_joined_iter!($name, #reads: $(&$tlt $ty),*, #writes: );
+    ($name:ident, #reads: $($ty:ident),* $(,)?) => {
+        impl_joined_iter!($name, #reads: $($ty),*, #writes: );
     };
 
-    ($name:ident, #writes: $(&$tltm:lifetime mut $tym:ident),* $(,)?) => {
-        impl_joined_iter!($name, #reads: , #writes: $(&$tltm mut $tym),*);
+    ($name:ident, #writes: $($tym:ident),* $(,)?) => {
+        impl_joined_iter!($name, #reads: , #writes: $($tym),*);
     };
 
-    ($name:ident, #reads: $(&$tlt:lifetime $ty:ident),*, #writes: $(&$tltm:lifetime mut $tym:ident),* $(,)?) => {
+    ($name:ident, #reads: $($ty:ident),*, #writes: $($tym:ident),* $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
-        pub struct $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> {
+        pub struct $name<'a, $($ty,)* $($tym),*> {
             indices: Vec<$crate::entity::index::Index>,
             cursor: usize,
             $(
-                $ty: &$tlt $ty,
+                $ty: &'a $ty,
             )*
             $(
-                $tym: &$tltm mut $tym,
+                $tym: &'a mut $tym,
             )*
         }
 
-        impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
+        impl<'a, $($ty,)* $($tym),*> $name<'a, $($ty,)* $($tym),*>
         where
             $(
                 $ty: $crate::storage::Storage,
@@ -174,7 +174,7 @@ macro_rules! impl_joined_iter {
                 $tym: $crate::storage::Storage,
             )*
         {
-            pub fn new($($ty: &$tlt $ty,)* $($tym: &$tltm mut $tym,)*) -> Self {
+            pub fn new($($ty: &'a $ty,)* $($tym: &'a mut $tym,)*) -> Self {
                 $name {
                     indices: intersect_many(&[$($ty.indices(),)* $($tym.indices(),)*]),
                     cursor: 0,
@@ -188,7 +188,7 @@ macro_rules! impl_joined_iter {
             }
         }
 
-        impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> ExactSizeIterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
+        impl<'a, $($ty,)* $($tym),*> ExactSizeIterator for $name<'a, $($ty,)* $($tym),*>
         where
             $(
                 $ty: $crate::storage::Storage,
@@ -198,7 +198,7 @@ macro_rules! impl_joined_iter {
             )*
         {}
 
-        impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> std::iter::FusedIterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
+        impl<'a, $($ty,)* $($tym),*> std::iter::FusedIterator for $name<'a, $($ty,)* $($tym),*>
         where
             $(
                 $ty: $crate::storage::Storage,
@@ -208,7 +208,7 @@ macro_rules! impl_joined_iter {
             )*
         {}
 
-        impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> Iterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
+        impl<'a, $($ty,)* $($tym),*> Iterator for $name<'a, $($ty,)* $($tym),*>
         where
             $(
                 $ty: $crate::storage::Storage,
@@ -217,7 +217,7 @@ macro_rules! impl_joined_iter {
                 $tym: $crate::storage::Storage,
             )*
         {
-            type Item = ($(&$tlt $ty::Item,)* $(&$tltm mut $tym::Item,)*);
+            type Item = ($(&'a $ty::Item,)* $(&'a mut $tym::Item,)*);
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.cursor >= self.indices.len() {
@@ -251,21 +251,21 @@ macro_rules! impl_joined_iter {
 }
 
 macro_rules! impl_joined_iter_ref {
-    ($name:ident, #reads: Ref<$tlt:lifetime, $ty:ident> $(,)?) => {
+    ($name:ident, #reads: Ref<$ty:ident> $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
-        pub struct $name<$tlt, $ty> {
+        pub struct $name<'a, $ty> {
             indices: Vec<$crate::entity::index::Index>,
             cursor: usize,
-            $ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>,
+            $ty: parking_lot::MappedRwLockReadGuard<'a, $ty>,
         }
 
-        impl<$tlt, $ty> $name<$tlt, $ty>
+        impl<'a, $ty> $name<'a, $ty>
         where
             $ty: $crate::storage::Storage,
         {
-            pub fn new($ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>) -> Self {
+            pub fn new($ty: parking_lot::MappedRwLockReadGuard<'a, $ty>) -> Self {
                 $name {
                     indices: $ty.indices().iter().cloned().collect(),
                     cursor: 0,
@@ -273,28 +273,28 @@ macro_rules! impl_joined_iter_ref {
                 }
             }
 
-            pub fn get(&mut self, index: $crate::entity::index::Index) -> Option<&$tlt $ty::Item> {
+            pub fn get(&mut self, index: $crate::entity::index::Index) -> Option<&'a $ty::Item> {
                 let $ty = self.$ty.get(index)?;
 
                 unsafe { Some(& *($ty as *const _)) }
             }
         }
 
-        impl<$tlt, $ty> ExactSizeIterator for $name<$tlt, $ty>
+        impl<'a, $ty> ExactSizeIterator for $name<'a, $ty>
         where
             $ty: $crate::storage::Storage,
         {}
 
-        impl<$tlt, $ty> std::iter::FusedIterator for $name<$tlt, $ty>
+        impl<'a, $ty> std::iter::FusedIterator for $name<'a, $ty>
         where
             $ty: $crate::storage::Storage,
         {}
 
-        impl<$tlt, $ty> Iterator for $name<$tlt, $ty>
+        impl<'a, $ty> Iterator for $name<'a, $ty>
         where
             $ty: $crate::storage::Storage,
         {
-            type Item = ($crate::entity::index::Index, &$tlt $ty::Item);
+            type Item = ($crate::entity::index::Index, &'a $ty::Item);
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.cursor >= self.indices.len() {
@@ -321,21 +321,21 @@ macro_rules! impl_joined_iter_ref {
         }
     };
 
-    ($name:ident, #writes: RefMut<$tltm:lifetime, $tym:ident> $(,)?) => {
+    ($name:ident, #writes: RefMut<$tym:ident> $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
-        pub struct $name<$tltm, $tym> {
+        pub struct $name<'a, $tym> {
             indices: Vec<$crate::entity::index::Index>,
             cursor: usize,
-            $tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>,
+            $tym: parking_lot::MappedRwLockWriteGuard<'a, $tym>,
         }
 
-        impl<$tltm, $tym> $name<$tltm, $tym>
+        impl<'a, $tym> $name<'a, $tym>
         where
             $tym: $crate::storage::Storage,
         {
-            pub fn new($tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>) -> Self {
+            pub fn new($tym: parking_lot::MappedRwLockWriteGuard<'a, $tym>) -> Self {
                 $name {
                     indices: $tym.indices().iter().cloned().collect(),
                     cursor: 0,
@@ -343,28 +343,28 @@ macro_rules! impl_joined_iter_ref {
                 }
             }
 
-            pub fn get(&mut self, index: $crate::entity::index::Index) -> Option<&$tltm mut $tym::Item> {
+            pub fn get(&mut self, index: $crate::entity::index::Index) -> Option<&'a mut $tym::Item> {
                 let $tym = self.$tym.get_mut(index)?;
 
                 unsafe { Some(&mut *($tym as *mut _)) }
             }
         }
 
-        impl<$tltm, $tym> ExactSizeIterator for $name<$tltm, $tym>
+        impl<'a, $tym> ExactSizeIterator for $name<'a, $tym>
         where
             $tym: $crate::storage::Storage,
         {}
 
-        impl<$tltm, $tym> std::iter::FusedIterator for $name<$tltm, $tym>
+        impl<'a, $tym> std::iter::FusedIterator for $name<'a, $tym>
         where
             $tym: $crate::storage::Storage,
         {}
 
-        impl<$tltm, $tym> Iterator for $name<$tltm, $tym>
+        impl<'a, $tym> Iterator for $name<'a, $tym>
         where
             $tym: $crate::storage::Storage,
         {
-            type Item = ($crate::entity::index::Index, &$tltm mut $tym::Item);
+            type Item = ($crate::entity::index::Index, &'a mut $tym::Item);
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.cursor >= self.indices.len() {
@@ -391,30 +391,30 @@ macro_rules! impl_joined_iter_ref {
         }
     };
 
-    ($name:ident, #reads: $(Ref<$tlt:lifetime, $ty:ident>),* $(,)?) => {
-        impl_joined_iter_ref!($name, #reads: $(Ref<$tlt, $ty>),*, #writes: );
+    ($name:ident, #reads: $(Ref<$ty:ident>),* $(,)?) => {
+        impl_joined_iter_ref!($name, #reads: $(Ref<$ty>),*, #writes: );
     };
 
-    ($name:ident, #writes: $(RefMut<$tltm:lifetime, $tym:ident>),* $(,)?) => {
-        impl_joined_iter_ref!($name, #reads: , #writes: $(RefMut<$tltm, $tym>),*);
+    ($name:ident, #writes: $(RefMut<$tym:ident>),* $(,)?) => {
+        impl_joined_iter_ref!($name, #reads: , #writes: $(RefMut<$tym>),*);
     };
 
-    ($name:ident, #reads: $(Ref<$tlt:lifetime, $ty:ident>),*, #writes: $(RefMut<$tltm:lifetime, $tym:ident>),* $(,)?) => {
+    ($name:ident, #reads: $(Ref<$ty:ident>),*, #writes: $(RefMut<$tym:ident>),* $(,)?) => {
         // An iterator that allows iterating over the intersection of multiple components.
         // In other words, this iterator will only go over those entities that have all of the
         // requested component types.
-        pub struct $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> {
+        pub struct $name<'a, $($ty,)* $($tym),*> {
             indices: Vec<$crate::entity::index::Index>,
             cursor: usize,
             $(
-                $ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>,
+                $ty: parking_lot::MappedRwLockReadGuard<'a, $ty>,
             )*
             $(
-                $tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>,
+                $tym: parking_lot::MappedRwLockWriteGuard<'a, $tym>,
             )*
         }
 
-        impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
+        impl<'a, $($ty,)* $($tym),*> $name<'a, $($ty,)* $($tym),*>
         where
             $(
                 $ty: $crate::storage::Storage,
@@ -423,7 +423,7 @@ macro_rules! impl_joined_iter_ref {
                 $tym: $crate::storage::Storage,
             )*
         {
-            pub fn new($($ty: parking_lot::MappedRwLockReadGuard<$tlt, $ty>,)* $($tym: parking_lot::MappedRwLockWriteGuard<$tltm, $tym>,)*) -> Self {
+            pub fn new($($ty: parking_lot::MappedRwLockReadGuard<'a, $ty>,)* $($tym: parking_lot::MappedRwLockWriteGuard<'a, $tym>,)*) -> Self {
                 $name {
                     indices: intersect_many(&[$($ty.indices(),)* $($tym.indices(),)*]),
                     cursor: 0,
@@ -436,7 +436,7 @@ macro_rules! impl_joined_iter_ref {
                 }
             }
 
-            pub fn get(&mut self, index: $crate::entity::index::Index) -> Option<($(&$tlt $ty::Item,)* $(&$tltm mut $tym::Item,)*)> {
+            pub fn get(&mut self, index: $crate::entity::index::Index) -> Option<($(&'a $ty::Item,)* $(&'a mut $tym::Item,)*)> {
                 $(
                     let $ty = self.$ty.get(index)?;
                 )*
@@ -448,7 +448,7 @@ macro_rules! impl_joined_iter_ref {
             }
         }
 
-        impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> ExactSizeIterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
+        impl<'a, $($ty,)* $($tym),*> ExactSizeIterator for $name<'a, $($ty,)* $($tym),*>
         where
             $(
                 $ty: $crate::storage::Storage,
@@ -458,7 +458,7 @@ macro_rules! impl_joined_iter_ref {
             )*
         {}
 
-        impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> std::iter::FusedIterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
+        impl<'a, $($ty,)* $($tym),*> std::iter::FusedIterator for $name<'a, $($ty,)* $($tym),*>
         where
             $(
                 $ty: $crate::storage::Storage,
@@ -468,7 +468,7 @@ macro_rules! impl_joined_iter_ref {
             )*
         {}
 
-        impl<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*> Iterator for $name<$($tlt,)* $($tltm,)* $($ty,)* $($tym,)*>
+        impl<'a, $($ty,)* $($tym),*> Iterator for $name<'a, $($ty,)* $($tym),*>
         where
             $(
                 $ty: $crate::storage::Storage,
@@ -477,7 +477,7 @@ macro_rules! impl_joined_iter_ref {
                 $tym: $crate::storage::Storage,
             )*
         {
-            type Item = ($crate::entity::index::Index, $(&$tlt $ty::Item,)* $(&$tltm mut $tym::Item,)*);
+            type Item = ($crate::entity::index::Index, $(&'a $ty::Item,)* $(&'a mut $tym::Item,)*);
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.cursor >= self.indices.len() {
@@ -510,20 +510,20 @@ macro_rules! impl_joined_iter_ref {
     };
 }
 
-impl_joined_iter!(RIter, #reads: &'a A);
-impl_joined_iter!(WIter, #writes: &'a mut A);
+impl_joined_iter!(RIter, #reads: A);
+impl_joined_iter!(WIter, #writes: A);
 
-impl_joined_iter_ref!(RIterRef, #reads: Ref<'a, A>);
-impl_joined_iter_ref!(WIterRef, #writes: RefMut<'a, A>);
+impl_joined_iter_ref!(RIterRef, #reads: Ref<A>);
+impl_joined_iter_ref!(WIterRef, #writes: RefMut<A>);
 
-impl_joined_iter_ref!(RRIterRef, #reads: Ref<'a, A>, Ref<'b, B>);
-impl_joined_iter_ref!(RWIterRef, #reads: Ref<'a, A>, #writes: RefMut<'b, B>);
-impl_joined_iter_ref!(WWIterRef, #writes: RefMut<'a, A>, RefMut<'b, B>);
+impl_joined_iter_ref!(RRIterRef, #reads: Ref<A>, Ref<B>);
+impl_joined_iter_ref!(RWIterRef, #reads: Ref<A>, #writes: RefMut<B>);
+impl_joined_iter_ref!(WWIterRef, #writes: RefMut<A>, RefMut<B>);
 
-impl_joined_iter_ref!(RRRIterRef, #reads: Ref<'a, A>, Ref<'b, B>, Ref<'c, C>);
-impl_joined_iter_ref!(RRWIterRef, #reads: Ref<'a, A>, Ref<'b, B>, #writes: RefMut<'c, C>);
-impl_joined_iter_ref!(RWWIterRef, #reads: Ref<'a, A>, #writes: RefMut<'b, B>, RefMut<'c, C>);
-impl_joined_iter_ref!(WWWIterRef, #writes: RefMut<'a, A>, RefMut<'b, B>, RefMut<'c, C>);
+impl_joined_iter_ref!(RRRIterRef, #reads: Ref<A>, Ref<B>, Ref<C>);
+impl_joined_iter_ref!(RRWIterRef, #reads: Ref<A>, Ref<B>, #writes: RefMut<C>);
+impl_joined_iter_ref!(RWWIterRef, #reads: Ref<A>, #writes: RefMut<B>, RefMut<C>);
+impl_joined_iter_ref!(WWWIterRef, #writes: RefMut<A>, RefMut<B>, RefMut<C>);
 
 pub struct IndexedRIter<'a, S> {
     indices: Vec<super::super::entity::index::Index>,

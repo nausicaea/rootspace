@@ -107,13 +107,13 @@ macro_rules! reg {
     () => {
         $crate::registry::End
     };
-    (...$rest:expr) => {
+    (...$rest:expr_2021) => {
         $rest
     };
-    ($e:expr) => {
+    ($e:expr_2021) => {
         $crate::reg![$e,]
     };
-    ($e:expr, $($rest:tt)*) => {
+    ($e:expr_2021, $($rest:tt)*) => {
         $crate::registry::Element::new($e, $crate::reg![$($rest)*])
     };
 }
@@ -145,13 +145,13 @@ macro_rules! reg {
 /// ```
 #[macro_export]
 macro_rules! reg_add {
-    ($e:expr) => {
+    ($e:expr_2021) => {
         $e
     };
-    ($ea:expr, $eb:expr) => {
+    ($ea:expr_2021, $eb:expr_2021) => {
         $crate::registry::Element::new($ea, $eb)
     };
-    ($t:expr, $($rest:tt)+) => {
+    ($t:expr_2021, $($rest:tt)+) => {
         $crate::registry::Element::new($t, $crate::reg_add![$($rest)+])
     };
 }

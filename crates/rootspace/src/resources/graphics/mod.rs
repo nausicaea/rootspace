@@ -166,7 +166,7 @@ impl Graphics {
         self.database.insert_shader_module(sm)
     }
 
-    pub fn create_encoder(&self, label: Option<&str>) -> Result<Encoder, wgpu::SurfaceError> {
+    pub fn create_encoder(&self, label: Option<&str>) -> Result<Encoder<'_>, wgpu::SurfaceError> {
         Encoder::new(
             label,
             &self.runtime,
@@ -177,12 +177,12 @@ impl Graphics {
     }
 
     #[must_use]
-    pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder {
+    pub fn create_render_pipeline(&mut self) -> RenderPipelineBuilder<'_, '_, '_> {
         RenderPipelineBuilder::new(&self.runtime, &mut self.database, &self.settings)
     }
 
     #[must_use]
-    pub fn create_bind_group(&mut self, layout: BindGroupLayoutId) -> BindGroupBuilder {
+    pub fn create_bind_group(&mut self, layout: BindGroupLayoutId) -> BindGroupBuilder<'_> {
         BindGroupBuilder::new(&self.runtime, &mut self.database, layout)
     }
 

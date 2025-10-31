@@ -5,7 +5,7 @@ mod cmp;
 mod convert;
 pub mod proptest;
 
-pub fn diff<R, F>(lhs: &Mat4<R>, rhs: &Mat4<R>, eq: F) -> impl std::fmt::Display
+pub fn diff<R, F>(lhs: &Mat4<R>, rhs: &Mat4<R>, eq: F) -> impl std::fmt::Display + use<R, F>
 where
     R: std::fmt::Display,
     F: Fn(&R, &R) -> bool,

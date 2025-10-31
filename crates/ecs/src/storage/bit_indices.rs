@@ -38,7 +38,7 @@ impl BitIndices {
         (self.inner[group] & (1 << position)) != 0
     }
 
-    pub fn iter(&self) -> Iter {
+    pub fn iter(&self) -> Iter<'_> {
         self.into_iter()
     }
 

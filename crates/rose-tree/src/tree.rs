@@ -48,15 +48,15 @@ impl<K, V> Tree<K, V>
 where
     K: Clone,
 {
-    pub fn bfs_iter(&self) -> BfsIter<K, V> {
+    pub fn bfs_iter(&self) -> BfsIter<'_, K, V> {
         BfsIter::new(self)
     }
 
-    pub fn dfs_iter(&self) -> DfsIter<K, V> {
+    pub fn dfs_iter(&self) -> DfsIter<'_, K, V> {
         DfsIter::new(self)
     }
 
-    pub fn ancestors<J: AsRef<K>>(&self, key: J) -> AncestorsIter<K, V> {
+    pub fn ancestors<J: AsRef<K>>(&self, key: J) -> AncestorsIter<'_, K, V> {
         AncestorsIter::new(self, key.as_ref())
     }
 }
@@ -278,7 +278,7 @@ where
     type Item = (&'a K, &'a V);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(next_node) = self.queue.pop_front() {
+        match self.queue.pop_front() { Some(next_node) => {
             self.queue.extend(
                 self.hier
                     .edges
@@ -288,9 +288,9 @@ where
             );
 
             self.hier.nodes.get_key_value(&next_node)
-        } else {
+        } _ => {
             None
-        }
+        }}
     }
 }
 
@@ -325,7 +325,7 @@ where
     type Item = (&'a K, &'a V);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(next_node) = self.stack.pop() {
+        match self.stack.pop() { Some(next_node) => {
             self.stack.extend(
                 self.hier
                     .edges
@@ -335,9 +335,9 @@ where
             );
 
             self.hier.nodes.get_key_value(&next_node)
-        } else {
+        } _ => {
             None
-        }
+        }}
     }
 }
 

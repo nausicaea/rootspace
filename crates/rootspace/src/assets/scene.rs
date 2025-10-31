@@ -88,7 +88,7 @@ impl Scene {
         }
     }
 
-    pub fn create_entity(&mut self) -> EntityBuilder {
+    pub fn create_entity(&mut self) -> EntityBuilder<'_> {
         EntityBuilder::new(self)
     }
 
