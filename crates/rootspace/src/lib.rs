@@ -1,6 +1,7 @@
 //#![warn(clippy::unwrap_used)]
 #![recursion_limit = "256"]
 
+pub mod app;
 pub mod assets;
 pub mod components;
 pub mod events;
@@ -11,6 +12,7 @@ pub mod resources;
 pub mod systems;
 
 pub use crate::{
+    app::App,
     assets::scene::{RenderableSource, Scene},
     components::{camera::Camera, transform::Transform},
     orchestrator::{Orchestrator, OrchestratorDeps},
