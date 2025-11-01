@@ -46,15 +46,13 @@ impl<'a> Runtime<'a> {
         tracing::debug!("Supported adapter features: {:?}", adapter.features());
 
         let (device, queue) = adapter
-            .request_device(
-                &DeviceDescriptor {
-                    required_features: settings.required_features,
-                    required_limits: settings.required_limits.clone(),
-                    label: None,
-                    memory_hints: Default::default(),
-                    trace: Default::default(),
-                },
-            )
+            .request_device(&DeviceDescriptor {
+                required_features: settings.required_features,
+                required_limits: settings.required_limits.clone(),
+                label: None,
+                memory_hints: Default::default(),
+                trace: Default::default(),
+            })
             .await
             .unwrap();
 

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use winit::event::WindowEvent;
+use griffon::winit::event::WindowEvent;
 
 use crate::components::camera::Camera;
 use ecs::{

@@ -4,11 +4,11 @@ use std::{
 };
 
 use glamour::{quat::Quat, unit::Unit, vec::Vec4};
-use tokio::runtime::Runtime;
-use winit::{
+use griffon::winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoopWindowTarget},
 };
+use tokio::runtime::Runtime;
 
 use super::registry::{FUSRegistry, MSRegistry};
 use crate::{

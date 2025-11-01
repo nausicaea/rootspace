@@ -33,8 +33,14 @@ impl<'rt> BindGroupBuilder<'rt> {
         size: Option<S>,
         buffer: BufferId,
     ) -> Self {
-        self.entries
-            .push((binding, BindingResourceId::Buffer { buffer, offset: offset.into(), size: size.map(|s| s.into()) }));
+        self.entries.push((
+            binding,
+            BindingResourceId::Buffer {
+                buffer,
+                offset: offset.into(),
+                size: size.map(|s| s.into()),
+            },
+        ));
         self
     }
 

@@ -1,6 +1,6 @@
+use griffon::winit::event_loop::{EventLoop, EventLoopWindowTarget};
 use std::sync::Arc;
 use tokio::runtime::{Builder as RuntimeBuilder, Runtime};
-use winit::event_loop::{EventLoop, EventLoopWindowTarget};
 
 use crate::{Orchestrator, OrchestratorDeps, RpcDeps};
 use assam::AssetDatabaseDeps;

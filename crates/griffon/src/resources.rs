@@ -164,7 +164,12 @@ impl Graphics {
     }
 
     #[must_use]
-    pub fn create_buffer<A: Into<BufferAddress>>(&mut self, label: Option<&str>, size: A, usage: BufferUsages) -> BufferId {
+    pub fn create_buffer<A: Into<BufferAddress>>(
+        &mut self,
+        label: Option<&str>,
+        size: A,
+        usage: BufferUsages,
+    ) -> BufferId {
         tracing::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
         let buf = self.runtime.device.create_buffer(&wgpu::BufferDescriptor {
             label,

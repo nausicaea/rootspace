@@ -9,8 +9,9 @@ use std::{
 };
 
 use async_trait::async_trait;
-use winit::{
+use griffon::winit::{
     event::{ElementState, KeyEvent, WindowEvent},
+    keyboard,
     keyboard::NamedKey,
 };
 
@@ -77,7 +78,7 @@ impl System for ForceShutdown {
                     event:
                         KeyEvent {
                             state: ElementState::Released,
-                            logical_key: winit::keyboard::Key::Named(NamedKey::Exit),
+                            logical_key: keyboard::Key::Named(NamedKey::Exit),
                             ..
                         },
                     ..

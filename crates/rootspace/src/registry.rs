@@ -1,4 +1,4 @@
-use winit::event::WindowEvent;
+use griffon::winit::event::WindowEvent;
 
 use super::systems::debug_animator::DebugAnimator;
 use crate::{

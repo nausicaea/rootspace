@@ -2705,8 +2705,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
- "wgpu",
- "winit",
 ]
 
 [[package]]

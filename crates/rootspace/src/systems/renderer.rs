@@ -2,19 +2,19 @@ use std::{
     cmp::{max, min},
     collections::HashMap,
     mem::size_of,
+    num::NonZeroU64,
     ops::Range,
     slice::from_raw_parts,
     time::{Duration, Instant},
-    num::NonZeroU64,
 };
 
 use num_traits::Inv;
 
 use anyhow::Context;
 use async_trait::async_trait;
+use griffon::wgpu::{BufferUsages, SurfaceError};
+use griffon::winit::{dpi::PhysicalSize, event::WindowEvent};
 use itertools::Itertools;
-use wgpu::{BufferUsages, SurfaceError};
-use winit::{dpi::PhysicalSize, event::WindowEvent};
 
 use crate::{
     components::{camera::Camera, transform::Transform},

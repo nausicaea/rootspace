@@ -2,11 +2,11 @@
 
 use std::sync::Arc;
 
-use wgpu::{
-    Backends, CompositeAlphaMode, Device, DeviceDescriptor, Features, Instance, Limits, PowerPreference, PresentMode,
-    Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, TextureUsages,
+use griffon::wgpu::{
+    Backends, CompositeAlphaMode, Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits,
+    PowerPreference, PresentMode, Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, TextureUsages,
 };
-use winit::{
+use griffon::winit::{
     event::{Event, StartCause},
     event_loop::{EventLoop, EventLoopWindowTarget},
     window::{Window, WindowBuilder},
@@ -49,7 +49,7 @@ impl<'a> State<'a> {
     async fn new(window: Window) -> Self {
         let window = Arc::new(window);
 
-        let instance = Instance::new(&wgpu::InstanceDescriptor {
+        let instance = Instance::new(&InstanceDescriptor {
             backends: Backends::all(),
             ..Default::default()
         });
@@ -66,15 +66,13 @@ impl<'a> State<'a> {
         tracing::debug!("Supported adapter features: {:?}", adapter.features());
 
         let (device, queue) = adapter
-            .request_device(
-                &DeviceDescriptor {
-                    required_features: Features::empty(),
-                    required_limits: Limits::default(),
-                    label: Some("No features, default limits"),
-                    memory_hints: Default::default(),
-                    trace: Default::default(),
-                }
-            )
+            .request_device(&DeviceDescriptor {
+                required_features: Features::empty(),
+                required_limits: Limits::default(),
+                label: Some("No features, default limits"),
+                memory_hints: Default::default(),
+                trace: Default::default(),
+            })
             .await
             .unwrap();
 

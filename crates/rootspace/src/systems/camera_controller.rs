@@ -8,7 +8,7 @@ use ecs::{
     with_resources::WithResources,
 };
 use glamour::{affine::Affine, quat::Quat, vec::Vec4};
-use winit::{
+use griffon::winit::{
     event::{KeyEvent, WindowEvent},
     keyboard::{KeyCode, PhysicalKey},
 };
