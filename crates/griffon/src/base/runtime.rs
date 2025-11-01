@@ -51,6 +51,7 @@ impl<'a> Runtime<'a> {
                     required_features: settings.required_features,
                     required_limits: settings.required_limits.clone(),
                     label: None,
+                    memory_hints: Default::default(),
                 },
                 None, // Trace path
             )
