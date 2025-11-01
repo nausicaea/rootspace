@@ -2,10 +2,7 @@ use winit::event::WindowEvent;
 
 use super::systems::debug_animator::DebugAnimator;
 use crate::{
-    components::{
-        camera::Camera, debug_animate::DebugAnimate, info::Info,
-        transform::Transform,
-    },
+    components::{camera::Camera, debug_animate::DebugAnimate, info::Info, transform::Transform},
     events::engine_event::EngineEvent,
     resources::{rpc_settings::RpcSettings, statistics::Statistics},
     systems::{
@@ -14,12 +11,12 @@ use crate::{
 };
 use assam::AssetDatabase;
 use ecs::{
-    component::Component, entity::index::Index, event_monitor::EventMonitor, event_queue::EventQueue, world::event::WorldEvent,
-    RegAdd,
+    RegAdd, component::Component, entity::index::Index, event_monitor::EventMonitor, event_queue::EventQueue,
+    world::event::WorldEvent,
 };
+use griffon::Graphics;
 use griffon::components::light::Light;
 use griffon::components::renderable::Renderable;
-use griffon::Graphics;
 use rose_tree::hierarchy::Hierarchy;
 
 pub type RRegistry<S> = RegAdd![

@@ -1,8 +1,8 @@
 use crate::base::descriptors::VertexAttributeDescriptor;
+use crate::base::gpu_object_database::GpuObjectDatabase;
 use crate::base::ids::{BindGroupLayoutId, PipelineId, ShaderModuleId};
 use crate::base::runtime::Runtime;
 use crate::base::settings::Settings;
-use crate::base::gpu_object_database::GpuObjectDatabase;
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {

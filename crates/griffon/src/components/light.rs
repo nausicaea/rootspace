@@ -2,10 +2,10 @@ use anyhow::Context;
 use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};
 use glamour::vec::Vec4;
 
-use assam::AssetDatabase;
-use crate::base::gpu_model::GpuModel;
 use crate::assets::cpu_model::CpuModel;
+use crate::base::gpu_model::GpuModel;
 use crate::resources::Graphics;
+use assam::AssetDatabase;
 
 #[derive(Debug)]
 pub struct Light {

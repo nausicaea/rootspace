@@ -3,13 +3,11 @@ use std::{collections::BTreeMap, path::Path};
 use anyhow::Context;
 use glamour::vec::Vec4;
 
-use crate::components::{
-    camera::Camera, debug_animate::DebugAnimate, info::Info, transform::Transform,
-};
+use crate::components::{camera::Camera, debug_animate::DebugAnimate, info::Info, transform::Transform};
 use assam::{AssetDatabase, LoadAsset, SaveAsset};
 use ecs::{
     entities::Entities,
-    entity::{index::Index, Entity},
+    entity::{Entity, index::Index},
     resources::Resources,
     storage::Storage,
 };

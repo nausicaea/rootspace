@@ -1,10 +1,10 @@
 use anyhow::Context;
 
+use crate::Graphics;
+use crate::assets::cpu_model::CpuModel;
+use crate::base::gpu_model::GpuModel;
 use assam::AssetDatabase;
 use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};
-use crate::assets::cpu_model::CpuModel;
-use crate::Graphics;
-use crate::base::gpu_model::GpuModel;
 
 #[derive(Debug)]
 pub struct Renderable {

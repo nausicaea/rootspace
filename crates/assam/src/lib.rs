@@ -9,10 +9,7 @@ pub use self::resources::{AssetDatabase, AssetDatabaseDeps};
 pub trait LoadAsset {
     type Output;
 
-    fn with_path(
-        res: &Resources,
-        path: &Path,
-    ) -> impl Future<Output = Result<Self::Output, anyhow::Error>> + Send;
+    fn with_path(res: &Resources, path: &Path) -> impl Future<Output = Result<Self::Output, anyhow::Error>> + Send;
 }
 
 pub trait SaveAsset {

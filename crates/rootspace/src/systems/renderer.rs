@@ -15,7 +15,6 @@ use itertools::Itertools;
 use wgpu::{BufferAddress, BufferSize, BufferUsages, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
-use griffon::components::light::Light;
 use crate::{
     components::{camera::Camera, transform::Transform},
     events::engine_event::EngineEvent,
@@ -25,7 +24,7 @@ use assam::AssetDatabase;
 use ecs::{
     component::Component,
     entity::index::Index,
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     resources::Resources,
     storage::Storage,
     system::System,
@@ -39,6 +38,7 @@ use griffon::base::ids::{BindGroupId, BufferId, PipelineId};
 use griffon::base::instance::Instance;
 use griffon::base::light_uniform::LightUniform;
 use griffon::base::vertex::Vertex;
+use griffon::components::light::Light;
 use griffon::components::renderable::Renderable;
 use griffon::resources::Graphics;
 use rose_tree::hierarchy::Hierarchy;

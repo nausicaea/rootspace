@@ -1,8 +1,8 @@
-use wgpu::util::TextureDataOrder;
+use crate::base::gpu_object_database::GpuObjectDatabase;
 use crate::base::ids::TextureId;
 use crate::base::runtime::Runtime;
 use crate::base::settings::Settings;
-use crate::base::gpu_object_database::GpuObjectDatabase;
+use wgpu::util::TextureDataOrder;
 
 pub struct TextureBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,

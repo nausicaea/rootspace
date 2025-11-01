@@ -12,28 +12,28 @@ use winit::{
 
 use super::registry::{FUSRegistry, MSRegistry};
 use crate::{
+    RenderableSource,
     assets::scene::{LightSource, Scene},
     components::{camera::Camera, info::Info, transform::Transform},
     events::engine_event::EngineEvent,
     registry::{RRegistry, USRegistry},
     resources::{rpc_settings::RpcDeps, statistics::Statistics},
     systems::renderer::Renderer,
-    RenderableSource,
 };
 use assam::{AssetDatabase, AssetDatabaseDeps};
 use ecs::{
     entity::Entity,
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     loop_control::LoopControl,
     registry::{ResourceRegistry, SystemRegistry},
     resources::Resources,
     storage::Storage,
     with_dependencies::WithDependencies,
     with_resources::WithResources,
-    world::{event::WorldEvent, World},
+    world::{World, event::WorldEvent},
 };
-use griffon::{Graphics, GraphicsDeps};
 use griffon::components::renderable::Renderable;
+use griffon::{Graphics, GraphicsDeps};
 
 const DELTA_TIME: Duration = Duration::from_millis(50);
 #[cfg(feature = "editor")]

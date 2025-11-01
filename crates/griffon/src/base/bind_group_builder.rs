@@ -1,6 +1,6 @@
+use super::gpu_object_database::GpuObjectDatabase;
 use super::ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureViewId};
 use super::runtime::Runtime;
-use super::gpu_object_database::GpuObjectDatabase;
 
 pub struct BindGroupBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,

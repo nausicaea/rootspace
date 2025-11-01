@@ -1,6 +1,6 @@
+use crate::base::gpu_object_database::GpuObjectDatabase;
 use crate::base::ids::SamplerId;
 use crate::base::runtime::Runtime;
-use crate::base::gpu_object_database::GpuObjectDatabase;
 
 pub struct SamplerBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,

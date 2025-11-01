@@ -1,11 +1,11 @@
 use std::ops::Range;
 
-use wgpu::{LoadOp, StoreOp};
-use super::ids::{BindGroupId, BufferId, PipelineId};
+use super::gpu_object_database::GpuObjectDatabase;
 use super::ids::TextureViewId;
+use super::ids::{BindGroupId, BufferId, PipelineId};
 use super::runtime::Runtime;
 use super::settings::Settings;
-use super::gpu_object_database::GpuObjectDatabase;
+use wgpu::{LoadOp, StoreOp};
 
 #[derive(Debug)]
 pub struct Encoder<'rt> {
