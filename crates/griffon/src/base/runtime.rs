@@ -52,6 +52,7 @@ impl<'a> Runtime<'a> {
                 label: None,
                 memory_hints: Default::default(),
                 trace: Default::default(),
+                experimental_features: Default::default(),
             })
             .await
             .unwrap();

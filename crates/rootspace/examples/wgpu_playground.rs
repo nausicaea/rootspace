@@ -72,6 +72,7 @@ impl<'a> State<'a> {
                 label: Some("No features, default limits"),
                 memory_hints: Default::default(),
                 trace: Default::default(),
+                experimental_features: Default::default(),
             })
             .await
             .unwrap();
