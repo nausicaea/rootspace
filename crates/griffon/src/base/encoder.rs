@@ -70,6 +70,7 @@ impl<'rt> Encoder<'rt> {
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &self.surface_view,
                 resolve_target: None,
+                depth_slice: None,
                 ops: wgpu::Operations {
                     load: LoadOp::Clear(self.settings.clear_color),
                     store: StoreOp::Store,
