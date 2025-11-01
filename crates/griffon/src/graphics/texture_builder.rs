@@ -1,7 +1,7 @@
 use wgpu::util::TextureDataOrder;
 
 use super::{ids::TextureId, runtime::Runtime, GpuObjectDatabase};
-use crate::Settings;
+use super::settings::Settings;
 
 pub struct TextureBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,

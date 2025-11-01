@@ -3,14 +3,12 @@ use std::{collections::BTreeMap, path::Path};
 use anyhow::Context;
 use glamour::vec::Vec4;
 
-use super::private::PrivLoadAsset;
+use assam::{LoadAsset, SaveAsset, AssetDatabase};
 use crate::{
-    assets::private::PrivSaveAsset,
     components::{
         camera::Camera, debug_animate::DebugAnimate, info::Info, light::Light, renderable::Renderable,
         transform::Transform,
     },
-    resources::asset_database::AssetDatabase,
 };
 use ecs::{
     entities::Entities,
@@ -202,7 +200,7 @@ impl Scene {
     }
 }
 
-impl PrivLoadAsset for Scene {
+impl LoadAsset for Scene {
     type Output = ();
 
     async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
@@ -219,7 +217,7 @@ impl PrivLoadAsset for Scene {
     }
 }
 
-impl PrivSaveAsset for Scene {
+impl SaveAsset for Scene {
     async fn to_path(&self, path: &Path) -> Result<(), anyhow::Error> {
         let file = std::fs::File::create(path).with_context(|| format!("Creating the file '{}'", path.display()))?;
         let writer = std::io::BufWriter::new(file);

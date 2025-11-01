@@ -3,7 +3,9 @@ use tokio::runtime::{Runtime, Builder as RuntimeBuilder};
 use winit::event_loop::{EventLoop, EventLoopWindowTarget};
 
 use ecs::Reg;
-use crate::{AssetDatabaseDeps, GraphicsDeps, Orchestrator, OrchestratorDeps, RpcDeps, Settings};
+use assam::AssetDatabaseDeps;
+use griffon::{GraphicsDeps, Settings};
+use crate::{Orchestrator, OrchestratorDeps, RpcDeps};
 
 #[derive(Debug)]
 pub struct App {

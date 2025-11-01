@@ -11,14 +11,14 @@ use winit::{
 };
 
 use super::registry::{FUSRegistry, MSRegistry};
+use assam::{AssetDatabase, AssetDatabaseDeps};
+use griffon::{Graphics, GraphicsDeps};
 use crate::{
     assets::scene::{LightSource, Scene},
     components::{camera::Camera, info::Info, renderable::Renderable, transform::Transform},
     events::engine_event::EngineEvent,
     registry::{RRegistry, USRegistry},
     resources::{
-        asset_database::{AssetDatabase, AssetDatabaseDeps},
-        graphics::{Graphics, GraphicsDeps},
         rpc_settings::RpcDeps,
         statistics::Statistics,
     },

@@ -8,7 +8,7 @@ use super::{
     settings::Settings,
     GpuObjectDatabase,
 };
-use crate::resources::graphics::ids::TextureViewId;
+use super::ids::TextureViewId;
 
 #[derive(Debug)]
 pub struct Encoder<'rt> {

@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use anyhow::Context;
 
-use super::{private::PrivLoadAsset, Error};
-use crate::resources::graphics::vertex::Vertex;
+use assam::{LoadAsset, Error};
+use crate::graphics::vertex::Vertex;
 use plyers::{
     load_ply,
     types::{
@@ -21,7 +21,7 @@ pub struct CpuMesh {
     pub indices: Vec<u32>,
 }
 
-impl PrivLoadAsset for CpuMesh {
+impl LoadAsset for CpuMesh {
     type Output = Self;
 
     async fn with_path(

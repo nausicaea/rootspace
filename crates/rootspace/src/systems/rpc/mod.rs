@@ -12,10 +12,11 @@ use tarpc::server::{incoming::Incoming, BaseChannel, Channel};
 use tokio::{sync::mpsc, task::JoinHandle};
 use tracing::error;
 
+use assam::AssetDatabase;
 use crate::{
     assets::scene::Scene,
     events::engine_event::EngineEvent,
-    resources::{asset_database::AssetDatabase, rpc_settings::RpcSettings, statistics::Statistics},
+    resources::{rpc_settings::RpcSettings, statistics::Statistics},
     systems::rpc::{server::RpcServer, service::RpcService},
 };
 use ecs::{

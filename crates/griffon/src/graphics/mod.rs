@@ -17,16 +17,16 @@ use self::{
     settings::Settings,
     texture_builder::TextureBuilder,
 };
-use crate::assets::cpu_material::CpuMaterial;
-use crate::assets::cpu_mesh::CpuMesh;
-use crate::assets::cpu_model::CpuModel;
-use crate::assets::cpu_texture::CpuTexture;
-use crate::resources::graphics::gpu_material::GpuMaterial;
-use crate::resources::graphics::gpu_mesh::GpuMesh;
-use crate::resources::graphics::gpu_model::GpuModel;
-use crate::resources::graphics::gpu_texture::GpuTexture;
-use crate::resources::graphics::instance::Instance;
-use crate::resources::graphics::internal_runtime_data::InternalRuntimeData;
+use super::assets::cpu_material::CpuMaterial;
+use super::assets::cpu_mesh::CpuMesh;
+use super::assets::cpu_model::CpuModel;
+use super::assets::cpu_texture::CpuTexture;
+use self::gpu_material::GpuMaterial;
+use self::gpu_mesh::GpuMesh;
+use self::gpu_model::GpuModel;
+use self::gpu_texture::GpuTexture;
+use self::instance::Instance;
+use self::internal_runtime_data::InternalRuntimeData;
 use ecs::{resource::Resource, with_dependencies::WithDependencies};
 use urn::Urn;
 

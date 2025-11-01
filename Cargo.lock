@@ -199,6 +199,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "assam"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "directories",
+ "ecs",
+ "file-manipulation",
+ "image",
+ "lazy_static",
+ "plyers",
+ "regex",
+ "serde_json",
+ "thiserror 2.0.17",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "async-stream"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1397,6 +1415,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fdf242682df893b86f33a73828fb09ca4b2d3bb6cc95249707fc684d27484b91"
 dependencies = [
  "bitflags 2.10.0",
+]
+
+[[package]]
+name = "griffon"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assam",
+ "bytemuck",
+ "ecs",
+ "image",
+ "plyers",
+ "serde",
+ "tracing",
+ "urn",
+ "wgpu",
+ "winit",
 ]
 
 [[package]]
@@ -2763,6 +2798,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "approx 0.5.1",
+ "assam",
  "async-trait",
  "bytemuck",
  "ciborium",
@@ -2774,6 +2810,7 @@ dependencies = [
  "file-manipulation",
  "futures",
  "glamour",
+ "griffon",
  "humantime",
  "image",
  "itertools 0.14.0",

@@ -2,10 +2,10 @@ use anyhow::Context;
 use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};
 use glamour::vec::Vec4;
 
-use crate::{
+use assam::AssetDatabase;
+use griffon::{
     assets::cpu_model::CpuModel,
-    resources::graphics::{gpu_model::GpuModel, Graphics},
-    AssetDatabase,
+    graphics::{gpu_model::GpuModel, Graphics},
 };
 
 #[derive(Debug)]

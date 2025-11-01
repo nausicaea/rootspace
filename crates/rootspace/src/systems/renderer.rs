@@ -15,24 +15,22 @@ use itertools::Itertools;
 use wgpu::{BufferAddress, BufferSize, BufferUsages, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
-use crate::{
-    components::light::Light,
-    resources::graphics::{camera_uniform::CameraUniform, gpu_material::GpuMaterial, light_uniform::LightUniform},
+use assam::AssetDatabase;
+use griffon::graphics::{
+    camera_uniform::CameraUniform, 
+    gpu_material::GpuMaterial, 
+    light_uniform::LightUniform,
+    encoder::RenderPass,
+    ids::{BindGroupId, BufferId, PipelineId},
+    instance::Instance,
+    vertex::Vertex,
+    Graphics,
 };
+use crate::components::light::Light;
 use crate::{
     components::{camera::Camera, renderable::Renderable, transform::Transform},
     events::engine_event::EngineEvent,
-    resources::{
-        asset_database::AssetDatabase,
-        graphics::{
-            encoder::RenderPass,
-            ids::{BindGroupId, BufferId, PipelineId},
-            instance::Instance,
-            vertex::Vertex,
-            Graphics,
-        },
-        statistics::Statistics,
-    },
+    resources::statistics::Statistics,
 };
 use ecs::{
     component::Component,
@@ -504,7 +502,7 @@ fn hier_transform(idx: Index, hier: &Hierarchy<Index>, transforms: &<Transform a
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resources::asset_database::AssetDatabaseDeps;
+    use assam::AssetDatabaseDeps;
     use ecs::Reg;
 
     struct TDeps<'a> {

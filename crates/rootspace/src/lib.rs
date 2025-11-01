@@ -16,11 +16,7 @@ pub use crate::{
     assets::scene::{RenderableSource, Scene},
     components::{camera::Camera, transform::Transform},
     orchestrator::{Orchestrator, OrchestratorDeps},
-    resources::{
-        asset_database::{AssetDatabase, AssetDatabaseDeps},
-        graphics::{settings::Settings, GraphicsDeps},
-        rpc_settings::RpcDeps,
-    },
+    resources::rpc_settings::RpcDeps,
     systems::rpc::service::RpcServiceClient,
 };
 pub use ecs::{

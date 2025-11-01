@@ -1,4 +1,4 @@
-use super::{private::PrivLoadAsset, Error};
+use assam::{LoadAsset, Error};
 
 #[derive(Debug)]
 pub struct CpuTexture {
@@ -6,7 +6,7 @@ pub struct CpuTexture {
     pub image: image::DynamicImage,
 }
 
-impl PrivLoadAsset for CpuTexture {
+impl LoadAsset for CpuTexture {
     type Output = Self;
 
     async fn with_path(

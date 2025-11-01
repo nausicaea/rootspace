@@ -1,0 +1,18 @@
+[package]
+name = "assam"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = { version = "^1.0.0" }
+directories = "^6.0"
+ecs = { path = "../ecs" }
+file-manipulation = { path = "../file-manipulation" }
+image = { version = "^0.25", default-features = false }
+lazy_static = "^1.0"
+plyers = { path = "../plyers" }
+regex = "^1.0"
+serde_json = { version = "^1.0.0", default-features = false, features = ["std"] }
+thiserror = "^2.0.17"
+tokio = { version = "^1.36.0", default-features = false, features = ["fs"] }
+tracing = "^0.1.40"

@@ -1,7 +1,7 @@
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
 use winit::{event_loop::EventLoopWindowTarget, window::Fullscreen};
 
-use crate::resources::graphics::settings::Settings;
+use super::settings::Settings;
 
 #[derive(Debug)]
 pub struct Runtime<'a> {

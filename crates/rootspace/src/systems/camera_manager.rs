@@ -3,7 +3,8 @@ use std::time::Duration;
 use async_trait::async_trait;
 use winit::event::WindowEvent;
 
-use crate::{components::camera::Camera, resources::graphics::Graphics};
+use griffon::Graphics;
+use crate::components::camera::Camera;
 use ecs::{
     event_queue::{receiver_id::ReceiverId, EventQueue},
     resources::Resources,

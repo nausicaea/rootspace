@@ -4,7 +4,7 @@ use super::{
     runtime::Runtime,
     GpuObjectDatabase,
 };
-use crate::Settings;
+use super::settings::Settings;
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
