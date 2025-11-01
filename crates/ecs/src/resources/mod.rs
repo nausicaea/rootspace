@@ -250,11 +250,13 @@ mod tests {
 
     impl Resource for TestResourceA {}
 
+    #[allow(dead_code)]
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceB(Vec<usize>);
 
     impl Resource for TestResourceB {}
 
+    #[allow(dead_code)]
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceC(String);
 

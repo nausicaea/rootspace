@@ -502,38 +502,7 @@ fn hier_transform(idx: Index, hier: &Hierarchy<Index>, transforms: &<Transform a
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assam::AssetDatabaseDeps;
     use ecs::Reg;
-
-    struct TDeps<'a> {
-        name: &'a str,
-        force_init: bool,
-        within_repo: bool,
-    }
-
-    impl Default for TDeps<'static> {
-        fn default() -> Self {
-            TDeps {
-                name: "test",
-                force_init: false,
-                within_repo: false,
-            }
-        }
-    }
-
-    impl<'a> AssetDatabaseDeps for TDeps<'a> {
-        fn name(&self) -> &str {
-            self.name
-        }
-
-        fn force_init(&self) -> bool {
-            self.force_init
-        }
-
-        fn within_repo(&self) -> bool {
-            self.within_repo
-        }
-    }
 
     #[test]
     fn renderer_reg_macro() {
