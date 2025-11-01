@@ -49,7 +49,7 @@ impl<'a> State<'a> {
     async fn new(window: Window) -> Self {
         let window = Arc::new(window);
 
-        let instance = Instance::new(wgpu::InstanceDescriptor {
+        let instance = Instance::new(&wgpu::InstanceDescriptor {
             backends: Backends::all(),
             ..Default::default()
         });

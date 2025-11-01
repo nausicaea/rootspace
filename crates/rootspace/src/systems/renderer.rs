@@ -448,6 +448,9 @@ impl System for Renderer {
                 self.on_timeout();
                 (0, Duration::ZERO, Duration::ZERO)
             }
+            Err(SurfaceError::Other) => {
+                todo!()
+            }
             Ok(mut enc) => {
                 let draw_start = Instant::now();
                 let draw_calls = self.draw(&draw_data, enc.begin(Some("main-render-pass")));

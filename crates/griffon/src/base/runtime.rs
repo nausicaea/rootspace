@@ -29,7 +29,7 @@ impl<'a> Runtime<'a> {
 
         let max_size = window.current_monitor().unwrap().size();
 
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: settings.backends,
             ..Default::default()
         });
