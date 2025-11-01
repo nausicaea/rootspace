@@ -26,15 +26,15 @@ impl<'rt> BindGroupBuilder<'rt> {
         self
     }
 
-    pub fn add_buffer(
+    pub fn add_buffer<A: Into<wgpu::BufferAddress>, S: Into<wgpu::BufferSize>>(
         mut self,
         binding: u32,
-        offset: wgpu::BufferAddress,
-        size: Option<wgpu::BufferSize>,
+        offset: A,
+        size: Option<S>,
         buffer: BufferId,
     ) -> Self {
         self.entries
-            .push((binding, BindingResourceId::Buffer { buffer, offset, size }));
+            .push((binding, BindingResourceId::Buffer { buffer, offset: offset.into(), size: size.map(|s| s.into()) }));
         self
     }
 

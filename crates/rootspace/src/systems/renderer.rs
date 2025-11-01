@@ -5,6 +5,7 @@ use std::{
     ops::Range,
     slice::from_raw_parts,
     time::{Duration, Instant},
+    num::NonZeroU64,
 };
 
 use num_traits::Inv;
@@ -12,7 +13,7 @@ use num_traits::Inv;
 use anyhow::Context;
 use async_trait::async_trait;
 use itertools::Itertools;
-use wgpu::{BufferAddress, BufferSize, BufferUsages, SurfaceError};
+use wgpu::{BufferUsages, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
 use crate::{
@@ -371,7 +372,7 @@ impl WithResources for Renderer {
 
         let camera_buffer = gfx.create_buffer(
             Some("camera-buffer"),
-            uniform_alignment as BufferAddress,
+            uniform_alignment,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
@@ -379,12 +380,12 @@ impl WithResources for Renderer {
         let camera_bind_group = gfx
             .create_bind_group(cbl)
             .with_label(Some("camera-bind-group"))
-            .add_buffer(0, 0, BufferSize::new(size_of::<CameraUniform>() as _), camera_buffer)
+            .add_buffer(0, 0u64, NonZeroU64::new(size_of::<CameraUniform>() as _), camera_buffer)
             .submit();
 
         let light_buffer = gfx.create_buffer(
             Some("light-buffer"),
-            uniform_alignment as BufferAddress,
+            uniform_alignment,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
@@ -392,7 +393,7 @@ impl WithResources for Renderer {
         let light_bind_group = gfx
             .create_bind_group(ll)
             .with_label(Some("light-bind-group"))
-            .add_buffer(0, 0, BufferSize::new(size_of::<LightUniform>() as _), light_buffer)
+            .add_buffer(0, 0u64, NonZeroU64::new(size_of::<LightUniform>() as _), light_buffer)
             .submit();
 
         Ok(Renderer {
