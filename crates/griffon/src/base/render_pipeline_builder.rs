@@ -109,7 +109,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                             .shader_modules
                             .get(&vsm)
                             .unwrap_or_else(|| panic!("Unknown {:?}", vsm)),
-                        entry_point: vep,
+                        entry_point: Some(vep),
                         buffers: self.vertex_buffer_layouts.as_slice(),
                         compilation_options: Default::default(),
                     })
@@ -120,7 +120,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                         .shader_modules
                         .get(&fsm)
                         .unwrap_or_else(|| panic!("Unknown {:?}", fsm)),
-                    entry_point: fep,
+                    entry_point: Some(fep),
                     targets: &cts,
                     compilation_options: Default::default(),
                 }),
