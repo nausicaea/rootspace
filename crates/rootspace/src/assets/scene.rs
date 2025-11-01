@@ -4,15 +4,17 @@ use anyhow::Context;
 use glamour::vec::Vec4;
 
 use crate::components::{
-    camera::Camera, debug_animate::DebugAnimate, info::Info, light::Light, renderable::Renderable, transform::Transform,
+    camera::Camera, debug_animate::DebugAnimate, info::Info, transform::Transform,
 };
 use assam::{AssetDatabase, LoadAsset, SaveAsset};
 use ecs::{
     entities::Entities,
-    entity::{Entity, index::Index},
+    entity::{index::Index, Entity},
     resources::Resources,
     storage::Storage,
 };
+use griffon::components::light::Light;
+use griffon::components::renderable::Renderable;
 use rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]

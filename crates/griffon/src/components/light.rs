@@ -3,10 +3,9 @@ use ecs::{component::Component, resources::Resources, storage::vec_storage::VecS
 use glamour::vec::Vec4;
 
 use assam::AssetDatabase;
-use griffon::{
-    assets::cpu_model::CpuModel,
-    graphics::{Graphics, gpu_model::GpuModel},
-};
+use crate::base::gpu_model::GpuModel;
+use crate::assets::cpu_model::CpuModel;
+use crate::resources::Graphics;
 
 #[derive(Debug)]
 pub struct Light {

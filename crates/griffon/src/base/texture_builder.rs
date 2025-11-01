@@ -1,7 +1,8 @@
 use wgpu::util::TextureDataOrder;
-
-use super::settings::Settings;
-use super::{GpuObjectDatabase, ids::TextureId, runtime::Runtime};
+use crate::base::ids::TextureId;
+use crate::base::runtime::Runtime;
+use crate::base::settings::Settings;
+use crate::base::gpu_object_database::GpuObjectDatabase;
 
 pub struct TextureBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
@@ -13,7 +14,7 @@ pub struct TextureBuilder<'rt> {
 }
 
 impl<'rt> TextureBuilder<'rt> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
+    pub(crate) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
         Self {
             runtime,
             database,

@@ -12,6 +12,7 @@ anyhow = { version = "^1.0.0" }
 assam = { path = "../assam" }
 bytemuck = { version = "^1.0", features = [ "derive" ] }
 ecs = { path = "../ecs" }
+glamour = { path = "../glamour" }
 image = { version = "^0.25", default-features = false, features = ["png", "jpeg"] }
 plyers = { path = "../plyers" }
 serde = { version = "^1.0.0", features = ["derive"] }

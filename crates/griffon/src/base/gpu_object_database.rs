@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::ids::{
+use crate::base::ids::{
     BindGroupId, BindGroupLayoutId, BufferId, PipelineId, SamplerId, ShaderModuleId, TextureId, TextureViewId,
 };
 use urn::Urn;

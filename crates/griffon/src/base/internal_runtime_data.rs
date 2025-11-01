@@ -1,4 +1,4 @@
-use super::ids::{BindGroupLayoutId, InstanceId, TextureId, TextureViewId};
+use crate::base::ids::{BindGroupLayoutId, InstanceId, TextureId, TextureViewId};
 use urn::Urn;
 
 #[derive(Debug)]

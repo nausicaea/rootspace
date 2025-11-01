@@ -3,7 +3,7 @@ use winit::event::WindowEvent;
 use super::systems::debug_animator::DebugAnimator;
 use crate::{
     components::{
-        camera::Camera, debug_animate::DebugAnimate, info::Info, light::Light, renderable::Renderable,
+        camera::Camera, debug_animate::DebugAnimate, info::Info,
         transform::Transform,
     },
     events::engine_event::EngineEvent,
@@ -14,9 +14,11 @@ use crate::{
 };
 use assam::AssetDatabase;
 use ecs::{
-    RegAdd, component::Component, entity::index::Index, event_monitor::EventMonitor, event_queue::EventQueue,
-    world::event::WorldEvent,
+    component::Component, entity::index::Index, event_monitor::EventMonitor, event_queue::EventQueue, world::event::WorldEvent,
+    RegAdd,
 };
+use griffon::components::light::Light;
+use griffon::components::renderable::Renderable;
 use griffon::Graphics;
 use rose_tree::hierarchy::Hierarchy;
 

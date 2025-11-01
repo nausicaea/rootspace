@@ -1,10 +1,8 @@
-use super::settings::Settings;
-use super::{
-    GpuObjectDatabase,
-    descriptors::VertexAttributeDescriptor,
-    ids::{BindGroupLayoutId, PipelineId, ShaderModuleId},
-    runtime::Runtime,
-};
+use crate::base::descriptors::VertexAttributeDescriptor;
+use crate::base::ids::{BindGroupLayoutId, PipelineId, ShaderModuleId};
+use crate::base::runtime::Runtime;
+use crate::base::settings::Settings;
+use crate::base::gpu_object_database::GpuObjectDatabase;
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
@@ -19,7 +17,7 @@ pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
 }
 
 impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
+    pub(crate) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
         RenderPipelineBuilder {
             runtime,
             database,

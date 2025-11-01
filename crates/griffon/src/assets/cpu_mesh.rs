@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Context;
 
-use crate::graphics::vertex::Vertex;
+use crate::base::vertex::Vertex;
 use assam::{Error, LoadAsset};
 use plyers::{
     load_ply,

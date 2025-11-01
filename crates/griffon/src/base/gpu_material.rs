@@ -1,5 +1,5 @@
-use super::gpu_texture::GpuTexture;
-use super::ids::BindGroupId;
+use crate::base::gpu_texture::GpuTexture;
+use crate::base::ids::BindGroupId;
 
 #[derive(Debug, Clone)]
 pub struct GpuMaterial {

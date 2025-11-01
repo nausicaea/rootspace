@@ -3,53 +3,30 @@ use std::mem::size_of;
 use wgpu::{BindingType, BufferAddress, BufferBindingType, BufferSize, BufferUsages, ShaderStages};
 use winit::event_loop::EventLoopWindowTarget;
 
-use self::gpu_material::GpuMaterial;
-use self::gpu_mesh::GpuMesh;
-use self::gpu_model::GpuModel;
-use self::gpu_texture::GpuTexture;
-use self::instance::Instance;
-use self::internal_runtime_data::InternalRuntimeData;
-use self::{
-    bind_group_builder::BindGroupBuilder,
-    bind_group_layout_builder::BindGroupLayoutBuilder,
-    camera_uniform::CameraUniform,
-    encoder::Encoder,
-    gpu_object_database::GpuObjectDatabase,
-    ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
-    light_uniform::LightUniform,
-    render_pipeline_builder::RenderPipelineBuilder,
-    runtime::Runtime,
-    sampler_builder::SamplerBuilder,
-    settings::Settings,
-    texture_builder::TextureBuilder,
-};
+use crate::base::gpu_material::GpuMaterial;
+use crate::base::gpu_mesh::GpuMesh;
+use crate::base::gpu_model::GpuModel;
+use crate::base::gpu_texture::GpuTexture;
+use crate::base::instance::Instance;
+use crate::base::internal_runtime_data::InternalRuntimeData;
 use super::assets::cpu_material::CpuMaterial;
 use super::assets::cpu_mesh::CpuMesh;
 use super::assets::cpu_model::CpuModel;
 use super::assets::cpu_texture::CpuTexture;
 use ecs::{resource::Resource, with_dependencies::WithDependencies};
 use urn::Urn;
-
-pub mod bind_group_builder;
-pub mod bind_group_layout_builder;
-pub mod camera_uniform;
-pub mod descriptors;
-pub mod encoder;
-pub mod gpu_material;
-pub mod gpu_mesh;
-pub mod gpu_model;
-mod gpu_object_database;
-pub mod gpu_texture;
-pub mod ids;
-pub mod instance;
-mod internal_runtime_data;
-pub mod light_uniform;
-pub mod render_pipeline_builder;
-mod runtime;
-pub mod sampler_builder;
-pub mod settings;
-pub mod texture_builder;
-pub mod vertex;
+use crate::base::bind_group_builder::BindGroupBuilder;
+use crate::base::bind_group_layout_builder::BindGroupLayoutBuilder;
+use crate::base::camera_uniform::CameraUniform;
+use crate::base::encoder::Encoder;
+use crate::base::gpu_object_database::GpuObjectDatabase;
+use crate::base::ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId};
+use crate::base::light_uniform::LightUniform;
+use crate::base::render_pipeline_builder::RenderPipelineBuilder;
+use crate::base::runtime::Runtime;
+use crate::base::sampler_builder::SamplerBuilder;
+use crate::base::settings::Settings;
+use crate::base::texture_builder::TextureBuilder;
 
 const DEPTH_TEXTURE_LABEL: Option<&str> = Some("depth-stencil:texture");
 const DEPTH_TEXTURE_VIEW_LABEL: Option<&str> = Some("depth-stencil:view");

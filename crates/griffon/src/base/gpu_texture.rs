@@ -1,4 +1,4 @@
-use super::ids::{SamplerId, TextureId, TextureViewId};
+use crate::base::ids::{SamplerId, TextureId, TextureViewId};
 
 #[derive(Debug, Clone)]
 pub struct GpuTexture {

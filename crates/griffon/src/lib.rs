@@ -1,5 +1,8 @@
 pub mod assets;
-pub mod graphics;
+pub mod resources;
 mod macros;
+pub mod base;
+pub mod components;
 
-pub use self::graphics::{Graphics, GraphicsDeps, settings::Settings};
+pub use self::base::settings::Settings;
+pub use self::resources::{Graphics, GraphicsDeps};

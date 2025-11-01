@@ -2,9 +2,9 @@ use ecs::resources::Resources;
 use std::path::Path;
 use std::path::PathBuf;
 
-pub mod asset_database;
+pub mod resources;
 
-pub use self::asset_database::{AssetDatabase, AssetDatabaseDeps};
+pub use self::resources::{AssetDatabase, AssetDatabaseDeps};
 
 pub trait LoadAsset {
     type Output;
@@ -12,11 +12,11 @@ pub trait LoadAsset {
     fn with_path(
         res: &Resources,
         path: &Path,
-    ) -> impl std::future::Future<Output = Result<Self::Output, anyhow::Error>> + Send;
+    ) -> impl Future<Output = Result<Self::Output, anyhow::Error>> + Send;
 }
 
 pub trait SaveAsset {
-    fn to_path(&self, path: &Path) -> impl std::future::Future<Output = Result<(), anyhow::Error>> + Send;
+    fn to_path(&self, path: &Path) -> impl Future<Output = Result<(), anyhow::Error>> + Send;
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -15,9 +15,9 @@ use itertools::Itertools;
 use wgpu::{BufferAddress, BufferSize, BufferUsages, SurfaceError};
 use winit::{dpi::PhysicalSize, event::WindowEvent};
 
-use crate::components::light::Light;
+use griffon::components::light::Light;
 use crate::{
-    components::{camera::Camera, renderable::Renderable, transform::Transform},
+    components::{camera::Camera, transform::Transform},
     events::engine_event::EngineEvent,
     resources::statistics::Statistics,
 };
@@ -25,23 +25,22 @@ use assam::AssetDatabase;
 use ecs::{
     component::Component,
     entity::index::Index,
-    event_queue::{EventQueue, receiver_id::ReceiverId},
+    event_queue::{receiver_id::ReceiverId, EventQueue},
     resources::Resources,
     storage::Storage,
     system::System,
     with_resources::WithResources,
 };
 use glamour::{affine::builder::AffineBuilder, mat::Mat4};
-use griffon::graphics::{
-    Graphics,
-    camera_uniform::CameraUniform,
-    encoder::RenderPass,
-    gpu_material::GpuMaterial,
-    ids::{BindGroupId, BufferId, PipelineId},
-    instance::Instance,
-    light_uniform::LightUniform,
-    vertex::Vertex,
-};
+use griffon::base::camera_uniform::CameraUniform;
+use griffon::base::encoder::RenderPass;
+use griffon::base::gpu_material::GpuMaterial;
+use griffon::base::ids::{BindGroupId, BufferId, PipelineId};
+use griffon::base::instance::Instance;
+use griffon::base::light_uniform::LightUniform;
+use griffon::base::vertex::Vertex;
+use griffon::components::renderable::Renderable;
+use griffon::resources::Graphics;
 use rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug)]

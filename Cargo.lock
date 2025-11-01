@@ -1425,6 +1425,7 @@ dependencies = [
  "assam",
  "bytemuck",
  "ecs",
+ "glamour",
  "image",
  "plyers",
  "serde",

@@ -1,8 +1,6 @@
-use super::{
-    GpuObjectDatabase,
-    ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureViewId},
-    runtime::Runtime,
-};
+use super::ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureViewId};
+use super::runtime::Runtime;
+use super::gpu_object_database::GpuObjectDatabase;
 
 pub struct BindGroupBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
@@ -13,7 +11,7 @@ pub struct BindGroupBuilder<'rt> {
 }
 
 impl<'rt> BindGroupBuilder<'rt> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, layout: BindGroupLayoutId) -> Self {
+    pub(crate) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, layout: BindGroupLayoutId) -> Self {
         BindGroupBuilder {
             runtime,
             database,
