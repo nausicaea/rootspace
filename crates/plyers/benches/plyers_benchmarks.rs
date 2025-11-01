@@ -1,4 +1,5 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
+use criterion::{criterion_group, criterion_main, Criterion};
 use plyers::{load_ply, save_ply};
 
 fn load_ply_jasmin6(c: &mut Criterion) {

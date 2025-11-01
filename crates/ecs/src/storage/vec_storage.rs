@@ -324,7 +324,7 @@ mod tests {
         type Storage = VecStorage<Self>;
     }
 
-    impl<'a> Add for &'a Tc {
+    impl Add for &Tc {
         type Output = Tc;
 
         fn add(self, rhs: Self) -> Self::Output {

@@ -60,8 +60,7 @@ impl System for CameraController {
                 event: KeyEvent { physical_key, .. },
                 ..
             } = event
-            {
-                if let Some((signum, dof)) = self.physical_key_to_dof.get(&physical_key) {
+                && let Some((signum, dof)) = self.physical_key_to_dof.get(&physical_key) {
                     match (signum, dof) {
                         (Signum::Positive, DoF::X) => delta_transform.t.x = dx,
                         (Signum::Negative, DoF::X) => delta_transform.t.x = -dx,
@@ -77,7 +76,6 @@ impl System for CameraController {
                         (Signum::Negative, DoF::ZX) => delta_transform.o = Quat::with_axis_angle(Vec4::y(), -dx),
                     }
                 }
-            }
         }
 
         for (_, _, trf) in res.iter_rw::<Camera, Transform>() {

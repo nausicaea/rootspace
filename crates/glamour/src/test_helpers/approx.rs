@@ -358,6 +358,7 @@ where
     /// Cgmath uses column-major storage, while glamour uses row-major storage. We need to invert the indexes for proper comparison.
     fn abs_diff_eq(&self, rhs: &cgmath::Matrix4<R>, epsilon: R::Epsilon) -> bool {
         let cgmath_mat: &[[R; 4]; 4] = rhs.as_ref();
+        #[allow(clippy::needless_range_loop)]
         for r in 0..4 {
             #[allow(clippy::needless_range_loop)]
             for c in 0..4 {
@@ -404,6 +405,7 @@ where
     /// Cgmath uses column-major storage, while glamour uses row-major storage. We need to invert the indexes for proper comparison.
     fn relative_eq(&self, rhs: &cgmath::Matrix4<R>, epsilon: R::Epsilon, max_relative: R::Epsilon) -> bool {
         let cgmath_mat: &[[R; 4]; 4] = rhs.as_ref();
+        #[allow(clippy::needless_range_loop)]
         for r in 0..4 {
             #[allow(clippy::needless_range_loop)]
             for c in 0..4 {
@@ -427,7 +429,9 @@ where
 
     /// Nalgebra uses column-major storage, while glamour uses row-major storage. We need to invert the indexes for proper comparison.
     fn ulps_eq(&self, rhs: &nalgebra::Matrix4<R>, epsilon: R::Epsilon, max_ulps: u32) -> bool {
+        #[allow(clippy::needless_range_loop)]
         for r in 0..4 {
+            #[allow(clippy::needless_range_loop)]
             for c in 0..4 {
                 if self.0[r][c].ulps_ne(&rhs.data.0[c][r], epsilon, max_ulps) {
                     return false;
@@ -450,6 +454,7 @@ where
     /// Cgmath uses column-major storage, while glamour uses row-major storage. We need to invert the indexes for proper comparison.
     fn ulps_eq(&self, rhs: &cgmath::Matrix4<R>, epsilon: R::Epsilon, max_ulps: u32) -> bool {
         let cgmath_mat: &[[R; 4]; 4] = rhs.as_ref();
+        #[allow(clippy::needless_range_loop)]
         for r in 0..4 {
             #[allow(clippy::needless_range_loop)]
             for c in 0..4 {

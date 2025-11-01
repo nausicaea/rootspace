@@ -60,7 +60,9 @@ where
 {
     /// Nalgebra uses column-major storage, while glamour uses row-major storage. We need to invert the indexes for proper comparison.
     fn eq(&self, other: &nalgebra::Matrix4<R>) -> bool {
+        #[allow(clippy::needless_range_loop)]
         for r in 0..4 {
+            #[allow(clippy::needless_range_loop)]
             for c in 0..4 {
                 if self.0[r][c].ne(&other.data.0[c][r]) {
                     return false;
@@ -78,6 +80,7 @@ where
     /// Cgmath uses column-major storage, while glamour uses row-major storage. We need to invert the indexes for proper comparison.
     fn eq(&self, other: &cgmath::Matrix4<R>) -> bool {
         let cgmath_mat: &[[R; 4]; 4] = other.as_ref();
+        #[allow(clippy::needless_range_loop)]
         for r in 0..4 {
             #[allow(clippy::needless_range_loop)]
             for c in 0..4 {

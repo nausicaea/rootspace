@@ -36,14 +36,13 @@ fn main() -> anyhow::Result<()> {
 
     let matches = Args::parse();
 
-    if let Some(save) = &matches.save {
-        if !save.is_dir() {
+    if let Some(save) = &matches.save
+        && !save.is_dir() {
             return Err(anyhow::anyhow!(
                 "Save destination is not a directory: {}",
                 save.display()
             ));
         }
-    }
 
     for path in &matches.paths {
         if matches.verbose > 0 {

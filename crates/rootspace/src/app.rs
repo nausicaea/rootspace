@@ -70,7 +70,7 @@ impl<'a> GraphicsDeps for Deps<'a> {
 
 impl<'a> AssetDatabaseDeps for Deps<'a> {
     fn name(&self) -> &str {
-        &self.name
+        self.name
     }
 
     fn force_init(&self) -> bool {

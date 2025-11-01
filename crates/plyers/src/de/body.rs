@@ -22,6 +22,8 @@ use super::{
     ParseNumError,
 };
 
+type PropVals = BTreeMap<PropertyId, (Primitive, Values)>;
+
 fn ascii_count_fct<'a, E>(_count_type: CountType) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], usize, E>
 where
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]>,
@@ -234,7 +236,7 @@ fn properties_fct<'a, 'b, F1, F2, P1, P2, E>(
     num_fn: &'a F2,
     properties: &'b BTreeMap<PropertyId, PropertyDescriptor>,
     repetitions: usize,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, Values)>, E> + 'b
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], PropVals, E> + 'b
 where
     'a: 'b,
     F1: Fn(CountType) -> P1,
@@ -299,7 +301,7 @@ fn elements_fct<'a, 'b, F1, F2, P1, P2, E>(
     cnt_fn: &'a F1,
     num_fn: &'a F2,
     elements: &'b BTreeMap<ElementId, ElementDescriptor>,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, Values)>, E> + 'b
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], PropVals, E> + 'b
 where
     'a: 'b,
     F1: Fn(CountType) -> P1,
@@ -336,7 +338,7 @@ pub fn body_fct<
     E: ParseError<&'a [u8]> + FromExternalError<&'a [u8], ParseNumError> + ContextError<&'a [u8]> + 'a,
 >(
     ply: PlyDescriptor,
-) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], BTreeMap<PropertyId, (Primitive, Values)>, E> {
+) -> impl FnMut(&'a [u8]) -> IResult<&'a [u8], PropVals, E> {
     context("plyers::de::body::body_fct", move |input| match ply.format_type {
         FormatType::Ascii => {
             tracing::debug!("Parsing PLY data as ASCII");
