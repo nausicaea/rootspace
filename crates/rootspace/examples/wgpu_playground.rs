@@ -72,8 +72,8 @@ impl<'a> State<'a> {
                     required_limits: Limits::default(),
                     label: Some("No features, default limits"),
                     memory_hints: Default::default(),
-                },
-                None, // Trace path
+                    trace: Default::default(),
+                }
             )
             .await
             .unwrap();

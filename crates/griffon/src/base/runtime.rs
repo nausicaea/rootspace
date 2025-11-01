@@ -52,8 +52,8 @@ impl<'a> Runtime<'a> {
                     required_limits: settings.required_limits.clone(),
                     label: None,
                     memory_hints: Default::default(),
+                    trace: Default::default(),
                 },
-                None, // Trace path
             )
             .await
             .unwrap();
