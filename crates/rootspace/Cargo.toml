@@ -41,7 +41,7 @@ tokio = { version = "^1.36.0", features = ["full"] }
 tracing = "^0.1.40"
 tracing-subscriber = { version = "^0.3.18", features = ["env-filter"] }
 urn = { path = "../urn" }
-wgpu = { version = "^0.19", features = ["serde", "trace", "replay"] }
+wgpu = { version = "^0.20.1", features = ["serde", "trace", "replay"] }
 winit = { version = "^0.29", features = ["serde"] }
 
 [lib]

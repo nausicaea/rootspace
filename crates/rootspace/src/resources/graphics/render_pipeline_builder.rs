@@ -113,6 +113,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                             .unwrap_or_else(|| panic!("Unknown {:?}", vsm)),
                         entry_point: vep,
                         buffers: self.vertex_buffer_layouts.as_slice(),
+                        compilation_options: Default::default(),
                     })
                     .expect("cannot build a render pipeline without vertex shader module"),
                 fragment: self.fragment_shader_module.map(|(fsm, fep)| wgpu::FragmentState {
@@ -123,6 +124,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                         .unwrap_or_else(|| panic!("Unknown {:?}", fsm)),
                     entry_point: fep,
                     targets: &cts,
+                    compilation_options: Default::default(),
                 }),
                 primitive: wgpu::PrimitiveState {
                     topology: wgpu::PrimitiveTopology::TriangleList,
