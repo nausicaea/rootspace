@@ -1,4 +1,4 @@
-use num_traits::{float::Float, NumAssign};
+use num_traits::{NumAssign, float::Float};
 
 use crate::{affine::Affine, mat::Mat4};
 

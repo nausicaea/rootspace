@@ -2,7 +2,7 @@ use std::{collections::HashMap, time::Duration};
 
 use async_trait::async_trait;
 use ecs::{
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     resources::Resources,
     system::System,
     with_resources::WithResources,
@@ -60,22 +60,23 @@ impl System for CameraController {
                 event: KeyEvent { physical_key, .. },
                 ..
             } = event
-                && let Some((signum, dof)) = self.physical_key_to_dof.get(&physical_key) {
-                    match (signum, dof) {
-                        (Signum::Positive, DoF::X) => delta_transform.t.x = dx,
-                        (Signum::Negative, DoF::X) => delta_transform.t.x = -dx,
-                        (Signum::Positive, DoF::Y) => delta_transform.t.y = dx,
-                        (Signum::Negative, DoF::Y) => delta_transform.t.y = -dx,
-                        (Signum::Positive, DoF::Z) => delta_transform.t.z = dx,
-                        (Signum::Negative, DoF::Z) => delta_transform.t.z = -dx,
-                        (Signum::Positive, DoF::XY) => delta_transform.o = Quat::with_axis_angle(Vec4::z(), dx),
-                        (Signum::Negative, DoF::XY) => delta_transform.o = Quat::with_axis_angle(Vec4::z(), -dx),
-                        (Signum::Positive, DoF::YZ) => delta_transform.o = Quat::with_axis_angle(Vec4::x(), dx),
-                        (Signum::Negative, DoF::YZ) => delta_transform.o = Quat::with_axis_angle(Vec4::x(), -dx),
-                        (Signum::Positive, DoF::ZX) => delta_transform.o = Quat::with_axis_angle(Vec4::y(), dx),
-                        (Signum::Negative, DoF::ZX) => delta_transform.o = Quat::with_axis_angle(Vec4::y(), -dx),
-                    }
+                && let Some((signum, dof)) = self.physical_key_to_dof.get(&physical_key)
+            {
+                match (signum, dof) {
+                    (Signum::Positive, DoF::X) => delta_transform.t.x = dx,
+                    (Signum::Negative, DoF::X) => delta_transform.t.x = -dx,
+                    (Signum::Positive, DoF::Y) => delta_transform.t.y = dx,
+                    (Signum::Negative, DoF::Y) => delta_transform.t.y = -dx,
+                    (Signum::Positive, DoF::Z) => delta_transform.t.z = dx,
+                    (Signum::Negative, DoF::Z) => delta_transform.t.z = -dx,
+                    (Signum::Positive, DoF::XY) => delta_transform.o = Quat::with_axis_angle(Vec4::z(), dx),
+                    (Signum::Negative, DoF::XY) => delta_transform.o = Quat::with_axis_angle(Vec4::z(), -dx),
+                    (Signum::Positive, DoF::YZ) => delta_transform.o = Quat::with_axis_angle(Vec4::x(), dx),
+                    (Signum::Negative, DoF::YZ) => delta_transform.o = Quat::with_axis_angle(Vec4::x(), -dx),
+                    (Signum::Positive, DoF::ZX) => delta_transform.o = Quat::with_axis_angle(Vec4::y(), dx),
+                    (Signum::Negative, DoF::ZX) => delta_transform.o = Quat::with_axis_angle(Vec4::y(), -dx),
                 }
+            }
         }
 
         for (_, _, trf) in res.iter_rw::<Camera, Transform>() {

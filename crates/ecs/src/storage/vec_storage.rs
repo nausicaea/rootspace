@@ -1,15 +1,15 @@
 use std::{collections::BTreeSet, marker::PhantomData, mem::MaybeUninit};
 
 use serde::{
+    Deserialize, Serialize,
     de::{Deserializer, MapAccess, Visitor},
     ser::{SerializeMap, Serializer},
-    Deserialize, Serialize,
 };
 
 use super::{
     super::{entity::index::Index, resource::Resource, storage::entry::Entry, with_dependencies::WithDependencies},
-    iterators::{IndexedRIter, RIter, WIter},
     Storage,
+    iterators::{IndexedRIter, RIter, WIter},
 };
 
 /// Implements component storage based on a `Vec<T>`.
@@ -152,17 +152,21 @@ impl<T> Storage for VecStorage<T> {
         &self.index
     }
 
-    unsafe fn get_unchecked<I: Into<Index>>(&self, index: I) -> &T { unsafe {
-        let idx: Index = index.into();
-        let idx_usize: usize = idx.into();
-        self.data.get_unchecked(idx_usize).assume_init_ref()
-    }}
+    unsafe fn get_unchecked<I: Into<Index>>(&self, index: I) -> &T {
+        unsafe {
+            let idx: Index = index.into();
+            let idx_usize: usize = idx.into();
+            self.data.get_unchecked(idx_usize).assume_init_ref()
+        }
+    }
 
-    unsafe fn get_unchecked_mut<I: Into<Index>>(&mut self, index: I) -> &mut T { unsafe {
-        let idx: Index = index.into();
-        let idx_usize: usize = idx.into();
-        self.data.get_unchecked_mut(idx_usize).assume_init_mut()
-    }}
+    unsafe fn get_unchecked_mut<I: Into<Index>>(&mut self, index: I) -> &mut T {
+        unsafe {
+            let idx: Index = index.into();
+            let idx_usize: usize = idx.into();
+            self.data.get_unchecked_mut(idx_usize).assume_init_mut()
+        }
+    }
 }
 
 impl<T> Resource for VecStorage<T> where T: 'static + Send + Sync {}
@@ -293,7 +297,7 @@ where
 mod tests {
     use std::{iter::Sum, ops::Add};
 
-    use serde_test::{assert_tokens, Token};
+    use serde_test::{Token, assert_tokens};
 
     use super::{
         super::super::{

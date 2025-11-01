@@ -2,8 +2,8 @@
 use std::process;
 use std::{
     sync::{
-        atomic::{AtomicUsize, Ordering},
         Arc,
+        atomic::{AtomicUsize, Ordering},
     },
     time::Duration,
 };
@@ -16,7 +16,7 @@ use winit::{
 
 use crate::events::engine_event::EngineEvent;
 use ecs::{
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     resources::Resources,
     system::System,
     with_resources::WithResources,
@@ -95,9 +95,9 @@ impl System for ForceShutdown {
 mod tests {
     use super::*;
     use ecs::{
+        Reg,
         registry::{End, SystemRegistry},
         world::World,
-        Reg,
     };
 
     #[test]

@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 
 use std::{
-    any::{type_name, TypeId},
+    any::{TypeId, type_name},
     collections::{HashMap, HashSet},
 };
 

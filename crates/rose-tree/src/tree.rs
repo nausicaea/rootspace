@@ -278,19 +278,20 @@ where
     type Item = (&'a K, &'a V);
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.queue.pop_front() { Some(next_node) => {
-            self.queue.extend(
-                self.hier
-                    .edges
-                    .get(&next_node)
-                    .iter()
-                    .flat_map(|children| children.iter().cloned()),
-            );
+        match self.queue.pop_front() {
+            Some(next_node) => {
+                self.queue.extend(
+                    self.hier
+                        .edges
+                        .get(&next_node)
+                        .iter()
+                        .flat_map(|children| children.iter().cloned()),
+                );
 
-            self.hier.nodes.get_key_value(&next_node)
-        } _ => {
-            None
-        }}
+                self.hier.nodes.get_key_value(&next_node)
+            }
+            _ => None,
+        }
     }
 }
 
@@ -325,19 +326,20 @@ where
     type Item = (&'a K, &'a V);
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.stack.pop() { Some(next_node) => {
-            self.stack.extend(
-                self.hier
-                    .edges
-                    .get(&next_node)
-                    .iter()
-                    .flat_map(|children| children.iter().rev().cloned()),
-            );
+        match self.stack.pop() {
+            Some(next_node) => {
+                self.stack.extend(
+                    self.hier
+                        .edges
+                        .get(&next_node)
+                        .iter()
+                        .flat_map(|children| children.iter().rev().cloned()),
+                );
 
-            self.hier.nodes.get_key_value(&next_node)
-        } _ => {
-            None
-        }}
+                self.hier.nodes.get_key_value(&next_node)
+            }
+            _ => None,
+        }
     }
 }
 
@@ -345,7 +347,7 @@ where
 mod tests {
     use std::ops::Mul;
 
-    use serde_test::{assert_tokens, Token};
+    use serde_test::{Token, assert_tokens};
 
     use super::{BfsIter, DfsIter, Tree};
 

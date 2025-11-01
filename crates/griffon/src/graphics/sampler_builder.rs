@@ -1,4 +1,4 @@
-use super::{ids::SamplerId, runtime::Runtime, GpuObjectDatabase};
+use super::{GpuObjectDatabase, ids::SamplerId, runtime::Runtime};
 
 pub struct SamplerBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,

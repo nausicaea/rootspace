@@ -51,7 +51,7 @@ impl<E> ReceiverId<E> {
 
 #[cfg(test)]
 mod tests {
-    use serde_test::{assert_tokens, Token};
+    use serde_test::{Token, assert_tokens};
 
     use super::*;
 

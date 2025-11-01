@@ -576,7 +576,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::{
-        super::{vec_storage::VecStorage, Storage},
+        super::{Storage, vec_storage::VecStorage},
         *,
     };
 

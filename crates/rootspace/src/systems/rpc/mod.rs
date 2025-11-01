@@ -8,19 +8,19 @@ use anyhow::Error;
 use async_trait::async_trait;
 use futures::StreamExt;
 use message::RpcMessage;
-use tarpc::server::{incoming::Incoming, BaseChannel, Channel};
+use tarpc::server::{BaseChannel, Channel, incoming::Incoming};
 use tokio::{sync::mpsc, task::JoinHandle};
 use tracing::error;
 
-use assam::AssetDatabase;
 use crate::{
     assets::scene::Scene,
     events::engine_event::EngineEvent,
     resources::{rpc_settings::RpcSettings, statistics::Statistics},
     systems::rpc::{server::RpcServer, service::RpcService},
 };
+use assam::AssetDatabase;
 use ecs::{
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     resources::Resources,
     system::System,
     with_resources::WithResources,

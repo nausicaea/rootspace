@@ -1,4 +1,4 @@
-use assam::{LoadAsset, Error};
+use assam::{Error, LoadAsset};
 
 #[derive(Debug)]
 pub struct CpuTexture {

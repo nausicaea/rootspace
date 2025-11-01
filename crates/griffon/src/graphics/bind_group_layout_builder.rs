@@ -1,4 +1,4 @@
-use super::{ids::BindGroupLayoutId, runtime::Runtime, GpuObjectDatabase};
+use super::{GpuObjectDatabase, ids::BindGroupLayoutId, runtime::Runtime};
 
 pub struct BindGroupLayoutBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,

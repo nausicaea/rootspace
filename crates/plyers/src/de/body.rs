@@ -1,16 +1,16 @@
 use std::collections::BTreeMap;
 
 use nom::{
+    IResult,
     bytes::complete::take_till1,
     combinator::{map, map_res},
-    error::{context, ContextError, FromExternalError, ParseError},
+    error::{ContextError, FromExternalError, ParseError, context},
     multi::length_count,
     number::complete::{
-        be_f32, be_f64, be_i16, be_i32, be_i64, be_i8, be_u16, be_u32, be_u64, be_u8, le_f32, le_f64, le_i16, le_i32,
-        le_i64, le_i8, le_u16, le_u32, le_u64, le_u8, recognize_float,
+        be_f32, be_f64, be_i8, be_i16, be_i32, be_i64, be_u8, be_u16, be_u32, be_u64, le_f32, le_f64, le_i8, le_i16,
+        le_i32, le_i64, le_u8, le_u16, le_u32, le_u64, recognize_float,
     },
     sequence::terminated,
-    IResult,
 };
 
 use super::{
@@ -18,8 +18,8 @@ use super::{
         CountType, DataType, ElementDescriptor, ElementId, FormatType, PlyDescriptor, Primitive, PropertyDescriptor,
         PropertyId, Value, Values,
     },
-    common::{fold_exact, is_whitespace, whitespace},
     ParseNumError,
+    common::{fold_exact, is_whitespace, whitespace},
 };
 
 type PropVals = BTreeMap<PropertyId, (Primitive, Values)>;

@@ -175,13 +175,13 @@ impl<E> Default for EventQueue<E> {
 
 #[cfg(test)]
 mod tests {
-    use serde_test::{assert_tokens, Token};
+    use serde_test::{Token, assert_tokens};
 
     use super::*;
     use crate::{
+        Reg,
         registry::{End, ResourceRegistry},
         world::World,
-        Reg,
     };
 
     #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]

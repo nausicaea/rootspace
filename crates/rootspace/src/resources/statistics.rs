@@ -131,14 +131,16 @@ impl Default for Statistics {
 
 impl Display for Statistics {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Loop and Render Stats:\nDraw calls (mean): {}\nRender duration (mean): {}\nPrepare duration (mean): {}\nDraw duration (mean): {}\nSubmit duration (mean): {}\nRedraw interval (mean): {}\nMaintenance interval (mean): {}\n",
-               self.mean_draw_calls(),
-               format_duration(self.mean_render_duration()),
-               format_duration(self.mean_render_prepare_duration()),
-               format_duration(self.mean_render_draw_duration()),
-               format_duration(self.mean_render_submit_duration()),
-               format_duration(self.mean_redraw_interval()),
-               format_duration(self.mean_maintenance_interval()),
+        writeln!(
+            f,
+            "Loop and Render Stats:\nDraw calls (mean): {}\nRender duration (mean): {}\nPrepare duration (mean): {}\nDraw duration (mean): {}\nSubmit duration (mean): {}\nRedraw interval (mean): {}\nMaintenance interval (mean): {}\n",
+            self.mean_draw_calls(),
+            format_duration(self.mean_render_duration()),
+            format_duration(self.mean_render_prepare_duration()),
+            format_duration(self.mean_render_draw_duration()),
+            format_duration(self.mean_render_submit_duration()),
+            format_duration(self.mean_redraw_interval()),
+            format_duration(self.mean_maintenance_interval()),
         )
     }
 }
@@ -156,9 +158,9 @@ impl<D> WithDependencies<D> for Statistics {
 mod tests {
     use super::*;
     use ecs::{
+        Reg,
         registry::{End, ResourceRegistry},
         world::World,
-        Reg,
     };
 
     #[test]

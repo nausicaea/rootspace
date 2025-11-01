@@ -1,8 +1,6 @@
 use winit::event::WindowEvent;
 
 use super::systems::debug_animator::DebugAnimator;
-use assam::AssetDatabase;
-use griffon::Graphics;
 use crate::{
     components::{
         camera::Camera, debug_animate::DebugAnimate, info::Info, light::Light, renderable::Renderable,
@@ -14,10 +12,12 @@ use crate::{
         camera_controller::CameraController, camera_manager::CameraManager, force_shutdown::ForceShutdown, rpc::Rpc,
     },
 };
+use assam::AssetDatabase;
 use ecs::{
-    component::Component, entity::index::Index, event_monitor::EventMonitor, event_queue::EventQueue,
-    world::event::WorldEvent, RegAdd,
+    RegAdd, component::Component, entity::index::Index, event_monitor::EventMonitor, event_queue::EventQueue,
+    world::event::WorldEvent,
 };
+use griffon::Graphics;
 use rose_tree::hierarchy::Hierarchy;
 
 pub type RRegistry<S> = RegAdd![

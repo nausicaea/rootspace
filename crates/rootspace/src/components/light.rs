@@ -5,7 +5,7 @@ use glamour::vec::Vec4;
 use assam::AssetDatabase;
 use griffon::{
     assets::cpu_model::CpuModel,
-    graphics::{gpu_model::GpuModel, Graphics},
+    graphics::{Graphics, gpu_model::GpuModel},
 };
 
 #[derive(Debug)]

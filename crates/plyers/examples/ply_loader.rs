@@ -37,12 +37,13 @@ fn main() -> anyhow::Result<()> {
     let matches = Args::parse();
 
     if let Some(save) = &matches.save
-        && !save.is_dir() {
-            return Err(anyhow::anyhow!(
-                "Save destination is not a directory: {}",
-                save.display()
-            ));
-        }
+        && !save.is_dir()
+    {
+        return Err(anyhow::anyhow!(
+            "Save destination is not a directory: {}",
+            save.display()
+        ));
+    }
 
     for path in &matches.paths {
         if matches.verbose > 0 {
@@ -87,12 +88,8 @@ fn main() -> anyhow::Result<()> {
                 }
                 for property in element.properties.values() {
                     match property {
-                        PropertyDescriptor::Scalar {
-                            name, comments, ..
-                        }
-                        | PropertyDescriptor::List {
-                            name, comments, ..
-                        } => {
+                        PropertyDescriptor::Scalar { name, comments, .. }
+                        | PropertyDescriptor::List { name, comments, .. } => {
                             for comment in comments {
                                 println!("{}.{}: {}", &element.name, name, comment);
                             }
@@ -112,12 +109,8 @@ fn main() -> anyhow::Result<()> {
                 }
                 for property in element.properties.values() {
                     match property {
-                        PropertyDescriptor::Scalar {
-                            name, obj_info, ..
-                        }
-                        | PropertyDescriptor::List {
-                            name, obj_info, ..
-                        } => {
+                        PropertyDescriptor::Scalar { name, obj_info, .. }
+                        | PropertyDescriptor::List { name, obj_info, .. } => {
                             for oinf in obj_info {
                                 println!("{}.{}: {}", &element.name, name, oinf);
                             }

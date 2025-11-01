@@ -1,6 +1,6 @@
+use assam::{AssetDatabase, AssetDatabaseDeps};
 use clap::Parser;
 use glamour::vec::Vec4;
-use assam::{AssetDatabase, AssetDatabaseDeps};
 use rootspace::{Camera, RenderableSource, Scene, Transform, WithDependencies};
 
 #[derive(Debug, Parser)]

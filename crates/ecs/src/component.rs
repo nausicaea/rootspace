@@ -1,6 +1,6 @@
 use super::{
     resource::Resource,
-    storage::{vec_storage::VecStorage, zst_storage::ZstStorage, Storage},
+    storage::{Storage, vec_storage::VecStorage, zst_storage::ZstStorage},
 };
 
 /// A component is a data type that is associated with a particular `Entity`.

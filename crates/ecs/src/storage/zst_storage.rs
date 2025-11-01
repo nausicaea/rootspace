@@ -1,15 +1,15 @@
 use std::{collections::BTreeSet, marker::PhantomData};
 
 use serde::{
+    Deserialize, Serialize,
     de::{Deserializer, SeqAccess, Visitor},
     ser::{SerializeSeq, Serializer},
-    Deserialize, Serialize,
 };
 
 use super::{
     super::{entity::index::Index, resource::Resource, with_dependencies::WithDependencies},
-    iterators::{IndexedRIter, RIter, WIter},
     Storage,
+    iterators::{IndexedRIter, RIter, WIter},
 };
 
 /// Implements component storage for zero-sized types.

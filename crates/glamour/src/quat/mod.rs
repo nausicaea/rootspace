@@ -85,7 +85,7 @@ mod tests {
         num::f32::{INFINITE, NEGATIVE, NORMAL, POSITIVE, QUIET_NAN as NAN, SUBNORMAL, ZERO},
         prop_assert, proptest,
     };
-    use serde_test::{assert_tokens, Token};
+    use serde_test::{Token, assert_tokens};
 
     use super::*;
     use crate::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, quat, unit_vec4};

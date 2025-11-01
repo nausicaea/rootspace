@@ -18,4 +18,3 @@ macro_rules! trace_gfx {
         }
     };
 }
-

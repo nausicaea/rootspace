@@ -190,20 +190,21 @@ where
     type Item = K;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.queue.pop_front() { Some(next_node) => {
-            self.queue.extend(
-                self.hier
-                    .0
-                    .edges
-                    .get(&next_node)
-                    .iter()
-                    .flat_map(|children| children.iter().cloned()),
-            );
+        match self.queue.pop_front() {
+            Some(next_node) => {
+                self.queue.extend(
+                    self.hier
+                        .0
+                        .edges
+                        .get(&next_node)
+                        .iter()
+                        .flat_map(|children| children.iter().cloned()),
+                );
 
-            Some(next_node)
-        } _ => {
-            None
-        }}
+                Some(next_node)
+            }
+            _ => None,
+        }
     }
 }
 
@@ -239,20 +240,21 @@ where
     type Item = K;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.stack.pop() { Some(next_node) => {
-            self.stack.extend(
-                self.hier
-                    .0
-                    .edges
-                    .get(&next_node)
-                    .iter()
-                    .flat_map(|children| children.iter().rev().cloned()),
-            );
+        match self.stack.pop() {
+            Some(next_node) => {
+                self.stack.extend(
+                    self.hier
+                        .0
+                        .edges
+                        .get(&next_node)
+                        .iter()
+                        .flat_map(|children| children.iter().rev().cloned()),
+                );
 
-            Some(next_node)
-        } _ => {
-            None
-        }}
+                Some(next_node)
+            }
+            _ => None,
+        }
     }
 }
 
@@ -262,13 +264,13 @@ mod tests {
 
     use super::*;
     use ecs::{
+        Reg,
         component::Component,
         entities::Entities,
         entity::index::Index,
         registry::{End, ResourceRegistry},
-        storage::{vec_storage::VecStorage, Storage},
+        storage::{Storage, vec_storage::VecStorage},
         world::World,
-        Reg,
     };
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

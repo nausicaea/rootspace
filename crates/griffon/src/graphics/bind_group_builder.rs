@@ -1,7 +1,7 @@
 use super::{
+    GpuObjectDatabase,
     ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureViewId},
     runtime::Runtime,
-    GpuObjectDatabase,
 };
 
 pub struct BindGroupBuilder<'rt> {

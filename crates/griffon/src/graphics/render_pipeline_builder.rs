@@ -1,10 +1,10 @@
+use super::settings::Settings;
 use super::{
+    GpuObjectDatabase,
     descriptors::VertexAttributeDescriptor,
     ids::{BindGroupLayoutId, PipelineId, ShaderModuleId},
     runtime::Runtime,
-    GpuObjectDatabase,
 };
-use super::settings::Settings;
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {

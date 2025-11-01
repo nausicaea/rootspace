@@ -1,10 +1,10 @@
 use anyhow::Context;
 
 use assam::AssetDatabase;
-use griffon::graphics::gpu_model::GpuModel;
+use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};
 use griffon::assets::cpu_model::CpuModel;
 use griffon::graphics::Graphics;
-use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};
+use griffon::graphics::gpu_model::GpuModel;
 
 #[derive(Debug)]
 pub struct Renderable {

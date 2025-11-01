@@ -199,9 +199,9 @@ where
 mod tests {
     use super::*;
     use ecs::{
+        Reg,
         registry::{End, ResourceRegistry},
         world::World,
-        Reg,
     };
 
     #[derive(Debug)]

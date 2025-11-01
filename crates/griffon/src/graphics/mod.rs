@@ -3,6 +3,12 @@ use std::mem::size_of;
 use wgpu::{BindingType, BufferAddress, BufferBindingType, BufferSize, BufferUsages, ShaderStages};
 use winit::event_loop::EventLoopWindowTarget;
 
+use self::gpu_material::GpuMaterial;
+use self::gpu_mesh::GpuMesh;
+use self::gpu_model::GpuModel;
+use self::gpu_texture::GpuTexture;
+use self::instance::Instance;
+use self::internal_runtime_data::InternalRuntimeData;
 use self::{
     bind_group_builder::BindGroupBuilder,
     bind_group_layout_builder::BindGroupLayoutBuilder,
@@ -21,12 +27,6 @@ use super::assets::cpu_material::CpuMaterial;
 use super::assets::cpu_mesh::CpuMesh;
 use super::assets::cpu_model::CpuModel;
 use super::assets::cpu_texture::CpuTexture;
-use self::gpu_material::GpuMaterial;
-use self::gpu_mesh::GpuMesh;
-use self::gpu_model::GpuModel;
-use self::gpu_texture::GpuTexture;
-use self::instance::Instance;
-use self::internal_runtime_data::InternalRuntimeData;
 use ecs::{resource::Resource, with_dependencies::WithDependencies};
 use urn::Urn;
 
