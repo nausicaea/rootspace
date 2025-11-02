@@ -495,6 +495,7 @@ struct InstanceDrawData<'a> {
     instance_ids: Range<u32>,
 }
 
+#[allow(dead_code)]
 #[tracing::instrument(skip_all)]
 fn hier_transform(idx: Index, hier: &Hierarchy<Index>, transforms: &<Transform as Component>::Storage) -> Mat4<f32> {
     hier.ancestors(idx)

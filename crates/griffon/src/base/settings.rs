@@ -20,7 +20,7 @@ impl Default for Settings {
             backends: wgpu::Backends::all(),
             power_preference: wgpu::PowerPreference::LowPower,
             required_features: wgpu::Features::empty(),
-            required_limits: wgpu::Limits::default(),
+            required_limits: wgpu::Limits::defaults(),
             preferred_texture_format: wgpu::TextureFormat::Bgra8UnormSrgb,
             present_mode: wgpu::PresentMode::AutoVsync,
             alpha_mode: wgpu::CompositeAlphaMode::Opaque,

@@ -63,6 +63,34 @@ impl Graphics {
         self.settings.max_instances
     }
 
+    pub fn gen_instance_report(&self) -> Option<wgpu_core::global::GlobalReport> {
+        self.runtime.instance.generate_report()
+    }
+
+    pub fn gen_surface_capabilities(&self) -> wgpu::SurfaceCapabilities {
+        self.runtime.surface.get_capabilities(&self.runtime.adapter)
+    }
+
+    pub fn gen_adapter_features(&self) -> wgpu::Features {
+        self.runtime.adapter.features()
+    }
+
+    pub fn gen_adapter_limits(&self) -> wgpu::Limits {
+        self.runtime.adapter.limits()
+    }
+
+    pub fn gen_adapter_downlevel_capabilities(&self) -> wgpu::DownlevelCapabilities {
+        self.runtime.adapter.get_downlevel_capabilities()
+    }
+
+    pub fn gen_adapter_info(&self) -> wgpu::AdapterInfo {
+        self.runtime.adapter.get_info()
+    }
+
+    pub fn gen_device_allocator_report(&self) -> Option<wgpu::AllocatorReport> {
+        self.runtime.device.generate_allocator_report()
+    }
+
     pub fn limits(&self) -> wgpu::Limits {
         self.runtime.device.limits()
     }

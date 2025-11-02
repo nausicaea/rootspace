@@ -2,12 +2,13 @@ use std::net::SocketAddr;
 
 use tarpc::context::Context;
 use tokio::sync::mpsc;
-
+use tracing::trace;
 use super::service::Error;
 use crate::{
     resources::statistics::Statistics,
     systems::rpc::{message::RpcMessage, service::RpcService},
 };
+use crate::systems::rpc::graphics_info::{GraphicsInfo, GraphicsInfoCategory};
 
 #[derive(Debug, Clone)]
 pub struct RpcServer {
@@ -25,27 +26,34 @@ impl RpcServer {
 }
 
 impl RpcService for RpcServer {
-    async fn hello(self, _context: Context, name: String) -> Result<String, Error> {
-        tracing::trace!("RpcService::hello");
-        Ok(format!("Hello, {}@{}", &name, self.socket_address))
-    }
-
+    #[tracing::instrument(skip_all, fields(client = self.socket_address.to_string()))]
     async fn exit(self, _: Context) -> Result<(), Error> {
-        tracing::trace!("RpcService::exit");
+        trace!("RpcService::exit");
         self.mpsc_tx.send(RpcMessage::Exit).await?;
         Ok(())
     }
 
+    #[tracing::instrument(skip(self, _context), fields(client = self.socket_address.to_string()))]
+    async fn graphics_info(self, _context: Context, category: GraphicsInfoCategory) -> Result<GraphicsInfo, Error> {
+        trace!("RpcService::graphics_info");
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        self.mpsc_tx.send(RpcMessage::GraphicsInfo { tx, category }).await?;
+        let info = rx.await?;
+        Ok(info)
+    }
+
+    #[tracing::instrument(skip_all, fields(client = self.socket_address.to_string()))]
     async fn perf(self, _: Context) -> Result<Statistics, Error> {
-        tracing::trace!("RpcService::perf");
+        trace!("RpcService::perf");
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.mpsc_tx.send(RpcMessage::StatsRequest(tx)).await?;
         let stats = rx.await?;
         Ok(stats)
     }
 
+    #[tracing::instrument(skip_all, fields(client = self.socket_address.to_string()))]
     async fn load_scene(self, _: Context, group: String, name: String) -> Result<(), Error> {
-        tracing::trace!("RpcService::load_scene");
+        trace!("RpcService::load_scene");
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.mpsc_tx.send(RpcMessage::LoadScene { tx, group, name }).await?;
         rx.await??;

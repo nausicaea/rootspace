@@ -30,7 +30,7 @@ serde = { version = "^1.0.0", features = ["derive"] }
 tarpc = { version = "^0.37.0", features = ["serde-transport-bincode", "tcp", "serde-transport"] }
 thiserror = "^2.0.17"
 tokio = { version = "^1.36.0", features = ["full"] }
-tracing = "^0.1.40"
+tracing = { version = "^0.1.40" }
 tracing-subscriber = { version = "^0.3.18", features = ["env-filter"] }
 
 [lib]

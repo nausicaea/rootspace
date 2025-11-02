@@ -6,7 +6,9 @@ use crate::base::settings::Settings;
 #[derive(Debug)]
 pub struct Runtime<'a> {
     pub window: std::sync::Arc<winit::window::Window>,
+    pub instance: wgpu::Instance,
     pub surface: wgpu::Surface<'a>,
+    pub adapter: wgpu::Adapter,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
@@ -83,7 +85,9 @@ impl<'a> Runtime<'a> {
 
         Runtime {
             window,
+            instance,
             surface,
+            adapter,
             device,
             queue,
             config,
