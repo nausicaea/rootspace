@@ -340,6 +340,19 @@ impl Orchestrator {
                 color: [1.0, 1.0, 1.0, 1.0].into(),
             })
             .submit();
+        // builtins_scene
+        //     .create_entity()
+        //     .with_info(Info {
+        //         name: "light-2".into(),
+        //         ..Default::default()
+        //     })
+        //     .with_light(LightSource::Reference {
+        //         group: "models".into(),
+        //         name: "cube.ply".into(),
+        //         position: [-2.0, 2.0, -2.0, 1.0].into(),
+        //         color: [1.0, 1.0, 0.5, 1.0].into(),
+        //     })
+        //     .submit();
 
         const SPACE_BETWEEN: f32 = 3.0;
         const NUM_INSTANCES_PER_ROW: usize = 16;
