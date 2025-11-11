@@ -104,8 +104,8 @@ fn fragment_main(
     let specular_color = light.color * specular_strength;
 
     return vec4<f32>(
-        //(ambient_color + diffuse_color + specular_color) * object_color.xyz, 
-        (specular_color) * object_color.xyz, 
+        (ambient_color + diffuse_color + specular_color) * object_color.xyz,
+        //(specular_color) * object_color.xyz,
         object_color.a,
     );
 }
