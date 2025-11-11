@@ -4,7 +4,7 @@ use std::ops::Range;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum GraphicsInfo {
-    InstanceReport(Option<InstanceReport>),
+    InstanceReport(Box<Option<InstanceReport>>),
     SurfaceCapabilities(SurfaceCapabilities),
     AdapterFeatures(griffon::wgpu::Features),
     AdapterLimits(griffon::wgpu::Limits),
@@ -16,11 +16,12 @@ pub enum GraphicsInfo {
 impl fmt::Display for GraphicsInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            GraphicsInfo::InstanceReport(Some(ir)) => {
-                writeln!(f, "{ir}")
-            }
-            GraphicsInfo::InstanceReport(None) => {
-                writeln!(f, "no instance report available")
+            GraphicsInfo::InstanceReport(ir) => {
+                if let Some(ir) = &**ir {
+                    writeln!(f, "{ir}")
+                } else {
+                    writeln!(f, "no instance report available")
+                }
             }
             GraphicsInfo::SurfaceCapabilities(sc) => {
                 writeln!(f, "{sc}")
@@ -207,10 +208,10 @@ pub struct SurfaceCapabilities {
 impl From<griffon::wgpu::SurfaceCapabilities> for SurfaceCapabilities {
     fn from(r: griffon::wgpu::SurfaceCapabilities) -> Self {
         SurfaceCapabilities {
-            formats: r.formats.into_iter().map(Into::into).collect(),
-            present_modes: r.present_modes.into_iter().map(Into::into).collect(),
-            alpha_modes: r.alpha_modes.into_iter().map(Into::into).collect(),
-            usages: r.usages.into(),
+            formats: r.formats.into_iter().collect(),
+            present_modes: r.present_modes.into_iter().collect(),
+            alpha_modes: r.alpha_modes.into_iter().collect(),
+            usages: r.usages,
         }
     }
 }

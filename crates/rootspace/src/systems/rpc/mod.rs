@@ -52,7 +52,7 @@ impl Rpc {
         let gfx = res.read::<Graphics>();
         let response = match category {
             GraphicsInfoCategory::InstanceReport => {
-                GraphicsInfo::InstanceReport(gfx.gen_instance_report().map(Into::into))
+                GraphicsInfo::InstanceReport(Box::new(gfx.gen_instance_report().map(Into::into)))
             }
             GraphicsInfoCategory::SurfaceCapabilities => {
                 GraphicsInfo::SurfaceCapabilities(gfx.gen_surface_capabilities().into())
@@ -111,7 +111,7 @@ impl System for Rpc {
                     ref group,
                     ref name,
                 } => self.load_scene(res, tx, group, name).await,
-                RpcMessage::Exit => self.exit(&res).await,
+                RpcMessage::Exit => self.exit(res).await,
             }
         }
     }
