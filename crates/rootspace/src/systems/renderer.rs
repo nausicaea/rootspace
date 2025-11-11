@@ -169,9 +169,10 @@ impl Renderer {
             instance_buffer_data.insert(instance_buffer, instance_data);
         }
 
-        let (light_draw_data, light_buffer_data) = res
-            .iter_r::<Light>()
-            .map(|(_, lght)| {
+        let mut light_draw_data: Vec<LightDrawData> = Vec::new();
+        let mut light_buffer_data: Vec<LightUniform> = Vec::new();
+        res.iter_r::<Light>()
+            .for_each(|(_, lght)| {
                 let ldd = LightDrawData {
                     vertex_buffer: lght.model.mesh.vertex_buffer,
                     index_buffer: lght.model.mesh.index_buffer,
@@ -189,10 +190,9 @@ impl Renderer {
                     color: lght.color.into(),
                 };
 
-                (ldd, lu)
-            })
-            .next()
-            .unwrap_or_else(|| todo!("currently, only one light is supported"));
+                light_draw_data.push(ldd);
+                light_buffer_data.push(lu);
+            });
 
         // Write the camera uniform data to the corresponding uniform buffer
         gfx.write_buffer(self.camera_buffer, &[camera_uniform]);
@@ -208,10 +208,10 @@ impl Renderer {
         }
 
         // Write the light buffer data to the corresponding uniform buffer
-        gfx.write_buffer(self.light_buffer, &[light_buffer_data]);
+        gfx.write_buffer(self.light_buffer, &light_buffer_data);
 
         DrawData {
-            lights: vec![light_draw_data],
+            lights: light_draw_data,
             instances: instance_draw_data,
         }
     }
@@ -219,16 +219,6 @@ impl Renderer {
     #[tracing::instrument(skip_all)]
     fn draw(&mut self, draw_data: &DrawData, mut rp: RenderPass) -> usize {
         let mut draw_calls = 0;
-
-        for light in &draw_data.lights {
-            draw_calls += 1;
-            rp.set_pipeline(self.pipeline_ldb)
-                .set_bind_group(0, self.camera_bind_group, &[])
-                .set_bind_group(1, self.light_bind_group, &[])
-                .set_vertex_buffer(0, light.vertex_buffer)
-                .set_index_buffer(light.index_buffer)
-                .draw_indexed(0..light.num_indices, 0, 0..1);
-        }
 
         for instance_data in &draw_data.instances {
             draw_calls += 1;
@@ -250,6 +240,16 @@ impl Renderer {
                     .set_index_buffer(instance_data.index_buffer)
                     .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
             }
+        }
+
+        for light in &draw_data.lights {
+            draw_calls += 1;
+            rp.set_pipeline(self.pipeline_ldb)
+                .set_bind_group(0, self.camera_bind_group, &[])
+                .set_bind_group(1, self.light_bind_group, &[])
+                .set_vertex_buffer(0, light.vertex_buffer)
+                .set_index_buffer(light.index_buffer)
+                .draw_indexed(0..light.num_indices, 0, 0..1);
         }
 
         draw_calls
