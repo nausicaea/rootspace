@@ -25,7 +25,12 @@ pub mod event;
 pub mod type_registry;
 
 /// A World must perform actions for four types of calls that each allow a subset of the registered
-/// systems to operate on the stored resources, components and entities.
+/// systems to operate on the stored resources, components and entities:
+///
+/// 1. fixed update systems are called at fixed time intervals (recommended for physics)
+/// 2. update systems are called more or less regularly (recommended for everything else)
+/// 3. the render system (only one is supported) draws the state of the world as a graphical representation
+/// 4. maintenance systems perform auxiliary tasks and are allowed control the flow of the loop (recommended for cleanup, APIs, etc.)
 pub struct World {
     resources: Arc<Resources>,
     fixed_update_systems: Systems,

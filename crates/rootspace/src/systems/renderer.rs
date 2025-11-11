@@ -89,7 +89,7 @@ impl Renderer {
         //    use in the next step
         // 4. For each instance, multiply the view and the model matrix and write to the instance
         //    buffer
-        // 5. Doe the same as step 4 for each light
+        // 5. Do the same as step 4 for each light
 
         // Calculate all camera transforms and the respective buffer offset
         let (camera_uniform, camera_view) = res
