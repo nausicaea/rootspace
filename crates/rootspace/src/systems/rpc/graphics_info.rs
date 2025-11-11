@@ -1,6 +1,6 @@
+use itertools::Itertools;
 use std::fmt;
 use std::ops::Range;
-use itertools::Itertools;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum GraphicsInfo {
@@ -30,7 +30,7 @@ impl fmt::Display for GraphicsInfo {
             }
             GraphicsInfo::AdapterLimits(al) => {
                 writeln!(f, "{al:?}")
-            },
+            }
             GraphicsInfo::AdapterDownlevelCapabilities(adlc) => {
                 writeln!(f, "{adlc:?}")
             }
@@ -65,12 +65,7 @@ impl From<griffon::wgpu_core::global::GlobalReport> for InstanceReport {
 
 impl fmt::Display for InstanceReport {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Surfaces: {}\n{}",
-            self.surfaces,
-            self.hub,
-        )
+        write!(f, "Surfaces: {}\n{}", self.surfaces, self.hub,)
     }
 }
 
@@ -88,10 +83,7 @@ impl fmt::Display for RegistryReport {
         write!(
             f,
             "element size: {}, released from user: {}, kept from user: {}, total allocated: {}",
-            self.element_size,
-            self.num_released_from_user,
-            self.num_kept_from_user,
-            self.num_allocated,
+            self.element_size, self.num_released_from_user, self.num_kept_from_user, self.num_allocated,
         )
     }
 }
@@ -161,7 +153,7 @@ impl fmt::Display for HubReport {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-r#"Adapters: {}
+            r#"Adapters: {}
 Devices: {}
 Queues: {}
 Pipeline layouts: {}
@@ -227,7 +219,7 @@ impl fmt::Display for SurfaceCapabilities {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-r#"Surface capabilities:
+            r#"Surface capabilities:
 Texture formats: {}
 Present modes: {}
 Alpha modes: {}
@@ -264,7 +256,7 @@ impl fmt::Display for AllocatorReport {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-r#"Allocator report:
+            r#"Allocator report:
 Allocations: {}
 Blocks: {}
 Total allocated bytes: {}

@@ -162,7 +162,9 @@ impl Scene {
                     let mut cameras = res.write_components::<Camera>();
                     let num_cameras = cameras.len();
                     if num_cameras >= max_cameras {
-                        return Err(anyhow!("The maximum number of cameras ({max_cameras}) has been reached"));
+                        return Err(anyhow!(
+                            "The maximum number of cameras ({max_cameras}) has been reached"
+                        ));
                     }
                     cameras.insert(i_new, camera);
                 }
@@ -187,7 +189,9 @@ impl Scene {
                     let mut lights = res.write_components::<Light>();
                     let num_lights = lights.len();
                     if num_lights >= max_lights {
-                        return Err(anyhow!("The maximum number of light sources ({max_lights}) has been reached"));
+                        return Err(anyhow!(
+                            "The maximum number of light sources ({max_lights}) has been reached"
+                        ));
                     }
                     let light = Light::with_model(res, group, name, *position, *color).await?;
                     lights.insert(i_new, light);

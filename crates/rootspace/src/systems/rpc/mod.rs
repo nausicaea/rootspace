@@ -1,7 +1,7 @@
+pub mod graphics_info;
 mod message;
 mod server;
 pub mod service;
-pub mod graphics_info;
 
 use std::{future::ready, time::Duration};
 
@@ -9,9 +9,9 @@ use anyhow::Error;
 use async_trait::async_trait;
 use futures::StreamExt;
 use message::RpcMessage;
-use tarpc::server::{incoming::Incoming, BaseChannel, Channel};
-use tokio::{sync::mpsc, task::JoinHandle};
+use tarpc::server::{BaseChannel, Channel, incoming::Incoming};
 use tokio::sync::oneshot;
+use tokio::{sync::mpsc, task::JoinHandle};
 use tracing::error;
 
 use crate::{
@@ -22,14 +22,14 @@ use crate::{
 };
 use assam::AssetDatabase;
 use ecs::{
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     resources::Resources,
     system::System,
     with_resources::WithResources,
 };
-use griffon::Graphics;
-use graphics_info::GraphicsInfoCategory;
 use graphics_info::GraphicsInfo;
+use graphics_info::GraphicsInfoCategory;
+use griffon::Graphics;
 
 #[derive(Debug)]
 pub struct Rpc {
@@ -57,18 +57,12 @@ impl Rpc {
             GraphicsInfoCategory::SurfaceCapabilities => {
                 GraphicsInfo::SurfaceCapabilities(gfx.gen_surface_capabilities().into())
             }
-            GraphicsInfoCategory::AdapterFeatures => {
-                GraphicsInfo::AdapterFeatures(gfx.gen_adapter_features())
-            }
-            GraphicsInfoCategory::AdapterLimits => {
-                GraphicsInfo::AdapterLimits(gfx.gen_adapter_limits())
-            }
+            GraphicsInfoCategory::AdapterFeatures => GraphicsInfo::AdapterFeatures(gfx.gen_adapter_features()),
+            GraphicsInfoCategory::AdapterLimits => GraphicsInfo::AdapterLimits(gfx.gen_adapter_limits()),
             GraphicsInfoCategory::AdapterDownlevelCapabilities => {
                 GraphicsInfo::AdapterDownlevelCapabilities(gfx.gen_adapter_downlevel_capabilities())
             }
-            GraphicsInfoCategory::AdapterInfo => {
-                GraphicsInfo::AdapterInfo(gfx.gen_adapter_info())
-            }
+            GraphicsInfoCategory::AdapterInfo => GraphicsInfo::AdapterInfo(gfx.gen_adapter_info()),
             GraphicsInfoCategory::DeviceAllocatorReport => {
                 GraphicsInfo::DeviceAllocatorReport(gfx.gen_device_allocator_report().map(Into::into))
             }
@@ -112,7 +106,11 @@ impl System for Rpc {
             match msg {
                 RpcMessage::StatsRequest(tx) => self.perf(res, tx).await,
                 RpcMessage::GraphicsInfo { tx, category } => self.graphics_info(res, tx, category).await,
-                RpcMessage::LoadScene { tx, ref group, ref name } => self.load_scene(res, tx, group, name).await,
+                RpcMessage::LoadScene {
+                    tx,
+                    ref group,
+                    ref name,
+                } => self.load_scene(res, tx, group, name).await,
                 RpcMessage::Exit => self.exit(&res).await,
             }
         }

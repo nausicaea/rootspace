@@ -184,28 +184,27 @@ impl Renderer {
 
         let mut light_draw_data: Vec<LightDrawData> = Vec::new();
         let mut light_buffer_data: Vec<LightUniform> = Vec::new();
-        res.iter_r::<Light>()
-            .for_each(|(_, lght)| {
-                let ldd = LightDrawData {
-                    vertex_buffer: lght.model.mesh.vertex_buffer,
-                    index_buffer: lght.model.mesh.index_buffer,
-                    num_indices: lght.model.mesh.num_indices,
-                };
+        res.iter_r::<Light>().for_each(|(_, lght)| {
+            let ldd = LightDrawData {
+                vertex_buffer: lght.model.mesh.vertex_buffer,
+                index_buffer: lght.model.mesh.index_buffer,
+                num_indices: lght.model.mesh.num_indices,
+            };
 
-                let light_transform = AffineBuilder::default()
-                    .with_scale(0.25)
-                    .with_translation(lght.position)
-                    .build();
-                let model_view = camera_view * light_transform;
+            let light_transform = AffineBuilder::default()
+                .with_scale(0.25)
+                .with_translation(lght.position)
+                .build();
+            let model_view = camera_view * light_transform;
 
-                let lu = LightUniform {
-                    model_view: model_view.0,
-                    color: lght.color.into(),
-                };
+            let lu = LightUniform {
+                model_view: model_view.0,
+                color: lght.color.into(),
+            };
 
-                light_draw_data.push(ldd);
-                light_buffer_data.push(lu);
-            });
+            light_draw_data.push(ldd);
+            light_buffer_data.push(lu);
+        });
 
         // Write the camera uniform data to the corresponding uniform buffer
         gfx.write_buffer(self.camera_buffer, &[camera_uniform]);
