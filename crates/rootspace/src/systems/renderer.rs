@@ -83,13 +83,26 @@ impl Renderer {
         let _hier = res.read::<Hierarchy<Index>>();
         let _transforms = res.read_components::<Transform>();
 
-        // 1. Allow only a single camera
+        // 1. Perform validation for cameras and lights
         // 2. Obtain the camera projection matrix and write it to the corresponding uniform buffer
         // 3. Obtain the camera model matrix, calculate the inverse resulting in the view matrix, then
         //    use in the next step
         // 4. For each instance, multiply the view and the model matrix and write to the instance
         //    buffer
         // 5. Do the same as step 4 for each light
+
+        // Validate the number of cameras and light sources
+        let max_cameras = gfx.max_cameras() as usize;
+        let num_cameras = res.read_components::<Camera>().len();
+        if num_cameras > max_cameras {
+            panic!("Too many cameras: have {num_cameras}, expected only {max_cameras}.");
+        }
+
+        let max_lights = gfx.max_lights() as usize;
+        let num_lights = res.read_components::<Light>().len();
+        if num_lights > max_lights {
+            panic!("Too many light sources: have {num_lights}, expected only {max_lights}.");
+        }
 
         // Calculate all camera transforms and the respective buffer offset
         let (camera_uniform, camera_view) = res
@@ -108,7 +121,7 @@ impl Renderer {
                 )
             })
             .next()
-            .expect("exactly one camera must be present");
+            .expect("at least one camera must be present for rendering");
 
         // Iterate through all entities with a renderable and transform
         // Extract all fields of Renderable that are shared across instances
