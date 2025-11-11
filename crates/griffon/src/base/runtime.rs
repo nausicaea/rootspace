@@ -67,7 +67,7 @@ impl<'a> Runtime<'a> {
             .iter()
             .find(|&tf| tf == &settings.preferred_texture_format)
             .unwrap_or(&capabilities.formats[0]);
-        tracing::debug!("Choosing texture format: {:?}", &texture_format);
+        tracing::debug!("Choosing surface texture format: {:?}", &texture_format);
 
         tracing::debug!("Supported present modes: {:?}", &capabilities.present_modes);
 
