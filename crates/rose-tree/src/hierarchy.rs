@@ -190,20 +190,21 @@ where
     type Item = K;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.queue.pop_front() { Some(next_node) => {
-            self.queue.extend(
-                self.hier
-                    .0
-                    .edges
-                    .get(&next_node)
-                    .iter()
-                    .flat_map(|children| children.iter().cloned()),
-            );
+        match self.queue.pop_front() {
+            Some(next_node) => {
+                self.queue.extend(
+                    self.hier
+                        .0
+                        .edges
+                        .get(&next_node)
+                        .iter()
+                        .flat_map(|children| children.iter().cloned()),
+                );
 
-            Some(next_node)
-        } _ => {
-            None
-        }}
+                Some(next_node)
+            }
+            _ => None,
+        }
     }
 }
 
@@ -239,20 +240,21 @@ where
     type Item = K;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.stack.pop() { Some(next_node) => {
-            self.stack.extend(
-                self.hier
-                    .0
-                    .edges
-                    .get(&next_node)
-                    .iter()
-                    .flat_map(|children| children.iter().rev().cloned()),
-            );
+        match self.stack.pop() {
+            Some(next_node) => {
+                self.stack.extend(
+                    self.hier
+                        .0
+                        .edges
+                        .get(&next_node)
+                        .iter()
+                        .flat_map(|children| children.iter().rev().cloned()),
+                );
 
-            Some(next_node)
-        } _ => {
-            None
-        }}
+                Some(next_node)
+            }
+            _ => None,
+        }
     }
 }
 
@@ -262,13 +264,13 @@ mod tests {
 
     use super::*;
     use ecs::{
+        Reg,
         component::Component,
         entities::Entities,
         entity::index::Index,
         registry::{End, ResourceRegistry},
-        storage::{vec_storage::VecStorage, Storage},
+        storage::{Storage, vec_storage::VecStorage},
         world::World,
-        Reg,
     };
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -295,7 +297,7 @@ mod tests {
         }
     }
 
-    impl<'a, 'b> Mul<&'a Tc> for &'b Tc {
+    impl<'a> Mul<&'a Tc> for &Tc {
         type Output = Tc;
 
         fn mul(self, rhs: &'a Tc) -> Tc {
@@ -348,8 +350,8 @@ mod tests {
     fn insert_child() {
         let mut rt: Hierarchy<Tk> = Hierarchy::default();
         rt.insert(Tk(0));
-        rt.insert_child(&Tk(0), Tk(1));
-        rt.insert_child(&Tk(0), Tk(2));
+        rt.insert_child(Tk(0), Tk(1));
+        rt.insert_child(Tk(0), Tk(2));
     }
 
     #[test]
@@ -358,29 +360,29 @@ mod tests {
         assert!(rt.insert(Tk(0)));
         assert!(!rt.insert(Tk(0)));
         assert!(rt.insert(Tk(1)));
-        assert!(!rt.insert_child(&Tk(1), Tk(0)));
-        assert!(rt.remove(&Tk(0)));
-        assert!(rt.insert_child(&Tk(1), Tk(0)));
+        assert!(!rt.insert_child(Tk(1), Tk(0)));
+        assert!(rt.remove(Tk(0)));
+        assert!(rt.insert_child(Tk(1), Tk(0)));
     }
 
     #[test]
     fn remove() {
         let mut rt: Hierarchy<Tk> = Hierarchy::default();
         rt.insert(Tk(0));
-        rt.insert_child(&Tk(0), Tk(2));
+        rt.insert_child(Tk(0), Tk(2));
         rt.insert(Tk(1));
-        rt.insert_child(&Tk(1), Tk(3));
-        rt.insert_child(&Tk(3), Tk(5));
-        rt.insert_child(&Tk(1), Tk(4));
+        rt.insert_child(Tk(1), Tk(3));
+        rt.insert_child(Tk(3), Tk(5));
+        rt.insert_child(Tk(1), Tk(4));
 
-        assert!(rt.remove(&Tk(1)));
-        assert!(rt.contains_key(&Tk(0)));
-        assert!(rt.contains_key(&Tk(2)));
-        assert!(!rt.contains_key(&Tk(1)));
-        assert!(!rt.contains_key(&Tk(3)));
-        assert!(!rt.contains_key(&Tk(4)));
-        assert!(!rt.contains_key(&Tk(5)));
-        assert!(!rt.remove(&Tk(1)));
+        assert!(rt.remove(Tk(1)));
+        assert!(rt.contains_key(Tk(0)));
+        assert!(rt.contains_key(Tk(2)));
+        assert!(!rt.contains_key(Tk(1)));
+        assert!(!rt.contains_key(Tk(3)));
+        assert!(!rt.contains_key(Tk(4)));
+        assert!(!rt.contains_key(Tk(5)));
+        assert!(!rt.remove(Tk(1)));
     }
 
     #[test]
@@ -388,12 +390,12 @@ mod tests {
         let mut rt: Hierarchy<Tk> = Hierarchy::default();
         rt.insert(Tk(0));
         rt.insert(Tk(1));
-        rt.insert_child(&Tk(1), Tk(3));
-        rt.insert_child(&Tk(3), Tk(5));
-        rt.insert_child(&Tk(1), Tk(4));
+        rt.insert_child(Tk(1), Tk(3));
+        rt.insert_child(Tk(3), Tk(5));
+        rt.insert_child(Tk(1), Tk(4));
 
-        assert!(!rt.has_children(&Tk(0)));
-        assert!(rt.has_children(&Tk(1)));
+        assert!(!rt.has_children(Tk(0)));
+        assert!(rt.has_children(Tk(1)));
     }
 
     #[test]
@@ -412,7 +414,7 @@ mod tests {
         assert_eq!(rt.len(), 0);
         rt.insert(Tk(0));
         assert_eq!(rt.len(), 1);
-        rt.insert_child(&Tk(0), Tk(1));
+        rt.insert_child(Tk(0), Tk(1));
         assert_eq!(rt.len(), 2);
     }
 
@@ -420,18 +422,18 @@ mod tests {
     fn contains() {
         let mut rt: Hierarchy<Tk> = Hierarchy::default();
 
-        assert!(!rt.contains_key(&Tk(0)));
+        assert!(!rt.contains_key(Tk(0)));
         rt.insert(Tk(0));
-        assert!(rt.contains_key(&Tk(0)));
-        rt.insert_child(&Tk(0), Tk(1));
-        assert!(rt.contains_key(&Tk(1)));
+        assert!(rt.contains_key(Tk(0)));
+        rt.insert_child(Tk(0), Tk(1));
+        assert!(rt.contains_key(Tk(1)));
     }
 
     #[test]
     fn clear() {
         let mut rt: Hierarchy<Tk> = Hierarchy::default();
         rt.insert(Tk(0));
-        rt.insert_child(&Tk(0), Tk(1));
+        rt.insert_child(Tk(0), Tk(1));
 
         rt.clear();
         assert!(rt.is_empty());
@@ -441,11 +443,11 @@ mod tests {
     fn bfs_iter() {
         let mut rt: Hierarchy<Tk> = Hierarchy::default();
         rt.insert(Tk(0));
-        rt.insert_child(&Tk(0), Tk(2));
+        rt.insert_child(Tk(0), Tk(2));
         rt.insert(Tk(1));
-        rt.insert_child(&Tk(1), Tk(3));
-        rt.insert_child(&Tk(3), Tk(5));
-        rt.insert_child(&Tk(1), Tk(4));
+        rt.insert_child(Tk(1), Tk(3));
+        rt.insert_child(Tk(3), Tk(5));
+        rt.insert_child(Tk(1), Tk(4));
 
         let bfsiter = BfsIter::new(&rt);
         let keys: Vec<Tk> = bfsiter.collect();
@@ -456,11 +458,11 @@ mod tests {
     fn dfs_iter() {
         let mut rt: Hierarchy<Tk> = Hierarchy::default();
         rt.insert(Tk(0));
-        rt.insert_child(&Tk(0), Tk(2));
+        rt.insert_child(Tk(0), Tk(2));
         rt.insert(Tk(1));
-        rt.insert_child(&Tk(1), Tk(3));
-        rt.insert_child(&Tk(3), Tk(5));
-        rt.insert_child(&Tk(1), Tk(4));
+        rt.insert_child(Tk(1), Tk(3));
+        rt.insert_child(Tk(3), Tk(5));
+        rt.insert_child(Tk(1), Tk(4));
 
         let dfsiter = DfsIter::new(&rt);
         let keys: Vec<Tk> = dfsiter.collect();
@@ -471,13 +473,13 @@ mod tests {
     fn ancestors() {
         let mut rt: Hierarchy<Tk> = Hierarchy::default();
         rt.insert(Tk(0));
-        rt.insert_child(&Tk(0), Tk(2));
+        rt.insert_child(Tk(0), Tk(2));
         rt.insert(Tk(1));
-        rt.insert_child(&Tk(1), Tk(3));
-        rt.insert_child(&Tk(3), Tk(5));
-        rt.insert_child(&Tk(1), Tk(4));
+        rt.insert_child(Tk(1), Tk(3));
+        rt.insert_child(Tk(3), Tk(5));
+        rt.insert_child(Tk(1), Tk(4));
 
-        let ancestors: Vec<Tk> = rt.ancestors(&Tk(5)).collect();
+        let ancestors: Vec<Tk> = rt.ancestors(Tk(5)).collect();
         assert_eq!(ancestors, [Tk(5), Tk(3), Tk(1)]);
     }
 
@@ -507,26 +509,26 @@ mod tests {
     fn impl_partial_eq() {
         let mut rt: Hierarchy<Tk> = Hierarchy::default();
         rt.insert(Tk(0));
-        rt.insert_child(&Tk(0), Tk(2));
+        rt.insert_child(Tk(0), Tk(2));
         rt.insert(Tk(1));
-        rt.insert_child(&Tk(1), Tk(3));
-        rt.insert_child(&Tk(3), Tk(5));
-        rt.insert_child(&Tk(1), Tk(4));
+        rt.insert_child(Tk(1), Tk(3));
+        rt.insert_child(Tk(3), Tk(5));
+        rt.insert_child(Tk(1), Tk(4));
 
         let mut rt2: Hierarchy<Tk> = Hierarchy::default();
         rt2.insert(Tk(0));
-        rt2.insert_child(&Tk(0), Tk(2));
+        rt2.insert_child(Tk(0), Tk(2));
         rt2.insert(Tk(1));
-        rt2.insert_child(&Tk(1), Tk(3));
-        rt2.insert_child(&Tk(3), Tk(5));
-        rt2.insert_child(&Tk(1), Tk(4));
+        rt2.insert_child(Tk(1), Tk(3));
+        rt2.insert_child(Tk(3), Tk(5));
+        rt2.insert_child(Tk(1), Tk(4));
 
         let mut rt3: Hierarchy<Tk> = Hierarchy::default();
         rt3.insert(Tk(0));
-        rt3.insert_child(&Tk(0), Tk(2));
+        rt3.insert_child(Tk(0), Tk(2));
         rt3.insert(Tk(1));
-        rt3.insert_child(&Tk(1), Tk(3));
-        rt3.insert_child(&Tk(3), Tk(5));
+        rt3.insert_child(Tk(1), Tk(3));
+        rt3.insert_child(Tk(3), Tk(5));
 
         assert_eq!(&rt, &rt2);
         assert_ne!(&rt, &rt3);

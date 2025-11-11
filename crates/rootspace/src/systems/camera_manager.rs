@@ -1,15 +1,16 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use winit::event::WindowEvent;
+use griffon::winit::event::WindowEvent;
 
-use crate::{components::camera::Camera, resources::graphics::Graphics};
+use crate::components::camera::Camera;
 use ecs::{
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     resources::Resources,
     system::System,
     with_resources::WithResources,
 };
+use griffon::Graphics;
 
 #[derive(Debug)]
 pub struct CameraManager {
@@ -56,9 +57,9 @@ impl System for CameraManager {
 mod tests {
     use super::*;
     use ecs::{
+        Reg,
         registry::{End, SystemRegistry},
         world::World,
-        Reg,
     };
 
     #[test]

@@ -10,7 +10,7 @@ use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::{
-    fs::{copy, create_dir_all, metadata, read_dir, File},
+    fs::{File, copy, create_dir_all, metadata, read_dir},
     io::AsyncReadExt,
 };
 
@@ -460,8 +460,8 @@ pub enum FileError {
 mod tests {
     use std::io::Write;
 
-    use serde_test::{assert_tokens, Token};
-    use tempfile::{tempdir, NamedTempFile};
+    use serde_test::{Token, assert_tokens};
+    use tempfile::{NamedTempFile, tempdir};
 
     use super::*;
 

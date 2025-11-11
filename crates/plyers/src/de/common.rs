@@ -1,5 +1,6 @@
 use either::{Either, Left, Right};
 use nom::{
+    IResult, Parser,
     branch::alt,
     bytes::complete::{tag, take_till1, take_while1},
     character::{
@@ -10,7 +11,6 @@ use nom::{
     error::ParseError,
     multi::many0_count,
     sequence::pair,
-    IResult, Parser,
 };
 
 pub fn split_vecs_of_either<L, R>(mut input: Vec<Either<L, R>>) -> (Vec<L>, Vec<R>) {

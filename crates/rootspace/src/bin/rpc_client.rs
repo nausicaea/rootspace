@@ -2,6 +2,7 @@ use std::net::{IpAddr, Ipv6Addr};
 
 use clap::{Parser, Subcommand};
 use rootspace::RpcServiceClient;
+use rootspace::systems::rpc::graphics_info::GraphicsInfoCategory;
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -19,6 +20,9 @@ struct Args {
 enum Command {
     Exit,
     Perf,
+    Gfx {
+        category: GraphicsInfoCategory,
+    },
     LoadScene {
         #[arg(short, long, help = "The asset group", default_value = "scenes")]
         group: String,
@@ -45,6 +49,9 @@ async fn main() -> anyhow::Result<()> {
     match args.command {
         Command::Exit => client.exit(context).await??,
         Command::Perf => println!("{}", client.perf(context).await??),
+        Command::Gfx { category } => {
+            println!("{}", client.graphics_info(context, category).await??);
+        }
         Command::LoadScene { group, name } => client.load_scene(context, group, name).await??,
     }
 

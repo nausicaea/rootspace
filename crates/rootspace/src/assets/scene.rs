@@ -3,21 +3,16 @@ use std::{collections::BTreeMap, path::Path};
 use anyhow::Context;
 use glamour::vec::Vec4;
 
-use super::private::PrivLoadAsset;
-use crate::{
-    assets::private::PrivSaveAsset,
-    components::{
-        camera::Camera, debug_animate::DebugAnimate, info::Info, light::Light, renderable::Renderable,
-        transform::Transform,
-    },
-    resources::asset_database::AssetDatabase,
-};
+use crate::components::{camera::Camera, debug_animate::DebugAnimate, info::Info, transform::Transform};
+use assam::{AssetDatabase, LoadAsset, SaveAsset};
 use ecs::{
     entities::Entities,
-    entity::{index::Index, Entity},
+    entity::{Entity, index::Index},
     resources::Resources,
     storage::Storage,
 };
+use griffon::components::light::Light;
+use griffon::components::renderable::Renderable;
 use rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
@@ -202,7 +197,7 @@ impl Scene {
     }
 }
 
-impl PrivLoadAsset for Scene {
+impl LoadAsset for Scene {
     type Output = ();
 
     async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
@@ -219,7 +214,7 @@ impl PrivLoadAsset for Scene {
     }
 }
 
-impl PrivSaveAsset for Scene {
+impl SaveAsset for Scene {
     async fn to_path(&self, path: &Path) -> Result<(), anyhow::Error> {
         let file = std::fs::File::create(path).with_context(|| format!("Creating the file '{}'", path.display()))?;
         let writer = std::io::BufWriter::new(file);

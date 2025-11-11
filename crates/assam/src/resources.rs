@@ -4,7 +4,7 @@ use anyhow::Context;
 use directories::ProjectDirs;
 use tokio::fs::{create_dir_all, remove_dir_all};
 
-use crate::assets::{Error, LoadAsset, SaveAsset};
+use super::{Error, LoadAsset, SaveAsset};
 use ecs::{resource::Resource, resources::Resources, with_dependencies::WithDependencies};
 use file_manipulation::copy_recursive;
 
@@ -199,9 +199,9 @@ where
 mod tests {
     use super::*;
     use ecs::{
+        Reg,
         registry::{End, ResourceRegistry},
         world::World,
-        Reg,
     };
 
     #[derive(Debug)]

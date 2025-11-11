@@ -2,7 +2,7 @@
 
 #![allow(clippy::multiple_bound_locations)]
 
-use downcast_rs::{impl_downcast, DowncastSync};
+use downcast_rs::{DowncastSync, impl_downcast};
 
 /// A resource is a data structure that is not coupled to a specific entity. Resources can be used
 /// to provide "global" state to systems.

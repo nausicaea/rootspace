@@ -1,9 +1,9 @@
 use std::num::{ParseFloatError, ParseIntError};
 
 use nom::{
-    combinator::{all_consuming, flat_map, map},
-    error::{context, ContextError, FromExternalError, ParseError},
     IResult,
+    combinator::{all_consuming, flat_map, map},
+    error::{ContextError, FromExternalError, ParseError, context},
 };
 
 use self::{body::body_fct, header::header_fct};
@@ -40,7 +40,7 @@ pub fn parse_ply<
     let e_urn_ref = &mut e_urn;
     let p_urn_ref = &mut p_urn;
 
-    let r = context(
+    context(
         "plyers::de::parse_ply#0",
         all_consuming(flat_map(header_fct(e_urn_ref, p_urn_ref), |descriptor| {
             tracing::debug!("Completed PLY header parsing, continuing to the body");
@@ -55,9 +55,7 @@ pub fn parse_ply<
                 }),
             )
         })),
-    )(input);
-
-    r
+    )(input)
 }
 
 #[cfg(test)]

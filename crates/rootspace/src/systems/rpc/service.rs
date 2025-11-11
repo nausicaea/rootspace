@@ -2,13 +2,14 @@ use tokio::sync::{mpsc::error::SendError, oneshot::error::RecvError};
 
 use super::message::RpcMessage;
 use crate::resources::statistics::Statistics;
+use crate::systems::rpc::graphics_info::{GraphicsInfo, GraphicsInfoCategory};
 
 #[tarpc::service]
 pub trait RpcService {
-    /// Returns a greeting for name.
-    async fn hello(name: String) -> Result<String, Error>;
     /// Requests the engine to exit
     async fn exit() -> Result<(), Error>;
+    /// Requests information about the graphics subsystem
+    async fn graphics_info(category: GraphicsInfoCategory) -> Result<GraphicsInfo, Error>;
     /// Requests performance statistics
     async fn perf() -> Result<Statistics, Error>;
     /// Requests the engine to load a scene

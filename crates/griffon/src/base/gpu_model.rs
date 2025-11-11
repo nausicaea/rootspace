@@ -1,5 +1,5 @@
-use super::{gpu_material::GpuMaterial, gpu_mesh::GpuMesh};
-
+use crate::base::gpu_material::GpuMaterial;
+use crate::base::gpu_mesh::GpuMesh;
 #[derive(Debug)]
 pub struct GpuModel {
     pub mesh: GpuMesh,

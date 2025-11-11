@@ -1,6 +1,7 @@
 mod message;
 mod server;
 pub mod service;
+pub mod graphics_info;
 
 use std::{future::ready, time::Duration};
 
@@ -10,26 +11,88 @@ use futures::StreamExt;
 use message::RpcMessage;
 use tarpc::server::{incoming::Incoming, BaseChannel, Channel};
 use tokio::{sync::mpsc, task::JoinHandle};
+use tokio::sync::oneshot;
 use tracing::error;
 
 use crate::{
     assets::scene::Scene,
     events::engine_event::EngineEvent,
-    resources::{asset_database::AssetDatabase, rpc_settings::RpcSettings, statistics::Statistics},
+    resources::{rpc_settings::RpcSettings, statistics::Statistics},
     systems::rpc::{server::RpcServer, service::RpcService},
 };
+use assam::AssetDatabase;
 use ecs::{
     event_queue::{receiver_id::ReceiverId, EventQueue},
     resources::Resources,
     system::System,
     with_resources::WithResources,
 };
+use griffon::Graphics;
+use graphics_info::GraphicsInfoCategory;
+use graphics_info::GraphicsInfo;
 
 #[derive(Debug)]
 pub struct Rpc {
     rpc_listener: JoinHandle<()>,
     mpsc_rx: mpsc::Receiver<RpcMessage>,
     receiver: ReceiverId<EngineEvent>,
+}
+
+impl Rpc {
+    #[tracing::instrument(skip_all)]
+    async fn perf(&self, res: &Resources, tx: oneshot::Sender<Statistics>) {
+        let stats = res.read::<Statistics>().clone();
+        if tx.send(stats).is_err() {
+            error!("unable to send statistics data to the RPC server");
+        }
+    }
+
+    #[tracing::instrument(skip_all)]
+    async fn graphics_info(&self, res: &Resources, tx: oneshot::Sender<GraphicsInfo>, category: GraphicsInfoCategory) {
+        let gfx = res.read::<Graphics>();
+        let response = match category {
+            GraphicsInfoCategory::InstanceReport => {
+                GraphicsInfo::InstanceReport(gfx.gen_instance_report().map(Into::into))
+            }
+            GraphicsInfoCategory::SurfaceCapabilities => {
+                GraphicsInfo::SurfaceCapabilities(gfx.gen_surface_capabilities().into())
+            }
+            GraphicsInfoCategory::AdapterFeatures => {
+                GraphicsInfo::AdapterFeatures(gfx.gen_adapter_features())
+            }
+            GraphicsInfoCategory::AdapterLimits => {
+                GraphicsInfo::AdapterLimits(gfx.gen_adapter_limits())
+            }
+            GraphicsInfoCategory::AdapterDownlevelCapabilities => {
+                GraphicsInfo::AdapterDownlevelCapabilities(gfx.gen_adapter_downlevel_capabilities())
+            }
+            GraphicsInfoCategory::AdapterInfo => {
+                GraphicsInfo::AdapterInfo(gfx.gen_adapter_info())
+            }
+            GraphicsInfoCategory::DeviceAllocatorReport => {
+                GraphicsInfo::DeviceAllocatorReport(gfx.gen_device_allocator_report().map(Into::into))
+            }
+        };
+        if tx.send(response).is_err() {
+            error!("unable to send the graphics subsystem info response to the RPC server");
+        }
+    }
+
+    #[tracing::instrument(skip_all)]
+    async fn load_scene(&self, res: &Resources, tx: oneshot::Sender<Result<(), Error>>, group: &str, name: &str) {
+        let r = res
+            .read::<AssetDatabase>()
+            .load_asset::<Scene, _>(res, group, name)
+            .await;
+        if tx.send(r).is_err() {
+            error!("unable to send the result of asset loading to the RPC server");
+        }
+    }
+
+    #[tracing::instrument(skip_all)]
+    async fn exit(&self, res: &Resources) {
+        res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit)
+    }
 }
 
 #[async_trait]
@@ -46,24 +109,11 @@ impl System for Rpc {
         }
 
         while let Ok(msg) = self.mpsc_rx.try_recv() {
-            tracing::trace!("RPC incoming call: {:?}", &msg);
             match msg {
-                RpcMessage::StatsRequest(tx) => {
-                    let stats = res.read::<Statistics>().clone();
-                    if tx.send(stats).is_err() {
-                        error!("unable to send statistics data to the RPC server");
-                    }
-                }
-                RpcMessage::LoadScene { tx, group, name } => {
-                    let r = res
-                        .read::<AssetDatabase>()
-                        .load_asset::<Scene, _>(res, &group, &name)
-                        .await;
-                    if tx.send(r).is_err() {
-                        error!("unable to send the result of asset loading to the RPC server");
-                    }
-                }
-                RpcMessage::Exit => res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit),
+                RpcMessage::StatsRequest(tx) => self.perf(res, tx).await,
+                RpcMessage::GraphicsInfo { tx, category } => self.graphics_info(res, tx, category).await,
+                RpcMessage::LoadScene { tx, ref group, ref name } => self.load_scene(res, tx, group, name).await,
+                RpcMessage::Exit => self.exit(&res).await,
             }
         }
     }

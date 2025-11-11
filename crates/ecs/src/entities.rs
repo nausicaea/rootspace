@@ -5,7 +5,7 @@ use std::iter::FusedIterator;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    entity::{generation::Generation, index::Index, Entity},
+    entity::{Entity, generation::Generation, index::Index},
     resource::Resource,
     with_dependencies::WithDependencies,
 };
@@ -139,13 +139,13 @@ impl<'a> FusedIterator for Iter<'a> {}
 
 #[cfg(test)]
 mod tests {
-    use serde_test::{assert_tokens, Token};
+    use serde_test::{Token, assert_tokens};
 
     use super::*;
     use crate::{
+        Reg,
         registry::{End, ResourceRegistry},
         world::World,
-        Reg,
     };
 
     #[test]

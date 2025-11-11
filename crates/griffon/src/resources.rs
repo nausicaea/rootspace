@@ -3,53 +3,30 @@ use std::mem::size_of;
 use wgpu::{BindingType, BufferAddress, BufferBindingType, BufferSize, BufferUsages, ShaderStages};
 use winit::event_loop::EventLoopWindowTarget;
 
-use self::{
-    bind_group_builder::BindGroupBuilder,
-    bind_group_layout_builder::BindGroupLayoutBuilder,
-    camera_uniform::CameraUniform,
-    encoder::Encoder,
-    gpu_object_database::GpuObjectDatabase,
-    ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId},
-    light_uniform::LightUniform,
-    render_pipeline_builder::RenderPipelineBuilder,
-    runtime::Runtime,
-    sampler_builder::SamplerBuilder,
-    settings::Settings,
-    texture_builder::TextureBuilder,
-};
-use crate::assets::cpu_material::CpuMaterial;
-use crate::assets::cpu_mesh::CpuMesh;
-use crate::assets::cpu_model::CpuModel;
-use crate::assets::cpu_texture::CpuTexture;
-use crate::resources::graphics::gpu_material::GpuMaterial;
-use crate::resources::graphics::gpu_mesh::GpuMesh;
-use crate::resources::graphics::gpu_model::GpuModel;
-use crate::resources::graphics::gpu_texture::GpuTexture;
-use crate::resources::graphics::instance::Instance;
-use crate::resources::graphics::internal_runtime_data::InternalRuntimeData;
+use super::assets::cpu_material::CpuMaterial;
+use super::assets::cpu_mesh::CpuMesh;
+use super::assets::cpu_model::CpuModel;
+use super::assets::cpu_texture::CpuTexture;
+use crate::base::bind_group_builder::BindGroupBuilder;
+use crate::base::bind_group_layout_builder::BindGroupLayoutBuilder;
+use crate::base::camera_uniform::CameraUniform;
+use crate::base::encoder::Encoder;
+use crate::base::gpu_material::GpuMaterial;
+use crate::base::gpu_mesh::GpuMesh;
+use crate::base::gpu_model::GpuModel;
+use crate::base::gpu_object_database::GpuObjectDatabase;
+use crate::base::gpu_texture::GpuTexture;
+use crate::base::ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, TextureViewId};
+use crate::base::instance::Instance;
+use crate::base::internal_runtime_data::InternalRuntimeData;
+use crate::base::light_uniform::LightUniform;
+use crate::base::render_pipeline_builder::RenderPipelineBuilder;
+use crate::base::runtime::Runtime;
+use crate::base::sampler_builder::SamplerBuilder;
+use crate::base::settings::Settings;
+use crate::base::texture_builder::TextureBuilder;
 use ecs::{resource::Resource, with_dependencies::WithDependencies};
 use urn::Urn;
-
-pub mod bind_group_builder;
-pub mod bind_group_layout_builder;
-pub mod camera_uniform;
-pub mod descriptors;
-pub mod encoder;
-pub mod gpu_material;
-pub mod gpu_mesh;
-pub mod gpu_model;
-mod gpu_object_database;
-pub mod gpu_texture;
-pub mod ids;
-pub mod instance;
-mod internal_runtime_data;
-pub mod light_uniform;
-pub mod render_pipeline_builder;
-mod runtime;
-pub mod sampler_builder;
-pub mod settings;
-pub mod texture_builder;
-pub mod vertex;
 
 const DEPTH_TEXTURE_LABEL: Option<&str> = Some("depth-stencil:texture");
 const DEPTH_TEXTURE_VIEW_LABEL: Option<&str> = Some("depth-stencil:view");
@@ -84,6 +61,34 @@ impl Graphics {
 
     pub fn max_instances(&self) -> u64 {
         self.settings.max_instances
+    }
+
+    pub fn gen_instance_report(&self) -> Option<wgpu_core::global::GlobalReport> {
+        self.runtime.instance.generate_report()
+    }
+
+    pub fn gen_surface_capabilities(&self) -> wgpu::SurfaceCapabilities {
+        self.runtime.surface.get_capabilities(&self.runtime.adapter)
+    }
+
+    pub fn gen_adapter_features(&self) -> wgpu::Features {
+        self.runtime.adapter.features()
+    }
+
+    pub fn gen_adapter_limits(&self) -> wgpu::Limits {
+        self.runtime.adapter.limits()
+    }
+
+    pub fn gen_adapter_downlevel_capabilities(&self) -> wgpu::DownlevelCapabilities {
+        self.runtime.adapter.get_downlevel_capabilities()
+    }
+
+    pub fn gen_adapter_info(&self) -> wgpu::AdapterInfo {
+        self.runtime.adapter.get_info()
+    }
+
+    pub fn gen_device_allocator_report(&self) -> Option<wgpu::AllocatorReport> {
+        self.runtime.device.generate_allocator_report()
     }
 
     pub fn limits(&self) -> wgpu::Limits {
@@ -187,11 +192,16 @@ impl Graphics {
     }
 
     #[must_use]
-    pub fn create_buffer(&mut self, label: Option<&str>, size: BufferAddress, usage: BufferUsages) -> BufferId {
+    pub fn create_buffer<A: Into<BufferAddress>>(
+        &mut self,
+        label: Option<&str>,
+        size: A,
+        usage: BufferUsages,
+    ) -> BufferId {
         tracing::trace!("Creating buffer '{}'", label.unwrap_or("unnamed"));
         let buf = self.runtime.device.create_buffer(&wgpu::BufferDescriptor {
             label,
-            size,
+            size: size.into(),
             usage,
             mapped_at_creation: false,
         });

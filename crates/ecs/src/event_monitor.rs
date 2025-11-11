@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     resources::Resources,
     system::System,
     with_resources::WithResources,
@@ -43,9 +43,9 @@ where
 mod tests {
     use super::*;
     use crate::{
+        Reg,
         registry::{End, SystemRegistry},
         world::World,
-        Reg,
     };
 
     #[test]

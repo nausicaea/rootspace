@@ -1,8 +1,6 @@
-use super::{
-    ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureViewId},
-    runtime::Runtime,
-    GpuObjectDatabase,
-};
+use super::gpu_object_database::GpuObjectDatabase;
+use super::ids::{BindGroupId, BindGroupLayoutId, BufferId, SamplerId, TextureViewId};
+use super::runtime::Runtime;
 
 pub struct BindGroupBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
@@ -13,7 +11,7 @@ pub struct BindGroupBuilder<'rt> {
 }
 
 impl<'rt> BindGroupBuilder<'rt> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, layout: BindGroupLayoutId) -> Self {
+    pub(crate) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, layout: BindGroupLayoutId) -> Self {
         BindGroupBuilder {
             runtime,
             database,
@@ -28,15 +26,21 @@ impl<'rt> BindGroupBuilder<'rt> {
         self
     }
 
-    pub fn add_buffer(
+    pub fn add_buffer<A: Into<wgpu::BufferAddress>, S: Into<wgpu::BufferSize>>(
         mut self,
         binding: u32,
-        offset: wgpu::BufferAddress,
-        size: Option<wgpu::BufferSize>,
+        offset: A,
+        size: Option<S>,
         buffer: BufferId,
     ) -> Self {
-        self.entries
-            .push((binding, BindingResourceId::Buffer { buffer, offset, size }));
+        self.entries.push((
+            binding,
+            BindingResourceId::Buffer {
+                buffer,
+                offset: offset.into(),
+                size: size.map(|s| s.into()),
+            },
+        ));
         self
     }
 

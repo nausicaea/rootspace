@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
-use futures::{stream::FuturesUnordered, StreamExt};
+use futures::{StreamExt, stream::FuturesUnordered};
 use parking_lot::MappedRwLockReadGuard;
 use tracing::Instrument;
 
@@ -9,7 +9,7 @@ use super::{
     component::Component,
     entities::Entities,
     entity::Entity,
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     loop_control::LoopControl,
     registry::{ResourceRegistry, SystemRegistry},
     resource::Resource,

@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use plyers::{load_ply, save_ply};
+use std::hint::black_box;
 
 fn load_ply_jasmin6(c: &mut Criterion) {
     let path = std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/valid/jasmin6.ply"));

@@ -1,14 +1,11 @@
 use std::ops::Range;
 
+use super::gpu_object_database::GpuObjectDatabase;
+use super::ids::TextureViewId;
+use super::ids::{BindGroupId, BufferId, PipelineId};
+use super::runtime::Runtime;
+use super::settings::Settings;
 use wgpu::{LoadOp, StoreOp};
-
-use super::{
-    ids::{BindGroupId, BufferId, PipelineId},
-    runtime::Runtime,
-    settings::Settings,
-    GpuObjectDatabase,
-};
-use crate::resources::graphics::ids::TextureViewId;
 
 #[derive(Debug)]
 pub struct Encoder<'rt> {
@@ -22,7 +19,7 @@ pub struct Encoder<'rt> {
 }
 
 impl<'rt> Encoder<'rt> {
-    pub(super) fn new(
+    pub(crate) fn new(
         label: Option<&str>,
         runtime: &'rt Runtime,
         settings: &'rt Settings,
@@ -73,6 +70,7 @@ impl<'rt> Encoder<'rt> {
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &self.surface_view,
                 resolve_target: None,
+                depth_slice: None,
                 ops: wgpu::Operations {
                     load: LoadOp::Clear(self.settings.clear_color),
                     store: StoreOp::Store,

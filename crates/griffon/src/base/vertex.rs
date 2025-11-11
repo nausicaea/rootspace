@@ -1,4 +1,4 @@
-use super::descriptors::VertexAttributeDescriptor;
+use crate::base::descriptors::VertexAttributeDescriptor;
 
 #[derive(Debug, Default, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable, serde::Serialize, serde::Deserialize)]
 #[repr(C)]

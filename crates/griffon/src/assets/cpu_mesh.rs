@@ -2,14 +2,14 @@ use std::collections::HashMap;
 
 use anyhow::Context;
 
-use super::{private::PrivLoadAsset, Error};
-use crate::resources::graphics::vertex::Vertex;
+use crate::base::vertex::Vertex;
+use assam::{Error, LoadAsset};
 use plyers::{
     load_ply,
     types::{
-        AsSlice, Ply, Primitive, PropertyDescriptor, FACE_ELEMENT, NX_PROPERTY, NY_PROPERTY, NZ_PROPERTY, S_PROPERTY,
-        TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, T_PROPERTY, U_PROPERTY, VERTEX_ELEMENT, VERTEX_INDICES_LIST_PROPERTY,
-        V_PROPERTY, X_PROPERTY, Y_PROPERTY, Z_PROPERTY,
+        AsSlice, FACE_ELEMENT, NX_PROPERTY, NY_PROPERTY, NZ_PROPERTY, Ply, Primitive, PropertyDescriptor, S_PROPERTY,
+        T_PROPERTY, TEXTURE_U_PROPERTY, TEXTURE_V_PROPERTY, U_PROPERTY, V_PROPERTY, VERTEX_ELEMENT,
+        VERTEX_INDICES_LIST_PROPERTY, X_PROPERTY, Y_PROPERTY, Z_PROPERTY,
     },
 };
 
@@ -21,7 +21,7 @@ pub struct CpuMesh {
     pub indices: Vec<u32>,
 }
 
-impl PrivLoadAsset for CpuMesh {
+impl LoadAsset for CpuMesh {
     type Output = Self;
 
     async fn with_path(

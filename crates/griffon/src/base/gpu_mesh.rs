@@ -1,5 +1,5 @@
-use crate::resources::graphics::ids::BufferId;
-use crate::resources::graphics::ids::InstanceId;
+use crate::base::ids::BufferId;
+use crate::base::ids::InstanceId;
 
 #[derive(Debug)]
 pub struct GpuMesh {

@@ -3,8 +3,8 @@ use std::io::Write;
 use num_traits::ToBytes;
 
 use crate::{
-    types::{PlyDescriptor, Primitive, PropertyDescriptor},
     PlyError,
+    types::{PlyDescriptor, Primitive, PropertyDescriptor},
 };
 
 pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(), PlyError> {

@@ -2,8 +2,8 @@ use std::path::Path;
 
 use anyhow::Context;
 
-use super::{cpu_material::CpuMaterial, cpu_mesh::CpuMesh, private::PrivLoadAsset};
-use crate::resources::asset_database::AssetDatabase;
+use super::{cpu_material::CpuMaterial, cpu_mesh::CpuMesh};
+use assam::{AssetDatabase, LoadAsset};
 use ecs::resources::Resources;
 
 pub const MATERIAL_ASSET_GROUP: &str = "textures";
@@ -14,7 +14,7 @@ pub struct CpuModel {
     pub materials: Vec<CpuMaterial>,
 }
 
-impl PrivLoadAsset for CpuModel {
+impl LoadAsset for CpuModel {
     type Output = Self;
 
     async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {

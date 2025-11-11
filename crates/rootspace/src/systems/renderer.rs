@@ -2,6 +2,7 @@ use std::{
     cmp::{max, min},
     collections::HashMap,
     mem::size_of,
+    num::NonZeroU64,
     ops::Range,
     slice::from_raw_parts,
     time::{Duration, Instant},
@@ -11,39 +12,36 @@ use num_traits::Inv;
 
 use anyhow::Context;
 use async_trait::async_trait;
+use griffon::wgpu::{BufferUsages, SurfaceError};
+use griffon::winit::{dpi::PhysicalSize, event::WindowEvent};
 use itertools::Itertools;
-use wgpu::{BufferAddress, BufferSize, BufferUsages, SurfaceError};
-use winit::{dpi::PhysicalSize, event::WindowEvent};
 
 use crate::{
-    components::light::Light,
-    resources::graphics::{camera_uniform::CameraUniform, gpu_material::GpuMaterial, light_uniform::LightUniform},
-};
-use crate::{
-    components::{camera::Camera, renderable::Renderable, transform::Transform},
+    components::{camera::Camera, transform::Transform},
     events::engine_event::EngineEvent,
-    resources::{
-        asset_database::AssetDatabase,
-        graphics::{
-            encoder::RenderPass,
-            ids::{BindGroupId, BufferId, PipelineId},
-            instance::Instance,
-            vertex::Vertex,
-            Graphics,
-        },
-        statistics::Statistics,
-    },
+    resources::statistics::Statistics,
 };
+use assam::AssetDatabase;
 use ecs::{
     component::Component,
     entity::index::Index,
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     resources::Resources,
     storage::Storage,
     system::System,
     with_resources::WithResources,
 };
 use glamour::{affine::builder::AffineBuilder, mat::Mat4};
+use griffon::base::camera_uniform::CameraUniform;
+use griffon::base::encoder::RenderPass;
+use griffon::base::gpu_material::GpuMaterial;
+use griffon::base::ids::{BindGroupId, BufferId, PipelineId};
+use griffon::base::instance::Instance;
+use griffon::base::light_uniform::LightUniform;
+use griffon::base::vertex::Vertex;
+use griffon::components::light::Light;
+use griffon::components::renderable::Renderable;
+use griffon::resources::Graphics;
 use rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug)]
@@ -374,7 +372,7 @@ impl WithResources for Renderer {
 
         let camera_buffer = gfx.create_buffer(
             Some("camera-buffer"),
-            uniform_alignment as BufferAddress,
+            uniform_alignment,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
@@ -382,12 +380,12 @@ impl WithResources for Renderer {
         let camera_bind_group = gfx
             .create_bind_group(cbl)
             .with_label(Some("camera-bind-group"))
-            .add_buffer(0, 0, BufferSize::new(size_of::<CameraUniform>() as _), camera_buffer)
+            .add_buffer(0, 0u64, NonZeroU64::new(size_of::<CameraUniform>() as _), camera_buffer)
             .submit();
 
         let light_buffer = gfx.create_buffer(
             Some("light-buffer"),
-            uniform_alignment as BufferAddress,
+            uniform_alignment,
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
@@ -395,7 +393,7 @@ impl WithResources for Renderer {
         let light_bind_group = gfx
             .create_bind_group(ll)
             .with_label(Some("light-bind-group"))
-            .add_buffer(0, 0, BufferSize::new(size_of::<LightUniform>() as _), light_buffer)
+            .add_buffer(0, 0u64, NonZeroU64::new(size_of::<LightUniform>() as _), light_buffer)
             .submit();
 
         Ok(Renderer {
@@ -450,6 +448,9 @@ impl System for Renderer {
                 self.on_timeout();
                 (0, Duration::ZERO, Duration::ZERO)
             }
+            Err(SurfaceError::Other) => {
+                todo!()
+            }
             Ok(mut enc) => {
                 let draw_start = Instant::now();
                 let draw_calls = self.draw(&draw_data, enc.begin(Some("main-render-pass")));
@@ -494,6 +495,7 @@ struct InstanceDrawData<'a> {
     instance_ids: Range<u32>,
 }
 
+#[allow(dead_code)]
 #[tracing::instrument(skip_all)]
 fn hier_transform(idx: Index, hier: &Hierarchy<Index>, transforms: &<Transform as Component>::Storage) -> Mat4<f32> {
     hier.ancestors(idx)
@@ -504,38 +506,7 @@ fn hier_transform(idx: Index, hier: &Hierarchy<Index>, transforms: &<Transform a
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resources::asset_database::AssetDatabaseDeps;
     use ecs::Reg;
-
-    struct TDeps<'a> {
-        name: &'a str,
-        force_init: bool,
-        within_repo: bool,
-    }
-
-    impl Default for TDeps<'static> {
-        fn default() -> Self {
-            TDeps {
-                name: "test",
-                force_init: false,
-                within_repo: false,
-            }
-        }
-    }
-
-    impl<'a> AssetDatabaseDeps for TDeps<'a> {
-        fn name(&self) -> &str {
-            self.name
-        }
-
-        fn force_init(&self) -> bool {
-            self.force_init
-        }
-
-        fn within_repo(&self) -> bool {
-            self.within_repo
-        }
-    }
 
     #[test]
     fn renderer_reg_macro() {

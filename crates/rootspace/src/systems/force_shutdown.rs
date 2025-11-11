@@ -2,21 +2,22 @@
 use std::process;
 use std::{
     sync::{
-        atomic::{AtomicUsize, Ordering},
         Arc,
+        atomic::{AtomicUsize, Ordering},
     },
     time::Duration,
 };
 
 use async_trait::async_trait;
-use winit::{
+use griffon::winit::{
     event::{ElementState, KeyEvent, WindowEvent},
+    keyboard,
     keyboard::NamedKey,
 };
 
 use crate::events::engine_event::EngineEvent;
 use ecs::{
-    event_queue::{receiver_id::ReceiverId, EventQueue},
+    event_queue::{EventQueue, receiver_id::ReceiverId},
     resources::Resources,
     system::System,
     with_resources::WithResources,
@@ -77,7 +78,7 @@ impl System for ForceShutdown {
                     event:
                         KeyEvent {
                             state: ElementState::Released,
-                            logical_key: winit::keyboard::Key::Named(NamedKey::Exit),
+                            logical_key: keyboard::Key::Named(NamedKey::Exit),
                             ..
                         },
                     ..
@@ -95,9 +96,9 @@ impl System for ForceShutdown {
 mod tests {
     use super::*;
     use ecs::{
+        Reg,
         registry::{End, SystemRegistry},
         world::World,
-        Reg,
     };
 
     #[test]

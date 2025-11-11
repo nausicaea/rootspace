@@ -1,6 +1,7 @@
 use anyhow::Context;
 
-use super::{cpu_texture::CpuTexture, private::PrivLoadAsset};
+use super::cpu_texture::CpuTexture;
+use assam::LoadAsset;
 
 #[derive(Debug)]
 pub struct CpuMaterial {
@@ -8,7 +9,7 @@ pub struct CpuMaterial {
     pub texture: CpuTexture,
 }
 
-impl PrivLoadAsset for CpuMaterial {
+impl LoadAsset for CpuMaterial {
     type Output = Self;
 
     async fn with_path(res: &ecs::resources::Resources, path: &std::path::Path) -> Result<Self::Output, anyhow::Error> {

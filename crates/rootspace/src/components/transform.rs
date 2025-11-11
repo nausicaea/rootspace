@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use ecs::{component::Component, storage::vec_storage::VecStorage};
 use glamour::{
-    affine::{builder::AffineBuilder, Affine},
+    affine::{Affine, builder::AffineBuilder},
     mat::Mat4,
     num::ToMatrix,
     quat::Quat,

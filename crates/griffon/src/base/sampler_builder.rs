@@ -1,4 +1,6 @@
-use super::{ids::SamplerId, runtime::Runtime, GpuObjectDatabase};
+use crate::base::gpu_object_database::GpuObjectDatabase;
+use crate::base::ids::SamplerId;
+use crate::base::runtime::Runtime;
 
 pub struct SamplerBuilder<'rt> {
     runtime: &'rt Runtime<'rt>,
@@ -7,7 +9,7 @@ pub struct SamplerBuilder<'rt> {
 }
 
 impl<'rt> SamplerBuilder<'rt> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase) -> Self {
+    pub(crate) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase) -> Self {
         Self {
             runtime,
             database,

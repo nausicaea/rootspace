@@ -1,12 +1,14 @@
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
 use winit::{event_loop::EventLoopWindowTarget, window::Fullscreen};
 
-use crate::resources::graphics::settings::Settings;
+use crate::base::settings::Settings;
 
 #[derive(Debug)]
 pub struct Runtime<'a> {
     pub window: std::sync::Arc<winit::window::Window>,
+    pub instance: wgpu::Instance,
     pub surface: wgpu::Surface<'a>,
+    pub adapter: wgpu::Adapter,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
@@ -29,7 +31,7 @@ impl<'a> Runtime<'a> {
 
         let max_size = window.current_monitor().unwrap().size();
 
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: settings.backends,
             ..Default::default()
         });
@@ -46,14 +48,14 @@ impl<'a> Runtime<'a> {
         tracing::debug!("Supported adapter features: {:?}", adapter.features());
 
         let (device, queue) = adapter
-            .request_device(
-                &DeviceDescriptor {
-                    required_features: settings.required_features,
-                    required_limits: settings.required_limits.clone(),
-                    label: None,
-                },
-                None, // Trace path
-            )
+            .request_device(&DeviceDescriptor {
+                required_features: settings.required_features,
+                required_limits: settings.required_limits.clone(),
+                label: None,
+                memory_hints: Default::default(),
+                trace: Default::default(),
+                experimental_features: Default::default(),
+            })
             .await
             .unwrap();
 
@@ -83,7 +85,9 @@ impl<'a> Runtime<'a> {
 
         Runtime {
             window,
+            instance,
             surface,
+            adapter,
             device,
             queue,
             config,

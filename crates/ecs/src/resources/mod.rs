@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 
 use std::{
-    any::{type_name, TypeId},
+    any::{TypeId, type_name},
     collections::{HashMap, HashSet},
 };
 
@@ -250,11 +250,13 @@ mod tests {
 
     impl Resource for TestResourceA {}
 
+    #[allow(dead_code)]
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceB(Vec<usize>);
 
     impl Resource for TestResourceB {}
 
+    #[allow(dead_code)]
     #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
     struct TestResourceC(String);
 

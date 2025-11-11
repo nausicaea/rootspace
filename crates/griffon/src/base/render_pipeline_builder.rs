@@ -1,10 +1,8 @@
-use super::{
-    descriptors::VertexAttributeDescriptor,
-    ids::{BindGroupLayoutId, PipelineId, ShaderModuleId},
-    runtime::Runtime,
-    GpuObjectDatabase,
-};
-use crate::Settings;
+use crate::base::descriptors::VertexAttributeDescriptor;
+use crate::base::gpu_object_database::GpuObjectDatabase;
+use crate::base::ids::{BindGroupLayoutId, PipelineId, ShaderModuleId};
+use crate::base::runtime::Runtime;
+use crate::base::settings::Settings;
 
 #[derive(Debug)]
 pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
@@ -19,7 +17,7 @@ pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
 }
 
 impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
-    pub(super) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
+    pub(crate) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
         RenderPipelineBuilder {
             runtime,
             database,
@@ -111,8 +109,9 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                             .shader_modules
                             .get(&vsm)
                             .unwrap_or_else(|| panic!("Unknown {:?}", vsm)),
-                        entry_point: vep,
+                        entry_point: Some(vep),
                         buffers: self.vertex_buffer_layouts.as_slice(),
+                        compilation_options: Default::default(),
                     })
                     .expect("cannot build a render pipeline without vertex shader module"),
                 fragment: self.fragment_shader_module.map(|(fsm, fep)| wgpu::FragmentState {
@@ -121,8 +120,9 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                         .shader_modules
                         .get(&fsm)
                         .unwrap_or_else(|| panic!("Unknown {:?}", fsm)),
-                    entry_point: fep,
+                    entry_point: Some(fep),
                     targets: &cts,
+                    compilation_options: Default::default(),
                 }),
                 primitive: wgpu::PrimitiveState {
                     topology: wgpu::PrimitiveTopology::TriangleList,
@@ -146,6 +146,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                     alpha_to_coverage_enabled: false,
                 },
                 multiview: None,
+                cache: None,
             });
 
         self.database.insert_render_pipeline(pipeline)

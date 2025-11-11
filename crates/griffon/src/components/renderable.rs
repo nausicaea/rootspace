@@ -1,8 +1,9 @@
 use anyhow::Context;
 
-use crate::resources::graphics::gpu_model::GpuModel;
-use crate::resources::graphics::Graphics;
-use crate::{assets::cpu_model::CpuModel, resources::asset_database::AssetDatabase};
+use crate::Graphics;
+use crate::assets::cpu_model::CpuModel;
+use crate::base::gpu_model::GpuModel;
+use assam::AssetDatabase;
 use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};
 
 #[derive(Debug)]

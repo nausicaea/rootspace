@@ -2,14 +2,14 @@ use std::collections::BTreeMap;
 
 use either::{Either, Left, Right};
 use nom::{
+    IResult,
     branch::alt,
     bytes::complete::tag,
     character::complete::digit1,
     combinator::{map, map_res, opt, value},
-    error::{context, ContextError, FromExternalError, ParseError},
+    error::{ContextError, FromExternalError, ParseError, context},
     multi::{fold_many1, many0},
     sequence::tuple,
-    IResult,
 };
 
 use super::{
@@ -17,8 +17,8 @@ use super::{
         CommentDescriptor, CountType, DataType, ElementDescriptor, ElementId, FormatType, ObjInfoDescriptor,
         PlyDescriptor, PropertyDescriptor, PropertyId,
     },
-    common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace},
     ParseNumError,
+    common::{identifier, newline, single_line_text, space, split_vecs_of_either, whitespace},
 };
 use crate::types::OverflowElementCountOrPropertyCount;
 use urn::Urn;
