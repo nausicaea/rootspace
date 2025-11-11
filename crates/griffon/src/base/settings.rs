@@ -30,7 +30,7 @@ impl Default for Settings {
                 b: 0.3,
                 a: 1.0,
             },
-            max_cameras: 4,
+            max_cameras: 1,
             max_lights: 1,
             max_instances: 1 << 10,
             depth_texture_format: wgpu::TextureFormat::Depth32Float,
