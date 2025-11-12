@@ -36,6 +36,14 @@ repos:
         types: [rust]
         stages: [pre-commit]
 
+      - id: cargo-fix
+        name: Cargo Fix
+        entry: cargo fix --all-targets --all-features
+        pass_filenames: false
+        language: system
+        types: [rust]
+        stages: [pre-push]
+
       - id: cargo-clippy-fix
         name: Cargo Clippy
         entry: cargo clippy --all-targets --all-features --fix -- -D warnings
