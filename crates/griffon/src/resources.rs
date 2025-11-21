@@ -1,6 +1,7 @@
 use std::mem::size_of;
 
 use wgpu::{BindingType, BufferAddress, BufferBindingType, BufferSize, BufferUsages, ShaderStages};
+use winit::dpi::PhysicalSize;
 use winit::event_loop::EventLoopWindowTarget;
 
 use super::assets::cpu_material::CpuMaterial;
@@ -99,6 +100,10 @@ impl Graphics {
         self.runtime.window.id()
     }
 
+    pub fn window_inner_size(&self) -> PhysicalSize<u32> {
+        self.runtime.window.inner_size()
+    }
+
     pub fn request_redraw(&self) {
         self.runtime.window.request_redraw()
     }
@@ -107,7 +112,7 @@ impl Graphics {
         self.resize(self.runtime.size)
     }
 
-    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+    pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
         if new_size.width > self.runtime.max_size.width || new_size.height > self.runtime.max_size.height {
             tracing::warn!(
                 "Ignoring requested physical dimensions {}x{} because they exceed maximum dimensions {}x{}",
