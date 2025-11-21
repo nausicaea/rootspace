@@ -77,7 +77,7 @@ impl<'a> Runtime<'a> {
             width: size.width,
             height: size.height,
             present_mode: settings.present_mode,
-            desired_maximum_frame_latency: 0,
+            desired_maximum_frame_latency: 2,
             alpha_mode: settings.alpha_mode,
             view_formats: vec![*texture_format],
         };
