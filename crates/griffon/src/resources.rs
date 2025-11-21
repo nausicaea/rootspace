@@ -192,6 +192,11 @@ impl Graphics {
     }
 
     #[must_use]
+    pub fn create_bind_group_layout(&mut self) -> BindGroupLayoutBuilder<'_> {
+        BindGroupLayoutBuilder::new(&self.runtime, &mut self.database)
+    }
+
+    #[must_use]
     pub fn create_bind_group(&mut self, layout: BindGroupLayoutId) -> BindGroupBuilder<'_> {
         BindGroupBuilder::new(&self.runtime, &mut self.database, layout)
     }
