@@ -33,6 +33,12 @@ tokio = { version = "^1.36.0", features = ["full"] }
 tracing = { version = "^0.1.40" }
 tracing-subscriber = { version = "^0.3.18", features = ["env-filter"] }
 
+[dev-dependencies]
+bytemuck = "1.24.0"
+cgmath = "0.18.0"
+image = "0.25.9"
+tobj = { version = "3.2", default-features = false, features = ["async"]}
+
 [lib]
 name = "rootspace"
 
@@ -44,6 +50,9 @@ name = "rootspace"
 
 [[example]]
 name = "wgpu_playground"
+
+[[example]]
+name = "wgpu_tutorial10_lighting"
 
 [[example]]
 name = "create_scene"
