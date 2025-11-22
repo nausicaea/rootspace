@@ -57,7 +57,7 @@ struct State {
 
 impl State {
     async fn new(elwt: &EventLoopWindowTarget<()>) -> anyhow::Result<Self> {
-        let window = Arc::new(WindowBuilder::new().build(&elwt)?);
+        let window = Arc::new(WindowBuilder::new().build(elwt)?);
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
