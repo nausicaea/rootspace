@@ -26,15 +26,8 @@ impl<'rt> BindGroupBuilder<'rt> {
         self
     }
 
-    pub fn add_entire_buffer(
-        mut self,
-        binding: u32,
-        buffer: BufferId,
-    ) -> Self {
-        self.entries.push((
-            binding,
-            BindingResourceId::EntireBuffer(buffer),
-        ));
+    pub fn add_entire_buffer(mut self, binding: u32, buffer: BufferId) -> Self {
+        self.entries.push((binding, BindingResourceId::EntireBuffer(buffer)));
         self
     }
 
@@ -80,11 +73,9 @@ impl<'rt> BindGroupBuilder<'rt> {
                         size,
                     }),
                 },
-                BindingResourceId::EntireBuffer(buffer) => {
-                    wgpu::BindGroupEntry {
-                        binding,
-                        resource: self.database.buffers[&buffer].as_entire_binding(),
-                    }
+                BindingResourceId::EntireBuffer(buffer) => wgpu::BindGroupEntry {
+                    binding,
+                    resource: self.database.buffers[&buffer].as_entire_binding(),
                 },
                 BindingResourceId::TextureView(v) => {
                     let view = &self.database.texture_views[&v];
