@@ -32,7 +32,7 @@ impl Light {
             .load_asset::<CpuModel, _>(res, group, name)
             .await
             .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name))?;
-        let model = res.write::<Graphics>().create_model(&cpu_model);
+        let model = res.write::<Graphics>().create_gpu_model(&cpu_model);
 
         Ok(Self {
             model,

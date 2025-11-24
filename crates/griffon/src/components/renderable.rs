@@ -26,14 +26,14 @@ impl Renderable {
             .iter_r::<Renderable>()
             .find(|(_, ren)| ren.group == group && ren.name == name);
         let model = if let Some((_, ren)) = instancing_candidate {
-            res.write::<Graphics>().create_instanced_model(&ren.model)
+            res.write::<Graphics>().create_instanced_gpu_model(&ren.model)
         } else {
             let cpu_model = res
                 .read::<AssetDatabase>()
                 .load_asset::<CpuModel, _>(res, group, name)
                 .await
                 .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name))?;
-            res.write::<Graphics>().create_model(&cpu_model)
+            res.write::<Graphics>().create_gpu_model(&cpu_model)
         };
 
         Ok(Renderable {

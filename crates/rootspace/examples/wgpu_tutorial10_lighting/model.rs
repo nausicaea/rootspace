@@ -1,8 +1,11 @@
 use crate::texture::Texture;
 use crate::vertex::Vertex;
-use crate::{texture, util};
-use griffon::wgpu;
+use crate::util;
+use griffon::base::descriptors::VertexAttributeDescriptor;
+use griffon::base::ids::{BindGroupId, BindGroupLayoutId, BufferId};
 use griffon::wgpu::util::DeviceExt;
+use griffon::wgpu::{BufferUsages, VertexAttribute, VertexStepMode};
+use griffon::{Graphics, wgpu};
 use std::io::{BufReader, Cursor};
 
 #[repr(C)]
@@ -40,21 +43,42 @@ impl Vertex for ModelVertex {
     }
 }
 
+impl VertexAttributeDescriptor for ModelVertex {
+    const STEP_MODE: VertexStepMode = VertexStepMode::Vertex;
+    const ATTRS: &'static [VertexAttribute] = &[
+        VertexAttribute {
+            offset: 0,
+            shader_location: 0,
+            format: wgpu::VertexFormat::Float32x3,
+        },
+        VertexAttribute {
+            offset: size_of::<[f32; 3]>() as wgpu::BufferAddress,
+            shader_location: 1,
+            format: wgpu::VertexFormat::Float32x2,
+        },
+        VertexAttribute {
+            offset: size_of::<[f32; 5]>() as wgpu::BufferAddress,
+            shader_location: 2,
+            format: wgpu::VertexFormat::Float32x3,
+        },
+    ];
+}
+
 #[derive(Debug)]
 pub struct Material {
     #[allow(unused)]
     pub name: String,
     #[allow(unused)]
     pub diffuse_texture: Texture,
-    pub bind_group: wgpu::BindGroup,
+    pub bind_group: BindGroupId,
 }
 
 #[derive(Debug)]
 pub struct Mesh {
     #[allow(unused)]
     pub name: String,
-    pub vertex_buffer: wgpu::Buffer,
-    pub index_buffer: wgpu::Buffer,
+    pub vertex_buffer: BufferId,
+    pub index_buffer: BufferId,
     pub num_elements: u32,
     pub material: usize,
 }
@@ -65,12 +89,7 @@ pub struct Model {
     pub materials: Vec<Material>,
 }
 
-pub async fn load_model(
-    file_name: &str,
-    device: &wgpu::Device,
-    queue: &wgpu::Queue,
-    layout: &wgpu::BindGroupLayout,
-) -> anyhow::Result<Model> {
+pub async fn load_model(file_name: &str, gfx: &mut Graphics, layout: BindGroupLayoutId) -> anyhow::Result<Model> {
     let obj_text = util::load_string(file_name).await?;
     let obj_cursor = Cursor::new(obj_text);
     let mut obj_reader = BufReader::new(obj_cursor);
@@ -91,21 +110,12 @@ pub async fn load_model(
 
     let mut materials = Vec::new();
     for m in obj_materials? {
-        let diffuse_texture = texture::load_texture(&m.diffuse_texture, device, queue).await?;
-        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&diffuse_texture.view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler),
-                },
-            ],
-            label: None,
-        });
+        let diffuse_texture = Texture::from_file(gfx, &m.diffuse_texture).await?;
+        let bind_group = gfx
+            .create_bind_group(layout)
+            .add_texture_view(0, diffuse_texture.view)
+            .add_sampler(1, diffuse_texture.sampler)
+            .submit();
 
         materials.push(Material {
             name: m.name,
@@ -133,16 +143,16 @@ pub async fn load_model(
                 })
                 .collect::<Vec<_>>();
 
-            let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some(&format!("{:?} Vertex Buffer", file_name)),
-                contents: bytemuck::cast_slice(&vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-            let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some(&format!("{:?} Index Buffer", file_name)),
-                contents: bytemuck::cast_slice(&m.mesh.indices),
-                usage: wgpu::BufferUsages::INDEX,
-            });
+            let vertex_buffer = gfx.create_buffer_init(
+                Some(&format!("{:?} Vertex Buffer", file_name)),
+                BufferUsages::VERTEX,
+                &vertices,
+            );
+            let index_buffer = gfx.create_buffer_init(
+                Some(&format!("{:?} Index Buffer", file_name)),
+                BufferUsages::INDEX,
+                &m.mesh.indices,
+            );
 
             Mesh {
                 name: file_name.to_string(),

@@ -243,17 +243,17 @@ impl Graphics {
 
     #[tracing::instrument(skip_all)]
     #[must_use]
-    fn create_texture(&mut self, t: &CpuTexture) -> GpuTexture {
+    fn create_gpu_texture(&mut self, t: &CpuTexture) -> GpuTexture {
         let texture = TextureBuilder::new(&self.runtime, &mut self.database, &self.settings)
             .with_label(t.label.as_ref().map(|l| format!("{}:texture", &l)).as_deref())
             .with_image(&t.image)
             .submit();
-        let view = Self::create_texture_view_int(
-            &mut self.database,
+        let view = self.create_texture_view(
             t.label.as_ref().map(|l| format!("{}:texture-view", &l)).as_deref(),
             texture,
         );
-        let sampler = SamplerBuilder::new(&self.runtime, &mut self.database)
+        let sampler = self
+            .create_sampler()
             .with_label(t.label.as_ref().map(|l| format!("{}:texture-sampler", &l)).as_deref())
             .submit();
 
@@ -262,8 +262,8 @@ impl Graphics {
 
     #[tracing::instrument(skip_all)]
     #[must_use]
-    fn create_material(&mut self, m: &CpuMaterial) -> GpuMaterial {
-        let texture = self.create_texture(&m.texture);
+    fn create_gpu_material(&mut self, m: &CpuMaterial) -> GpuMaterial {
+        let texture = self.create_gpu_texture(&m.texture);
 
         let layout = self.material_buffer_layout();
         let bind_group = self
@@ -278,7 +278,7 @@ impl Graphics {
 
     #[tracing::instrument(skip_all)]
     #[must_use]
-    fn create_mesh(&mut self, m: &CpuMesh) -> GpuMesh {
+    fn create_gpu_mesh(&mut self, m: &CpuMesh) -> GpuMesh {
         let vertex_buffer = self.create_buffer_init(
             m.label.as_ref().map(|l| format!("{}:vertex-buffer", &l)).as_deref(),
             BufferUsages::VERTEX,
@@ -311,7 +311,7 @@ impl Graphics {
 
     #[tracing::instrument(skip_all)]
     #[must_use]
-    fn create_instanced_mesh(&mut self, m: &GpuMesh) -> GpuMesh {
+    fn create_instanced_gpu_mesh(&mut self, m: &GpuMesh) -> GpuMesh {
         GpuMesh {
             vertex_buffer: m.vertex_buffer,
             instance_buffer: m.instance_buffer,
@@ -323,22 +323,41 @@ impl Graphics {
 
     #[tracing::instrument(skip_all)]
     #[must_use]
-    pub fn create_model(&mut self, m: &CpuModel) -> GpuModel {
+    pub fn create_gpu_model(&mut self, m: &CpuModel) -> GpuModel {
         GpuModel {
-            mesh: self.create_mesh(&m.mesh),
-            materials: m.materials.iter().map(|mat| self.create_material(mat)).collect(),
+            mesh: self.create_gpu_mesh(&m.mesh),
+            materials: m.materials.iter().map(|mat| self.create_gpu_material(mat)).collect(),
         }
     }
 
     #[tracing::instrument(skip_all)]
     #[must_use]
-    pub fn create_instanced_model(&mut self, m: &GpuModel) -> GpuModel {
+    pub fn create_instanced_gpu_model(&mut self, m: &GpuModel) -> GpuModel {
         GpuModel {
-            mesh: self.create_instanced_mesh(&m.mesh),
+            mesh: self.create_instanced_gpu_mesh(&m.mesh),
             materials: m.materials.clone(),
         }
     }
 
+    #[tracing::instrument(skip_all)]
+    #[must_use]
+    pub fn create_texture(&mut self) -> TextureBuilder {
+        TextureBuilder::new(&self.runtime, &mut self.database, &self.settings)
+    }
+
+    #[tracing::instrument(skip_all)]
+    #[must_use]
+    pub fn create_texture_view(&mut self, label: Option<&str>, texture: TextureId) -> TextureViewId {
+        Self::create_texture_view_int(&mut self.database, label, texture)
+    }
+
+    #[tracing::instrument(skip_all)]
+    #[must_use]
+    pub fn create_sampler(&mut self) -> SamplerBuilder {
+        SamplerBuilder::new(&self.runtime, &mut self.database)
+    }
+
+    /// This function does not bind `self` on purpose because it needs to work during the constructor.
     #[must_use]
     fn create_depth_texture_int(
         runtime: &Runtime,

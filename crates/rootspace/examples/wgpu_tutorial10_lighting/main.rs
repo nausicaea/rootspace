@@ -2,14 +2,12 @@ mod camera;
 mod instance;
 mod light;
 mod model;
-mod render;
 mod state;
 mod texture;
 mod util;
 mod vertex;
 
-use griffon::winit::event_loop::{EventLoop, EventLoopWindowTarget};
-use griffon::{GraphicsDeps, Settings};
+use griffon::winit::event_loop::EventLoop;
 use state::State;
 use std::sync::Arc;
 use tokio::runtime::Builder as RuntimeBuilder;
@@ -25,19 +23,4 @@ fn main() -> anyhow::Result<()> {
     let state = rt.block_on(State::new(&event_loop))?;
     event_loop.run(state.run())?;
     Ok(())
-}
-
-#[derive(Debug)]
-pub struct Dependencies<'a>(&'a EventLoopWindowTarget<()>, &'a Settings);
-
-impl GraphicsDeps for Dependencies<'_> {
-    type CustomEvent = ();
-
-    fn event_loop(&self) -> &EventLoopWindowTarget<()> {
-        self.0
-    }
-
-    fn settings(&self) -> &Settings {
-        self.1
-    }
 }
