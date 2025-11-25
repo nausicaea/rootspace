@@ -7,8 +7,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-use num_traits::Inv;
-
 use crate::{
     components::{camera::Camera, transform::Transform},
     events::engine_event::EngineEvent,

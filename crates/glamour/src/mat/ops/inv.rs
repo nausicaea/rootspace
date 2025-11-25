@@ -1,5 +1,5 @@
 use approx::ulps_eq;
-use num_traits::{Float, Inv, Zero};
+use num_traits::{Float, Inv};
 
 use crate::mat::Mat4;
 
