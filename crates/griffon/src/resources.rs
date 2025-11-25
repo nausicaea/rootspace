@@ -341,7 +341,7 @@ impl Graphics {
 
     #[tracing::instrument(skip_all)]
     #[must_use]
-    pub fn create_texture(&mut self) -> TextureBuilder {
+    pub fn create_texture(&mut self) -> TextureBuilder<'_> {
         TextureBuilder::new(&self.runtime, &mut self.database, &self.settings)
     }
 
@@ -353,7 +353,7 @@ impl Graphics {
 
     #[tracing::instrument(skip_all)]
     #[must_use]
-    pub fn create_sampler(&mut self) -> SamplerBuilder {
+    pub fn create_sampler(&mut self) -> SamplerBuilder<'_> {
         SamplerBuilder::new(&self.runtime, &mut self.database)
     }
 

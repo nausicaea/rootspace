@@ -10,18 +10,14 @@ use std::{
 
 use num_traits::Inv;
 
-use anyhow::Context;
-use async_trait::async_trait;
-use griffon::wgpu::{BufferUsages, SurfaceError};
-use griffon::winit::{dpi::PhysicalSize, event::WindowEvent};
-use itertools::Itertools;
-
 use crate::{
     components::{camera::Camera, transform::Transform},
     events::engine_event::EngineEvent,
     resources::statistics::Statistics,
 };
+use anyhow::Context;
 use assam::AssetDatabase;
+use async_trait::async_trait;
 use ecs::{
     component::Component,
     entity::index::Index,
@@ -42,7 +38,11 @@ use griffon::base::vertex::Vertex;
 use griffon::components::light::Light;
 use griffon::components::renderable::Renderable;
 use griffon::resources::Graphics;
+use griffon::wgpu::{BufferUsages, SurfaceError};
+use griffon::winit::{dpi::PhysicalSize, event::WindowEvent};
+use itertools::Itertools;
 use rose_tree::hierarchy::Hierarchy;
+use tracing::warn;
 
 #[derive(Debug)]
 pub struct Renderer {

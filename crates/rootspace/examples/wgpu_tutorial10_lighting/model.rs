@@ -1,6 +1,6 @@
 use crate::texture::Texture;
-use crate::vertex::Vertex;
 use crate::util;
+use crate::vertex::Vertex;
 use griffon::base::descriptors::VertexAttributeDescriptor;
 use griffon::base::ids::{BindGroupId, BindGroupLayoutId, BufferId};
 use griffon::wgpu::util::DeviceExt;

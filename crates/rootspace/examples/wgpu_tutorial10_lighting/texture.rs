@@ -1,5 +1,5 @@
-use griffon::base::ids::{SamplerId, TextureId, TextureViewId};
 use griffon::Graphics;
+use griffon::base::ids::{SamplerId, TextureId, TextureViewId};
 
 #[derive(Debug)]
 pub struct Texture {
@@ -20,11 +20,7 @@ impl Texture {
     }
 
     pub fn from_image(graphics: &mut Graphics, img: &image::DynamicImage, label: Option<&str>) -> anyhow::Result<Self> {
-        let texture = graphics
-            .create_texture()
-            .with_label(label)
-            .with_image(img)
-            .submit();
+        let texture = graphics.create_texture().with_label(label).with_image(img).submit();
 
         Ok(Self {
             texture,

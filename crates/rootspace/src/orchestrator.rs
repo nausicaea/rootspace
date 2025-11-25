@@ -3,13 +3,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-use glamour::{quat::Quat, unit::Unit, vec::Vec4};
-use griffon::winit::{
-    event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoopWindowTarget},
-};
-use tokio::runtime::Runtime;
-
 use super::registry::{FUSRegistry, MSRegistry};
 use crate::{
     RenderableSource,
@@ -32,8 +25,14 @@ use ecs::{
     with_resources::WithResources,
     world::{World, event::WorldEvent},
 };
+use glamour::{quat::Quat, unit::Unit, vec::Vec4};
 use griffon::components::renderable::Renderable;
+use griffon::winit::{
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoopWindowTarget},
+};
 use griffon::{Graphics, GraphicsDeps};
+use tokio::runtime::Runtime;
 
 const DELTA_TIME: Duration = Duration::from_millis(50);
 #[cfg(feature = "editor")]
