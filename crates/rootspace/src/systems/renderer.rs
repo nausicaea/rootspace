@@ -1,5 +1,4 @@
 use std::{
-    cmp::{max, min},
     collections::HashMap,
     mem::size_of,
     num::NonZeroU64,
@@ -138,8 +137,6 @@ impl Renderer {
             let mut index_buffer = None;
             let mut num_indices = None;
             let mut materials = None;
-            let mut min_instance_id = u32::MAX;
-            let mut max_instance_id = u32::MIN;
 
             let instance_data: Vec<_> = data
                 .sorted_by_key(|(_, ren, _)| ren.model.mesh.instance_id)
@@ -156,28 +153,32 @@ impl Renderer {
                     if materials.is_none() {
                         materials = Some(&ren.model.materials);
                     }
-                    min_instance_id = min(min_instance_id, ren.model.mesh.instance_id.to_u32());
-                    max_instance_id = max(max_instance_id, ren.model.mesh.instance_id.to_u32());
 
                     let instance_transform = trf.affine; //hier_transform(idx, &hier, &transforms);
                     let model_view = camera_view * instance_transform;
 
                     Instance {
                         model_view: model_view.0,
+                        // FIXME: there might be an error in the normal matrix calculation
                         normal: model_view.inv().t().0,
                         with_camera: if trf.ui { 0.0 } else { 1.0 },
                     }
                 })
                 .collect();
 
-            instance_draw_data.push(InstanceDrawData {
+            let instances = u32::try_from(instance_data.len())
+                .unwrap_or_else(|e| panic!("at most {} instances are supported: {e}", u32::MAX));
+
+            let idd = InstanceDrawData {
                 vertex_buffer: vertex_buffer.unwrap(),
                 instance_buffer,
                 index_buffer: index_buffer.unwrap(),
                 num_indices: num_indices.unwrap(),
                 materials: materials.unwrap(),
-                instance_ids: min_instance_id..(max_instance_id + 1),
-            });
+                instance_indexes: 0..instances,
+            };
+
+            instance_draw_data.push(idd);
 
             instance_buffer_data.insert(instance_buffer, instance_data);
         }
@@ -241,7 +242,7 @@ impl Renderer {
                     .set_vertex_buffer(0, instance_data.vertex_buffer)
                     .set_vertex_buffer(1, instance_data.instance_buffer)
                     .set_index_buffer(instance_data.index_buffer)
-                    .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
+                    .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_indexes.clone());
             } else {
                 rp.set_pipeline(self.pipeline_wcm)
                     .set_bind_group(0, self.camera_bind_group, &[])
@@ -250,7 +251,7 @@ impl Renderer {
                     .set_vertex_buffer(0, instance_data.vertex_buffer)
                     .set_vertex_buffer(1, instance_data.instance_buffer)
                     .set_index_buffer(instance_data.index_buffer)
-                    .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
+                    .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_indexes.clone());
             }
         }
 
@@ -504,7 +505,7 @@ struct InstanceDrawData<'a> {
     index_buffer: BufferId,
     num_indices: u32,
     materials: &'a [GpuMaterial],
-    instance_ids: Range<u32>,
+    instance_indexes: Range<u32>,
 }
 
 #[allow(dead_code)]
