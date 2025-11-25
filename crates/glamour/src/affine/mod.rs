@@ -74,13 +74,13 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::num::ToMatrix;
+    use crate::test_helpers::proptest::{affine, bounded_f32, bounded_nonzero_f32, vec4};
     use ::approx::relative_eq;
     use cgmath::Transform;
     use proptest::{prop_assert, proptest};
     use serde_test::{Token, assert_tokens};
-
-    use super::*;
-    use crate::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, vec4};
 
     #[test]
     #[ignore = "the results of cgmath and nalgebra don't agree"]
@@ -132,6 +132,15 @@ mod tests {
     }
 
     proptest! {
+        #[test]
+        fn affine_conversion_to_quat_erases_all_but_rotational_components(a in affine(bounded_f32(-32, 32), bounded_nonzero_f32(-32, 32))) {
+            let a_rot = Into::<Unit<Quat<f32>>>::into(a.to_matrix()).to_matrix();
+            let a_identity = a_rot.t() * a_rot;
+            prop_assert!(relative_eq!(a_identity, Mat4::identity(), max_relative = 1.0),
+                "Orthogonality didn't hold for extracted quaternion. Expected an identity matrix, got: {a_identity:?}"
+            )
+        }
+
         #[test]
         #[ignore = "our implementation has significant differences to cgmath for the translational part"]
         fn with_look_at_rh_is_equal_to_cgmath(eye in vec4(bounded_nonzero_f32(-16, 16))) {

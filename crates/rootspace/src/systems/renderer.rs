@@ -26,6 +26,9 @@ use ecs::{
     system::System,
     with_resources::WithResources,
 };
+use glamour::num::ToMatrix;
+use glamour::quat::Quat;
+use glamour::unit::Unit;
 use glamour::{affine::builder::AffineBuilder, mat::Mat4};
 use griffon::base::camera_uniform::CameraUniform;
 use griffon::base::encoder::RenderPass;
@@ -159,8 +162,7 @@ impl Renderer {
 
                     Instance {
                         model_view: model_view.0,
-                        // FIXME: there might be an error in the normal matrix calculation
-                        normal: model_view.inv().t().0,
+                        normal: Into::<Unit<Quat<f32>>>::into(model_view).to_matrix().0,
                         with_camera: if trf.ui { 0.0 } else { 1.0 },
                     }
                 })
