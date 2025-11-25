@@ -397,7 +397,7 @@ where
     #[tracing::instrument(skip_all)]
     async fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
         let settings = deps.settings();
-        let runtime = Runtime::new(deps.event_loop(), settings).await;
+        let runtime = Runtime::new(deps.event_loop(), settings).await?;
 
         let mut database = GpuObjectDatabase::default();
 
