@@ -105,7 +105,7 @@ impl Orchestrator {
     }
 
     /// Creates and returns a closure that is run by
-    /// [`EventLoop::run`](winit::event_loop::EventLoop::run) every time `winit` received an event
+    /// [`griffon::winit::event_loop::EventLoop::run`] every time `winit` received an event
     /// from the operating system. Internally, the closure instructs the asynchronous runtime to
     /// block on [`Orchestrator::run`](Orchestrator::run), which does
     /// the actual work.
@@ -354,7 +354,7 @@ impl Orchestrator {
         //     .submit();
 
         const SPACE_BETWEEN: f32 = 3.0;
-        const NUM_INSTANCES_PER_ROW: usize = 16;
+        const NUM_INSTANCES_PER_ROW: usize = 1;
         for i in 0..NUM_INSTANCES_PER_ROW {
             for j in 0..NUM_INSTANCES_PER_ROW {
                 let x = SPACE_BETWEEN * (i as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
@@ -377,7 +377,6 @@ impl Orchestrator {
                         name: format!("cube-{i}x{j}"),
                         ..Default::default()
                     })
-                    .with_debug_animate()
                     .with_renderable(RenderableSource::Reference {
                         group: "models".into(),
                         name: "textured-cube.ply".into(),
@@ -385,7 +384,6 @@ impl Orchestrator {
                     .with_transform(
                         Transform::builder()
                             .with_translation(position)
-                            .with_scale(0.5)
                             .with_orientation(Quat::with_axis_angle(axis, angle))
                             .build(),
                     )

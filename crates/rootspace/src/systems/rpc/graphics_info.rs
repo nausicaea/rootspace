@@ -48,7 +48,7 @@ impl fmt::Display for GraphicsInfo {
     }
 }
 
-/// Serializable proxy for [`griffon::wgpu_core::global::GlobalReport`](griffon::wgpu_core::global::GlobalReport)
+/// Serializable proxy for [`griffon::wgpu_core::global::GlobalReport`]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct InstanceReport {
     pub surfaces: RegistryReport,
@@ -70,7 +70,7 @@ impl fmt::Display for InstanceReport {
     }
 }
 
-/// Serializable proxy for [`griffon::wgpu_core::registry::RegistryReport`](griffon::wgpu_core::registry::RegistryReport)
+/// Serializable proxy for [`griffon::wgpu_core::registry::RegistryReport`]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct RegistryReport {
     pub num_allocated: usize,
@@ -100,7 +100,7 @@ impl From<griffon::wgpu_core::registry::RegistryReport> for RegistryReport {
     }
 }
 
-/// Serializable proxy for [`griffon::wgpu_core::HubReport`](griffon::wgpu_core::HubReport)
+/// Serializable proxy for [`griffon::wgpu_core::hub::HubReport`]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct HubReport {
     pub adapters: RegistryReport,
@@ -196,7 +196,7 @@ Samplers: {}"#,
     }
 }
 
-/// Serializable proxy for [`griffon::wgpu::SurfaceCapabilities`](griffon::wgpu::SurfaceCapabilities)
+/// Serializable proxy for [`griffon::wgpu::SurfaceCapabilities`]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct SurfaceCapabilities {
     pub formats: Vec<griffon::wgpu_types::TextureFormat>,
@@ -233,7 +233,7 @@ Texture usages: {:?}"#,
     }
 }
 
-/// Serializable proxy for [`griffon::wgpu_types::AllocatorReport`](griffon::wgpu_types::AllocatorReport)
+/// Serializable proxy for [`griffon::wgpu_types::AllocatorReport`]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct AllocatorReport {
     pub allocations: Vec<AllocationReport>,
@@ -270,7 +270,7 @@ Total reserved bytes: {}"#,
     }
 }
 
-/// Serializable proxy for [`griffon::wgpu_types::AllocationReport`](griffon::wgpu_types::AllocationReport)
+/// Serializable proxy for [`griffon::wgpu_types::AllocationReport`]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct AllocationReport {
     pub name: String,
@@ -294,7 +294,7 @@ impl fmt::Display for AllocationReport {
     }
 }
 
-/// Serializable proxy for [`griffon::wgpu_types::MemoryBlockReport`](griffon::wgpu_types::MemoryBlockReport)
+/// Serializable proxy for [`griffon::wgpu_types::MemoryBlockReport`]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct MemoryBlockReport {
     pub size: u64,
