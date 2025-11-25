@@ -67,7 +67,7 @@ fn vertex_main(
         instance.normal_3,
     );
 
-    let with_camera = clamp(instance.with_camera, 0.0, 1.0);
+    let with_camera = step(0.5, instance.with_camera);
     let local_position = vec4<f32>(vertex.position, 1.0);
     let view_position = local_position * model_view;
     let clip_position = view_position * camera.projection * with_camera + view_position * (1.0 - with_camera);
