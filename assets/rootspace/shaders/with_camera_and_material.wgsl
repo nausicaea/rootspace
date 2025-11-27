@@ -69,10 +69,10 @@ fn vertex_main(
 
     let with_camera = step(0.5, instance.with_camera);
     let local_position = vec4<f32>(vertex.position, 1.0);
-    let view_position = local_position * model_view;
-    let clip_position = view_position * camera.projection * with_camera + view_position * (1.0 - with_camera);
+    let view_position = model_view * local_position;
+    let clip_position = with_camera * camera.projection * view_position + (1.0 - with_camera) * view_position;
 
-    let view_normal = normalize(vec4<f32>(vertex.normal, 0.0) * normal);
+    let view_normal = normalize(normal * vec4<f32>(vertex.normal, 0.0));
 
     return VertexOutput(
         clip_position,
@@ -93,12 +93,13 @@ fn fragment_main(
     let ambient_color = light.color * ambient_strength;
 
     let light_local_position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-    let light_view_position = light_local_position * light.model_view;
+    let light_view_position = light.model_view * light_local_position;
     let light_dir = normalize(light_view_position.xyz - in.view_position);
     let diffuse_strength = max(dot(in.view_normal, light_dir), 0.0);
     let diffuse_color = light.color * diffuse_strength;
 
     let view_dir = normalize(-in.view_position);
+    // let half_dir = normalize(view_dir + light_dir);
     let reflect_dir = reflect(-light_dir, in.view_normal);
     let specular_strength = pow(max(dot(view_dir, reflect_dir), 0.0), 32.0);
     let specular_color = light.color * specular_strength;

@@ -116,7 +116,7 @@ impl Renderer {
 
                 (
                     CameraUniform {
-                        projection: cam.as_persp_matrix().0,
+                        projection: cam.as_persp_matrix().t().0,
                     },
                     camera_view,
                 )
@@ -160,8 +160,8 @@ impl Renderer {
                     let model_view = camera_view * instance_transform;
 
                     Instance {
-                        model_view: model_view.0,
-                        normal: model_view.inv().t().0,
+                        model_view: model_view.t().0,
+                        normal: model_view.inv().0,
                         with_camera: if trf.ui { 0.0 } else { 1.0 },
                     }
                 })
@@ -200,7 +200,7 @@ impl Renderer {
             let model_view = camera_view * light_transform;
 
             let lu = LightUniform {
-                model_view: model_view.0,
+                model_view: model_view.t().0,
                 color: lght.color.into(),
             };
 
