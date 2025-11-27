@@ -41,6 +41,7 @@ use griffon::resources::Graphics;
 use griffon::wgpu::{BufferUsages, SurfaceError};
 use griffon::winit::{dpi::PhysicalSize, event::WindowEvent};
 use itertools::Itertools;
+use num_traits::Inv;
 use rose_tree::hierarchy::Hierarchy;
 use tracing::warn;
 
@@ -160,7 +161,7 @@ impl Renderer {
 
                     Instance {
                         model_view: model_view.0,
-                        normal: Into::<Unit<Quat<f32>>>::into(model_view).to_matrix().0,
+                        normal: model_view.inv().t().0,
                         with_camera: if trf.ui { 0.0 } else { 1.0 },
                     }
                 })
