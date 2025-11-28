@@ -29,7 +29,8 @@ struct VertexOutput {
     @location(1) view_normal: vec3<f32>,
     @location(2) tex_coords: vec2<f32>,
     @location(3) color: vec3<f32>,
-    @location(4) with_material: f32,
+    @location(4) light_position: vec3<f32>,
+    @location(5) with_material: f32,
 }
 
 struct Camera {
@@ -85,6 +86,7 @@ fn vertex_main(
         view_normal.xyz,
         vertex.tex_coords,
         light.color,
+        (light.model_view * vec4(0.0, 0.0, 0.0, 1.0)).xyz,
         instance.with_material,
     );
 }
@@ -93,35 +95,35 @@ fn vertex_main(
 fn fragment_main(
     in: VertexOutput
 ) -> @location(0) vec4<f32> {
+    // Light source properties
+    let Ia = 0.05;
+    let Ip = 1.0;
+
+    // Material properties
+    let Ka = 1.0;
+    let Kd = 1.0;
+    let Ks = 1.0;
+    let smoothness = 32.0;
     let with_material = step(0.5, in.with_material);
     let object_color = with_material * textureSample(t_diffuse, s_diffuse, in.tex_coords) + (1.0 - with_material) * DEFAULT_COLOR;
 
-    // Light source properties
-    let ambient_light_intensity = 0.05;
-    let point_light_intensity = 1.0;
+    // Phong shading (thank you https://www.cs.toronto.edu/~jacobson/phong-demo/)
+    let ambient_color = object_color.rgb;
+    let diffuse_color = object_color.rgb * light.color;
+    let specular_color = light.color;
 
-    // Material properties
-    let ambient_reflectivity = 1.0;
-    let diffuse_reflectivity = 1.0;
-    let specular_reflectivity = 1.0;
-    let smoothness = 32.0;
+    let N = in.view_normal;
+    let L = normalize(in.light_position - in.view_position);
+    let V = normalize(-in.view_position);
+    let R = reflect(-L, N);
 
-    let incoming_light_direction = normalize(light.model_view * vec4(0.0, 0.0, 0.0, 1.0) - vec4(in.view_position, 1.0)).xyz;
-    let outgoing_light_direction = reflect(-incoming_light_direction, in.view_normal);
-    let viewing_direction = normalize(vec3(0.0, 0.0, -1.0) - in.view_position);
-    let surface_normal = in.view_normal;
+    let Ca = Ia * Ka * ambient_color;
+    let Cd = Ip * Kd * max(dot(N, L), 0.0) * diffuse_color;
 
-    let normalization_factor = (smoothness + 2.0) / TAU;
-    let diffuse_component = dot(incoming_light_direction, surface_normal);
-    let specular_component = normalization_factor * pow(dot(outgoing_light_direction, viewing_direction), smoothness);
+    let Cd_gt_zero = sign(Cd);
+    let Cs = Cd_gt_zero * Ip * Ks * (smoothness + 2.0) / TAU * pow(max(dot(R, V), 0.0), smoothness) * specular_color;
 
-    let phong_light_intensity = ambient_light_intensity * ambient_reflectivity + point_light_intensity * (diffuse_reflectivity * diffuse_component + specular_reflectivity * specular_component);
-    let color = phong_light_intensity * light.color * object_color.rgb;
-
-    return vec4<f32>(
-        color,
-        object_color.a,
-    );
+    return vec4<f32>(Ca + Cd + Cs, 1.0);
 }
 
 // vim: set filetype=wgsl :
