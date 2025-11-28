@@ -7,6 +7,7 @@ pub struct Instance {
     pub normal: [[f32; 4]; 4],
     // TODO: this kind of handling of non-projected UI objects is janky
     pub with_camera: f32,
+    pub with_material: f32,
 }
 
 impl VertexAttributeDescriptor for Instance {
@@ -21,5 +22,6 @@ impl VertexAttributeDescriptor for Instance {
         10 => Float32x4,
         11 => Float32x4,
         12 => Float32,
+        13 => Float32,
     ];
 }

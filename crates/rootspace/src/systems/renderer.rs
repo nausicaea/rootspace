@@ -55,7 +55,6 @@ pub struct Renderer {
     light_buffer: BufferId,
     light_bind_group: BindGroupId,
     pipeline_ldb: PipelineId,
-    pipeline_wc: PipelineId,
     pipeline_wcm: PipelineId,
 }
 
@@ -163,6 +162,7 @@ impl Renderer {
                         // The correct normal matrix is the inverse-transpose of the model-view matrix. But we can elide the transpose operation thanks to the change from row-major (CPU) to column-major (GPU).
                         normal: model_view.inv().0,
                         with_camera: if trf.ui { 0.0 } else { 1.0 },
+                        with_material: if ren.model.materials.is_empty() { 0.0 } else { 1.0 },
                     }
                 })
                 .collect();
@@ -237,24 +237,18 @@ impl Renderer {
 
         for instance_data in &draw_data.instances {
             draw_calls += 1;
-            if instance_data.materials.is_empty() {
-                rp.set_pipeline(self.pipeline_wc)
-                    .set_bind_group(0, self.camera_bind_group, &[])
-                    .set_bind_group(1, self.light_bind_group, &[])
-                    .set_vertex_buffer(0, instance_data.vertex_buffer)
-                    .set_vertex_buffer(1, instance_data.instance_buffer)
-                    .set_index_buffer(instance_data.index_buffer)
-                    .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_indexes.clone());
-            } else {
-                rp.set_pipeline(self.pipeline_wcm)
-                    .set_bind_group(0, self.camera_bind_group, &[])
-                    .set_bind_group(1, self.light_bind_group, &[])
-                    .set_bind_group(2, instance_data.materials[0].bind_group, &[])
-                    .set_vertex_buffer(0, instance_data.vertex_buffer)
-                    .set_vertex_buffer(1, instance_data.instance_buffer)
-                    .set_index_buffer(instance_data.index_buffer)
-                    .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_indexes.clone());
+            rp.set_pipeline(self.pipeline_wcm)
+                .set_bind_group(0, self.camera_bind_group, &[])
+                .set_bind_group(1, self.light_bind_group, &[]);
+            
+            if !instance_data.materials.is_empty() {
+                rp.set_bind_group(2, instance_data.materials[0].bind_group, &[]);
             }
+            
+            rp.set_vertex_buffer(0, instance_data.vertex_buffer)
+                .set_vertex_buffer(1, instance_data.instance_buffer)
+                .set_index_buffer(instance_data.index_buffer)
+                .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_indexes.clone());
         }
 
         for light in &draw_data.lights {
@@ -317,30 +311,6 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn crp_with_camera(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
-        let shader_path = adb.find_asset("shaders", "with_camera.wgsl")?;
-        let shader_data = std::fs::read_to_string(&shader_path)
-            .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
-        let shader_module = gfx.create_shader_module(Some("with-camera:shader"), &shader_data);
-
-        let cbl = gfx.camera_buffer_layout();
-        let lbl = gfx.light_buffer_layout();
-
-        let pipeline = gfx
-            .create_render_pipeline()
-            .with_label("with-camera:pipeline")
-            .add_bind_group_layout(cbl)
-            .add_bind_group_layout(lbl)
-            .with_vertex_shader_module(shader_module, "vertex_main")
-            .with_fragment_shader_module(shader_module, "fragment_main")
-            .add_vertex_buffer_layout::<Vertex>()
-            .add_vertex_buffer_layout::<Instance>()
-            .submit();
-
-        Ok(pipeline)
-    }
-
-    #[tracing::instrument(skip_all)]
     fn crp_with_camera_and_material(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
         let shader_path = adb.find_asset("shaders", "with_camera_and_material.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
@@ -380,8 +350,6 @@ impl WithResources for Renderer {
             Self::crp_light_debug(&adb, &mut gfx).context("Creating the light debugging render pipeline")?;
         let pipeline_wcm = Self::crp_with_camera_and_material(&adb, &mut gfx)
             .context("Creating the render pipeline 'with-camera-material'")?;
-        let pipeline_wc =
-            Self::crp_with_camera(&adb, &mut gfx).context("Creating the render pipeline 'with-camera'")?;
 
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256
 
@@ -421,7 +389,6 @@ impl WithResources for Renderer {
             light_bind_group,
             pipeline_ldb,
             pipeline_wcm,
-            pipeline_wc,
         })
     }
 }

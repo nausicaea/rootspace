@@ -2,6 +2,7 @@
 // Function reference: https://webgpufundamentals.org/webgpu/lessons/webgpu-wgsl-function-reference.html
 
 const TAU = 6.283185307179586476925286766559005768394338798;
+const DEFAULT_COLOR = vec4<f32>(0.34, 0.34, 0.87, 1.0);
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
@@ -19,6 +20,7 @@ struct InstanceInput {
     @location(10) normal_2: vec4<f32>,
     @location(11) normal_3: vec4<f32>,
     @location(12) with_camera: f32,
+    @location(13) with_material: f32,
 }
 
 struct VertexOutput {
@@ -27,6 +29,7 @@ struct VertexOutput {
     @location(1) view_normal: vec3<f32>,
     @location(2) tex_coords: vec2<f32>,
     @location(3) color: vec3<f32>,
+    @location(4) with_material: f32,
 }
 
 struct Camera {
@@ -82,6 +85,7 @@ fn vertex_main(
         view_normal.xyz,
         vertex.tex_coords,
         light.color,
+        instance.with_material,
     );
 }
 
@@ -89,7 +93,8 @@ fn vertex_main(
 fn fragment_main(
     in: VertexOutput
 ) -> @location(0) vec4<f32> {
-    let object_color = textureSample(t_diffuse, s_diffuse, in.tex_coords);
+    let with_material = step(0.5, in.with_material);
+    let object_color = with_material * textureSample(t_diffuse, s_diffuse, in.tex_coords) + (1.0 - with_material) * DEFAULT_COLOR;
 
     // Light source properties
     let ambient_light_intensity = 0.05;
