@@ -116,12 +116,13 @@ fn fragment_main(
     let L = normalize(in.light_position - in.view_position);
     let V = normalize(-in.view_position);
     let R = reflect(-L, N);
+    let H = normalize(V + L);
 
     let Ca = Ia * Ka * ambient_color;
     let Cd = Ip * Kd * max(dot(N, L), 0.0) * diffuse_color;
 
     let Cd_gt_zero = sign(Cd);
-    let Cs = Cd_gt_zero * Ip * Ks * (smoothness + 2.0) / TAU * pow(max(dot(R, V), 0.0), smoothness) * specular_color;
+    let Cs = Cd_gt_zero * Ip * Ks * (smoothness + 2.0) / TAU * pow(max(dot(N, H), 0.0), smoothness) * specular_color;
 
     return vec4<f32>(Ca + Cd + Cs, 1.0);
 }
