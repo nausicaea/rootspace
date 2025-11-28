@@ -1,6 +1,8 @@
 // Shader pre-processing hint: https://elyshaffir.github.io/Taiga-Blog/2022/01/08/using_include_statements_in_wgsl.html
 // Function reference: https://webgpufundamentals.org/webgpu/lessons/webgpu-wgsl-function-reference.html
 
+const TAU = 6.283185307179586476925286766559005768394338798;
+
 struct VertexInput {
     @location(0) position: vec3<f32>,
     @location(1) normal: vec3<f32>,
@@ -89,24 +91,30 @@ fn fragment_main(
 ) -> @location(0) vec4<f32> {
     let object_color = textureSample(t_diffuse, s_diffuse, in.tex_coords);
 
-    let ambient_strength = 0.05;
-    let ambient_color = light.color * ambient_strength;
+    // Light source properties
+    let ambient_light_intensity = 0.05;
+    let point_light_intensity = 1.0;
 
-    let light_local_position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-    let light_view_position = light.model_view * light_local_position;
-    let light_dir = normalize(light_view_position.xyz - in.view_position);
-    let diffuse_strength = max(dot(in.view_normal, light_dir), 0.0);
-    let diffuse_color = light.color * diffuse_strength;
+    // Material properties
+    let ambient_reflectivity = 1.0;
+    let diffuse_reflectivity = 1.0;
+    let specular_reflectivity = 1.0;
+    let smoothness = 32.0;
 
-    let view_dir = normalize(-in.view_position);
-    // let half_dir = normalize(view_dir + light_dir);
-    let reflect_dir = reflect(-light_dir, in.view_normal);
-    let specular_strength = pow(max(dot(view_dir, reflect_dir), 0.0), 32.0);
-    let specular_color = light.color * specular_strength;
+    let incoming_light_direction = normalize(light.model_view * vec4(0.0, 0.0, 0.0, 1.0) - vec4(in.view_position, 1.0)).xyz;
+    let outgoing_light_direction = reflect(-incoming_light_direction, in.view_normal);
+    let viewing_direction = normalize(vec3(0.0, 0.0, -1.0) - in.view_position);
+    let surface_normal = in.view_normal;
+
+    let normalization_factor = (smoothness + 2.0) / TAU;
+    let diffuse_component = dot(incoming_light_direction, surface_normal);
+    let specular_component = normalization_factor * pow(dot(outgoing_light_direction, viewing_direction), smoothness);
+
+    let phong_light_intensity = ambient_light_intensity * ambient_reflectivity + point_light_intensity * (diffuse_reflectivity * diffuse_component + specular_reflectivity * specular_component);
+    let color = phong_light_intensity * light.color * object_color.rgb;
 
     return vec4<f32>(
-        (ambient_color + diffuse_color + specular_color) * object_color.xyz,
-        //(specular_color) * object_color.xyz,
+        color,
         object_color.a,
     );
 }
