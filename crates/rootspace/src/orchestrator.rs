@@ -320,7 +320,7 @@ impl Orchestrator {
                 ..Default::default()
             })
             .with_camera(Camera::default())
-            .with_transform(Transform::look_at_rh_inv(
+            .with_transform(Transform::look_at_rh(
                 [0.0, 5.0, -10.0, 1.0],
                 [0.0, 0.0, 0.0, 1.0],
                 Vec4::y(),

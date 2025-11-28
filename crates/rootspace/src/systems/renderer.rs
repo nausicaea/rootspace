@@ -109,13 +109,11 @@ impl Renderer {
         let (camera_uniform, camera_view) = res
             .iter_rr::<Camera, Transform>()
             .map(|(_idx, cam, trf)| {
-                use num_traits::Inv;
-
-                let camera_transform = trf.affine; //hier_transform(idx, &hier, &transforms);
-                let camera_view = camera_transform.inv();
+                let camera_view = trf.affine.to_matrix(); //hier_transform(idx, &hier, &transforms);
 
                 (
                     CameraUniform {
+                        // Transpose the matrix to go from row-major (CPU) to column-major (GPU).
                         projection: cam.as_persp_matrix().t().0,
                     },
                     camera_view,
@@ -156,11 +154,13 @@ impl Renderer {
                         materials = Some(&ren.model.materials);
                     }
 
-                    let instance_transform = trf.affine; //hier_transform(idx, &hier, &transforms);
+                    let instance_transform = trf.affine.to_matrix(); //hier_transform(idx, &hier, &transforms);
                     let model_view = camera_view * instance_transform;
 
                     Instance {
+                        // Transpose the matrix to go from row-major (CPU) to column-major (GPU).
                         model_view: model_view.t().0,
+                        // The correct normal matrix is the inverse-transpose of the model-view matrix. But we can elide the transpose operation thanks to the change from row-major (CPU) to column-major (GPU).
                         normal: model_view.inv().0,
                         with_camera: if trf.ui { 0.0 } else { 1.0 },
                     }
@@ -194,12 +194,13 @@ impl Renderer {
             };
 
             let light_transform = AffineBuilder::default()
-                .with_scale(0.25)
                 .with_translation(lght.position)
-                .build();
+                .build()
+                .to_matrix();
             let model_view = camera_view * light_transform;
 
             let lu = LightUniform {
+                // Transpose the matrix to go from row-major (CPU) to column-major (GPU).
                 model_view: model_view.t().0,
                 color: lght.color.into(),
             };
@@ -513,7 +514,7 @@ struct InstanceDrawData<'a> {
 #[tracing::instrument(skip_all)]
 fn hier_transform(idx: Index, hier: &Hierarchy<Index>, transforms: &<Transform as Component>::Storage) -> Mat4<f32> {
     hier.ancestors(idx)
-        .filter_map(|a| transforms.get(a).map(|at| Into::<Mat4<f32>>::into(at.affine)))
+        .filter_map(|a| transforms.get(a).map(|at| at.affine.to_matrix()))
         .product::<Mat4<f32>>()
 }
 
