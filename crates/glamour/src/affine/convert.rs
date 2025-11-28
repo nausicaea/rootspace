@@ -52,7 +52,7 @@ mod tests {
     fn from_affine_for_mat_comparison() {
         let glamour_lhs = Affine::builder()
             .with_scale(1.5_f32)
-            .with_translation(Vec4::new(1.0_f32, 2.0, 3.0, 0.0))
+            .with_translation(Vec4::new_vector(1.0_f32, 2.0, 3.0))
             .with_orientation(Quat::new(0.5_f32, 0.0, 1.0, 0.0))
             .build();
 

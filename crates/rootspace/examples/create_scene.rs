@@ -63,7 +63,7 @@ async fn main() -> anyhow::Result<()> {
         .create_entity()
         .with_transform(
             Transform::builder()
-                .with_translation(Vec4::new(1.0, 0.0, 0.0, 0.0))
+                .with_translation(Vec4::new_vector(1.0, 0.0, 0.0))
                 .build(),
         )
         .with_renderable(RenderableSource::Reference {
@@ -77,7 +77,7 @@ async fn main() -> anyhow::Result<()> {
         .with_parent(tri1)
         .with_transform(
             Transform::builder()
-                .with_translation(Vec4::new(-1.0, 0.0, 0.0, 0.0))
+                .with_translation(Vec4::new_vector(-1.0, 0.0, 0.0))
                 .with_scale(0.25f32)
                 .build(),
         )

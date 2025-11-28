@@ -360,7 +360,7 @@ impl Orchestrator {
                 let x = SPACE_BETWEEN * (i as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
                 let z = SPACE_BETWEEN * (j as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
 
-                let position = Vec4::new(x, 0.0, z, 1.0);
+                let position = Vec4::new_point(x, 0.0, z);
 
                 use approx::relative_eq;
                 use glamour::num::Zero;

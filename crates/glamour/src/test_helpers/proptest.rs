@@ -48,7 +48,7 @@ prop_compose! {
 
 prop_compose! {
     pub fn vec4(s: impl Strategy<Value = f32>)(v in vec(s, 3)) -> Vec4<f32> {
-        Vec4::new(v[0], v[1], v[2], 0.0_f32)
+        Vec4::new_vector(v[0], v[1], v[2])
     }
 }
 
@@ -60,7 +60,7 @@ prop_compose! {
 
 prop_compose! {
     pub fn point4(s: impl Strategy<Value = f32>)(v in vec(s, 3)) -> Vec4<f32> {
-        Vec4::new(v[0], v[1], v[2], 1.0_f32)
+        Vec4::new_point(v[0], v[1], v[2])
     }
 }
 

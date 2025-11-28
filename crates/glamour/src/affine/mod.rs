@@ -43,12 +43,12 @@ where
 
 impl<R> Affine<R>
 where
-    R: Float,
+    R: Float + num_traits::ConstOne + num_traits::ConstZero,
 {
     pub fn with_look_at_rh(eye: Vec4<R>, target: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
-        let eye = Vec4::new(eye.x, eye.y, eye.z, R::one());
-        let target = Vec4::new(target.x, target.y, target.z, R::one());
-        let up: Unit<_> = Vec4::new(up.x, up.y, up.z, R::zero()).into();
+        let eye = Vec4::new_point(eye.x, eye.y, eye.z);
+        let target = Vec4::new_point(target.x, target.y, target.z);
+        let up: Unit<_> = Vec4::new_vector(up.x, up.y, up.z).into();
 
         let dir: Unit<_> = (target - eye).into();
         let right: Unit<_> = dir.cross(up);
@@ -85,8 +85,8 @@ mod tests {
     #[test]
     #[ignore = "the results of cgmath and nalgebra don't agree"]
     fn with_look_at_rh_comparison() {
-        let eye = Vec4::new(0.0, 5.0, -10.0, 1.0);
-        let cntr = Vec4::new(0.0, 0.0, 0.0, 1.0);
+        let eye = Vec4::new_point(0.0, 5.0, -10.0);
+        let cntr = Vec4::new_point(0.0, 0.0, 0.0);
         let up: Unit<Vec4<f32>> = Vec4::y();
 
         let glamour_look_at = Affine::with_look_at_rh(eye, cntr, up);
