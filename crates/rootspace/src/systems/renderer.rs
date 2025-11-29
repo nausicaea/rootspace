@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
     mem::size_of,
-    num::NonZeroU64,
     ops::Range,
     slice::from_raw_parts,
     time::{Duration, Instant},
@@ -25,8 +24,6 @@ use ecs::{
     with_resources::WithResources,
 };
 use glamour::num::ToMatrix;
-use glamour::quat::Quat;
-use glamour::unit::Unit;
 use glamour::{affine::builder::AffineBuilder, mat::Mat4};
 use griffon::base::camera_uniform::CameraUniform;
 use griffon::base::encoder::RenderPass;
@@ -202,7 +199,11 @@ impl Renderer {
             let lu = LightUniform {
                 // Transpose the matrix to go from row-major (CPU) to column-major (GPU).
                 model_view: model_view.t().0,
-                color: lght.color.into(),
+                ambient_color: lght.ambient_color.into(),
+                specular_color: lght.specular_color.into(),
+                ambient_intensity: 0.05,
+                point_intensity: 1.0,
+                ..Default::default()
             };
 
             light_draw_data.push(ldd);
@@ -240,11 +241,11 @@ impl Renderer {
             rp.set_pipeline(self.pipeline_wcm)
                 .set_bind_group(0, self.camera_bind_group, &[])
                 .set_bind_group(1, self.light_bind_group, &[]);
-            
+
             if !instance_data.materials.is_empty() {
                 rp.set_bind_group(2, instance_data.materials[0].bind_group, &[]);
             }
-            
+
             rp.set_vertex_buffer(0, instance_data.vertex_buffer)
                 .set_vertex_buffer(1, instance_data.instance_buffer)
                 .set_index_buffer(instance_data.index_buffer)
@@ -294,8 +295,8 @@ impl Renderer {
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let shader_module = gfx.create_shader_module(Some("light-debug:shader"), &shader_data);
 
-        let cbl = gfx.camera_buffer_layout();
-        let lbl = gfx.light_buffer_layout();
+        let cbl = gfx.camera_bind_group_layout();
+        let lbl = gfx.light_bind_group_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
@@ -317,9 +318,9 @@ impl Renderer {
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let shader_module = gfx.create_shader_module(Some("with-camera-material:shader"), &shader_data);
 
-        let cbl = gfx.camera_buffer_layout();
-        let lbl = gfx.light_buffer_layout();
-        let mbl = gfx.material_buffer_layout();
+        let cbl = gfx.camera_bind_group_layout();
+        let lbl = gfx.light_bind_group_layout();
+        let mbl = gfx.material_bind_group_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
@@ -359,11 +360,11 @@ impl WithResources for Renderer {
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
-        let cbl = gfx.camera_buffer_layout();
+        let cbl = gfx.camera_bind_group_layout();
         let camera_bind_group = gfx
             .create_bind_group(cbl)
             .with_label(Some("camera-bind-group"))
-            .add_buffer(0, 0u64, NonZeroU64::new(size_of::<CameraUniform>() as _), camera_buffer)
+            .add_entire_buffer(0, camera_buffer)
             .submit();
 
         let light_buffer = gfx.create_buffer(
@@ -372,11 +373,11 @@ impl WithResources for Renderer {
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
-        let ll = gfx.light_buffer_layout();
+        let ll = gfx.light_bind_group_layout();
         let light_bind_group = gfx
             .create_bind_group(ll)
             .with_label(Some("light-bind-group"))
-            .add_buffer(0, 0u64, NonZeroU64::new(size_of::<LightUniform>() as _), light_buffer)
+            .add_entire_buffer(0, light_buffer)
             .submit();
 
         Ok(Renderer {

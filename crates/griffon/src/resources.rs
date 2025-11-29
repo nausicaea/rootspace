@@ -21,6 +21,7 @@ use crate::base::ids::{BindGroupLayoutId, BufferId, ShaderModuleId, TextureId, T
 use crate::base::instance::Instance;
 use crate::base::internal_runtime_data::InternalRuntimeData;
 use crate::base::light_uniform::LightUniform;
+use crate::base::material_uniform::MaterialUniform;
 use crate::base::render_pipeline_builder::RenderPipelineBuilder;
 use crate::base::runtime::Runtime;
 use crate::base::sampler_builder::SamplerBuilder;
@@ -140,16 +141,16 @@ impl Graphics {
         );
     }
 
-    pub fn camera_buffer_layout(&self) -> BindGroupLayoutId {
-        self.internal.camera_buffer_layout
+    pub fn camera_bind_group_layout(&self) -> BindGroupLayoutId {
+        self.internal.camera_bind_group_layout
     }
 
-    pub fn light_buffer_layout(&self) -> BindGroupLayoutId {
-        self.internal.light_buffer_layout
+    pub fn light_bind_group_layout(&self) -> BindGroupLayoutId {
+        self.internal.light_bind_group_layout
     }
 
-    pub fn material_buffer_layout(&self) -> BindGroupLayoutId {
-        self.internal.material_buffer_layout
+    pub fn material_bind_group_layout(&self) -> BindGroupLayoutId {
+        self.internal.material_bind_group_layout
     }
 
     pub fn write_buffer<T>(&self, buffer: BufferId, data: &[T])
@@ -265,12 +266,24 @@ impl Graphics {
     fn create_gpu_material(&mut self, m: &CpuMaterial) -> GpuMaterial {
         let texture = self.create_gpu_texture(&m.texture);
 
-        let layout = self.material_buffer_layout();
+        let material = self.create_buffer_init(
+            Some("material-buffer"),
+            BufferUsages::UNIFORM,
+            &[MaterialUniform {
+                ambient_reflectivity: m.ambient_reflectivity,
+                diffuse_reflectivity: m.diffuse_reflectivity,
+                specular_reflectivity: m.specular_reflectivity,
+                smoothness: m.smoothness,
+            }],
+        );
+
+        let layout = self.material_bind_group_layout();
         let bind_group = self
             .create_bind_group(layout)
             .with_label(m.label.as_ref().map(|l| format!("{}:bind-group", &l)).as_deref())
             .add_texture_view(0, texture.view)
             .add_sampler(1, texture.sampler)
+            .add_entire_buffer(2, material)
             .submit();
 
         GpuMaterial { texture, bind_group }
@@ -401,8 +414,8 @@ where
 
         let mut database = GpuObjectDatabase::default();
 
-        let camera_buffer_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
-            .with_label("camera-buffer-layout")
+        let camera_bind_group_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
+            .with_label("camera-bind-group-layout")
             .add_bind_group_layout_entry(
                 0,
                 ShaderStages::VERTEX,
@@ -414,8 +427,8 @@ where
             )
             .submit();
 
-        let light_buffer_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
-            .with_label("light-buffer-layout")
+        let light_bind_group_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
+            .with_label("light-bind-group-layout")
             .add_bind_group_layout_entry(
                 0,
                 ShaderStages::VERTEX | ShaderStages::FRAGMENT,
@@ -427,8 +440,8 @@ where
             )
             .submit();
 
-        let material_buffer_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
-            .with_label("material-buffer-layout")
+        let material_bind_group_layout = BindGroupLayoutBuilder::new(&runtime, &mut database)
+            .with_label("material-bind-group-layout-layout")
             .add_bind_group_layout_entry(
                 0,
                 ShaderStages::FRAGMENT,
@@ -443,6 +456,15 @@ where
                 ShaderStages::FRAGMENT,
                 BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
             )
+            .add_bind_group_layout_entry(
+                2,
+                ShaderStages::FRAGMENT,
+                BindingType::Buffer {
+                    ty: BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: BufferSize::new(size_of::<MaterialUniform>() as _),
+                },
+            )
             .submit();
 
         let depth_texture = Self::create_depth_texture_int(&runtime, &mut database, settings, DEPTH_TEXTURE_LABEL);
@@ -453,9 +475,9 @@ where
             runtime,
             database,
             internal: InternalRuntimeData {
-                camera_buffer_layout,
-                light_buffer_layout,
-                material_buffer_layout,
+                camera_bind_group_layout,
+                light_bind_group_layout,
+                material_bind_group_layout,
                 depth_texture,
                 depth_texture_view,
                 instances: Urn::default(),

@@ -76,7 +76,8 @@ impl Scene {
                             group: r.group.clone(),
                             name: r.name.clone(),
                             position: r.position,
-                            color: r.color,
+                            ambient_color: r.ambient_color,
+                            specular_color: r.specular_color,
                         },
                     )
                 })
@@ -182,7 +183,8 @@ impl Scene {
                     group,
                     name,
                     position,
-                    color,
+                    ambient_color,
+                    specular_color,
                 }) = scene.lights.get(&i_prev)
                 {
                     let max_lights = res.read::<Graphics>().max_lights() as usize;
@@ -193,7 +195,7 @@ impl Scene {
                             "The maximum number of light sources ({max_lights}) has been reached"
                         ));
                     }
-                    let light = Light::with_model(res, group, name, *position, *color).await?;
+                    let light = Light::with_model(res, group, name, *position, *ambient_color, *specular_color).await?;
                     lights.insert(i_new, light);
                 }
             }
@@ -351,6 +353,7 @@ pub enum LightSource {
         group: String,
         name: String,
         position: Vec4<f32>,
-        color: Vec4<f32>,
+        ambient_color: Vec4<f32>,
+        specular_color: Vec4<f32>,
     },
 }

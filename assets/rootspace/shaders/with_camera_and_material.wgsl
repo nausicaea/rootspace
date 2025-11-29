@@ -28,9 +28,8 @@ struct VertexOutput {
     @location(0) view_position: vec3<f32>,
     @location(1) view_normal: vec3<f32>,
     @location(2) tex_coords: vec2<f32>,
-    @location(3) color: vec3<f32>,
-    @location(4) light_position: vec3<f32>,
-    @location(5) with_material: f32,
+    @location(3) light_position: vec3<f32>,
+    @location(4) with_material: f32,
 }
 
 struct Camera {
@@ -39,7 +38,17 @@ struct Camera {
 
 struct Light {
     model_view: mat4x4<f32>,
-    color: vec3<f32>,
+    ambient_color: vec4<f32>,
+    specular_color: vec4<f32>,
+    ambient_intensity: f32,
+    point_intensity: f32,
+}
+
+struct Material {
+    ambient_reflectivity: f32,
+    diffuse_reflectivity: f32,
+    specular_reflectivity: f32,
+    smoothness: f32,
 }
 
 @group(0) @binding(0)
@@ -53,6 +62,9 @@ var t_diffuse: texture_2d<f32>;
 
 @group(2) @binding(1)
 var s_diffuse: sampler;
+
+@group(2) @binding(2)
+var<uniform> material: Material;
 
 @vertex
 fn vertex_main(
@@ -85,7 +97,6 @@ fn vertex_main(
         view_position.xyz,
         view_normal.xyz,
         vertex.tex_coords,
-        light.color,
         (light.model_view * vec4(0.0, 0.0, 0.0, 1.0)).xyz,
         instance.with_material,
     );
@@ -96,21 +107,21 @@ fn fragment_main(
     in: VertexOutput
 ) -> @location(0) vec4<f32> {
     // Light source properties
-    let Ia = 0.05;
-    let Ip = 1.0;
+    let Ia = light.ambient_intensity;
+    let Ip = light.point_intensity;
 
     // Material properties
-    let Ka = 1.0;
-    let Kd = 1.0;
-    let Ks = 1.0;
-    let smoothness = 32.0;
+    let Ka = material.ambient_reflectivity;
+    let Kd = material.diffuse_reflectivity;
+    let Ks = material.specular_reflectivity;
+    let smoothness = material.smoothness;
     let with_material = step(0.5, in.with_material);
     let object_color = with_material * textureSample(t_diffuse, s_diffuse, in.tex_coords) + (1.0 - with_material) * DEFAULT_COLOR;
 
     // Phong shading (thank you https://www.cs.toronto.edu/~jacobson/phong-demo/)
-    let ambient_color = object_color.rgb;
-    let diffuse_color = object_color.rgb * light.color;
-    let specular_color = light.color;
+    let ambient_color = light.ambient_color.rgb;
+    let diffuse_color = object_color.rgb;
+    let specular_color = light.specular_color.rgb;
 
     let N = in.view_normal;
     let L = normalize(in.light_position - in.view_position);
