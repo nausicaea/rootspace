@@ -1,12 +1,12 @@
-use std::f32::consts::PI;
 use approx::assert_relative_eq;
-use num_traits::Inv;
 use glamour::affine::Affine;
 use glamour::mat::Mat4;
 use glamour::num::{ToMatrix, Zero};
 use glamour::quat::Quat;
 use glamour::unit::Unit;
 use glamour::vec::Vec4;
+use num_traits::Inv;
+use std::f32::consts::PI;
 
 /// The test attempts to quantify the error of calculating the model-view matrix either using [`Affine`] or directly with [`Mat4`]. The double inverse of the camera-view matrix is wrong, but was accidentally used in [`rootspace::systems::renderer::Renderer`].
 #[test]
@@ -17,7 +17,8 @@ fn model_view_matrix_with_double_inverse_error() {
         Vec4::new_point(0.0, 5.0, -10.0),
         Vec4::new_point(0.0, 0.0, 0.0),
         Vec4::y(),
-    ).inv();
+    )
+    .inv();
 
     let cube = {
         let position = Vec4::new_point(1.5, 0.0, 1.5);

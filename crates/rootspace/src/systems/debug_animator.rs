@@ -4,7 +4,7 @@ use async_trait::async_trait;
 
 use crate::components::{debug_animate::DebugAnimate, transform::Transform};
 use ecs::{resources::Resources, system::System, with_resources::WithResources};
-use glamour::{quat::Quat, unit::Unit, vec::Vec4};
+use glamour::{quat::Quat, vec::Vec4};
 
 #[derive(Debug)]
 pub struct DebugAnimator;

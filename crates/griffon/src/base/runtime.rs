@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Context};
+use crate::base::settings::Settings;
+use anyhow::{Context, anyhow};
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
 use winit::{event_loop::EventLoopWindowTarget, window::Fullscreen};
-use crate::base::settings::Settings;
 
 #[derive(Debug)]
 pub struct Runtime<'a> {
@@ -23,13 +23,14 @@ impl<'a> Runtime<'a> {
             winit::window::WindowBuilder::new()
                 .with_fullscreen(Some(Fullscreen::Borderless(primary_monitor)))
                 .build(event_loop)
-                .context("Creating a window")?
+                .context("Creating a window")?,
         );
 
         let size = window.inner_size();
         tracing::debug!("Physical window size: {:?}", &size);
 
-        let max_size = window.current_monitor()
+        let max_size = window
+            .current_monitor()
             .ok_or_else(|| anyhow!("No monitor assigned to the current window"))?
             .size();
 
