@@ -68,25 +68,13 @@ var<uniform> material: Material;
 
 /// Calculate ambient, diffuse, and specular lighting based on the Blinn-Phong model
 fn blinn_phong(
-    /// Ambient light intensity
-    Ia: f32,
-    /// Point light source intensity
-    Ip: f32,
-    /// Ambient color of the light source
-    ambient_color: vec3<f32>,
-    /// Diffuse color of the light source
-    diffuse_color: vec3<f32>,
-    /// Specular color of the light source
-    specular_color: vec3<f32>,
+    // Light source properties
+    light: Light,
 
-    /// Ambient reflectivity of the material
-    Ka: f32,
-    /// Diffuse reflectivity of the material
-    Kd: f32,
-    /// Specular reflectivity of the material
-    Ks: f32,
-    /// Smoothness of the material's surface
-    smoothness: f32,
+    /// Material properties
+    material: Material,
+    /// Textured color of the object
+    texture_color: vec3<f32>,
 
     /// The surface normal in view space, interpolated for each fragment (unit vector)
     N: vec3<f32>,
@@ -95,6 +83,15 @@ fn blinn_phong(
     /// The viewing direction (unit vector)
     V: vec3<f32>,
 ) -> vec3<f32> {
+    let Ia = light.ambient_intensity;
+    let Ip = light.point_intensity;
+    let ambient_color = light.ambient_color.rgb;
+    let diffuse_color = texture_color;
+    let specular_color = light.specular_color.rgb;
+    let Ka = material.ambient_reflectivity;
+    let Kd = material.diffuse_reflectivity;
+    let Ks = material.specular_reflectivity;
+    let smoothness = material.smoothness;
     let H = normalize(V + L);
     let Ca = Ia * Ka * ambient_color;
     let Cd = Ip * Kd * max(dot(N, L), 0.0) * diffuse_color;
@@ -148,17 +145,9 @@ fn fragment_main(
     let texture_color = with_material * textureSample(t_diffuse, s_diffuse, in.tex_coords) + (1.0 - with_material) * DEFAULT_COLOR;
 
     let color = blinn_phong(
-        light.ambient_intensity,
-        light.point_intensity,
-        light.ambient_color.rgb,
+        light,
+        material,
         texture_color.rgb,
-        light.specular_color.rgb,
-
-        material.ambient_reflectivity,
-        material.diffuse_reflectivity,
-        material.specular_reflectivity,
-        material.smoothness,
-
         in.view_normal,
         normalize(in.light_position - in.view_position),
         normalize(-in.view_position),
