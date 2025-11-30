@@ -66,6 +66,44 @@ var s_diffuse: sampler;
 @group(2) @binding(2)
 var<uniform> material: Material;
 
+/// Calculate ambient, diffuse, and specular lighting based on the Blinn-Phong model
+fn blinn_phong(
+    /// Ambient light intensity
+    Ia: f32,
+    /// Point light source intensity
+    Ip: f32,
+    /// Ambient color of the light source
+    ambient_color: vec3<f32>,
+    /// Diffuse color of the light source
+    diffuse_color: vec3<f32>,
+    /// Specular color of the light source
+    specular_color: vec3<f32>,
+
+    /// Ambient reflectivity of the material
+    Ka: f32,
+    /// Diffuse reflectivity of the material
+    Kd: f32,
+    /// Specular reflectivity of the material
+    Ks: f32,
+    /// Smoothness of the material's surface
+    smoothness: f32,
+
+    /// The surface normal in view space, interpolated for each fragment (unit vector)
+    N: vec3<f32>,
+    /// The incoming light direction (unit vector)
+    L: vec3<f32>,
+    /// The viewing direction (unit vector)
+    V: vec3<f32>,
+) -> vec3<f32> {
+    let H = normalize(V + L);
+    let Ca = Ia * Ka * ambient_color;
+    let Cd = Ip * Kd * max(dot(N, L), 0.0) * diffuse_color;
+    // Only calculate the specular component if the diffuse component is greater than zero
+    let Cd_gt_zero = sign(Cd);
+    let Cs = Cd_gt_zero * Ip * Ks * (smoothness + 2.0) / TAU * pow(max(dot(N, H), 0.0), smoothness) * specular_color;
+    return Ca + Cd + Cs;
+}
+
 @vertex
 fn vertex_main(
     vertex: VertexInput,
@@ -106,36 +144,27 @@ fn vertex_main(
 fn fragment_main(
     in: VertexOutput
 ) -> @location(0) vec4<f32> {
-    // Light source properties
-    let Ia = light.ambient_intensity;
-    let Ip = light.point_intensity;
-
-    // Material properties
-    let Ka = material.ambient_reflectivity;
-    let Kd = material.diffuse_reflectivity;
-    let Ks = material.specular_reflectivity;
-    let smoothness = material.smoothness;
     let with_material = step(0.5, in.with_material);
-    let object_color = with_material * textureSample(t_diffuse, s_diffuse, in.tex_coords) + (1.0 - with_material) * DEFAULT_COLOR;
+    let texture_color = with_material * textureSample(t_diffuse, s_diffuse, in.tex_coords) + (1.0 - with_material) * DEFAULT_COLOR;
 
-    // Phong shading (thank you https://www.cs.toronto.edu/~jacobson/phong-demo/)
-    let ambient_color = light.ambient_color.rgb;
-    let diffuse_color = object_color.rgb;
-    let specular_color = light.specular_color.rgb;
+    let color = blinn_phong(
+        light.ambient_intensity,
+        light.point_intensity,
+        light.ambient_color.rgb,
+        texture_color.rgb,
+        light.specular_color.rgb,
 
-    let N = in.view_normal;
-    let L = normalize(in.light_position - in.view_position);
-    let V = normalize(-in.view_position);
-    let R = reflect(-L, N);
-    let H = normalize(V + L);
+        material.ambient_reflectivity,
+        material.diffuse_reflectivity,
+        material.specular_reflectivity,
+        material.smoothness,
 
-    let Ca = Ia * Ka * ambient_color;
-    let Cd = Ip * Kd * max(dot(N, L), 0.0) * diffuse_color;
+        in.view_normal,
+        normalize(in.light_position - in.view_position),
+        normalize(-in.view_position),
+    );
 
-    let Cd_gt_zero = sign(Cd);
-    let Cs = Cd_gt_zero * Ip * Ks * (smoothness + 2.0) / TAU * pow(max(dot(N, H), 0.0), smoothness) * specular_color;
-
-    return vec4<f32>(Ca + Cd + Cs, 1.0);
+    return vec4<f32>(color, 1.0);
 }
 
 // vim: set filetype=wgsl :
