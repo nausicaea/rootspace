@@ -2,7 +2,7 @@
   description = "Rust development environment";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils = {
       url = "github:numtide/flake-utils";
@@ -32,6 +32,7 @@
             openssl
             pkg-config
             git
+            trufflehog
             pre-commit
             rust-analyzer
             cargo-nextest
