@@ -336,7 +336,8 @@ impl Orchestrator {
                 group: "models".into(),
                 name: "cube.ply".into(),
                 position: [2.0, 2.0, 2.0, 1.0].into(),
-                color: [1.0, 1.0, 1.0, 1.0].into(),
+                ambient_color: [0.5, 0.5, 0.5, 1.0].into(),
+                specular_color: [1.0, 1.0, 1.0, 1.0].into(),
             })
             .submit();
         // builtins_scene
@@ -354,7 +355,7 @@ impl Orchestrator {
         //     .submit();
 
         const SPACE_BETWEEN: f32 = 3.0;
-        const NUM_INSTANCES_PER_ROW: usize = 1;
+        const NUM_INSTANCES_PER_ROW: usize = 5;
         for i in 0..NUM_INSTANCES_PER_ROW {
             for j in 0..NUM_INSTANCES_PER_ROW {
                 let x = SPACE_BETWEEN * (i as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
@@ -387,9 +388,29 @@ impl Orchestrator {
                             .with_orientation(Quat::with_axis_angle(axis, angle))
                             .build(),
                     )
+                    .with_debug_animate()
                     .submit();
             }
         }
+
+        builtins_scene
+            .create_entity()
+            .with_info(Info {
+                name: "floor".to_string(),
+                ..Default::default()
+            })
+            .with_renderable(RenderableSource::Reference {
+                group: "models".into(),
+                name: "quad.ply".into(),
+            })
+            .with_transform(
+                Transform::builder()
+                    .with_translation(Vec4::new_point(0.0, -2.0, 0.0))
+                    .with_orientation(Quat::with_axis_angle(Vec4::x(), std::f32::consts::PI / -2.0))
+                    .with_scale(100.0)
+                    .build(),
+            )
+            .submit();
 
         builtins_scene.submit(res, "builtin", "main").await?;
 
