@@ -1,6 +1,9 @@
 // Shader pre-processing hint: https://elyshaffir.github.io/Taiga-Blog/2022/01/08/using_include_statements_in_wgsl.html
 // Function reference: https://webgpufundamentals.org/webgpu/lessons/webgpu-wgsl-function-reference.html
 
+const TAU = 6.283185307179586476925286766559005768394338798;
+const DEFAULT_COLOR = vec4<f32>(0.34, 0.34, 0.87, 1.0);
+
 struct VertexInput {
     @location(0) position: vec3<f32>,
     @location(1) normal: vec3<f32>,
@@ -17,6 +20,7 @@ struct InstanceInput {
     @location(10) normal_2: vec4<f32>,
     @location(11) normal_3: vec4<f32>,
     @location(12) with_camera: f32,
+    @location(13) with_material: f32,
 }
 
 struct VertexOutput {
@@ -24,7 +28,8 @@ struct VertexOutput {
     @location(0) view_position: vec3<f32>,
     @location(1) view_normal: vec3<f32>,
     @location(2) tex_coords: vec2<f32>,
-    @location(3) color: vec3<f32>,
+    @location(3) light_position: vec3<f32>,
+    @location(4) with_material: f32,
 }
 
 struct Camera {
@@ -33,7 +38,17 @@ struct Camera {
 
 struct Light {
     model_view: mat4x4<f32>,
-    color: vec3<f32>,
+    ambient_color: vec4<f32>,
+    specular_color: vec4<f32>,
+    ambient_intensity: f32,
+    point_intensity: f32,
+}
+
+struct Material {
+    ambient_reflectivity: f32,
+    diffuse_reflectivity: f32,
+    specular_reflectivity: f32,
+    smoothness: f32,
 }
 
 @group(0) @binding(0)
@@ -47,6 +62,44 @@ var t_diffuse: texture_2d<f32>;
 
 @group(2) @binding(1)
 var s_diffuse: sampler;
+
+@group(2) @binding(2)
+var<uniform> material: Material;
+
+/// Calculate ambient, diffuse, and specular lighting based on the Blinn-Phong model
+fn blinn_phong(
+    // Light source properties
+    light: Light,
+
+    /// Material properties
+    material: Material,
+    /// Textured color of the object
+    texture_color: vec3<f32>,
+
+    /// The surface normal in view space, interpolated for each fragment (unit vector)
+    N: vec3<f32>,
+    /// The incoming light direction (unit vector)
+    L: vec3<f32>,
+    /// The viewing direction (unit vector)
+    V: vec3<f32>,
+) -> vec3<f32> {
+    let Ia = light.ambient_intensity;
+    let Ip = light.point_intensity;
+    let ambient_color = light.ambient_color.rgb;
+    let diffuse_color = texture_color;
+    let specular_color = light.specular_color.rgb;
+    let Ka = material.ambient_reflectivity;
+    let Kd = material.diffuse_reflectivity;
+    let Ks = material.specular_reflectivity;
+    let smoothness = material.smoothness;
+    let H = normalize(V + L);
+    let Ca = Ia * Ka * ambient_color;
+    let Cd = Ip * Kd * max(dot(N, L), 0.0) * diffuse_color;
+    // Only calculate the specular component if the diffuse component is greater than zero
+    let Cd_gt_zero = sign(Cd);
+    let Cs = Cd_gt_zero * Ip * Ks * (smoothness + 2.0) / TAU * pow(max(dot(N, H), 0.0), smoothness) * specular_color;
+    return Ca + Cd + Cs;
+}
 
 @vertex
 fn vertex_main(
@@ -67,19 +120,20 @@ fn vertex_main(
         instance.normal_3,
     );
 
-    let with_camera = clamp(instance.with_camera, 0.0, 1.0);
+    let with_camera = step(0.5, instance.with_camera);
     let local_position = vec4<f32>(vertex.position, 1.0);
-    let view_position = local_position * model_view;
-    let clip_position = view_position * camera.projection * with_camera + view_position * (1.0 - with_camera);
+    let view_position = model_view * local_position;
+    let clip_position = with_camera * camera.projection * view_position + (1.0 - with_camera) * view_position;
 
-    let view_normal = normalize(vec4<f32>(vertex.normal, 0.0) * normal);
+    let view_normal = normalize(normal * vec4<f32>(vertex.normal, 0.0));
 
     return VertexOutput(
         clip_position,
         view_position.xyz,
         view_normal.xyz,
         vertex.tex_coords,
-        light.color,
+        (light.model_view * vec4(0.0, 0.0, 0.0, 1.0)).xyz,
+        instance.with_material,
     );
 }
 
@@ -87,27 +141,19 @@ fn vertex_main(
 fn fragment_main(
     in: VertexOutput
 ) -> @location(0) vec4<f32> {
-    let object_color = textureSample(t_diffuse, s_diffuse, in.tex_coords);
+    let with_material = step(0.5, in.with_material);
+    let texture_color = with_material * textureSample(t_diffuse, s_diffuse, in.tex_coords) + (1.0 - with_material) * DEFAULT_COLOR;
 
-    let ambient_strength = 0.1;
-    let ambient_color = light.color * ambient_strength;
-
-    let light_local_position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-    let light_view_position = light_local_position * light.model_view;
-    let light_dir = normalize(light_view_position.xyz - in.view_position);
-    let diffuse_strength = max(dot(in.view_normal, light_dir), 0.0);
-    let diffuse_color = light.color * diffuse_strength;
-
-    let view_dir = normalize(-in.view_position);
-    let reflect_dir = reflect(-light_dir, in.view_normal);
-    let specular_strength = pow(max(dot(view_dir, reflect_dir), 0.0), 32.0);
-    let specular_color = light.color * specular_strength;
-
-    return vec4<f32>(
-        //(ambient_color + diffuse_color + specular_color) * object_color.xyz, 
-        (specular_color) * object_color.xyz, 
-        object_color.a,
+    let color = blinn_phong(
+        light,
+        material,
+        texture_color.rgb,
+        in.view_normal,
+        normalize(in.light_position - in.view_position),
+        normalize(-in.view_position),
     );
+
+    return vec4<f32>(color, 1.0);
 }
 
 // vim: set filetype=wgsl :

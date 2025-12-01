@@ -1,27 +1,19 @@
 use std::{
-    cmp::{max, min},
     collections::HashMap,
     mem::size_of,
-    num::NonZeroU64,
     ops::Range,
     slice::from_raw_parts,
     time::{Duration, Instant},
 };
-
-use num_traits::Inv;
-
-use anyhow::Context;
-use async_trait::async_trait;
-use griffon::wgpu::{BufferUsages, SurfaceError};
-use griffon::winit::{dpi::PhysicalSize, event::WindowEvent};
-use itertools::Itertools;
 
 use crate::{
     components::{camera::Camera, transform::Transform},
     events::engine_event::EngineEvent,
     resources::statistics::Statistics,
 };
+use anyhow::Context;
 use assam::AssetDatabase;
+use async_trait::async_trait;
 use ecs::{
     component::Component,
     entity::index::Index,
@@ -31,6 +23,7 @@ use ecs::{
     system::System,
     with_resources::WithResources,
 };
+use glamour::num::ToMatrix;
 use glamour::{affine::builder::AffineBuilder, mat::Mat4};
 use griffon::base::camera_uniform::CameraUniform;
 use griffon::base::encoder::RenderPass;
@@ -42,7 +35,12 @@ use griffon::base::vertex::Vertex;
 use griffon::components::light::Light;
 use griffon::components::renderable::Renderable;
 use griffon::resources::Graphics;
+use griffon::wgpu::{BufferUsages, SurfaceError};
+use griffon::winit::{dpi::PhysicalSize, event::WindowEvent};
+use itertools::Itertools;
+use num_traits::Inv;
 use rose_tree::hierarchy::Hierarchy;
+use tracing::warn;
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -54,7 +52,6 @@ pub struct Renderer {
     light_buffer: BufferId,
     light_bind_group: BindGroupId,
     pipeline_ldb: PipelineId,
-    pipeline_wc: PipelineId,
     pipeline_wcm: PipelineId,
 }
 
@@ -83,32 +80,43 @@ impl Renderer {
         let _hier = res.read::<Hierarchy<Index>>();
         let _transforms = res.read_components::<Transform>();
 
-        // 1. Allow only a single camera
+        // 1. Perform validation for cameras and lights
         // 2. Obtain the camera projection matrix and write it to the corresponding uniform buffer
         // 3. Obtain the camera model matrix, calculate the inverse resulting in the view matrix, then
         //    use in the next step
         // 4. For each instance, multiply the view and the model matrix and write to the instance
         //    buffer
-        // 5. Doe the same as step 4 for each light
+        // 5. Do the same as step 4 for each light
+
+        // Validate the number of cameras and light sources
+        let max_cameras = gfx.max_cameras() as usize;
+        let num_cameras = res.read_components::<Camera>().len();
+        if num_cameras > max_cameras {
+            panic!("Too many cameras: have {num_cameras}, expected only {max_cameras}.");
+        }
+
+        let max_lights = gfx.max_lights() as usize;
+        let num_lights = res.read_components::<Light>().len();
+        if num_lights > max_lights {
+            panic!("Too many light sources: have {num_lights}, expected only {max_lights}.");
+        }
 
         // Calculate all camera transforms and the respective buffer offset
         let (camera_uniform, camera_view) = res
             .iter_rr::<Camera, Transform>()
             .map(|(_idx, cam, trf)| {
-                use num_traits::Inv;
-
-                let camera_transform = trf.affine; //hier_transform(idx, &hier, &transforms);
-                let camera_view = camera_transform.inv();
+                let camera_view = trf.affine.to_matrix(); //hier_transform(idx, &hier, &transforms);
 
                 (
                     CameraUniform {
-                        projection: cam.as_persp_matrix().0,
+                        // Transpose the matrix to go from row-major (CPU) to column-major (GPU).
+                        projection: cam.as_persp_matrix().t().0,
                     },
                     camera_view,
                 )
             })
             .next()
-            .expect("exactly one camera must be present");
+            .expect("at least one camera must be present for rendering");
 
         // Iterate through all entities with a renderable and transform
         // Extract all fields of Renderable that are shared across instances
@@ -125,8 +133,6 @@ impl Renderer {
             let mut index_buffer = None;
             let mut num_indices = None;
             let mut materials = None;
-            let mut min_instance_id = u32::MAX;
-            let mut max_instance_id = u32::MIN;
 
             let instance_data: Vec<_> = data
                 .sorted_by_key(|(_, ren, _)| ren.model.mesh.instance_id)
@@ -143,56 +149,66 @@ impl Renderer {
                     if materials.is_none() {
                         materials = Some(&ren.model.materials);
                     }
-                    min_instance_id = min(min_instance_id, ren.model.mesh.instance_id.to_u32());
-                    max_instance_id = max(max_instance_id, ren.model.mesh.instance_id.to_u32());
 
-                    let instance_transform = trf.affine; //hier_transform(idx, &hier, &transforms);
+                    let instance_transform = trf.affine.to_matrix(); //hier_transform(idx, &hier, &transforms);
                     let model_view = camera_view * instance_transform;
 
                     Instance {
-                        model_view: model_view.0,
-                        normal: model_view.inv().t().0,
+                        // Transpose the matrix to go from row-major (CPU) to column-major (GPU).
+                        model_view: model_view.t().0,
+                        // The correct normal matrix is the inverse-transpose of the model-view matrix. But we can elide the transpose operation thanks to the change from row-major (CPU) to column-major (GPU).
+                        normal: model_view.inv().0,
                         with_camera: if trf.ui { 0.0 } else { 1.0 },
+                        with_material: if ren.model.materials.is_empty() { 0.0 } else { 1.0 },
                     }
                 })
                 .collect();
 
-            instance_draw_data.push(InstanceDrawData {
+            let instances = u32::try_from(instance_data.len())
+                .unwrap_or_else(|e| panic!("at most {} instances are supported: {e}", u32::MAX));
+
+            let idd = InstanceDrawData {
                 vertex_buffer: vertex_buffer.unwrap(),
                 instance_buffer,
                 index_buffer: index_buffer.unwrap(),
                 num_indices: num_indices.unwrap(),
                 materials: materials.unwrap(),
-                instance_ids: min_instance_id..(max_instance_id + 1),
-            });
+                instance_indexes: 0..instances,
+            };
+
+            instance_draw_data.push(idd);
 
             instance_buffer_data.insert(instance_buffer, instance_data);
         }
 
-        let (light_draw_data, light_buffer_data) = res
-            .iter_r::<Light>()
-            .map(|(_, lght)| {
-                let ldd = LightDrawData {
-                    vertex_buffer: lght.model.mesh.vertex_buffer,
-                    index_buffer: lght.model.mesh.index_buffer,
-                    num_indices: lght.model.mesh.num_indices,
-                };
+        let mut light_draw_data: Vec<LightDrawData> = Vec::new();
+        let mut light_buffer_data: Vec<LightUniform> = Vec::new();
+        res.iter_r::<Light>().for_each(|(_, lght)| {
+            let ldd = LightDrawData {
+                vertex_buffer: lght.model.mesh.vertex_buffer,
+                index_buffer: lght.model.mesh.index_buffer,
+                num_indices: lght.model.mesh.num_indices,
+            };
 
-                let light_transform = AffineBuilder::default()
-                    .with_scale(0.25)
-                    .with_translation(lght.position)
-                    .build();
-                let model_view = camera_view * light_transform;
+            let light_transform = AffineBuilder::default()
+                .with_translation(lght.position)
+                .build()
+                .to_matrix();
+            let model_view = camera_view * light_transform;
 
-                let lu = LightUniform {
-                    model_view: model_view.0,
-                    color: lght.color.into(),
-                };
+            let lu = LightUniform {
+                // Transpose the matrix to go from row-major (CPU) to column-major (GPU).
+                model_view: model_view.t().0,
+                ambient_color: lght.ambient_color.into(),
+                specular_color: lght.specular_color.into(),
+                ambient_intensity: 0.05,
+                point_intensity: 1.0,
+                ..Default::default()
+            };
 
-                (ldd, lu)
-            })
-            .next()
-            .unwrap_or_else(|| todo!("currently, only one light is supported"));
+            light_draw_data.push(ldd);
+            light_buffer_data.push(lu);
+        });
 
         // Write the camera uniform data to the corresponding uniform buffer
         gfx.write_buffer(self.camera_buffer, &[camera_uniform]);
@@ -208,10 +224,10 @@ impl Renderer {
         }
 
         // Write the light buffer data to the corresponding uniform buffer
-        gfx.write_buffer(self.light_buffer, &[light_buffer_data]);
+        gfx.write_buffer(self.light_buffer, &light_buffer_data);
 
         DrawData {
-            lights: vec![light_draw_data],
+            lights: light_draw_data,
             instances: instance_draw_data,
         }
     }
@@ -219,6 +235,22 @@ impl Renderer {
     #[tracing::instrument(skip_all)]
     fn draw(&mut self, draw_data: &DrawData, mut rp: RenderPass) -> usize {
         let mut draw_calls = 0;
+
+        for instance_data in &draw_data.instances {
+            draw_calls += 1;
+            rp.set_pipeline(self.pipeline_wcm)
+                .set_bind_group(0, self.camera_bind_group, &[])
+                .set_bind_group(1, self.light_bind_group, &[]);
+
+            if !instance_data.materials.is_empty() {
+                rp.set_bind_group(2, instance_data.materials[0].bind_group, &[]);
+            }
+
+            rp.set_vertex_buffer(0, instance_data.vertex_buffer)
+                .set_vertex_buffer(1, instance_data.instance_buffer)
+                .set_index_buffer(instance_data.index_buffer)
+                .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_indexes.clone());
+        }
 
         for light in &draw_data.lights {
             draw_calls += 1;
@@ -228,28 +260,6 @@ impl Renderer {
                 .set_vertex_buffer(0, light.vertex_buffer)
                 .set_index_buffer(light.index_buffer)
                 .draw_indexed(0..light.num_indices, 0, 0..1);
-        }
-
-        for instance_data in &draw_data.instances {
-            draw_calls += 1;
-            if instance_data.materials.is_empty() {
-                rp.set_pipeline(self.pipeline_wc)
-                    .set_bind_group(0, self.camera_bind_group, &[])
-                    .set_bind_group(1, self.light_bind_group, &[])
-                    .set_vertex_buffer(0, instance_data.vertex_buffer)
-                    .set_vertex_buffer(1, instance_data.instance_buffer)
-                    .set_index_buffer(instance_data.index_buffer)
-                    .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
-            } else {
-                rp.set_pipeline(self.pipeline_wcm)
-                    .set_bind_group(0, self.camera_bind_group, &[])
-                    .set_bind_group(1, self.light_bind_group, &[])
-                    .set_bind_group(2, instance_data.materials[0].bind_group, &[])
-                    .set_vertex_buffer(0, instance_data.vertex_buffer)
-                    .set_vertex_buffer(1, instance_data.instance_buffer)
-                    .set_index_buffer(instance_data.index_buffer)
-                    .draw_indexed(0..instance_data.num_indices, 0, instance_data.instance_ids.clone());
-            }
         }
 
         draw_calls
@@ -285,8 +295,8 @@ impl Renderer {
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let shader_module = gfx.create_shader_module(Some("light-debug:shader"), &shader_data);
 
-        let cbl = gfx.camera_buffer_layout();
-        let lbl = gfx.light_buffer_layout();
+        let cbl = gfx.camera_bind_group_layout();
+        let lbl = gfx.light_bind_group_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
@@ -302,39 +312,15 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn crp_with_camera(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
-        let shader_path = adb.find_asset("shaders", "with_camera.wgsl")?;
-        let shader_data = std::fs::read_to_string(&shader_path)
-            .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
-        let shader_module = gfx.create_shader_module(Some("with-camera:shader"), &shader_data);
-
-        let cbl = gfx.camera_buffer_layout();
-        let lbl = gfx.light_buffer_layout();
-
-        let pipeline = gfx
-            .create_render_pipeline()
-            .with_label("with-camera:pipeline")
-            .add_bind_group_layout(cbl)
-            .add_bind_group_layout(lbl)
-            .with_vertex_shader_module(shader_module, "vertex_main")
-            .with_fragment_shader_module(shader_module, "fragment_main")
-            .add_vertex_buffer_layout::<Vertex>()
-            .add_vertex_buffer_layout::<Instance>()
-            .submit();
-
-        Ok(pipeline)
-    }
-
-    #[tracing::instrument(skip_all)]
     fn crp_with_camera_and_material(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
         let shader_path = adb.find_asset("shaders", "with_camera_and_material.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
         let shader_module = gfx.create_shader_module(Some("with-camera-material:shader"), &shader_data);
 
-        let cbl = gfx.camera_buffer_layout();
-        let lbl = gfx.light_buffer_layout();
-        let mbl = gfx.material_buffer_layout();
+        let cbl = gfx.camera_bind_group_layout();
+        let lbl = gfx.light_bind_group_layout();
+        let mbl = gfx.material_bind_group_layout();
 
         let pipeline = gfx
             .create_render_pipeline()
@@ -365,8 +351,6 @@ impl WithResources for Renderer {
             Self::crp_light_debug(&adb, &mut gfx).context("Creating the light debugging render pipeline")?;
         let pipeline_wcm = Self::crp_with_camera_and_material(&adb, &mut gfx)
             .context("Creating the render pipeline 'with-camera-material'")?;
-        let pipeline_wc =
-            Self::crp_with_camera(&adb, &mut gfx).context("Creating the render pipeline 'with-camera'")?;
 
         let uniform_alignment = gfx.limits().min_uniform_buffer_offset_alignment; // 256
 
@@ -376,11 +360,11 @@ impl WithResources for Renderer {
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
-        let cbl = gfx.camera_buffer_layout();
+        let cbl = gfx.camera_bind_group_layout();
         let camera_bind_group = gfx
             .create_bind_group(cbl)
             .with_label(Some("camera-bind-group"))
-            .add_buffer(0, 0u64, NonZeroU64::new(size_of::<CameraUniform>() as _), camera_buffer)
+            .add_entire_buffer(0, camera_buffer)
             .submit();
 
         let light_buffer = gfx.create_buffer(
@@ -389,11 +373,11 @@ impl WithResources for Renderer {
             BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         );
 
-        let ll = gfx.light_buffer_layout();
+        let ll = gfx.light_bind_group_layout();
         let light_bind_group = gfx
             .create_bind_group(ll)
             .with_label(Some("light-bind-group"))
-            .add_buffer(0, 0u64, NonZeroU64::new(size_of::<LightUniform>() as _), light_buffer)
+            .add_entire_buffer(0, light_buffer)
             .submit();
 
         Ok(Renderer {
@@ -406,7 +390,6 @@ impl WithResources for Renderer {
             light_bind_group,
             pipeline_ldb,
             pipeline_wcm,
-            pipeline_wc,
         })
     }
 }
@@ -492,14 +475,14 @@ struct InstanceDrawData<'a> {
     index_buffer: BufferId,
     num_indices: u32,
     materials: &'a [GpuMaterial],
-    instance_ids: Range<u32>,
+    instance_indexes: Range<u32>,
 }
 
 #[allow(dead_code)]
 #[tracing::instrument(skip_all)]
 fn hier_transform(idx: Index, hier: &Hierarchy<Index>, transforms: &<Transform as Component>::Storage) -> Mat4<f32> {
     hier.ancestors(idx)
-        .filter_map(|a| transforms.get(a).map(|at| Into::<Mat4<f32>>::into(at.affine)))
+        .filter_map(|a| transforms.get(a).map(|at| at.affine.to_matrix()))
         .product::<Mat4<f32>>()
 }
 

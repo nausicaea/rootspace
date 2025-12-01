@@ -1,14 +1,14 @@
 use std::net::SocketAddr;
 
-use tarpc::context::Context;
-use tokio::sync::mpsc;
-use tracing::trace;
 use super::service::Error;
+use crate::systems::rpc::graphics_info::{GraphicsInfo, GraphicsInfoCategory};
 use crate::{
     resources::statistics::Statistics,
     systems::rpc::{message::RpcMessage, service::RpcService},
 };
-use crate::systems::rpc::graphics_info::{GraphicsInfo, GraphicsInfoCategory};
+use tarpc::context::Context;
+use tokio::sync::mpsc;
+use tracing::trace;
 
 #[derive(Debug, Clone)]
 pub struct RpcServer {

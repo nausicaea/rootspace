@@ -11,7 +11,8 @@ use assam::AssetDatabase;
 pub struct Light {
     pub model: GpuModel,
     pub position: Vec4<f32>,
-    pub color: Vec4<f32>,
+    pub ambient_color: Vec4<f32>,
+    pub specular_color: Vec4<f32>,
     pub group: String,
     pub name: String,
 }
@@ -23,7 +24,8 @@ impl Light {
         group: S,
         name: S,
         position: Vec4<f32>,
-        color: Vec4<f32>,
+        ambient_color: Vec4<f32>,
+        specular_color: Vec4<f32>,
     ) -> Result<Self, anyhow::Error> {
         let group = group.as_ref();
         let name = name.as_ref();
@@ -32,12 +34,13 @@ impl Light {
             .load_asset::<CpuModel, _>(res, group, name)
             .await
             .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name))?;
-        let model = res.write::<Graphics>().create_model(&cpu_model);
+        let model = res.write::<Graphics>().create_gpu_model(&cpu_model);
 
         Ok(Self {
             model,
             position,
-            color,
+            ambient_color,
+            specular_color,
             group: group.to_string(),
             name: name.to_string(),
         })

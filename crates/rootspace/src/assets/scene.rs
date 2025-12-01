@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, path::Path};
 
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use glamour::vec::Vec4;
 
 use crate::components::{camera::Camera, debug_animate::DebugAnimate, info::Info, transform::Transform};
@@ -13,6 +13,7 @@ use ecs::{
 };
 use griffon::components::light::Light;
 use griffon::components::renderable::Renderable;
+use griffon::resources::Graphics;
 use rose_tree::hierarchy::Hierarchy;
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
@@ -75,7 +76,8 @@ impl Scene {
                             group: r.group.clone(),
                             name: r.name.clone(),
                             position: r.position,
-                            color: r.color,
+                            ambient_color: r.ambient_color,
+                            specular_color: r.specular_color,
                         },
                     )
                 })
@@ -157,7 +159,15 @@ impl Scene {
                 }
 
                 if let Some(camera) = scene.cameras.get(&i_prev).cloned() {
-                    res.write_components::<Camera>().insert(i_new, camera);
+                    let max_cameras = res.read::<Graphics>().max_cameras() as usize;
+                    let mut cameras = res.write_components::<Camera>();
+                    let num_cameras = cameras.len();
+                    if num_cameras >= max_cameras {
+                        return Err(anyhow!(
+                            "The maximum number of cameras ({max_cameras}) has been reached"
+                        ));
+                    }
+                    cameras.insert(i_new, camera);
                 }
 
                 if let Some(transform) = scene.transforms.get(&i_prev).cloned() {
@@ -173,11 +183,20 @@ impl Scene {
                     group,
                     name,
                     position,
-                    color,
+                    ambient_color,
+                    specular_color,
                 }) = scene.lights.get(&i_prev)
                 {
-                    let light = Light::with_model(res, group, name, *position, *color).await?;
-                    res.write_components::<Light>().insert(i_new, light);
+                    let max_lights = res.read::<Graphics>().max_lights() as usize;
+                    let mut lights = res.write_components::<Light>();
+                    let num_lights = lights.len();
+                    if num_lights >= max_lights {
+                        return Err(anyhow!(
+                            "The maximum number of light sources ({max_lights}) has been reached"
+                        ));
+                    }
+                    let light = Light::with_model(res, group, name, *position, *ambient_color, *specular_color).await?;
+                    lights.insert(i_new, light);
                 }
             }
 
@@ -334,6 +353,7 @@ pub enum LightSource {
         group: String,
         name: String,
         position: Vec4<f32>,
-        color: Vec4<f32>,
+        ambient_color: Vec4<f32>,
+        specular_color: Vec4<f32>,
     },
 }

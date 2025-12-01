@@ -20,6 +20,14 @@ impl<R> Vec4<R> {
 }
 
 impl<R: num_traits::ConstOne + num_traits::ConstZero> Vec4<R> {
+    pub const fn new_point(x: R, y: R, z: R) -> Self {
+        Vec4 { x, y, z, w: R::ONE }
+    }
+
+    pub const fn new_vector(x: R, y: R, z: R) -> Self {
+        Vec4 { x, y, z, w: R::ZERO }
+    }
+
     pub const fn x() -> Unit<Vec4<R>> {
         Unit(Vec4 {
             x: R::ONE,

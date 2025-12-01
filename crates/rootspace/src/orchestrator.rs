@@ -3,13 +3,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-use glamour::{quat::Quat, unit::Unit, vec::Vec4};
-use griffon::winit::{
-    event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoopWindowTarget},
-};
-use tokio::runtime::Runtime;
-
 use super::registry::{FUSRegistry, MSRegistry};
 use crate::{
     RenderableSource,
@@ -32,8 +25,14 @@ use ecs::{
     with_resources::WithResources,
     world::{World, event::WorldEvent},
 };
+use glamour::{quat::Quat, unit::Unit, vec::Vec4};
 use griffon::components::renderable::Renderable;
+use griffon::winit::{
+    event::{Event, WindowEvent},
+    event_loop::{ControlFlow, EventLoopWindowTarget},
+};
 use griffon::{Graphics, GraphicsDeps};
+use tokio::runtime::Runtime;
 
 const DELTA_TIME: Duration = Duration::from_millis(50);
 #[cfg(feature = "editor")]
@@ -106,7 +105,7 @@ impl Orchestrator {
     }
 
     /// Creates and returns a closure that is run by
-    /// [`EventLoop::run`](winit::event_loop::EventLoop::run) every time `winit` received an event
+    /// [`griffon::winit::event_loop::EventLoop::run`] every time `winit` received an event
     /// from the operating system. Internally, the closure instructs the asynchronous runtime to
     /// block on [`Orchestrator::run`](Orchestrator::run), which does
     /// the actual work.
@@ -321,7 +320,7 @@ impl Orchestrator {
                 ..Default::default()
             })
             .with_camera(Camera::default())
-            .with_transform(Transform::look_at_rh_inv(
+            .with_transform(Transform::look_at_rh(
                 [0.0, 5.0, -10.0, 1.0],
                 [0.0, 0.0, 0.0, 1.0],
                 Vec4::y(),
@@ -337,18 +336,32 @@ impl Orchestrator {
                 group: "models".into(),
                 name: "cube.ply".into(),
                 position: [2.0, 2.0, 2.0, 1.0].into(),
-                color: [1.0, 1.0, 1.0, 1.0].into(),
+                ambient_color: [0.5, 0.5, 0.5, 1.0].into(),
+                specular_color: [1.0, 1.0, 1.0, 1.0].into(),
             })
             .submit();
+        // builtins_scene
+        //     .create_entity()
+        //     .with_info(Info {
+        //         name: "light-2".into(),
+        //         ..Default::default()
+        //     })
+        //     .with_light(LightSource::Reference {
+        //         group: "models".into(),
+        //         name: "cube.ply".into(),
+        //         position: [-2.0, 2.0, -2.0, 1.0].into(),
+        //         color: [1.0, 1.0, 0.5, 1.0].into(),
+        //     })
+        //     .submit();
 
         const SPACE_BETWEEN: f32 = 3.0;
-        const NUM_INSTANCES_PER_ROW: usize = 16;
+        const NUM_INSTANCES_PER_ROW: usize = 5;
         for i in 0..NUM_INSTANCES_PER_ROW {
             for j in 0..NUM_INSTANCES_PER_ROW {
                 let x = SPACE_BETWEEN * (i as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
                 let z = SPACE_BETWEEN * (j as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0);
 
-                let position = Vec4::new(x, 0.0, z, 0.0);
+                let position = Vec4::new_point(x, 0.0, z);
 
                 use approx::relative_eq;
                 use glamour::num::Zero;
@@ -365,7 +378,6 @@ impl Orchestrator {
                         name: format!("cube-{i}x{j}"),
                         ..Default::default()
                     })
-                    //.with_debug_animate()
                     .with_renderable(RenderableSource::Reference {
                         group: "models".into(),
                         name: "textured-cube.ply".into(),
@@ -373,13 +385,32 @@ impl Orchestrator {
                     .with_transform(
                         Transform::builder()
                             .with_translation(position)
-                            .with_scale(0.5)
                             .with_orientation(Quat::with_axis_angle(axis, angle))
                             .build(),
                     )
+                    .with_debug_animate()
                     .submit();
             }
         }
+
+        builtins_scene
+            .create_entity()
+            .with_info(Info {
+                name: "floor".to_string(),
+                ..Default::default()
+            })
+            .with_renderable(RenderableSource::Reference {
+                group: "models".into(),
+                name: "quad.ply".into(),
+            })
+            .with_transform(
+                Transform::builder()
+                    .with_translation(Vec4::new_point(0.0, -2.0, 0.0))
+                    .with_orientation(Quat::with_axis_angle(Vec4::x(), std::f32::consts::PI / -2.0))
+                    .with_scale(100.0)
+                    .build(),
+            )
+            .submit();
 
         builtins_scene.submit(res, "builtin", "main").await?;
 

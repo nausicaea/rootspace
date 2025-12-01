@@ -133,7 +133,7 @@ impl Display for Statistics {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
-r#"Loop and Render Stats:
+            r#"Loop and Render Stats:
 Draw calls (mean): {}
 Render duration (mean): {}
 Prepare duration (mean): {}

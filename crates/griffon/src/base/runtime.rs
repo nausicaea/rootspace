@@ -1,7 +1,7 @@
+use crate::base::settings::Settings;
+use anyhow::{Context, anyhow};
 use wgpu::{DeviceDescriptor, RequestAdapterOptions, TextureUsages};
 use winit::{event_loop::EventLoopWindowTarget, window::Fullscreen};
-
-use crate::base::settings::Settings;
 
 #[derive(Debug)]
 pub struct Runtime<'a> {
@@ -17,25 +17,28 @@ pub struct Runtime<'a> {
 }
 
 impl<'a> Runtime<'a> {
-    pub async fn new<T>(event_loop: &EventLoopWindowTarget<T>, settings: &Settings) -> Runtime<'a> {
+    pub async fn new<T>(event_loop: &EventLoopWindowTarget<T>, settings: &Settings) -> anyhow::Result<Runtime<'a>> {
         let primary_monitor = event_loop.primary_monitor();
         let window = std::sync::Arc::new(
             winit::window::WindowBuilder::new()
                 .with_fullscreen(Some(Fullscreen::Borderless(primary_monitor)))
                 .build(event_loop)
-                .unwrap(),
+                .context("Creating a window")?,
         );
 
         let size = window.inner_size();
         tracing::debug!("Physical window size: {:?}", &size);
 
-        let max_size = window.current_monitor().unwrap().size();
+        let max_size = window
+            .current_monitor()
+            .ok_or_else(|| anyhow!("No monitor assigned to the current window"))?
+            .size();
 
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: settings.backends,
             ..Default::default()
         });
-        let surface = instance.create_surface(window.clone()).unwrap();
+        let surface = instance.create_surface(window.clone())?;
 
         let adapter = instance
             .request_adapter(&RequestAdapterOptions {
@@ -43,8 +46,7 @@ impl<'a> Runtime<'a> {
                 compatible_surface: Some(&surface),
                 force_fallback_adapter: false,
             })
-            .await
-            .unwrap();
+            .await?;
         tracing::debug!("Supported adapter features: {:?}", adapter.features());
 
         let (device, queue) = adapter
@@ -56,8 +58,7 @@ impl<'a> Runtime<'a> {
                 trace: Default::default(),
                 experimental_features: Default::default(),
             })
-            .await
-            .unwrap();
+            .await?;
 
         let capabilities = surface.get_capabilities(&adapter);
         tracing::debug!("Supported texture formats: {:?}", &capabilities.formats);
@@ -67,7 +68,7 @@ impl<'a> Runtime<'a> {
             .iter()
             .find(|&tf| tf == &settings.preferred_texture_format)
             .unwrap_or(&capabilities.formats[0]);
-        tracing::debug!("Choosing texture format: {:?}", &texture_format);
+        tracing::debug!("Choosing surface texture format: {:?}", &texture_format);
 
         tracing::debug!("Supported present modes: {:?}", &capabilities.present_modes);
 
@@ -77,13 +78,13 @@ impl<'a> Runtime<'a> {
             width: size.width,
             height: size.height,
             present_mode: settings.present_mode,
-            desired_maximum_frame_latency: 0,
+            desired_maximum_frame_latency: 2,
             alpha_mode: settings.alpha_mode,
             view_formats: vec![*texture_format],
         };
         surface.configure(&device, &config);
 
-        Runtime {
+        Ok(Runtime {
             window,
             instance,
             surface,
@@ -93,6 +94,6 @@ impl<'a> Runtime<'a> {
             config,
             size,
             max_size,
-        }
+        })
     }
 }

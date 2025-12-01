@@ -31,8 +31,8 @@ fn vertex_main(
     let scale = 0.25;
 
     let local_position = vec4<f32>(vertex.position, 1.0);
-    let view_position = local_position * light.model_view;
-    let clip_position = view_position * camera.projection;
+    let view_position = light.model_view * local_position;
+    let clip_position = camera.projection * view_position;
 
     return VertexOutput(
         clip_position,

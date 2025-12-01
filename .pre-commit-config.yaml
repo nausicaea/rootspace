@@ -2,6 +2,14 @@
 fail_fast: true
 exclude: \.ply$
 repos:
+  - repo: https://github.com/thoughtworks/talisman
+    rev: v1.37.0
+    hooks:
+      - id: talisman-commit
+  - repo: https://github.com/trufflesecurity/trufflehog
+    rev: v3.91.1
+    hooks:
+      - id: trufflehog
   - repo: local
     hooks:
       - id: cargo-nextest
@@ -35,6 +43,14 @@ repos:
         language: system
         types: [rust]
         stages: [pre-commit]
+
+      - id: cargo-fix
+        name: Cargo Fix
+        entry: cargo fix --all-targets --all-features
+        pass_filenames: false
+        language: system
+        types: [rust]
+        stages: [pre-push]
 
       - id: cargo-clippy-fix
         name: Cargo Clippy

@@ -12,6 +12,7 @@ pub mod ids;
 pub mod instance;
 pub mod internal_runtime_data;
 pub mod light_uniform;
+pub mod material_uniform;
 pub mod render_pipeline_builder;
 pub mod runtime;
 pub mod sampler_builder;
