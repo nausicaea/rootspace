@@ -1,4 +1,3 @@
-
 use crate::base::gpu_model::GpuModel;
 use crate::utilities::load_instanced_gpu_model;
 use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};

@@ -11,7 +11,7 @@ pub enum RpcMessage {
         category: GraphicsInfoCategory,
     },
     LoadScene {
-        tx: Sender<Result<(), anyhow::Error>>,
+        tx: Sender<anyhow::Result<()>>,
         group: String,
         name: String,
     },

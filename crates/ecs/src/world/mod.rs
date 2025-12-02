@@ -42,7 +42,7 @@ pub struct World {
 
 impl World {
     #[tracing::instrument(skip_all)]
-    pub async fn with_dependencies<RR, FUSR, USR, RS, MS, D>(deps: &D) -> Result<Self, anyhow::Error>
+    pub async fn with_dependencies<RR, FUSR, USR, RS, MS, D>(deps: &D) -> anyhow::Result<Self>
     where
         D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,

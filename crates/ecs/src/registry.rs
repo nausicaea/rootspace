@@ -1,7 +1,5 @@
 use std::fmt::Debug;
 
-use anyhow::Error;
-
 use super::{
     resource::Resource, resources::Resources, system::System, with_dependencies::WithDependencies,
     with_resources::WithResources,
@@ -27,7 +25,7 @@ where
     T: WithResources,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         Ok(Self {
             head: H::with_res(res).await?,
             tail: T::with_res(res).await?,
@@ -42,7 +40,7 @@ where
     T: WithDependencies<D>,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(deps: &D) -> Result<Self, Error> {
+    async fn with_deps(deps: &D) -> anyhow::Result<Self> {
         Ok(Self {
             head: H::with_deps(deps).await?,
             tail: T::with_deps(deps).await?,
@@ -56,14 +54,14 @@ pub struct End;
 
 impl WithResources for End {
     #[tracing::instrument(skip_all)]
-    async fn with_res(_: &Resources) -> Result<Self, Error> {
+    async fn with_res(_: &Resources) -> anyhow::Result<Self> {
         Ok(Self)
     }
 }
 
 impl<D> WithDependencies<D> for End {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> Result<Self, Error> {
+    async fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Self)
     }
 }

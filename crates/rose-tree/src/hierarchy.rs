@@ -118,7 +118,7 @@ impl<K> ecs::resource::Resource for Hierarchy<K> where K: 'static + Send + Sync 
 
 impl<D, K: Ord> ecs::with_dependencies::WithDependencies<D> for Hierarchy<K> {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Hierarchy::default())
     }
 }

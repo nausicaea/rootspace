@@ -20,7 +20,7 @@ where
     E: 'static + Clone + fmt::Debug + Send + Sync,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let receiver = res.write::<EventQueue<E>>().subscribe::<Self>();
 
         Ok(EventMonitor { receiver })

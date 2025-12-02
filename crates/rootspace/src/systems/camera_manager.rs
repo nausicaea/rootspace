@@ -19,7 +19,7 @@ pub struct CameraManager {
 
 impl WithResources for CameraManager {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
 
         Ok(CameraManager { receiver })

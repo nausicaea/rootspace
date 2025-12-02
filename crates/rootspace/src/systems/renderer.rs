@@ -290,7 +290,7 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn crp_light_debug(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
+    fn crp_light_debug(adb: &AssetDatabase, gfx: &mut Graphics) -> anyhow::Result<PipelineId> {
         let shader_path = adb.find_asset("shaders", "light_debug.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
@@ -313,7 +313,7 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn crp_with_camera_and_material(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
+    fn crp_with_camera_and_material(adb: &AssetDatabase, gfx: &mut Graphics) -> anyhow::Result<PipelineId> {
         let shader_path = adb.find_asset("shaders", "with_camera_and_material.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
@@ -341,7 +341,7 @@ impl Renderer {
 
 impl WithResources for Renderer {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let window_receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let engine_receiver = res.write::<EventQueue<EngineEvent>>().subscribe::<Self>();
 

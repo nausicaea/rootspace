@@ -80,7 +80,7 @@ impl Resource for Entities {}
 
 impl<D> WithDependencies<D> for Entities {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Entities::default())
     }
 }

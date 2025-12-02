@@ -206,7 +206,7 @@ impl<T> Default for VecStorage<T> {
 
 impl<D, T> WithDependencies<D> for VecStorage<T> {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(VecStorage::default())
     }
 }

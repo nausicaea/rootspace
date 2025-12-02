@@ -23,7 +23,7 @@ pub struct CameraController {
 
 impl WithResources for CameraController {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         Ok(CameraController {
             receiver: res.write::<EventQueue<WindowEvent>>().subscribe::<Self>(),
             physical_key_to_dof: [

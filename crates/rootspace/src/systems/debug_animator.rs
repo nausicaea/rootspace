@@ -11,7 +11,7 @@ pub struct DebugAnimator;
 
 impl WithResources for DebugAnimator {
     #[tracing::instrument(skip_all)]
-    async fn with_res(_res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(_res: &Resources) -> anyhow::Result<Self> {
         Ok(DebugAnimator)
     }
 }

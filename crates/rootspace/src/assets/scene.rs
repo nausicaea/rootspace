@@ -91,7 +91,7 @@ impl Scene {
     }
 
     #[tracing::instrument(skip_all)]
-    pub async fn submit<S>(mut self, res: &Resources, group: S, name: S) -> Result<(), anyhow::Error>
+    pub async fn submit<S>(mut self, res: &Resources, group: S, name: S) -> anyhow::Result<()>
     where
         S: AsRef<str> + std::fmt::Debug,
     {
@@ -149,7 +149,7 @@ impl Scene {
             scene: &Scene,
             map: &BTreeMap<Index, Index>,
             res: &Resources,
-        ) -> Result<(), anyhow::Error> {
+        ) -> anyhow::Result<()> {
             for (&i_prev, &i_new) in map {
                 if let Some(info) = scene.infos.get(&i_prev).cloned() {
                     res.write_components::<Info>().insert(i_new, info);
@@ -205,7 +205,7 @@ impl Scene {
 impl LoadAsset for Scene {
     type Output = ();
 
-    async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
+    async fn with_path(res: &Resources, path: &Path) -> anyhow::Result<Self::Output> {
         let file = std::fs::File::open(path).with_context(|| format!("Opening the file '{}'", path.display()))?;
         let reader = std::io::BufReader::new(file);
 
@@ -220,7 +220,7 @@ impl LoadAsset for Scene {
 }
 
 impl SaveAsset for Scene {
-    async fn to_path(&self, path: &Path) -> Result<(), anyhow::Error> {
+    async fn to_path(&self, path: &Path) -> anyhow::Result<()> {
         let file = std::fs::File::create(path).with_context(|| format!("Creating the file '{}'", path.display()))?;
         let writer = std::io::BufWriter::new(file);
 

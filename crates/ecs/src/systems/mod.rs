@@ -13,7 +13,7 @@ impl Systems {
     }
 
     #[tracing::instrument(skip_all)]
-    pub async fn with_resources<SR>(res: &Resources) -> Result<Self, anyhow::Error>
+    pub async fn with_resources<SR>(res: &Resources) -> anyhow::Result<Self>
     where
         SR: SystemRegistry + WithResources,
     {

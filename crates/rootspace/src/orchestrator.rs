@@ -54,7 +54,7 @@ pub struct Orchestrator {
 
 impl Orchestrator {
     #[tracing::instrument(skip_all)]
-    pub async fn with_dependencies<RR, FUSR, USR, MSR, D>(deps: &D) -> Result<Self, anyhow::Error>
+    pub async fn with_dependencies<RR, FUSR, USR, MSR, D>(deps: &D) -> anyhow::Result<Self>
     where
         D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,

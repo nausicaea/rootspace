@@ -42,7 +42,7 @@ pub struct AssetDatabase {
 
 impl AssetDatabase {
     #[tracing::instrument(skip_all)]
-    pub async fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> Result<A::Output, anyhow::Error>
+    pub async fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> anyhow::Result<A::Output>
     where
         A: LoadAsset,
         S: AsRef<str> + std::fmt::Debug,
@@ -66,7 +66,7 @@ impl AssetDatabase {
     }
 
     #[tracing::instrument(skip_all)]
-    pub async fn save_asset<A, S>(&self, asset: &A, group: S, name: S) -> Result<(), anyhow::Error>
+    pub async fn save_asset<A, S>(&self, asset: &A, group: S, name: S) -> anyhow::Result<()>
     where
         A: SaveAsset + std::fmt::Debug,
         S: AsRef<str> + std::fmt::Debug,
@@ -147,7 +147,7 @@ where
     D: AssetDatabaseDeps + std::fmt::Debug,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(deps: &D) -> anyhow::Result<Self> {
         let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, deps.name()).with_context(|| {
             format!(
                 "Finding the project directories of triplet ({}, {}, {})",

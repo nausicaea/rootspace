@@ -6,7 +6,6 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use anyhow::Error;
 use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use super::{
@@ -79,7 +78,7 @@ impl Resources {
     /// in the registry to initialize those resources that have a default, parameterless
     /// constructor.
     #[tracing::instrument(skip_all)]
-    pub async fn with_dependencies<RR, D>(deps: &D) -> Result<Self, Error>
+    pub async fn with_dependencies<RR, D>(deps: &D) -> anyhow::Result<Self>
     where
         D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,

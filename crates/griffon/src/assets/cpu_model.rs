@@ -17,7 +17,7 @@ pub struct CpuModel {
 impl LoadAsset for CpuModel {
     type Output = Self;
 
-    async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
+    async fn with_path(res: &Resources, path: &Path) -> anyhow::Result<Self::Output> {
         let mesh = CpuMesh::with_path(res, path)
             .await
             .with_context(|| format!("Loading a CpuMesh from '{}'", path.display()))?;

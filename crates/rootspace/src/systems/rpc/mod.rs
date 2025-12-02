@@ -5,7 +5,6 @@ pub mod service;
 
 use std::{future::ready, time::Duration};
 
-use anyhow::Error;
 use async_trait::async_trait;
 use futures::StreamExt;
 use message::RpcMessage;
@@ -73,7 +72,7 @@ impl Rpc {
     }
 
     #[tracing::instrument(skip_all)]
-    async fn load_scene(&self, res: &Resources, tx: oneshot::Sender<Result<(), Error>>, group: &str, name: &str) {
+    async fn load_scene(&self, res: &Resources, tx: oneshot::Sender<anyhow::Result<()>>, group: &str, name: &str) {
         let r = res
             .read::<AssetDatabase>()
             .load_asset::<Scene, _>(res, group, name)
@@ -119,7 +118,7 @@ impl System for Rpc {
 
 impl WithResources for Rpc {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let (ba, mfl, mcc, mcpk, rcc) = {
             let settings = res.read::<RpcSettings>();
             (

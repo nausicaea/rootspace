@@ -156,7 +156,7 @@ impl Resource for Statistics {}
 
 impl<D> WithDependencies<D> for Statistics {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Statistics::default())
     }
 }
