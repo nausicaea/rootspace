@@ -10,7 +10,7 @@ use ecs::resources::Resources;
 pub async fn load_instanced_gpu_model(res: &Resources, group: &str, name: &str) -> anyhow::Result<GpuModel> {
     let instancing_candidate = res
         .iter_r::<Renderable>()
-        .find(|(_, ren)| &ren.group == group && &ren.name == name);
+        .find(|(_, ren)| ren.group == group && ren.name == name);
 
     if let Some((_, ren)) = instancing_candidate {
         Ok(res.write::<Graphics>().create_instanced_gpu_model(&ren.model))

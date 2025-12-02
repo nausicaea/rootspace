@@ -1,12 +1,10 @@
-use anyhow::{Context, anyhow};
+use anyhow::anyhow;
 use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};
 use glamour::vec::Vec4;
 
-use crate::assets::cpu_model::CpuModel;
 use crate::base::gpu_model::GpuModel;
 use crate::resources::Graphics;
 use crate::utilities::load_instanced_gpu_model;
-use assam::AssetDatabase;
 use ecs::storage::Storage;
 
 #[derive(Debug)]

@@ -430,10 +430,10 @@ impl Orchestrator {
                 name: "coordinate-diag-ortho".into(),
                 ..Default::default()
             })
-            .with_renderable(RenderableSource::Reference(Reference {
+            .with_renderable(RenderableSource {
                 group: "models".into(),
                 name: "coordinate-diag.ply".into(),
-            }))
+            })
             .with_transform(Transform::builder().with_ui(true).with_scale(0.1).build())
             .submit();
         editor_scene
@@ -442,10 +442,10 @@ impl Orchestrator {
                 name: "coordinate-diag-persp".into(),
                 ..Default::default()
             })
-            .with_renderable(RenderableSource::Reference(Reference {
+            .with_renderable(RenderableSource {
                 group: "models".into(),
                 name: "coordinate-diag.ply".into(),
-            }))
+            })
             .with_transform(Transform::default())
             .submit();
         editor_scene.submit(res, "builtin", "editor").await?;
