@@ -59,7 +59,7 @@ impl Scene {
                 .map(|(i, r)| {
                     (
                         i,
-                        RenderableSource::Reference {
+                        RenderableSource {
                             group: r.group.clone(),
                             name: r.name.clone(),
                         },
@@ -72,7 +72,7 @@ impl Scene {
                 .map(|(i, r)| {
                     (
                         i,
-                        LightSource::Reference {
+                        LightSource {
                             group: r.group.clone(),
                             name: r.name.clone(),
                             position: r.position,
@@ -177,21 +177,12 @@ impl Scene {
                     res.write_components::<Transform>().insert(i_new, transform);
                 }
 
-                if let Some(RenderableSource::Reference { group, name }) = scene.renderables.get(&i_prev) {
+                if let Some(RenderableSource { group, name }) = scene.renderables.get(&i_prev) {
                     let renderable = Renderable::with_model(res, group, name).await?;
                     res.write_components::<Renderable>().insert(i_new, renderable);
                 }
 
-                if let Some(LightSource::Reference {
-                    group,
-                    name,
-                    position,
-                    ambient_color,
-                    diffuse_color,
-                    specular_color,
-                    ambient_intensity,
-                    point_intensity,
-                }) = scene.lights.get(&i_prev)
+                if let Some(LightSource { group, name, position, ambient_color, diffuse_color, specular_color, ambient_intensity, point_intensity }) = scene.lights.get(&i_prev)
                 {
                     let max_lights = res.read::<Graphics>().max_lights() as usize;
                     let mut lights = res.write_components::<Light>();
@@ -360,20 +351,19 @@ impl<'a> EntityBuilder<'a> {
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub enum RenderableSource {
-    Reference { group: String, name: String },
+pub struct RenderableSource {
+    pub group: String,
+    pub name: String
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub enum LightSource {
-    Reference {
-        group: String,
-        name: String,
-        position: Vec4<f32>,
-        ambient_color: Vec4<f32>,
-        diffuse_color: Vec4<f32>,
-        specular_color: Vec4<f32>,
-        ambient_intensity: f32,
-        point_intensity: f32,
-    },
+pub struct LightSource {
+    pub group: String,
+    pub name: String,
+    pub position: Vec4<f32>,
+    pub ambient_color: Vec4<f32>,
+    pub diffuse_color: Vec4<f32>,
+    pub specular_color: Vec4<f32>,
+    pub ambient_intensity: f32,
+    pub point_intensity: f32,
 }

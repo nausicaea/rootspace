@@ -66,7 +66,7 @@ async fn main() -> anyhow::Result<()> {
                 .with_translation(Vec4::new_vector(1.0, 0.0, 0.0))
                 .build(),
         )
-        .with_renderable(RenderableSource::Reference {
+        .with_renderable(RenderableSource {
             group: "models".into(),
             name: "quad.ply".into(),
         })
@@ -81,7 +81,7 @@ async fn main() -> anyhow::Result<()> {
                 .with_scale(0.25f32)
                 .build(),
         )
-        .with_renderable(RenderableSource::Reference {
+        .with_renderable(RenderableSource {
             group: "models".into(),
             name: "triangle.ply".into(),
         })

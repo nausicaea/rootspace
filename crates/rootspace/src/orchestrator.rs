@@ -332,7 +332,7 @@ impl Orchestrator {
                 name: "light-1".into(),
                 ..Default::default()
             })
-            .with_light(LightSource::Reference {
+            .with_light(LightSource {
                 group: "models".into(),
                 name: "cube.ply".into(),
                 position: [2.0, 2.0, 2.0, 1.0].into(),
@@ -381,7 +381,7 @@ impl Orchestrator {
                         name: format!("cube-{i}x{j}"),
                         ..Default::default()
                     })
-                    .with_renderable(RenderableSource::Reference {
+                    .with_renderable(RenderableSource {
                         group: "models".into(),
                         name: "textured-cube.ply".into(),
                     })
@@ -402,7 +402,7 @@ impl Orchestrator {
                 name: "floor".to_string(),
                 ..Default::default()
             })
-            .with_renderable(RenderableSource::Reference {
+            .with_renderable(RenderableSource {
                 group: "models".into(),
                 name: "quad.ply".into(),
             })
@@ -430,10 +430,10 @@ impl Orchestrator {
                 name: "coordinate-diag-ortho".into(),
                 ..Default::default()
             })
-            .with_renderable(RenderableSource::Reference {
+            .with_renderable(RenderableSource::Reference(Reference {
                 group: "models".into(),
                 name: "coordinate-diag.ply".into(),
-            })
+            }))
             .with_transform(Transform::builder().with_ui(true).with_scale(0.1).build())
             .submit();
         editor_scene
@@ -442,10 +442,10 @@ impl Orchestrator {
                 name: "coordinate-diag-persp".into(),
                 ..Default::default()
             })
-            .with_renderable(RenderableSource::Reference {
+            .with_renderable(RenderableSource::Reference(Reference {
                 group: "models".into(),
                 name: "coordinate-diag.ply".into(),
-            })
+            }))
             .with_transform(Transform::default())
             .submit();
         editor_scene.submit(res, "builtin", "editor").await?;
