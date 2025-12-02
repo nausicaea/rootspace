@@ -55,6 +55,7 @@
       <excludeFolder url="file://$MODULE_DIR$/contrib" />
       <excludeFolder url="file://$MODULE_DIR$/contrib/engine/src" />
       <excludeFolder url="file://$MODULE_DIR$/contrib/engine/tests" />
+      <excludeFolder url="file://$MODULE_DIR$/.direnv" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
