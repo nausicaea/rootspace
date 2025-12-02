@@ -49,7 +49,7 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub fn max_window_size(&self) -> winit::dpi::PhysicalSize<u32> {
+    pub fn max_window_size(&self) -> PhysicalSize<u32> {
         self.runtime.max_size
     }
 

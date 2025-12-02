@@ -142,7 +142,7 @@ impl World {
 
     /// This method is supposed to be called when pending events or messages should be
     /// handled by the world. If this method returns
-    /// [`LoopControl::Continue`](crate::loop_control::LoopControl), the execution of the
+    /// [`LoopControl::Continue`], the execution of the
     /// main loop shall continue, otherwise it shall abort.
     #[tracing::instrument(skip_all)]
     pub async fn maintain(&mut self) -> LoopControl {

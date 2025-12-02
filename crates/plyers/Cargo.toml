@@ -16,7 +16,7 @@ urn = { path = "../urn" }
 
 [dev-dependencies]
 anyhow = { version = "^1.0.0" }
-criterion = "^0.7.0"
+criterion = { version = "^0.7.0", features = ["html_reports"] }
 mutants = "^0.0.3"
 proptest = "^1.0.0"
 proptest-derive = "^0.7.0"

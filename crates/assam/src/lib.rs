@@ -28,24 +28,6 @@ pub enum Error {
     NoAssetName(PathBuf),
     #[error("The asset group or name contain disallowed characters: group='{:?}', name='{:?}'", .0, .1)]
     InvalidCharacters(String, String),
-    #[error(transparent)]
-    File(#[from] file_manipulation::FileError),
-    #[error(transparent)]
-    Io(#[from] std::io::Error),
-    #[error(transparent)]
-    Image(#[from] image::ImageError),
-    #[error(transparent)]
-    SerdeJson(#[from] serde_json::Error),
-    #[error(transparent)]
-    Ply(#[from] plyers::PlyError),
     #[error("The specified file format is not supported for loading assets")]
     UnsupportedFileFormat,
-    #[error("No element named 'vertex' was found")]
-    NoVertexElement,
-    #[error("No element named 'face' was found")]
-    NoFaceElement,
-    #[error("The element named 'face' contains no property 'vertex_indices' with triangle indices")]
-    NoVertexIndices,
-    #[error("The mesh does not use triangles as face primitive")]
-    NoTriangleFaces,
 }

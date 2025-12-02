@@ -1559,6 +1559,7 @@ dependencies = [
  "image",
  "plyers",
  "serde",
+ "thiserror 2.0.17",
  "tracing",
  "urn",
  "wgpu",

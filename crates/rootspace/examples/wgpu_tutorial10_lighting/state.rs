@@ -77,7 +77,7 @@ impl State {
 
         let camera_buffer = gfx.create_buffer_init(
             Some("Camera Buffer"),
-            wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            BufferUsages::UNIFORM | BufferUsages::COPY_DST,
             &[camera_uniform],
         );
 
@@ -103,7 +103,7 @@ impl State {
 
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
         let instance_buffer =
-            gfx.create_buffer_init(Some("Instance Buffer"), wgpu::BufferUsages::VERTEX, &instance_data);
+            gfx.create_buffer_init(Some("Instance Buffer"), BufferUsages::VERTEX, &instance_data);
 
         let camera_bind_group_layout = gfx
             .create_bind_group_layout()
@@ -126,8 +126,7 @@ impl State {
             .submit();
 
         let obj_model = model::load_model("cube.obj", &mut gfx, texture_bind_group_layout)
-            .await
-            .unwrap();
+            .await?;
 
         let light_uniform = LightUniform {
             position: [2.0, 2.0, 2.0],

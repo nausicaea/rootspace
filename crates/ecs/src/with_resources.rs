@@ -1,7 +1,7 @@
 use super::resources::Resources;
 
 pub trait WithResources: Sized + Send {
-    fn with_res(res: &Resources) -> impl std::future::Future<Output = anyhow::Result<Self>> + Send;
+    fn with_res(res: &Resources) -> impl Future<Output = anyhow::Result<Self>> + Send;
 }
 
 impl WithResources for () {

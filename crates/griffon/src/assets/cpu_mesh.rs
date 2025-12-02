@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::Context;
 
 use crate::base::vertex::Vertex;
-use assam::{Error, LoadAsset};
+use assam::LoadAsset;
 use plyers::{
     load_ply,
     types::{
@@ -33,13 +33,13 @@ impl LoadAsset for CpuMesh {
             let mesh = Self::with_ply(&ply, label)?;
             Ok(mesh)
         } else {
-            Err(Error::UnsupportedFileFormat.into())
+            Err(assam::Error::UnsupportedFileFormat.into())
         }
     }
 }
 
 impl CpuMesh {
-    fn with_ply(ply: &Ply, label: Option<String>) -> Result<Self, Error> {
+    fn with_ply(ply: &Ply, label: Option<String>) -> anyhow::Result<Self> {
         let (v_e_id, num_vertices) = ply
             .descriptor
             .elements
@@ -98,7 +98,7 @@ impl CpuMesh {
         tracing::trace!("Located vertex indices property {}", vertex_indices_id);
 
         if ply.primitive() != Some(Primitive::Triangles) {
-            return Err(Error::NoTriangleFaces);
+            return Err(Error::NoTriangleFaces.into());
         }
 
         let mut vertices = vec![Vertex::default(); num_vertices];
@@ -203,4 +203,18 @@ impl CpuMesh {
                     .map(|c| c.trim_start_matches("texture ")),
             )
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("No element named 'vertex' was found")]
+    NoVertexElement,
+    #[error("No element named 'face' was found")]
+    NoFaceElement,
+    #[error("The element named 'face' contains no property 'vertex_indices' with triangle indices")]
+    NoVertexIndices,
+    #[error("The mesh does not use triangles as face primitive")]
+    NoTriangleFaces,
+    #[error(transparent)]
+    Ply(#[from] plyers::PlyError),
 }
