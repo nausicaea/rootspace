@@ -200,9 +200,10 @@ impl Renderer {
                 // Transpose the matrix to go from row-major (CPU) to column-major (GPU).
                 model_view: model_view.t().0,
                 ambient_color: lght.ambient_color.into(),
+                diffuse_color: lght.diffuse_color.into(),
                 specular_color: lght.specular_color.into(),
-                ambient_intensity: 0.05,
-                point_intensity: 1.0,
+                ambient_intensity: lght.ambient_intensity,
+                point_intensity: lght.point_intensity,
                 ..Default::default()
             };
 

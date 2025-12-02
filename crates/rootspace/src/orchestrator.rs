@@ -337,7 +337,10 @@ impl Orchestrator {
                 name: "cube.ply".into(),
                 position: [2.0, 2.0, 2.0, 1.0].into(),
                 ambient_color: [0.5, 0.5, 0.5, 1.0].into(),
+                diffuse_color: [0.34, 0.34, 0.87, 1.0].into(),
                 specular_color: [1.0, 1.0, 1.0, 1.0].into(),
+                ambient_intensity: 0.05,
+                point_intensity: 1.0,
             })
             .submit();
         // builtins_scene

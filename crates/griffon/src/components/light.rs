@@ -12,7 +12,10 @@ pub struct Light {
     pub model: GpuModel,
     pub position: Vec4<f32>,
     pub ambient_color: Vec4<f32>,
+    pub diffuse_color: Vec4<f32>,
     pub specular_color: Vec4<f32>,
+    pub ambient_intensity: f32,
+    pub point_intensity: f32,
     pub group: String,
     pub name: String,
 }
@@ -25,7 +28,10 @@ impl Light {
         name: S,
         position: Vec4<f32>,
         ambient_color: Vec4<f32>,
+        diffuse_color: Vec4<f32>,
         specular_color: Vec4<f32>,
+        ambient_intensity: f32,
+        point_intensity: f32,
     ) -> Result<Self, anyhow::Error> {
         let group = group.as_ref();
         let name = name.as_ref();
@@ -40,7 +46,10 @@ impl Light {
             model,
             position,
             ambient_color,
+            diffuse_color,
             specular_color,
+            ambient_intensity,
+            point_intensity,
             group: group.to_string(),
             name: name.to_string(),
         })

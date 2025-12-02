@@ -77,7 +77,10 @@ impl Scene {
                             name: r.name.clone(),
                             position: r.position,
                             ambient_color: r.ambient_color,
+                            diffuse_color: r.diffuse_color,
                             specular_color: r.specular_color,
+                            ambient_intensity: r.ambient_intensity,
+                            point_intensity: r.point_intensity,
                         },
                     )
                 })
@@ -184,7 +187,10 @@ impl Scene {
                     name,
                     position,
                     ambient_color,
+                    diffuse_color,
                     specular_color,
+                    ambient_intensity,
+                    point_intensity,
                 }) = scene.lights.get(&i_prev)
                 {
                     let max_lights = res.read::<Graphics>().max_lights() as usize;
@@ -195,7 +201,18 @@ impl Scene {
                             "The maximum number of light sources ({max_lights}) has been reached"
                         ));
                     }
-                    let light = Light::with_model(res, group, name, *position, *ambient_color, *specular_color).await?;
+                    let light = Light::with_model(
+                        res,
+                        group,
+                        name,
+                        *position,
+                        *ambient_color,
+                        *diffuse_color,
+                        *specular_color,
+                        *ambient_intensity,
+                        *point_intensity,
+                    )
+                    .await?;
                     lights.insert(i_new, light);
                 }
             }
@@ -354,6 +371,9 @@ pub enum LightSource {
         name: String,
         position: Vec4<f32>,
         ambient_color: Vec4<f32>,
+        diffuse_color: Vec4<f32>,
         specular_color: Vec4<f32>,
+        ambient_intensity: f32,
+        point_intensity: f32,
     },
 }

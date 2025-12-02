@@ -2,7 +2,6 @@
 // Function reference: https://webgpufundamentals.org/webgpu/lessons/webgpu-wgsl-function-reference.html
 
 const TAU = 6.283185307179586476925286766559005768394338798;
-const DEFAULT_COLOR = vec4<f32>(0.34, 0.34, 0.87, 1.0);
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
@@ -39,6 +38,7 @@ struct Camera {
 struct Light {
     model_view: mat4x4<f32>,
     ambient_color: vec4<f32>,
+    diffuse_color: vec4<f32>,
     specular_color: vec4<f32>,
     ambient_intensity: f32,
     point_intensity: f32,
@@ -142,7 +142,7 @@ fn fragment_main(
     in: VertexOutput
 ) -> @location(0) vec4<f32> {
     let with_material = step(0.5, in.with_material);
-    let texture_color = with_material * textureSample(t_diffuse, s_diffuse, in.tex_coords) + (1.0 - with_material) * DEFAULT_COLOR;
+    let texture_color = with_material * textureSample(t_diffuse, s_diffuse, in.tex_coords) + (1.0 - with_material) * light.diffuse_color;
 
     let color = blinn_phong(
         light,
