@@ -13,7 +13,7 @@ pub mod systems;
 
 pub use crate::{
     app::App,
-    assets::scene::{RenderableSource, Scene},
+    assets::scene::Scene,
     components::{camera::Camera, transform::Transform},
     orchestrator::{Orchestrator, OrchestratorDeps},
     resources::rpc_settings::RpcDeps,
@@ -24,3 +24,4 @@ pub use ecs::{
     resource::Resource,
     with_dependencies::WithDependencies,
 };
+pub use griffon::components::renderable::RenderableSource;

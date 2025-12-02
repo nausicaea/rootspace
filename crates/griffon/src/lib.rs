@@ -3,6 +3,7 @@ pub mod base;
 pub mod components;
 mod macros;
 pub mod resources;
+mod utilities;
 
 pub use self::base::settings::Settings;
 pub use self::resources::{Graphics, GraphicsDeps};

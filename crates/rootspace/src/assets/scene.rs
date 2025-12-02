@@ -1,9 +1,7 @@
 use std::{collections::BTreeMap, path::Path};
 
-use anyhow::{Context, anyhow};
-use glamour::vec::Vec4;
-
 use crate::components::{camera::Camera, debug_animate::DebugAnimate, info::Info, transform::Transform};
+use anyhow::{Context, anyhow};
 use assam::{AssetDatabase, LoadAsset, SaveAsset};
 use ecs::{
     entities::Entities,
@@ -11,8 +9,8 @@ use ecs::{
     resources::Resources,
     storage::Storage,
 };
-use griffon::components::light::Light;
-use griffon::components::renderable::Renderable;
+use griffon::components::light::{Light, LightSource};
+use griffon::components::renderable::{Renderable, RenderableSource};
 use griffon::resources::Graphics;
 use rose_tree::hierarchy::Hierarchy;
 
@@ -177,34 +175,14 @@ impl Scene {
                     res.write_components::<Transform>().insert(i_new, transform);
                 }
 
-                if let Some(RenderableSource { group, name }) = scene.renderables.get(&i_prev) {
-                    let renderable = Renderable::with_model(res, group, name).await?;
+                if let Some(source) = scene.renderables.get(&i_prev) {
+                    let renderable = Renderable::new(res, source).await?;
                     res.write_components::<Renderable>().insert(i_new, renderable);
                 }
 
-                if let Some(LightSource { group, name, position, ambient_color, diffuse_color, specular_color, ambient_intensity, point_intensity }) = scene.lights.get(&i_prev)
-                {
-                    let max_lights = res.read::<Graphics>().max_lights() as usize;
-                    let mut lights = res.write_components::<Light>();
-                    let num_lights = lights.len();
-                    if num_lights >= max_lights {
-                        return Err(anyhow!(
-                            "The maximum number of light sources ({max_lights}) has been reached"
-                        ));
-                    }
-                    let light = Light::with_model(
-                        res,
-                        group,
-                        name,
-                        *position,
-                        *ambient_color,
-                        *diffuse_color,
-                        *specular_color,
-                        *ambient_intensity,
-                        *point_intensity,
-                    )
-                    .await?;
-                    lights.insert(i_new, light);
+                if let Some(source) = scene.lights.get(&i_prev) {
+                    let light = Light::new(res, source).await?;
+                    res.write_components::<Light>().insert(i_new, light);
                 }
             }
 
@@ -348,22 +326,4 @@ impl<'a> EntityBuilder<'a> {
 
         e
     }
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct RenderableSource {
-    pub group: String,
-    pub name: String
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct LightSource {
-    pub group: String,
-    pub name: String,
-    pub position: Vec4<f32>,
-    pub ambient_color: Vec4<f32>,
-    pub diffuse_color: Vec4<f32>,
-    pub specular_color: Vec4<f32>,
-    pub ambient_intensity: f32,
-    pub point_intensity: f32,
 }

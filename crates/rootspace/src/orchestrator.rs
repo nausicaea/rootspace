@@ -5,8 +5,7 @@ use std::{
 
 use super::registry::{FUSRegistry, MSRegistry};
 use crate::{
-    RenderableSource,
-    assets::scene::{LightSource, Scene},
+    assets::scene::Scene,
     components::{camera::Camera, info::Info, transform::Transform},
     events::engine_event::EngineEvent,
     registry::{RRegistry, USRegistry},
@@ -26,7 +25,8 @@ use ecs::{
     world::{World, event::WorldEvent},
 };
 use glamour::{quat::Quat, unit::Unit, vec::Vec4};
-use griffon::components::renderable::Renderable;
+use griffon::components::light::LightSource;
+use griffon::components::renderable::{Renderable, RenderableSource};
 use griffon::winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoopWindowTarget},
