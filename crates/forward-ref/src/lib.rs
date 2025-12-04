@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 /// Forward an implementation of a unary operator to combinations of references
 #[macro_export]
 macro_rules! forward_ref_unop {
