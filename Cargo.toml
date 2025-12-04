@@ -1,7 +1,16 @@
 [workspace]
 resolver = "2"
 members = [
-  "crates/*",
+  "crates/assam",
+  "crates/ecs",
+  "crates/file-manipulation",
+  "crates/forward-ref",
+  "crates/glamour",
+  "crates/griffon",
+  "crates/plyers",
+  "crates/rootspace",
+  "crates/rose-tree",
+  "crates/urn",
 ]
 exclude = [
   "crates/fuzz",

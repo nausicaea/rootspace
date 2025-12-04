@@ -39,6 +39,7 @@
             cargo-fuzz
             cargo-audit
             cargo-auditable
+            cargo-machete
             tokio-console
             rusty-man
             jetbrains.rust-rover
