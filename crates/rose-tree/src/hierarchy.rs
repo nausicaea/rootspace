@@ -22,16 +22,18 @@ use crate::tree::Tree;
 pub struct Hierarchy<K>(Tree<K, ()>);
 
 impl<K> Hierarchy<K> {
+    #[must_use] 
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    #[must_use] 
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
     pub fn clear(&mut self) {
-        self.0.clear()
+        self.0.clear();
     }
 }
 
@@ -48,10 +50,12 @@ impl<K> Hierarchy<K>
 where
     K: Clone,
 {
+    #[must_use] 
     pub fn bfs_iter(&self) -> BfsIter<'_, K> {
         BfsIter::new(self)
     }
 
+    #[must_use] 
     pub fn dfs_iter(&self) -> DfsIter<'_, K> {
         DfsIter::new(self)
     }
@@ -140,7 +144,7 @@ where
     }
 }
 
-impl<'a, K> Iterator for AncestorsIter<'a, K>
+impl<K> Iterator for AncestorsIter<'_, K>
 where
     K: Clone + Ord + Eq + Hash,
 {
@@ -154,7 +158,7 @@ where
             return None;
         }
 
-        self.key = self.hier.0.parents.get(&key).and_then(|p| p.clone());
+        self.key = self.hier.0.parents.get(&key).and_then(std::clone::Clone::clone);
         Some(key)
     }
 }
@@ -183,7 +187,7 @@ where
     }
 }
 
-impl<'a, K> Iterator for BfsIter<'a, K>
+impl<K> Iterator for BfsIter<'_, K>
 where
     K: Clone + Eq + Hash,
 {
@@ -233,7 +237,7 @@ where
     }
 }
 
-impl<'a, K> Iterator for DfsIter<'a, K>
+impl<K> Iterator for DfsIter<'_, K>
 where
     K: Clone + Eq + Hash,
 {

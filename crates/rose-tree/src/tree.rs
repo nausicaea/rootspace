@@ -20,10 +20,12 @@ pub struct Tree<K, V> {
 }
 
 impl<K, V> Tree<K, V> {
+    #[must_use] 
     pub fn is_empty(&self) -> bool {
         self.nodes.is_empty()
     }
 
+    #[must_use] 
     pub fn len(&self) -> usize {
         self.nodes.len()
     }
@@ -40,7 +42,7 @@ where
     K: Eq + Hash,
 {
     pub fn has_children<J: AsRef<K>>(&self, key: J) -> bool {
-        self.edges.get(key.as_ref()).map(|e| !e.is_empty()).unwrap_or(false)
+        self.edges.get(key.as_ref()).is_some_and(|e| !e.is_empty())
     }
 }
 
@@ -48,10 +50,12 @@ impl<K, V> Tree<K, V>
 where
     K: Clone,
 {
+    #[must_use] 
     pub fn bfs_iter(&self) -> BfsIter<'_, K, V> {
         BfsIter::new(self)
     }
 
+    #[must_use] 
     pub fn dfs_iter(&self) -> DfsIter<'_, K, V> {
         DfsIter::new(self)
     }
@@ -103,9 +107,7 @@ where
             return false;
         }
 
-        if !self.nodes.contains_key(parent) {
-            panic!("The parent node does not exist");
-        }
+        assert!(self.nodes.contains_key(parent), "The parent node does not exist");
 
         self.edges
             .entry(parent.clone())
@@ -134,7 +136,7 @@ where
                 self.edges
                     .remove(&k)
                     .into_iter()
-                    .flat_map(|children| children.into_iter()),
+                    .flat_map(std::iter::IntoIterator::into_iter),
             );
 
             // Remove all dangling edges
@@ -246,7 +248,7 @@ where
     }
 }
 
-impl<'a, K, V> FusedIterator for AncestorsIter<'a, K, V> where K: Clone + Ord + Eq + Hash {}
+impl<K, V> FusedIterator for AncestorsIter<'_, K, V> where K: Clone + Ord + Eq + Hash {}
 
 pub struct BfsIter<'a, K, V> {
     queue: VecDeque<K>,
