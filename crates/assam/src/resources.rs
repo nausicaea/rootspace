@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-
+use std::sync::LazyLock;
 use anyhow::Context;
 use directories::ProjectDirs;
 use tokio::fs::{create_dir_all, remove_dir_all};
@@ -11,17 +11,20 @@ use file_manipulation::copy_recursive;
 const APP_QUALIFIER: &str = "net";
 const APP_ORGANIZATION: &str = "nausicaea";
 
-lazy_static::lazy_static! {
-    static ref WITHIN_REPO_ASSETS: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR"))
+static WITHIN_REPO_ASSETS: LazyLock<PathBuf> = LazyLock::new(|| {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(|crates| crates.parent())
         .map(|workspace_root| workspace_root.join("assets"))
-        .unwrap();
-    static ref GROUP_AND_NAME_ALLOWLIST: regex::Regex = regex::RegexBuilder::new("^[-._0-9a-zA-Z]+$")
+        .unwrap()
+});
+
+static GROUP_AND_NAME_ALLOWLIST: LazyLock<regex::Regex> = LazyLock::new(|| {
+    regex::RegexBuilder::new("^[-._0-9a-zA-Z]+$")
         .multi_line(true)
         .build()
-        .unwrap();
-}
+        .unwrap()
+});
 
 pub trait AssetDatabaseDeps {
     /// Specifies the name of the game (must be a valid directory name)
@@ -124,12 +127,12 @@ impl AssetDatabase {
             .parent()
             .and_then(|parent| parent.file_name())
             .and_then(|file_name| file_name.to_str())
-            .map(|g| g.to_string())
+            .map(std::string::ToString::to_string)
             .ok_or(Error::NoAssetGroup(asset_path.to_path_buf()))?;
         let name = asset_path
             .file_name()
             .and_then(|file_name| file_name.to_str())
-            .map(|n| n.to_string())
+            .map(std::string::ToString::to_string)
             .ok_or(Error::NoAssetName(asset_path.to_path_buf()))?;
 
         if !(GROUP_AND_NAME_ALLOWLIST.is_match(&group) && GROUP_AND_NAME_ALLOWLIST.is_match(&name)) {

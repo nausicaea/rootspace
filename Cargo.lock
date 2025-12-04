@@ -212,7 +212,6 @@ dependencies = [
  "directories",
  "ecs",
  "file-manipulation",
- "lazy_static",
  "regex",
  "thiserror 2.0.17",
  "tokio",

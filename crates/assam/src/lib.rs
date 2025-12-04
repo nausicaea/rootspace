@@ -1,3 +1,6 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::missing_errors_doc)]
+
 use ecs::resources::Resources;
 use std::path::Path;
 use std::path::PathBuf;
