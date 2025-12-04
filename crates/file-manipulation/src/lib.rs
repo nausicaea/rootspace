@@ -1,3 +1,6 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::missing_errors_doc)]
+
 use std::{
     ffi::{OsStr, OsString},
     fmt::Debug,
@@ -106,7 +109,7 @@ pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> a
                         })?;
                     }
                     None => {
-                        return Err(anyhow!("Unable to copy the file: {:?}", path));
+                        return Err(anyhow!("Unable to copy the file: {}", path.display()));
                     }
                 }
             }
@@ -195,18 +198,18 @@ impl TryFrom<&Path> for NewOrExFilePathBuf {
             let parent = path
                 .parent()
                 .filter(|p| p.is_dir())
-                .ok_or_else(|| FileError::ParentDirectoryNotFound(path.to_path_buf()))
-                .and_then(|p| p.canonicalize().map_err(|e| FileError::IoError(path.to_path_buf(), e)))?;
+                .ok_or_else(|| FileError::ParentDirectoryNotFound(path.clone()))
+                .and_then(|p| p.canonicalize().map_err(|e| FileError::IoError(path.clone(), e)))?;
 
             let file_name = path
                 .file_name()
-                .ok_or_else(|| FileError::NoBaseNameFound(path.to_path_buf()))?;
+                .ok_or_else(|| FileError::NoBaseNameFound(path.clone()))?;
 
             Ok(NewOrExFilePathBuf(parent.join(file_name)))
         } else if path.is_file() {
             let path = path
                 .canonicalize()
-                .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
+                .map_err(|e| FileError::IoError(path.clone(), e))?;
             Ok(NewOrExFilePathBuf(path))
         } else {
             Err(FileError::NotAFile(path))
@@ -326,7 +329,7 @@ impl TryFrom<&Path> for FilePathBuf {
         if path.is_file() {
             let path = path
                 .canonicalize()
-                .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
+                .map_err(|e| FileError::IoError(path.clone(), e))?;
             Ok(FilePathBuf(path))
         } else {
             Err(FileError::NotAFile(path))
@@ -420,7 +423,7 @@ impl TryFrom<&Path> for DirPathBuf {
         if path.is_dir() {
             let path = path
                 .canonicalize()
-                .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
+                .map_err(|e| FileError::IoError(path.clone(), e))?;
             Ok(DirPathBuf(path))
         } else {
             Err(FileError::NotADirectory(path))
