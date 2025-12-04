@@ -8,7 +8,6 @@ anyhow = { version = "^1.0.0" }
 directories = "^6.0"
 ecs = { path = "../ecs" }
 file-manipulation = { path = "../file-manipulation" }
-image = { version = "^0.25", default-features = false }
 lazy_static = "^1.0"
 plyers = { path = "../plyers" }
 regex = "^1.0"
