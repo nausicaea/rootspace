@@ -15,13 +15,13 @@ use anyhow::Context;
 use assam::AssetDatabase;
 use async_trait::async_trait;
 use ecs::{
-    component::Component,
-    entity::index::Index,
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    resources::Resources,
-    storage::Storage,
-    system::System,
-    with_resources::WithResources,
+    Component,
+    Index,
+    EventQueue, ReceiverId,
+    Resources,
+    Storage,
+    System,
+    WithResources,
 };
 use glamour::num::ToMatrix;
 use glamour::{affine::builder::AffineBuilder, mat::Mat4};

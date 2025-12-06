@@ -17,7 +17,7 @@ impl LoadAsset for CpuMaterial {
     type Output = Self;
 
     #[tracing::instrument(skip(res))]
-    async fn with_path(res: &ecs::resources::Resources, path: &std::path::Path) -> anyhow::Result<Self::Output> {
+    async fn with_path(res: &ecs::Resources, path: &std::path::Path) -> anyhow::Result<Self::Output> {
         let label = path.file_stem().and_then(|n| n.to_str()).map(|n| n.to_owned());
         let texture = CpuTexture::with_path(res, path)
             .await

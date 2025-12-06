@@ -4,7 +4,7 @@ use crate::light::LightUniform;
 use crate::model;
 use crate::model::{Model, ModelVertex};
 use cgmath::{InnerSpace, Rotation3};
-use ecs::with_dependencies::WithDependencies;
+use ecs::WithDependencies;
 use griffon::base::ids::{BindGroupId, BufferId, PipelineId};
 use griffon::wgpu::{BindingType, BufferUsages, ShaderStages, SurfaceError};
 use griffon::winit::dpi::PhysicalSize;

@@ -7,7 +7,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use ecs::{resource::Resource, with_dependencies::WithDependencies};
+use ecs::{Resource, WithDependencies};
 
 const WINDOW_SIZE: usize = 10;
 
@@ -166,8 +166,8 @@ mod tests {
     use super::*;
     use ecs::{
         Reg,
-        registry::{End, ResourceRegistry},
-        world::World,
+        End, ResourceRegistry,
+        World,
     };
 
     #[test]

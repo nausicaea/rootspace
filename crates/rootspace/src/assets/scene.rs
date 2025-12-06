@@ -4,10 +4,10 @@ use crate::components::{camera::Camera, debug_animate::DebugAnimate, info::Info,
 use anyhow::{Context, anyhow};
 use assam::{AssetDatabase, LoadAsset, SaveAsset};
 use ecs::{
-    entities::Entities,
-    entity::{Entity, index::Index},
-    resources::Resources,
-    storage::Storage,
+    Entities,
+    Entity, Index,
+    Resources,
+    Storage,
 };
 use griffon::components::light::{Light, LightSource};
 use griffon::components::renderable::{Renderable, RenderableSource};

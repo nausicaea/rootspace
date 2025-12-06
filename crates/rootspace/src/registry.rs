@@ -11,8 +11,8 @@ use crate::{
 };
 use assam::AssetDatabase;
 use ecs::{
-    RegAdd, component::Component, entity::index::Index, event_monitor::EventMonitor, event_queue::EventQueue,
-    world::event::WorldEvent,
+    RegAdd, Component, Index, EventMonitor, EventQueue,
+    WorldEvent,
 };
 use griffon::Graphics;
 use griffon::components::light::Light;

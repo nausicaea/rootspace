@@ -3,7 +3,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 
 use crate::components::{debug_animate::DebugAnimate, transform::Transform};
-use ecs::{resources::Resources, system::System, with_resources::WithResources};
+use ecs::{Resources, System, WithResources};
 use glamour::{quat::Quat, vec::Vec4};
 
 #[derive(Debug)]

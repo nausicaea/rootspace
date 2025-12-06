@@ -118,9 +118,9 @@ where
     }
 }
 
-impl<K> ecs::resource::Resource for Hierarchy<K> where K: 'static + Send + Sync {}
+impl<K> ecs::Resource for Hierarchy<K> where K: 'static + Send + Sync {}
 
-impl<D, K: Ord> ecs::with_dependencies::WithDependencies<D> for Hierarchy<K> {
+impl<D, K: Ord> ecs::WithDependencies<D> for Hierarchy<K> {
     #[tracing::instrument(skip_all)]
     async fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Hierarchy::default())
@@ -269,12 +269,12 @@ mod tests {
     use super::*;
     use ecs::{
         Reg,
-        component::Component,
-        entities::Entities,
-        entity::index::Index,
-        registry::{End, ResourceRegistry},
-        storage::{Storage, vec_storage::VecStorage},
-        world::World,
+        Component,
+        Entities,
+        Index,
+        End, ResourceRegistry,
+        Storage, VecStorage,
+        World,
     };
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

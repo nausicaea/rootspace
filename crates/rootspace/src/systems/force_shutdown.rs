@@ -17,10 +17,10 @@ use griffon::winit::{
 
 use crate::events::engine_event::EngineEvent;
 use ecs::{
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    resources::Resources,
-    system::System,
-    with_resources::WithResources,
+    EventQueue, ReceiverId,
+    Resources,
+    System,
+    WithResources,
 };
 
 #[derive(Debug)]
@@ -97,8 +97,8 @@ mod tests {
     use super::*;
     use ecs::{
         Reg,
-        registry::{End, SystemRegistry},
-        world::World,
+        End, SystemRegistry,
+        World,
     };
 
     #[test]

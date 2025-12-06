@@ -14,15 +14,15 @@ use crate::{
 };
 use assam::{AssetDatabase, AssetDatabaseDeps};
 use ecs::{
-    entity::Entity,
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    loop_control::LoopControl,
-    registry::{ResourceRegistry, SystemRegistry},
-    resources::Resources,
-    storage::Storage,
-    with_dependencies::WithDependencies,
-    with_resources::WithResources,
-    world::{World, event::WorldEvent},
+    Entity,
+    EventQueue, ReceiverId,
+    LoopControl,
+    ResourceRegistry, SystemRegistry,
+    Resources,
+    Storage,
+    WithDependencies,
+    WithResources,
+    World, WorldEvent,
 };
 use glamour::{quat::Quat, unit::Unit, vec::Vec4};
 use griffon::components::light::LightSource;

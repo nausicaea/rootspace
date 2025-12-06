@@ -5,10 +5,10 @@ use griffon::winit::event::WindowEvent;
 
 use crate::components::camera::Camera;
 use ecs::{
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    resources::Resources,
-    system::System,
-    with_resources::WithResources,
+    EventQueue, ReceiverId,
+    Resources,
+    System,
+    WithResources,
 };
 use griffon::Graphics;
 
@@ -58,8 +58,8 @@ mod tests {
     use super::*;
     use ecs::{
         Reg,
-        registry::{End, SystemRegistry},
-        world::World,
+        End, SystemRegistry,
+        World,
     };
 
     #[test]

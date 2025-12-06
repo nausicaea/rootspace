@@ -2,10 +2,10 @@ use std::{collections::HashMap, time::Duration};
 
 use async_trait::async_trait;
 use ecs::{
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    resources::Resources,
-    system::System,
-    with_resources::WithResources,
+    EventQueue, ReceiverId,
+    Resources,
+    System,
+    WithResources,
 };
 use glamour::{affine::Affine, quat::Quat, vec::Vec4};
 use griffon::winit::{

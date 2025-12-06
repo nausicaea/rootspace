@@ -1,6 +1,6 @@
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 
-use ecs::{resource::Resource, with_dependencies::WithDependencies};
+use ecs::{Resource, WithDependencies};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RpcSettings {

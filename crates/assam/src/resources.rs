@@ -5,7 +5,7 @@ use directories::ProjectDirs;
 use tokio::fs::{create_dir_all, remove_dir_all};
 
 use super::{Error, LoadAsset, SaveAsset};
-use ecs::{resource::Resource, resources::Resources, with_dependencies::WithDependencies};
+use ecs::{Resource, Resources, WithDependencies};
 use file_manipulation::copy_recursive;
 
 const APP_QUALIFIER: &str = "net";
@@ -203,8 +203,8 @@ mod tests {
     use super::*;
     use ecs::{
         Reg,
-        registry::{End, ResourceRegistry},
-        world::World,
+        End, ResourceRegistry,
+        World,
     };
 
     #[derive(Debug)]

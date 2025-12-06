@@ -4,7 +4,7 @@ use anyhow::Context;
 use tracing::trace;
 use super::{cpu_material::CpuMaterial, cpu_mesh::CpuMesh};
 use assam::{AssetDatabase, LoadAsset};
-use ecs::resources::Resources;
+use ecs::Resources;
 
 pub const MATERIAL_ASSET_GROUP: &str = "textures";
 

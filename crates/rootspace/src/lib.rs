@@ -20,8 +20,8 @@ pub use crate::{
     systems::rpc::service::RpcServiceClient,
 };
 pub use ecs::{
-    registry::{Element, End},
-    resource::Resource,
-    with_dependencies::WithDependencies,
+    Element, End,
+    Resource,
+    WithDependencies,
 };
 pub use griffon::components::renderable::RenderableSource;

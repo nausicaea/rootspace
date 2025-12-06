@@ -27,7 +27,7 @@ use crate::base::runtime::Runtime;
 use crate::base::sampler_builder::SamplerBuilder;
 use crate::base::settings::Settings;
 use crate::base::texture_builder::TextureBuilder;
-use ecs::{resource::Resource, with_dependencies::WithDependencies};
+use ecs::{Resource, WithDependencies};
 use urn::Urn;
 
 const DEPTH_TEXTURE_LABEL: Option<&str> = Some("depth-stencil:texture");

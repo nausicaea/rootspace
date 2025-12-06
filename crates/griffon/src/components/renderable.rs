@@ -1,6 +1,6 @@
 use crate::base::gpu_model::GpuModel;
 use crate::utilities::load_instanced_gpu_model;
-use ecs::{component::Component, resources::Resources, storage::vec_storage::VecStorage};
+use ecs::{Component, Resources, VecStorage};
 
 #[derive(Debug)]
 pub struct Renderable {

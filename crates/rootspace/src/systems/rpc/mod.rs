@@ -21,10 +21,10 @@ use crate::{
 };
 use assam::AssetDatabase;
 use ecs::{
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    resources::Resources,
-    system::System,
-    with_resources::WithResources,
+    EventQueue, ReceiverId,
+    Resources,
+    System,
+    WithResources,
 };
 use graphics_info::GraphicsInfo;
 use graphics_info::GraphicsInfoCategory;
