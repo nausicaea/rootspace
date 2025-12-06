@@ -4,12 +4,7 @@ use async_trait::async_trait;
 use griffon::winit::event::WindowEvent;
 
 use crate::components::camera::Camera;
-use ecs::{
-    EventQueue, ReceiverId,
-    Resources,
-    System,
-    WithResources,
-};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use griffon::Graphics;
 
 #[derive(Debug)]
@@ -56,11 +51,7 @@ impl System for CameraManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::{
-        Reg,
-        End, SystemRegistry,
-        World,
-    };
+    use ecs::{End, Reg, SystemRegistry, World};
 
     #[test]
     fn camera_manager_reg_macro() {

@@ -14,15 +14,7 @@ use crate::{
 use anyhow::Context;
 use assam::AssetDatabase;
 use async_trait::async_trait;
-use ecs::{
-    Component,
-    Index,
-    EventQueue, ReceiverId,
-    Resources,
-    Storage,
-    System,
-    WithResources,
-};
+use ecs::{Component, EventQueue, Index, ReceiverId, Resources, Storage, System, WithResources};
 use glamour::num::ToMatrix;
 use glamour::{affine::builder::AffineBuilder, mat::Mat4};
 use griffon::base::camera_uniform::CameraUniform;

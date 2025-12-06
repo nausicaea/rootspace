@@ -7,7 +7,7 @@ pub enum Entry<'a, T: 'a, S: Storage<Item = T>> {
 }
 
 impl<'a, T: 'a, S: Storage<Item = T>> Entry<'a, T, S> {
-    #[must_use] 
+    #[must_use]
     pub fn index(&self) -> &Index {
         match self {
             Entry::Occupied(_, i) => i,
@@ -57,7 +57,7 @@ impl<'a, T: 'a, S: Storage<Item = T>> Entry<'a, T, S> {
 }
 
 impl<'a, T: Default + 'a, S: Storage<Item = T>> Entry<'a, T, S> {
-    #[must_use] 
+    #[must_use]
     pub fn or_default(self) -> &'a mut T {
         match self {
             Entry::Vacant(s, i) => {

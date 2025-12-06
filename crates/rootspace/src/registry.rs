@@ -10,10 +10,7 @@ use crate::{
     },
 };
 use assam::AssetDatabase;
-use ecs::{
-    RegAdd, Component, Index, EventMonitor, EventQueue,
-    WorldEvent,
-};
+use ecs::{Component, EventMonitor, EventQueue, Index, RegAdd, WorldEvent};
 use griffon::Graphics;
 use griffon::components::light::Light;
 use griffon::components::renderable::Renderable;

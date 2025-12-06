@@ -76,7 +76,7 @@ impl World {
         })
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn resources(&self) -> &Resources {
         &self.resources
     }

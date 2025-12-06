@@ -40,7 +40,7 @@ impl<T> ZstStorage<T>
 where
     T: Default,
 {
-    #[must_use] 
+    #[must_use]
     pub fn with_capacity(_capacity: usize) -> Self {
         ZstStorage {
             index: BTreeSet::default(),

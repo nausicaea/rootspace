@@ -1,12 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use async_trait::async_trait;
-use ecs::{
-    EventQueue, ReceiverId,
-    Resources,
-    System,
-    WithResources,
-};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use glamour::{affine::Affine, quat::Quat, vec::Vec4};
 use griffon::winit::{
     event::{KeyEvent, WindowEvent},

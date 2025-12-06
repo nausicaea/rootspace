@@ -1,10 +1,10 @@
 use std::path::Path;
 
-use anyhow::Context;
-use tracing::trace;
 use super::{cpu_material::CpuMaterial, cpu_mesh::CpuMesh};
+use anyhow::Context;
 use assam::{AssetDatabase, LoadAsset};
 use ecs::Resources;
+use tracing::trace;
 
 pub const MATERIAL_ASSET_GROUP: &str = "textures";
 

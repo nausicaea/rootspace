@@ -45,7 +45,11 @@ where
 
         self.receivers.insert(id, ReceiverState::new(id));
 
-        tracing::debug!("Adding subscriber {} to queue {}", type_name::<T>(), type_name::<Self>());
+        tracing::debug!(
+            "Adding subscriber {} to queue {}",
+            type_name::<T>(),
+            type_name::<Self>()
+        );
         ReceiverId::new(id)
     }
 
@@ -133,7 +137,9 @@ where
         // If the event queue is empty, or all events have been read by all receivers, reset the
         // counters for each receiver
         if self.events.is_empty() {
-            self.receivers.values_mut().for_each(receiver_state::ReceiverState::reset);
+            self.receivers
+                .values_mut()
+                .for_each(receiver_state::ReceiverState::reset);
         }
     }
 }

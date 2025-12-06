@@ -21,26 +21,19 @@ mod with_resources;
 mod world;
 
 pub use crate::{
+    component::Component,
+    entities::Entities,
+    entity::Entity,
+    entity::index::Index,
+    event_monitor::EventMonitor,
+    event_queue::{EventQueue, receiver_id::ReceiverId},
+    loop_control::LoopControl,
+    registry::{Element, End, ResourceRegistry, SystemRegistry},
     resource::Resource,
     resources::Resources,
-    with_dependencies::WithDependencies,
-    registry::{Element, End, SystemRegistry, ResourceRegistry},
-    event_monitor::EventMonitor,
-    component::Component,
-    storage::{
-        Storage,
-        vec_storage::VecStorage,
-        zst_storage::ZstStorage
-    },
-    entity::Entity,
-    loop_control::LoopControl,
-    event_queue::{EventQueue, receiver_id::ReceiverId},
+    storage::{Storage, vec_storage::VecStorage, zst_storage::ZstStorage},
     system::System,
+    with_dependencies::WithDependencies,
     with_resources::WithResources,
-    world::{
-        World,
-        event::WorldEvent,
-    },
-    entities::Entities,
-    entity::index::Index,
+    world::{World, event::WorldEvent},
 };

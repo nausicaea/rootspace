@@ -3,12 +3,7 @@ use std::{collections::BTreeMap, path::Path};
 use crate::components::{camera::Camera, debug_animate::DebugAnimate, info::Info, transform::Transform};
 use anyhow::{Context, anyhow};
 use assam::{AssetDatabase, LoadAsset, SaveAsset};
-use ecs::{
-    Entities,
-    Entity, Index,
-    Resources,
-    Storage,
-};
+use ecs::{Entities, Entity, Index, Resources, Storage};
 use griffon::components::light::{Light, LightSource};
 use griffon::components::renderable::{Renderable, RenderableSource};
 use griffon::resources::Graphics;

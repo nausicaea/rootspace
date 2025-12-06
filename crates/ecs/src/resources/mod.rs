@@ -70,7 +70,7 @@ impl Resources {
     impl_iter_ref!(iter_www, WWWIterRef, #writes: C, D, E);
 
     /// Create a new resources container with the specified capacity.
-    #[must_use] 
+    #[must_use]
     pub fn with_capacity(cap: usize) -> Self {
         Resources(HashMap::with_capacity(cap))
     }
@@ -106,12 +106,12 @@ impl Resources {
         self.0.clear();
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -133,7 +133,7 @@ impl Resources {
     }
 
     /// Returns `true` if a resource of the specified type is present.
-    #[must_use] 
+    #[must_use]
     pub fn contains<R>(&self) -> bool
     where
         R: Resource,
@@ -146,19 +146,16 @@ impl Resources {
     where
         R: Resource,
     {
-        self.0
-            .get(&TypeId::of::<R>())
-            .ok_or(NoSuchTypeFound)
-            .map_or_else(
-                |e| panic!("Unable to acquire read access to resource {}: {}", type_name::<R>(), e),
-                |r| {
-                    RwLockReadGuard::map(r.read(), |i| {
-                        i.downcast_ref::<R>().unwrap_or_else(|| {
-                            panic!("Could not downcast the requested resource to type {}", type_name::<R>())
-                        })
+        self.0.get(&TypeId::of::<R>()).ok_or(NoSuchTypeFound).map_or_else(
+            |e| panic!("Unable to acquire read access to resource {}: {}", type_name::<R>(), e),
+            |r| {
+                RwLockReadGuard::map(r.read(), |i| {
+                    i.downcast_ref::<R>().unwrap_or_else(|| {
+                        panic!("Could not downcast the requested resource to type {}", type_name::<R>())
                     })
-                }
-            )
+                })
+            },
+        )
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
@@ -166,19 +163,16 @@ impl Resources {
     where
         R: Resource,
     {
-        self.0
-            .get(&TypeId::of::<R>())
-            .ok_or(NoSuchTypeFound)
-            .map_or_else(
-                |e| panic!("Unable to acquire write access to resource {}: {}", type_name::<R>(), e),
-                |r| {
-                    RwLockWriteGuard::map(r.write(), |i| {
-                        i.downcast_mut::<R>().unwrap_or_else(|| {
-                            panic!("Could not downcast the requested resource to type {}", type_name::<R>())
-                        })
+        self.0.get(&TypeId::of::<R>()).ok_or(NoSuchTypeFound).map_or_else(
+            |e| panic!("Unable to acquire write access to resource {}: {}", type_name::<R>(), e),
+            |r| {
+                RwLockWriteGuard::map(r.write(), |i| {
+                    i.downcast_mut::<R>().unwrap_or_else(|| {
+                        panic!("Could not downcast the requested resource to type {}", type_name::<R>())
                     })
-                }
-            )
+                })
+            },
+        )
     }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
@@ -186,16 +180,14 @@ impl Resources {
     where
         R: Resource,
     {
-        self.0
-            .get_mut(&TypeId::of::<R>())
-            .map_or_else(
-                || panic!("Could not find any resource of type {}", type_name::<R>()),
-                |r| {
-                    r.get_mut()
-                        .downcast_mut::<R>()
-                        .unwrap_or_else(|| panic!("Could not downcast the requested resource to type {}", type_name::<R>()))
-                }
-            )
+        self.0.get_mut(&TypeId::of::<R>()).map_or_else(
+            || panic!("Could not find any resource of type {}", type_name::<R>()),
+            |r| {
+                r.get_mut()
+                    .downcast_mut::<R>()
+                    .unwrap_or_else(|| panic!("Could not downcast the requested resource to type {}", type_name::<R>()))
+            },
+        )
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).

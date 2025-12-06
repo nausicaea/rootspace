@@ -20,12 +20,12 @@ pub struct Tree<K, V> {
 }
 
 impl<K, V> Tree<K, V> {
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.nodes.is_empty()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.nodes.len()
     }
@@ -50,12 +50,12 @@ impl<K, V> Tree<K, V>
 where
     K: Clone,
 {
-    #[must_use] 
+    #[must_use]
     pub fn bfs_iter(&self) -> BfsIter<'_, K, V> {
         BfsIter::new(self)
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn dfs_iter(&self) -> DfsIter<'_, K, V> {
         DfsIter::new(self)
     }
@@ -647,6 +647,6 @@ mod tests {
                 Token::SeqEnd,
                 Token::MapEnd,
             ],
-        )
+        );
     }
 }

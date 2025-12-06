@@ -86,7 +86,10 @@ impl std::str::FromStr for Entity {
         let idx = parts[0].parse::<Index>()?;
         let r#gen = parts[1].parse::<Generation>()?;
 
-        Ok(Entity { index: idx, generation: r#gen })
+        Ok(Entity {
+            index: idx,
+            generation: r#gen,
+        })
     }
 }
 

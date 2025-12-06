@@ -1,7 +1,7 @@
-use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
 use anyhow::Context;
 use directories::ProjectDirs;
+use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 use tokio::fs::{create_dir_all, remove_dir_all};
 
 use super::{Error, LoadAsset, SaveAsset};
@@ -201,11 +201,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::{
-        Reg,
-        End, ResourceRegistry,
-        World,
-    };
+    use ecs::{End, Reg, ResourceRegistry, World};
 
     #[derive(Debug)]
     struct TDeps<'a> {
@@ -224,7 +220,7 @@ mod tests {
         }
     }
 
-    impl<'a> AssetDatabaseDeps for TDeps<'a> {
+    impl AssetDatabaseDeps for TDeps<'_> {
         fn name(&self) -> &str {
             self.name
         }

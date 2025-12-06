@@ -16,12 +16,7 @@ use griffon::winit::{
 };
 
 use crate::events::engine_event::EngineEvent;
-use ecs::{
-    EventQueue, ReceiverId,
-    Resources,
-    System,
-    WithResources,
-};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 
 #[derive(Debug)]
 pub struct ForceShutdown {
@@ -95,11 +90,7 @@ impl System for ForceShutdown {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::{
-        Reg,
-        End, SystemRegistry,
-        World,
-    };
+    use ecs::{End, Reg, SystemRegistry, World};
 
     #[test]
     fn force_shutdown_reg_macro() {

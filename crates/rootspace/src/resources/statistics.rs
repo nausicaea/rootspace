@@ -164,11 +164,7 @@ impl<D> WithDependencies<D> for Statistics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::{
-        Reg,
-        End, ResourceRegistry,
-        World,
-    };
+    use ecs::{End, Reg, ResourceRegistry, World};
 
     #[test]
     fn statistics_reg_macro() {

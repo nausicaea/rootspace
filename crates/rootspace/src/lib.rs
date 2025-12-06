@@ -19,9 +19,5 @@ pub use crate::{
     resources::rpc_settings::RpcDeps,
     systems::rpc::service::RpcServiceClient,
 };
-pub use ecs::{
-    Element, End,
-    Resource,
-    WithDependencies,
-};
+pub use ecs::{Element, End, Resource, WithDependencies};
 pub use griffon::components::renderable::RenderableSource;

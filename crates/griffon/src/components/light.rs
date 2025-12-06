@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use ecs::{Component, Resources, VecStorage, Storage};
+use ecs::{Component, Resources, Storage, VecStorage};
 use glamour::vec::Vec4;
 
 use crate::base::gpu_model::GpuModel;

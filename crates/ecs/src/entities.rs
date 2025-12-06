@@ -56,13 +56,13 @@ impl Entities {
     }
 
     /// Return `true` if there are no active entities
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     /// Return the number of active entities.
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.generations.iter().filter(|g| g.is_active()).count()
     }
@@ -75,7 +75,7 @@ impl Entities {
     }
 
     /// Create an iterator over all active entities.
-    #[must_use] 
+    #[must_use]
     pub fn iter(&self) -> Iter<'_> {
         self.into_iter()
     }

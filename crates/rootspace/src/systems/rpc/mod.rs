@@ -20,12 +20,7 @@ use crate::{
     systems::rpc::{server::RpcServer, service::RpcService},
 };
 use assam::AssetDatabase;
-use ecs::{
-    EventQueue, ReceiverId,
-    Resources,
-    System,
-    WithResources,
-};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use graphics_info::GraphicsInfo;
 use graphics_info::GraphicsInfoCategory;
 use griffon::Graphics;

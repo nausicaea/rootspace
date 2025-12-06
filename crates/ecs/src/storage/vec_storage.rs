@@ -21,7 +21,7 @@ pub struct VecStorage<T> {
 }
 
 impl<T> VecStorage<T> {
-    #[must_use] 
+    #[must_use]
     pub fn with_capacity(_capacity: usize) -> Self {
         VecStorage {
             index: BTreeSet::default(),
@@ -29,7 +29,7 @@ impl<T> VecStorage<T> {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn iter(&self) -> RIter<'_, Self> {
         self.into_iter()
     }
@@ -38,7 +38,7 @@ impl<T> VecStorage<T> {
         self.into_iter()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn indexed_iter(&self) -> IndexedRIter<'_, Self> {
         IndexedRIter::new(self)
     }

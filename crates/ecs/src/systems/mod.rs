@@ -8,7 +8,7 @@ use super::{registry::SystemRegistry, resources::Resources, system::System, with
 pub struct Systems(Vec<Arc<Mutex<Box<dyn System>>>>);
 
 impl Systems {
-    #[must_use] 
+    #[must_use]
     pub fn with_capacity(cap: usize) -> Self {
         Systems(Vec::with_capacity(cap))
     }
@@ -35,12 +35,12 @@ impl Systems {
         Ok(sys)
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -56,7 +56,7 @@ impl Systems {
         self.0.push(Arc::new(Mutex::new(Box::new(sys))));
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn iter(&self) -> SystemsIter<'_> {
         self.into_iter()
     }

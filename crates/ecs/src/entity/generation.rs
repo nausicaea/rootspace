@@ -32,7 +32,7 @@ impl Generation {
     }
 
     /// Returns `true`, if the current generation is an odd number, `false` if even or zero.
-    #[must_use] 
+    #[must_use]
     pub fn is_active(&self) -> bool {
         self.0 % 2 == 1
     }

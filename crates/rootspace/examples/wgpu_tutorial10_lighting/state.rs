@@ -102,8 +102,7 @@ impl State {
             .collect::<Vec<_>>();
 
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
-        let instance_buffer =
-            gfx.create_buffer_init(Some("Instance Buffer"), BufferUsages::VERTEX, &instance_data);
+        let instance_buffer = gfx.create_buffer_init(Some("Instance Buffer"), BufferUsages::VERTEX, &instance_data);
 
         let camera_bind_group_layout = gfx
             .create_bind_group_layout()
@@ -125,8 +124,7 @@ impl State {
             .add_entire_buffer(0, camera_buffer)
             .submit();
 
-        let obj_model = model::load_model("cube.obj", &mut gfx, texture_bind_group_layout)
-            .await?;
+        let obj_model = model::load_model("cube.obj", &mut gfx, texture_bind_group_layout).await?;
 
         let light_uniform = LightUniform {
             position: [2.0, 2.0, 2.0],

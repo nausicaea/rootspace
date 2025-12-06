@@ -14,15 +14,8 @@ use crate::{
 };
 use assam::{AssetDatabase, AssetDatabaseDeps};
 use ecs::{
-    Entity,
-    EventQueue, ReceiverId,
-    LoopControl,
-    ResourceRegistry, SystemRegistry,
-    Resources,
-    Storage,
-    WithDependencies,
-    WithResources,
-    World, WorldEvent,
+    Entity, EventQueue, LoopControl, ReceiverId, ResourceRegistry, Resources, Storage, SystemRegistry,
+    WithDependencies, WithResources, World, WorldEvent,
 };
 use glamour::{quat::Quat, unit::Unit, vec::Vec4};
 use griffon::components::light::LightSource;

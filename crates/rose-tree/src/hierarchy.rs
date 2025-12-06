@@ -22,12 +22,12 @@ use crate::tree::Tree;
 pub struct Hierarchy<K>(Tree<K, ()>);
 
 impl<K> Hierarchy<K> {
-    #[must_use] 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -50,12 +50,12 @@ impl<K> Hierarchy<K>
 where
     K: Clone,
 {
-    #[must_use] 
+    #[must_use]
     pub fn bfs_iter(&self) -> BfsIter<'_, K> {
         BfsIter::new(self)
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn dfs_iter(&self) -> DfsIter<'_, K> {
         DfsIter::new(self)
     }
@@ -267,15 +267,7 @@ mod tests {
     use std::{iter::Product, ops::Mul};
 
     use super::*;
-    use ecs::{
-        Reg,
-        Component,
-        Entities,
-        Index,
-        End, ResourceRegistry,
-        Storage, VecStorage,
-        World,
-    };
+    use ecs::{Component, End, Entities, Index, Reg, ResourceRegistry, Storage, VecStorage, World};
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
     struct Tk(usize);

@@ -13,7 +13,7 @@ pub struct ReceiverState<E> {
 }
 
 impl<E> ReceiverState<E> {
-    #[must_use] 
+    #[must_use]
     pub fn new(id: usize) -> Self {
         ReceiverState {
             id,
