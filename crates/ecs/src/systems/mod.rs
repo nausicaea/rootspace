@@ -8,6 +8,7 @@ use super::{registry::SystemRegistry, resources::Resources, system::System, with
 pub struct Systems(Vec<Arc<Mutex<Box<dyn System>>>>);
 
 impl Systems {
+    #[must_use] 
     pub fn with_capacity(cap: usize) -> Self {
         Systems(Vec::with_capacity(cap))
     }
@@ -34,25 +35,28 @@ impl Systems {
         Ok(sys)
     }
 
+    #[must_use] 
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    #[must_use] 
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     pub fn clear(&mut self) {
-        self.0.clear()
+        self.0.clear();
     }
 
     pub fn insert<S>(&mut self, sys: S)
     where
         S: System,
     {
-        self.0.push(Arc::new(Mutex::new(Box::new(sys))))
+        self.0.push(Arc::new(Mutex::new(Box::new(sys))));
     }
 
+    #[must_use] 
     pub fn iter(&self) -> SystemsIter<'_> {
         self.into_iter()
     }
@@ -99,7 +103,7 @@ impl<'a> SystemsIter<'a> {
     }
 }
 
-impl<'a> Iterator for SystemsIter<'a> {
+impl Iterator for SystemsIter<'_> {
     type Item = Arc<Mutex<Box<dyn System>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -118,6 +122,6 @@ impl<'a> Iterator for SystemsIter<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for SystemsIter<'a> {}
+impl ExactSizeIterator for SystemsIter<'_> {}
 
-impl<'a> FusedIterator for SystemsIter<'a> {}
+impl FusedIterator for SystemsIter<'_> {}

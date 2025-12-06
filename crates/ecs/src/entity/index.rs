@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 /// indices.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
+#[must_use]
 pub struct Index(u32);
 
 impl Index {
@@ -12,6 +13,7 @@ impl Index {
         Index(idx)
     }
 
+    #[must_use]
     pub fn idx(&self) -> u32 {
         self.0
     }
@@ -75,15 +77,19 @@ impl From<&u32> for Index {
     }
 }
 
-impl From<usize> for Index {
-    fn from(value: usize) -> Self {
-        Index(value as u32)
+impl TryFrom<usize> for Index {
+    type Error = std::num::TryFromIntError;
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        u32::try_from(value).map(Index)
     }
 }
 
-impl From<&usize> for Index {
-    fn from(value: &usize) -> Self {
-        Index(*value as u32)
+impl TryFrom<&usize> for Index {
+    type Error = std::num::TryFromIntError;
+
+    fn try_from(value: &usize) -> Result<Self, Self::Error> {
+        u32::try_from(*value).map(Index)
     }
 }
 

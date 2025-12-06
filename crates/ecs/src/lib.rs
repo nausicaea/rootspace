@@ -1,3 +1,7 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::missing_errors_doc)]
+
 //! The `ecs` library provides facilities to build an Entity-Component-System architecture, wherein
 //! Entities serve as identifiers, Components contain (mostly) data and are always in a
 //! relationship with Entities, and finally, Systems encode (mostly) behaviour. The World manages

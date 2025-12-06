@@ -10,41 +10,38 @@ use crate::entity::{generation::Generation, index::Index};
 /// An entity serves as an identifier to an object within the world.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(from = "(Index, Generation)", into = "(Index, Generation)")]
+#[must_use]
 pub struct Entity {
     /// Holds the entity index.
-    idx: Index,
+    index: Index,
     /// Holds the entity generation.
-    r#gen: Generation,
+    generation: Generation,
 }
 
 impl Entity {
     /// Create a new entity by specifying index and generation directly.
-    pub fn new<I, G>(idx: I, r#gen: G) -> Entity
-    where
-        I: Into<Index>,
-        G: Into<Generation>,
-    {
+    pub fn new<I: Into<Index>, G: Into<Generation>>(idx: I, generation: G) -> Entity {
         Entity {
-            idx: idx.into(),
-            r#gen: r#gen.into(),
+            index: idx.into(),
+            generation: generation.into(),
         }
     }
 
     /// Return the integer index of the entity, which can be used to index into data structures.
     pub fn idx(&self) -> Index {
-        self.idx
+        self.index
     }
 
     /// Returns the integer generation of the entity, which indicates how often an entity has been reused.
     #[cfg(test)]
     pub fn r#gen(&self) -> Generation {
-        self.r#gen
+        self.generation
     }
 }
 
 impl std::fmt::Display for Entity {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.idx)
+        write!(f, "{}", self.index)
     }
 }
 
@@ -56,7 +53,7 @@ impl PartialOrd for Entity {
 
 impl Ord for Entity {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.idx.cmp(&other.idx)
+        self.index.cmp(&other.index)
     }
 }
 
@@ -68,13 +65,13 @@ impl AsRef<Entity> for Entity {
 
 impl AsRef<Index> for Entity {
     fn as_ref(&self) -> &Index {
-        &self.idx
+        &self.index
     }
 }
 
 impl AsRef<Generation> for Entity {
     fn as_ref(&self) -> &Generation {
-        &self.r#gen
+        &self.generation
     }
 }
 
@@ -90,21 +87,21 @@ impl std::str::FromStr for Entity {
         let idx = parts[0].parse::<Index>()?;
         let r#gen = parts[1].parse::<Generation>()?;
 
-        Ok(Entity { idx, r#gen })
+        Ok(Entity { index: idx, generation: r#gen })
     }
 }
 
 impl From<Entity> for (Index, Generation) {
     fn from(value: Entity) -> Self {
-        (value.idx, value.r#gen)
+        (value.index, value.generation)
     }
 }
 
 impl From<(Index, Generation)> for Entity {
     fn from(value: (Index, Generation)) -> Entity {
         Entity {
-            idx: value.0,
-            r#gen: value.1,
+            index: value.0,
+            generation: value.1,
         }
     }
 }
@@ -117,7 +114,7 @@ impl From<Entity> for Index {
 
 impl From<&Entity> for Index {
     fn from(value: &Entity) -> Self {
-        value.idx
+        value.index
     }
 }
 
@@ -129,6 +126,6 @@ impl From<Entity> for Generation {
 
 impl From<&Entity> for Generation {
     fn from(value: &Entity) -> Self {
-        value.r#gen
+        value.generation
     }
 }

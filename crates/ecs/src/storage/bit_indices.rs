@@ -10,12 +10,12 @@ impl BitIndices {
     pub fn with_capacity(capacity: usize) -> Self {
         BitIndices {
             num_entries: 0,
-            inner: Vec::with_capacity((capacity - 1) / bit_size::<u32>() as usize + 1),
+            inner: Vec::with_capacity((capacity - 1) / bit_size_of::<u32>() as usize + 1),
         }
     }
 
     pub fn capacity(&self) -> usize {
-        self.inner.capacity() * bit_size::<u32>() as usize
+        self.inner.capacity() * bit_size_of::<u32>() as usize
     }
 
     pub fn is_empty(&self) -> bool {
@@ -28,8 +28,8 @@ impl BitIndices {
 
     pub fn contains<I: Into<u32>>(&self, index: I) -> bool {
         let idx = index.into();
-        let group = (idx / bit_size::<u32>()) as usize;
-        let position = idx % bit_size::<u32>();
+        let group = (idx / bit_size_of::<u32>()) as usize;
+        let position = idx % bit_size_of::<u32>();
 
         if self.num_entries == 0 || self.inner.len() < group + 1 {
             return false;
@@ -44,8 +44,8 @@ impl BitIndices {
 
     pub fn insert<I: Into<u32>>(&mut self, index: I) -> bool {
         let idx = index.into();
-        let group = (idx / bit_size::<u32>()) as usize;
-        let position = idx % bit_size::<u32>();
+        let group = (idx / bit_size_of::<u32>()) as usize;
+        let position = idx % bit_size_of::<u32>();
 
         if group + 1 > self.inner.len() {
             self.inner.resize(group + 1, Default::default());
@@ -63,8 +63,8 @@ impl BitIndices {
 
     pub fn remove<I: Into<u32>>(&mut self, index: I) -> bool {
         let idx = index.into();
-        let group = (idx / bit_size::<u32>()) as usize;
-        let position = idx % bit_size::<u32>();
+        let group = (idx / bit_size_of::<u32>()) as usize;
+        let position = idx % bit_size_of::<u32>();
 
         if self.num_entries == 0 || self.inner.len() < group + 1 {
             return false;
@@ -118,18 +118,18 @@ impl<'a> Iter<'a> {
             num_entries,
             entry_cursor: 0,
             cursor: 0,
-            rev_cursor: num_groups * bit_size::<u32>(),
+            rev_cursor: num_groups * bit_size_of::<u32>(),
         }
     }
 
     fn cursors(&self) -> (u32, u32) {
-        (self.cursor / bit_size::<u32>(), self.cursor % bit_size::<u32>())
+        (self.cursor / bit_size_of::<u32>(), self.cursor % bit_size_of::<u32>())
     }
 
     fn rev_cursors(&self) -> (u32, u32) {
         (
-            (self.rev_cursor - 1) / bit_size::<u32>(),
-            (self.rev_cursor - 1) % bit_size::<u32>(),
+            (self.rev_cursor - 1) / bit_size_of::<u32>(),
+            (self.rev_cursor - 1) % bit_size_of::<u32>(),
         )
     }
 }
@@ -142,7 +142,7 @@ impl<'a> Iterator for Iter<'a> {
         if self.entry_cursor >= self.num_entries {
             return None;
         }
-        if self.cursor >= self.indices.inner.len() as u32 * bit_size::<u32>() {
+        if self.cursor >= self.indices.inner.len() as u32 * bit_size_of::<u32>() {
             return None;
         }
 
@@ -151,7 +151,7 @@ impl<'a> Iterator for Iter<'a> {
             self.cursor += 1;
             c = self.cursors();
 
-            if self.cursor >= self.indices.inner.len() as u32 * bit_size::<u32>() {
+            if self.cursor >= self.indices.inner.len() as u32 * bit_size_of::<u32>() {
                 return None;
             }
         }
@@ -199,7 +199,7 @@ impl<'a> ExactSizeIterator for Iter<'a> {}
 
 impl<'a> FusedIterator for Iter<'a> {}
 
-const fn bit_size<T>() -> u32 {
+const fn bit_size_of<T>() -> u32 {
     size_of::<T>() as u32 * 8
 }
 

@@ -40,6 +40,7 @@ impl<T> ZstStorage<T>
 where
     T: Default,
 {
+    #[must_use] 
     pub fn with_capacity(_capacity: usize) -> Self {
         ZstStorage {
             index: BTreeSet::default(),
@@ -53,7 +54,7 @@ impl<T> std::ops::Index<Index> for ZstStorage<T> {
 
     fn index(&self, index: Index) -> &Self::Output {
         self.get(index)
-            .unwrap_or_else(|| panic!("Could not find the index {}", index))
+            .unwrap_or_else(|| panic!("Could not find the index {index}"))
     }
 }
 
@@ -83,7 +84,7 @@ impl<T> Storage for ZstStorage<T> {
     }
 
     fn clear(&mut self) {
-        self.index.clear()
+        self.index.clear();
     }
 
     fn get<I: Into<Index>>(&self, _index: I) -> Option<&T> {

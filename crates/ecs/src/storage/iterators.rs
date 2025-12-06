@@ -537,16 +537,16 @@ where
 {
     pub fn new(storage: &'a S) -> Self {
         IndexedRIter {
-            indices: storage.indices().iter().cloned().collect(),
+            indices: storage.indices().iter().copied().collect(),
             cursor: 0,
             storage,
         }
     }
 }
 
-impl<'a, S> ExactSizeIterator for IndexedRIter<'a, S> where S: super::Storage {}
+impl<S> ExactSizeIterator for IndexedRIter<'_, S> where S: super::Storage {}
 
-impl<'a, S> std::iter::FusedIterator for IndexedRIter<'a, S> where S: super::Storage {}
+impl<S> std::iter::FusedIterator for IndexedRIter<'_, S> where S: super::Storage {}
 
 impl<'a, S> Iterator for IndexedRIter<'a, S>
 where
@@ -593,9 +593,9 @@ mod tests {
     #[test]
     fn r_iter() {
         let mut a: VecStorage<usize> = VecStorage::default();
-        a.insert(0usize, 100usize);
-        a.insert(1usize, 101usize);
-        a.insert(2usize, 102usize);
+        a.insert(0u32, 100usize);
+        a.insert(1u32, 101usize);
+        a.insert(2u32, 102usize);
 
         let mut riter = RIter::new(&a);
         assert_eq!(riter.next(), Some(&100usize));
@@ -607,9 +607,9 @@ mod tests {
     #[test]
     fn w_iter() {
         let mut a: VecStorage<usize> = VecStorage::default();
-        a.insert(0usize, 100usize);
-        a.insert(1usize, 101usize);
-        a.insert(2usize, 102usize);
+        a.insert(0u32, 100usize);
+        a.insert(1u32, 101usize);
+        a.insert(2u32, 102usize);
 
         let mut witer = WIter::new(&mut a);
         assert_eq!(witer.next(), Some(&mut 100usize));

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 /// index has been used previously.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
+#[must_use]
 pub struct Generation(u32);
 
 impl Generation {
@@ -14,11 +15,11 @@ impl Generation {
 
     /// Activates the current generation. Panics if the generation is already active.
     pub fn activate(&mut self) -> Generation {
-        if !self.is_active() {
+        if self.is_active() {
+            panic!("Attempted to activate an active generation")
+        } else {
             self.0 += 1;
             *self
-        } else {
-            panic!("Attempted to activate an active generation")
         }
     }
 
@@ -33,6 +34,7 @@ impl Generation {
     }
 
     /// Returns `true`, if the current generation is an odd number, `false` if even or zero.
+    #[must_use] 
     pub fn is_active(&self) -> bool {
         self.0 % 2 == 1
     }
@@ -83,15 +85,19 @@ impl From<&u32> for Generation {
     }
 }
 
-impl From<usize> for Generation {
-    fn from(value: usize) -> Self {
-        Generation(value as u32)
+impl TryFrom<usize> for Generation {
+    type Error = std::num::TryFromIntError;
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        u32::try_from(value).map(Generation)
     }
 }
 
-impl From<&usize> for Generation {
-    fn from(value: &usize) -> Self {
-        Generation(*value as u32)
+impl TryFrom<&usize> for Generation {
+    type Error = std::num::TryFromIntError;
+
+    fn try_from(value: &usize) -> Result<Self, Self::Error> {
+        u32::try_from(*value).map(Generation)
     }
 }
 
