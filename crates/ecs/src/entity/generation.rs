@@ -14,20 +14,18 @@ impl Generation {
     }
 
     /// Activates the current generation. Panics if the generation is already active.
-    pub fn activate(&mut self) -> Generation {
+    pub fn activate(&mut self) {
         if self.is_active() {
             panic!("Attempted to activate an active generation")
         } else {
             self.0 += 1;
-            *self
         }
     }
 
     /// Deactivates the current generation. Panics if the generation is already inactive.
-    pub fn deactivate(&mut self) -> Generation {
+    pub fn deactivate(&mut self) {
         if self.is_active() {
             self.0 += 1;
-            *self
         } else {
             panic!("Attempted to deactivate an inactive generation")
         }

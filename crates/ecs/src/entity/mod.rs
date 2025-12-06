@@ -10,7 +10,6 @@ use crate::entity::{generation::Generation, index::Index};
 /// An entity serves as an identifier to an object within the world.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(from = "(Index, Generation)", into = "(Index, Generation)")]
-#[must_use]
 pub struct Entity {
     /// Holds the entity index.
     index: Index,

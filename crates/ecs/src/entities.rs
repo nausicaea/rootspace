@@ -36,9 +36,11 @@ impl Entities {
             self.generations.resize(idx.idx() as usize + 1, Generation::default());
         }
 
-        let r#gen = self.generations[idx.idx() as usize].activate();
+        let r#gen = &mut self.generations[idx.idx() as usize];
 
-        Entity::new(idx, r#gen)
+        r#gen.activate();
+
+        Entity::new(idx, *r#gen)
     }
 
     /// Destroy the specified `Entity`.
@@ -120,7 +122,7 @@ impl Iterator for Iter<'_> {
         while (self.idx as usize) < self.gens.len() {
             let current_gen = self.gens[self.idx as usize];
             if current_gen.is_active() {
-                let tmp = Entity::new(self.idx.into(), current_gen);
+                let tmp = Entity::new(self.idx, current_gen);
                 self.idx += 1;
                 return Some(tmp);
             }
