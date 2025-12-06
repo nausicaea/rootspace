@@ -20,7 +20,6 @@ use super::{
     with_resources::WithResources,
 };
 
-pub mod error;
 pub mod event;
 pub mod type_registry;
 

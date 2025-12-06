@@ -5,7 +5,7 @@
 ///
 /// ```
 /// use serde::{Deserialize, Serialize};
-/// use ecs::{Reg, resource::Resource};
+/// use ecs::{Reg, Resource};
 ///
 /// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
@@ -27,7 +27,7 @@
 #[macro_export]
 macro_rules! Reg {
     () => {
-        $crate::registry::End
+        $crate::End
     };
     (...$rest:ty) => {
         $rest
@@ -36,7 +36,7 @@ macro_rules! Reg {
         $crate::Reg![$t,]
     };
     ($t:ty, $($rest:tt)*) => {
-        $crate::registry::Element<$t, $crate::Reg![$($rest)*]>
+        $crate::Element<$t, $crate::Reg![$($rest)*]>
     };
 }
 
@@ -70,10 +70,10 @@ macro_rules! RegAdd {
         $t
     };
     ($ta:ty, $tb:ty) => {
-        $crate::registry::Element<$ta, $tb>
+        $crate::Element<$ta, $tb>
     };
     ($t:ty, $($rest:tt)+) => {
-        $crate::registry::Element<$t, $crate::RegAdd![$($rest)+]>
+        $crate::Element<$t, $crate::RegAdd![$($rest)+]>
     };
 }
 
@@ -83,7 +83,7 @@ macro_rules! RegAdd {
 ///
 /// ```
 /// use serde::{Deserialize, Serialize};
-/// use ecs::{reg, resource::Resource};
+/// use ecs::{reg, Resource};
 ///
 /// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
@@ -105,7 +105,7 @@ macro_rules! RegAdd {
 #[macro_export]
 macro_rules! reg {
     () => {
-        $crate::registry::End
+        $crate::End
     };
     (...$rest:expr_2021) => {
         $rest
@@ -114,7 +114,7 @@ macro_rules! reg {
         $crate::reg![$e,]
     };
     ($e:expr_2021, $($rest:tt)*) => {
-        $crate::registry::Element::new($e, $crate::reg![$($rest)*])
+        $crate::Element::new($e, $crate::reg![$($rest)*])
     };
 }
 
@@ -124,7 +124,7 @@ macro_rules! reg {
 ///
 /// ```
 /// use serde::{Deserialize, Serialize};
-/// use ecs::{reg_add, registry::{Element, End}, resource::Resource};
+/// use ecs::{reg_add, Element, End, Resource};
 ///
 /// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
@@ -149,10 +149,10 @@ macro_rules! reg_add {
         $e
     };
     ($ea:expr_2021, $eb:expr_2021) => {
-        $crate::registry::Element::new($ea, $eb)
+        $crate::Element::new($ea, $eb)
     };
     ($t:expr_2021, $($rest:tt)+) => {
-        $crate::registry::Element::new($t, $crate::reg_add![$($rest)+])
+        $crate::Element::new($t, $crate::reg_add![$($rest)+])
     };
 }
 
