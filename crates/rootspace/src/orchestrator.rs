@@ -5,8 +5,7 @@ use std::{
 
 use super::registry::{FUSRegistry, MSRegistry};
 use crate::{
-    RenderableSource,
-    assets::scene::{LightSource, Scene},
+    assets::scene::Scene,
     components::{camera::Camera, info::Info, transform::Transform},
     events::engine_event::EngineEvent,
     registry::{RRegistry, USRegistry},
@@ -15,18 +14,12 @@ use crate::{
 };
 use assam::{AssetDatabase, AssetDatabaseDeps};
 use ecs::{
-    entity::Entity,
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    loop_control::LoopControl,
-    registry::{ResourceRegistry, SystemRegistry},
-    resources::Resources,
-    storage::Storage,
-    with_dependencies::WithDependencies,
-    with_resources::WithResources,
-    world::{World, event::WorldEvent},
+    Entity, EventQueue, LoopControl, ReceiverId, ResourceRegistry, Resources, Storage, SystemRegistry,
+    WithDependencies, WithResources, World, WorldEvent,
 };
 use glamour::{quat::Quat, unit::Unit, vec::Vec4};
-use griffon::components::renderable::Renderable;
+use griffon::components::light::LightSource;
+use griffon::components::renderable::{Renderable, RenderableSource};
 use griffon::winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoopWindowTarget},
@@ -54,7 +47,7 @@ pub struct Orchestrator {
 
 impl Orchestrator {
     #[tracing::instrument(skip_all)]
-    pub async fn with_dependencies<RR, FUSR, USR, MSR, D>(deps: &D) -> Result<Self, anyhow::Error>
+    pub async fn with_dependencies<RR, FUSR, USR, MSR, D>(deps: &D) -> anyhow::Result<Self>
     where
         D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,
@@ -332,12 +325,15 @@ impl Orchestrator {
                 name: "light-1".into(),
                 ..Default::default()
             })
-            .with_light(LightSource::Reference {
+            .with_light(LightSource {
                 group: "models".into(),
                 name: "cube.ply".into(),
                 position: [2.0, 2.0, 2.0, 1.0].into(),
                 ambient_color: [0.5, 0.5, 0.5, 1.0].into(),
+                diffuse_color: [0.34, 0.34, 0.87, 1.0].into(),
                 specular_color: [1.0, 1.0, 1.0, 1.0].into(),
+                ambient_intensity: 0.05,
+                point_intensity: 1.0,
             })
             .submit();
         // builtins_scene
@@ -378,7 +374,7 @@ impl Orchestrator {
                         name: format!("cube-{i}x{j}"),
                         ..Default::default()
                     })
-                    .with_renderable(RenderableSource::Reference {
+                    .with_renderable(RenderableSource {
                         group: "models".into(),
                         name: "textured-cube.ply".into(),
                     })
@@ -399,7 +395,7 @@ impl Orchestrator {
                 name: "floor".to_string(),
                 ..Default::default()
             })
-            .with_renderable(RenderableSource::Reference {
+            .with_renderable(RenderableSource {
                 group: "models".into(),
                 name: "quad.ply".into(),
             })
@@ -427,7 +423,7 @@ impl Orchestrator {
                 name: "coordinate-diag-ortho".into(),
                 ..Default::default()
             })
-            .with_renderable(RenderableSource::Reference {
+            .with_renderable(RenderableSource {
                 group: "models".into(),
                 name: "coordinate-diag.ply".into(),
             })
@@ -439,7 +435,7 @@ impl Orchestrator {
                 name: "coordinate-diag-persp".into(),
                 ..Default::default()
             })
-            .with_renderable(RenderableSource::Reference {
+            .with_renderable(RenderableSource {
                 group: "models".into(),
                 name: "coordinate-diag.ply".into(),
             })

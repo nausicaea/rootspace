@@ -15,8 +15,8 @@ pub fn bounded_positive_f32(lower_exp: i32, upper_exp: i32) -> impl Clone + Stra
 }
 
 pub fn bounded_f32(lower_exp: i32, upper_exp: i32) -> impl Clone + Strategy<Value = f32> {
-    let neg_lower = -(2.0_f32.powi(upper_exp));
-    let neg_upper = -(2.0_f32.powi(lower_exp));
+    let neg_lower = -2.0_f32.powi(upper_exp);
+    let neg_upper = -2.0_f32.powi(lower_exp);
     let pos_lower = 2.0_f32.powi(lower_exp);
     let pos_upper = 2.0_f32.powi(upper_exp);
     Union::new([
@@ -27,8 +27,8 @@ pub fn bounded_f32(lower_exp: i32, upper_exp: i32) -> impl Clone + Strategy<Valu
 }
 
 pub fn bounded_nonzero_f32(lower_exp: i32, upper_exp: i32) -> impl Clone + Strategy<Value = f32> {
-    let neg_lower = -(2.0_f32.powi(upper_exp));
-    let neg_upper = -(2.0_f32.powi(lower_exp));
+    let neg_lower = -2.0_f32.powi(upper_exp);
+    let neg_upper = -2.0_f32.powi(lower_exp);
     let pos_lower = 2.0_f32.powi(lower_exp);
     let pos_upper = 2.0_f32.powi(upper_exp);
     Union::new([(neg_lower..neg_upper).boxed(), (pos_lower..pos_upper).boxed()])

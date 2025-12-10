@@ -1,7 +1,10 @@
 [package]
 name = "griffon"
 version = "0.1.0"
-edition = "2024"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 
 [features]
 renormalize = []
@@ -22,3 +25,4 @@ wgpu = { version = "^27.0.0" }
 wgpu-core = { version = "^27.0.0" }
 wgpu-types = { version = "^27.0.0", features = ["serde"] }
 winit = { version = "^0.29", features = ["serde"] }
+thiserror = "^2.0.17"

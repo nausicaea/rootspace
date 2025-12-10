@@ -20,7 +20,6 @@ use super::{
     with_resources::WithResources,
 };
 
-pub mod error;
 pub mod event;
 pub mod type_registry;
 
@@ -42,7 +41,7 @@ pub struct World {
 
 impl World {
     #[tracing::instrument(skip_all)]
-    pub async fn with_dependencies<RR, FUSR, USR, RS, MS, D>(deps: &D) -> Result<Self, anyhow::Error>
+    pub async fn with_dependencies<RR, FUSR, USR, RS, MS, D>(deps: &D) -> anyhow::Result<Self>
     where
         D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,
@@ -77,6 +76,7 @@ impl World {
         })
     }
 
+    #[must_use]
     pub fn resources(&self) -> &Resources {
         &self.resources
     }
@@ -142,7 +142,7 @@ impl World {
 
     /// This method is supposed to be called when pending events or messages should be
     /// handled by the world. If this method returns
-    /// [`LoopControl::Continue`](crate::loop_control::LoopControl), the execution of the
+    /// [`LoopControl::Continue`], the execution of the
     /// main loop shall continue, otherwise it shall abort.
     #[tracing::instrument(skip_all)]
     pub async fn maintain(&mut self) -> LoopControl {
@@ -190,7 +190,7 @@ impl World {
                     let span = tracing::info_span!("system_acquire_lock");
                     let mut sys = s.lock().instrument(span).await;
                     let span = tracing::info_span!("system_run", system = sys.name());
-                    sys.run(&r, t, dt).instrument(span).await
+                    sys.run(&r, t, dt).instrument(span).await;
                 })
                 .instrument(span)
             })

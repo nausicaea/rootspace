@@ -52,7 +52,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
 
     pub fn add_vertex_buffer_layout<V: VertexAttributeDescriptor>(mut self) -> Self {
         let vbl = wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<V>() as wgpu::BufferAddress,
+            array_stride: size_of::<V>() as wgpu::BufferAddress,
             step_mode: V::STEP_MODE,
             attributes: V::ATTRS,
         };

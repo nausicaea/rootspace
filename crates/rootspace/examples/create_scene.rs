@@ -1,7 +1,8 @@
 use assam::{AssetDatabase, AssetDatabaseDeps};
 use clap::Parser;
 use glamour::vec::Vec4;
-use rootspace::{Camera, RenderableSource, Scene, Transform, WithDependencies};
+use griffon::components::renderable::RenderableSource;
+use rootspace::{Camera, Scene, Transform, WithDependencies};
 
 #[derive(Debug, Parser)]
 #[command(name = "create_scene", author, version, about = "Creates a new test scene via asset database", long_about = None)]
@@ -66,7 +67,7 @@ async fn main() -> anyhow::Result<()> {
                 .with_translation(Vec4::new_vector(1.0, 0.0, 0.0))
                 .build(),
         )
-        .with_renderable(RenderableSource::Reference {
+        .with_renderable(RenderableSource {
             group: "models".into(),
             name: "quad.ply".into(),
         })
@@ -81,7 +82,7 @@ async fn main() -> anyhow::Result<()> {
                 .with_scale(0.25f32)
                 .build(),
         )
-        .with_renderable(RenderableSource::Reference {
+        .with_renderable(RenderableSource {
             group: "models".into(),
             name: "triangle.ply".into(),
         })

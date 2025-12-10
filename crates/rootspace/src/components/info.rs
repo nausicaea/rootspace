@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use ecs::{component::Component, storage::vec_storage::VecStorage};
+use ecs::{Component, VecStorage};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Info {

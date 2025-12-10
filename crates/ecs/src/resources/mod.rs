@@ -6,7 +6,6 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use anyhow::Error;
 use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use super::{
@@ -71,15 +70,16 @@ impl Resources {
     impl_iter_ref!(iter_www, WWWIterRef, #writes: C, D, E);
 
     /// Create a new resources container with the specified capacity.
+    #[must_use]
     pub fn with_capacity(cap: usize) -> Self {
         Resources(HashMap::with_capacity(cap))
     }
 
-    /// In a similar fashion to Resources::deserialize, the following method uses the types stored
+    /// In a similar fashion to `Resources::deserialize`, the following method uses the types stored
     /// in the registry to initialize those resources that have a default, parameterless
     /// constructor.
     #[tracing::instrument(skip_all)]
-    pub async fn with_dependencies<RR, D>(deps: &D) -> Result<Self, Error>
+    pub async fn with_dependencies<RR, D>(deps: &D) -> anyhow::Result<Self>
     where
         D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,
@@ -106,10 +106,12 @@ impl Resources {
         self.0.clear();
     }
 
+    #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -131,6 +133,7 @@ impl Resources {
     }
 
     /// Returns `true` if a resource of the specified type is present.
+    #[must_use]
     pub fn contains<R>(&self) -> bool
     where
         R: Resource,
@@ -143,17 +146,16 @@ impl Resources {
     where
         R: Resource,
     {
-        self.0
-            .get(&TypeId::of::<R>())
-            .ok_or(NoSuchTypeFound)
-            .map(|r| {
+        self.0.get(&TypeId::of::<R>()).ok_or(NoSuchTypeFound).map_or_else(
+            |e| panic!("Unable to acquire read access to resource {}: {}", type_name::<R>(), e),
+            |r| {
                 RwLockReadGuard::map(r.read(), |i| {
                     i.downcast_ref::<R>().unwrap_or_else(|| {
                         panic!("Could not downcast the requested resource to type {}", type_name::<R>())
                     })
                 })
-            })
-            .unwrap_or_else(|e| panic!("Unable to acquire read access to resource {}: {}", type_name::<R>(), e))
+            },
+        )
     }
 
     /// Mutably borrows the requested resource (with a runtime borrow check).
@@ -161,17 +163,16 @@ impl Resources {
     where
         R: Resource,
     {
-        self.0
-            .get(&TypeId::of::<R>())
-            .ok_or(NoSuchTypeFound)
-            .map(|r| {
+        self.0.get(&TypeId::of::<R>()).ok_or(NoSuchTypeFound).map_or_else(
+            |e| panic!("Unable to acquire write access to resource {}: {}", type_name::<R>(), e),
+            |r| {
                 RwLockWriteGuard::map(r.write(), |i| {
                     i.downcast_mut::<R>().unwrap_or_else(|| {
                         panic!("Could not downcast the requested resource to type {}", type_name::<R>())
                     })
                 })
-            })
-            .unwrap_or_else(|e| panic!("Unable to acquire write access to resource {}: {}", type_name::<R>(), e))
+            },
+        )
     }
 
     /// Mutably borrows the requested resource (with a compile-time borrow check).
@@ -179,14 +180,14 @@ impl Resources {
     where
         R: Resource,
     {
-        self.0
-            .get_mut(&TypeId::of::<R>())
-            .map(|r| {
+        self.0.get_mut(&TypeId::of::<R>()).map_or_else(
+            || panic!("Could not find any resource of type {}", type_name::<R>()),
+            |r| {
                 r.get_mut()
                     .downcast_mut::<R>()
                     .unwrap_or_else(|| panic!("Could not downcast the requested resource to type {}", type_name::<R>()))
-            })
-            .unwrap_or_else(|| panic!("Could not find any resource of type {}", type_name::<R>()))
+            },
+        )
     }
 
     /// Borrows the requested component storage (this is a convenience method to `borrow`).
@@ -221,8 +222,8 @@ impl PartialEq for Resources {
             return false;
         }
 
-        let lhs_k: HashSet<_> = self.0.keys().cloned().collect();
-        let rhs_k: HashSet<_> = rhs.0.keys().cloned().collect();
+        let lhs_k: HashSet<_> = self.0.keys().copied().collect();
+        let rhs_k: HashSet<_> = rhs.0.keys().copied().collect();
 
         lhs_k == rhs_k
     }

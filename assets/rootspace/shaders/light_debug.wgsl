@@ -6,7 +6,6 @@ struct VertexInput {
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
-    @location(0) color: vec3<f32>,
 }
 
 struct Camera {
@@ -15,7 +14,11 @@ struct Camera {
 
 struct Light {
     model_view: mat4x4<f32>,
-    color: vec3<f32>,
+    ambient_color: vec4<f32>,
+    diffuse_color: vec4<f32>,
+    specular_color: vec4<f32>,
+    ambient_intensity: f32,
+    point_intensity: f32,
 }
 
 @group(0) @binding(0)
@@ -28,15 +31,12 @@ var<uniform> light: Light;
 fn vertex_main(
     vertex: VertexInput,
 ) -> VertexOutput {
-    let scale = 0.25;
-
     let local_position = vec4<f32>(vertex.position, 1.0);
     let view_position = light.model_view * local_position;
     let clip_position = camera.projection * view_position;
 
     return VertexOutput(
         clip_position,
-        light.color,
     );
 }
 
@@ -44,7 +44,7 @@ fn vertex_main(
 fn fragment_main(
     in: VertexOutput
 ) -> @location(0) vec4<f32> {
-    return vec4<f32>(in.color, 1.0);
+    return light.diffuse_color;
 }
 
 // vim: set filetype=wgsl :

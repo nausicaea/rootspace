@@ -1,10 +1,10 @@
 use std::path::Path;
 
-use anyhow::Context;
-
 use super::{cpu_material::CpuMaterial, cpu_mesh::CpuMesh};
+use anyhow::Context;
 use assam::{AssetDatabase, LoadAsset};
-use ecs::resources::Resources;
+use ecs::Resources;
+use tracing::trace;
 
 pub const MATERIAL_ASSET_GROUP: &str = "textures";
 
@@ -17,11 +17,11 @@ pub struct CpuModel {
 impl LoadAsset for CpuModel {
     type Output = Self;
 
-    async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
+    async fn with_path(res: &Resources, path: &Path) -> anyhow::Result<Self::Output> {
         let mesh = CpuMesh::with_path(res, path)
             .await
             .with_context(|| format!("Loading a CpuMesh from '{}'", path.display()))?;
-        tracing::trace!("Loaded CpuMesh with size {} bytes", std::mem::size_of_val(&mesh));
+        trace!("Loaded CpuMesh with size {} bytes", size_of_val(&mesh));
 
         let mut materials = Vec::new();
         for name in &mesh.texture_names {
@@ -35,7 +35,7 @@ impl LoadAsset for CpuModel {
                         MATERIAL_ASSET_GROUP, name
                     )
                 })?;
-            tracing::trace!("Loaded CpuMaterial with size {} bytes", std::mem::size_of_val(&cpu_mat));
+            trace!("Loaded CpuMaterial with size {} bytes", size_of_val(&cpu_mat));
 
             materials.push(cpu_mat);
         }

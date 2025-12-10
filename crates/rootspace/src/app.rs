@@ -23,7 +23,7 @@ impl App {
         }
     }
 
-    pub fn run(self) -> Result<(), anyhow::Error> {
+    pub fn run(self) -> anyhow::Result<()> {
         let App {
             name,
             force_init,

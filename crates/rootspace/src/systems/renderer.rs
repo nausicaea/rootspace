@@ -14,15 +14,7 @@ use crate::{
 use anyhow::Context;
 use assam::AssetDatabase;
 use async_trait::async_trait;
-use ecs::{
-    component::Component,
-    entity::index::Index,
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    resources::Resources,
-    storage::Storage,
-    system::System,
-    with_resources::WithResources,
-};
+use ecs::{Component, EventQueue, Index, ReceiverId, Resources, Storage, System, WithResources};
 use glamour::num::ToMatrix;
 use glamour::{affine::builder::AffineBuilder, mat::Mat4};
 use griffon::base::camera_uniform::CameraUniform;
@@ -200,9 +192,10 @@ impl Renderer {
                 // Transpose the matrix to go from row-major (CPU) to column-major (GPU).
                 model_view: model_view.t().0,
                 ambient_color: lght.ambient_color.into(),
+                diffuse_color: lght.diffuse_color.into(),
                 specular_color: lght.specular_color.into(),
-                ambient_intensity: 0.05,
-                point_intensity: 1.0,
+                ambient_intensity: lght.ambient_intensity,
+                point_intensity: lght.point_intensity,
                 ..Default::default()
             };
 
@@ -289,7 +282,7 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn crp_light_debug(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
+    fn crp_light_debug(adb: &AssetDatabase, gfx: &mut Graphics) -> anyhow::Result<PipelineId> {
         let shader_path = adb.find_asset("shaders", "light_debug.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
@@ -312,7 +305,7 @@ impl Renderer {
     }
 
     #[tracing::instrument(skip_all)]
-    fn crp_with_camera_and_material(adb: &AssetDatabase, gfx: &mut Graphics) -> Result<PipelineId, anyhow::Error> {
+    fn crp_with_camera_and_material(adb: &AssetDatabase, gfx: &mut Graphics) -> anyhow::Result<PipelineId> {
         let shader_path = adb.find_asset("shaders", "with_camera_and_material.wgsl")?;
         let shader_data = std::fs::read_to_string(&shader_path)
             .with_context(|| format!("Loading a shader source from '{}'", shader_path.display()))?;
@@ -340,7 +333,7 @@ impl Renderer {
 
 impl WithResources for Renderer {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let window_receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let engine_receiver = res.write::<EventQueue<EngineEvent>>().subscribe::<Self>();
 

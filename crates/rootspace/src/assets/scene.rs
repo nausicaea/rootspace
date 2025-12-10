@@ -1,18 +1,11 @@
 use std::{collections::BTreeMap, path::Path};
 
-use anyhow::{Context, anyhow};
-use glamour::vec::Vec4;
-
 use crate::components::{camera::Camera, debug_animate::DebugAnimate, info::Info, transform::Transform};
+use anyhow::{Context, anyhow};
 use assam::{AssetDatabase, LoadAsset, SaveAsset};
-use ecs::{
-    entities::Entities,
-    entity::{Entity, index::Index},
-    resources::Resources,
-    storage::Storage,
-};
-use griffon::components::light::Light;
-use griffon::components::renderable::Renderable;
+use ecs::{Entities, Entity, Index, Resources, Storage};
+use griffon::components::light::{Light, LightSource};
+use griffon::components::renderable::{Renderable, RenderableSource};
 use griffon::resources::Graphics;
 use rose_tree::hierarchy::Hierarchy;
 
@@ -59,7 +52,7 @@ impl Scene {
                 .map(|(i, r)| {
                     (
                         i,
-                        RenderableSource::Reference {
+                        RenderableSource {
                             group: r.group.clone(),
                             name: r.name.clone(),
                         },
@@ -72,12 +65,15 @@ impl Scene {
                 .map(|(i, r)| {
                     (
                         i,
-                        LightSource::Reference {
+                        LightSource {
                             group: r.group.clone(),
                             name: r.name.clone(),
                             position: r.position,
                             ambient_color: r.ambient_color,
+                            diffuse_color: r.diffuse_color,
                             specular_color: r.specular_color,
+                            ambient_intensity: r.ambient_intensity,
+                            point_intensity: r.point_intensity,
                         },
                     )
                 })
@@ -90,7 +86,7 @@ impl Scene {
     }
 
     #[tracing::instrument(skip_all)]
-    pub async fn submit<S>(mut self, res: &Resources, group: S, name: S) -> Result<(), anyhow::Error>
+    pub async fn submit<S>(mut self, res: &Resources, group: S, name: S) -> anyhow::Result<()>
     where
         S: AsRef<str> + std::fmt::Debug,
     {
@@ -148,7 +144,7 @@ impl Scene {
             scene: &Scene,
             map: &BTreeMap<Index, Index>,
             res: &Resources,
-        ) -> Result<(), anyhow::Error> {
+        ) -> anyhow::Result<()> {
             for (&i_prev, &i_new) in map {
                 if let Some(info) = scene.infos.get(&i_prev).cloned() {
                     res.write_components::<Info>().insert(i_new, info);
@@ -174,29 +170,14 @@ impl Scene {
                     res.write_components::<Transform>().insert(i_new, transform);
                 }
 
-                if let Some(RenderableSource::Reference { group, name }) = scene.renderables.get(&i_prev) {
-                    let renderable = Renderable::with_model(res, group, name).await?;
+                if let Some(source) = scene.renderables.get(&i_prev) {
+                    let renderable = Renderable::new(res, source).await?;
                     res.write_components::<Renderable>().insert(i_new, renderable);
                 }
 
-                if let Some(LightSource::Reference {
-                    group,
-                    name,
-                    position,
-                    ambient_color,
-                    specular_color,
-                }) = scene.lights.get(&i_prev)
-                {
-                    let max_lights = res.read::<Graphics>().max_lights() as usize;
-                    let mut lights = res.write_components::<Light>();
-                    let num_lights = lights.len();
-                    if num_lights >= max_lights {
-                        return Err(anyhow!(
-                            "The maximum number of light sources ({max_lights}) has been reached"
-                        ));
-                    }
-                    let light = Light::with_model(res, group, name, *position, *ambient_color, *specular_color).await?;
-                    lights.insert(i_new, light);
+                if let Some(source) = scene.lights.get(&i_prev) {
+                    let light = Light::new(res, source).await?;
+                    res.write_components::<Light>().insert(i_new, light);
                 }
             }
 
@@ -219,7 +200,7 @@ impl Scene {
 impl LoadAsset for Scene {
     type Output = ();
 
-    async fn with_path(res: &Resources, path: &Path) -> Result<Self::Output, anyhow::Error> {
+    async fn with_path(res: &Resources, path: &Path) -> anyhow::Result<Self::Output> {
         let file = std::fs::File::open(path).with_context(|| format!("Opening the file '{}'", path.display()))?;
         let reader = std::io::BufReader::new(file);
 
@@ -234,7 +215,7 @@ impl LoadAsset for Scene {
 }
 
 impl SaveAsset for Scene {
-    async fn to_path(&self, path: &Path) -> Result<(), anyhow::Error> {
+    async fn to_path(&self, path: &Path) -> anyhow::Result<()> {
         let file = std::fs::File::create(path).with_context(|| format!("Creating the file '{}'", path.display()))?;
         let writer = std::io::BufWriter::new(file);
 
@@ -340,20 +321,4 @@ impl<'a> EntityBuilder<'a> {
 
         e
     }
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub enum RenderableSource {
-    Reference { group: String, name: String },
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub enum LightSource {
-    Reference {
-        group: String,
-        name: String,
-        position: Vec4<f32>,
-        ambient_color: Vec4<f32>,
-        specular_color: Vec4<f32>,
-    },
 }

@@ -1,27 +1,30 @@
-use std::path::{Path, PathBuf};
-
 use anyhow::Context;
 use directories::ProjectDirs;
+use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 use tokio::fs::{create_dir_all, remove_dir_all};
 
 use super::{Error, LoadAsset, SaveAsset};
-use ecs::{resource::Resource, resources::Resources, with_dependencies::WithDependencies};
+use ecs::{Resource, Resources, WithDependencies};
 use file_manipulation::copy_recursive;
 
 const APP_QUALIFIER: &str = "net";
 const APP_ORGANIZATION: &str = "nausicaea";
 
-lazy_static::lazy_static! {
-    static ref WITHIN_REPO_ASSETS: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR"))
+static WITHIN_REPO_ASSETS: LazyLock<PathBuf> = LazyLock::new(|| {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(|crates| crates.parent())
         .map(|workspace_root| workspace_root.join("assets"))
-        .unwrap();
-    static ref GROUP_AND_NAME_ALLOWLIST: regex::Regex = regex::RegexBuilder::new("^[-._0-9a-zA-Z]+$")
+        .unwrap()
+});
+
+static GROUP_AND_NAME_ALLOWLIST: LazyLock<regex::Regex> = LazyLock::new(|| {
+    regex::RegexBuilder::new("^[-._0-9a-zA-Z]+$")
         .multi_line(true)
         .build()
-        .unwrap();
-}
+        .unwrap()
+});
 
 pub trait AssetDatabaseDeps {
     /// Specifies the name of the game (must be a valid directory name)
@@ -42,7 +45,7 @@ pub struct AssetDatabase {
 
 impl AssetDatabase {
     #[tracing::instrument(skip_all)]
-    pub async fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> Result<A::Output, anyhow::Error>
+    pub async fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> anyhow::Result<A::Output>
     where
         A: LoadAsset,
         S: AsRef<str> + std::fmt::Debug,
@@ -66,7 +69,7 @@ impl AssetDatabase {
     }
 
     #[tracing::instrument(skip_all)]
-    pub async fn save_asset<A, S>(&self, asset: &A, group: S, name: S) -> Result<(), anyhow::Error>
+    pub async fn save_asset<A, S>(&self, asset: &A, group: S, name: S) -> anyhow::Result<()>
     where
         A: SaveAsset + std::fmt::Debug,
         S: AsRef<str> + std::fmt::Debug,
@@ -124,12 +127,12 @@ impl AssetDatabase {
             .parent()
             .and_then(|parent| parent.file_name())
             .and_then(|file_name| file_name.to_str())
-            .map(|g| g.to_string())
+            .map(std::string::ToString::to_string)
             .ok_or(Error::NoAssetGroup(asset_path.to_path_buf()))?;
         let name = asset_path
             .file_name()
             .and_then(|file_name| file_name.to_str())
-            .map(|n| n.to_string())
+            .map(std::string::ToString::to_string)
             .ok_or(Error::NoAssetName(asset_path.to_path_buf()))?;
 
         if !(GROUP_AND_NAME_ALLOWLIST.is_match(&group) && GROUP_AND_NAME_ALLOWLIST.is_match(&name)) {
@@ -147,7 +150,7 @@ where
     D: AssetDatabaseDeps + std::fmt::Debug,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(deps: &D) -> anyhow::Result<Self> {
         let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, deps.name()).with_context(|| {
             format!(
                 "Finding the project directories of triplet ({}, {}, {})",
@@ -198,11 +201,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::{
-        Reg,
-        registry::{End, ResourceRegistry},
-        world::World,
-    };
+    use ecs::{End, Reg, ResourceRegistry, World};
 
     #[derive(Debug)]
     struct TDeps<'a> {
@@ -221,7 +220,7 @@ mod tests {
         }
     }
 
-    impl<'a> AssetDatabaseDeps for TDeps<'a> {
+    impl AssetDatabaseDeps for TDeps<'_> {
         fn name(&self) -> &str {
             self.name
         }

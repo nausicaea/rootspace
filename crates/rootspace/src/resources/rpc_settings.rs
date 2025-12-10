@@ -1,8 +1,6 @@
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 
-use anyhow::Error;
-
-use ecs::{resource::Resource, with_dependencies::WithDependencies};
+use ecs::{Resource, WithDependencies};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RpcSettings {
@@ -20,7 +18,7 @@ where
     D: RpcDeps + std::fmt::Debug,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(deps: &D) -> Result<Self, Error> {
+    async fn with_deps(deps: &D) -> anyhow::Result<Self> {
         Ok(RpcSettings {
             bind_address: deps.bind_address(),
             max_frame_length: deps.max_frame_length(),

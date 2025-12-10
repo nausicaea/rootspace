@@ -1,12 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use async_trait::async_trait;
-use ecs::{
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    resources::Resources,
-    system::System,
-    with_resources::WithResources,
-};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use glamour::{affine::Affine, quat::Quat, vec::Vec4};
 use griffon::winit::{
     event::{KeyEvent, WindowEvent},
@@ -23,7 +18,7 @@ pub struct CameraController {
 
 impl WithResources for CameraController {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         Ok(CameraController {
             receiver: res.write::<EventQueue<WindowEvent>>().subscribe::<Self>(),
             physical_key_to_dof: [

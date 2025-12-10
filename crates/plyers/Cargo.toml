@@ -1,8 +1,10 @@
 [package]
 name = "plyers"
 version = "0.1.0"
-authors = ["Eleanor Young <developer@nausicaea.net>"]
-edition = "2024"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 clap = { version = "^4.0.0", default-features = false, features = ["std"] }
@@ -16,7 +18,7 @@ urn = { path = "../urn" }
 
 [dev-dependencies]
 anyhow = { version = "^1.0.0" }
-criterion = "^0.7.0"
+criterion = { version = "^0.8.0", features = ["html_reports"] }
 mutants = "^0.0.3"
 proptest = "^1.0.0"
 proptest-derive = "^0.7.0"

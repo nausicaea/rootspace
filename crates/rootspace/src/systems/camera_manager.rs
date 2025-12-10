@@ -4,12 +4,7 @@ use async_trait::async_trait;
 use griffon::winit::event::WindowEvent;
 
 use crate::components::camera::Camera;
-use ecs::{
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    resources::Resources,
-    system::System,
-    with_resources::WithResources,
-};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use griffon::Graphics;
 
 #[derive(Debug)]
@@ -19,7 +14,7 @@ pub struct CameraManager {
 
 impl WithResources for CameraManager {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
 
         Ok(CameraManager { receiver })
@@ -56,11 +51,7 @@ impl System for CameraManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::{
-        Reg,
-        registry::{End, SystemRegistry},
-        world::World,
-    };
+    use ecs::{End, Reg, SystemRegistry, World};
 
     #[test]
     fn camera_manager_reg_macro() {

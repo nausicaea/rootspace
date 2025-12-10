@@ -5,7 +5,6 @@ pub mod service;
 
 use std::{future::ready, time::Duration};
 
-use anyhow::Error;
 use async_trait::async_trait;
 use futures::StreamExt;
 use message::RpcMessage;
@@ -21,12 +20,7 @@ use crate::{
     systems::rpc::{server::RpcServer, service::RpcService},
 };
 use assam::AssetDatabase;
-use ecs::{
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    resources::Resources,
-    system::System,
-    with_resources::WithResources,
-};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 use graphics_info::GraphicsInfo;
 use graphics_info::GraphicsInfoCategory;
 use griffon::Graphics;
@@ -73,7 +67,7 @@ impl Rpc {
     }
 
     #[tracing::instrument(skip_all)]
-    async fn load_scene(&self, res: &Resources, tx: oneshot::Sender<Result<(), Error>>, group: &str, name: &str) {
+    async fn load_scene(&self, res: &Resources, tx: oneshot::Sender<anyhow::Result<()>>, group: &str, name: &str) {
         let r = res
             .read::<AssetDatabase>()
             .load_asset::<Scene, _>(res, group, name)
@@ -119,7 +113,7 @@ impl System for Rpc {
 
 impl WithResources for Rpc {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let (ba, mfl, mcc, mcpk, rcc) = {
             let settings = res.read::<RpcSettings>();
             (
@@ -134,7 +128,7 @@ impl WithResources for Rpc {
 
         let mut listener =
             tarpc::serde_transport::tcp::listen(&ba, tarpc::tokio_serde::formats::Bincode::default).await?;
-        tracing::info!("RPC binding to {}", listener.local_addr());
+        tracing::info!("RPC server listening on {}", listener.local_addr());
         listener.config_mut().max_frame_length(mfl);
         let (tx, rx) = mpsc::channel::<RpcMessage>(mcc);
         let rpc_listener: JoinHandle<()> = tokio::task::spawn(async move {

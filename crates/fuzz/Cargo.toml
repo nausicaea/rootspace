@@ -2,7 +2,10 @@
 name = "fuzz"
 version = "0.0.0"
 publish = false
+authors = ["Eleanor Young <developer@nausicaea.net>"]
+license = "GPL-3"
 edition = "2024"
+rust-version = "1.88"
 
 [package.metadata]
 cargo-fuzz = true

@@ -56,6 +56,7 @@ impl<'a, T: 'a, S: Storage<Item = T>> Entry<'a, T, S> {
 }
 
 impl<'a, T: Default + 'a, S: Storage<Item = T>> Entry<'a, T, S> {
+    #[must_use]
     pub fn or_default(self) -> &'a mut T {
         match self {
             Entry::Vacant(s, i) => {

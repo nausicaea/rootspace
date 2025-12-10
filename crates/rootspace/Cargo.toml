@@ -1,8 +1,10 @@
 [package]
 name = "rootspace"
 version = "0.1.0"
-authors = ["Eleanor Young <developer@nausicaea.net>"]
-edition = "2024"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 
 [features]
 editor = []
@@ -36,7 +38,7 @@ tracing-subscriber = { version = "^0.3.18", features = ["env-filter"] }
 [dev-dependencies]
 bytemuck = "1.24.0"
 cgmath = "0.18.0"
-image = "0.25.9"
+image = { version = "^0.25", default-features = false, features = ["png"] }
 tobj = { version = "3.2", default-features = false, features = ["async"]}
 
 [lib]

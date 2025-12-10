@@ -20,7 +20,7 @@ where
     E: 'static + Clone + fmt::Debug + Send + Sync,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let receiver = res.write::<EventQueue<E>>().subscribe::<Self>();
 
         Ok(EventMonitor { receiver })
@@ -35,7 +35,7 @@ where
     #[tracing::instrument(skip_all)]
     async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         res.write::<EventQueue<E>>()
-            .receive_cb(&self.receiver, |e| tracing::trace!("Received {:?}", e))
+            .receive_cb(&self.receiver, |e| tracing::trace!("Received {:?}", e));
     }
 }
 

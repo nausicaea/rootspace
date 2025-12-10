@@ -21,6 +21,7 @@ pub struct VecStorage<T> {
 }
 
 impl<T> VecStorage<T> {
+    #[must_use]
     pub fn with_capacity(_capacity: usize) -> Self {
         VecStorage {
             index: BTreeSet::default(),
@@ -28,6 +29,7 @@ impl<T> VecStorage<T> {
         }
     }
 
+    #[must_use]
     pub fn iter(&self) -> RIter<'_, Self> {
         self.into_iter()
     }
@@ -36,6 +38,7 @@ impl<T> VecStorage<T> {
         self.into_iter()
     }
 
+    #[must_use]
     pub fn indexed_iter(&self) -> IndexedRIter<'_, Self> {
         IndexedRIter::new(self)
     }
@@ -49,12 +52,12 @@ impl<T> VecStorage<T> {
         }
 
         // If the index was previously occupied, return the old piece of data.
-        if !self.index.insert(idx) {
-            let old_datum = std::mem::replace(&mut self.data[idx_usize], MaybeUninit::new(datum));
-            Some(unsafe { old_datum.assume_init() })
-        } else {
+        if self.index.insert(idx) {
             self.data[idx_usize] = MaybeUninit::new(datum);
             None
+        } else {
+            let old_datum = std::mem::replace(&mut self.data[idx_usize], MaybeUninit::new(datum));
+            Some(unsafe { old_datum.assume_init() })
         }
     }
 }
@@ -64,7 +67,7 @@ impl<T> std::ops::Index<Index> for VecStorage<T> {
 
     fn index(&self, index: Index) -> &Self::Output {
         self.get(index)
-            .unwrap_or_else(|| panic!("Could not find the index {}", index))
+            .unwrap_or_else(|| panic!("Could not find the index {index}"))
     }
 }
 
@@ -173,7 +176,7 @@ impl<T> Resource for VecStorage<T> where T: 'static + Send + Sync {}
 
 impl<T> Drop for VecStorage<T> {
     fn drop(&mut self) {
-        self.clear()
+        self.clear();
     }
 }
 
@@ -206,7 +209,7 @@ impl<T> Default for VecStorage<T> {
 
 impl<D, T> WithDependencies<D> for VecStorage<T> {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(VecStorage::default())
     }
 }

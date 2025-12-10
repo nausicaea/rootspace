@@ -36,9 +36,11 @@ impl Entities {
             self.generations.resize(idx.idx() as usize + 1, Generation::default());
         }
 
-        let r#gen = self.generations[idx.idx() as usize].activate();
+        let r#gen = &mut self.generations[idx.idx() as usize];
 
-        Entity::new(idx, r#gen)
+        r#gen.activate();
+
+        Entity::new(idx, *r#gen)
     }
 
     /// Destroy the specified `Entity`.
@@ -54,11 +56,13 @@ impl Entities {
     }
 
     /// Return `true` if there are no active entities
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     /// Return the number of active entities.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.generations.iter().filter(|g| g.is_active()).count()
     }
@@ -71,6 +75,7 @@ impl Entities {
     }
 
     /// Create an iterator over all active entities.
+    #[must_use]
     pub fn iter(&self) -> Iter<'_> {
         self.into_iter()
     }
@@ -80,7 +85,7 @@ impl Resource for Entities {}
 
 impl<D> WithDependencies<D> for Entities {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Entities::default())
     }
 }
@@ -100,23 +105,24 @@ impl<'a> IntoIterator for &'a Entities {
 /// An iterator over all active entities.
 pub struct Iter<'a> {
     /// Tracks the current index into the generations slice.
-    idx: usize,
+    idx: u32,
     /// Holds a reference to the current generations.
     gens: &'a [Generation],
 }
 
-impl<'a> Iterator for Iter<'a> {
+impl Iterator for Iter<'_> {
     type Item = Entity;
 
     #[cfg_attr(test, mutants::skip)] // Mutating anything with self.idx causes hangs
     fn next(&mut self) -> Option<Self::Item> {
-        if self.idx >= self.gens.len() {
+        if self.idx as usize >= self.gens.len() {
             return None;
         }
 
-        while self.idx < self.gens.len() {
-            if self.gens[self.idx].is_active() {
-                let tmp = Entity::new(self.idx, self.gens[self.idx]);
+        while (self.idx as usize) < self.gens.len() {
+            let current_gen = self.gens[self.idx as usize];
+            if current_gen.is_active() {
+                let tmp = Entity::new(self.idx, current_gen);
                 self.idx += 1;
                 return Some(tmp);
             }
@@ -127,15 +133,15 @@ impl<'a> Iterator for Iter<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining_length = self.gens.len().saturating_sub(self.idx);
+        let remaining_length = self.gens.len().saturating_sub(self.idx as usize);
 
         (remaining_length, Some(remaining_length))
     }
 }
 
-impl<'a> ExactSizeIterator for Iter<'a> {}
+impl ExactSizeIterator for Iter<'_> {}
 
-impl<'a> FusedIterator for Iter<'a> {}
+impl FusedIterator for Iter<'_> {}
 
 #[cfg(test)]
 mod tests {

@@ -27,7 +27,7 @@ use crate::base::runtime::Runtime;
 use crate::base::sampler_builder::SamplerBuilder;
 use crate::base::settings::Settings;
 use crate::base::texture_builder::TextureBuilder;
-use ecs::{resource::Resource, with_dependencies::WithDependencies};
+use ecs::{Resource, WithDependencies};
 use urn::Urn;
 
 const DEPTH_TEXTURE_LABEL: Option<&str> = Some("depth-stencil:texture");
@@ -49,7 +49,7 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub fn max_window_size(&self) -> winit::dpi::PhysicalSize<u32> {
+    pub fn max_window_size(&self) -> PhysicalSize<u32> {
         self.runtime.max_size
     }
 
@@ -408,7 +408,7 @@ where
     D: GraphicsDeps + std::fmt::Debug,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(deps: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(deps: &D) -> anyhow::Result<Self> {
         let settings = deps.settings();
         let runtime = Runtime::new(deps.event_loop(), settings).await?;
 

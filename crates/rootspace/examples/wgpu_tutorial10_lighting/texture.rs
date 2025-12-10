@@ -3,6 +3,7 @@ use griffon::base::ids::{SamplerId, TextureId, TextureViewId};
 
 #[derive(Debug)]
 pub struct Texture {
+    #[allow(dead_code)]
     pub texture: TextureId,
     pub view: TextureViewId,
     pub sampler: SamplerId,

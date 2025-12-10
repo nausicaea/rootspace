@@ -4,7 +4,6 @@ use entry::Entry;
 
 use super::entity::index::Index;
 
-pub mod bit_indices;
 pub mod entry;
 pub mod iterators;
 pub mod vec_storage;

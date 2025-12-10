@@ -16,12 +16,7 @@ use griffon::winit::{
 };
 
 use crate::events::engine_event::EngineEvent;
-use ecs::{
-    event_queue::{EventQueue, receiver_id::ReceiverId},
-    resources::Resources,
-    system::System,
-    with_resources::WithResources,
-};
+use ecs::{EventQueue, ReceiverId, Resources, System, WithResources};
 
 #[derive(Debug)]
 pub struct ForceShutdown {
@@ -31,7 +26,7 @@ pub struct ForceShutdown {
 
 impl WithResources for ForceShutdown {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> Result<Self, anyhow::Error> {
+    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
         #[cfg(not(test))]
         {
@@ -95,11 +90,7 @@ impl System for ForceShutdown {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::{
-        Reg,
-        registry::{End, SystemRegistry},
-        world::World,
-    };
+    use ecs::{End, Reg, SystemRegistry, World};
 
     #[test]
     fn force_shutdown_reg_macro() {

@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 #[derive(Debug)]
 pub struct Urn<T> {
     max_token: usize,

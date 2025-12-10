@@ -7,7 +7,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use ecs::{resource::Resource, with_dependencies::WithDependencies};
+use ecs::{Resource, WithDependencies};
 
 const WINDOW_SIZE: usize = 10;
 
@@ -156,7 +156,7 @@ impl Resource for Statistics {}
 
 impl<D> WithDependencies<D> for Statistics {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> Result<Self, anyhow::Error> {
+    async fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Statistics::default())
     }
 }
@@ -164,11 +164,7 @@ impl<D> WithDependencies<D> for Statistics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ecs::{
-        Reg,
-        registry::{End, ResourceRegistry},
-        world::World,
-    };
+    use ecs::{End, Reg, ResourceRegistry, World};
 
     #[test]
     fn statistics_reg_macro() {

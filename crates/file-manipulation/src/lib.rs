@@ -1,3 +1,6 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::missing_errors_doc)]
+
 use std::{
     ffi::{OsStr, OsString},
     fmt::Debug,
@@ -106,7 +109,7 @@ pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> a
                         })?;
                     }
                     None => {
-                        return Err(anyhow!("Unable to copy the file: {:?}", path));
+                        return Err(anyhow!("Unable to copy the file: {}", path.display()));
                     }
                 }
             }
@@ -195,18 +198,16 @@ impl TryFrom<&Path> for NewOrExFilePathBuf {
             let parent = path
                 .parent()
                 .filter(|p| p.is_dir())
-                .ok_or_else(|| FileError::ParentDirectoryNotFound(path.to_path_buf()))
-                .and_then(|p| p.canonicalize().map_err(|e| FileError::IoError(path.to_path_buf(), e)))?;
+                .ok_or_else(|| FileError::ParentDirectoryNotFound(path.clone()))
+                .and_then(|p| p.canonicalize().map_err(|e| FileError::IoError(path.clone(), e)))?;
 
             let file_name = path
                 .file_name()
-                .ok_or_else(|| FileError::NoBaseNameFound(path.to_path_buf()))?;
+                .ok_or_else(|| FileError::NoBaseNameFound(path.clone()))?;
 
             Ok(NewOrExFilePathBuf(parent.join(file_name)))
         } else if path.is_file() {
-            let path = path
-                .canonicalize()
-                .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
+            let path = path.canonicalize().map_err(|e| FileError::IoError(path.clone(), e))?;
             Ok(NewOrExFilePathBuf(path))
         } else {
             Err(FileError::NotAFile(path))
@@ -324,9 +325,7 @@ impl TryFrom<&Path> for FilePathBuf {
         let path = expand_tilde(path)?;
 
         if path.is_file() {
-            let path = path
-                .canonicalize()
-                .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
+            let path = path.canonicalize().map_err(|e| FileError::IoError(path.clone(), e))?;
             Ok(FilePathBuf(path))
         } else {
             Err(FileError::NotAFile(path))
@@ -418,9 +417,7 @@ impl TryFrom<&Path> for DirPathBuf {
         let path = expand_tilde(path)?;
 
         if path.is_dir() {
-            let path = path
-                .canonicalize()
-                .map_err(|e| FileError::IoError(path.to_path_buf(), e))?;
+            let path = path.canonicalize().map_err(|e| FileError::IoError(path.clone(), e))?;
             Ok(DirPathBuf(path))
         } else {
             Err(FileError::NotADirectory(path))
@@ -471,7 +468,7 @@ mod tests {
         // Should work on your linux box during tests, would fail in stranger
         // environments!
         let home = std::env::var("HOME").unwrap();
-        let projects = PathBuf::from(format!("{}/Projects", home));
+        let projects = PathBuf::from(format!("{home}/Projects"));
         assert_eq!(expand_tilde("~/Projects").unwrap(), projects);
         assert_eq!(expand_tilde("/foo/bar").unwrap(), Path::new("/foo/bar"));
         assert_eq!(expand_tilde("~alice/projects").unwrap(), Path::new("~alice/projects"));
@@ -498,7 +495,7 @@ mod tests {
 
         // The operation must fail for a directory
         let r = NewOrExFilePathBuf::try_from(base_dir.path());
-        assert!(r.is_err())
+        assert!(r.is_err());
     }
 
     #[test]
@@ -522,7 +519,7 @@ mod tests {
 
         // The operation must fail for a directory
         let r = FilePathBuf::try_from(base_dir.path());
-        assert!(r.is_err())
+        assert!(r.is_err());
     }
 
     #[test]
@@ -546,7 +543,7 @@ mod tests {
 
         // The operation must succeed for a directory
         let r = DirPathBuf::try_from(base_dir.path());
-        assert!(r.is_ok(), "{:?}", r.unwrap_err())
+        assert!(r.is_ok(), "{:?}", r.unwrap_err());
     }
 
     #[tokio::test]

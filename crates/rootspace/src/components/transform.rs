@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use ecs::{component::Component, storage::vec_storage::VecStorage};
+use ecs::{Component, VecStorage};
 use glamour::{
     affine::{Affine, builder::AffineBuilder},
     mat::Mat4,

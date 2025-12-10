@@ -19,7 +19,7 @@
           config.allowUnfree = true;
         };
 
-        rustToolchain = pkgs.rust-bin.stable."1.89.0".default.override {
+        rustToolchain = pkgs.rust-bin.stable."1.91.1".default.override {
           extensions = [ "rust-src" "clippy" "rustfmt" ];
         };
       in {
@@ -39,6 +39,7 @@
             cargo-fuzz
             cargo-audit
             cargo-auditable
+            cargo-machete
             tokio-console
             rusty-man
             jetbrains.rust-rover

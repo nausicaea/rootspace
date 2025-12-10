@@ -21,7 +21,7 @@ impl<E> Eq for ReceiverId<E> {}
 
 impl<E> std::hash::Hash for ReceiverId<E> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.id.hash(state)
+        self.id.hash(state);
     }
 }
 
@@ -44,7 +44,7 @@ impl<E> ReceiverId<E> {
         ReceiverId { id, _e: PhantomData }
     }
 
-    pub(super) fn id(&self) -> usize {
+    pub(super) fn id(self) -> usize {
         self.id
     }
 }

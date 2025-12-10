@@ -4,9 +4,8 @@ use crate::light::LightUniform;
 use crate::model;
 use crate::model::{Model, ModelVertex};
 use cgmath::{InnerSpace, Rotation3};
-use ecs::with_dependencies::WithDependencies;
+use ecs::WithDependencies;
 use griffon::base::ids::{BindGroupId, BufferId, PipelineId};
-use griffon::wgpu::util::DeviceExt;
 use griffon::wgpu::{BindingType, BufferUsages, ShaderStages, SurfaceError};
 use griffon::winit::dpi::PhysicalSize;
 use griffon::winit::event::{Event, KeyEvent, WindowEvent};
@@ -78,7 +77,7 @@ impl State {
 
         let camera_buffer = gfx.create_buffer_init(
             Some("Camera Buffer"),
-            wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            BufferUsages::UNIFORM | BufferUsages::COPY_DST,
             &[camera_uniform],
         );
 
@@ -103,8 +102,7 @@ impl State {
             .collect::<Vec<_>>();
 
         let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
-        let instance_buffer =
-            gfx.create_buffer_init(Some("Instance Buffer"), wgpu::BufferUsages::VERTEX, &instance_data);
+        let instance_buffer = gfx.create_buffer_init(Some("Instance Buffer"), BufferUsages::VERTEX, &instance_data);
 
         let camera_bind_group_layout = gfx
             .create_bind_group_layout()
@@ -126,9 +124,7 @@ impl State {
             .add_entire_buffer(0, camera_buffer)
             .submit();
 
-        let obj_model = model::load_model("cube.obj", &mut gfx, texture_bind_group_layout)
-            .await
-            .unwrap();
+        let obj_model = model::load_model("cube.obj", &mut gfx, texture_bind_group_layout).await?;
 
         let light_uniform = LightUniform {
             position: [2.0, 2.0, 2.0],
@@ -304,13 +300,6 @@ impl State {
     }
 }
 
-#[rustfmt::skip]
-pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::from_cols(
-    cgmath::Vector4::new(1.0, 0.0, 0.0, 0.0),
-    cgmath::Vector4::new(0.0, 1.0, 0.0, 0.0),
-    cgmath::Vector4::new(0.0, 0.0, 0.5, 0.0),
-    cgmath::Vector4::new(0.0, 0.0, 0.5, 1.0),
-);
 pub const NUM_INSTANCES_PER_ROW: u32 = 10;
 
 #[derive(Debug)]

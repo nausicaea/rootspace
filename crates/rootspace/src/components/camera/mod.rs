@@ -1,4 +1,4 @@
-use ecs::{component::Component, storage::vec_storage::VecStorage};
+use ecs::{Component, VecStorage};
 use glamour::{mat::Mat4, ortho::Ortho, persp::Persp};
 
 pub mod projection;

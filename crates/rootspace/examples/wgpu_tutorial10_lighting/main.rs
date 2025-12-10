@@ -5,7 +5,6 @@ mod model;
 mod state;
 mod texture;
 mod util;
-mod vertex;
 
 use griffon::winit::event_loop::EventLoop;
 use state::State;
