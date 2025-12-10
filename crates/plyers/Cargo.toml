@@ -1,8 +1,10 @@
 [package]
 name = "plyers"
 version = "0.1.0"
-authors = ["Eleanor Young <developer@nausicaea.net>"]
-edition = "2024"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 clap = { version = "^4.0.0", default-features = false, features = ["std"] }

@@ -16,6 +16,12 @@ exclude = [
   "crates/fuzz",
 ]
 
+[workspace.package]
+authors = ["Eleanor Young <developer@nausicaea.net>"]
+license = "GPL-3"
+edition = "2024"
+rust-version = "1.88"
+
 [profile.release]
 panic = "abort"
 
