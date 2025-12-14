@@ -4,7 +4,7 @@ mod blades;
 mod multivector;
 
 /// Converts the internal data model to an intermediate representation for code generation
-pub fn lower(model: &model::Algebra) -> Algebra {
+pub fn lower(model: &model::Algebra) -> Algebra<'_> {
     let model::Algebra { module_name, .. } = model;
 
     Algebra {

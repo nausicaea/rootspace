@@ -21,7 +21,7 @@ use crate::algebra::{
 use crate::helpers::to_where_clause;
 
 #[allow(clippy::too_many_lines)]
-pub fn lower(model: &model::Algebra) -> Multivector {
+pub fn lower(model: &model::Algebra) -> Multivector<'_> {
     let model::Algebra {
         scalar_type,
         signed_primitive_types,

@@ -21,7 +21,7 @@ use crate::algebra::{
 use crate::helpers::to_where_clause;
 
 #[allow(clippy::too_many_lines)]
-pub fn lower(model: &model::Algebra) -> Blades {
+pub fn lower(model: &model::Algebra) -> Blades<'_> {
     let model::Algebra {
         scalar_type,
         signed_primitive_types,
@@ -100,7 +100,7 @@ pub fn lower(model: &model::Algebra) -> Blades {
                 .collect(),
             grades: higher_order_blade_indices
                 .iter()
-                .map(|idxs| idxs.len())
+                .map(std::vec::Vec::len)
                 .collect(),
             scalar_type,
             where_clause: to_where_clause([pq!(#scalar_type: #const_signum)]),
