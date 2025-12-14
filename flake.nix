@@ -40,7 +40,9 @@
             cargo-audit
             cargo-auditable
             cargo-machete
+            cargo-sweep
             tokio-console
+            bacon
             rusty-man
             jetbrains.rust-rover
           ];
