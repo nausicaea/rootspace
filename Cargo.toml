@@ -29,6 +29,20 @@ license = "GPL-3"
 edition = "2024"
 rust-version = "1.88"
 
+[workspace.dependencies]
+assam = { path = "crates/assam" }
+ecs = { path = "crates/ecs" }
+file-manipulation = { path = "crates/file-manipulation" }
+forward-ref = { path = "crates/forward-ref" }
+glamour = { path = "crates/glamour" }
+griffon = { path = "crates/griffon" }
+plyers = { path = "crates/plyers" }
+rose-tree = { path = "crates/rose-tree" }
+urn = { path = "crates/urn" }
+vega = { path = "crates/vega"}
+vega-codegen = { path = "crates/vega-codegen" }
+vega-internal = { path = "crates/vega-internal" }
+
 [profile.release]
 panic = "abort"
 

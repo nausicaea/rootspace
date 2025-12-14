@@ -12,15 +12,15 @@ dbg-gfx = ["tracing/log"]
 
 [dependencies]
 anyhow = { version = "^1.0.0" }
-assam = { path = "../assam" }
+assam.workspace = true
 bytemuck = { version = "^1.0", features = [ "derive" ] }
-ecs = { path = "../ecs" }
-glamour = { path = "../glamour" }
+ecs.workspace = true
+glamour.workspace = true
 image = { version = "^0.25", default-features = false, features = ["png", "jpeg"] }
-plyers = { path = "../plyers" }
+plyers.workspace = true
 serde = { version = "^1.0.0", features = ["derive"] }
 tracing = { version = "^0.1.40" }
-urn = { path = "../urn" }
+urn.workspace = true
 wgpu = { version = "^27.0.0" }
 wgpu-core = { version = "^27.0.0" }
 wgpu-types = { version = "^27.0.0", features = ["serde"] }

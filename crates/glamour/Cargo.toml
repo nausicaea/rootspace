@@ -8,7 +8,7 @@ rust-version.workspace = true
 
 [dependencies]
 approx = "^0.5.0"
-forward-ref = { path = "../forward-ref" }
+forward-ref.workspace = true
 lapack = "^0.20.0"
 lapack-src = { version = "^0.13.0", features = ["accelerate"] }
 num-traits = "^0.2.14"

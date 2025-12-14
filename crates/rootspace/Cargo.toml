@@ -14,20 +14,20 @@ tokio-console = ["console-subscriber"]
 [dependencies]
 anyhow = { version = "^1.0.0" }
 approx = "^0.5.0"
-assam = { path = "../assam" }
+assam.workspace = true
 async-trait = "^0.1.77"
 ciborium = "^0.2.0"
 clap = { version = "^4.0.0", features = ["derive"] }
 console-subscriber = { version = "^0.5.0", optional = true }
 ctrlc = { version = "^3.0.0", features = ["termination"] }
-ecs = { path = "../ecs" }
+ecs.workspace = true
 futures = { version = "^0.3.30", default-features = false, features = ["std"] }
-glamour = { path = "../glamour" }
-griffon = { path = "../griffon" }
+glamour.workspace = true
+griffon.workspace = true
 humantime = "^2.1.0"
 itertools = "^0.14.0"
 num-traits = "^0.2.14"
-rose-tree = { path = "../rose-tree" }
+rose-tree.workspace = true
 serde = { version = "^1.0.0", features = ["derive"] }
 tarpc = { version = "^0.37.0", features = ["serde-transport-bincode", "tcp", "serde-transport"] }
 thiserror = "^2.0.17"

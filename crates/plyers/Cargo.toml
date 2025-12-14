@@ -9,12 +9,12 @@ rust-version.workspace = true
 [dependencies]
 clap = { version = "^4.0.0", default-features = false, features = ["std"] }
 either = "^1.0"
-file-manipulation = { path = "../file-manipulation" }
+file-manipulation.workspace = true
 nom = "^7.0.0"
 num-traits = "^0.2.14"
 thiserror = "^2.0.17"
 tracing = "^0.1.40"
-urn = { path = "../urn" }
+urn.workspace = true
 
 [dev-dependencies]
 anyhow = { version = "^1.0.0" }
