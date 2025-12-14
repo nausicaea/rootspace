@@ -1,0 +1,5 @@
+error: expected integer literal
+ --> tests/compile_errors/type_error_input_data.rs:1:24
+  |
+1 | vega_codegen::algebra!(bool);
+  |                        ^^^^

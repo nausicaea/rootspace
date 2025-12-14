@@ -1,0 +1,5 @@
+error: invalid digit found in string
+ --> tests/compile_errors/negative_second_argument.rs:1:27
+  |
+1 | vega_codegen::algebra!(1, -1);
+  |                           ^

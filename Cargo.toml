@@ -11,6 +11,13 @@ members = [
   "crates/rootspace",
   "crates/rose-tree",
   "crates/urn",
+  "crates/vega",
+  "crates/vega-codegen",
+  "crates/vega-internal",
+  # Experimenting crates
+  "crates/effie",
+  "crates/ikebana",
+  "crates/rat",
 ]
 exclude = [
   "crates/fuzz",

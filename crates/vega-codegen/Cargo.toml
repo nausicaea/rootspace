@@ -1,0 +1,25 @@
+[package]
+name = "vega-codegen"
+description = "Provides procedural derive macros for geometric algebra"
+version = "0.1.0"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro-error = "1.0"
+itertools = "0.12"
+quote = "1.0"
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+proc-macro2 = "1.0"
+
+[dev-dependencies]
+proptest = "1.4.0"
+vega-internal.workspace = true
+num-traits = "0.2.18"
+trybuild = "1.0.91"
+

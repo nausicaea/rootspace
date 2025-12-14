@@ -1,0 +1,8 @@
+error: Expected at least one dimension that squares to one
+
+         = note: A geometric algebra must have at least one regular dimension
+
+ --> tests/compile_errors/zero_first_argument.rs:1:24
+  |
+1 | vega_codegen::algebra!(0);
+  |                        ^

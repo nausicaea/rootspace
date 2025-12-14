@@ -1,0 +1,5 @@
+error: This library can generate geometric algebras for at most 9 dimensions, you specified: 10
+ --> tests/compile_errors/too_many_dimensions.rs:1:24
+  |
+1 | vega_codegen::algebra!(10);
+  |                        ^^

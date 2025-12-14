@@ -1,0 +1,7 @@
+error: unexpected end of input, expected between one and three literal integer arguments
+ --> tests/compile_errors/more_than_three_numbers.rs:1:1
+  |
+1 | vega_codegen::algebra!(1, 2, 3, 4);
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the macro `vega_codegen::algebra` (in Nightly builds, run with -Z macro-backtrace for more info)

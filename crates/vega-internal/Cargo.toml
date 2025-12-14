@@ -1,0 +1,10 @@
+[package]
+name = "vega-internal"
+description = "Provides geometric algebra traits and internal functionality"
+version = "0.1.0"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
