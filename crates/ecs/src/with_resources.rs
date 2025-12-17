@@ -1,12 +1,12 @@
 use super::resources::Resources;
 
 pub trait WithResources: Sized + Send {
-    fn with_res(res: &Resources) -> impl Future<Output = anyhow::Result<Self>> + Send;
+    fn with_res(res: &Resources) -> anyhow::Result<Self>;
 }
 
 impl WithResources for () {
     #[tracing::instrument(skip_all)]
-    async fn with_res(_: &Resources) -> anyhow::Result<Self> {
+    fn with_res(_: &Resources) -> anyhow::Result<Self> {
         Ok(())
     }
 }

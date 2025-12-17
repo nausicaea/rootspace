@@ -25,10 +25,10 @@ where
     T: WithResources,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
+    fn with_res(res: &Resources) -> anyhow::Result<Self> {
         Ok(Self {
-            head: H::with_res(res).await?,
-            tail: T::with_res(res).await?,
+            head: H::with_res(res)?,
+            tail: T::with_res(res)?,
         })
     }
 }
@@ -54,7 +54,7 @@ pub struct End;
 
 impl WithResources for End {
     #[tracing::instrument(skip_all)]
-    async fn with_res(_: &Resources) -> anyhow::Result<Self> {
+    fn with_res(_: &Resources) -> anyhow::Result<Self> {
         Ok(Self)
     }
 }

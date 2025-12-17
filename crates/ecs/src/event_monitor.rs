@@ -20,7 +20,7 @@ where
     E: 'static + Clone + fmt::Debug + Send + Sync,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
+    fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let receiver = res.write::<EventQueue<E>>().subscribe::<Self>();
 
         Ok(EventMonitor { receiver })
@@ -55,17 +55,14 @@ mod tests {
 
     #[tokio::test]
     async fn event_monitor_system_registry() {
-        let res = Resources::with_dependencies::<Reg![EventQueue<usize>], _>(&())
-            .await
-            .unwrap();
         let _rr = SystemRegistry::push(End, EventMonitor::<usize>::with_res(&res).await.unwrap());
+        let res = Resources::with_dependencies::<Reg![EventQueue<usize>], _>(&()).unwrap();
     }
 
-    #[tokio::test]
-    async fn event_monitor_world() {
+    #[test]
+    fn event_monitor_world() {
         let _w =
             World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![EventMonitor<usize>], (), Reg![], _>(&())
-                .await
                 .unwrap();
     }
 }
