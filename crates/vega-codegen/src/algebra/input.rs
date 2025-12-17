@@ -1,5 +1,5 @@
 use proc_macro2::Span;
-use syn::{parse_quote, LitInt};
+use syn::{LitInt, parse_quote};
 
 /// Restricts the input [`algebra`](crate::algebra!()) to between one and three literal integers
 #[derive(Debug)]
@@ -17,10 +17,7 @@ pub struct Algebra {
 impl syn::parse::Parse for Algebra {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let span = input.span();
-        let punct =
-            syn::punctuated::Punctuated::<LitInt, syn::token::Comma>::parse_separated_nonempty(
-                input,
-            )?;
+        let punct = syn::punctuated::Punctuated::<LitInt, syn::token::Comma>::parse_separated_nonempty(input)?;
 
         match punct.len() {
             1 => Ok(Algebra {

@@ -1,20 +1,17 @@
 use itertools::Itertools;
 use quote::format_ident;
-use syn::{parse_quote as pq, Path};
+use syn::{Path, parse_quote as pq};
 
 use crate::algebra::{
     ir::blades::{
-        Blades, IrBladeAddTraitImpls, IrBladeAddTraitImplsWithOtherBlade,
-        IrBladeAddTraitImplsWithOtherBladeTable, IrBladeAddTraitImplsWithScalarLhs,
-        IrBladeAddTraitImplsWithScalarRhs, IrBladeCloneTraitImpls, IrBladeCopyTraitImpls,
-        IrBladeDebugTraitImpls, IrBladeEqTraitImpls, IrBladeHashTraitImpls, IrBladeMulTraitImpls,
-        IrBladeMulTraitImplsWithOtherBlade, IrBladeMulTraitImplsWithOtherBladeTable,
+        Blades, IrBladeAddTraitImpls, IrBladeAddTraitImplsWithOtherBlade, IrBladeAddTraitImplsWithOtherBladeTable,
+        IrBladeAddTraitImplsWithScalarLhs, IrBladeAddTraitImplsWithScalarRhs, IrBladeCloneTraitImpls,
+        IrBladeCopyTraitImpls, IrBladeDebugTraitImpls, IrBladeEqTraitImpls, IrBladeHashTraitImpls,
+        IrBladeMulTraitImpls, IrBladeMulTraitImplsWithOtherBlade, IrBladeMulTraitImplsWithOtherBladeTable,
         IrBladeMulTraitImplsWithScalarLhs, IrBladeMulTraitImplsWithScalarRhs, IrBladeNegTraitImpls,
-        IrBladeOrdTraitImpls, IrBladePartialEqTraitImpls, IrBladePartialOrdTraitImpls,
-        IrBladeSubTraitImpls, IrBladeSubTraitImplsWithOtherBlade,
-        IrBladeSubTraitImplsWithOtherBladeTable, IrBladeSubTraitImplsWithScalarLhs,
-        IrBladeSubTraitImplsWithScalarRhs, IrBladeTraitImpls, IrBladeZeroTraitImpls,
-        IrNewtypeStruct,
+        IrBladeOrdTraitImpls, IrBladePartialEqTraitImpls, IrBladePartialOrdTraitImpls, IrBladeSubTraitImpls,
+        IrBladeSubTraitImplsWithOtherBlade, IrBladeSubTraitImplsWithOtherBladeTable, IrBladeSubTraitImplsWithScalarLhs,
+        IrBladeSubTraitImplsWithScalarRhs, IrBladeTraitImpls, IrBladeZeroTraitImpls, IrNewtypeStruct,
     },
     model::{self, Cm},
 };
@@ -66,10 +63,7 @@ pub fn lower(model: &model::Algebra) -> Blades<'_> {
                 .iter()
                 .map(|idx| format_ident!("E{idx}"))
                 .collect::<Vec<_>>(),
-            unit_square_values: vec![
-                pq!(#const_signum::MINUS_ONE);
-                negative_vector_blade_indices.len()
-            ],
+            unit_square_values: vec![pq!(#const_signum::MINUS_ONE); negative_vector_blade_indices.len()],
             grades: vec![1; negative_vector_blade_indices.len()],
             scalar_type,
             where_clause: to_where_clause([pq!(#scalar_type: #const_signum)]),
@@ -98,10 +92,7 @@ pub fn lower(model: &model::Algebra) -> Blades<'_> {
                     _ => unreachable!(),
                 })
                 .collect(),
-            grades: higher_order_blade_indices
-                .iter()
-                .map(std::vec::Vec::len)
-                .collect(),
+            grades: higher_order_blade_indices.iter().map(std::vec::Vec::len).collect(),
             scalar_type,
             where_clause: to_where_clause([pq!(#scalar_type: #const_signum)]),
         },
@@ -168,9 +159,7 @@ pub fn lower(model: &model::Algebra) -> Blades<'_> {
         mul_trait_impls: IrBladeMulTraitImpls {
             idents: blade_types,
             scalar_type,
-            where_clause: to_where_clause([
-                pq!(#scalar_type: #const_signum + #mul<Output = #scalar_type>),
-            ]),
+            where_clause: to_where_clause([pq!(#scalar_type: #const_signum + #mul<Output = #scalar_type>)]),
         },
         add_trait_impls_with_scalar_rhs: IrBladeAddTraitImplsWithScalarRhs {
             multivector_ident,
@@ -241,9 +230,7 @@ pub fn lower(model: &model::Algebra) -> Blades<'_> {
                     rhs_field_type: pairs[1].1,
                 })
                 .collect(),
-            where_clause: to_where_clause([
-                pq!(#scalar_type: #copy + #zero + #neg<Output = #scalar_type>),
-            ]),
+            where_clause: to_where_clause([pq!(#scalar_type: #copy + #zero + #neg<Output = #scalar_type>)]),
         },
         mul_trait_impls_with_other_blade: IrBladeMulTraitImplsWithOtherBlade {
             scalar_type,
@@ -270,9 +257,7 @@ pub fn lower(model: &model::Algebra) -> Blades<'_> {
                     },
                 )
                 .collect(),
-            where_clause: to_where_clause([
-                pq!(#scalar_type: #const_signum + #mul<Output = #scalar_type>),
-            ]),
+            where_clause: to_where_clause([pq!(#scalar_type: #const_signum + #mul<Output = #scalar_type>)]),
         },
     }
 }

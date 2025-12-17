@@ -1,8 +1,7 @@
-use proptest::{
-    collection, num::i32::ANY as I32_FULL_RANGE, prop_assert_eq, prop_compose, proptest,
-    strategy::Strategy,
-};
 use num_traits::Zero;
+use proptest::{
+    collection, num::i32::ANY as I32_FULL_RANGE, prop_assert_eq, prop_compose, proptest, strategy::Strategy,
+};
 use std::ops::Range;
 use vega_codegen::algebra;
 use vega_internal::Multivector as _;
@@ -44,10 +43,7 @@ prop_compose! {
 
 #[test]
 fn multivector_grade_is_zero_for_scalar_multivectors() {
-    let a = Multivector {
-        s: 1,
-        ..Zero::zero()
-    };
+    let a = Multivector { s: 1, ..Zero::zero() };
 
     assert_eq!(a.grade(), Some(0));
 }
@@ -83,7 +79,14 @@ fn multivector_gproj_returns_a_pure_vector_for_grade_one() {
         e12: E12(4),
     };
 
-    assert_eq!(a.gproj(1), Multivector { e1: E1(2), e2: E2(3), ..Zero::zero() });
+    assert_eq!(
+        a.gproj(1),
+        Multivector {
+            e1: E1(2),
+            e2: E2(3),
+            ..Zero::zero()
+        }
+    );
 }
 
 #[test]
@@ -102,7 +105,7 @@ proptest! {
     fn multivector_grade_is_only_defined_for_pure_multivectors(a in multivector(I32_FULL_RANGE)) {
         let expected = if a.e12 != E12(0) && a.e1 == E1(0) && a.e2 == E2(0) && a.s == 0 {
             Some(2)
-        } else if a.e12 == E12(0) && (a.e1 != E1(0) || a.e2 != E2(0)) && a.s == 0 { 
+        } else if a.e12 == E12(0) && (a.e1 != E1(0) || a.e2 != E2(0)) && a.s == 0 {
             Some(1)
         } else if a.e12 == E12(0) && a.e1 == E1(0) && a.e2 == E2(0) && a.s != 0 {
             Some(0)

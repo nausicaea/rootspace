@@ -1,24 +1,21 @@
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 
 use crate::algebra::ir::blades::{
-    Blades, IrBladeAddTraitImpls, IrBladeAddTraitImplsWithOtherBlade,
-    IrBladeAddTraitImplsWithOtherBladeTable, IrBladeAddTraitImplsWithScalarLhs,
-    IrBladeAddTraitImplsWithScalarRhs, IrBladeCloneTraitImpls, IrBladeCopyTraitImpls,
-    IrBladeDebugTraitImpls, IrBladeEqTraitImpls, IrBladeHashTraitImpls, IrBladeMulTraitImpls,
-    IrBladeMulTraitImplsWithOtherBlade, IrBladeMulTraitImplsWithOtherBladeTable,
-    IrBladeMulTraitImplsWithScalarLhs, IrBladeMulTraitImplsWithScalarRhs, IrBladeNegTraitImpls,
-    IrBladeOrdTraitImpls, IrBladePartialEqTraitImpls, IrBladePartialOrdTraitImpls,
-    IrBladeSubTraitImpls, IrBladeSubTraitImplsWithOtherBlade,
-    IrBladeSubTraitImplsWithOtherBladeTable, IrBladeSubTraitImplsWithScalarLhs,
-    IrBladeSubTraitImplsWithScalarRhs, IrBladeTraitImpls, IrBladeZeroTraitImpls,
+    Blades, IrBladeAddTraitImpls, IrBladeAddTraitImplsWithOtherBlade, IrBladeAddTraitImplsWithOtherBladeTable,
+    IrBladeAddTraitImplsWithScalarLhs, IrBladeAddTraitImplsWithScalarRhs, IrBladeCloneTraitImpls,
+    IrBladeCopyTraitImpls, IrBladeDebugTraitImpls, IrBladeEqTraitImpls, IrBladeHashTraitImpls, IrBladeMulTraitImpls,
+    IrBladeMulTraitImplsWithOtherBlade, IrBladeMulTraitImplsWithOtherBladeTable, IrBladeMulTraitImplsWithScalarLhs,
+    IrBladeMulTraitImplsWithScalarRhs, IrBladeNegTraitImpls, IrBladeOrdTraitImpls, IrBladePartialEqTraitImpls,
+    IrBladePartialOrdTraitImpls, IrBladeSubTraitImpls, IrBladeSubTraitImplsWithOtherBlade,
+    IrBladeSubTraitImplsWithOtherBladeTable, IrBladeSubTraitImplsWithScalarLhs, IrBladeSubTraitImplsWithScalarRhs,
+    IrBladeTraitImpls, IrBladeZeroTraitImpls,
 };
 
 pub fn codegen(ir: &Blades) -> impl ToTokens {
     let positive_blade_trait_impls = codegen_blade_trait_impls(&ir.positive_blade_trait_impls);
     let negative_blade_trait_impls = codegen_blade_trait_impls(&ir.negative_blade_trait_impls);
     let zero_blade_trait_impls = codegen_blade_trait_impls(&ir.zero_blade_trait_impls);
-    let higher_order_blade_trait_impls =
-        codegen_blade_trait_impls(&ir.higher_order_blade_trait_impls);
+    let higher_order_blade_trait_impls = codegen_blade_trait_impls(&ir.higher_order_blade_trait_impls);
 
     let zero_trait_impls = codegen_zero_trait_impls(&ir.zero_trait_impls);
 
@@ -35,18 +32,12 @@ pub fn codegen(ir: &Blades) -> impl ToTokens {
     let sub_trait_impls = codegen_sub_trait_impls(&ir.sub_trait_impls);
     let neg_trait_impls = codegen_neg_trait_impls(&ir.neg_trait_impls);
     let mul_trait_impls = codegen_mul_trait_impls(&ir.mul_trait_impls);
-    let add_trait_impls_with_scalar_rhs =
-        codegen_add_trait_impls_with_scalar_rhs(&ir.add_trait_impls_with_scalar_rhs);
-    let add_trait_impls_with_scalar_lhs =
-        codegen_add_trait_impls_with_scalar_lhs(&ir.add_trait_impls_with_scalar_lhs);
-    let sub_trait_impls_with_scalar_rhs =
-        codegen_sub_trait_impls_with_scalar_rhs(&ir.sub_trait_impls_with_scalar_rhs);
-    let sub_trait_impls_with_scalar_lhs =
-        codegen_sub_trait_impls_with_scalar_lhs(&ir.sub_trait_impls_with_scalar_lhs);
-    let mul_trait_impls_with_scalar_rhs =
-        codegen_mul_trait_impls_with_scalar_rhs(&ir.mul_trait_impls_with_scalar_rhs);
-    let mul_trait_impls_with_scalar_lhs =
-        codegen_mul_trait_impls_with_scalar_lhs(&ir.mul_trait_impls_with_scalar_lhs);
+    let add_trait_impls_with_scalar_rhs = codegen_add_trait_impls_with_scalar_rhs(&ir.add_trait_impls_with_scalar_rhs);
+    let add_trait_impls_with_scalar_lhs = codegen_add_trait_impls_with_scalar_lhs(&ir.add_trait_impls_with_scalar_lhs);
+    let sub_trait_impls_with_scalar_rhs = codegen_sub_trait_impls_with_scalar_rhs(&ir.sub_trait_impls_with_scalar_rhs);
+    let sub_trait_impls_with_scalar_lhs = codegen_sub_trait_impls_with_scalar_lhs(&ir.sub_trait_impls_with_scalar_lhs);
+    let mul_trait_impls_with_scalar_rhs = codegen_mul_trait_impls_with_scalar_rhs(&ir.mul_trait_impls_with_scalar_rhs);
+    let mul_trait_impls_with_scalar_lhs = codegen_mul_trait_impls_with_scalar_lhs(&ir.mul_trait_impls_with_scalar_lhs);
     let add_trait_impls_with_other_blade =
         codegen_add_trait_impls_with_other_blade(&ir.add_trait_impls_with_other_blade);
     let sub_trait_impls_with_other_blade =
@@ -370,9 +361,7 @@ fn codegen_mul_trait_impls(ir: &IrBladeMulTraitImpls) -> impl ToTokens {
     }
 }
 
-fn codegen_add_trait_impls_with_scalar_rhs(
-    ir: &IrBladeAddTraitImplsWithScalarRhs,
-) -> impl ToTokens {
+fn codegen_add_trait_impls_with_scalar_rhs(ir: &IrBladeAddTraitImplsWithScalarRhs) -> impl ToTokens {
     let IrBladeAddTraitImplsWithScalarRhs {
         multivector_ident: ident,
         scalar_type,
@@ -401,9 +390,7 @@ fn codegen_add_trait_impls_with_scalar_rhs(
     }
 }
 
-fn codegen_add_trait_impls_with_scalar_lhs(
-    ir: &IrBladeAddTraitImplsWithScalarLhs,
-) -> impl ToTokens {
+fn codegen_add_trait_impls_with_scalar_lhs(ir: &IrBladeAddTraitImplsWithScalarLhs) -> impl ToTokens {
     let IrBladeAddTraitImplsWithScalarLhs {
         multivector_ident: ident,
         signed_primitive_types,
@@ -437,9 +424,7 @@ fn codegen_add_trait_impls_with_scalar_lhs(
     quote!(#(#impls)*)
 }
 
-fn codegen_sub_trait_impls_with_scalar_rhs(
-    ir: &IrBladeSubTraitImplsWithScalarRhs,
-) -> impl ToTokens {
+fn codegen_sub_trait_impls_with_scalar_rhs(ir: &IrBladeSubTraitImplsWithScalarRhs) -> impl ToTokens {
     let IrBladeSubTraitImplsWithScalarRhs {
         multivector_ident: ident,
         scalar_type,
@@ -468,9 +453,7 @@ fn codegen_sub_trait_impls_with_scalar_rhs(
     }
 }
 
-fn codegen_sub_trait_impls_with_scalar_lhs(
-    ir: &IrBladeSubTraitImplsWithScalarLhs,
-) -> impl ToTokens {
+fn codegen_sub_trait_impls_with_scalar_lhs(ir: &IrBladeSubTraitImplsWithScalarLhs) -> impl ToTokens {
     let IrBladeSubTraitImplsWithScalarLhs {
         multivector_ident: ident,
         signed_primitive_types,
@@ -504,9 +487,7 @@ fn codegen_sub_trait_impls_with_scalar_lhs(
     quote!(#(#impls)*)
 }
 
-fn codegen_mul_trait_impls_with_scalar_rhs(
-    ir: &IrBladeMulTraitImplsWithScalarRhs,
-) -> impl ToTokens {
+fn codegen_mul_trait_impls_with_scalar_rhs(ir: &IrBladeMulTraitImplsWithScalarRhs) -> impl ToTokens {
     let IrBladeMulTraitImplsWithScalarRhs {
         idents,
         scalar_type,
@@ -528,9 +509,7 @@ fn codegen_mul_trait_impls_with_scalar_rhs(
     }
 }
 
-fn codegen_mul_trait_impls_with_scalar_lhs(
-    ir: &IrBladeMulTraitImplsWithScalarLhs,
-) -> impl ToTokens {
+fn codegen_mul_trait_impls_with_scalar_lhs(ir: &IrBladeMulTraitImplsWithScalarLhs) -> impl ToTokens {
     let IrBladeMulTraitImplsWithScalarLhs {
         idents,
         signed_primitive_types,
@@ -557,9 +536,7 @@ fn codegen_mul_trait_impls_with_scalar_lhs(
     quote!(#(#impls)*)
 }
 
-fn codegen_add_trait_impls_with_other_blade(
-    ir: &IrBladeAddTraitImplsWithOtherBlade,
-) -> impl ToTokens {
+fn codegen_add_trait_impls_with_other_blade(ir: &IrBladeAddTraitImplsWithOtherBlade) -> impl ToTokens {
     let IrBladeAddTraitImplsWithOtherBlade {
         multivector_ident,
         scalar_type,
@@ -596,9 +573,7 @@ fn codegen_add_trait_impls_with_other_blade(
     quote!(#(#impls)*)
 }
 
-fn codegen_sub_trait_impls_with_other_blade(
-    ir: &IrBladeSubTraitImplsWithOtherBlade,
-) -> impl ToTokens {
+fn codegen_sub_trait_impls_with_other_blade(ir: &IrBladeSubTraitImplsWithOtherBlade) -> impl ToTokens {
     let IrBladeSubTraitImplsWithOtherBlade {
         multivector_ident,
         scalar_type,
@@ -635,9 +610,7 @@ fn codegen_sub_trait_impls_with_other_blade(
     quote!(#(#impls)*)
 }
 
-fn codegen_mul_trait_impls_with_other_blade(
-    ir: &IrBladeMulTraitImplsWithOtherBlade,
-) -> impl ToTokens {
+fn codegen_mul_trait_impls_with_other_blade(ir: &IrBladeMulTraitImplsWithOtherBlade) -> impl ToTokens {
     let IrBladeMulTraitImplsWithOtherBlade {
         scalar_type,
         operation_table,

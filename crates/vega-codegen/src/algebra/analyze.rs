@@ -9,8 +9,8 @@ use super::{
 use itertools::Itertools;
 use proc_macro_error::abort;
 use quote::format_ident;
-use syn::parse_quote as pq;
 use syn::Ident;
+use syn::parse_quote as pq;
 
 const MAX_DIMENSIONS: usize = 9;
 
@@ -35,10 +35,7 @@ pub fn analyze(input: &AlgebraInput) -> Algebra {
         .base10_parse()
         .unwrap_or_else(|e| abort!(e.span(), "{}", e));
 
-    let zero_dims: usize = input
-        .zero
-        .base10_parse()
-        .unwrap_or_else(|e| abort!(e.span(), "{}", e));
+    let zero_dims: usize = input.zero.base10_parse().unwrap_or_else(|e| abort!(e.span(), "{}", e));
 
     let dims = zero_dims + positive_dims + negative_dims;
     if dims > MAX_DIMENSIONS {
@@ -50,8 +47,7 @@ pub fn analyze(input: &AlgebraInput) -> Algebra {
     // Generate the blade indices
     let zero_vector_blade_indices: Vec<_> = (0..zero_dims).collect();
     let offset = usize::from(zero_dims == 0);
-    let positive_vector_blade_indices: Vec<_> =
-        (0..positive_dims).map(|d| d + offset + zero_dims).collect();
+    let positive_vector_blade_indices: Vec<_> = (0..positive_dims).map(|d| d + offset + zero_dims).collect();
     let negative_vector_blade_indices: Vec<_> = (0..negative_dims)
         .map(|d| d + offset + zero_dims + positive_dims)
         .collect();

@@ -2,7 +2,7 @@
 //! algebras.
 
 #![warn(clippy::pedantic)]
-#![warn(missing_docs, unused_imports, unsafe_code)]
+#![warn(unused_imports, unsafe_code)]
 
 pub mod ops;
 
@@ -13,6 +13,7 @@ pub trait Multivector: Sized {
 
     /// Grade projection: obtain the k-vector blades of a Multivector, where k is the selected
     /// grade.
+    #[must_use]
     fn gproj(&self, k: usize) -> Self;
 }
 
@@ -56,4 +57,3 @@ impl_const_signum! {
     f32 => (0.0, 1.0, -1.0);
     f64 => (0.0, 1.0, -1.0);
 }
-

@@ -1,11 +1,11 @@
 use crate::algebra::codegen::blades::codegen as codegen_blades;
 use crate::algebra::codegen::multivector::codegen as codegen_multivector;
 
+use super::ir::Algebra;
 use super::ir::blades::IrNewtypeStruct;
 use super::ir::multivector::IrNamedStruct;
-use super::ir::Algebra;
-use quote::quote;
 use quote::ToTokens;
+use quote::quote;
 
 mod blades;
 mod multivector;
@@ -45,10 +45,7 @@ pub fn codegen(ir: &Algebra) -> impl ToTokens {
 }
 
 fn codegen_newtype_struct(ir: &IrNewtypeStruct) -> impl ToTokens {
-    let IrNewtypeStruct {
-        idents,
-        scalar_type,
-    } = ir;
+    let IrNewtypeStruct { idents, scalar_type } = ir;
 
     quote! {
         #(

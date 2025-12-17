@@ -31,10 +31,7 @@ where
 /// 1. Operands may be swapped with adjacent operands under anti-commutativity
 /// 2. Equal neighbouring pairs square to a real value
 #[must_use]
-pub fn product_in_place<T: Eq + PartialOrd + Hash>(
-    operands: &mut Vec<T>,
-    unit_square_values: &HashMap<T, i8>,
-) -> i8 {
+pub fn product_in_place<T: Eq + PartialOrd + Hash>(operands: &mut Vec<T>, unit_square_values: &HashMap<T, i8>) -> i8 {
     if operands.is_empty() {
         return 0;
     }
@@ -45,11 +42,7 @@ pub fn product_in_place<T: Eq + PartialOrd + Hash>(
     // Contract the operand indices, squaring those that are equal
     let carry_square = square(operands, unit_square_values);
 
-    if carry_anticommute {
-        -carry_square
-    } else {
-        carry_square
-    }
+    if carry_anticommute { -carry_square } else { carry_square }
 }
 
 /// Bubble-sort the operand indices and record each swap

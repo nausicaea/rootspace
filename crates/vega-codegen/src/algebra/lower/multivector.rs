@@ -1,20 +1,18 @@
 use itertools::Itertools;
 use quote::format_ident;
-use syn::{parse_quote as pq, Path};
+use syn::{Path, parse_quote as pq};
 
 use crate::algebra::{
     ir::multivector::{
-        IrMultivectorAddTraitImpl, IrMultivectorAddTraitImplWithScalarLhs,
-        IrMultivectorAddTraitImplWithScalarRhs, IrMultivectorAddTraitImplsWithBlade,
-        IrMultivectorCloneTraitImpl, IrMultivectorCopyTraitImpl, IrMultivectorDebugTraitImpl,
-        IrMultivectorEqTraitImpl, IrMultivectorHashTraitImpl, IrMultivectorMulTraitImpl,
+        IrMultivectorAddTraitImpl, IrMultivectorAddTraitImplWithScalarLhs, IrMultivectorAddTraitImplWithScalarRhs,
+        IrMultivectorAddTraitImplsWithBlade, IrMultivectorCloneTraitImpl, IrMultivectorCopyTraitImpl,
+        IrMultivectorDebugTraitImpl, IrMultivectorEqTraitImpl, IrMultivectorHashTraitImpl, IrMultivectorMulTraitImpl,
         IrMultivectorMulTraitImplWithScalarLhs, IrMultivectorMulTraitImplWithScalarRhs,
         IrMultivectorMulTraitImplsWithBladeLhs, IrMultivectorMulTraitImplsWithBladeRhs,
-        IrMultivectorMulTraitImplsWithBladeRhsTable, IrMultivectorNegTraitImpl,
-        IrMultivectorPartialEqTraitImpl, IrMultivectorSubTraitImpl,
-        IrMultivectorSubTraitImplWithScalarLhs, IrMultivectorSubTraitImplWithScalarRhs,
-        IrMultivectorSubTraitImplsWithBlade, IrMultivectorTraitImpl, IrMultivectorZeroTraitImpl,
-        IrNamedStruct, Multivector,
+        IrMultivectorMulTraitImplsWithBladeRhsTable, IrMultivectorNegTraitImpl, IrMultivectorPartialEqTraitImpl,
+        IrMultivectorSubTraitImpl, IrMultivectorSubTraitImplWithScalarLhs, IrMultivectorSubTraitImplWithScalarRhs,
+        IrMultivectorSubTraitImplsWithBlade, IrMultivectorTraitImpl, IrMultivectorZeroTraitImpl, IrNamedStruct,
+        Multivector,
     },
     model,
 };
@@ -54,34 +52,41 @@ pub fn lower(model: &model::Algebra) -> Multivector<'_> {
             scalar_type,
             scalar_field_name,
             grade_exprs: {
-                let groups = blade_indices.iter()
-                    .group_by(|idxs| idxs.len());
+                let groups = blade_indices.iter().group_by(|idxs| idxs.len());
 
                 let mut ge = vec![];
 
                 for (_, group) in &groups {
-                    let (grouped_field_names, grouped_field_types): (Vec<_>, Vec<_>) = group.map(|idxs| (format_ident!("e{}", idxs.iter().join("")), format_ident!("E{}", idxs.iter().join("")))).unzip();
+                    let (grouped_field_names, grouped_field_types): (Vec<_>, Vec<_>) = group
+                        .map(|idxs| {
+                            (
+                                format_ident!("e{}", idxs.iter().join("")),
+                                format_ident!("E{}", idxs.iter().join("")),
+                            )
+                        })
+                        .unzip();
                     ge.push(pq!(#(self.#grouped_field_names != #grouped_field_types::zero())||*));
                 }
 
                 ge
             },
             gproj_exprs: {
-                let groups = blade_indices.iter()
-                    .group_by(|idxs| idxs.len());
+                let groups = blade_indices.iter().group_by(|idxs| idxs.len());
 
                 let mut ge = vec![];
 
                 for (_, group) in &groups {
-                    let grouped_field_names: Vec<_> = group.map(|idxs| format_ident!("e{}", idxs.iter().join(""))).collect();
-                    ge.push(pq!(Self { #(#grouped_field_names: self.#grouped_field_names),*, ..::num_traits::Zero::zero()}));
+                    let grouped_field_names: Vec<_> =
+                        group.map(|idxs| format_ident!("e{}", idxs.iter().join(""))).collect();
+                    ge.push(
+                        pq!(Self { #(#grouped_field_names: self.#grouped_field_names),*, ..::num_traits::Zero::zero()}),
+                    );
                 }
 
                 ge
             },
             grades: {
-                let groups = blade_indices.iter()
-                    .group_by(|idxs| idxs.len());
+                let groups = blade_indices.iter().group_by(|idxs| idxs.len());
 
                 let mut g = vec![];
 
