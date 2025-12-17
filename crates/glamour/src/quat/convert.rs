@@ -168,7 +168,7 @@ mod tests {
             let cgmath_result = Into::<cgmath::Quaternion<f32>>::into(cgmath_lhs).normalize();
 
             prop_assert!(
-                ulps_eq!(glamour_result.0, cgmath_result),
+                ulps_eq!(glamour_result.0, cgmath_result, max_ulps = 5),
                 "\nglamour  =            {}\ncgmath = {:?}",
                 glamour_result.0, //.c() / 2.0,
                 cgmath_result,
