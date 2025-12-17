@@ -40,12 +40,12 @@ macro_rules! Reg {
     };
 }
 
-/// Use this macro to expand the type of an existing `Registry`.
+/// Use this macro to expand the type of existing `Registry`.
 /// # Examples
 ///
 /// ```
 /// use serde::{Deserialize, Serialize};
-/// use ecs::{RegAdd, registry::{Element, End}, resource::Resource};
+/// use ecs::{RegAdd, Element, End, Resource};
 ///
 /// #[derive(Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 /// struct A(usize);
