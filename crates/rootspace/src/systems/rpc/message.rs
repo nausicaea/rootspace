@@ -1,4 +1,4 @@
-use tokio::sync::oneshot::Sender;
+use futures::channel::oneshot::Sender;
 
 use crate::resources::statistics::Statistics;
 use crate::systems::rpc::graphics_info::{GraphicsInfo, GraphicsInfoCategory};

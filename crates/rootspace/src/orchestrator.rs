@@ -1,7 +1,4 @@
-use std::{
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
 use super::registry::{FUSRegistry, MSRegistry};
 use crate::{
@@ -25,7 +22,6 @@ use griffon::winit::{
     event_loop::{ControlFlow, EventLoopWindowTarget},
 };
 use griffon::{Graphics, GraphicsDeps};
-use tokio::runtime::Runtime;
 
 const DELTA_TIME: Duration = Duration::from_millis(50);
 #[cfg(feature = "editor")]
@@ -42,12 +38,11 @@ pub struct Orchestrator {
     window_event_receiver: ReceiverId<WindowEvent>,
     world_event_receiver: ReceiverId<WorldEvent>,
     engine_event_receiver: ReceiverId<EngineEvent>,
-    runtime: Arc<Runtime>,
 }
 
 impl Orchestrator {
     #[tracing::instrument(skip_all)]
-    pub async fn with_dependencies<RR, FUSR, USR, MSR, D>(deps: &D) -> anyhow::Result<Self>
+    pub fn with_dependencies<RR, FUSR, USR, MSR, D>(deps: &D) -> anyhow::Result<Self>
     where
         D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,
@@ -63,21 +58,19 @@ impl Orchestrator {
             Renderer,
             MSRegistry<MSR>,
             _,
-        >(deps)
-        .await?;
+        >(deps)?;
 
         #[cfg(feature = "editor")]
         let window_event_receiver = world.get_mut::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let world_event_receiver = world.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
         let engine_event_receiver = world.get_mut::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
-        Self::load_builtins(world.resources()).await?;
+        Self::load_builtins(world.resources())?;
 
         if let Some(main_scene) = deps.main_scene() {
             world
                 .read::<AssetDatabase>()
-                .load_asset::<Scene, _>(world.resources(), deps.scene_group(), main_scene)
-                .await?;
+                .load_asset::<Scene, _>(world.resources(), deps.scene_group(), main_scene)?;
         }
 
         Ok(Orchestrator {
@@ -93,20 +86,15 @@ impl Orchestrator {
             window_event_receiver,
             world_event_receiver,
             engine_event_receiver,
-            runtime: deps.runtime(),
         })
     }
 
     /// Creates and returns a closure that is run by
     /// [`griffon::winit::event_loop::EventLoop::run`] every time `winit` received an event
-    /// from the operating system. Internally, the closure instructs the asynchronous runtime to
-    /// block on [`Orchestrator::run`](Orchestrator::run), which does
-    /// the actual work.
+    /// from the operating system.
     pub fn start(mut self) -> impl 'static + FnMut(Event<()>, &EventLoopWindowTarget<()>) {
-        let rt = self.runtime.clone();
-
         move |event, elwt| {
-            rt.block_on(self.run(event, elwt));
+            self.run(event, elwt);
         }
     }
 
@@ -118,7 +106,7 @@ impl Orchestrator {
     /// 3. Shutting down cleanly at the end of the engine lifecycle with
     ///    [`Orchestrator::on_exiting`](Orchestrator::on_exiting)
     #[tracing::instrument(skip_all)]
-    async fn run(&mut self, event: Event<()>, elwt: &EventLoopWindowTarget<()>) {
+    fn run(&mut self, event: Event<()>, elwt: &EventLoopWindowTarget<()>) {
         #[cfg(feature = "dbg-loop")]
         let mut draw_bottom = false;
         #[cfg(feature = "dbg-loop")]
@@ -141,10 +129,10 @@ impl Orchestrator {
                 window_id,
                 event: window_event,
             } if main_window_id == window_id => match window_event {
-                WindowEvent::RedrawRequested => self.redraw().await,
+                WindowEvent::RedrawRequested => self.redraw(),
                 e => self.world.get_mut::<EventQueue<WindowEvent>>().send(e),
             },
-            Event::AboutToWait => self.maintain(elwt).await,
+            Event::AboutToWait => self.maintain(elwt),
             Event::LoopExiting => self.on_exiting(),
             _ => (),
         }
@@ -162,7 +150,7 @@ impl Orchestrator {
     /// 3. Call [`World::render`](World::render) once per redraw event.
     /// 4. Update performance statistics in [`Statistics`](Statistics)
     #[tracing::instrument(skip_all)]
-    async fn redraw(&mut self) {
+    fn redraw(&mut self) {
         // Assess the duration of the last frame
         let loop_time = std::cmp::min(self.timers.last_redraw.elapsed(), self.timers.max_loop_duration);
         self.timers.last_redraw = Instant::now();
@@ -172,15 +160,14 @@ impl Orchestrator {
         // Call fixed update functions until the accumulated time buffer is empty
         while self.timers.accumulator >= self.timers.delta_time {
             self.world
-                .fixed_update(self.timers.fixed_game_time, self.timers.delta_time)
-                .await;
+                .fixed_update(self.timers.fixed_game_time, self.timers.delta_time);
             self.timers.accumulator -= self.timers.delta_time;
             self.timers.fixed_game_time += self.timers.delta_time;
         }
 
         // Call the dynamic update and render functions
-        self.world.update(self.timers.dynamic_game_time, loop_time).await;
-        self.world.render(self.timers.dynamic_game_time, loop_time).await;
+        self.world.update(self.timers.dynamic_game_time, loop_time);
+        self.world.render(self.timers.dynamic_game_time, loop_time);
 
         // Update the frame time statistics
         self.world.get_mut::<Statistics>().update_redraw_intervals(loop_time);
@@ -191,7 +178,7 @@ impl Orchestrator {
     /// Calls [`World::maintain`](World::maintain`) after all other events
     /// have been handled.
     #[tracing::instrument(skip_all)]
-    async fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
+    fn maintain(&mut self, event_loop_window_target: &EventLoopWindowTarget<()>) {
         // Update maintenance statistics
         self.world
             .get_mut::<Statistics>()
@@ -268,7 +255,7 @@ impl Orchestrator {
         }
 
         // Call the maintenance method of World
-        if let LoopControl::Abort = self.world.maintain().await {
+        if let LoopControl::Abort = self.world.maintain() {
             event_loop_window_target.exit();
         }
 
@@ -301,9 +288,9 @@ impl Orchestrator {
     }
 
     #[tracing::instrument(skip_all)]
-    async fn load_builtins(#[allow(unused_variables)] res: &Resources) -> anyhow::Result<()> {
+    fn load_builtins(#[allow(unused_variables)] res: &Resources) -> anyhow::Result<()> {
         #[cfg(feature = "editor")]
-        Self::load_editor_builtins(res).await?;
+        Self::load_editor_builtins(res)?;
 
         let mut builtins_scene = Scene::default();
         builtins_scene
@@ -408,14 +395,14 @@ impl Orchestrator {
             )
             .submit();
 
-        builtins_scene.submit(res, "builtin", "main").await?;
+        builtins_scene.submit(res, "builtin", "main")?;
 
         Ok(())
     }
 
     #[cfg(feature = "editor")]
     #[tracing::instrument(skip_all)]
-    async fn load_editor_builtins(res: &Resources) -> anyhow::Result<()> {
+    fn load_editor_builtins(res: &Resources) -> anyhow::Result<()> {
         let mut editor_scene = Scene::default();
         editor_scene
             .create_entity()
@@ -448,9 +435,6 @@ impl Orchestrator {
 }
 
 pub trait OrchestratorDeps {
-    /// You must supply an asynchronous Runtime so the engine can schedule tasks
-    fn runtime(&self) -> Arc<Runtime>;
-
     /// Specifies the name of the main scene
     fn main_scene(&self) -> Option<&str> {
         None

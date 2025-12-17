@@ -12,8 +12,11 @@ use griffon::winit::{
     window::{Window, WindowBuilder},
 };
 
-#[tokio::main]
-async fn main() {
+fn main() {
+    smol::block_on(async_main())
+}
+
+async fn async_main() {
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .finish();

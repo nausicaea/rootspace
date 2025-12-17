@@ -9,13 +9,12 @@ rust-version.workspace = true
 [features]
 editor = []
 dbg-loop = []
-tokio-console = ["console-subscriber"]
+tokio-console = ["dep:console-subscriber"]
 
 [dependencies]
 anyhow = { version = "^1.0.0" }
 approx = "^0.5.0"
 assam.workspace = true
-async-trait = "^0.1.77"
 ciborium = "^0.2.0"
 clap = { version = "^4.0.0", features = ["derive"] }
 console-subscriber = { version = "^0.5.0", optional = true }
@@ -31,15 +30,9 @@ rose-tree.workspace = true
 serde = { version = "^1.0.0", features = ["derive"] }
 tarpc = { version = "^0.37.0", features = ["serde-transport-bincode", "tcp", "serde-transport"] }
 thiserror = "^2.0.17"
-tokio = { version = "^1.36.0", features = ["full"] }
 tracing = { version = "^0.1.40" }
 tracing-subscriber = { version = "^0.3.18", features = ["env-filter"] }
-
-[dev-dependencies]
-bytemuck = "1.24.0"
-cgmath = "0.18.0"
-image = { version = "^0.25", default-features = false, features = ["png"] }
-tobj = { version = "3.2", default-features = false, features = ["async"]}
+smol = "2.0.2"
 
 [lib]
 name = "rootspace"
@@ -52,9 +45,6 @@ name = "rootspace"
 
 [[example]]
 name = "wgpu_playground"
-
-[[example]]
-name = "wgpu_tutorial10_lighting"
 
 [[example]]
 name = "create_scene"

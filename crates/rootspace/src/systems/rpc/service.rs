@@ -1,6 +1,5 @@
-use tokio::sync::{mpsc::error::SendError, oneshot::error::RecvError};
+use futures::channel::{mpsc::SendError, oneshot::Canceled};
 
-use super::message::RpcMessage;
 use crate::resources::statistics::Statistics;
 use crate::systems::rpc::graphics_info::{GraphicsInfo, GraphicsInfoCategory};
 
@@ -32,14 +31,14 @@ impl From<anyhow::Error> for Error {
     }
 }
 
-impl From<SendError<RpcMessage>> for Error {
-    fn from(value: SendError<RpcMessage>) -> Self {
+impl From<SendError> for Error {
+    fn from(value: SendError) -> Self {
         Error::MpscSend(format!("{}", value))
     }
 }
 
-impl From<RecvError> for Error {
-    fn from(value: RecvError) -> Self {
+impl From<Canceled> for Error {
+    fn from(value: Canceled) -> Self {
         Error::OneshotRecv(format!("{}", value))
     }
 }

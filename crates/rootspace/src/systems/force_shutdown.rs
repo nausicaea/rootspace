@@ -8,7 +8,6 @@ use std::{
     time::Duration,
 };
 
-use async_trait::async_trait;
 use griffon::winit::{
     event::{ElementState, KeyEvent, WindowEvent},
     keyboard,
@@ -26,7 +25,7 @@ pub struct ForceShutdown {
 
 impl WithResources for ForceShutdown {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
+    fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let ctrlc_triggered = Arc::new(AtomicUsize::new(0));
         #[cfg(not(test))]
         {
@@ -52,10 +51,9 @@ impl WithResources for ForceShutdown {
     }
 }
 
-#[async_trait]
 impl System for ForceShutdown {
     #[tracing::instrument(skip_all)]
-    async fn run(&mut self, res: &Resources, _: Duration, _: Duration) {
+    fn run(&mut self, res: &Resources, _: Duration, _: Duration) {
         if self.ctrlc_triggered.load(Ordering::SeqCst) > 0 {
             tracing::debug!("User requested to exit by SIGINT");
             res.write::<EventQueue<EngineEvent>>().send(EngineEvent::Exit);
@@ -97,19 +95,16 @@ mod tests {
         type _SR = Reg![ForceShutdown];
     }
 
-    #[tokio::test]
-    async fn force_shutdown_system_registry() {
-        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&())
-            .await
-            .unwrap();
-        let _rr = SystemRegistry::push(End, ForceShutdown::with_res(&res).await.unwrap());
+    #[test]
+    fn force_shutdown_system_registry() {
+        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&()).unwrap();
+        let _rr = SystemRegistry::push(End, ForceShutdown::with_res(&res).unwrap());
     }
 
-    #[tokio::test]
-    async fn force_shutdown_world() {
+    #[test]
+    fn force_shutdown_world() {
         let _w =
             World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![ForceShutdown], (), Reg![], _>(&())
-                .await
                 .unwrap();
     }
 }

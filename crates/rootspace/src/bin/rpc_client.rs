@@ -3,6 +3,7 @@ use std::net::{IpAddr, Ipv6Addr};
 use clap::{Parser, Subcommand};
 use rootspace::RpcServiceClient;
 use rootspace::systems::rpc::graphics_info::GraphicsInfoCategory;
+use tarpc::tokio_serde::formats::Bincode;
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -30,8 +31,11 @@ enum Command {
     },
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
+    smol::block_on(async_main())
+}
+
+async fn async_main() -> anyhow::Result<()> {
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .finish();
@@ -39,8 +43,7 @@ async fn main() -> anyhow::Result<()> {
 
     let args = Args::parse();
     let server_addr = (args.host, args.port);
-    let mut connection =
-        tarpc::serde_transport::tcp::connect(server_addr, tarpc::tokio_serde::formats::Bincode::default);
+    let mut connection = tarpc::serde_transport::tcp::connect(server_addr, Bincode::default);
     connection.config_mut().max_frame_length(args.max_frame_length);
 
     let client = RpcServiceClient::new(tarpc::client::Config::default(), connection.await?).spawn();

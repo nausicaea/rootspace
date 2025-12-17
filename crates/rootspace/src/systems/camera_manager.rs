@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use async_trait::async_trait;
 use griffon::winit::event::WindowEvent;
 
 use crate::components::camera::Camera;
@@ -14,7 +13,7 @@ pub struct CameraManager {
 
 impl WithResources for CameraManager {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
+    fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
 
         Ok(CameraManager { receiver })
@@ -32,10 +31,9 @@ impl CameraManager {
     }
 }
 
-#[async_trait]
 impl System for CameraManager {
     #[tracing::instrument(skip_all)]
-    async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
+    fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         let events = res.write::<EventQueue<WindowEvent>>().receive(&self.receiver);
         for event in events {
             if let WindowEvent::Resized(dims) = event {
@@ -58,19 +56,16 @@ mod tests {
         type _SR = Reg![CameraManager];
     }
 
-    #[tokio::test]
-    async fn camera_manager_system_registry() {
-        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&())
-            .await
-            .unwrap();
-        let _rr = SystemRegistry::push(End, CameraManager::with_res(&res).await.unwrap());
+    #[test]
+    fn camera_manager_system_registry() {
+        let res = Resources::with_dependencies::<Reg![EventQueue<WindowEvent>], _>(&()).unwrap();
+        let _rr = SystemRegistry::push(End, CameraManager::with_res(&res).unwrap());
     }
 
-    #[tokio::test]
-    async fn camera_manager_world() {
+    #[test]
+    fn camera_manager_world() {
         let _w =
             World::with_dependencies::<Reg![EventQueue<WindowEvent>], Reg![], Reg![CameraManager], (), Reg![], _>(&())
-                .await
                 .unwrap();
     }
 }

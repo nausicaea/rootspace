@@ -32,8 +32,11 @@ impl<'a> AssetDatabaseDeps for Dependencies<'a> {
     }
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
+    smol::block_on(async_main())
+}
+
+async fn async_main() -> anyhow::Result<()> {
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .finish();
@@ -47,7 +50,7 @@ async fn main() -> anyhow::Result<()> {
         within_repo: matches.within_repo,
     };
 
-    let adb = AssetDatabase::with_deps(&deps).await?;
+    let adb = AssetDatabase::with_deps(&deps)?;
 
     let mut scene = Scene::default();
     scene
@@ -88,7 +91,7 @@ async fn main() -> anyhow::Result<()> {
         })
         .submit();
 
-    adb.save_asset(&scene, "scenes", "test.cbor").await?;
+    adb.save_asset(&scene, "scenes", "test.cbor")?;
 
     Ok(())
 }

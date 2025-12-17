@@ -156,7 +156,7 @@ impl Resource for Statistics {}
 
 impl<D> WithDependencies<D> for Statistics {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> anyhow::Result<Self> {
+    fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Statistics::default())
     }
 }
@@ -176,10 +176,8 @@ mod tests {
         let _rr = ResourceRegistry::push(End, Statistics::default());
     }
 
-    #[tokio::test]
-    async fn statistics_world() {
-        let _w = World::with_dependencies::<Reg![Statistics], Reg![], Reg![], (), Reg![], _>(&())
-            .await
-            .unwrap();
+    #[test]
+    fn statistics_world() {
+        let _w = World::with_dependencies::<Reg![Statistics], Reg![], Reg![], (), Reg![], _>(&()).unwrap();
     }
 }

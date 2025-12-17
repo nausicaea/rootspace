@@ -86,7 +86,7 @@ impl Scene {
     }
 
     #[tracing::instrument(skip_all)]
-    pub async fn submit<S>(mut self, res: &Resources, group: S, name: S) -> anyhow::Result<()>
+    pub fn submit<S>(mut self, res: &Resources, group: S, name: S) -> anyhow::Result<()>
     where
         S: AsRef<str> + std::fmt::Debug,
     {
@@ -140,7 +140,7 @@ impl Scene {
         }
 
         #[tracing::instrument(skip_all)]
-        async fn load_components_additive(
+        fn load_components_additive(
             scene: &Scene,
             map: &BTreeMap<Index, Index>,
             res: &Resources,
@@ -171,12 +171,12 @@ impl Scene {
                 }
 
                 if let Some(source) = scene.renderables.get(&i_prev) {
-                    let renderable = Renderable::new(res, source).await?;
+                    let renderable = Renderable::new(res, source)?;
                     res.write_components::<Renderable>().insert(i_new, renderable);
                 }
 
                 if let Some(source) = scene.lights.get(&i_prev) {
-                    let light = Light::new(res, source).await?;
+                    let light = Light::new(res, source)?;
                     res.write_components::<Light>().insert(i_new, light);
                 }
             }
@@ -188,7 +188,7 @@ impl Scene {
 
         let map = load_hierarchy_additive(&self, &mut res.write(), &mut res.write());
 
-        if let Err(e) = load_components_additive(&self, &map, res).await {
+        if let Err(e) = load_components_additive(&self, &map, res) {
             error_recovery(res, map.values());
             return Err(e).context("Adding the scene's components to the existing loaded components");
         }
@@ -200,7 +200,7 @@ impl Scene {
 impl LoadAsset for Scene {
     type Output = ();
 
-    async fn with_path(res: &Resources, path: &Path) -> anyhow::Result<Self::Output> {
+    fn with_path(res: &Resources, path: &Path) -> anyhow::Result<Self::Output> {
         let file = std::fs::File::open(path).with_context(|| format!("Opening the file '{}'", path.display()))?;
         let reader = std::io::BufReader::new(file);
 
@@ -210,12 +210,12 @@ impl LoadAsset for Scene {
         // based on the scene asset name.
         let (group, name) = res.read::<AssetDatabase>().find_asset_name(path)?;
 
-        scene.submit(res, group, name).await
+        scene.submit(res, group, name)
     }
 }
 
 impl SaveAsset for Scene {
-    async fn to_path(&self, path: &Path) -> anyhow::Result<()> {
+    fn to_path(&self, path: &Path) -> anyhow::Result<()> {
         let file = std::fs::File::create(path).with_context(|| format!("Creating the file '{}'", path.display()))?;
         let writer = std::io::BufWriter::new(file);
 

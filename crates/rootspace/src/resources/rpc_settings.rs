@@ -18,7 +18,7 @@ where
     D: RpcDeps + std::fmt::Debug,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(deps: &D) -> anyhow::Result<Self> {
+    fn with_deps(deps: &D) -> anyhow::Result<Self> {
         Ok(RpcSettings {
             bind_address: deps.bind_address(),
             max_frame_length: deps.max_frame_length(),

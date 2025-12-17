@@ -13,7 +13,6 @@ use crate::{
 };
 use anyhow::Context;
 use assam::AssetDatabase;
-use async_trait::async_trait;
 use ecs::{Component, EventQueue, Index, ReceiverId, Resources, Storage, System, WithResources};
 use glamour::num::ToMatrix;
 use glamour::{affine::builder::AffineBuilder, mat::Mat4};
@@ -333,7 +332,7 @@ impl Renderer {
 
 impl WithResources for Renderer {
     #[tracing::instrument(skip_all)]
-    async fn with_res(res: &Resources) -> anyhow::Result<Self> {
+    fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let window_receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
         let engine_receiver = res.write::<EventQueue<EngineEvent>>().subscribe::<Self>();
 
@@ -387,10 +386,9 @@ impl WithResources for Renderer {
     }
 }
 
-#[async_trait]
 impl System for Renderer {
     #[tracing::instrument(skip_all)]
-    async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
+    fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         let frame_start = Instant::now();
         self.handle_events(res);
 
