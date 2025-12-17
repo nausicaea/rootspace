@@ -382,6 +382,7 @@ mod tests {
         }
     }
 
+    #[allow(clippy::default_trait_access)]
     #[test]
     fn impl_default() {
         let _: Tree<Tk, Tv> = Default::default();
@@ -403,7 +404,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "The parent node does not exist")]
     fn insert_child_parent_does_not_exist() {
         let mut rt: Tree<Tk, Tv> = Tree::default();
         rt.insert_child(Tk(0), Tk(1), Tv("Good night, World!"));

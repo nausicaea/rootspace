@@ -122,7 +122,7 @@ impl<K> ecs::Resource for Hierarchy<K> where K: 'static + Send + Sync {}
 
 impl<D, K: Ord> ecs::WithDependencies<D> for Hierarchy<K> {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> anyhow::Result<Self> {
+    fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Hierarchy::default())
     }
 }
@@ -323,13 +323,12 @@ mod tests {
         let _rr = ResourceRegistry::push(End, Hierarchy::<Tk>::default());
     }
 
-    #[tokio::test]
-    async fn hierarchy_world() {
-        let _w = World::with_dependencies::<Reg![Hierarchy<Tk>], Reg![], Reg![], (), Reg![], _>(&())
-            .await
-            .unwrap();
+    #[test]
+    fn hierarchy_world() {
+        let _w = World::with_dependencies::<Reg![Hierarchy<Tk>], Reg![], Reg![], (), Reg![], _>(&()).unwrap();
     }
 
+    #[allow(clippy::default_trait_access)]
     #[test]
     fn impl_default() {
         let _: Hierarchy<Tk> = Default::default();
