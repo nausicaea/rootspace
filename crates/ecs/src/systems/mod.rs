@@ -59,17 +59,11 @@ impl Systems {
     pub fn iter(&self) -> SystemsIter<'_> {
         self.into_iter()
     }
-}
 
-// impl PartialEq for Systems {
-//     fn eq(&self, rhs: &Self) -> bool {
-//         if self.len() != rhs.len() {
-//             return false;
-//         }
-//
-//         self.0.iter().zip(rhs).all(|(lhs, rhs)| lhs.name() == rhs.name())
-//     }
-// }
+    pub fn par_iter(&'_ self) -> rayon::slice::Iter<'_, Arc<Mutex<Box<dyn System>>>> {
+        self.0.par_iter()
+    }
+}
 
 impl std::fmt::Debug for Systems {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -89,7 +83,7 @@ impl<'a> IntoIterator for &'a Systems {
 pub struct SystemsIter<'a> {
     length: usize,
     cursor: usize,
-    systems: &'a Systems,
+    systems: &'a [Arc<Mutex<Box<dyn System>>>],
 }
 
 impl<'a> SystemsIter<'a> {
@@ -97,7 +91,7 @@ impl<'a> SystemsIter<'a> {
         SystemsIter {
             length: systems.0.len(),
             cursor: 0,
-            systems,
+            systems: &systems.0,
         }
     }
 }
@@ -110,7 +104,7 @@ impl Iterator for SystemsIter<'_> {
             return None;
         }
 
-        let arc = self.systems.0[self.cursor].clone();
+        let arc = self.systems[self.cursor].clone();
         self.cursor += 1;
         Some(arc)
     }

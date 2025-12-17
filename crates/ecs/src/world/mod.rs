@@ -1,8 +1,6 @@
-use std::{sync::Arc, time::Duration};
-
-use futures::{StreamExt, stream::FuturesUnordered};
 use parking_lot::MappedRwLockReadGuard;
-use tracing::Instrument;
+use rayon::iter::ParallelIterator;
+use std::{sync::Arc, time::Duration};
 
 use self::{event::WorldEvent, type_registry::ResourceTypes};
 use super::{
@@ -50,20 +48,24 @@ impl World {
         RS: System + WithResources,
         MS: SystemRegistry + WithResources,
     {
-        let mut resources = Resources::with_dependencies::<ResourceTypes<RR>, D>(deps).await?;
         let mut resources = Resources::with_dependencies::<ResourceTypes<RR>, D>(deps)?;
 
-        let join_result = tokio::join! {
-            Systems::with_resources::<FUSR>(&resources),
-            Systems::with_resources::<USR>(&resources),
-            RS::with_res(&resources),
-            Systems::with_resources::<MS>(&resources),
-        };
+        let join_results = std::thread::scope(|s| {
+            let fusr = s.spawn(|| Systems::with_resources::<FUSR>(&resources));
+            let usr = s.spawn(|| Systems::with_resources::<USR>(&resources));
+            let rs = s.spawn(|| RS::with_res(&resources));
+            let ms = s.spawn(|| Systems::with_resources::<MS>(&resources));
 
-        let fixed_update_systems = join_result.0?;
-        let update_systems = join_result.1?;
-        let render_system = join_result.2?;
-        let maintenance_systems = join_result.3?;
+            fusr.join()
+                .and_then(|fusr| usr.join().map(|usr| (fusr, usr)))
+                .and_then(|(fusr, usr)| rs.join().map(|rs| (fusr, usr, rs)))
+                .and_then(|(fusr, usr, rs)| ms.join().map(|ms| (fusr, usr, rs, ms)))
+        });
+
+        let (fixed_update_systems, update_systems, render_system, maintenance_systems) = match join_results {
+            Ok(join_results) => (join_results.0?, join_results.1?, join_results.2?, join_results.3?),
+            Err(e) => std::panic::resume_unwind(e),
+        };
 
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
@@ -113,8 +115,8 @@ impl World {
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `fixed_update`.
     #[tracing::instrument(skip_all)]
-    pub async fn fixed_update(&mut self, t: Duration, dt: Duration) {
-        World::run_systems_parallel(&self.fixed_update_systems, &self.resources, t, dt).await
+    pub fn fixed_update(&mut self, t: Duration, dt: Duration) {
+        World::run_systems_parallel(&self.fixed_update_systems, &self.resources, t, dt)
     }
 
     /// The dynamic update method is supposed to be called from the main loop just before the
@@ -125,8 +127,8 @@ impl World {
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `update`.
     #[tracing::instrument(skip_all)]
-    pub async fn update(&mut self, t: Duration, dt: Duration) {
-        World::run_systems_parallel(&self.update_systems, &self.resources, t, dt).await
+    pub fn update(&mut self, t: Duration, dt: Duration) {
+        World::run_systems_parallel(&self.update_systems, &self.resources, t, dt)
     }
 
     /// The render method is supposed to be called when a re-draw of the graphical representation
@@ -137,8 +139,8 @@ impl World {
     /// * `t` - Interpreted as the current game time.
     /// * `dt` - Interpreted as the time interval between calls to `render`.
     #[tracing::instrument(skip_all)]
-    pub async fn render(&mut self, t: Duration, dt: Duration) {
-        self.render_system.run(&self.resources, t, dt).await;
+    pub fn render(&mut self, t: Duration, dt: Duration) {
+        self.render_system.run(&self.resources, t, dt);
     }
 
     /// This method is supposed to be called when pending events or messages should be
@@ -146,10 +148,10 @@ impl World {
     /// [`LoopControl::Continue`], the execution of the
     /// main loop shall continue, otherwise it shall abort.
     #[tracing::instrument(skip_all)]
-    pub async fn maintain(&mut self) -> LoopControl {
+    pub fn maintain(&mut self) -> LoopControl {
         // Run all custom maintenance systems
         let dummy_time = Duration::new(0, 0);
-        World::run_systems_parallel(&self.maintenance_systems, &self.resources, dummy_time, dummy_time).await;
+        World::run_systems_parallel(&self.maintenance_systems, &self.resources, dummy_time, dummy_time);
 
         // Receive all pending events
         let events = Arc::get_mut(&mut self.resources)
@@ -181,23 +183,12 @@ impl World {
     }
 
     #[tracing::instrument(skip_all)]
-    async fn run_systems_parallel(systems: &Systems, resources: &Arc<Resources>, t: Duration, dt: Duration) {
-        let mut fut = systems
-            .into_iter()
-            .map(|s| {
-                let span = tracing::info_span!("system_spawn_task");
-                let r = resources.clone();
-                tokio::task::spawn(async move {
-                    let span = tracing::info_span!("system_acquire_lock");
-                    let mut sys = s.lock().instrument(span).await;
-                    let span = tracing::info_span!("system_run", system = sys.name());
-                    sys.run(&r, t, dt).instrument(span).await;
-                })
-                .instrument(span)
-            })
-            .collect::<FuturesUnordered<_>>();
-
-        while let Some(()) = fut.next().await.transpose().unwrap() {}
+    fn run_systems_parallel(systems: &Systems, resources: &Arc<Resources>, t: Duration, dt: Duration) {
+        systems.par_iter().for_each(|system| {
+            let r = resources.clone();
+            let mut sys = system.lock();
+            sys.run(&r, t, dt);
+        });
     }
 
     #[tracing::instrument(skip_all)]
