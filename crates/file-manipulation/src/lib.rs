@@ -1,6 +1,10 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::missing_errors_doc)]
 
+use anyhow::anyhow;
+use serde::{Deserialize, Serialize};
+use std::fs::{File, copy, create_dir_all, metadata, read_dir};
+use std::io::Read;
 use std::{
     ffi::{OsStr, OsString},
     fmt::Debug,
@@ -8,14 +12,7 @@ use std::{
     ops::Deref,
     path::{Path, PathBuf},
 };
-
-use anyhow::anyhow;
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tokio::{
-    fs::{File, copy, create_dir_all, metadata, read_dir},
-    io::AsyncReadExt,
-};
 
 fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError> {
     let p = path_user_input.as_ref();
@@ -44,7 +41,7 @@ fn expand_tilde<P: AsRef<Path>>(path_user_input: P) -> Result<PathBuf, FileError
     Ok(expanded_path)
 }
 
-pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow::Result<()> {
+pub fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> anyhow::Result<()> {
     let input_root = PathBuf::from(from.as_ref());
     let num_input_components = input_root.components().count();
     let output_root = PathBuf::from(to.as_ref());
@@ -69,18 +66,17 @@ pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> a
 
         // Create the destination if it is missing
         // Why don't they use `dest.is_dir()` or `dest.exists()`?
-        if metadata(&dest).await.is_err() {
+        if metadata(&dest).is_err() {
             tracing::trace!("Creating directory: {}", dest.display());
-            create_dir_all(&dest).await?;
+            create_dir_all(&dest)?;
         }
 
         // Read the contents of the directory
-        let mut read_dir_iter = read_dir(&working_path)
-            .await
+        let read_dir_iter = read_dir(&working_path)
             .map_err(|e| anyhow!("Cannot read the directory {}: {}", working_path.display(), e))?;
 
         // Iterate over the contents of the working directory
-        while let Some(entry) = read_dir_iter.next_entry().await.transpose() {
+        for entry in read_dir_iter {
             let path = entry
                 .map_err(|e| {
                     anyhow!(
@@ -99,7 +95,7 @@ pub async fn copy_recursive<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> a
                     Some(filename) => {
                         let dest_path = dest.join(filename);
                         tracing::trace!("Copying file: {} -> {}", path.display(), dest_path.display());
-                        copy(&path, &dest_path).await.map_err(|e| {
+                        copy(&path, &dest_path).map_err(|e| {
                             anyhow!(
                                 "Cannot copy the file {} -> {}: {}",
                                 path.display(),
@@ -229,25 +225,19 @@ impl TryFrom<&PathBuf> for NewOrExFilePathBuf {
 pub struct FilePathBuf(PathBuf);
 
 impl FilePathBuf {
-    pub async fn read_to_string(&self) -> Result<String, FileError> {
-        let mut f = File::open(&self.0)
-            .await
-            .map_err(|e| FileError::IoError(self.0.clone(), e))?;
+    pub fn read_to_string(&self) -> Result<String, FileError> {
+        let mut f = File::open(&self.0).map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = String::new();
         f.read_to_string(&mut buf)
-            .await
             .map_err(|e| FileError::IoError(self.0.clone(), e))?;
 
         Ok(buf)
     }
 
-    pub async fn read_to_bytes(&self) -> Result<Vec<u8>, FileError> {
-        let mut f = File::open(&self.0)
-            .await
-            .map_err(|e| FileError::IoError(self.0.clone(), e))?;
+    pub fn read_to_bytes(&self) -> Result<Vec<u8>, FileError> {
+        let mut f = File::open(&self.0).map_err(|e| FileError::IoError(self.0.clone(), e))?;
         let mut buf = Vec::new();
         f.read_to_end(&mut buf)
-            .await
             .map_err(|e| FileError::IoError(self.0.clone(), e))?;
 
         Ok(buf)
@@ -546,24 +536,24 @@ mod tests {
         assert!(r.is_ok(), "{:?}", r.unwrap_err());
     }
 
-    #[tokio::test]
-    async fn file_path_read_to_string() {
+    #[test]
+    fn file_path_read_to_string() {
         let mut tf = NamedTempFile::new().unwrap();
 
         write!(tf, "Hello, World!").unwrap();
 
-        let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_string().await;
+        let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_string();
         assert!(r.is_ok());
         assert_eq!(r.unwrap(), "Hello, World!");
     }
 
-    #[tokio::test]
-    async fn file_path_read_to_bytes() {
+    #[test]
+    fn file_path_read_to_bytes() {
         let mut tf = NamedTempFile::new().unwrap();
 
         tf.write_all(&[0x00, 0xff, 0x14, 0xf6]).unwrap();
 
-        let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_bytes().await;
+        let r = FilePathBuf::try_from(tf.path()).unwrap().read_to_bytes();
         assert!(r.is_ok());
         assert_eq!(r.unwrap(), vec![0x00, 0xff, 0x14, 0xf6]);
     }
