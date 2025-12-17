@@ -85,7 +85,7 @@ impl Resource for Entities {}
 
 impl<D> WithDependencies<D> for Entities {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> anyhow::Result<Self> {
+    fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Entities::default())
     }
 }
@@ -164,11 +164,9 @@ mod tests {
         let _rr = ResourceRegistry::push(End, Entities::default());
     }
 
-    #[tokio::test]
-    async fn entities_world() {
-        let _w = World::with_dependencies::<Reg![Entities], Reg![], Reg![], (), Reg![], _>(&())
-            .await
-            .unwrap();
+    #[test]
+    fn entities_world() {
+        let _w = World::with_dependencies::<Reg![Entities], Reg![], Reg![], (), Reg![], _>(&()).unwrap();
     }
 
     #[test]

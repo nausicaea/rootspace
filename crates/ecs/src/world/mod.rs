@@ -41,7 +41,7 @@ pub struct World {
 
 impl World {
     #[tracing::instrument(skip_all)]
-    pub async fn with_dependencies<RR, FUSR, USR, RS, MS, D>(deps: &D) -> anyhow::Result<Self>
+    pub fn with_dependencies<RR, FUSR, USR, RS, MS, D>(deps: &D) -> anyhow::Result<Self>
     where
         D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,
@@ -51,6 +51,7 @@ impl World {
         MS: SystemRegistry + WithResources,
     {
         let mut resources = Resources::with_dependencies::<ResourceTypes<RR>, D>(deps).await?;
+        let mut resources = Resources::with_dependencies::<ResourceTypes<RR>, D>(deps)?;
 
         let join_result = tokio::join! {
             Systems::with_resources::<FUSR>(&resources),

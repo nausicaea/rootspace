@@ -40,10 +40,10 @@ where
     T: WithDependencies<D>,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(deps: &D) -> anyhow::Result<Self> {
+    fn with_deps(deps: &D) -> anyhow::Result<Self> {
         Ok(Self {
-            head: H::with_deps(deps).await?,
-            tail: T::with_deps(deps).await?,
+            head: H::with_deps(deps)?,
+            tail: T::with_deps(deps)?,
         })
     }
 }
@@ -61,7 +61,7 @@ impl WithResources for End {
 
 impl<D> WithDependencies<D> for End {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> anyhow::Result<Self> {
+    fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(Self)
     }
 }

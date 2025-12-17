@@ -209,7 +209,7 @@ impl<T> Default for VecStorage<T> {
 
 impl<D, T> WithDependencies<D> for VecStorage<T> {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> anyhow::Result<Self> {
+    fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(VecStorage::default())
     }
 }
@@ -369,11 +369,9 @@ mod tests {
         let _rr = ResourceRegistry::push(End, VecStorage::<usize>::default());
     }
 
-    #[tokio::test]
-    async fn vec_storage_world() {
-        let _w = World::with_dependencies::<Reg![VecStorage<usize>], Reg![], Reg![], (), Reg![], _>(&())
-            .await
-            .unwrap();
+    #[test]
+    fn vec_storage_world() {
+        let _w = World::with_dependencies::<Reg![VecStorage<usize>], Reg![], Reg![], (), Reg![], _>(&()).unwrap();
     }
 
     #[test]

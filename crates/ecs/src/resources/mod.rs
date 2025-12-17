@@ -79,7 +79,7 @@ impl Resources {
     /// in the registry to initialize those resources that have a default, parameterless
     /// constructor.
     #[tracing::instrument(skip_all)]
-    pub async fn with_dependencies<RR, D>(deps: &D) -> anyhow::Result<Self>
+    pub fn with_dependencies<RR, D>(deps: &D) -> anyhow::Result<Self>
     where
         D: std::fmt::Debug,
         RR: ResourceRegistry + WithDependencies<D>,
@@ -94,7 +94,7 @@ impl Resources {
             recursive_insert(res, tail);
         }
 
-        let rr = RR::with_deps(deps).await?;
+        let rr = RR::with_deps(deps)?;
         let mut res = Resources::with_capacity(RR::LEN);
         recursive_insert(&mut res, rr);
 

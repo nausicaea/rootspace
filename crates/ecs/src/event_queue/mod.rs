@@ -148,7 +148,7 @@ impl<E> Resource for EventQueue<E> where E: fmt::Debug + 'static + Send + Sync {
 
 impl<D, E> WithDependencies<D> for EventQueue<E> {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(_: &D) -> anyhow::Result<Self> {
+    fn with_deps(_: &D) -> anyhow::Result<Self> {
         Ok(EventQueue::default())
     }
 }
@@ -201,11 +201,9 @@ mod tests {
         let _rr = ResourceRegistry::push(End, EventQueue::<usize>::default());
     }
 
-    #[tokio::test]
-    async fn event_queue_world() {
-        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![], (), Reg![], _>(&())
-            .await
-            .unwrap();
+    #[test]
+    fn event_queue_world() {
+        let _w = World::with_dependencies::<Reg![EventQueue<usize>], Reg![], Reg![], (), Reg![], _>(&()).unwrap();
     }
 
     #[test]
