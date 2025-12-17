@@ -12,11 +12,11 @@ pub use self::resources::{AssetDatabase, AssetDatabaseDeps};
 pub trait LoadAsset {
     type Output;
 
-    fn with_path(res: &Resources, path: &Path) -> impl Future<Output = anyhow::Result<Self::Output>> + Send;
+    fn with_path(res: &Resources, path: &Path) -> anyhow::Result<Self::Output>;
 }
 
 pub trait SaveAsset {
-    fn to_path(&self, path: &Path) -> impl Future<Output = anyhow::Result<()>> + Send;
+    fn to_path(&self, path: &Path) -> anyhow::Result<()>;
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -2,7 +2,6 @@ use anyhow::Context;
 use directories::ProjectDirs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
-use tokio::fs::{create_dir_all, remove_dir_all};
 
 use super::{Error, LoadAsset, SaveAsset};
 use ecs::{Resource, Resources, WithDependencies};
@@ -45,7 +44,7 @@ pub struct AssetDatabase {
 
 impl AssetDatabase {
     #[tracing::instrument(skip_all)]
-    pub async fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> anyhow::Result<A::Output>
+    pub fn load_asset<A, S>(&self, res: &Resources, group: S, name: S) -> anyhow::Result<A::Output>
     where
         A: LoadAsset,
         S: AsRef<str> + std::fmt::Debug,
@@ -57,7 +56,7 @@ impl AssetDatabase {
                 group.as_ref()
             )
         })?;
-        let asset = A::with_path(res, &path).await.with_context(|| {
+        let asset = A::with_path(res, &path).with_context(|| {
             format!(
                 "Loading a {} asset from path '{}'",
                 std::any::type_name::<A>(),
@@ -69,7 +68,7 @@ impl AssetDatabase {
     }
 
     #[tracing::instrument(skip_all)]
-    pub async fn save_asset<A, S>(&self, asset: &A, group: S, name: S) -> anyhow::Result<()>
+    pub fn save_asset<A, S>(&self, asset: &A, group: S, name: S) -> anyhow::Result<()>
     where
         A: SaveAsset + std::fmt::Debug,
         S: AsRef<str> + std::fmt::Debug,
@@ -83,12 +82,11 @@ impl AssetDatabase {
         })?;
 
         if let Some(parent) = path.parent() {
-            create_dir_all(parent)
-                .await
+            std::fs::create_dir_all(parent)
                 .with_context(|| format!("Creating the parent directories of path '{}'", path.display()))?;
         }
 
-        asset.to_path(&path).await.with_context(|| {
+        asset.to_path(&path).with_context(|| {
             format!(
                 "Saving a {} asset to path '{}'",
                 std::any::type_name::<A>(),
@@ -150,7 +148,7 @@ where
     D: AssetDatabaseDeps + std::fmt::Debug,
 {
     #[tracing::instrument(skip_all)]
-    async fn with_deps(deps: &D) -> anyhow::Result<Self> {
+    fn with_deps(deps: &D) -> anyhow::Result<Self> {
         let project_dirs = ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, deps.name()).with_context(|| {
             format!(
                 "Finding the project directories of triplet ({}, {}, {})",
@@ -168,8 +166,7 @@ where
         };
 
         if !deps.within_repo() && deps.force_init() && assets.is_dir() {
-            remove_dir_all(&assets)
-                .await
+            std::fs::remove_dir_all(&assets)
                 .with_context(|| format!("Removing all contents of the path '{}'", assets.display()))?;
         }
 
@@ -181,7 +178,7 @@ where
                     source_assets.display()
                 ));
             }
-            copy_recursive(&source_assets, &assets).await.with_context(|| {
+            copy_recursive(&source_assets, &assets).with_context(|| {
                 format!(
                     "Copying the asset database contents from '{}' to '{}'",
                     source_assets.display(),
@@ -239,17 +236,15 @@ mod tests {
         type _RR = Reg![AssetDatabase];
     }
 
-    #[tokio::test]
-    async fn asset_database_resource_registry() {
+    #[test]
+    fn asset_database_resource_registry() {
         let deps = TDeps::default();
-        let _rr = ResourceRegistry::push(End, AssetDatabase::with_deps(&deps).await.unwrap());
+        let _rr = ResourceRegistry::push(End, AssetDatabase::with_deps(&deps).unwrap());
     }
 
-    #[tokio::test]
-    async fn asset_database_world() {
+    #[test]
+    fn asset_database_world() {
         let deps = TDeps::default();
-        let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], (), Reg![], _>(&deps)
-            .await
-            .unwrap();
+        let _w = World::with_dependencies::<Reg![AssetDatabase], Reg![], Reg![], (), Reg![], _>(&deps).unwrap();
     }
 }
