@@ -17,10 +17,9 @@ pub struct CpuModel {
 impl LoadAsset for CpuModel {
     type Output = Self;
 
-    async fn with_path(res: &Resources, path: &Path) -> anyhow::Result<Self::Output> {
-        let mesh = CpuMesh::with_path(res, path)
-            .await
-            .with_context(|| format!("Loading a CpuMesh from '{}'", path.display()))?;
+    fn with_path(res: &Resources, path: &Path) -> anyhow::Result<Self::Output> {
+        let mesh =
+            CpuMesh::with_path(res, path).with_context(|| format!("Loading a CpuMesh from '{}'", path.display()))?;
         trace!("Loaded CpuMesh with size {} bytes", size_of_val(&mesh));
 
         let mut materials = Vec::new();
@@ -28,7 +27,6 @@ impl LoadAsset for CpuModel {
             let cpu_mat = res
                 .read::<AssetDatabase>()
                 .load_asset::<CpuMaterial, _>(res, MATERIAL_ASSET_GROUP, name)
-                .await
                 .with_context(|| {
                     format!(
                         "Loading a CpuMaterial from group {} and name {}",

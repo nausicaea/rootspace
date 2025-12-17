@@ -9,7 +9,7 @@ pub struct CpuTexture {
 impl LoadAsset for CpuTexture {
     type Output = Self;
 
-    async fn with_path(_res: &ecs::Resources, path: &std::path::Path) -> anyhow::Result<Self::Output> {
+    fn with_path(_res: &ecs::Resources, path: &std::path::Path) -> anyhow::Result<Self::Output> {
         let label = path.file_stem().and_then(|n| n.to_str()).map(|n| n.to_owned());
 
         let image_format = path

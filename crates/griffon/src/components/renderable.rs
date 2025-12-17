@@ -11,8 +11,8 @@ pub struct Renderable {
 
 impl Renderable {
     #[tracing::instrument(skip(res))]
-    pub async fn new(res: &Resources, source: &RenderableSource) -> anyhow::Result<Self> {
-        let model = load_instanced_gpu_model(res, &source.group, &source.name).await?;
+    pub fn new(res: &Resources, source: &RenderableSource) -> anyhow::Result<Self> {
+        let model = load_instanced_gpu_model(res, &source.group, &source.name)?;
 
         Ok(Renderable {
             model,

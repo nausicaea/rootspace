@@ -21,7 +21,7 @@ pub struct Light {
 
 impl Light {
     #[tracing::instrument(skip_all)]
-    pub async fn new(res: &Resources, source: &LightSource) -> anyhow::Result<Self> {
+    pub fn new(res: &Resources, source: &LightSource) -> anyhow::Result<Self> {
         {
             let max_lights = res.read::<Graphics>().max_lights() as usize;
             let lights = res.read_components::<Light>();
@@ -33,7 +33,7 @@ impl Light {
             }
         }
 
-        let model = load_instanced_gpu_model(res, &source.group, &source.name).await?;
+        let model = load_instanced_gpu_model(res, &source.group, &source.name)?;
 
         Ok(Self {
             model,
