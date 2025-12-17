@@ -2,12 +2,9 @@
 
 use std::time::Duration;
 
-use async_trait::async_trait;
-
 use super::resources::Resources;
 
 /// Encodes a system or behaviour.
-#[async_trait]
 pub trait System: 'static + Sync + Send {
     /// Return the system's name.
     fn name(&self) -> &'static str {
@@ -15,10 +12,9 @@ pub trait System: 'static + Sync + Send {
     }
 
     /// Run the behaviour.
-    async fn run(&mut self, res: &Resources, t: Duration, dt: Duration);
+    fn run(&mut self, res: &Resources, t: Duration, dt: Duration);
 }
 
-#[async_trait]
 impl System for () {
-    async fn run(&mut self, _: &Resources, _: Duration, _: Duration) {}
+    fn run(&mut self, _: &Resources, _: Duration, _: Duration) {}
 }

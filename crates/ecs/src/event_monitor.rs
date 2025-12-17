@@ -1,6 +1,5 @@
 use std::{fmt, time::Duration};
 
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -27,13 +26,12 @@ where
     }
 }
 
-#[async_trait]
 impl<E> System for EventMonitor<E>
 where
     E: 'static + Clone + fmt::Debug + Send + Sync,
 {
     #[tracing::instrument(skip_all)]
-    async fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
+    fn run(&mut self, res: &Resources, _t: Duration, _dt: Duration) {
         res.write::<EventQueue<E>>()
             .receive_cb(&self.receiver, |e| tracing::trace!("Received {:?}", e));
     }
@@ -53,10 +51,10 @@ mod tests {
         type _SR = Reg![EventMonitor<u32>];
     }
 
-    #[tokio::test]
-    async fn event_monitor_system_registry() {
-        let _rr = SystemRegistry::push(End, EventMonitor::<usize>::with_res(&res).await.unwrap());
+    #[test]
+    fn event_monitor_system_registry() {
         let res = Resources::with_dependencies::<Reg![EventQueue<usize>], _>(&()).unwrap();
+        let _rr = SystemRegistry::push(End, EventMonitor::<usize>::with_res(&res).unwrap());
     }
 
     #[test]

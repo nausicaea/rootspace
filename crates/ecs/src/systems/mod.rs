@@ -1,8 +1,7 @@
-use std::{iter::FusedIterator, sync::Arc};
-
-use tokio::sync::Mutex;
-
 use super::{registry::SystemRegistry, resources::Resources, system::System, with_resources::WithResources};
+use parking_lot::Mutex;
+use rayon::iter::IntoParallelRefIterator;
+use std::{iter::FusedIterator, sync::Arc};
 
 #[derive(Default)]
 pub struct Systems(Vec<Arc<Mutex<Box<dyn System>>>>);
@@ -14,7 +13,7 @@ impl Systems {
     }
 
     #[tracing::instrument(skip_all)]
-    pub async fn with_resources<SR>(res: &Resources) -> anyhow::Result<Self>
+    pub fn with_resources<SR>(res: &Resources) -> anyhow::Result<Self>
     where
         SR: SystemRegistry + WithResources,
     {
@@ -28,7 +27,7 @@ impl Systems {
             recursor(sys, tail);
         }
 
-        let sr = SR::with_res(res).await?;
+        let sr = SR::with_res(res)?;
         let mut sys = Systems::with_capacity(SR::LEN);
         recursor(&mut sys, sr);
 
