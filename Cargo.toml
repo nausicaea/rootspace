@@ -14,10 +14,9 @@ members = [
   "crates/vega",
   "crates/vega-codegen",
   "crates/vega-internal",
+
   # Experimenting crates
   "crates/effie",
-  "crates/ikebana",
-  "crates/rat",
 ]
 exclude = [
   "crates/fuzz",
@@ -46,3 +45,7 @@ vega-internal = { path = "crates/vega-internal" }
 [profile.release]
 panic = "abort"
 
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+unwrap_used = "warn"
