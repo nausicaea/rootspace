@@ -12,3 +12,5 @@ num-traits = "0.2.18"
 vega-internal.workspace = true
 vega-codegen.workspace = true
 
+[lints]
+workspace = true

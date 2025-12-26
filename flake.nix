@@ -55,6 +55,7 @@
 
             export RUST_SRC_PATH="$HOME/.rust-rover/toolchain/lib/rustlib/src/rust/library"
             export RUST_LOG="warn,rootspace=trace,griffon=info,glamour=trace"
+            export RUST_BACKTRACE=1
           '';
         };
       }

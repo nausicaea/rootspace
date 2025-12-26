@@ -48,3 +48,6 @@ name = "wgpu_playground"
 
 [[example]]
 name = "create_scene"
+
+[lints]
+workspace = true

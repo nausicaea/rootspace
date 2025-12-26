@@ -14,3 +14,6 @@ tracing = "^0.1.40"
 
 [dev-dependencies]
 serde_test = "^1.0.126"
+
+[lints]
+workspace = true

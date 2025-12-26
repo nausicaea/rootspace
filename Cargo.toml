@@ -16,8 +16,8 @@ members = [
   "crates/vega-internal",
 
   # Experimenting crates
-  "crates/effie",
-]
+  "crates/effie"
+, "crates/dorothy"]
 exclude = [
   "crates/fuzz",
 ]

@@ -32,3 +32,6 @@ name = "ply_loader"
 [[bench]]
 name = "plyers_benchmarks"
 harness = false
+
+[lints]
+workspace = true

@@ -23,3 +23,5 @@ vega-internal.workspace = true
 num-traits = "0.2.18"
 trybuild = "1.0.91"
 
+[lints]
+workspace = true

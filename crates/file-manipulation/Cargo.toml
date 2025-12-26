@@ -16,3 +16,6 @@ tracing = "^0.1.40"
 [dev-dependencies]
 serde_test = "^1.0.126"
 tempfile = "^3.0.1"
+
+[lints]
+workspace = true
