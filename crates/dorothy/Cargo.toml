@@ -1,0 +1,27 @@
+# Inspired by https://www.dabeaz.com/py-kcs/
+# and https://www.gkc.org.uk/martin/software/#CUTS
+[package]
+name = "dorothy"
+version = "0.1.0"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow = "1.0.100"
+clap = { version = "4.5.53", default-features = false, features = ["std", "derive"] }
+hound = "3.5.1"
+itertools = "0.14.0"
+thiserror = "2.0.17"
+
+[dev-dependencies]
+proptest = "1.9.0"
+rstest = "0.26.1"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "kcs-encode"
+path = "src/bin/kcs_encode.rs"
