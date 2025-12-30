@@ -85,7 +85,7 @@ struct BitDecoder {
 impl BitDecoder {
     fn new(buffer_size: usize) -> Self {
         Self { 
-            state: BitDecoderFsm::DetectStartBit, 
+            state: BitDecoderFsm::default(), 
             look_behind: RingBuffer::new(buffer_size),
             previous_sign_bit: 0,
         }
@@ -165,17 +165,27 @@ impl BitDecoderFsm {
     }
 }
 
+impl Default for BitDecoderFsm {
+    fn default() -> Self {
+        BitDecoderFsm::DetectStartBit
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 struct RingBuffer<T>(VecDeque<T>, usize);
 
 impl<T> RingBuffer<T> {
     fn new(size: usize) -> Self {
-        RingBuffer(VecDeque::with_capacity(size), size)
+        RingBuffer(VecDeque::with_capacity(size + 1), size)
+    }
+
+    fn len(&self) -> usize {
+        self.0.len()
     }
 
     fn push(&mut self, value: T) {
-        self.truncate();
         self.0.push_front(value);
+        self.truncate();
 
     }
 
@@ -184,8 +194,8 @@ impl<T> RingBuffer<T> {
     }
 
     fn truncate(&mut self) {
-        if self.0.len() >= self.1 {
-            self.0.truncate(self.1 - 1);
+        if self.0.len() > self.1 {
+            self.0.truncate(self.1);
         }
     }
 }
@@ -209,12 +219,81 @@ mod tests {
     const TEST_DIR: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests")));
 
     #[test]
+    fn ring_buffer_initializes_with_size_plus_one() {
+        let buf: RingBuffer<u8> = RingBuffer::new(1);
+        assert_eq!(buf.0.capacity(), 2);
+    }
+
+    #[test]
+    fn ring_buffer_len_is_never_larger_than_size() {
+        let mut buf: RingBuffer<u8> = RingBuffer::new(3);
+        assert_eq!(buf.len(), 0, "0/3");
+        buf.push(1);
+        assert_eq!(buf.len(), 1, "1/3");
+        buf.push(2);
+        assert_eq!(buf.len(), 2, "2/3");
+        buf.push(3);
+        assert_eq!(buf.len(), 3, "3/3");
+        buf.push(4);
+        assert_eq!(buf.len(), 3, "4/3 -> 3/3");
+    }
+
+    #[test]
+    fn ring_buffer_truncate_keeps_the_deque_length_constant() {
+        let mut buf: RingBuffer<u8> = RingBuffer::new(2);
+        assert_eq!(buf.0, &[]);
+        buf.truncate();
+        assert_eq!(buf.0, &[]);
+        buf.push(1);
+        assert_eq!(buf.0, &[1]);
+        buf.truncate();
+        assert_eq!(buf.0, &[1]);
+        buf.push(1);
+        buf.push(2);
+        assert_eq!(buf.0, &[2, 1]);
+        buf.truncate();
+        assert_eq!(buf.0, &[2, 1]);
+
+    }
+
+    #[test]
+    fn ring_buffer_push_single_element() {
+        let mut buf: RingBuffer<u8> = RingBuffer::new(1);
+        buf.push(1);
+        assert_eq!(buf.len(), 1);
+        assert_eq!(buf.pop(), Some(1));
+        assert_eq!(buf.pop(), None);
+    }
+
+    #[test]
+    fn ring_buffer_push_drops_off_excess_as_fifo() {
+        let mut buf: RingBuffer<u8> = RingBuffer::new(2);
+        buf.push(1);
+        buf.push(2);
+        buf.push(3);
+        assert_eq!(buf.len(), 2);
+        assert_eq!(buf.pop(), Some(2));
+        assert_eq!(buf.pop(), Some(3));
+        assert_eq!(buf.pop(), None);
+    }
+
+    #[test]
+    fn ring_buffer_extend_drops_off_excess_as_fifo() {
+        let mut buf: RingBuffer<u8> = RingBuffer::new(2);
+        buf.extend([2, 3, 4]);
+        assert_eq!(buf.len(), 2);
+        assert_eq!(buf.pop(), Some(3));
+        assert_eq!(buf.pop(), Some(4));
+        assert_eq!(buf.pop(), None);
+    }
+
+    #[test]
     fn decode_accepts_i16_iterator_input() {
-        decode(0, 0, [0_i16; 4]);
-        decode(0, 0, &[0_i16; 4]);
-        decode(0, 0, vec![0_i16; 4]);
-        decode(0, 0, &vec![0_i16; 4]);
-        decode(0, 0, std::iter::once(0_i16));
+        decode(2, 2, [0_i16; 4]);
+        decode(2, 2, &[0_i16; 4]);
+        decode(2, 2, vec![0_i16; 4]);
+        decode(2, 2, &vec![0_i16; 4]);
+        decode(2, 2, std::iter::once(0_i16));
     }
 
     #[rstest]
