@@ -21,7 +21,3 @@ rstest = "0.26.1"
 
 [lints]
 workspace = true
-
-[[bin]]
-name = "kcs-encode"
-path = "src/bin/kcs_encode.rs"
