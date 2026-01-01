@@ -13,6 +13,7 @@ anyhow = "1.0.100"
 clap = { version = "4.5.53", default-features = false, features = ["std", "derive"] }
 hound = "3.5.1"
 itertools = "0.14.0"
+num-traits = "0.2.19"
 thiserror = "2.0.17"
 
 [dev-dependencies]

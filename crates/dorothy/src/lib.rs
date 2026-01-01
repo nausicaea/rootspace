@@ -1,46 +1,45 @@
-use std::{borrow::Borrow, collections::VecDeque};
+use std::{borrow::Borrow, collections::VecDeque, fmt::LowerHex};
+use itertools::Itertools;
+use num_traits::Signed;
 
-pub fn decode<I: IntoIterator<Item = T>, T: Borrow<i16>>(channels: usize, sample_rate: usize, samples: I) -> Vec<Vec<u8>> {
-    use itertools::Itertools;
+const BITMASKS: [u8; 8] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
 
-    // Fixed decoder parameters
-    const BASE_FREQ: u32 = 2400;
-    let frames_per_bit: usize = (sample_rate as f64 * 8.0 / BASE_FREQ as f64).round() as usize;
-
-    // Decoder state
-    let mut outputs: Vec<Vec<u8>> = vec![Vec::default(); channels];
+pub fn decode<N, I>(channels: usize, sample_rate: usize, target_freq: usize, samples: I) -> Vec<Vec<u8>> 
+where
+    N: Copy + LowerHex + Signed,
+    I: IntoIterator<Item = N>,
+{
+    // Determine how many audio samples are used to encode a single bit
+    let samples_per_bit: usize = (sample_rate as f64 * 8.0 / target_freq as f64).round() as usize;
 
     let framed_iter = samples.into_iter()
-        // Retrieve the raw i16 sample data
+        // Retrieve the raw sample data
         .map(|sample| *sample.borrow())
         // Separate the individual interleaved channels
         .chunks(channels);
 
     // Create an iterator over all audio samples, grouped by channel, indexed by time and channel
     let per_channel_iter = framed_iter.into_iter()
-        // Create an index for each point in time
-        .enumerate()
-        .flat_map(|(time_idx, frame)| {
-            // Create an index for each channel
-            frame.enumerate()
-                .map(move |(channel_idx, sample)| (time_idx, channel_idx, sample))
+        // Create an index for each channel
+        .flat_map(|frame| frame.enumerate())
+        // Group by channels, thus de-interleaving audio samples for each channel
+        .chunk_by(|(channel_idx, _)| *channel_idx);
+
+    per_channel_iter.into_iter()
+        .map(|(_, channel_samples)| {
+            decode_channel(
+                channel_samples.map(|(_, sample)| sample), 
+                samples_per_bit,
+            )
         })
-        .chunk_by(|(_, channel_idx, _)| *channel_idx);
-
-    for (channel_idx, channel_samples) in &per_channel_iter {
-        outputs[channel_idx] = decode_channel(
-            channel_samples.map(|(_, _, sample)| sample), 
-            frames_per_bit,
-        );
-    }
-
-    outputs
+        .collect()
 }
 
-const fn to_sign_bit(i: i16) -> u8 {
-    match i.signum() {
-        -1 => 1,
-        _ => 0,
+fn to_sign_bit<S: Signed + num_traits::One + std::ops::Neg>(i: S) -> u8 {
+    if i.signum() == S::one().neg() {
+        1
+    } else {
+        0
     }
 }
 
@@ -56,18 +55,20 @@ fn advance_n<I: Iterator<Item = u8>>(buf: &mut RingBuffer<u8>, i: &mut I, n: usi
         .for_each(|item| buf.push(item));
 }
 
-fn sign_changes<T: Borrow<u8>, I: IntoIterator<Item = T>>(i: I) -> usize {
+fn count_sign_changes<T: Borrow<u8>, I: IntoIterator<Item = T>>(i: I) -> usize {
     i.into_iter().map(|k| *k.borrow() as usize).sum()
 }
 
-const BITMASKS: [u8; 8] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
 
-fn decode_channel(
-    channel_data: impl Iterator<Item = i16>, 
-    frames_per_bit: usize,
-) -> Vec<u8> {
+fn decode_channel<S>(
+    channel_data: impl Iterator<Item = S>, 
+    samples_per_bit: usize,
+) -> Vec<u8> 
+where
+    S: Copy + LowerHex + Signed,
+{
     // Per-channel decoder state
-    let mut look_behind: RingBuffer<u8> = RingBuffer::new(frames_per_bit);
+    let mut look_behind: RingBuffer<u8> = RingBuffer::new(samples_per_bit);
     let mut previous_sign_bit = 0_u8;
     let mut output = Vec::default();
 
@@ -78,8 +79,8 @@ fn decode_channel(
         .map(|sample| to_sign_change(sample, &mut previous_sign_bit))
         .inspect(|sample| eprintln!("{sample:x}"));
 
-    advance_n(&mut look_behind, sign_change_iter.by_ref(), frames_per_bit - 1);
-    let mut num_sign_changes = sign_changes(&look_behind.0);
+    advance_n(&mut look_behind, sign_change_iter.by_ref(), samples_per_bit - 1);
+    let mut num_sign_changes = count_sign_changes(&look_behind.0);
 
     while let Some(sign_change) = sign_change_iter.next() {
         if sign_change != 0 {
@@ -94,8 +95,8 @@ fn decode_channel(
         if num_sign_changes <= 9 {
             let mut byteval = 0_u8;
             for mask in BITMASKS {
-                advance_n(&mut look_behind, sign_change_iter.by_ref(), frames_per_bit);
-                if sign_changes(&look_behind.0) >= 12 {
+                advance_n(&mut look_behind, sign_change_iter.by_ref(), samples_per_bit);
+                if count_sign_changes(&look_behind.0) >= 12 {
                     byteval |= mask;
                 }
             }
@@ -103,10 +104,10 @@ fn decode_channel(
 
             // Skip the final two stop bits and refill the sample buffer
             sign_change_iter.by_ref()
-                .skip(2 * frames_per_bit)
-                .take(3 * frames_per_bit - 1)
+                .skip(2 * samples_per_bit)
+                .take(3 * samples_per_bit - 1)
                 .for_each(|item| look_behind.push(item));
-            num_sign_changes = sign_changes(&look_behind.0);
+            num_sign_changes = count_sign_changes(&look_behind.0);
         }
     }
 
@@ -232,11 +233,9 @@ mod tests {
 
     #[test]
     fn decode_accepts_i16_iterator_input() {
-        decode(1, 4, [0_i16; 4]);
-        decode(1, 4, &[0_i16; 4]);
-        decode(1, 4, vec![0_i16; 4]);
-        decode(1, 4, &vec![0_i16; 4]);
-        decode(1, 4, std::iter::once(0_i16));
+        decode(1, 4, 2400, [0_i16; 4]);
+        decode(1, 4, 2400, vec![0_i16; 4]);
+        decode(1, 4, 2400, std::iter::once(0_i16));
     }
 
     #[rstest]
@@ -277,7 +276,7 @@ mod tests {
         assert_eq!(spec.sample_format, hound::SampleFormat::Int, "Sample data type should be Int");
         assert!(spec.bits_per_sample <= 16, "Bits per sample should be at most 16");
 
-        let output = decode(spec.channels as usize, spec.sample_rate as usize, r.into_samples::<i16>().map(|s| s.unwrap()));
+        let output = decode(spec.channels as usize, spec.sample_rate as usize, 2400, r.into_samples::<i16>().map(|s| s.unwrap()));
 
         let mut expected_data = Vec::new();
         BufReader::new(File::open(TEST_DIR.join(expected)).unwrap()).read_to_end(&mut expected_data).unwrap();
@@ -285,7 +284,7 @@ mod tests {
         assert_eq!(output.len(), 1);
         let output = &output[0];
 
-        assert_eq!(output.len(), expected_data.len());
+        //assert_eq!(output.len(), expected_data.len());
         assert_eq!(output, &expected_data);
     }
 

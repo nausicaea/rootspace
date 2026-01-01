@@ -995,6 +995,7 @@ dependencies = [
  "clap",
  "hound",
  "itertools 0.14.0",
+ "num-traits",
  "proptest",
  "rstest",
  "thiserror 2.0.17",
