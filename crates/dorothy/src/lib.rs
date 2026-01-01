@@ -1,10 +1,10 @@
-use std::{borrow::Borrow, collections::VecDeque};
 use itertools::Itertools;
 use num_traits::Signed;
+use std::{borrow::Borrow, collections::VecDeque, task::Poll};
 
 const BITMASKS: [u8; 8] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
 
-pub fn decode<N, I>(channels: usize, sample_rate: usize, target_freq: usize, samples: I) -> Vec<Vec<u8>> 
+pub fn decode<N, I>(channels: usize, sample_rate: usize, target_freq: usize, samples: I) -> Vec<Vec<u8>>
 where
     N: Copy + Signed,
     I: IntoIterator<Item = N>,
@@ -25,20 +25,13 @@ where
         // Group by channels, thus de-interleaving audio samples for each channel
         .chunk_by(|(channel_idx, _)| *channel_idx);
 
-    per_channel_iter.into_iter()
-        .map(|(_, channel_samples)| {
-            decode_channel(
-                channel_samples.map(|(_, sample)| sample), 
-                samples_per_bit,
-            )
-        })
+    per_channel_iter
+        .into_iter()
+        .map(|(_, channel_samples)| decode_channel(channel_samples.map(|(_, sample)| sample), samples_per_bit))
         .collect()
 }
 
-fn decode_channel<S>(
-    channel_data: impl Iterator<Item = S>, 
-    samples_per_bit: usize,
-) -> Vec<u8> 
+fn decode_channel<S>(channel_data: impl Iterator<Item = S>, samples_per_bit: usize) -> Vec<u8>
 where
     S: Copy + Signed,
 {
@@ -50,27 +43,60 @@ where
         .map(|sample| to_sign_bit(sample))
         .scan(0_u8, |p, sample| Some(to_sign_change(sample, p)));
 
-    let mut fsm = BitDecoder::default();
+    let mut fsm = Bdec::new(sign_change_iter.by_ref(), &mut look_behind, samples_per_bit);
     while !fsm.is_complete() {
-        if let Some(output_byte) = fsm.try_next(sign_change_iter.by_ref(), &mut look_behind, samples_per_bit) {
-            output.push(output_byte);
+        match fsm.poll() {
+            Poll::Pending => (),
+            Poll::Ready(Ok(output_byte)) => output.push(output_byte),
+            Poll::Ready(Err(BitDecoderError::EndOfIterator)) => break,
+            Poll::Ready(Err(e)) => panic!("{e}"),
         }
     }
 
     output
 }
 
+#[derive(Debug)]
+struct Bdec<'lt, I> {
+    state: BitDecoder,
+    iter: &'lt mut I,
+    look_behind: &'lt mut RingBuffer<u8>,
+    samples_per_bit: usize,
+}
+
+impl<'lt, I> Bdec<'lt, I>
+where
+    I: Iterator<Item = u8>,
+{
+    fn new(iter: &'lt mut I, look_behind: &'lt mut RingBuffer<u8>, samples_per_bit: usize) -> Self {
+        Self {
+            state: BitDecoder::default(),
+            iter,
+            look_behind,
+            samples_per_bit,
+        }
+    }
+
+    fn is_complete(&self) -> bool {
+        matches!(self.state, BitDecoder::Complete)
+    }
+
+    fn poll(&mut self) -> Poll<Result<u8, BitDecoderError>> {
+        let mut output = Poll::Pending;
+        self.state = self
+            .state
+            .next(&mut self.iter, &mut self.look_behind, self.samples_per_bit, &mut output);
+        output
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum BitDecoder {
     Initialize,
     DetectStartBit(usize),
-    DecodeBit {
-        mask_idx: usize,
-        byte: u8,
-    },
-    DetectStopBitA,
-    DetectStopBitB,
-    Eof,
+    DecodeBit { mask_idx: usize, byte: u8 },
+    DetectStopBits(u8),
+    Complete,
 }
 
 impl Default for BitDecoder {
@@ -79,40 +105,35 @@ impl Default for BitDecoder {
     }
 }
 
-/*
-impl std::future::Future for BitDecoder {
-    type Output;
-
-    fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        todo!()
-    }
+#[derive(Debug, thiserror::Error)]
+enum BitDecoderError {
+    #[error("The sample iterator does not have anymore elements")]
+    EndOfIterator,
+    #[error("Could not detect one or more stop bits")]
+    MissingStopBits,
 }
-*/
 
 impl BitDecoder {
     const LOW: usize = 9;
     const HIGH: usize = 12;
 
-    fn is_complete(&self) -> bool {
-        matches!(self, BitDecoder::Eof)
-    }
-
-    fn try_next(&mut self, sign_changes: &mut impl Iterator<Item = u8>, look_behind: &mut RingBuffer<u8>, samples_per_bit: usize) -> Option<u8> {
-        let mut output = None;
-        *self = self.next_state(sign_changes, look_behind, samples_per_bit, &mut output);
-        output
-    }
-
-    fn next_state(&self, sign_changes: &mut impl Iterator<Item = u8>, look_behind: &mut RingBuffer<u8>, samples_per_bit: usize, output: &mut Option<u8>) -> Self {
+    fn next(
+        &self,
+        sign_changes: &mut impl Iterator<Item = u8>,
+        look_behind: &mut RingBuffer<u8>,
+        samples_per_bit: usize,
+        output: &mut Poll<Result<u8, BitDecoderError>>,
+    ) -> Self {
         use BitDecoder::*;
         match *self {
             Initialize => {
                 look_behind.extend(sign_changes.take(samples_per_bit - 1));
                 DetectStartBit(count_sign_changes(&look_behind.0))
-            },
+            }
             DetectStartBit(mut num_sign_changes) => {
                 let Some(current) = sign_changes.next() else {
-                    return Eof;
+                    *output = Poll::Ready(Err(BitDecoderError::EndOfIterator));
+                    return Complete;
                 };
 
                 if current != 0 {
@@ -124,52 +145,40 @@ impl BitDecoder {
                 look_behind.push(current);
 
                 if num_sign_changes <= Self::LOW {
-                    DecodeBit {
-                        mask_idx: 0,
-                        byte: 0,
-                    }
+                    DecodeBit { mask_idx: 0, byte: 0 }
                 } else {
                     DetectStartBit(num_sign_changes)
                 }
-            },
+            }
             DecodeBit { mask_idx, mut byte } => {
                 if mask_idx < BITMASKS.len() {
                     if count_sign_changes(sign_changes.take(samples_per_bit)) >= Self::HIGH {
                         byte |= BITMASKS[mask_idx];
                     }
-                    DecodeBit { mask_idx: mask_idx + 1, byte }
+                    DecodeBit {
+                        mask_idx: mask_idx + 1,
+                        byte,
+                    }
                 } else {
-                    *output = Some(byte);
-                    DetectStopBitA
+                    DetectStopBits(byte)
                 }
-            },
-            DetectStopBitA => {
-                if count_sign_changes(sign_changes.take(samples_per_bit)) >= Self::HIGH {
-                    DetectStopBitB
-                } else {
-                    // WARN: no stop bit A found
-                    Eof
-                }
-            },
-            DetectStopBitB => {
-                if count_sign_changes(sign_changes.take(samples_per_bit)) >= Self::HIGH {
+            }
+            DetectStopBits(byte) => {
+                if count_sign_changes(sign_changes.take(2 * samples_per_bit)) >= Self::HIGH {
+                    *output = Poll::Ready(Ok(byte));
                     Initialize
                 } else {
-                    // WARN: no stop bit A found
-                    Eof
+                    *output = Poll::Ready(Err(BitDecoderError::MissingStopBits));
+                    Complete
                 }
-            },
-            Eof => Eof,
+            }
+            Complete => Complete,
         }
     }
 }
 
 fn to_sign_bit<S: Signed + num_traits::One + std::ops::Neg>(i: S) -> u8 {
-    if i.signum() == S::one().neg() {
-        1
-    } else {
-        0
-    }
+    if i.signum() == S::one().neg() { 1 } else { 0 }
 }
 
 const fn to_sign_change(i: u8, previous: &mut u8) -> u8 {
@@ -182,29 +191,6 @@ fn count_sign_changes<T: Borrow<u8>, I: IntoIterator<Item = T>>(i: I) -> usize {
     i.into_iter().map(|k| *k.borrow() as usize).sum()
 }
 
-fn skip_stop_bits_and_refill(i: &mut impl Iterator<Item = u8>, look_behind: &mut RingBuffer<u8>, samples_per_bit: usize) {
-    i.skip(2 * samples_per_bit)
-        .take(samples_per_bit - 1)
-        .for_each(|item| look_behind.push(item));
-}
-
-fn count_zeros(i: impl Iterator<Item = u8>) -> impl Iterator<Item = usize> {
-    std::iter::once(0)
-        .chain(i)
-        .scan(0_usize, |counter, sample| {
-            if sample == 1 {
-                let result = Some(Some(*counter));
-                *counter = 0;
-                result
-            } else {
-                *counter += 1;
-                Some(None)
-            }
-        })
-        .flatten()
-        .skip(1)
-}
-
 #[derive(Debug, Clone, Default)]
 struct RingBuffer<T>(VecDeque<T>, usize);
 
@@ -213,14 +199,9 @@ impl<T> RingBuffer<T> {
         RingBuffer(VecDeque::with_capacity(size + 1), size)
     }
 
-    fn len(&self) -> usize {
-        self.0.len()
-    }
-
     fn push(&mut self, value: T) {
         self.0.push_front(value);
         self.truncate();
-
     }
 
     fn pop(&mut self) -> Option<T> {
@@ -248,8 +229,8 @@ mod tests {
 
     use super::*;
     use hound::WavReader;
+    use proptest::{prop_assert_eq, proptest};
     use rstest::rstest;
-    use proptest::{proptest, prop_assert_eq};
 
     const TEST_DIR: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests")));
 
@@ -257,20 +238,6 @@ mod tests {
     fn ring_buffer_initializes_with_size_plus_one() {
         let buf: RingBuffer<u8> = RingBuffer::new(1);
         assert_eq!(buf.0.capacity(), 2);
-    }
-
-    #[test]
-    fn ring_buffer_len_is_never_larger_than_size() {
-        let mut buf: RingBuffer<u8> = RingBuffer::new(3);
-        assert_eq!(buf.len(), 0, "0/3");
-        buf.push(1);
-        assert_eq!(buf.len(), 1, "1/3");
-        buf.push(2);
-        assert_eq!(buf.len(), 2, "2/3");
-        buf.push(3);
-        assert_eq!(buf.len(), 3, "3/3");
-        buf.push(4);
-        assert_eq!(buf.len(), 3, "4/3 -> 3/3");
     }
 
     #[test]
@@ -288,14 +255,13 @@ mod tests {
         assert_eq!(buf.0, &[2, 1]);
         buf.truncate();
         assert_eq!(buf.0, &[2, 1]);
-
     }
 
     #[test]
     fn ring_buffer_push_single_element() {
         let mut buf: RingBuffer<u8> = RingBuffer::new(1);
         buf.push(1);
-        assert_eq!(buf.len(), 1);
+        assert_eq!(buf.0.len(), 1);
         assert_eq!(buf.pop(), Some(1));
         assert_eq!(buf.pop(), None);
     }
@@ -306,7 +272,7 @@ mod tests {
         buf.push(1);
         buf.push(2);
         buf.push(3);
-        assert_eq!(buf.len(), 2);
+        assert_eq!(buf.0.len(), 2);
         assert_eq!(buf.pop(), Some(2));
         assert_eq!(buf.pop(), Some(3));
         assert_eq!(buf.pop(), None);
@@ -316,7 +282,7 @@ mod tests {
     fn ring_buffer_extend_drops_off_excess_as_fifo() {
         let mut buf: RingBuffer<u8> = RingBuffer::new(2);
         buf.extend([2, 3, 4]);
-        assert_eq!(buf.len(), 2);
+        assert_eq!(buf.0.len(), 2);
         assert_eq!(buf.pop(), Some(3));
         assert_eq!(buf.pop(), Some(4));
         assert_eq!(buf.pop(), None);
@@ -330,10 +296,7 @@ mod tests {
     }
 
     #[rstest]
-    fn to_sign_bit_returns_one_for_negative_numbers_and_zero_otherwise(
-        #[values(-2, 0, 2)]
-        input: i16,
-    ) {
+    fn to_sign_bit_returns_one_for_negative_numbers_and_zero_otherwise(#[values(-2, 0, 2)] input: i16) {
         assert_eq!(to_sign_bit(input), if input < 0 { 1_u8 } else { 0 });
     }
 
@@ -351,35 +314,36 @@ mod tests {
         }
     }
 
-    #[test]
-    fn skip_stop_bits_and_refill_consumes_three_bits_worth_of_samples() {
-        let samples_per_bit = 4_u8;
-        let mut iter = (0..(4 * samples_per_bit)).into_iter();
-        let mut buf: RingBuffer<u8> = RingBuffer::new(samples_per_bit as usize);
-        skip_stop_bits_and_refill(iter.by_ref(), &mut buf, samples_per_bit as usize);
-        assert_eq!(iter.count(), samples_per_bit as usize + 1);
-    }
-
     #[rstest]
     #[case("hello-world.wav", "hello-world.txt")]
-    //#[case("good-example.wav", "good-example.txt")]
-    fn decoding_files_works_as_expected(
-        #[case] source: &str,
-        #[case] expected: &str,
-    ) {
-        use std::{fs::File, io::{BufReader, Read}};
+    fn decoding_files_works_as_expected(#[case] source: &str, #[case] expected: &str) {
+        use std::{
+            fs::File,
+            io::{BufReader, Read},
+        };
 
         let r = WavReader::open(TEST_DIR.join(source)).unwrap();
 
         // Verify decoder assumptions
         let spec = r.spec();
-        assert_eq!(spec.sample_format, hound::SampleFormat::Int, "Sample data type should be Int");
+        assert_eq!(
+            spec.sample_format,
+            hound::SampleFormat::Int,
+            "Sample data type should be Int"
+        );
         assert!(spec.bits_per_sample <= 16, "Bits per sample should be at most 16");
 
-        let output = decode(spec.channels as usize, spec.sample_rate as usize, 2400, r.into_samples::<i16>().map(|s| s.unwrap()));
+        let output = decode(
+            spec.channels as usize,
+            spec.sample_rate as usize,
+            2400,
+            r.into_samples::<i16>().map(|s| s.unwrap()),
+        );
 
         let mut expected_data = Vec::new();
-        BufReader::new(File::open(TEST_DIR.join(expected)).unwrap()).read_to_end(&mut expected_data).unwrap();
+        BufReader::new(File::open(TEST_DIR.join(expected)).unwrap())
+            .read_to_end(&mut expected_data)
+            .unwrap();
 
         assert_eq!(output.len(), 1);
         let output = &output[0];
@@ -387,7 +351,4 @@ mod tests {
         //assert_eq!(output.len(), expected_data.len());
         assert_eq!(output, &expected_data);
     }
-
-
-
 }
