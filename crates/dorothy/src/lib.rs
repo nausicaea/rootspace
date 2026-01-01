@@ -6,7 +6,7 @@ const BITMASKS: [u8; 8] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
 
 pub fn decode<N, I>(channels: usize, sample_rate: usize, target_freq: usize, samples: I) -> Vec<Vec<u8>> 
 where
-    N: Copy + Signed + std::fmt::Display,
+    N: Copy + Signed,
     I: IntoIterator<Item = N>,
 {
     // Determine how many audio samples are used to encode a single bit
@@ -33,6 +33,59 @@ where
             )
         })
         .collect()
+}
+
+fn decode_channel<S>(
+    channel_data: impl Iterator<Item = S>, 
+    samples_per_bit: usize,
+) -> Vec<u8> 
+where
+    S: Copy + Signed,
+{
+    // Per-channel decoder state
+    let mut look_behind: RingBuffer<u8> = RingBuffer::new(samples_per_bit);
+    let mut output = Vec::default();
+
+    let mut sign_change_iter = channel_data
+        .map(|sample| to_sign_bit(sample))
+        .scan(0_u8, |p, sample| Some(to_sign_change(sample, p)));
+
+    sign_change_iter
+        .by_ref()
+        .take(samples_per_bit - 1)
+        .for_each(|item| look_behind.push(item));
+    let mut num_sign_changes = count_sign_changes(&look_behind.0);
+
+    while let Some(sign_change) = sign_change_iter.next() {
+        if sign_change != 0 {
+            num_sign_changes += 1;
+        }
+        if look_behind.pop() != Some(0) {
+            num_sign_changes -= 1;
+        }
+        look_behind.push(sign_change);
+
+        // If a start bit is detected, sample the next 8 data bits
+        if num_sign_changes <= 9 {
+            let mut byteval = 0_u8;
+            for mask in BITMASKS {
+                let sc = count_sign_changes(sign_change_iter.by_ref().take(samples_per_bit));
+                if sc >= 12 {
+                    byteval |= mask;
+                }
+            }
+            output.push(byteval);
+
+            // Skip the final two stop bits and refill the sample buffer
+            sign_change_iter.by_ref()
+                .skip(2 * samples_per_bit)
+                .take(samples_per_bit - 1)
+                .for_each(|item| look_behind.push(item));
+            num_sign_changes = count_sign_changes(&look_behind.0);
+        }
+    }
+
+    output
 }
 
 fn to_sign_bit<S: Signed + num_traits::One + std::ops::Neg>(i: S) -> u8 {
@@ -70,87 +123,8 @@ fn count_zeros(i: impl Iterator<Item = u8>) -> impl Iterator<Item = usize> {
         .skip(1)
 }
 
-
-fn decode_channel<S>(
-    channel_data: impl Iterator<Item = S>, 
-    samples_per_bit: usize,
-) -> Vec<u8> 
-where
-    S: Copy + Signed + std::fmt::Display,
-{
-    // Per-channel decoder state
-    let mut look_behind: RingBuffer<u8> = RingBuffer::new(samples_per_bit);
-    let mut output = Vec::default();
-
-    let mut sign_change_iter = channel_data
-        .map(|sample| to_sign_bit(sample))
-        .scan(0_u8, |p, sample| Some(to_sign_change(sample, p)));
-
-    /*
-    eprintln!("Distance between sign changes in blocks of {samples_per_bit} samples:");
-    count_zeros(sign_change_iter)
-        .chunks(samples_per_bit)
-        .into_iter()
-        .for_each(|zeros| eprintln!("{}", zeros.map(|z| z.to_string()).collect::<Vec<_>>().join("")));
-    */
-
-    sign_change_iter
-        .by_ref()
-        .take(samples_per_bit - 1)
-        .for_each(|item| look_behind.push(item));
-    let mut num_sign_changes = count_sign_changes(&look_behind.0);
-
-    while let Some(sign_change) = sign_change_iter.next() {
-        eprint!("{sign_change}: {num_sign_changes} -> ");
-
-        if sign_change != 0 {
-            num_sign_changes += 1;
-        }
-        if look_behind.pop() != Some(0) {
-            num_sign_changes -= 1;
-        }
-        look_behind.push(sign_change);
-        eprint!("{num_sign_changes}");
-
-        // If a start bit is detected, sample the next 8 data bits
-        if num_sign_changes <= 9 {
-            eprint!(" ! ");
-            let mut byteval = 0_u8;
-            for mask in BITMASKS {
-                let sc = count_sign_changes(sign_change_iter.by_ref().take(samples_per_bit));
-                eprint!("({sc})");
-                if sc >= 12 {
-                    byteval |= mask;
-                }
-            }
-            eprint!(" -> {byteval} -> ");
-            output.push(byteval);
-
-            // Skip the final two stop bits and refill the sample buffer
-            sign_change_iter.by_ref()
-                .skip(2 * samples_per_bit)
-                .take(samples_per_bit - 1)
-                .for_each(|item| look_behind.push(item));
-            num_sign_changes = count_sign_changes(&look_behind.0);
-            eprint!("{num_sign_changes}");
-        }
-        eprintln!();
-    }
-
-    output
-}
-
 #[derive(Debug, Clone, Default)]
 struct RingBuffer<T>(VecDeque<T>, usize);
-
-impl<T: std::fmt::Display> RingBuffer<T> {
-    fn debug(&self) {
-        let mut buf: String = "->[".into();
-        self.0.iter().for_each(|item| buf.push_str(&format!("{item},")));
-        buf.push_str("]->");
-        eprintln!("{buf}");
-    }
-}
 
 impl<T> RingBuffer<T> {
     fn new(size: usize) -> Self {
