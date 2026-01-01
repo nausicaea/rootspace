@@ -28,9 +28,9 @@ pub fn decode<I: IntoIterator<Item = T>, T: Borrow<i16>>(channels: usize, sample
         }
 
         for (decoder, channel_data) in bit_decoder.iter_mut().zip_eq(&channel_data) {
-            let sign_bits = to_sign_bits(channel_data);
-            let sign_changes = to_sign_changes(&sign_bits, &mut decoder.previous_sign_bit);
-            let mut sign_change_iter = sign_changes.into_iter();
+            let mut sign_change_iter = channel_data.into_iter()
+                .inspect(|sample| eprint!("{sample:x}"))
+                .map(|&sample| to_sign_change(to_sign_bit(sample), &mut decoder.previous_sign_bit));
 
             while let Some(sign_change) = sign_change_iter.next() {
                 decoder.look_behind.push(sign_change);
@@ -55,24 +55,9 @@ const fn to_sign_bit(i: i16) -> u8 {
     }
 }
 
-const fn to_sign_bits<const N: usize>(i: &[i16; N]) -> [u8; N] {
-    let mut o = [0; N];
-    let mut idx = 0;
-    while idx < N {
-        o[idx] = to_sign_bit(i[idx]);
-        idx += 1;
-    }
-    o
-}
-
-const fn to_sign_changes<const N: usize>(i: &[u8; N], previous: &mut u8) -> [u8; N] {
-    let mut o = [0; N];
-    let mut idx = 0;
-    while idx < N {
-        o[idx] = i[idx] ^ *previous;
-        *previous = i[idx];
-        idx += 1;
-    }
+const fn to_sign_change(i: u8, previous: &mut u8) -> u8 {
+    let o = i ^ *previous;
+    *previous = i;
     o
 }
 
@@ -227,6 +212,7 @@ mod tests {
     use super::*;
     use hound::WavReader;
     use rstest::rstest;
+    use proptest::{proptest, prop_assert_eq};
 
     const TEST_DIR: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests")));
 
@@ -316,6 +302,15 @@ mod tests {
         assert_eq!(to_sign_bit(input), if input < 0 { 1_u8 } else { 0 });
     }
 
+    proptest! {
+        #[test]
+        fn to_sign_change_xors_input_and_previous(input: u8, previous: u8) {
+            let mut p = previous;
+            prop_assert_eq!(to_sign_change(input, &mut p), input ^ previous);
+            prop_assert_eq!(p, input);
+        }
+    }
+
     #[rstest]
     #[case("hello-world.wav", "hello-world.txt")]
     //#[case("good-example.wav", "good-example.txt")]
@@ -325,14 +320,14 @@ mod tests {
     ) {
         use std::{fs::File, io::{BufReader, Read}};
 
-        let mut r = WavReader::open(TEST_DIR.join(source)).unwrap();
+        let r = WavReader::open(TEST_DIR.join(source)).unwrap();
 
         // Verify decoder assumptions
         let spec = r.spec();
         assert_eq!(spec.sample_format, hound::SampleFormat::Int, "Sample data type should be Int");
         assert!(spec.bits_per_sample <= 16, "Bits per sample should be at most 16");
 
-        let output = decode(spec.channels as usize, spec.sample_rate as usize, r.samples::<i16>().map(|s| s.unwrap()));
+        let output = decode(spec.channels as usize, spec.sample_rate as usize, r.into_samples::<i16>().map(|s| s.unwrap()));
 
         let mut expected_data = Vec::new();
         BufReader::new(File::open(TEST_DIR.join(expected)).unwrap()).read_to_end(&mut expected_data).unwrap();
