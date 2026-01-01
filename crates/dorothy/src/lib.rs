@@ -1,57 +1,49 @@
 use std::{borrow::Borrow, collections::VecDeque};
 
-pub fn decode<I: IntoIterator<Item = T>, T: Borrow<i16>>(channels: usize, sample_rate: usize, samples: I) -> Vec<u8> {
+pub fn decode<I: IntoIterator<Item = T>, T: Borrow<i16>>(channels: usize, sample_rate: usize, samples: I) -> Vec<Vec<u8>> {
     use itertools::Itertools;
 
     // Fixed decoder parameters
-    const BLOCK_SIZE: usize = 8196;
+    //const BLOCK_SIZE: usize = 8196;
     const BASE_FREQ: u32 = 2400;
     let frames_per_bit: usize = (sample_rate as f64 * 8.0 / BASE_FREQ as f64).round() as usize;
 
     // Decoder state
+    //let mut per_channel_sample_buffer: Vec<[i16; BLOCK_SIZE]> = vec![[0; BLOCK_SIZE]; channels];
     let mut fsms: Vec<BitDecoderFsm> = vec![BitDecoderFsm::default(); channels];
     let mut look_behinds: Vec<RingBuffer<u8>> = vec![RingBuffer::new(frames_per_bit); channels];
     let mut previous_sign_bits: Vec<u8> = vec![0; channels];
-    let mut output = Vec::default();
+    let mut outputs: Vec<Vec<u8>> = vec![Vec::default(); channels];
 
-    // Iterate over the input in large chunks.
-    // Adjust the block size by the number of channels (since channel data is interleaved in
-    // WAV)
-    for chunk in &samples.into_iter().chunks(BLOCK_SIZE * channels) {
-        // Per-block state (reset on every iteration)
-        let mut channel_data = vec![[0_i16; BLOCK_SIZE]; channels];
+    let framed_iter = samples.into_iter()
+        // Retrieve the raw i16 sample data
+        .map(|sample| *sample.borrow())
+        // Separate the individual interleaved channels
+        .chunks(channels);
 
-        // Separate the interleaved audio channels per sample
-        for (sample_idx, sample) in chunk.chunks(channels).into_iter().enumerate() {
-            // Iterate over each channel in the sample
-            for (channel_idx, channel) in sample.enumerate() {
-                channel_data[channel_idx][sample_idx] = *channel.borrow();
-            }
-        }
+    // Create an iterator over all audio samples, grouped by channel, indexed by time and channel
+    let per_channel_iter = framed_iter.into_iter()
+        // Create an index for each point in time
+        .enumerate()
+        .flat_map(|(time_idx, frame)| {
+            // Create an index for each channel
+            frame.enumerate()
+                .map(move |(channel_idx, sample)| (time_idx, channel_idx, sample))
+        })
+        .chunk_by(|(_, channel_idx, _)| *channel_idx);
 
-        for (channel_idx, channel_data) in channel_data.iter().enumerate() {
-            let fsm = &mut fsms[channel_idx];
-            let look_behind = &mut look_behinds[channel_idx];
-            let previous_sign_bit = &mut previous_sign_bits[channel_idx];
-
-            let mut sign_change_iter = channel_data.into_iter()
-                .inspect(|sample| eprint!("{sample:x}"))
-                .map(|&sample| to_sign_change(to_sign_bit(sample), previous_sign_bit));
-
-            while let Some(sign_change) = sign_change_iter.next() {
-                look_behind.push(sign_change);
-                let num_sign_changes: usize = look_behind.0.iter()
-                    .map(|&k| k as usize)
-                    .sum();
-
-                if let Some(decoded_byte) = fsm.next(frames_per_bit, num_sign_changes, &mut sign_change_iter) {
-                    output.push(decoded_byte);
-                }
-            }
-        }
+    for (channel_idx, channel_samples) in &per_channel_iter {
+        decode_channel(
+            channel_samples.map(|(_, _, sample)| sample), 
+            frames_per_bit,
+            &mut fsms[channel_idx],
+            &mut look_behinds[channel_idx],
+            &mut previous_sign_bits[channel_idx],
+            &mut outputs[channel_idx],
+        );
     }
 
-    output
+    outputs
 }
 
 const fn to_sign_bit(i: i16) -> u8 {
@@ -65,6 +57,30 @@ const fn to_sign_change(i: u8, previous: &mut u8) -> u8 {
     let o = i ^ *previous;
     *previous = i;
     o
+}
+
+fn decode_channel(
+    channel_data: impl Iterator<Item = i16>, 
+    frames_per_bit: usize,
+    fsm: &mut BitDecoderFsm, 
+    look_behind: &mut RingBuffer<u8>, 
+    previous_sign_bit: &mut u8,
+    output: &mut Vec<u8>,
+) {
+    let mut sign_change_iter = channel_data
+        .inspect(|sample| eprint!("{sample:x}"))
+        .map(|sample| to_sign_change(to_sign_bit(sample), previous_sign_bit));
+
+    while let Some(sign_change) = sign_change_iter.next() {
+        look_behind.push(sign_change);
+        let num_sign_changes: usize = look_behind.0.iter()
+            .map(|&k| k as usize)
+            .sum();
+
+        if let Some(decoded_byte) = fsm.next(frames_per_bit, num_sign_changes, &mut sign_change_iter) {
+            output.push(decoded_byte);
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -322,7 +338,8 @@ mod tests {
         BufReader::new(File::open(TEST_DIR.join(expected)).unwrap()).read_to_end(&mut expected_data).unwrap();
 
         //assert_eq!(output.len(), expected_data.len());
-        assert_eq!(output, expected_data);
+        eprintln!("{output:?}");
+        assert_eq!(output[0], expected_data);
     }
 
 
