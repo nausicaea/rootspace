@@ -77,10 +77,7 @@ where
             output.push(byteval);
 
             // Skip the final two stop bits and refill the sample buffer
-            sign_change_iter.by_ref()
-                .skip(2 * samples_per_bit)
-                .take(samples_per_bit - 1)
-                .for_each(|item| look_behind.push(item));
+            skip_stop_bits_and_refill(sign_change_iter.by_ref(), &mut look_behind, samples_per_bit);
             num_sign_changes = count_sign_changes(&look_behind.0);
         }
     }
@@ -104,6 +101,12 @@ const fn to_sign_change(i: u8, previous: &mut u8) -> u8 {
 
 fn count_sign_changes<T: Borrow<u8>, I: IntoIterator<Item = T>>(i: I) -> usize {
     i.into_iter().map(|k| *k.borrow() as usize).sum()
+}
+
+fn skip_stop_bits_and_refill(i: &mut impl Iterator<Item = u8>, look_behind: &mut RingBuffer<u8>, samples_per_bit: usize) {
+    i.skip(2 * samples_per_bit)
+        .take(samples_per_bit - 1)
+        .for_each(|item| look_behind.push(item));
 }
 
 fn count_zeros(i: impl Iterator<Item = u8>) -> impl Iterator<Item = usize> {
@@ -267,6 +270,15 @@ mod tests {
             prop_assert_eq!(to_sign_change(input, &mut p), input ^ previous);
             prop_assert_eq!(p, input);
         }
+    }
+
+    #[test]
+    fn skip_stop_bits_and_refill_consumes_three_bits_worth_of_samples() {
+        let samples_per_bit = 4_u8;
+        let mut iter = (0..(4 * samples_per_bit)).into_iter();
+        let mut buf: RingBuffer<u8> = RingBuffer::new(samples_per_bit as usize);
+        skip_stop_bits_and_refill(iter.by_ref(), &mut buf, samples_per_bit as usize);
+        assert_eq!(iter.count(), samples_per_bit as usize + 1);
     }
 
     #[rstest]
