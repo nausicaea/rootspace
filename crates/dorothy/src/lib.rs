@@ -50,39 +50,118 @@ where
         .map(|sample| to_sign_bit(sample))
         .scan(0_u8, |p, sample| Some(to_sign_change(sample, p)));
 
-    sign_change_iter
-        .by_ref()
-        .take(samples_per_bit - 1)
-        .for_each(|item| look_behind.push(item));
-    let mut num_sign_changes = count_sign_changes(&look_behind.0);
-
-    while let Some(sign_change) = sign_change_iter.next() {
-        if sign_change != 0 {
-            num_sign_changes += 1;
-        }
-        if look_behind.pop() != Some(0) {
-            num_sign_changes -= 1;
-        }
-        look_behind.push(sign_change);
-
-        // If a start bit is detected, sample the next 8 data bits
-        if num_sign_changes <= 9 {
-            let mut byteval = 0_u8;
-            for mask in BITMASKS {
-                let sc = count_sign_changes(sign_change_iter.by_ref().take(samples_per_bit));
-                if sc >= 12 {
-                    byteval |= mask;
-                }
-            }
-            output.push(byteval);
-
-            // Skip the final two stop bits and refill the sample buffer
-            skip_stop_bits_and_refill(sign_change_iter.by_ref(), &mut look_behind, samples_per_bit);
-            num_sign_changes = count_sign_changes(&look_behind.0);
+    let mut fsm = BitDecoder::default();
+    while !fsm.is_complete() {
+        if let Some(output_byte) = fsm.try_next(sign_change_iter.by_ref(), &mut look_behind, samples_per_bit) {
+            output.push(output_byte);
         }
     }
 
     output
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BitDecoder {
+    Initialize,
+    DetectStartBit(usize),
+    DecodeBit {
+        mask_idx: usize,
+        byte: u8,
+    },
+    DetectStopBitA,
+    DetectStopBitB,
+    Eof,
+}
+
+impl Default for BitDecoder {
+    fn default() -> Self {
+        BitDecoder::Initialize
+    }
+}
+
+/*
+impl std::future::Future for BitDecoder {
+    type Output;
+
+    fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        todo!()
+    }
+}
+*/
+
+impl BitDecoder {
+    const LOW: usize = 9;
+    const HIGH: usize = 12;
+
+    fn is_complete(&self) -> bool {
+        matches!(self, BitDecoder::Eof)
+    }
+
+    fn try_next(&mut self, sign_changes: &mut impl Iterator<Item = u8>, look_behind: &mut RingBuffer<u8>, samples_per_bit: usize) -> Option<u8> {
+        let mut output = None;
+        *self = self.next_state(sign_changes, look_behind, samples_per_bit, &mut output);
+        output
+    }
+
+    fn next_state(&self, sign_changes: &mut impl Iterator<Item = u8>, look_behind: &mut RingBuffer<u8>, samples_per_bit: usize, output: &mut Option<u8>) -> Self {
+        use BitDecoder::*;
+        match *self {
+            Initialize => {
+                look_behind.extend(sign_changes.take(samples_per_bit - 1));
+                DetectStartBit(count_sign_changes(&look_behind.0))
+            },
+            DetectStartBit(mut num_sign_changes) => {
+                let Some(current) = sign_changes.next() else {
+                    return Eof;
+                };
+
+                if current != 0 {
+                    num_sign_changes += 1;
+                }
+                if look_behind.pop() != Some(0) {
+                    num_sign_changes -= 1;
+                }
+                look_behind.push(current);
+
+                if num_sign_changes <= Self::LOW {
+                    DecodeBit {
+                        mask_idx: 0,
+                        byte: 0,
+                    }
+                } else {
+                    DetectStartBit(num_sign_changes)
+                }
+            },
+            DecodeBit { mask_idx, mut byte } => {
+                if mask_idx < BITMASKS.len() {
+                    if count_sign_changes(sign_changes.take(samples_per_bit)) >= Self::HIGH {
+                        byte |= BITMASKS[mask_idx];
+                    }
+                    DecodeBit { mask_idx: mask_idx + 1, byte }
+                } else {
+                    *output = Some(byte);
+                    DetectStopBitA
+                }
+            },
+            DetectStopBitA => {
+                if count_sign_changes(sign_changes.take(samples_per_bit)) >= Self::HIGH {
+                    DetectStopBitB
+                } else {
+                    // WARN: no stop bit A found
+                    Eof
+                }
+            },
+            DetectStopBitB => {
+                if count_sign_changes(sign_changes.take(samples_per_bit)) >= Self::HIGH {
+                    Initialize
+                } else {
+                    // WARN: no stop bit A found
+                    Eof
+                }
+            },
+            Eof => Eof,
+        }
+    }
 }
 
 fn to_sign_bit<S: Signed + num_traits::One + std::ops::Neg>(i: S) -> u8 {
