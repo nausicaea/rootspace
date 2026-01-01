@@ -9,7 +9,9 @@ pub fn decode<I: IntoIterator<Item = T>, T: Borrow<i16>>(channels: usize, sample
     let frames_per_bit: usize = (sample_rate as f64 * 8.0 / BASE_FREQ as f64).round() as usize;
 
     // Decoder state
-    let mut bit_decoder: Vec<BitDecoder> = vec![BitDecoder::new(frames_per_bit); channels];
+    let mut fsms: Vec<BitDecoderFsm> = vec![BitDecoderFsm::default(); channels];
+    let mut look_behinds: Vec<RingBuffer<u8>> = vec![RingBuffer::new(frames_per_bit); channels];
+    let mut previous_sign_bits: Vec<u8> = vec![0; channels];
     let mut output = Vec::default();
 
     // Iterate over the input in large chunks.
@@ -27,18 +29,22 @@ pub fn decode<I: IntoIterator<Item = T>, T: Borrow<i16>>(channels: usize, sample
             }
         }
 
-        for (decoder, channel_data) in bit_decoder.iter_mut().zip_eq(&channel_data) {
+        for (channel_idx, channel_data) in channel_data.iter().enumerate() {
+            let fsm = &mut fsms[channel_idx];
+            let look_behind = &mut look_behinds[channel_idx];
+            let previous_sign_bit = &mut previous_sign_bits[channel_idx];
+
             let mut sign_change_iter = channel_data.into_iter()
                 .inspect(|sample| eprint!("{sample:x}"))
-                .map(|&sample| to_sign_change(to_sign_bit(sample), &mut decoder.previous_sign_bit));
+                .map(|&sample| to_sign_change(to_sign_bit(sample), previous_sign_bit));
 
             while let Some(sign_change) = sign_change_iter.next() {
-                decoder.look_behind.push(sign_change);
-                let num_sign_changes: usize = decoder.look_behind.0.iter()
+                look_behind.push(sign_change);
+                let num_sign_changes: usize = look_behind.0.iter()
                     .map(|&k| k as usize)
                     .sum();
 
-                if let Some(decoded_byte) = decoder.state.next(frames_per_bit, num_sign_changes, &mut sign_change_iter) {
+                if let Some(decoded_byte) = fsm.next(frames_per_bit, num_sign_changes, &mut sign_change_iter) {
                     output.push(decoded_byte);
                 }
             }
@@ -59,23 +65,6 @@ const fn to_sign_change(i: u8, previous: &mut u8) -> u8 {
     let o = i ^ *previous;
     *previous = i;
     o
-}
-
-#[derive(Debug, Clone)]
-struct BitDecoder {
-    state: BitDecoderFsm,
-    look_behind: RingBuffer<u8>,
-    previous_sign_bit: u8,
-}
-
-impl BitDecoder {
-    fn new(buffer_size: usize) -> Self {
-        Self { 
-            state: BitDecoderFsm::default(), 
-            look_behind: RingBuffer::new(buffer_size),
-            previous_sign_bit: 0,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
