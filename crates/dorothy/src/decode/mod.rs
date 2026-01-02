@@ -58,12 +58,12 @@ where
                 samples_per_bit,
             )
         })
-        .collect();
+        .collect::<Result<_, BitDecoderError>>()?;
 
     Ok(output)
 }
 
-fn decode_channel<S>(samples: impl Iterator<Item = (usize, usize, S)>, samples_per_bit: usize) -> Vec<u8>
+fn decode_channel<S>(samples: impl Iterator<Item = (usize, usize, S)>, samples_per_bit: usize) -> Result<Vec<u8>, BitDecoderError>
 where
     S: Copy + Signed + ConstZero + PartialOrd,
 {
@@ -82,11 +82,11 @@ where
             Poll::Pending => (),
             Poll::Ready(Ok(output_byte)) => output.push(output_byte),
             Poll::Ready(Err(BitDecoderError::EndOfIterator)) => break,
-            Poll::Ready(Err(e)) => panic!("{e}"),
+            Poll::Ready(Err(e)) => return Err(e),
         }
     }
 
-    output
+    Ok(output)
 }
 
 /// KCS decoder errors
@@ -95,6 +95,8 @@ pub enum Error {
     /// The sample rate is not at least twice as large as the target frequency
     #[error("Sample rate {0} is not at least twice as large as target frequency {1}")]
     NyquistViolation(usize, usize),
+    #[error(transparent)]
+    BitDecoder(#[from] BitDecoderError),
 }
 
 #[cfg(test)]
