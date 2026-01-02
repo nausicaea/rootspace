@@ -1,9 +1,9 @@
 use self::bit_decoder::{BitDecoder, Error};
 use crate::ring_buffer::RingBuffer;
 use crate::util;
+use crate::util::samples_per_bit;
 use itertools::Itertools;
 use num_traits::Signed;
-use std::borrow::Borrow;
 use std::task::Poll;
 
 mod bit_decoder;
@@ -13,27 +13,17 @@ where
     N: Copy + Signed,
     I: IntoIterator<Item = N>,
 {
-    // Determine how many audio samples are used to encode a single bit
-    #[allow(
-        clippy::cast_sign_loss,
-        clippy::cast_precision_loss,
-        clippy::cast_possible_truncation
-    )]
-    let samples_per_bit: usize = (sample_rate as f32 * 8.0 / target_freq as f32).abs().round() as usize;
-
-    let framed_iter = samples.into_iter()
-        // Retrieve the raw sample data
-        .map(|sample| *sample.borrow())
-        // Separate the individual interleaved channels
-        .chunks(channels);
-
     // Create an iterator over all audio samples, grouped by channel, indexed by time and channel
-    let per_channel_iter = framed_iter.into_iter()
-        // Create an index for each channel
-        .flat_map(std::iter::Iterator::enumerate)
+    let per_channel_iter = samples.into_iter()
+        // Index into each sample (remember: channels are interleaved)
+        .enumerate()
         // Group by channels, thus de-interleaving audio samples for each channel
-        .chunk_by(|(channel_idx, _)| *channel_idx);
+        .chunk_by(|(sample_idx, _)| sample_idx % channels);
 
+    // This tells us how much we need to skip forward when decoding each byte
+    let samples_per_bit: usize = samples_per_bit(sample_rate, target_freq);
+
+    // Decode each channel separately
     per_channel_iter
         .into_iter()
         .map(|(_, channel_samples)| decode_channel(channel_samples.map(|(_, sample)| sample), samples_per_bit))

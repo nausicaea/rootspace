@@ -11,6 +11,16 @@ pub const fn to_sign_change(i: u8, previous: &mut u8) -> u8 {
     o
 }
 
+/// Determine how many audio samples are used to encode a single bit
+#[allow(
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation
+)]
+pub fn samples_per_bit(sample_rate: usize, target_freq: usize) -> usize {
+    (sample_rate as f32 * 8.0 / target_freq as f32).round() as usize
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
