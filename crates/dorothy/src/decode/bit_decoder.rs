@@ -5,8 +5,8 @@ use std::task::Poll;
 #[derive(Debug)]
 pub struct BitDecoder<'lt, I> {
     state: State,
+    look_behind: RingBuffer<u8>,
     iter: &'lt mut I,
-    look_behind: &'lt mut RingBuffer<u8>,
     samples_per_bit: usize,
 }
 
@@ -14,11 +14,11 @@ impl<'lt, I> BitDecoder<'lt, I>
 where
     I: Iterator<Item = u8>,
 {
-    pub fn new(iter: &'lt mut I, look_behind: &'lt mut RingBuffer<u8>, samples_per_bit: usize) -> Self {
+    pub fn new(iter: &'lt mut I, samples_per_bit: usize) -> Self {
         Self {
             state: State::default(),
+            look_behind: RingBuffer::new(samples_per_bit),
             iter,
-            look_behind,
             samples_per_bit,
         }
     }
@@ -31,7 +31,7 @@ where
         let mut output = Poll::Pending;
         self.state = self
             .state
-            .next(&mut self.iter, self.look_behind, self.samples_per_bit, &mut output);
+            .next(&mut self.iter, &mut self.look_behind, self.samples_per_bit, &mut output);
         output
     }
 }

@@ -1,5 +1,4 @@
 use self::bit_decoder::{BitDecoder, Error as BitDecoderError};
-use crate::ring_buffer::RingBuffer;
 use crate::util;
 use crate::util::samples_per_bit;
 use itertools::Itertools;
@@ -60,14 +59,13 @@ where
     S: Copy + Signed,
 {
     // Per-channel decoder state
-    let mut look_behind: RingBuffer<u8> = RingBuffer::new(samples_per_bit);
     let mut output = Vec::default();
 
     let mut sign_change_iter = channel_data
         .map(|sample| util::to_sign_bit(sample))
         .scan(0_u8, |p, sample| Some(util::to_sign_change(sample, p)));
 
-    let mut fsm = BitDecoder::new(sign_change_iter.by_ref(), &mut look_behind, samples_per_bit);
+    let mut fsm = BitDecoder::new(sign_change_iter.by_ref(), samples_per_bit);
     while !fsm.is_complete() {
         match fsm.poll() {
             Poll::Pending => (),
