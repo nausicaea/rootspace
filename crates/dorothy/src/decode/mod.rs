@@ -2,7 +2,7 @@ use self::bit_decoder::{BitDecoder, Error as BitDecoderError};
 use crate::util;
 use crate::util::{Sign, samples_per_bit};
 use itertools::Itertools;
-use num_traits::{Signed, Zero};
+use num_traits::{ConstZero, Signed};
 use std::num::NonZeroUsize;
 use std::task::Poll;
 
@@ -28,7 +28,7 @@ pub fn decode<N, I>(
     samples: I,
 ) -> Result<Vec<Vec<u8>>, Error>
 where
-    N: Copy + Signed + Zero + PartialOrd,
+    N: Copy + Signed + ConstZero + PartialOrd,
     I: IntoIterator<Item = N>,
 {
     let channels = channels.get();
@@ -60,7 +60,7 @@ where
 
 fn decode_channel<S>(samples: impl Iterator<Item = S>, samples_per_bit: usize) -> Vec<u8>
 where
-    S: Copy + Signed + Zero + PartialOrd,
+    S: Copy + Signed + ConstZero + PartialOrd,
 {
     // Each channel may produce independent output
     let mut output = Vec::default();

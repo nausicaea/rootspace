@@ -1,16 +1,23 @@
-use num_traits::{Signed, Zero};
+use num_traits::{ConstZero, Signed};
 
-pub fn to_sign_bit<S: Copy + Signed + Zero + PartialOrd>(i: S) -> Sign {
-    if i < S::zero() {
-        Sign::Negative
-    } else {
+/// These values are used to split a byte into individual bits during encoding / decoding
+pub const BITMASKS: [u8; 8] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
+
+/// Determine if the input is negative or non-negative. `Sign` is an artificial
+/// bound, but the function just doesn't make sense otherwise,
+pub fn to_sign_bit<S: Copy + Signed + ConstZero + PartialOrd>(i: S) -> Sign {
+    if i >= S::ZERO {
         Sign::NonNegative
+    } else {
+        Sign::Negative
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Sign {
+    /// Represents a negative number
     Negative,
+    /// Represents a positive number or zero
     NonNegative,
 }
 
@@ -79,5 +86,3 @@ mod tests {
         }
     }
 }
-
-pub const BITMASKS: [u8; 8] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
