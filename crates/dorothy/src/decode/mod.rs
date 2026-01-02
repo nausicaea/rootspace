@@ -54,16 +54,18 @@ where
     Ok(output)
 }
 
-fn decode_channel<S>(channel_data: impl Iterator<Item = S>, samples_per_bit: usize) -> Vec<u8>
+fn decode_channel<S>(samples: impl Iterator<Item = S>, samples_per_bit: usize) -> Vec<u8>
 where
     S: Copy + Signed,
 {
-    // Per-channel decoder state
+    // Each channel may produce independent output
     let mut output = Vec::default();
 
-    let mut sign_change_iter = channel_data
-        .map(|sample| util::to_sign_bit(sample))
-        .scan(0_u8, |p, sample| Some(util::to_sign_change(sample, p)));
+    // Perform edge detection on the audio signal, replacing each sample with `1_u8` if the sign
+    // has changed wrt. to the previous sample, or `0_u8` if it stayed the same.
+    let mut sign_change_iter = samples.scan(0_u8, |p, sample| {
+        Some(util::to_sign_change(util::to_sign_bit(sample), p))
+    });
 
     let mut fsm = BitDecoder::new(sign_change_iter.by_ref(), samples_per_bit);
     while !fsm.is_complete() {
@@ -118,7 +120,8 @@ mod tests {
             NonZeroUsize::new(spec.sample_rate as usize).unwrap(),
             unsafe { NonZeroUsize::new_unchecked(2400) },
             r.into_samples::<i16>().map(|s| s.unwrap()),
-        ).unwrap();
+        )
+        .unwrap();
 
         let mut expected_data = Vec::new();
         BufReader::new(File::open(TEST_DIR.join(expected)).unwrap())
