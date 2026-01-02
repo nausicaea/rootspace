@@ -4,15 +4,34 @@ use crate::util;
 use crate::util::samples_per_bit;
 use itertools::Itertools;
 use num_traits::Signed;
+use std::num::NonZeroUsize;
 use std::task::Poll;
 
 mod bit_decoder;
 
-pub fn decode<N, I>(channels: usize, sample_rate: usize, target_freq: usize, samples: I) -> Vec<Vec<u8>>
+/// Given an audio signal with a known sample rate, and number of channels, decode a
+/// frequency-shift-keyed (FSK) signal in the vein of the Kansas City Standard (KCS).
+///
+/// # Assumptions
+///
+/// 1. The `sample_rate` is at least twice as large as the `target_freq` (Nyquist)
+/// 2. Binary one `0b01` is represented by the `target_freq` frequency
+/// 3. Each audio sample is represented by a signed number (i.e. `i8`, `i16`, `f32`, etc.)
+/// 4. Audio channels are interleaved
+pub fn decode<N, I>(
+    channels: NonZeroUsize,
+    sample_rate: NonZeroUsize,
+    target_freq: NonZeroUsize,
+    samples: I,
+) -> Vec<Vec<u8>>
 where
     N: Copy + Signed,
     I: IntoIterator<Item = N>,
 {
+    let channels = channels.get();
+    let sample_rate = sample_rate.get();
+    let target_freq = target_freq.get();
+
     // Create an iterator over all audio samples, grouped by channel, indexed by time and channel
     let per_channel_iter = samples.into_iter()
         // Index into each sample (remember: channels are interleaved)
@@ -62,6 +81,7 @@ mod tests {
     use crate::decode::decode;
     use hound::WavReader;
     use rstest::rstest;
+    use std::num::NonZeroUsize;
     use std::{
         fs::File,
         io::{BufReader, Read},
@@ -84,9 +104,9 @@ mod tests {
         assert!(spec.bits_per_sample <= 16, "Bits per sample should be at most 16");
 
         let output = decode(
-            spec.channels as usize,
-            spec.sample_rate as usize,
-            2400,
+            NonZeroUsize::new(spec.channels as usize).unwrap(),
+            NonZeroUsize::new(spec.sample_rate as usize).unwrap(),
+            unsafe { NonZeroUsize::new_unchecked(2400) },
             r.into_samples::<i16>().map(|s| s.unwrap()),
         );
 
