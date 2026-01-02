@@ -54,16 +54,19 @@ impl State {
     const HIGH: usize = 12;
 
     fn next(
-        &self,
+        self,
         sign_changes: &mut impl Iterator<Item = SignChange>,
         look_behind: &mut RingBuffer<SignChange>,
         samples_per_bit: usize,
         output: &mut Poll<Result<u8, Error>>,
     ) -> Self {
         use State::{Complete, DecodeBit, DetectStartBit, DetectStopBits, Initialize};
-        match *self {
+        match self {
             Initialize => {
-                look_behind.extend(sign_changes.take(samples_per_bit - 1));
+                if let Err(e) = try_extend_n(sign_changes, look_behind, samples_per_bit - 1) {
+                    *output = Poll::Ready(Err(e));
+                    return Complete;
+                }
                 DetectStartBit
             }
             DetectStartBit => {
@@ -80,7 +83,10 @@ impl State {
             }
             DecodeBit { mask_idx, mut byte } => {
                 if mask_idx < BITMASKS.len() {
-                    look_behind.extend(sign_changes.take(samples_per_bit));
+                    if let Err(e) = try_extend_n(sign_changes, look_behind, samples_per_bit) {
+                        *output = Poll::Ready(Err(e));
+                        return Complete;
+                    }
                     if look_behind.count_changed() >= Self::HIGH {
                         byte |= BITMASKS[mask_idx];
                     }
@@ -93,7 +99,10 @@ impl State {
                 }
             }
             DetectStopBits(byte) => {
-                look_behind.extend(sign_changes.take(2 * samples_per_bit));
+                if let Err(e) = try_extend_n(sign_changes, look_behind, 2 * samples_per_bit) {
+                    *output = Poll::Ready(Err(e));
+                    return Complete;
+                }
                 if look_behind.count_changed() >= Self::HIGH {
                     *output = Poll::Ready(Ok(byte));
                     Initialize
@@ -107,10 +116,22 @@ impl State {
     }
 }
 
+fn try_extend_n(i: &mut impl Iterator<Item = SignChange>, look_behind: &mut RingBuffer<SignChange>, n: usize) -> Result<(), Error> {
+    let buf = i.take(n).collect::<Vec<_>>();
+    if buf.len() == n {
+        look_behind.extend(buf);
+        Ok(())
+    } else {
+        Err(Error::UnexpectedEndOfIterator)
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("The sample iterator does not have anymore elements")]
+    #[error("Not an error: The sample iterator is complete")]
     EndOfIterator,
+    #[error("Expected additional elements in the iterator")]
+    UnexpectedEndOfIterator,
     #[error("Could not detect one or more stop bits")]
     MissingStopBits,
 }
