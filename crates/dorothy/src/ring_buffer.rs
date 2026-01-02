@@ -14,7 +14,7 @@ impl<T> RingBuffer<T> {
         self.0.push_front(value);
         self.truncate();
     }
-    
+
     pub fn front(&self) -> Option<&T> {
         self.0.front()
     }
@@ -45,13 +45,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ring_buffer_initializes_with_size_plus_one() {
+    fn initializes_with_size_plus_one() {
         let buf: RingBuffer<u8> = RingBuffer::new(1);
         assert_eq!(buf.0.capacity(), 2);
     }
 
     #[test]
-    fn ring_buffer_truncate_keeps_the_deque_length_constant() {
+    fn truncate_keeps_the_deque_length_constant() {
         let mut buf: RingBuffer<u8> = RingBuffer::new(2);
         assert_eq!(buf.0, &[]);
         buf.truncate();
@@ -68,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn ring_buffer_push_single_element() {
+    fn push_single_element() {
         let mut buf: RingBuffer<u8> = RingBuffer::new(1);
         buf.push_front(1);
         assert_eq!(buf.0.len(), 1);
@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn ring_buffer_push_drops_off_excess_as_fifo() {
+    fn push_drops_off_excess_as_fifo() {
         let mut buf: RingBuffer<u8> = RingBuffer::new(2);
         buf.push_front(1);
         buf.push_front(2);
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn ring_buffer_extend_drops_off_excess_as_fifo() {
+    fn extend_drops_off_excess_as_fifo() {
         let mut buf: RingBuffer<u8> = RingBuffer::new(2);
         buf.extend([2, 3, 4]);
         assert_eq!(buf.0.len(), 2);

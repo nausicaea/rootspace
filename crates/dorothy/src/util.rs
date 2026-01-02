@@ -5,7 +5,7 @@ pub const BITMASKS: [u8; 8] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
 
 /// Determine if the input is negative or non-negative. `Sign` is an artificial
 /// bound, but the function just doesn't make sense otherwise,
-pub fn to_sign_bit<S: Copy + Signed + ConstZero + PartialOrd>(i: S) -> Sign {
+pub fn to_sign<S: Copy + Signed + ConstZero + PartialOrd>(i: S) -> Sign {
     if i >= S::ZERO {
         Sign::NonNegative
     } else {
@@ -43,14 +43,14 @@ pub enum SignChange {
     clippy::cast_possible_truncation
 )]
 pub const fn samples_per_bit(sample_rate: usize, target_freq: usize) -> usize {
-    (sample_rate as f32 * 8.0 / target_freq as f32).round() as usize
+    (sample_rate << 3) / target_freq
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use proptest::prelude::{Just, Strategy};
-    use proptest::{prop_assert_eq, prop_oneof, proptest};
+    use proptest::{prop_assert_eq, prop_compose, prop_oneof, proptest};
     use rstest::rstest;
 
     fn sign() -> impl Strategy<Value = Sign> {
@@ -60,18 +60,33 @@ mod tests {
         }
     }
 
+    prop_compose! {
+        fn sr_and_tf()(sr in 2_usize..(usize::MAX >> 3))(sr in Just(sr), tf in 1..=(sr >> 1)) -> (usize, usize) {
+            (sr, tf)
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn samples_per_bit_f32_and_usize_are_equivalent((sr, tf) in sr_and_tf()) {
+            let spb_f32 = (sr as f32 * 8.0 / tf as f32).floor() as usize;
+            let spb_usize = samples_per_bit(sr, tf);
+            assert_eq!(spb_f32, spb_usize);
+        }
+    }
+
     #[rstest]
-    fn to_sign_bit_returns_one_for_negative_numbers_and_zero_otherwise(#[values(-2, 0, 2)] input: i16) {
+    fn to_sign_detects_sign_special(#[values(-2, 0, 2)] input: i16) {
         assert_eq!(
-            to_sign_bit(input),
+            to_sign(input),
             if input < 0 { Sign::Negative } else { Sign::NonNegative }
         );
     }
 
     proptest! {
         #[test]
-        fn to_sign_bit_is_one_for_negative_input(input: i16) {
-            prop_assert_eq!(to_sign_bit(input), if input < 0 { Sign::Negative } else { Sign::NonNegative });
+        fn to_sign_detects_sign(input: i16) {
+            prop_assert_eq!(to_sign(input), if input < 0 { Sign::Negative } else { Sign::NonNegative });
         }
 
         #[test]

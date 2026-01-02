@@ -5,14 +5,14 @@ use std::task::Poll;
 type IndexedSignChange = (usize, usize, SignChange);
 
 #[derive(Debug)]
-pub struct BitDecoder<I> {
+pub struct ByteDecoder<I> {
     state: State,
     look_behind: RingBuffer<IndexedSignChange>,
     iter: I,
     samples_per_bit: usize,
 }
 
-impl<I> BitDecoder<I>
+impl<I> ByteDecoder<I>
 where
     I: Iterator<Item = IndexedSignChange>,
 {
