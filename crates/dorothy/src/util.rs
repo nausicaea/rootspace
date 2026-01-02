@@ -35,15 +35,15 @@ pub enum SignChange {
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation
 )]
-pub fn samples_per_bit(sample_rate: usize, target_freq: usize) -> usize {
+pub const fn samples_per_bit(sample_rate: usize, target_freq: usize) -> usize {
     (sample_rate as f32 * 8.0 / target_freq as f32).round() as usize
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use proptest::prelude::{Arbitrary, Just, Strategy};
-    use proptest::{prop_assert_eq, prop_compose, prop_oneof, proptest};
+    use proptest::prelude::{Just, Strategy};
+    use proptest::{prop_assert_eq, prop_oneof, proptest};
     use rstest::rstest;
 
     fn sign() -> impl Strategy<Value = Sign> {
