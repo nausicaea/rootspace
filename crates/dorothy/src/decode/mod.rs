@@ -1,8 +1,8 @@
 use self::bit_decoder::{BitDecoder, Error as BitDecoderError};
 use crate::util;
-use crate::util::samples_per_bit;
+use crate::util::{Sign, samples_per_bit};
 use itertools::Itertools;
-use num_traits::Signed;
+use num_traits::{Signed, Zero};
 use std::num::NonZeroUsize;
 use std::task::Poll;
 
@@ -13,10 +13,14 @@ mod bit_decoder;
 ///
 /// # Assumptions
 ///
-/// 1. The `sample_rate` is at least twice as large as the `target_freq` (Nyquist)
+/// 1. The `sample_rate` is at least twice as large as `target_freq` (Nyquist)
 /// 2. Binary one `0b01` is represented by the `target_freq` frequency
 /// 3. Each audio sample is represented by a signed number (i.e. `i8`, `i16`, `f32`, etc.)
 /// 4. Audio channels are interleaved
+///
+/// # Errors
+///
+/// 1. Errors with [`Error::NyquistViolation`] if the `sample_rate` is not at least twice as large as `target_freq`
 pub fn decode<N, I>(
     channels: NonZeroUsize,
     sample_rate: NonZeroUsize,
@@ -24,7 +28,7 @@ pub fn decode<N, I>(
     samples: I,
 ) -> Result<Vec<Vec<u8>>, Error>
 where
-    N: Copy + Signed,
+    N: Copy + Signed + Zero + PartialOrd,
     I: IntoIterator<Item = N>,
 {
     let channels = channels.get();
@@ -56,14 +60,14 @@ where
 
 fn decode_channel<S>(samples: impl Iterator<Item = S>, samples_per_bit: usize) -> Vec<u8>
 where
-    S: Copy + Signed,
+    S: Copy + Signed + Zero + PartialOrd,
 {
     // Each channel may produce independent output
     let mut output = Vec::default();
 
-    // Perform edge detection on the audio signal, replacing each sample with `1_u8` if the sign
-    // has changed wrt. to the previous sample, or `0_u8` if it stayed the same.
-    let mut sign_change_iter = samples.scan(0_u8, |p, sample| {
+    // Perform edge detection on the audio signal, replacing each sample with `SignChange::Changed` if the sign
+    // has changed wrt. to the previous sample, or `SignChange::Unchanged` if it stayed the same.
+    let mut sign_change_iter = samples.scan(Sign::NonNegative, |p, sample| {
         Some(util::to_sign_change(util::to_sign_bit(sample), p))
     });
 
@@ -80,8 +84,10 @@ where
     output
 }
 
+/// KCS decoder errors
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// The sample rate is not at least twice as large as the target frequency
     #[error("Sample rate {0} is not at least twice as large as target frequency {1}")]
     NyquistViolation(usize, usize),
 }

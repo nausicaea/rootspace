@@ -1,6 +1,6 @@
+use crate::util::SignChange;
 use std::borrow::Borrow;
 use std::collections::VecDeque;
-use std::iter::Sum;
 
 #[derive(Debug, Clone, Default)]
 pub struct RingBuffer<T>(VecDeque<T>, usize);
@@ -26,9 +26,9 @@ impl<T> RingBuffer<T> {
     }
 }
 
-impl<T: Copy + Sum<T>> RingBuffer<T> {
-    pub fn sum(&self) -> T {
-        self.0.iter().copied().sum()
+impl RingBuffer<SignChange> {
+    pub fn count_changed(&self) -> usize {
+        self.0.iter().filter(|item| matches!(item, SignChange::Changed)).count()
     }
 }
 

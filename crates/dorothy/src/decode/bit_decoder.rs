@@ -1,18 +1,18 @@
 use crate::ring_buffer::RingBuffer;
-use crate::util::BITMASKS;
+use crate::util::{BITMASKS, SignChange};
 use std::task::Poll;
 
 #[derive(Debug)]
 pub struct BitDecoder<'lt, I> {
     state: State,
-    look_behind: RingBuffer<u8>,
+    look_behind: RingBuffer<SignChange>,
     iter: &'lt mut I,
     samples_per_bit: usize,
 }
 
 impl<'lt, I> BitDecoder<'lt, I>
 where
-    I: Iterator<Item = u8>,
+    I: Iterator<Item = SignChange>,
 {
     pub fn new(iter: &'lt mut I, samples_per_bit: usize) -> Self {
         Self {
@@ -55,8 +55,8 @@ impl State {
 
     fn next(
         &self,
-        sign_changes: &mut impl Iterator<Item = u8>,
-        look_behind: &mut RingBuffer<u8>,
+        sign_changes: &mut impl Iterator<Item = SignChange>,
+        look_behind: &mut RingBuffer<SignChange>,
         samples_per_bit: usize,
         output: &mut Poll<Result<u8, Error>>,
     ) -> Self {
@@ -64,7 +64,7 @@ impl State {
         match *self {
             Initialize => {
                 look_behind.extend(sign_changes.take(samples_per_bit - 1));
-                DetectStartBit(look_behind.sum() as usize)
+                DetectStartBit(look_behind.count_changed())
             }
             DetectStartBit(mut num_sign_changes) => {
                 let Some(current) = sign_changes.next() else {
@@ -72,10 +72,10 @@ impl State {
                     return Complete;
                 };
 
-                if current != 0 {
+                if matches!(current, SignChange::Changed) {
                     num_sign_changes += 1;
                 }
-                if look_behind.pop() != Some(0) {
+                if matches!(look_behind.pop(), Some(SignChange::Unchanged)) {
                     num_sign_changes -= 1;
                 }
                 look_behind.push(current);
@@ -89,7 +89,7 @@ impl State {
             DecodeBit { mask_idx, mut byte } => {
                 if mask_idx < BITMASKS.len() {
                     look_behind.extend(sign_changes.take(samples_per_bit));
-                    if look_behind.sum() as usize >= Self::HIGH {
+                    if look_behind.count_changed() >= Self::HIGH {
                         byte |= BITMASKS[mask_idx];
                     }
                     DecodeBit {
@@ -102,7 +102,7 @@ impl State {
             }
             DetectStopBits(byte) => {
                 look_behind.extend(sign_changes.take(2 * samples_per_bit));
-                if look_behind.sum() as usize >= Self::HIGH {
+                if look_behind.count_changed() >= Self::HIGH {
                     *output = Poll::Ready(Ok(byte));
                     Initialize
                 } else {
