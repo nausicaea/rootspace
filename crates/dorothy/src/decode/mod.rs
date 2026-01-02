@@ -52,7 +52,12 @@ where
     // Decode each channel separately
     let output = per_channel_iter
         .into_iter()
-        .map(|(channel_idx, channel_samples)| decode_channel(channel_samples.map(|(sample_idx, sample)| (sample_idx, channel_idx, sample)), samples_per_bit))
+        .map(|(channel_idx, channel_samples)| {
+            decode_channel(
+                channel_samples.map(|(sample_idx, sample)| (sample_idx, channel_idx, sample)),
+                samples_per_bit,
+            )
+        })
         .collect();
 
     Ok(output)
@@ -93,5 +98,4 @@ pub enum Error {
 }
 
 #[cfg(test)]
-mod tests {
-}
+mod tests {}

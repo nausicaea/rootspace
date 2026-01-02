@@ -31,7 +31,7 @@ fn decoding_files_works_as_expected(#[case] source: &str, #[case] expected: &str
         unsafe { NonZeroUsize::new_unchecked(2400) },
         r.into_samples::<i16>().map(|s| s.unwrap()),
     )
-        .unwrap();
+    .unwrap();
 
     let mut expected_data = Vec::new();
     BufReader::new(File::open(TEST_DIR.join(expected)).unwrap())
