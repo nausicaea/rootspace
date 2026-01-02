@@ -52,13 +52,13 @@ where
     // Decode each channel separately
     let output = per_channel_iter
         .into_iter()
-        .map(|(_, channel_samples)| decode_channel(channel_samples.map(|(_, sample)| sample), samples_per_bit))
+        .map(|(channel_idx, channel_samples)| decode_channel(channel_samples.map(|(sample_idx, sample)| (sample_idx, channel_idx, sample)), samples_per_bit))
         .collect();
 
     Ok(output)
 }
 
-fn decode_channel<S>(samples: impl Iterator<Item = S>, samples_per_bit: usize) -> Vec<u8>
+fn decode_channel<S>(samples: impl Iterator<Item = (usize, usize, S)>, samples_per_bit: usize) -> Vec<u8>
 where
     S: Copy + Signed + ConstZero + PartialOrd,
 {
@@ -67,11 +67,11 @@ where
 
     // Perform edge detection on the audio signal, replacing each sample with `SignChange::Changed` if the sign
     // has changed wrt. to the previous sample, or `SignChange::Unchanged` if it stayed the same.
-    let mut sign_change_iter = samples.scan(Sign::NonNegative, |p, sample| {
-        Some(util::to_sign_change(util::to_sign_bit(sample), p))
+    let sign_change_iter = samples.scan(Sign::NonNegative, |p, (sample_idx, channel_idx, sample)| {
+        Some((sample_idx, channel_idx, util::to_sign_change(util::to_sign_bit(sample), p)))
     });
 
-    let mut fsm = BitDecoder::new(sign_change_iter.by_ref(), samples_per_bit);
+    let mut fsm = BitDecoder::new(sign_change_iter, samples_per_bit);
     while !fsm.is_complete() {
         match fsm.poll() {
             Poll::Pending => (),

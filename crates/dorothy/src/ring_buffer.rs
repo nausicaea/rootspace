@@ -10,9 +10,13 @@ impl<T> RingBuffer<T> {
         Self(VecDeque::with_capacity(size + 1), size)
     }
 
-    pub fn push(&mut self, value: T) {
+    pub fn push_front(&mut self, value: T) {
         self.0.push_front(value);
         self.truncate();
+    }
+    
+    pub fn front(&self) -> Option<&T> {
+        self.0.front()
     }
 
     fn truncate(&mut self) {
@@ -22,16 +26,16 @@ impl<T> RingBuffer<T> {
     }
 }
 
-impl RingBuffer<SignChange> {
+impl RingBuffer<(usize, usize, SignChange)> {
     pub fn count_changed(&self) -> usize {
-        self.0.iter().filter(|item| matches!(item, SignChange::Changed)).count()
+        self.0.iter().filter(|(_, _, item)| matches!(item, SignChange::Changed)).count()
     }
 }
 
 impl<T: Copy, U: Borrow<T>> Extend<U> for RingBuffer<T> {
     fn extend<I: IntoIterator<Item = U>>(&mut self, iter: I) {
         for element in iter {
-            self.push(*element.borrow());
+            self.push_front(*element.borrow());
         }
     }
 }
@@ -52,12 +56,12 @@ mod tests {
         assert_eq!(buf.0, &[]);
         buf.truncate();
         assert_eq!(buf.0, &[]);
-        buf.push(1);
+        buf.push_front(1);
         assert_eq!(buf.0, &[1]);
         buf.truncate();
         assert_eq!(buf.0, &[1]);
-        buf.push(1);
-        buf.push(2);
+        buf.push_front(1);
+        buf.push_front(2);
         assert_eq!(buf.0, &[2, 1]);
         buf.truncate();
         assert_eq!(buf.0, &[2, 1]);
@@ -66,7 +70,7 @@ mod tests {
     #[test]
     fn ring_buffer_push_single_element() {
         let mut buf: RingBuffer<u8> = RingBuffer::new(1);
-        buf.push(1);
+        buf.push_front(1);
         assert_eq!(buf.0.len(), 1);
         assert_eq!(buf.0.pop_back(), Some(1));
         assert_eq!(buf.0.pop_back(), None);
@@ -75,9 +79,9 @@ mod tests {
     #[test]
     fn ring_buffer_push_drops_off_excess_as_fifo() {
         let mut buf: RingBuffer<u8> = RingBuffer::new(2);
-        buf.push(1);
-        buf.push(2);
-        buf.push(3);
+        buf.push_front(1);
+        buf.push_front(2);
+        buf.push_front(3);
         assert_eq!(buf.0.len(), 2);
         assert_eq!(buf.0.pop_back(), Some(2));
         assert_eq!(buf.0.pop_back(), Some(3));
