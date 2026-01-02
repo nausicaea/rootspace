@@ -15,10 +15,6 @@ impl<T> RingBuffer<T> {
         self.truncate();
     }
 
-    pub fn pop(&mut self) -> Option<T> {
-        self.0.pop_back()
-    }
-
     fn truncate(&mut self) {
         if self.0.len() > self.1 {
             self.0.truncate(self.1);
@@ -72,8 +68,8 @@ mod tests {
         let mut buf: RingBuffer<u8> = RingBuffer::new(1);
         buf.push(1);
         assert_eq!(buf.0.len(), 1);
-        assert_eq!(buf.pop(), Some(1));
-        assert_eq!(buf.pop(), None);
+        assert_eq!(buf.0.pop_back(), Some(1));
+        assert_eq!(buf.0.pop_back(), None);
     }
 
     #[test]
@@ -83,9 +79,9 @@ mod tests {
         buf.push(2);
         buf.push(3);
         assert_eq!(buf.0.len(), 2);
-        assert_eq!(buf.pop(), Some(2));
-        assert_eq!(buf.pop(), Some(3));
-        assert_eq!(buf.pop(), None);
+        assert_eq!(buf.0.pop_back(), Some(2));
+        assert_eq!(buf.0.pop_back(), Some(3));
+        assert_eq!(buf.0.pop_back(), None);
     }
 
     #[test]
@@ -93,8 +89,8 @@ mod tests {
         let mut buf: RingBuffer<u8> = RingBuffer::new(2);
         buf.extend([2, 3, 4]);
         assert_eq!(buf.0.len(), 2);
-        assert_eq!(buf.pop(), Some(3));
-        assert_eq!(buf.pop(), Some(4));
-        assert_eq!(buf.pop(), None);
+        assert_eq!(buf.0.pop_back(), Some(3));
+        assert_eq!(buf.0.pop_back(), Some(4));
+        assert_eq!(buf.0.pop_back(), None);
     }
 }

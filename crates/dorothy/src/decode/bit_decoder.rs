@@ -40,7 +40,7 @@ where
 enum State {
     #[default]
     Initialize,
-    DetectStartBit(usize),
+    DetectStartBit,
     DecodeBit {
         mask_idx: usize,
         byte: u8,
@@ -64,26 +64,18 @@ impl State {
         match *self {
             Initialize => {
                 look_behind.extend(sign_changes.take(samples_per_bit - 1));
-                DetectStartBit(look_behind.count_changed())
+                DetectStartBit
             }
-            DetectStartBit(mut num_sign_changes) => {
+            DetectStartBit => {
                 let Some(current) = sign_changes.next() else {
                     *output = Poll::Ready(Err(Error::EndOfIterator));
                     return Complete;
                 };
-
-                if matches!(current, SignChange::Changed) {
-                    num_sign_changes += 1;
-                }
-                if matches!(look_behind.pop(), Some(SignChange::Unchanged)) {
-                    num_sign_changes -= 1;
-                }
                 look_behind.push(current);
-
-                if num_sign_changes <= Self::LOW {
+                if look_behind.count_changed() <= Self::LOW {
                     DecodeBit { mask_idx: 0, byte: 0 }
                 } else {
-                    DetectStartBit(num_sign_changes)
+                    DetectStartBit
                 }
             }
             DecodeBit { mask_idx, mut byte } => {
