@@ -1,4 +1,4 @@
-use self::bit_decoder::{BitDecoder, Error};
+use self::bit_decoder::{BitDecoder, Error as BitDecoderError};
 use crate::ring_buffer::RingBuffer;
 use crate::util;
 use crate::util::samples_per_bit;
@@ -23,7 +23,7 @@ pub fn decode<N, I>(
     sample_rate: NonZeroUsize,
     target_freq: NonZeroUsize,
     samples: I,
-) -> Vec<Vec<u8>>
+) -> Result<Vec<Vec<u8>>, Error>
 where
     N: Copy + Signed,
     I: IntoIterator<Item = N>,
@@ -31,6 +31,10 @@ where
     let channels = channels.get();
     let sample_rate = sample_rate.get();
     let target_freq = target_freq.get();
+
+    if (target_freq << 1) > sample_rate {
+        return Err(Error::NyquistViolation(sample_rate, target_freq));
+    }
 
     // Create an iterator over all audio samples, grouped by channel, indexed by time and channel
     let per_channel_iter = samples.into_iter()
@@ -43,10 +47,12 @@ where
     let samples_per_bit: usize = samples_per_bit(sample_rate, target_freq);
 
     // Decode each channel separately
-    per_channel_iter
+    let output = per_channel_iter
         .into_iter()
         .map(|(_, channel_samples)| decode_channel(channel_samples.map(|(_, sample)| sample), samples_per_bit))
-        .collect()
+        .collect();
+
+    Ok(output)
 }
 
 fn decode_channel<S>(channel_data: impl Iterator<Item = S>, samples_per_bit: usize) -> Vec<u8>
@@ -66,12 +72,18 @@ where
         match fsm.poll() {
             Poll::Pending => (),
             Poll::Ready(Ok(output_byte)) => output.push(output_byte),
-            Poll::Ready(Err(Error::EndOfIterator)) => break,
+            Poll::Ready(Err(BitDecoderError::EndOfIterator)) => break,
             Poll::Ready(Err(e)) => panic!("{e}"),
         }
     }
 
     output
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("Sample rate {0} is not at least twice as large as target frequency {1}")]
+    NyquistViolation(usize, usize),
 }
 
 #[cfg(test)]
@@ -108,7 +120,7 @@ mod tests {
             NonZeroUsize::new(spec.sample_rate as usize).unwrap(),
             unsafe { NonZeroUsize::new_unchecked(2400) },
             r.into_samples::<i16>().map(|s| s.unwrap()),
-        );
+        ).unwrap();
 
         let mut expected_data = Vec::new();
         BufReader::new(File::open(TEST_DIR.join(expected)).unwrap())
