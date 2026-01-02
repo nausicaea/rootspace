@@ -1,7 +1,7 @@
 use num_traits::{Signed, Zero};
 
 pub fn to_sign_bit<S: Copy + Signed + Zero + PartialOrd>(i: S) -> Sign {
-    if i.signum() < S::zero() {
+    if i < S::zero() {
         Sign::Negative
     } else {
         Sign::NonNegative
