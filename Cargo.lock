@@ -991,8 +991,6 @@ dependencies = [
 name = "dorothy"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "clap",
  "hound",
  "itertools 0.14.0",
  "num-traits",

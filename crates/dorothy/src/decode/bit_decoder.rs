@@ -1,0 +1,124 @@
+use crate::ring_buffer::RingBuffer;
+use crate::util::BITMASKS;
+use std::task::Poll;
+
+#[derive(Debug)]
+pub struct BitDecoder<'lt, I> {
+    state: State,
+    iter: &'lt mut I,
+    look_behind: &'lt mut RingBuffer<u8>,
+    samples_per_bit: usize,
+}
+
+impl<'lt, I> BitDecoder<'lt, I>
+where
+    I: Iterator<Item = u8>,
+{
+    pub fn new(iter: &'lt mut I, look_behind: &'lt mut RingBuffer<u8>, samples_per_bit: usize) -> Self {
+        Self {
+            state: State::default(),
+            iter,
+            look_behind,
+            samples_per_bit,
+        }
+    }
+
+    pub const fn is_complete(&self) -> bool {
+        matches!(self.state, State::Complete)
+    }
+
+    pub fn poll(&mut self) -> Poll<Result<u8, Error>> {
+        let mut output = Poll::Pending;
+        self.state = self
+            .state
+            .next(&mut self.iter, self.look_behind, self.samples_per_bit, &mut output);
+        output
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+enum State {
+    #[default]
+    Initialize,
+    DetectStartBit(usize),
+    DecodeBit {
+        mask_idx: usize,
+        byte: u8,
+    },
+    DetectStopBits(u8),
+    Complete,
+}
+
+impl State {
+    const LOW: usize = 9;
+    const HIGH: usize = 12;
+
+    fn next(
+        &self,
+        sign_changes: &mut impl Iterator<Item = u8>,
+        look_behind: &mut RingBuffer<u8>,
+        samples_per_bit: usize,
+        output: &mut Poll<Result<u8, Error>>,
+    ) -> Self {
+        use State::{Complete, DecodeBit, DetectStartBit, DetectStopBits, Initialize};
+        match *self {
+            Initialize => {
+                look_behind.extend(sign_changes.take(samples_per_bit - 1));
+                DetectStartBit(look_behind.sum() as usize)
+            }
+            DetectStartBit(mut num_sign_changes) => {
+                let Some(current) = sign_changes.next() else {
+                    *output = Poll::Ready(Err(Error::EndOfIterator));
+                    return Complete;
+                };
+
+                if current != 0 {
+                    num_sign_changes += 1;
+                }
+                if look_behind.pop() != Some(0) {
+                    num_sign_changes -= 1;
+                }
+                look_behind.push(current);
+
+                if num_sign_changes <= Self::LOW {
+                    DecodeBit { mask_idx: 0, byte: 0 }
+                } else {
+                    DetectStartBit(num_sign_changes)
+                }
+            }
+            DecodeBit { mask_idx, mut byte } => {
+                if mask_idx < BITMASKS.len() {
+                    look_behind.extend(sign_changes.take(samples_per_bit));
+                    if look_behind.sum() as usize >= Self::HIGH {
+                        byte |= BITMASKS[mask_idx];
+                    }
+                    DecodeBit {
+                        mask_idx: mask_idx + 1,
+                        byte,
+                    }
+                } else {
+                    DetectStopBits(byte)
+                }
+            }
+            DetectStopBits(byte) => {
+                look_behind.extend(sign_changes.take(2 * samples_per_bit));
+                if look_behind.sum() as usize >= Self::HIGH {
+                    *output = Poll::Ready(Ok(byte));
+                    Initialize
+                } else {
+                    *output = Poll::Ready(Err(Error::MissingStopBits));
+                    Complete
+                }
+            }
+            Complete => Complete,
+        }
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("The sample iterator does not have anymore elements")]
+    EndOfIterator,
+    #[error("Could not detect one or more stop bits")]
+    MissingStopBits,
+}
