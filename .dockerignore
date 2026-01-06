@@ -120,7 +120,7 @@ xcuserdata/
 # Generated files
 .idea/**/contentModel.xml
 
-# Sensitive or high-churn files
+# Sensitive or HIGH-churn files
 .idea/**/dataSources/
 .idea/**/dataSources.ids
 .idea/**/dataSources.local.xml

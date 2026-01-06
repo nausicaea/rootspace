@@ -1,6 +1,6 @@
 use std::{path::PathBuf, sync::LazyLock};
 
-use dorothy::decode;
+use dorothy::{decode, encode, SquareWaveSpec};
 use hound::WavReader;
 use rstest::rstest;
 use std::num::NonZeroUsize;
@@ -10,6 +10,30 @@ use std::{
 };
 
 const TEST_DIR: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests")));
+
+#[test]
+fn roundtrip() {
+    let channels = unsafe { NonZeroUsize::new_unchecked(1) };
+    let sample_rate = unsafe { NonZeroUsize::new_unchecked(9600) };
+    let target_freq = unsafe { NonZeroUsize::new_unchecked(2400) };
+    let ones_num_periods = unsafe { NonZeroUsize::new_unchecked(8) };
+
+    let source = "Hello, World!".as_bytes();
+    let encoded = encode(
+        SquareWaveSpec {
+            offset: 128,
+            amplitude: 128,
+            sample_rate: sample_rate.get(),
+            target_freq: target_freq.get(),
+            num_periods: ones_num_periods.get(),
+        },
+        source
+    );
+    let decoded = decode(channels, sample_rate, target_freq, encoded).unwrap();
+    let decoded = &decoded[0];
+
+    assert_eq!(source, decoded);
+}
 
 #[rstest]
 #[case("hello-world.wav", "hello-world.txt")]

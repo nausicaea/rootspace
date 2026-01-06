@@ -4,10 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     rust-overlay.url = "github:oxalica/rust-overlay";
-    flake-utils = {
-      url = "github:numtide/flake-utils";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
@@ -19,13 +16,17 @@
           config.allowUnfree = true;
         };
 
-        rustToolchain = pkgs.rust-bin.stable."1.91.1".default.override {
-          extensions = [ "rust-src" "clippy" "rustfmt" ];
-        };
+        #rustEnv = pkgs.rust-bin.stable."1.91.1".default.override {
+        #  extensions = [ "rust-src" "clippy" "rustfmt" ];
+        #};
+        rustEnv = pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
+          extensions = [ "rust-src" "clippy" "rustfmt" "llvm-tools" ];
+          targets = [ "aarch64-apple-darwin" ];
+        });
       in {
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
-            rustToolchain
+            rustEnv
           ];
 
           buildInputs = with pkgs; [
@@ -37,6 +38,7 @@
             rust-analyzer
             cargo-nextest
             cargo-fuzz
+            #llvmPackages.bintools
             cargo-audit
             cargo-auditable
             cargo-machete
@@ -50,12 +52,12 @@
           shellHook = ''
             mkdir -p ~/.rust-rover/toolchain
 
-            ln -sfn ${rustToolchain}/lib ~/.rust-rover/toolchain
-            ln -sfn ${rustToolchain}/bin ~/.rust-rover/toolchain
+            ln -sfn ${rustEnv}/lib ~/.rust-rover/toolchain
+            ln -sfn ${rustEnv}/bin ~/.rust-rover/toolchain
 
             export RUST_SRC_PATH="$HOME/.rust-rover/toolchain/lib/rustlib/src/rust/library"
             export RUST_LOG="warn,rootspace=trace,griffon=info,glamour=trace"
-            export RUST_BACKTRACE=1
+            export RUST_BACKTRACE=full
           '';
         };
       }

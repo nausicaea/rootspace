@@ -63,7 +63,10 @@ where
     Ok(output)
 }
 
-fn decode_channel<S>(samples: impl Iterator<Item = (usize, usize, S)>, samples_per_bit: usize) -> Result<Vec<u8>, BitDecoderError>
+fn decode_channel<S>(
+    samples: impl Iterator<Item = (usize, usize, S)>,
+    samples_per_bit: usize,
+) -> Result<Vec<u8>, BitDecoderError>
 where
     S: Copy + Signed + ConstZero + PartialOrd,
 {

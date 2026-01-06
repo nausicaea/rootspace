@@ -5,13 +5,15 @@ publish = false
 authors = ["Eleanor Young <developer@nausicaea.net>"]
 license = "GPL-3"
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.90"
 
 [package.metadata]
 cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
+# libfuzzer-sys = { version = "0.15.3", package = "libafl_libfuzzer" }
+# libfuzzer-sys = { git = "https://github.com/AFLplusplus/LibAFL.git", package = "libafl_libfuzzer" }
 ciborium = "^0.2.0"
 plyers = { path = "../plyers" }
 serde = { version = "^1.0.0", features = ["derive"] }
