@@ -3,7 +3,6 @@ use crate::util;
 use crate::util::{Sign, samples_per_bit};
 use itertools::Itertools;
 use num_traits::{ConstZero, Signed};
-use std::num::NonZeroUsize;
 use std::task::Poll;
 
 mod byte_decoder;
@@ -22,18 +21,15 @@ mod byte_decoder;
 ///
 /// 1. Errors with [`Error::NyquistViolation`] if the `sample_rate` is not at least twice as large as `target_freq`
 pub fn decode<N, I>(
-    channels: NonZeroUsize,
-    sample_rate: NonZeroUsize,
-    target_freq: NonZeroUsize,
+    channels: usize,
+    sample_rate: usize,
+    target_freq: usize,
     samples: I,
 ) -> Result<Vec<Vec<u8>>, Error>
 where
     N: Copy + Signed + ConstZero + PartialOrd,
     I: IntoIterator<Item = N>,
 {
-    let channels = channels.get();
-    let sample_rate = sample_rate.get();
-    let target_freq = target_freq.get();
 
     if (target_freq << 1) > sample_rate {
         return Err(Error::NyquistViolation(sample_rate, target_freq));
@@ -58,7 +54,13 @@ where
                 samples_per_bit,
             )
         })
-        .collect::<Result<_, BitDecoderError>>()?;
+        .fold(Result::<Vec<Vec<u8>>, Error>::Ok(Vec::new()), |state, channel_output| {
+            match (state, channel_output) {
+                (Ok(mut s), Ok(co)) => { s.push(co); Ok(s) },
+                (Ok(s), Err(e)) => Err(Error::BitDecoder(s, e)),
+                _ => unreachable!(),
+            }
+        })?;
 
     Ok(output)
 }
@@ -98,8 +100,8 @@ pub enum Error {
     /// The sample rate is not at least twice as large as the target frequency
     #[error("Sample rate {0} is not at least twice as large as target frequency {1}")]
     NyquistViolation(usize, usize),
-    #[error(transparent)]
-    BitDecoder(#[from] BitDecoderError),
+    #[error("Decoding error: {1}\nOutput so far:\n{0:?}")]
+    BitDecoder(Vec<Vec<u8>>, #[source] BitDecoderError),
 }
 
 #[cfg(test)]

@@ -1,4 +1,3 @@
-use std::array::IntoIter;
 use crate::util::BITMASKS;
 use std::borrow::Borrow;
 use std::iter::{repeat_n, FusedIterator};
@@ -15,21 +14,21 @@ where
     padding(spec.sample_rate, padding_factor)
         .chain(data.into_iter().map(|t| *t.borrow()))
         .chain(padding(spec.sample_rate, padding_factor))
-        .flat_map(move |byte| encode_byte(spec, byte))
+        .flat_map(move |byte| encode_byte_le(spec, byte))
 }
 
 fn padding(sample_rate: usize, factor: usize) -> impl Iterator<Item = u8> {
     repeat_n(0b1, factor * sample_rate)
 }
 
-fn encode_byte(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i16> {
+fn encode_byte_le(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i16> {
     zero_pulse(spec)
-        .chain(encode_byte_unarmored(spec, byte))
+        .chain(encode_byte_le_unarmored(spec, byte))
         .chain(one_pulse(spec))
         .chain(one_pulse(spec))
 }
 
-fn encode_byte_unarmored(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i16> {
+fn encode_byte_le_unarmored(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i16> {
     BITMASKS.into_iter().flat_map(move |mask| encode_bit(spec, mask, byte))
 }
 
@@ -125,8 +124,22 @@ const fn square_wave_predicate(i: usize, period_length: usize) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use rstest::rstest;
+    use std::ops::Range;
+
+    use proptest::{prelude::Just, prop_compose, proptest, sample::select};
+    use rstest::{rstest, fixture};
     use super::*;
+
+    #[fixture]
+    fn sqw_spec() -> SquareWaveSpec {
+        SquareWaveSpec {
+            offset: 0x0080,
+            amplitude: 0x0080,
+            sample_rate: 4,
+            target_freq: 2,
+            num_periods: 2,
+        }
+    }
 
     #[rstest]
     #[case(0, 2, true)]
@@ -159,39 +172,72 @@ mod tests {
         assert_eq!(sqwave, &[-0x0080, 0x0080, -0x0080, 0x0080]);
     }
 
-    #[test]
-    fn zero_pulse_is_half_frequency_of_one_pulse_but_same_length() {
-        let spec = SquareWaveSpec {
-            offset: 0x0080,
-            amplitude: 0x0080,
-            sample_rate: 4,
-            target_freq: 2,
-            num_periods: 2,
-        };
-
-        let one = one_pulse(spec).collect::<Vec<_>>();
+    #[rstest]
+    fn zero_pulse_is_half_frequency_of_one_pulse_but_same_length(sqw_spec: SquareWaveSpec) {
+        let one = one_pulse(sqw_spec).collect::<Vec<_>>();
         assert_eq!(one.len(), 4);
         assert_eq!(one, &[0x0040, 0x00C0, 0x0040, 0x00C0]);
-        let zero = zero_pulse(spec).collect::<Vec<_>>();
+        let zero = zero_pulse(sqw_spec).collect::<Vec<_>>();
         assert_eq!(zero.len(), 4);
         assert_eq!(zero, &[0x0040, 0x0040, 0x00C0, 0x00C0]);
     }
 
-    #[test]
-    fn asdasd() {
-        let samples = encode_bit(
-            SquareWaveSpec {
-                offset: 128,
-                amplitude: 128,
-                sample_rate: 4,
-                target_freq: 2,
-                num_periods: 1,
-            },
-            0x01,
-            0xff,
-        ).collect::<Vec<_>>();
+    #[rstest]
+    fn test_encode_byte_le_unarmored(sqw_spec: SquareWaveSpec) {
+        let samples = encode_byte_le_unarmored(sqw_spec, 0x01).collect::<Vec<_>>();
+        assert_eq!(samples.len(), 4 * 8);
+        #[rustfmt::skip]
+        assert_eq!(samples, &[
+            0x0040, 0x00C0, 0x0040, 0x00C0, // 0b0000_0001 * 1
+            0x0040, 0x0040, 0x00C0, 0x00C0, // 0b0000_0010 * 0
+            0x0040, 0x0040, 0x00C0, 0x00C0, // 0b0000_0100 * 0
+            0x0040, 0x0040, 0x00C0, 0x00C0, // 0b0000_1000 * 0
+            0x0040, 0x0040, 0x00C0, 0x00C0, // 0b0001_0000 * 0
+            0x0040, 0x0040, 0x00C0, 0x00C0, // 0b0010_0000 * 0
+            0x0040, 0x0040, 0x00C0, 0x00C0, // 0b0100_0000 * 0
+            0x0040, 0x0040, 0x00C0, 0x00C0, // 0b1000_0000 * 0
+        ]);
+    }
 
-        assert_eq!(samples.len(), 2);
-        assert_eq!(samples, &[0x0040, 0x00C0]);
+    prop_compose! {
+        fn powers_of_two_u8()(p in 0_u8..7) -> u8 {
+            2 << p
+        }
+    }
+
+    fn mismatching(src: Range<u8>, el: u8) -> Vec<u8> {
+        src.filter(move |&e| e != el).collect()
+    }
+
+    prop_compose! {
+        fn mismatching_powers_of_two_u8()(p1 in 0_u8..7)(p1 in Just(p1), p2 in select(mismatching(0_u8..7, p1))) -> (u8, u8) {
+            (2 << p1, 2 << p2)
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn encode_bit_encode_same_is_always_0b1_encoded(bit in powers_of_two_u8()) {
+            let samples = encode_bit(
+                sqw_spec(),
+                bit,
+                bit,
+            ).collect::<Vec<_>>();
+
+            assert_eq!(samples.len(), 4);
+            assert_eq!(samples, &[0x0040, 0x00C0, 0x0040, 0x00C0]);
+        }
+
+        #[test]
+        fn encode_bit_encode_mismatching_is_always_0b0_encoded((b1, b2) in mismatching_powers_of_two_u8()) {
+            let samples = encode_bit(
+                sqw_spec(),
+                b1,
+                b2,
+            ).collect::<Vec<_>>();
+
+            assert_eq!(samples.len(), 4);
+            assert_eq!(samples, &[0x0040, 0x0040, 0x00C0, 0x00C0]);
+        }
     }
 }
