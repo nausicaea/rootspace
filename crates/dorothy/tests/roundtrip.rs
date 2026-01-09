@@ -17,24 +17,18 @@ fn roundtrip(kcs_spec: SquareWaveSpec) {
     let channels = 1;
 
     let source = "Hello, World!".as_bytes();
-    let encoded = encode(kcs_spec, source).collect::<Vec<_>>();
-
-    let mut wav_writer = hound::WavWriter::create(
-        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/roundtrip.wav"),
-        hound::WavSpec {
-            channels,
-            sample_rate: kcs_spec.sample_rate as u32,
-            bits_per_sample: 8,
-            sample_format: hound::SampleFormat::Int,
-        },
-    )
-    .unwrap();
-    //let mut wav_writer_i16 = wav_writer.get_i16_writer(encoded.len() as u32);
-    encoded.iter().for_each(|sample| wav_writer.write_sample(*sample).unwrap());
-    //wav_writer_i16.flush().unwrap();
-    wav_writer.finalize().unwrap();
-
+    let encoded = encode(kcs_spec, 5, source).collect::<Vec<_>>();
     let decoded = decode(channels as usize, kcs_spec.sample_rate, kcs_spec.target_freq, encoded).unwrap();
+
+    // let spec_ex = hound::WavSpecEx { 
+    //     spec: hound::WavSpec { 
+    //         channels: todo!(), 
+    //         sample_rate: todo!(), 
+    //         bits_per_sample: todo!(), 
+    //         sample_format: todo!(),
+    //     }, 
+    //     bytes_per_sample: todo!(),
+    // };
 
     assert_eq!(&decoded[0], source);
 }

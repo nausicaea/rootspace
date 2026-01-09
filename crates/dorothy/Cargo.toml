@@ -12,11 +12,15 @@ rust-version.workspace = true
 itertools = "0.14.0"
 num-traits = "0.2.19"
 thiserror = "2.0.17"
+hound = "3.5.1"
 
 [dev-dependencies]
 proptest = "1.9.0"
 rstest = "0.26.1"
-hound = "3.5.1"
 
 [lints]
 workspace = true
+
+[[bin]]
+name = "kcs_encode"
+

@@ -47,9 +47,12 @@ pub const fn samples_per_bit(sample_rate: usize, target_freq: usize) -> usize {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
+    use std::ops::Range;
+
     use super::*;
     use proptest::prelude::{Just, Strategy};
+    use proptest::sample::select;
     use proptest::{prop_assert_eq, prop_compose, prop_oneof, proptest};
     use rstest::rstest;
 
@@ -61,8 +64,30 @@ mod tests {
     }
 
     prop_compose! {
-        fn sr_and_tf()(sr in 2_usize..(usize::MAX >> 3))(sr in Just(sr), tf in 1..=(sr >> 1)) -> (usize, usize) {
+        pub fn sr_and_tf()(sr in 2_usize..(usize::MAX >> 3))(sr in Just(sr), tf in 1..=(sr >> 1)) -> (usize, usize) {
             (sr, tf)
+        }
+    }
+
+    prop_compose! {
+        pub fn odd_usize()(i in 1..(usize::MAX / 2)) -> usize {
+            i * 2 - 1
+        }
+    }
+
+    prop_compose! {
+        pub fn powers_of_two_u8()(p in 0_u8..7) -> u8 {
+            2 << p
+        }
+    }
+
+    fn mismatching(src: Range<u8>, el: u8) -> Vec<u8> {
+        src.filter(move |&e| e != el).collect()
+    }
+
+    prop_compose! {
+        pub fn mismatching_powers_of_two_u8()(p1 in 0_u8..7)(p1 in Just(p1), p2 in select(mismatching(0_u8..7, p1))) -> (u8, u8) {
+            (2 << p1, 2 << p2)
         }
     }
 

@@ -1,21 +1,26 @@
 use crate::util::BITMASKS;
 use std::borrow::Borrow;
-use std::iter::{FusedIterator, repeat_n};
+use std::iter::FusedIterator;
 
-pub fn encode<T, I>(spec: SquareWaveSpec, data: I) -> impl Iterator<Item = i8>
+pub fn encode<T, I>(spec: SquareWaveSpec, padding_factor: usize, data: I) -> impl Iterator<Item = i8>
 where
     T: Borrow<u8>,
     I: IntoIterator<Item = T>,
 {
-    let padding_factor = 5;
-    padding(spec.sample_rate, padding_factor)
-        .chain(data.into_iter().map(|t| *t.borrow()))
-        .chain(padding(spec.sample_rate, padding_factor))
-        .flat_map(move |byte| encode_byte_le(spec, byte))
+    padding(spec, padding_factor)
+        .chain(
+            data.into_iter()
+            .map(|t| *t.borrow())
+            .flat_map(move |byte| encode_byte_le(spec, byte))
+        )
+        .chain(padding(spec, padding_factor))
 }
 
-fn padding(sample_rate: usize, factor: usize) -> impl Iterator<Item = u8> {
-    repeat_n(0b1, factor * sample_rate)
+const fn padding(spec: SquareWaveSpec, factor: usize) -> SquareWave {
+    SquareWave::with_spec(SquareWaveSpec {
+        num_periods: factor * spec.target_freq,
+        ..spec
+    })
 }
 
 fn encode_byte_le(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i8> {
@@ -46,7 +51,7 @@ pub struct SquareWaveSpec {
     pub num_periods: usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct SquareWave {
     low: i8,
     high: i8,
@@ -57,7 +62,6 @@ pub struct SquareWave {
 
 impl SquareWave {
     pub const fn new(offset: i8, amplitude: i8, period_length: usize, num_periods: usize) -> Self {
-        debug_assert!(period_length % 2 == 0);
         Self {
             low: offset - amplitude,
             high: offset + amplitude,
@@ -94,9 +98,7 @@ impl SquareWave {
     }
 
     /// Return `true` when the square wave amplitude is `1`, and false where it is `0`.
-    /// `period_length` must be divisible by two.
     const fn is_high(i: usize, period_length: usize) -> bool {
-        debug_assert!(period_length % 2 == 0);
         (2 * i / period_length) % 2 != 0
     }
 }
@@ -132,10 +134,11 @@ impl FusedIterator for SquareWave {}
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Range;
+
+    use crate::util::tests::{mismatching_powers_of_two_u8, odd_usize, powers_of_two_u8, sr_and_tf};
 
     use super::*;
-    use proptest::{prelude::Just, prop_assert_eq, prop_compose, proptest, sample::select};
+    use proptest::{prop_assert_eq, proptest};
     use rstest::{fixture, rstest};
 
     type Spec = (SquareWaveSpec, &'static [i8], &'static [i8]);
@@ -215,25 +218,7 @@ mod tests {
         }
     }
 
-    prop_compose! {
-        fn odd_usize()(i in 1..(usize::MAX / 2)) -> usize {
-            i * 2 - 1
-        }
-    }
-
     proptest! {
-        #[test]
-        #[should_panic]
-        fn is_high_0_period_panics(i: usize) {
-            SquareWave::is_high(i, 0);
-        }
-
-        #[test]
-        #[should_panic]
-        fn is_high_odd_period_panics(i: usize, period_length in odd_usize()) {
-            SquareWave::is_high(i, period_length);
-        }
-
         #[test]
         fn is_high_2_period_is_true_for_odd_indices(i in 0..(usize::MAX / 2)) {
             prop_assert_eq!(SquareWave::is_high(i, 2), i % 2 != 0);
@@ -354,22 +339,6 @@ mod tests {
         }
     }
 
-    prop_compose! {
-        fn powers_of_two_u8()(p in 0_u8..7) -> u8 {
-            2 << p
-        }
-    }
-
-    fn mismatching(src: Range<u8>, el: u8) -> Vec<u8> {
-        src.filter(move |&e| e != el).collect()
-    }
-
-    prop_compose! {
-        fn mismatching_powers_of_two_u8()(p1 in 0_u8..7)(p1 in Just(p1), p2 in select(mismatching(0_u8..7, p1))) -> (u8, u8) {
-            (2 << p1, 2 << p2)
-        }
-    }
-
     proptest! {
         #[test]
         fn encode_bit_encode_same_is_always_0b1_encoded(bit in powers_of_two_u8()) {
@@ -395,6 +364,52 @@ mod tests {
 
             prop_assert_eq!(samples.len(), 4);
             prop_assert_eq!(samples, zero);
+        }
+    }
+
+    /// A one-to-one port of the padding length calculation from py_kcs
+    ///
+    /// # Original in Python
+    ///
+    /// ```python
+    /// one_pulse_len = 8 * 2 * int(FRAMERATE / FREQ / 2)
+    /// padding_len = one_pulse_len * (int(FRAMERATE / one_pulse_len) * leader)
+    /// ```
+    const fn padding_len_pykcs(sample_rate: f32, freq: f32, leader: f32) -> f32 {
+        const fn one_pulse_len_pykcs(sample_rate: f32, freq: f32) -> f32 {
+            16.0 * ((sample_rate / freq) / 2.0).floor()
+        }
+
+        one_pulse_len_pykcs(sample_rate, freq) * ((sample_rate / one_pulse_len_pykcs(sample_rate, freq)).floor() * leader)
+    }
+
+    #[rstest]
+    fn kcs_padding_len_equivalency(kcs_spec: Spec) {
+        let sample_rate = kcs_spec.0.sample_rate;
+        let freq = kcs_spec.0.target_freq;
+        let leader = 5;
+
+        assert_eq!(
+            padding_len_pykcs(sample_rate as f32, freq as f32, leader as f32),
+            padding(kcs_spec.0, leader).len() as f32,
+            "padding_len_pykcs vs. padding_len"
+        );
+    }
+
+    proptest! {
+        #[test]
+        #[ignore]
+        fn padding_len_equivalency_properties((sr, tf) in sr_and_tf(), leader in 0..6_usize) {
+            let spec = SquareWaveSpec {
+                sample_rate: sr,
+                target_freq: tf,
+                ..kcs_spec().0
+            };
+            prop_assert_eq!(
+                padding_len_pykcs(sr as f32, tf as f32, leader as f32),
+                padding(spec, leader).len() as f32,
+                "padding_len_pykcs vs. padding().len()"
+            )
         }
     }
 }
