@@ -12,7 +12,7 @@ const TEST_DIR: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from(concat!(env!(
 
 #[rstest]
 #[case("hello-world.wav", "hello-world.txt")]
-fn decoding_files_works_as_expected(#[case] source: &str, #[case] expected: &str) {
+fn decode_files_from_py_kcs(#[case] source: &str, #[case] expected: &str) {
     let r = WavReader::open(TEST_DIR.join(source)).unwrap();
 
     // Verify decoder assumptions
@@ -25,8 +25,8 @@ fn decoding_files_works_as_expected(#[case] source: &str, #[case] expected: &str
     assert!(spec.bits_per_sample <= 16, "Bits per sample should be at most 16");
 
     let output = decode(
-        spec.channels as usize,
-        spec.sample_rate as usize,
+        spec.channels,
+        spec.sample_rate,
         2400,
         r.into_samples::<i16>().map(|s| s.unwrap()),
     )

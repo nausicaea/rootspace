@@ -20,7 +20,7 @@ mod byte_decoder;
 /// # Errors
 ///
 /// 1. Errors with [`Error::NyquistViolation`] if the `sample_rate` is not at least twice as large as `target_freq`
-pub fn decode<N, I>(channels: usize, sample_rate: usize, target_freq: usize, samples: I) -> Result<Vec<Vec<u8>>, Error>
+pub fn decode<N, I>(channels: u16, sample_rate: u32, target_freq: u32, samples: I) -> Result<Vec<Vec<u8>>, Error>
 where
     N: Copy + Signed + ConstZero + PartialOrd,
     I: IntoIterator<Item = N>,
@@ -30,14 +30,14 @@ where
     }
 
     // This tells us how much we need to skip forward when decoding each byte
-    let samples_per_bit: usize = samples_per_bit(sample_rate, target_freq);
+    let samples_per_bit: usize = samples_per_bit(sample_rate as usize, target_freq as usize);
 
     // Create an iterator over all audio samples, grouped by channel, indexed by time and channel
     let per_channel_iter = samples.into_iter()
         // Index into each sample (remember: channels are interleaved)
         .enumerate()
         // Group by channels, thus de-interleaving audio samples for each channel
-        .chunk_by(|(sample_idx, _)| sample_idx % channels);
+        .chunk_by(|(sample_idx, _)| sample_idx % (channels as usize));
 
     // Decode each channel separately
     let output = per_channel_iter
@@ -97,7 +97,7 @@ where
 pub enum Error {
     /// The sample rate is not at least twice as large as the target frequency
     #[error("Sample rate {0} is not at least twice as large as target frequency {1}")]
-    NyquistViolation(usize, usize),
+    NyquistViolation(u32, u32),
     #[error("Decoding error: {1}\nOutput so far:\n{0:?}")]
     BitDecoder(Vec<Vec<u8>>, #[source] BitDecoderError),
 }

@@ -18,7 +18,7 @@ where
 
 const fn padding(spec: SquareWaveSpec, factor: usize) -> SquareWave {
     SquareWave::with_spec(SquareWaveSpec {
-        num_periods: factor * spec.target_freq,
+        num_periods: factor * (spec.target_freq as usize),
         ..spec
     })
 }
@@ -139,7 +139,7 @@ impl FusedIterator for SquareWave {}
 #[cfg(test)]
 mod tests {
 
-    use crate::util::tests::{mismatching_powers_of_two_u8, odd_usize, powers_of_two_u8, sr_and_tf};
+    use crate::util::tests::{mismatching_powers_of_two_u8, powers_of_two_u8, sr_and_tf};
 
     use super::*;
     use proptest::{prop_assert_eq, proptest};
@@ -365,14 +365,14 @@ mod tests {
     proptest! {
         #[test]
         fn encode_byte_le_always_has_the_same_length(b: u8) {
-            let samples = encode_byte_le(test_spec().0, 0x01).collect::<Vec<_>>();
+            let samples = encode_byte_le(test_spec().0, b).collect::<Vec<_>>();
             assert_eq!(samples.len(), 44);
         }
 
         #[test]
         fn encode_byte_le_always_has_a_start_bit(b: u8) {
             let (spec, _, zero) = test_spec();
-            let samples = encode_byte_le(spec, 0x01).collect::<Vec<_>>();
+            let samples = encode_byte_le(spec, b).collect::<Vec<_>>();
             #[rustfmt::skip]
             assert_eq!(&samples[0..4],
                 zero, // 0b0 start bit
@@ -382,7 +382,7 @@ mod tests {
         #[test]
         fn encode_byte_le_always_has_two_stop_bits(b: u8) {
             let (spec, one, _) = test_spec();
-            let samples = encode_byte_le(spec, 0x01).collect::<Vec<_>>();
+            let samples = encode_byte_le(spec, b).collect::<Vec<_>>();
             #[rustfmt::skip]
             assert_eq!(&samples[36..44], [
                 one, // 0b1 stop bit 1

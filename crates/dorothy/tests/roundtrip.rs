@@ -18,17 +18,7 @@ fn roundtrip(kcs_spec: SquareWaveSpec) {
 
     let source = "Hello, World!".as_bytes();
     let encoded = encode(kcs_spec, 5, source).collect::<Vec<_>>();
-    let decoded = decode(channels as usize, kcs_spec.sample_rate, kcs_spec.target_freq, encoded).unwrap();
-
-    // let spec_ex = hound::WavSpecEx {
-    //     spec: hound::WavSpec {
-    //         channels: todo!(),
-    //         sample_rate: todo!(),
-    //         bits_per_sample: todo!(),
-    //         sample_format: todo!(),
-    //     },
-    //     bytes_per_sample: todo!(),
-    // };
+    let decoded = decode(channels, kcs_spec.sample_rate as u32, kcs_spec.target_freq as u32, encoded).unwrap();
 
     assert_eq!(&decoded[0], source);
 }
