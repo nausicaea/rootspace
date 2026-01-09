@@ -2,7 +2,7 @@ use crate::util::BITMASKS;
 use std::borrow::Borrow;
 use std::iter::{FusedIterator, repeat_n};
 
-pub fn encode<T, I>(spec: SquareWaveSpec, data: I) -> impl Iterator<Item = i16>
+pub fn encode<T, I>(spec: SquareWaveSpec, data: I) -> impl Iterator<Item = i8>
 where
     T: Borrow<u8>,
     I: IntoIterator<Item = T>,
@@ -18,14 +18,14 @@ fn padding(sample_rate: usize, factor: usize) -> impl Iterator<Item = u8> {
     repeat_n(0b1, factor * sample_rate)
 }
 
-fn encode_byte_le(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i16> {
+fn encode_byte_le(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i8> {
     zero_pulse(spec)
         .chain(encode_byte_le_unarmored(spec, byte))
         .chain(one_pulse(spec))
         .chain(one_pulse(spec))
 }
 
-fn encode_byte_le_unarmored(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i16> {
+fn encode_byte_le_unarmored(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i8> {
     BITMASKS.into_iter().flat_map(move |mask| encode_bit(spec, mask, byte))
 }
 
@@ -51,8 +51,8 @@ const fn zero_pulse(spec: SquareWaveSpec) -> SquareWave {
 
 #[derive(Debug, Clone, Copy)]
 pub struct SquareWaveSpec {
-    pub offset: i16,
-    pub amplitude: i16,
+    pub offset: i8,
+    pub amplitude: i8,
     pub sample_rate: usize,
     pub target_freq: usize,
     pub num_periods: usize,
@@ -60,15 +60,15 @@ pub struct SquareWaveSpec {
 
 #[derive(Debug, Clone)]
 pub struct SquareWave {
-    low: i16,
-    high: i16,
+    low: i8,
+    high: i8,
     period_length: usize,
     num_periods: usize,
     index: usize,
 }
 
 impl SquareWave {
-    pub const fn new(offset: i16, amplitude: i16, period_length: usize, num_periods: usize) -> Self {
+    pub const fn new(offset: i8, amplitude: i8, period_length: usize, num_periods: usize) -> Self {
         debug_assert!(period_length % 2 == 0);
         Self {
             low: offset - amplitude,
@@ -102,7 +102,7 @@ impl SquareWave {
 }
 
 impl Iterator for SquareWave {
-    type Item = i16;
+    type Item = i8;
 
     fn next(&mut self) -> Option<Self::Item> {
         let output = if self.index >= self.len_internal() {
@@ -141,8 +141,8 @@ mod tests {
     #[fixture]
     fn test_spec() -> SquareWaveSpec {
         SquareWaveSpec {
-            offset: 0x0080,
-            amplitude: 0x0080,
+            offset: i8::MAX / 2,
+            amplitude: i8::MAX / 2,
             sample_rate: 4,
             target_freq: 2,
             num_periods: 2,
@@ -153,7 +153,7 @@ mod tests {
     fn kcs_spec() -> SquareWaveSpec {
         SquareWaveSpec {
             offset: 0,
-            amplitude: i16::MAX,
+            amplitude: i8::MAX,
             sample_rate: 9600,
             target_freq: 2400,
             num_periods: 8,
@@ -233,14 +233,14 @@ mod tests {
     fn square_wave_with_amplitude_offset(test_spec: SquareWaveSpec) {
         let sqwave = SquareWave::with_spec(test_spec).collect::<Vec<_>>();
         assert_eq!(sqwave.len(), 4);
-        assert_eq!(sqwave, &[0x0000, 0x0100, 0x0000, 0x0100]);
+        assert_eq!(sqwave, &[0x0000, 0x7E, 0x0000, 0x7E]);
     }
 
     #[test]
     fn square_wave_new_without_offset() {
-        let sqwave = SquareWave::new(0, 256, 2, 2).collect::<Vec<_>>();
+        let sqwave = SquareWave::new(0, i8::MAX, 2, 2).collect::<Vec<_>>();
         assert_eq!(sqwave.len(), 4);
-        assert_eq!(sqwave, &[-0x0100, 0x0100, -0x0100, 0x0100]);
+        assert_eq!(sqwave, &[-i8::MAX, i8::MAX, -i8::MAX, i8::MAX]);
     }
 
     #[rstest]
@@ -250,14 +250,14 @@ mod tests {
         // Exactly eight periods of a 2400 Hz tone at 9600 Hz sampling rate
         #[rustfmt::skip]
         assert_eq!(sqwave, &[
-            -i16::MAX, -i16::MAX, i16::MAX, i16::MAX, 
-            -i16::MAX, -i16::MAX, i16::MAX, i16::MAX,
-            -i16::MAX, -i16::MAX, i16::MAX, i16::MAX,
-            -i16::MAX, -i16::MAX, i16::MAX, i16::MAX,
-            -i16::MAX, -i16::MAX, i16::MAX, i16::MAX, 
-            -i16::MAX, -i16::MAX, i16::MAX, i16::MAX,
-            -i16::MAX, -i16::MAX, i16::MAX, i16::MAX,
-            -i16::MAX, -i16::MAX, i16::MAX, i16::MAX,
+            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX, 
+            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX, 
+            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
         ]);
     }
 
@@ -265,10 +265,10 @@ mod tests {
     fn zero_pulse_is_half_frequency_of_one_pulse_but_same_length(test_spec: SquareWaveSpec) {
         let one = one_pulse(test_spec).collect::<Vec<_>>();
         assert_eq!(one.len(), 4);
-        assert_eq!(one, &[0x0000, 0x0100, 0x0000, 0x0100]);
+        assert_eq!(one, &[0x00, 0x7E, 0x00, 0x7E]);
         let zero = zero_pulse(test_spec).collect::<Vec<_>>();
         assert_eq!(zero.len(), 4);
-        assert_eq!(zero, &[0x0000, 0x0000, 0x0100, 0x0100]);
+        assert_eq!(zero, &[0x00, 0x00, 0x7E, 0x7E]);
     }
 
     #[rstest]
@@ -277,14 +277,14 @@ mod tests {
         assert_eq!(samples.len(), 4 * 8);
         #[rustfmt::skip]
         assert_eq!(samples, &[
-            0x0000, 0x0100, 0x0000, 0x0100, // 0b0000_0001 * 1
-            0x0000, 0x0000, 0x0100, 0x0100, // 0b0000_0010 * 0
-            0x0000, 0x0000, 0x0100, 0x0100, // 0b0000_0100 * 0
-            0x0000, 0x0000, 0x0100, 0x0100, // 0b0000_1000 * 0
-            0x0000, 0x0000, 0x0100, 0x0100, // 0b0001_0000 * 0
-            0x0000, 0x0000, 0x0100, 0x0100, // 0b0010_0000 * 0
-            0x0000, 0x0000, 0x0100, 0x0100, // 0b0100_0000 * 0
-            0x0000, 0x0000, 0x0100, 0x0100, // 0b1000_0000 * 0
+            0x00, 0x7E, 0x00, 0x7E, // 0b0000_0001 * 1
+            0x00, 0x00, 0x7E, 0x7E, // 0b0000_0010 * 0
+            0x00, 0x00, 0x7E, 0x7E, // 0b0000_0100 * 0
+            0x00, 0x00, 0x7E, 0x7E, // 0b0000_1000 * 0
+            0x00, 0x00, 0x7E, 0x7E, // 0b0001_0000 * 0
+            0x00, 0x00, 0x7E, 0x7E, // 0b0010_0000 * 0
+            0x00, 0x00, 0x7E, 0x7E, // 0b0100_0000 * 0
+            0x00, 0x00, 0x7E, 0x7E, // 0b1000_0000 * 0
         ]);
     }
 
@@ -314,7 +314,7 @@ mod tests {
             ).collect::<Vec<_>>();
 
             prop_assert_eq!(samples.len(), 4);
-            prop_assert_eq!(samples, &[0x0000, 0x0100, 0x0000, 0x0100]);
+            prop_assert_eq!(samples, &[0x00, 0x7E, 0x00, 0x7E]);
         }
 
         #[test]
@@ -326,7 +326,7 @@ mod tests {
             ).collect::<Vec<_>>();
 
             prop_assert_eq!(samples.len(), 4);
-            prop_assert_eq!(samples, &[0x0000, 0x0000, 0x0100, 0x0100]);
+            prop_assert_eq!(samples, &[0x00, 0x00, 0x7E, 0x7E]);
         }
     }
 }
