@@ -10,8 +10,8 @@ where
     padding(spec, padding_factor)
         .chain(
             data.into_iter()
-            .map(|t| *t.borrow())
-            .flat_map(move |byte| encode_byte_le(spec, byte))
+                .map(|t| *t.borrow())
+                .flat_map(move |byte| encode_byte_le(spec, byte)),
         )
         .chain(padding(spec, padding_factor))
 }
@@ -173,25 +173,73 @@ mod tests {
                 num_periods: 8,
             },
             &[
-                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX, 
-                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX, 
-                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
             ],
             &[
-                -i8::MAX, -i8::MAX, -i8::MAX, -i8::MAX, 
-                i8::MAX, i8::MAX, i8::MAX, i8::MAX,
-                -i8::MAX, -i8::MAX, -i8::MAX, -i8::MAX, 
-                i8::MAX, i8::MAX, i8::MAX, i8::MAX,
-                -i8::MAX, -i8::MAX, -i8::MAX, -i8::MAX, 
-                i8::MAX, i8::MAX, i8::MAX, i8::MAX,
-                -i8::MAX, -i8::MAX, -i8::MAX, -i8::MAX, 
-                i8::MAX, i8::MAX, i8::MAX, i8::MAX,
-            ]
+                -i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                -i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                i8::MAX,
+                i8::MAX,
+            ],
         )
     }
 
@@ -322,7 +370,7 @@ mod tests {
             let (spec, _, zero) = test_spec();
             let samples = encode_byte_le(spec, 0x01).collect::<Vec<_>>();
             #[rustfmt::skip]
-            assert_eq!(&samples[0..4], 
+            assert_eq!(&samples[0..4],
                 zero, // 0b0 start bit
             );
         }
@@ -380,7 +428,8 @@ mod tests {
             16.0 * ((sample_rate / freq) / 2.0).floor()
         }
 
-        one_pulse_len_pykcs(sample_rate, freq) * ((sample_rate / one_pulse_len_pykcs(sample_rate, freq)).floor() * leader)
+        one_pulse_len_pykcs(sample_rate, freq)
+            * ((sample_rate / one_pulse_len_pykcs(sample_rate, freq)).floor() * leader)
     }
 
     #[rstest]
