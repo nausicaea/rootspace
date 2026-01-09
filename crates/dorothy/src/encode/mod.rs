@@ -61,6 +61,7 @@ pub struct SquareWave {
 }
 
 impl SquareWave {
+    #[must_use] 
     pub const fn new(offset: i8, amplitude: i8, period_length: usize, num_periods: usize) -> Self {
         Self {
             low: offset - amplitude,
@@ -71,6 +72,7 @@ impl SquareWave {
         }
     }
 
+    #[must_use] 
     pub const fn with_spec(spec: SquareWaveSpec) -> Self {
         debug_assert!(spec.target_freq <= (spec.sample_rate >> 1));
         Self::new(
@@ -81,12 +83,14 @@ impl SquareWave {
         )
     }
 
+    #[must_use] 
     pub const fn one_pulse(spec: SquareWaveSpec) -> Self {
-        SquareWave::with_spec(spec)
+        Self::with_spec(spec)
     }
 
+    #[must_use] 
     pub const fn zero_pulse(spec: SquareWaveSpec) -> Self {
-        SquareWave::with_spec(SquareWaveSpec {
+        Self::with_spec(SquareWaveSpec {
             target_freq: spec.target_freq / 2,
             num_periods: spec.num_periods / 2,
             ..spec
@@ -99,7 +103,7 @@ impl SquareWave {
 
     /// Return `true` when the square wave amplitude is `1`, and false where it is `0`.
     const fn is_high(i: usize, period_length: usize) -> bool {
-        (2 * i / period_length) % 2 != 0
+        !(2 * i / period_length).is_multiple_of(2)
     }
 }
 
@@ -269,12 +273,12 @@ mod tests {
     proptest! {
         #[test]
         fn is_high_2_period_is_true_for_odd_indices(i in 0..(usize::MAX / 2)) {
-            prop_assert_eq!(SquareWave::is_high(i, 2), i % 2 != 0);
+            prop_assert_eq!(SquareWave::is_high(i, 2), !i.is_multiple_of(2));
         }
 
         #[test]
         fn is_high_4_period_is_true_in_blocks_of_two(i in 0..(usize::MAX / 2)) {
-            prop_assert_eq!(SquareWave::is_high(i, 4), (i / 2) % 2 != 0);
+            prop_assert_eq!(SquareWave::is_high(i, 4), !(i / 2).is_multiple_of(2));
         }
 
     }

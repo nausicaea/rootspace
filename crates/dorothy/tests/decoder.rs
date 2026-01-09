@@ -36,6 +36,11 @@ fn decoding_files_works_as_expected(#[case] source: &str, #[case] expected: &str
     BufReader::new(File::open(TEST_DIR.join(expected)).unwrap())
         .read_to_end(&mut expected_data)
         .unwrap();
+    // py_kcs's kcs_encode.py adds several null bytes whenever it encounters a carriage return. I
+    // don't want my parser to have special logic to decode that, so we need to adjust the expected
+    // output by inserting those null bytes.
+    expected_data.pop();
+    expected_data.extend(&[13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10]);
 
     assert_eq!(output.len(), 1);
     let output = &output[0];

@@ -2,7 +2,7 @@ use std::io::{BufReader, Read};
 
 use dorothy::{SquareWaveSpec, encode};
 
-fn spec() -> SquareWaveSpec {
+const fn spec() -> SquareWaveSpec {
     SquareWaveSpec {
         offset: 0,
         amplitude: i8::MAX,
