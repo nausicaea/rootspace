@@ -48,15 +48,14 @@ where
                 samples_per_bit,
             )
         })
-        .fold(
-            Result::<Vec<Vec<u8>>, Error>::Ok(Vec::new()),
-            |state, channel_output| match (state, channel_output) {
-                (Ok(mut s), Ok(co)) => {
-                    s.push(co);
-                    Ok(s)
+        .try_fold(
+            Vec::new(),
+            |mut state, channel_output| match channel_output {
+                Ok(co) => {
+                    state.push(co);
+                    Ok(state)
                 }
-                (Ok(s), Err(e)) => Err(Error::BitDecoder(s, e)),
-                _ => unreachable!(),
+                Err(e) => Err(Error::BitDecoder(state, e)),
             },
         )?;
 

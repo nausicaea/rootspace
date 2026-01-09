@@ -18,7 +18,7 @@ where
 
 const fn padding(spec: SquareWaveSpec, factor: usize) -> SquareWave {
     SquareWave::with_spec(SquareWaveSpec {
-        num_periods: factor * (spec.target_freq as usize),
+        num_periods: factor * spec.target_freq,
         ..spec
     })
 }
@@ -124,11 +124,9 @@ impl Iterator for SquareWave {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        if let Some(remaining) = self.len_internal().checked_sub(self.index) {
-            (remaining, Some(remaining))
-        } else {
-            (0, Some(0))
-        }
+        self.len_internal()
+            .checked_sub(self.index)
+            .map_or((0, Some(0)), |remaining| (remaining, Some(remaining)))
     }
 }
 
