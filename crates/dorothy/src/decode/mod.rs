@@ -20,17 +20,11 @@ mod byte_decoder;
 /// # Errors
 ///
 /// 1. Errors with [`Error::NyquistViolation`] if the `sample_rate` is not at least twice as large as `target_freq`
-pub fn decode<N, I>(
-    channels: usize,
-    sample_rate: usize,
-    target_freq: usize,
-    samples: I,
-) -> Result<Vec<Vec<u8>>, Error>
+pub fn decode<N, I>(channels: usize, sample_rate: usize, target_freq: usize, samples: I) -> Result<Vec<Vec<u8>>, Error>
 where
     N: Copy + Signed + ConstZero + PartialOrd,
     I: IntoIterator<Item = N>,
 {
-
     if (target_freq << 1) > sample_rate {
         return Err(Error::NyquistViolation(sample_rate, target_freq));
     }
@@ -54,13 +48,17 @@ where
                 samples_per_bit,
             )
         })
-        .fold(Result::<Vec<Vec<u8>>, Error>::Ok(Vec::new()), |state, channel_output| {
-            match (state, channel_output) {
-                (Ok(mut s), Ok(co)) => { s.push(co); Ok(s) },
+        .fold(
+            Result::<Vec<Vec<u8>>, Error>::Ok(Vec::new()),
+            |state, channel_output| match (state, channel_output) {
+                (Ok(mut s), Ok(co)) => {
+                    s.push(co);
+                    Ok(s)
+                }
                 (Ok(s), Err(e)) => Err(Error::BitDecoder(s, e)),
                 _ => unreachable!(),
-            }
-        })?;
+            },
+        )?;
 
     Ok(output)
 }
