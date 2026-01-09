@@ -18,7 +18,13 @@ fn roundtrip(kcs_spec: SquareWaveSpec) {
 
     let source = "Hello, World!".as_bytes();
     let encoded = encode(kcs_spec, 5, source).collect::<Vec<_>>();
-    let decoded = decode(channels, kcs_spec.sample_rate as u32, kcs_spec.target_freq as u32, encoded).unwrap();
+    let decoded = decode(
+        channels,
+        kcs_spec.sample_rate as u32,
+        kcs_spec.target_freq as u32,
+        encoded,
+    )
+    .unwrap();
 
     assert_eq!(&decoded[0], source);
 }

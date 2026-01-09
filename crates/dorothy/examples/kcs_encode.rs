@@ -1,4 +1,7 @@
-use std::{io::{BufReader, Read}, path::PathBuf};
+use std::{
+    io::{BufReader, Read},
+    path::PathBuf,
+};
 
 use clap::Parser;
 use dorothy::{SquareWaveSpec, encode};
@@ -22,13 +25,12 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
-    let Args {source, destination} = Args::parse();
+    let Args { source, destination } = Args::parse();
     let channels = 1;
     let kcs_spec = spec();
 
     let mut source_data = Vec::new();
-    BufReader::new(std::fs::File::open(source)?)
-        .read_to_end(&mut source_data)?;
+    BufReader::new(std::fs::File::open(source)?).read_to_end(&mut source_data)?;
     let encoded = encode(kcs_spec, 5, &source_data).collect::<Vec<_>>();
 
     let mut wav_writer = hound::WavWriter::create(

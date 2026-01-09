@@ -61,7 +61,7 @@ pub struct SquareWave {
 }
 
 impl SquareWave {
-    #[must_use] 
+    #[must_use]
     pub const fn new(offset: i8, amplitude: i8, period_length: usize, num_periods: usize) -> Self {
         Self {
             low: offset - amplitude,
@@ -72,7 +72,7 @@ impl SquareWave {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_spec(spec: SquareWaveSpec) -> Self {
         debug_assert!(spec.target_freq <= (spec.sample_rate >> 1));
         Self::new(
@@ -83,12 +83,12 @@ impl SquareWave {
         )
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn one_pulse(spec: SquareWaveSpec) -> Self {
         Self::with_spec(spec)
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn zero_pulse(spec: SquareWaveSpec) -> Self {
         Self::with_spec(SquareWaveSpec {
             target_freq: spec.target_freq / 2,
