@@ -1,5 +1,5 @@
 {
-  description = "Rust stable development environment";
+  description = "Rust nightly development environment";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
@@ -13,12 +13,12 @@
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs {
           inherit system overlays;
-          config.allowUnfree = true;
         };
 
-        rustEnv = pkgs.rust-bin.stable."1.91.1".default.override {
-          extensions = [ "rust-src" "clippy" "rustfmt" ];
-        };
+        rustEnv = pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
+          extensions = [ "rust-src" "clippy" "rustfmt" "llvm-tools" ];
+          targets = [ "aarch64-apple-darwin" ];
+        });
       in {
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
@@ -29,28 +29,14 @@
             openssl
             pkg-config
             git
-            trufflehog
-            pre-commit
-            rust-analyzer
-            cargo-nextest
+            cargo-fuzz
+            #llvmPackages.bintools
             cargo-audit
             cargo-auditable
             cargo-machete
             cargo-sweep
             bacon
-            rusty-man
-            jetbrains.rust-rover
           ];
-
-          shellHook = ''
-            mkdir -p ~/.rust-rover/toolchain
-
-            ln -sfn ${rustEnv}/lib ~/.rust-rover/toolchain
-            ln -sfn ${rustEnv}/bin ~/.rust-rover/toolchain
-
-            export RUST_SRC_PATH="$HOME/.rust-rover/toolchain/lib/rustlib/src/rust/library"
-            export RUST_LOG="warn,rootspace=trace,griffon=info,glamour=trace"
-          '';
         };
       }
     );
