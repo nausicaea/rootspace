@@ -19,10 +19,10 @@ fn padding(sample_rate: usize, factor: usize) -> impl Iterator<Item = u8> {
 }
 
 fn encode_byte_le(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i8> {
-    zero_pulse(spec)
+    SquareWave::zero_pulse(spec)
         .chain(encode_byte_le_unarmored(spec, byte))
-        .chain(one_pulse(spec))
-        .chain(one_pulse(spec))
+        .chain(SquareWave::one_pulse(spec))
+        .chain(SquareWave::one_pulse(spec))
 }
 
 fn encode_byte_le_unarmored(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Item = i8> {
@@ -31,22 +31,10 @@ fn encode_byte_le_unarmored(spec: SquareWaveSpec, byte: u8) -> impl Iterator<Ite
 
 const fn encode_bit(spec: SquareWaveSpec, mask: u8, byte: u8) -> SquareWave {
     if byte & mask != 0 {
-        one_pulse(spec)
+        SquareWave::one_pulse(spec)
     } else {
-        zero_pulse(spec)
+        SquareWave::zero_pulse(spec)
     }
-}
-
-const fn one_pulse(spec: SquareWaveSpec) -> SquareWave {
-    SquareWave::with_spec(spec)
-}
-
-const fn zero_pulse(spec: SquareWaveSpec) -> SquareWave {
-    SquareWave::with_spec(SquareWaveSpec {
-        target_freq: spec.target_freq / 2,
-        num_periods: spec.num_periods / 2,
-        ..spec
-    })
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -87,6 +75,18 @@ impl SquareWave {
             spec.sample_rate / spec.target_freq,
             spec.num_periods,
         )
+    }
+
+    pub const fn one_pulse(spec: SquareWaveSpec) -> Self {
+        SquareWave::with_spec(spec)
+    }
+
+    pub const fn zero_pulse(spec: SquareWaveSpec) -> Self {
+        SquareWave::with_spec(SquareWaveSpec {
+            target_freq: spec.target_freq / 2,
+            num_periods: spec.num_periods / 2,
+            ..spec
+        })
     }
 
     const fn len_internal(&self) -> usize {
@@ -132,32 +132,64 @@ impl FusedIterator for SquareWave {}
 
 #[cfg(test)]
 mod tests {
-    use std::{ops::Range, path::Path};
+    use std::ops::Range;
 
     use super::*;
     use proptest::{prelude::Just, prop_assert_eq, prop_compose, proptest, sample::select};
     use rstest::{fixture, rstest};
 
+    type Spec = (SquareWaveSpec, &'static [i8], &'static [i8]);
+
+    /// Returns a tuple with the square wave specification, and static values for 0b01 encoded and
+    /// 0b00 encoded in that order.
     #[fixture]
-    fn test_spec() -> SquareWaveSpec {
-        SquareWaveSpec {
-            offset: i8::MAX / 2,
-            amplitude: i8::MAX / 2,
-            sample_rate: 4,
-            target_freq: 2,
-            num_periods: 2,
-        }
+    fn test_spec() -> Spec {
+        (
+            SquareWaveSpec {
+                offset: i8::MAX / 2,
+                amplitude: i8::MAX / 2,
+                sample_rate: 4,
+                target_freq: 2,
+                num_periods: 2,
+            },
+            &[0x00, 0x7E, 0x00, 0x7E], // 0b1 encoded
+            &[0x00, 0x00, 0x7E, 0x7E], // 0b0 encoded
+        )
     }
 
+    /// Returns a tuple with the square wave specification, and static values for 0b01 encoded and
+    /// 0b00 encoded in that order.
     #[fixture]
-    fn kcs_spec() -> SquareWaveSpec {
-        SquareWaveSpec {
-            offset: 0,
-            amplitude: i8::MAX,
-            sample_rate: 9600,
-            target_freq: 2400,
-            num_periods: 8,
-        }
+    fn kcs_spec() -> Spec {
+        (
+            SquareWaveSpec {
+                offset: 0,
+                amplitude: i8::MAX,
+                sample_rate: 9600,
+                target_freq: 2400,
+                num_periods: 8,
+            },
+            &[
+                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX, 
+                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX, 
+                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+                -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
+            ],
+            &[
+                -i8::MAX, -i8::MAX, -i8::MAX, -i8::MAX, 
+                i8::MAX, i8::MAX, i8::MAX, i8::MAX,
+                -i8::MAX, -i8::MAX, -i8::MAX, -i8::MAX, 
+                i8::MAX, i8::MAX, i8::MAX, i8::MAX,
+                -i8::MAX, -i8::MAX, -i8::MAX, -i8::MAX, 
+                i8::MAX, i8::MAX, i8::MAX, i8::MAX,
+                -i8::MAX, -i8::MAX, -i8::MAX, -i8::MAX, 
+                i8::MAX, i8::MAX, i8::MAX, i8::MAX,
+            ]
+        )
     }
 
     #[rstest]
@@ -214,26 +246,11 @@ mod tests {
 
     }
 
-    // #[rstest]
-    // fn square_wave_to_wav(kcs_spec: SquareWaveSpec) {
-    //     let bits_per_sample = 16;
-    //     let sqwave = SquareWave::with_spec(kcs_spec);
-    //     let mut wav_writer = hound::WavWriter::create(
-    //         Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("tests/simple_square_wave_{}hz_{bits_per_sample}bps_{}samples.wav", kcs_spec.sample_rate, sqwave.len())),
-    //         hound::WavSpec { channels: 1, sample_rate: kcs_spec.sample_rate as u32, bits_per_sample, sample_format: hound::SampleFormat::Int }
-    //     ).unwrap();
-
-    //     let mut wav_writer_i16 = wav_writer.get_i16_writer(sqwave.len() as u32);
-    //     sqwave.for_each(|sample| wav_writer_i16.write_sample(sample));
-    //     wav_writer_i16.flush().unwrap();
-    //     wav_writer.finalize().unwrap();
-    // }
-
     #[rstest]
-    fn square_wave_with_amplitude_offset(test_spec: SquareWaveSpec) {
-        let sqwave = SquareWave::with_spec(test_spec).collect::<Vec<_>>();
+    fn square_wave_with_amplitude_offset(test_spec: Spec) {
+        let sqwave = SquareWave::with_spec(test_spec.0).collect::<Vec<_>>();
         assert_eq!(sqwave.len(), 4);
-        assert_eq!(sqwave, &[0x0000, 0x7E, 0x0000, 0x7E]);
+        assert_eq!(sqwave, test_spec.1);
     }
 
     #[test]
@@ -244,48 +261,97 @@ mod tests {
     }
 
     #[rstest]
-    fn square_wave_kcs_spec(kcs_spec: SquareWaveSpec) {
-        let sqwave = SquareWave::with_spec(kcs_spec).collect::<Vec<_>>();
+    fn square_wave_kcs_spec(kcs_spec: Spec) {
+        let sqwave = SquareWave::with_spec(kcs_spec.0).collect::<Vec<_>>();
         assert_eq!(sqwave.len(), 32);
         // Exactly eight periods of a 2400 Hz tone at 9600 Hz sampling rate
-        #[rustfmt::skip]
-        assert_eq!(sqwave, &[
-            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX, 
-            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX, 
-            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-            -i8::MAX, -i8::MAX, i8::MAX, i8::MAX,
-        ]);
+        assert_eq!(sqwave, kcs_spec.1);
     }
 
     #[rstest]
-    fn zero_pulse_is_half_frequency_of_one_pulse_but_same_length(test_spec: SquareWaveSpec) {
-        let one = one_pulse(test_spec).collect::<Vec<_>>();
+    fn zero_pulse_and_one_pulse_are_equal_length(test_spec: Spec) {
+        let one = SquareWave::one_pulse(test_spec.0).collect::<Vec<_>>();
         assert_eq!(one.len(), 4);
-        assert_eq!(one, &[0x00, 0x7E, 0x00, 0x7E]);
-        let zero = zero_pulse(test_spec).collect::<Vec<_>>();
+        assert_eq!(one, test_spec.1);
+        let zero = SquareWave::zero_pulse(test_spec.0).collect::<Vec<_>>();
         assert_eq!(zero.len(), 4);
-        assert_eq!(zero, &[0x00, 0x00, 0x7E, 0x7E]);
+        assert_eq!(zero, test_spec.2);
     }
 
     #[rstest]
-    fn test_encode_byte_le_unarmored(test_spec: SquareWaveSpec) {
-        let samples = encode_byte_le_unarmored(test_spec, 0x01).collect::<Vec<_>>();
-        assert_eq!(samples.len(), 4 * 8);
+    fn kcs_zero_pulse_and_one_pulse_are_equal_length(kcs_spec: Spec) {
+        let one = SquareWave::one_pulse(kcs_spec.0).collect::<Vec<_>>();
+        assert_eq!(one.len(), 32);
+        assert_eq!(one, kcs_spec.1);
+        let zero = SquareWave::zero_pulse(kcs_spec.0).collect::<Vec<_>>();
+        assert_eq!(zero.len(), 32);
+        assert_eq!(zero, kcs_spec.2);
+    }
+
+    #[rstest]
+    fn encode_byte_le_unarmored_0x01(test_spec: Spec) {
+        let samples = encode_byte_le_unarmored(test_spec.0, 0x01).collect::<Vec<_>>();
+        assert_eq!(samples.len(), 32);
         #[rustfmt::skip]
-        assert_eq!(samples, &[
-            0x00, 0x7E, 0x00, 0x7E, // 0b0000_0001 * 1
-            0x00, 0x00, 0x7E, 0x7E, // 0b0000_0010 * 0
-            0x00, 0x00, 0x7E, 0x7E, // 0b0000_0100 * 0
-            0x00, 0x00, 0x7E, 0x7E, // 0b0000_1000 * 0
-            0x00, 0x00, 0x7E, 0x7E, // 0b0001_0000 * 0
-            0x00, 0x00, 0x7E, 0x7E, // 0b0010_0000 * 0
-            0x00, 0x00, 0x7E, 0x7E, // 0b0100_0000 * 0
-            0x00, 0x00, 0x7E, 0x7E, // 0b1000_0000 * 0
-        ]);
+        assert_eq!(samples, [
+            test_spec.1, // 0b0000_0001 * 1
+            test_spec.2, // 0b0000_0010 * 0
+            test_spec.2, // 0b0000_0100 * 0
+            test_spec.2, // 0b0000_1000 * 0
+            test_spec.2, // 0b0001_0000 * 0
+            test_spec.2, // 0b0010_0000 * 0
+            test_spec.2, // 0b0100_0000 * 0
+            test_spec.2, // 0b1000_0000 * 0
+        ].concat());
+    }
+
+    #[rstest]
+    fn encode_byte_le_0x01(test_spec: Spec) {
+        let samples = encode_byte_le(test_spec.0, 0x01).collect::<Vec<_>>();
+        assert_eq!(samples.len(), 44);
+        #[rustfmt::skip]
+        assert_eq!(samples, [
+            test_spec.2, // 0b0 start bit
+            test_spec.1, // 0b0000_0001 * 1
+            test_spec.2, // 0b0000_0010 * 0
+            test_spec.2, // 0b0000_0100 * 0
+            test_spec.2, // 0b0000_1000 * 0
+            test_spec.2, // 0b0001_0000 * 0
+            test_spec.2, // 0b0010_0000 * 0
+            test_spec.2, // 0b0100_0000 * 0
+            test_spec.2, // 0b1000_0000 * 0
+            test_spec.1, // 0b1 stop bit 1
+            test_spec.1, // 0b1 stop bit 2
+        ].concat());
+    }
+
+    proptest! {
+        #[test]
+        fn encode_byte_le_always_has_the_same_length(b: u8) {
+            let samples = encode_byte_le(test_spec().0, 0x01).collect::<Vec<_>>();
+            assert_eq!(samples.len(), 44);
+        }
+
+        #[test]
+        fn encode_byte_le_always_has_a_start_bit(b: u8) {
+            let (spec, _, zero) = test_spec();
+            let samples = encode_byte_le(spec, 0x01).collect::<Vec<_>>();
+            #[rustfmt::skip]
+            assert_eq!(&samples[0..4], 
+                zero, // 0b0 start bit
+            );
+        }
+
+        #[test]
+        fn encode_byte_le_always_has_two_stop_bits(b: u8) {
+            let (spec, one, _) = test_spec();
+            let samples = encode_byte_le(spec, 0x01).collect::<Vec<_>>();
+            #[rustfmt::skip]
+            assert_eq!(&samples[36..44], [
+                one, // 0b1 stop bit 1
+                one, // 0b1 stop bit 2
+            ].concat());
+        }
     }
 
     prop_compose! {
@@ -307,26 +373,28 @@ mod tests {
     proptest! {
         #[test]
         fn encode_bit_encode_same_is_always_0b1_encoded(bit in powers_of_two_u8()) {
+            let (spec, one, _) = test_spec();
             let samples = encode_bit(
-                test_spec(),
+                spec,
                 bit,
                 bit,
             ).collect::<Vec<_>>();
 
             prop_assert_eq!(samples.len(), 4);
-            prop_assert_eq!(samples, &[0x00, 0x7E, 0x00, 0x7E]);
+            prop_assert_eq!(samples, one);
         }
 
         #[test]
         fn encode_bit_encode_mismatching_is_always_0b0_encoded((b1, b2) in mismatching_powers_of_two_u8()) {
+            let (spec, _, zero) = test_spec();
             let samples = encode_bit(
-                test_spec(),
+                spec,
                 b1,
                 b2,
             ).collect::<Vec<_>>();
 
             prop_assert_eq!(samples.len(), 4);
-            prop_assert_eq!(samples, &[0x00, 0x00, 0x7E, 0x7E]);
+            prop_assert_eq!(samples, zero);
         }
     }
 }
