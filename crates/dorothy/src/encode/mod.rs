@@ -51,7 +51,7 @@ pub struct SquareWaveSpec {
     pub num_periods: usize,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct SquareWave {
     low: i8,
     high: i8,
