@@ -15,10 +15,6 @@ impl<T> RingBuffer<T> {
         self.truncate();
     }
 
-    pub fn front(&self) -> Option<&T> {
-        self.0.front()
-    }
-
     fn truncate(&mut self) {
         if self.0.len() > self.1 {
             self.0.truncate(self.1);
