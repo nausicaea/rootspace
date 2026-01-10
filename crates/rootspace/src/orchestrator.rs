@@ -73,7 +73,7 @@ impl Orchestrator {
                 .load_asset::<Scene, _>(world.resources(), deps.scene_group(), main_scene)?;
         }
 
-        Ok(Orchestrator {
+        Ok(Self {
             world,
             timers: Timers {
                 delta_time: deps.delta_time(),
@@ -235,7 +235,7 @@ impl Orchestrator {
             .receive(&self.engine_event_receiver);
         for event in events {
             #[allow(irrefutable_let_patterns)]
-            if let EngineEvent::Exit = event {
+            if matches!(event, EngineEvent::Exit) {
                 self.on_exit();
             }
         }
@@ -255,7 +255,7 @@ impl Orchestrator {
         }
 
         // Call the maintenance method of World
-        if let LoopControl::Abort = self.world.maintain() {
+        if self.world.maintain() == LoopControl::Abort {
             event_loop_window_target.exit();
         }
 
@@ -347,9 +347,9 @@ impl Orchestrator {
                 let position = Vec4::new_point(x, 0.0, z);
 
                 use approx::relative_eq;
-                use glamour::num::Zero;
+                use numenor::ConstZero;
 
-                let (axis, angle) = if relative_eq!(position, Vec4::zero()) {
+                let (axis, angle) = if relative_eq!(position, Vec4::ZERO) {
                     (Vec4::z(), 0.0)
                 } else {
                     (Unit::from(position), std::f32::consts::PI / 4.0)
@@ -441,7 +441,7 @@ pub trait OrchestratorDeps {
     }
 
     /// Specifies the name of the asset group scenes are stored in
-    fn scene_group(&self) -> &str {
+    fn scene_group(&self) -> &'static str {
         "scenes"
     }
 
@@ -476,7 +476,7 @@ struct Timers {
 
 impl Default for Timers {
     fn default() -> Self {
-        Timers {
+        Self {
             last_maintenance: Instant::now(),
             last_redraw: Instant::now(),
             accumulator: Duration::default(),

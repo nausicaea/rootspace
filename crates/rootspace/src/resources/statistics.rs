@@ -23,10 +23,12 @@ pub struct Statistics {
 }
 
 impl Statistics {
+    #[must_use] 
     pub fn mean_draw_calls(&self) -> f32 {
         self.draw_calls.iter().sum::<usize>() as f32 / WINDOW_SIZE as f32
     }
 
+    #[must_use] 
     pub fn mean_render_duration(&self) -> Duration {
         self.render_durations
             .iter()
@@ -34,6 +36,7 @@ impl Statistics {
             .div_f32(WINDOW_SIZE as f32)
     }
 
+    #[must_use] 
     pub fn mean_render_prepare_duration(&self) -> Duration {
         self.render_prepare_durations
             .iter()
@@ -41,6 +44,7 @@ impl Statistics {
             .div_f32(WINDOW_SIZE as f32)
     }
 
+    #[must_use] 
     pub fn mean_render_draw_duration(&self) -> Duration {
         self.render_draw_durations
             .iter()
@@ -48,6 +52,7 @@ impl Statistics {
             .div_f32(WINDOW_SIZE as f32)
     }
 
+    #[must_use] 
     pub fn mean_render_submit_duration(&self) -> Duration {
         self.render_submit_durations
             .iter()
@@ -55,6 +60,7 @@ impl Statistics {
             .div_f32(WINDOW_SIZE as f32)
     }
 
+    #[must_use] 
     pub fn mean_redraw_interval(&self) -> Duration {
         self.redraw_intervals
             .iter()
@@ -62,6 +68,7 @@ impl Statistics {
             .div_f32(WINDOW_SIZE as f32)
     }
 
+    #[must_use] 
     pub fn mean_maintenance_interval(&self) -> Duration {
         self.maintenance_intervals
             .iter()
@@ -117,7 +124,7 @@ impl Statistics {
 
 impl Default for Statistics {
     fn default() -> Self {
-        Statistics {
+        Self {
             draw_calls: VecDeque::with_capacity(WINDOW_SIZE),
             render_durations: VecDeque::with_capacity(WINDOW_SIZE),
             render_prepare_durations: VecDeque::with_capacity(WINDOW_SIZE),
@@ -133,14 +140,14 @@ impl Display for Statistics {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
-            r#"Loop and Render Stats:
+            r"Loop and Render Stats:
 Draw calls (mean): {}
 Render duration (mean): {}
 Prepare duration (mean): {}
 Draw duration (mean): {}
 Submit duration (mean): {}
 Redraw interval (mean): {}
-Maintenance interval (mean): {}"#,
+Maintenance interval (mean): {}",
             self.mean_draw_calls(),
             format_duration(self.mean_render_duration()),
             format_duration(self.mean_render_prepare_duration()),
@@ -157,7 +164,7 @@ impl Resource for Statistics {}
 impl<D> WithDependencies<D> for Statistics {
     #[tracing::instrument(skip_all)]
     fn with_deps(_: &D) -> anyhow::Result<Self> {
-        Ok(Statistics::default())
+        Ok(Self::default())
     }
 }
 

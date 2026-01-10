@@ -10,7 +10,7 @@ pub struct DebugAnimator;
 impl WithResources for DebugAnimator {
     #[tracing::instrument(skip_all)]
     fn with_res(_res: &Resources) -> anyhow::Result<Self> {
-        Ok(DebugAnimator)
+        Ok(Self)
     }
 }
 

@@ -16,7 +16,7 @@ impl WithResources for CameraManager {
     fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
 
-        Ok(CameraManager { receiver })
+        Ok(Self { receiver })
     }
 }
 
@@ -39,7 +39,7 @@ impl System for CameraManager {
             if let WindowEvent::Resized(dims) = event {
                 let max_dims = res.read::<Graphics>().max_window_size();
                 if dims.width <= max_dims.width && dims.height <= max_dims.height {
-                    self.on_resize(res, dims.width, dims.height)
+                    self.on_resize(res, dims.width, dims.height);
                 }
             }
         }

@@ -17,6 +17,7 @@ pub struct Transform {
 }
 
 impl Transform {
+    #[must_use] 
     pub fn builder() -> TransformBuilder {
         TransformBuilder::default()
     }
@@ -27,7 +28,7 @@ impl Transform {
         V2: Into<Vec4<f32>>,
         V3: Into<Vec4<f32>>,
     {
-        Transform {
+        Self {
             affine: Affine::with_look_at_rh(eye.into(), cntr.into(), Unit::from(up.into())),
             ui: false,
         }
@@ -40,7 +41,7 @@ impl Transform {
         V3: Into<Vec4<f32>>,
     {
         use num_traits::Inv;
-        Transform {
+        Self {
             affine: Affine::with_look_at_rh(eye.into(), cntr.into(), Unit::from(up.into())).inv(),
             ui: false,
         }
@@ -49,7 +50,7 @@ impl Transform {
 
 impl Default for Transform {
     fn default() -> Self {
-        Transform::builder().build()
+        Self::builder().build()
     }
 }
 
@@ -59,7 +60,7 @@ impl Component for Transform {
 
 impl From<Affine<f32>> for Transform {
     fn from(value: Affine<f32>) -> Self {
-        Transform {
+        Self {
             affine: value,
             ui: false,
         }
@@ -105,16 +106,19 @@ impl TransformBuilder {
         self
     }
 
+    #[must_use] 
     pub fn with_scale(mut self, s: f32) -> Self {
         self.affine_builder = self.affine_builder.with_scale(s);
         self
     }
 
-    pub fn with_ui(mut self, ui: bool) -> Self {
+    #[must_use] 
+    pub const fn with_ui(mut self, ui: bool) -> Self {
         self.ui = ui;
         self
     }
 
+    #[must_use] 
     pub fn build(self) -> Transform {
         Transform {
             affine: self.affine_builder.build(),
@@ -126,7 +130,8 @@ impl TransformBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use glamour::{num::Zero, quat::Quat, vec::Vec4};
+    use glamour::{quat::Quat, vec::Vec4};
+    use numenor::ConstZero;
 
     #[test]
     fn implements_default() {
@@ -154,7 +159,7 @@ mod tests {
 
     #[test]
     fn builder_accepts_position() {
-        let _: TransformBuilder = TransformBuilder::default().with_translation(Vec4::zero());
+        let _: TransformBuilder = TransformBuilder::default().with_translation(Vec4::ZERO);
     }
 
     #[test]
@@ -170,12 +175,12 @@ mod tests {
     #[test]
     fn builder_complete_example() {
         let m: Transform = TransformBuilder::default()
-            .with_translation(Vec4::zero())
+            .with_translation(Vec4::ZERO)
             .with_orientation(Quat::identity())
             .with_scale(1.0f32)
             .build();
 
-        assert_eq!(m.affine.t, Vec4::zero());
+        assert_eq!(m.affine.t, Vec4::ZERO);
         assert_eq!(m.affine.o, Unit::from(Quat::identity()));
         assert_eq!(m.affine.s, 1.0f32);
     }

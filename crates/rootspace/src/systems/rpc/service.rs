@@ -27,18 +27,18 @@ pub enum Error {
 
 impl From<anyhow::Error> for Error {
     fn from(value: anyhow::Error) -> Self {
-        Error::Other(format!("{:?}", value))
+        Self::Other(format!("{value:?}"))
     }
 }
 
 impl From<SendError> for Error {
     fn from(value: SendError) -> Self {
-        Error::MpscSend(format!("{}", value))
+        Self::MpscSend(format!("{value}"))
     }
 }
 
 impl From<Canceled> for Error {
     fn from(value: Canceled) -> Self {
-        Error::OneshotRecv(format!("{}", value))
+        Self::OneshotRecv(format!("{value}"))
     }
 }

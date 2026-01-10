@@ -86,7 +86,7 @@ impl System for Rpc {
         let events = res.write::<EventQueue<EngineEvent>>().receive(&self.receiver);
         for event in events {
             #[allow(irrefutable_let_patterns)]
-            if let EngineEvent::Exit = event {
+            if matches!(event, EngineEvent::Exit) {
                 tracing::trace!("Stopping RPC listener");
                 if let Some(abort_tx) = self.abort_tx.take() {
                     let _ = abort_tx.send(());
@@ -119,7 +119,7 @@ impl WithResources for Rpc {
 
         let rpc_listener = std::thread::spawn(move || smol::block_on(tarpc_thread(abort_rx, tx, &settings)));
 
-        Ok(Rpc {
+        Ok(Self {
             _rpc_listener: rpc_listener,
             mpsc_rx: rx,
             abort_tx: Some(abort_tx),
@@ -140,7 +140,7 @@ async fn tarpc_thread(
     tracing::info!("RPC server listening on {}", listener.local_addr());
     futures::select! {
         _ = &mut abort_rx => (),
-        _ = listener
+        () = listener
             // Ignore accept errors.
             .filter_map(|r| ready(r.ok()))
             .map(BaseChannel::with_defaults)
@@ -160,7 +160,7 @@ async fn tarpc_thread(
             })
             // Max 10 channels.
             .buffer_unordered(settings.rpc_channel_capacity)
-            .for_each(|_| async { }) => ()
+            .for_each(|()| async { }) => ()
     }
 
     Ok(())

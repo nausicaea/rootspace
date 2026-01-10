@@ -19,7 +19,7 @@ where
 {
     #[tracing::instrument(skip_all)]
     fn with_deps(deps: &D) -> anyhow::Result<Self> {
-        Ok(RpcSettings {
+        Ok(Self {
             bind_address: deps.bind_address(),
             max_frame_length: deps.max_frame_length(),
             mpsc_channel_capacity: deps.mpsc_channel_capacity(),
@@ -31,7 +31,7 @@ where
 
 impl Default for RpcSettings {
     fn default() -> Self {
-        RpcSettings {
+        Self {
             bind_address: (IpAddr::V6(Ipv6Addr::LOCALHOST), 7919).into(),
             max_frame_length: 8 * 1024 * 1024,
             mpsc_channel_capacity: 10,

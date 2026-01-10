@@ -52,15 +52,15 @@ impl Renderer {
         res.write::<EventQueue<WindowEvent>>()
             .receive_cb(&self.window_receiver, |e| {
                 if let WindowEvent::Resized(ps) = e {
-                    self.on_window_resized(res, *ps)
+                    self.on_window_resized(res, *ps);
                 }
             });
 
         res.write::<EventQueue<EngineEvent>>()
             .receive_cb(&self.engine_receiver, |e| {
                 #[allow(irrefutable_let_patterns)]
-                if let EngineEvent::Exit = e {
-                    self.renderer_enabled = false
+                if matches!(e, EngineEvent::Exit) {
+                    self.renderer_enabled = false;
                 }
             });
     }
@@ -82,15 +82,11 @@ impl Renderer {
         // Validate the number of cameras and light sources
         let max_cameras = gfx.max_cameras() as usize;
         let num_cameras = res.read_components::<Camera>().len();
-        if num_cameras > max_cameras {
-            panic!("Too many cameras: have {num_cameras}, expected only {max_cameras}.");
-        }
+        assert!(num_cameras <= max_cameras, "Too many cameras: have {num_cameras}, expected only {max_cameras}.");
 
         let max_lights = gfx.max_lights() as usize;
         let num_lights = res.read_components::<Light>().len();
-        if num_lights > max_lights {
-            panic!("Too many light sources: have {num_lights}, expected only {max_lights}.");
-        }
+        assert!(num_lights <= max_lights, "Too many light sources: have {num_lights}, expected only {max_lights}.");
 
         // Calculate all camera transforms and the respective buffer offset
         let (camera_uniform, camera_view) = res
@@ -209,7 +205,7 @@ impl Renderer {
         for (instance_buffer, instance_data) in instance_buffer_data {
             gfx.write_buffer(instance_buffer, unsafe {
                 from_raw_parts(
-                    instance_data.as_ptr() as *const u8,
+                    instance_data.as_ptr().cast::<u8>(),
                     instance_data.len() * size_of::<Instance>(),
                 )
             });
@@ -372,7 +368,7 @@ impl WithResources for Renderer {
             .add_entire_buffer(0, light_buffer)
             .submit();
 
-        Ok(Renderer {
+        Ok(Self {
             window_receiver,
             engine_receiver,
             renderer_enabled: true,

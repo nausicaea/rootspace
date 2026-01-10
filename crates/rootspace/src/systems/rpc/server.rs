@@ -18,8 +18,8 @@ pub struct RpcServer {
 }
 
 impl RpcServer {
-    pub fn new(mpsc_tx: mpsc::Sender<RpcMessage>, socket_address: SocketAddr) -> Self {
-        RpcServer {
+    pub const fn new(mpsc_tx: mpsc::Sender<RpcMessage>, socket_address: SocketAddr) -> Self {
+        Self {
             mpsc_tx,
             socket_address,
         }

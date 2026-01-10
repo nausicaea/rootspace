@@ -14,7 +14,7 @@ pub struct Info {
 
 impl Info {
     pub fn new<S: AsRef<str>>(name: S, description: S) -> Self {
-        Info {
+        Self {
             name: name.as_ref().to_string(),
             description: description.as_ref().to_string(),
             ..Default::default()

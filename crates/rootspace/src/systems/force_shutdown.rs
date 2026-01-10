@@ -44,7 +44,7 @@ impl WithResources for ForceShutdown {
 
         let receiver = res.write::<EventQueue<WindowEvent>>().subscribe::<Self>();
 
-        Ok(ForceShutdown {
+        Ok(Self {
             ctrlc_triggered,
             receiver,
         })

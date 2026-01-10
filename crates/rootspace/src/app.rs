@@ -14,7 +14,7 @@ pub struct App {
 
 impl App {
     pub fn new<S: AsRef<str>>(name: S) -> Self {
-        App {
+        Self {
             name: name.as_ref().to_owned(),
             force_init: false,
             graphics_settings: Settings::default(),
@@ -22,7 +22,7 @@ impl App {
     }
 
     pub fn run(self) -> anyhow::Result<()> {
-        let App {
+        let Self {
             name,
             force_init,
             graphics_settings,
@@ -55,7 +55,7 @@ struct Deps<'a> {
     graphics_settings: &'a Settings,
 }
 
-impl<'a> GraphicsDeps for Deps<'a> {
+impl GraphicsDeps for Deps<'_> {
     type CustomEvent = ();
 
     fn event_loop(&self) -> &EventLoopWindowTarget<Self::CustomEvent> {
@@ -67,7 +67,7 @@ impl<'a> GraphicsDeps for Deps<'a> {
     }
 }
 
-impl<'a> AssetDatabaseDeps for Deps<'a> {
+impl AssetDatabaseDeps for Deps<'_> {
     fn name(&self) -> &str {
         self.name
     }
@@ -81,10 +81,10 @@ impl<'a> AssetDatabaseDeps for Deps<'a> {
     }
 }
 
-impl<'a> OrchestratorDeps for Deps<'a> {
+impl OrchestratorDeps for Deps<'_> {
     fn main_scene(&self) -> Option<&str> {
         None
     }
 }
 
-impl<'a> RpcDeps for Deps<'a> {}
+impl RpcDeps for Deps<'_> {}

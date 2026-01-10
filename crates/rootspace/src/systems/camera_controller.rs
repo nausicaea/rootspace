@@ -18,7 +18,7 @@ pub struct CameraController {
 impl WithResources for CameraController {
     #[tracing::instrument(skip_all)]
     fn with_res(res: &Resources) -> anyhow::Result<Self> {
-        Ok(CameraController {
+        Ok(Self {
             receiver: res.write::<EventQueue<WindowEvent>>().subscribe::<Self>(),
             physical_key_to_dof: [
                 (PhysicalKey::Code(KeyCode::KeyW), (Signum::Negative, DoF::Z)),

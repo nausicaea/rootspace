@@ -9,8 +9,8 @@ pub enum Projection {
 impl std::fmt::Display for Projection {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Projection::Perspective => f.write_str("Perspective"),
-            Projection::Orthographic => f.write_str("Orthographic"),
+            Self::Perspective => f.write_str("Perspective"),
+            Self::Orthographic => f.write_str("Orthographic"),
         }
     }
 }

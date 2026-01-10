@@ -22,8 +22,9 @@ pub struct Scene {
 }
 
 impl Scene {
+    #[must_use] 
     pub fn with_resources(res: &Resources) -> Self {
-        Scene {
+        Self {
             entities: res.read::<Entities>().clone(),
             hierarchy: res.read::<Hierarchy<Index>>().clone(),
             infos: res
@@ -204,7 +205,7 @@ impl LoadAsset for Scene {
         let file = std::fs::File::open(path).with_context(|| format!("Opening the file '{}'", path.display()))?;
         let reader = std::io::BufReader::new(file);
 
-        let scene = ciborium::de::from_reader::<Scene, _>(reader).context("Loading the Scene")?;
+        let scene = ciborium::de::from_reader::<Self, _>(reader).context("Loading the Scene")?;
 
         // Since the Info::origin field is not serialized, make sure to assign it to every entity
         // based on the scene asset name.
@@ -237,7 +238,7 @@ pub struct EntityBuilder<'a> {
 }
 
 impl<'a> EntityBuilder<'a> {
-    fn new(scene: &'a mut Scene) -> Self {
+    const fn new(scene: &'a mut Scene) -> Self {
         EntityBuilder {
             scene,
             parent: None,
@@ -255,36 +256,43 @@ impl<'a> EntityBuilder<'a> {
         self
     }
 
+    #[must_use] 
     pub fn with_info(mut self, info: Info) -> Self {
         self.info = Some(info);
         self
     }
 
-    pub fn with_debug_animate(mut self) -> Self {
+    #[must_use] 
+    pub const fn with_debug_animate(mut self) -> Self {
         self.debug_animate = true;
         self
     }
 
-    pub fn with_camera(mut self, cam: Camera) -> Self {
+    #[must_use] 
+    pub const fn with_camera(mut self, cam: Camera) -> Self {
         self.camera = Some(cam);
         self
     }
 
-    pub fn with_transform(mut self, trf: Transform) -> Self {
+    #[must_use] 
+    pub const fn with_transform(mut self, trf: Transform) -> Self {
         self.transform = Some(trf);
         self
     }
 
+    #[must_use] 
     pub fn with_renderable(mut self, rdb: RenderableSource) -> Self {
         self.renderable = Some(rdb);
         self
     }
 
+    #[must_use] 
     pub fn with_light(mut self, lght: LightSource) -> Self {
         self.light = Some(lght);
         self
     }
 
+    #[must_use] 
     pub fn submit(self) -> Entity {
         let e = self.scene.entities.create();
         let i = e.idx();

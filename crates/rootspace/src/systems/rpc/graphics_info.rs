@@ -16,32 +16,32 @@ pub enum GraphicsInfo {
 impl fmt::Display for GraphicsInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            GraphicsInfo::InstanceReport(ir) => {
+            Self::InstanceReport(ir) => {
                 if let Some(ir) = &**ir {
                     writeln!(f, "{ir}")
                 } else {
                     writeln!(f, "no instance report available")
                 }
             }
-            GraphicsInfo::SurfaceCapabilities(sc) => {
+            Self::SurfaceCapabilities(sc) => {
                 writeln!(f, "{sc}")
             }
-            GraphicsInfo::AdapterFeatures(af) => {
+            Self::AdapterFeatures(af) => {
                 writeln!(f, "{af}")
             }
-            GraphicsInfo::AdapterLimits(al) => {
+            Self::AdapterLimits(al) => {
                 writeln!(f, "{al:?}")
             }
-            GraphicsInfo::AdapterDownlevelCapabilities(adlc) => {
+            Self::AdapterDownlevelCapabilities(adlc) => {
                 writeln!(f, "{adlc:?}")
             }
-            GraphicsInfo::AdapterInfo(ai) => {
+            Self::AdapterInfo(ai) => {
                 writeln!(f, "{ai:?}")
             }
-            GraphicsInfo::DeviceAllocatorReport(Some(dar)) => {
+            Self::DeviceAllocatorReport(Some(dar)) => {
                 writeln!(f, "{dar:?}")
             }
-            GraphicsInfo::DeviceAllocatorReport(None) => {
+            Self::DeviceAllocatorReport(None) => {
                 writeln!(f, "no device allocator report available")
             }
         }
@@ -57,7 +57,7 @@ pub struct InstanceReport {
 
 impl From<griffon::wgpu_core::global::GlobalReport> for InstanceReport {
     fn from(r: griffon::wgpu_core::global::GlobalReport) -> Self {
-        InstanceReport {
+        Self {
             surfaces: r.surfaces.into(),
             hub: r.hub.into(),
         }
@@ -91,7 +91,7 @@ impl fmt::Display for RegistryReport {
 
 impl From<griffon::wgpu_core::registry::RegistryReport> for RegistryReport {
     fn from(r: griffon::wgpu_core::registry::RegistryReport) -> Self {
-        RegistryReport {
+        Self {
             num_allocated: r.num_allocated,
             num_kept_from_user: r.num_kept_from_user,
             num_released_from_user: r.num_released_from_user,
@@ -126,7 +126,7 @@ pub struct HubReport {
 
 impl From<griffon::wgpu_core::hub::HubReport> for HubReport {
     fn from(r: griffon::wgpu_core::hub::HubReport) -> Self {
-        HubReport {
+        Self {
             adapters: r.adapters.into(),
             devices: r.devices.into(),
             queues: r.queues.into(),
@@ -154,7 +154,7 @@ impl fmt::Display for HubReport {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            r#"Adapters: {}
+            r"Adapters: {}
 Devices: {}
 Queues: {}
 Pipeline layouts: {}
@@ -172,7 +172,7 @@ Buffers: {}
 Textures: {}
 Texture views: {}
 External textures: {}
-Samplers: {}"#,
+Samplers: {}",
             self.adapters,
             self.devices,
             self.queues,
@@ -207,7 +207,7 @@ pub struct SurfaceCapabilities {
 
 impl From<griffon::wgpu::SurfaceCapabilities> for SurfaceCapabilities {
     fn from(r: griffon::wgpu::SurfaceCapabilities) -> Self {
-        SurfaceCapabilities {
+        Self {
             formats: r.formats.into_iter().collect(),
             present_modes: r.present_modes.into_iter().collect(),
             alpha_modes: r.alpha_modes.into_iter().collect(),
@@ -220,11 +220,11 @@ impl fmt::Display for SurfaceCapabilities {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            r#"Surface capabilities:
+            r"Surface capabilities:
 Texture formats: {}
 Present modes: {}
 Alpha modes: {}
-Texture usages: {:?}"#,
+Texture usages: {:?}",
             self.formats.iter().map(|f| format!("{f:?}")).join("\n  "),
             self.present_modes.iter().map(|pm| format!("{pm:?}")).join("\n  "),
             self.alpha_modes.iter().map(|am| format!("{am:?}")).join("\n  "),
@@ -244,7 +244,7 @@ pub struct AllocatorReport {
 
 impl From<griffon::wgpu_types::AllocatorReport> for AllocatorReport {
     fn from(r: griffon::wgpu::AllocatorReport) -> Self {
-        AllocatorReport {
+        Self {
             allocations: r.allocations.into_iter().map(Into::into).collect(),
             blocks: r.blocks.into_iter().map(Into::into).collect(),
             total_allocated_bytes: r.total_allocated_bytes,
@@ -257,11 +257,11 @@ impl fmt::Display for AllocatorReport {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            r#"Allocator report:
+            r"Allocator report:
 Allocations: {}
 Blocks: {}
 Total allocated bytes: {}
-Total reserved bytes: {}"#,
+Total reserved bytes: {}",
             self.allocations.iter().map(|a| format!("{a}")).join("\n  "),
             self.blocks.iter().map(|b| format!("{b}")).join("\n  "),
             self.total_allocated_bytes,
@@ -280,7 +280,7 @@ pub struct AllocationReport {
 
 impl From<griffon::wgpu_types::AllocationReport> for AllocationReport {
     fn from(r: griffon::wgpu_types::AllocationReport) -> Self {
-        AllocationReport {
+        Self {
             name: r.name,
             offset: r.offset,
             size: r.size,
@@ -303,7 +303,7 @@ pub struct MemoryBlockReport {
 
 impl From<griffon::wgpu_types::MemoryBlockReport> for MemoryBlockReport {
     fn from(r: griffon::wgpu_types::MemoryBlockReport) -> Self {
-        MemoryBlockReport {
+        Self {
             size: r.size,
             allocations: r.allocations,
         }

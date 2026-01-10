@@ -26,6 +26,7 @@ griffon.workspace = true
 humantime = "^2.1.0"
 itertools = "^0.14.0"
 num-traits = "^0.2.14"
+numenor.workspace = true
 rose-tree.workspace = true
 serde = { version = "^1.0.0", features = ["derive"] }
 tarpc = { version = "^0.37.0", features = ["serde-transport-bincode", "tcp", "serde-transport"] }
