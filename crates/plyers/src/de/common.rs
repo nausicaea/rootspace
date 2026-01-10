@@ -30,7 +30,7 @@ pub fn is_whitespace(b: u8) -> bool {
     (0x09..=0x0d).contains(&b) || (b == 0x20)
 }
 
-pub fn is_newline(b: u8) -> bool {
+pub const fn is_newline(b: u8) -> bool {
     b == 0x0a || b == 0x0d
 }
 

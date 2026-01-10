@@ -17,13 +17,13 @@ pub fn convert_error(input: &[u8], e: VerboseError<&[u8]>) -> String {
         if input.is_empty() {
             match kind {
                 VerboseErrorKind::Char(c) => {
-                    write!(&mut result, "{}: expected '{}', got empty input\n\n", i, c)
+                    write!(&mut result, "{i}: expected '{c}', got empty input\n\n")
                 }
                 VerboseErrorKind::Context(s) => {
-                    write!(&mut result, "{}: in {}, got empty input\n\n", i, s)
+                    write!(&mut result, "{i}: in {s}, got empty input\n\n")
                 }
                 VerboseErrorKind::Nom(e) => {
-                    write!(&mut result, "{}: in {:?}, got empty input\n\n", i, e)
+                    write!(&mut result, "{i}: in {e:?}, got empty input\n\n")
                 }
             }
         } else {
@@ -38,8 +38,7 @@ pub fn convert_error(input: &[u8], e: VerboseError<&[u8]>) -> String {
                 .iter()
                 .rev()
                 .position(|&b| b == b'\n')
-                .map(|pos| offset - pos)
-                .unwrap_or(0);
+                .map_or(0, |pos| offset - pos);
 
             // Find the full line after that newline
             let line = &input[line_begin..]

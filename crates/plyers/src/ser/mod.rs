@@ -33,7 +33,7 @@ pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(
             }
             match property {
                 PropertyDescriptor::Scalar { data_type, name, .. } => {
-                    writeln!(f, "property {} {}", data_type, name)?;
+                    writeln!(f, "property {data_type} {name}")?;
                 }
                 PropertyDescriptor::List {
                     count_type,
@@ -41,7 +41,7 @@ pub fn write_header<W: Write>(f: &mut W, descriptor: &PlyDescriptor) -> Result<(
                     name,
                     ..
                 } => {
-                    writeln!(f, "property list {} {} {}", count_type, data_type, name)?;
+                    writeln!(f, "property list {count_type} {data_type} {name}")?;
                 }
             }
         }
@@ -172,13 +172,13 @@ fn write_ascii_lists<W: Write, T: std::fmt::Display>(
     trailing_sep: &str,
 ) -> Result<(), PlyError> {
     let stride: usize = primitive.try_into()?;
-    write!(f, "{}{}", stride, normal_sep)?;
+    write!(f, "{stride}{normal_sep}")?;
     let chunk_values = values[(stride * element_index)..(stride * (element_index + 1))]
         .iter()
-        .map(|v| v.to_string())
+        .map(std::string::ToString::to_string)
         .collect::<Vec<_>>()
         .join(normal_sep);
-    write!(f, "{}{}", chunk_values, trailing_sep)?;
+    write!(f, "{chunk_values}{trailing_sep}")?;
 
     Ok(())
 }

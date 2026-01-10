@@ -36,7 +36,7 @@ impl From<ElementId> for usize {
 
 impl From<usize> for ElementId {
     fn from(value: usize) -> Self {
-        ElementId(value)
+        Self(value)
     }
 }
 
@@ -57,7 +57,7 @@ impl From<PropertyId> for usize {
 
 impl From<usize> for PropertyId {
     fn from(value: usize) -> Self {
-        PropertyId(value)
+        Self(value)
     }
 }
 
@@ -68,7 +68,7 @@ impl Display for PropertyId {
 }
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FormatType {
     Ascii,
     BinaryLittleEndian,
@@ -78,17 +78,17 @@ pub enum FormatType {
 impl clap::ValueEnum for FormatType {
     fn value_variants<'a>() -> &'a [Self] {
         &[
-            FormatType::Ascii,
-            FormatType::BinaryLittleEndian,
-            FormatType::BinaryBigEndian,
+            Self::Ascii,
+            Self::BinaryLittleEndian,
+            Self::BinaryBigEndian,
         ]
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
-            FormatType::Ascii => Some(PossibleValue::new("ascii")),
-            FormatType::BinaryLittleEndian => Some(PossibleValue::new("binary_little_endian")),
-            FormatType::BinaryBigEndian => Some(PossibleValue::new("binary_big_endian")),
+            Self::Ascii => Some(PossibleValue::new("ascii")),
+            Self::BinaryLittleEndian => Some(PossibleValue::new("binary_little_endian")),
+            Self::BinaryBigEndian => Some(PossibleValue::new("binary_big_endian")),
         }
     }
 }
@@ -96,15 +96,15 @@ impl clap::ValueEnum for FormatType {
 impl Display for FormatType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            FormatType::Ascii => write!(f, "ascii"),
-            FormatType::BinaryLittleEndian => write!(f, "binary_little_endian"),
-            FormatType::BinaryBigEndian => write!(f, "binary_big_endian"),
+            Self::Ascii => write!(f, "ascii"),
+            Self::BinaryLittleEndian => write!(f, "binary_little_endian"),
+            Self::BinaryBigEndian => write!(f, "binary_big_endian"),
         }
     }
 }
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CountType {
     U8,
     U16,
@@ -115,16 +115,16 @@ pub enum CountType {
 impl Display for CountType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            CountType::U8 => write!(f, "uint8"),
-            CountType::U16 => write!(f, "uint16"),
-            CountType::U32 => write!(f, "uint32"),
-            CountType::U64 => write!(f, "uint64"),
+            Self::U8 => write!(f, "uint8"),
+            Self::U16 => write!(f, "uint16"),
+            Self::U32 => write!(f, "uint32"),
+            Self::U64 => write!(f, "uint64"),
         }
     }
 }
 
 #[cfg_attr(test, derive(proptest_derive::Arbitrary))]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DataType {
     I8,
     U8,
@@ -141,16 +141,16 @@ pub enum DataType {
 impl Display for DataType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            DataType::I8 => write!(f, "int8"),
-            DataType::U8 => write!(f, "uint8"),
-            DataType::I16 => write!(f, "int16"),
-            DataType::U16 => write!(f, "uint16"),
-            DataType::I32 => write!(f, "int32"),
-            DataType::U32 => write!(f, "uint32"),
-            DataType::I64 => write!(f, "int64"),
-            DataType::U64 => write!(f, "uint64"),
-            DataType::F32 => write!(f, "float32"),
-            DataType::F64 => write!(f, "float64"),
+            Self::I8 => write!(f, "int8"),
+            Self::U8 => write!(f, "uint8"),
+            Self::I16 => write!(f, "int16"),
+            Self::U16 => write!(f, "uint16"),
+            Self::I32 => write!(f, "int32"),
+            Self::U32 => write!(f, "uint32"),
+            Self::I64 => write!(f, "int64"),
+            Self::U64 => write!(f, "uint64"),
+            Self::F32 => write!(f, "float32"),
+            Self::F64 => write!(f, "float64"),
         }
     }
 }
@@ -176,15 +176,15 @@ pub enum PropertyDescriptor {
 impl PropertyDescriptor {
     pub fn comments(&self) -> impl Iterator<Item = &CommentDescriptor> {
         match self {
-            PropertyDescriptor::Scalar { comments, .. } => comments.iter(),
-            PropertyDescriptor::List { comments, .. } => comments.iter(),
+            Self::Scalar { comments, .. } => comments.iter(),
+            Self::List { comments, .. } => comments.iter(),
         }
     }
 
     pub fn obj_info(&self) -> impl Iterator<Item = &ObjInfoDescriptor> {
         match self {
-            PropertyDescriptor::Scalar { obj_info, .. } => obj_info.iter(),
-            PropertyDescriptor::List { obj_info, .. } => obj_info.iter(),
+            Self::Scalar { obj_info, .. } => obj_info.iter(),
+            Self::List { obj_info, .. } => obj_info.iter(),
         }
     }
 }
@@ -242,7 +242,7 @@ pub struct PlyDescriptor {
 
 impl Default for PlyDescriptor {
     fn default() -> Self {
-        PlyDescriptor {
+        Self {
             format_type: FormatType::Ascii,
             elements: BTreeMap::default(),
             comments: Vec::default(),
@@ -263,7 +263,7 @@ pub enum Primitive {
 
 impl From<usize> for Primitive {
     fn from(value: usize) -> Self {
-        use self::Primitive::*;
+        use self::Primitive::{Single, Lines, Triangles, Quads, Mixed};
         match value {
             1 => Single,
             2 => Lines,
@@ -286,7 +286,7 @@ impl TryFrom<Primitive> for usize {
     type Error = AmbiguousMixedPrimitive;
 
     fn try_from(value: Primitive) -> Result<Self, Self::Error> {
-        use self::Primitive::*;
+        use self::Primitive::{Single, Lines, Triangles, Quads, Mixed};
         match value {
             Single => Ok(1),
             Lines => Ok(2),
@@ -358,33 +358,34 @@ pub enum Values {
 }
 
 impl Values {
-    pub fn with_data_type(dt: DataType) -> Self {
+    #[must_use] 
+    pub const fn with_data_type(dt: DataType) -> Self {
         match dt {
-            DataType::U8 => Values::U8(Vec::new()),
-            DataType::I8 => Values::I8(Vec::new()),
-            DataType::U16 => Values::U16(Vec::new()),
-            DataType::I16 => Values::I16(Vec::new()),
-            DataType::U32 => Values::U32(Vec::new()),
-            DataType::I32 => Values::I32(Vec::new()),
-            DataType::U64 => Values::U64(Vec::new()),
-            DataType::I64 => Values::I64(Vec::new()),
-            DataType::F32 => Values::F32(Vec::new()),
-            DataType::F64 => Values::F64(Vec::new()),
+            DataType::U8 => Self::U8(Vec::new()),
+            DataType::I8 => Self::I8(Vec::new()),
+            DataType::U16 => Self::U16(Vec::new()),
+            DataType::I16 => Self::I16(Vec::new()),
+            DataType::U32 => Self::U32(Vec::new()),
+            DataType::I32 => Self::I32(Vec::new()),
+            DataType::U64 => Self::U64(Vec::new()),
+            DataType::I64 => Self::I64(Vec::new()),
+            DataType::F32 => Self::F32(Vec::new()),
+            DataType::F64 => Self::F64(Vec::new()),
         }
     }
 
     pub fn try_push(&mut self, v: Value) -> Result<(), InconsistentDataTypes> {
         match (self, v) {
-            (Values::U8(acc), Value::U8(v)) => acc.push(v),
-            (Values::I8(acc), Value::I8(v)) => acc.push(v),
-            (Values::U16(acc), Value::U16(v)) => acc.push(v),
-            (Values::I16(acc), Value::I16(v)) => acc.push(v),
-            (Values::U32(acc), Value::U32(v)) => acc.push(v),
-            (Values::I32(acc), Value::I32(v)) => acc.push(v),
-            (Values::U64(acc), Value::U64(v)) => acc.push(v),
-            (Values::I64(acc), Value::I64(v)) => acc.push(v),
-            (Values::F32(acc), Value::F32(v)) => acc.push(v),
-            (Values::F64(acc), Value::F64(v)) => acc.push(v),
+            (Self::U8(acc), Value::U8(v)) => acc.push(v),
+            (Self::I8(acc), Value::I8(v)) => acc.push(v),
+            (Self::U16(acc), Value::U16(v)) => acc.push(v),
+            (Self::I16(acc), Value::I16(v)) => acc.push(v),
+            (Self::U32(acc), Value::U32(v)) => acc.push(v),
+            (Self::I32(acc), Value::I32(v)) => acc.push(v),
+            (Self::U64(acc), Value::U64(v)) => acc.push(v),
+            (Self::I64(acc), Value::I64(v)) => acc.push(v),
+            (Self::F32(acc), Value::F32(v)) => acc.push(v),
+            (Self::F64(acc), Value::F64(v)) => acc.push(v),
             _ => return Err(InconsistentDataTypes),
         }
 
@@ -395,7 +396,7 @@ impl Values {
     where
         I: IntoIterator<Item = Value>,
     {
-        for value in iter.into_iter() {
+        for value in iter {
             self.try_push(value)?;
         }
 
@@ -435,7 +436,7 @@ impl TryFrom<(DataType, Vec<Value>)> for Values {
     type Error = InconsistentDataTypes;
 
     fn try_from(value: (DataType, Vec<Value>)) -> Result<Self, Self::Error> {
-        let mut accum = Values::with_data_type(value.0);
+        let mut accum = Self::with_data_type(value.0);
         accum.try_extend(value.1)?;
         Ok(accum)
     }
@@ -449,6 +450,7 @@ pub struct Ply {
 }
 
 impl Ply {
+    #[must_use] 
     pub fn property_id(&self, element_name: &str, property_name: &str) -> Option<(ElementId, PropertyId)> {
         self.descriptor
             .elements
@@ -463,6 +465,7 @@ impl Ply {
             .next()
     }
 
+    #[must_use] 
     pub fn primitive(&self) -> Option<Primitive> {
         let p_id = self
             .property_id(FACE_ELEMENT, VERTEX_INDICES_LIST_PROPERTY)

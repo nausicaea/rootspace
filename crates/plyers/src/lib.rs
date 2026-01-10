@@ -20,18 +20,18 @@
 //! Z: any string (non-linebreak)
 //!
 //! Data Types:
-//! H -> "ascii" | "binary_little_endian" | "binary_big_endian"
+//! H -> "ascii" | "`binary_little_endian`" | "`binary_big_endian`"
 //! J -> "char" | "uchar" | "short" | "ushort" | "int" | "uint" | "float" | "double" | "int8" |
 //! "uint8" | "int16" | "uint16" | "int32" | "uint32" | "float32" | "float64"
 //! K -> "uchar" | "ushort" | "uint" | "uint8" | "uint16" | "uint32"
 //!
 //! Declarations:
 //! A' -> "ply" ;
-//! A'' -> "end_header" ;
+//! A'' -> "`end_header`" ;
 //! D' -> "format" - H - "1.0" ;
 //! E' -> "element" - Y - X ;
 //! F' -> "comment" - Z ;
-//! M' -> "obj_info" - Z ;
+//! M' -> "`obj_info`" - Z ;
 //! G' -> "property" - J - Y ;
 //! G'' -> "property" - "list" - K - J - Y ;
 //!
@@ -84,7 +84,7 @@ pub fn parse_ply(input: &[u8]) -> Result<Ply, PlyError> {
         .map(|(_, p)| p)
         .map_err(|e| match e {
             nom::Err::Error(e) | nom::Err::Failure(e) => PlyError::Nom(convert_error(input, e)),
-            e @ nom::Err::Incomplete(_) => PlyError::Nom(format!("{}", e)),
+            e @ nom::Err::Incomplete(_) => PlyError::Nom(format!("{e}")),
         })
 }
 
@@ -162,34 +162,34 @@ pub fn save_ply<P: AsRef<Path>>(ply: &Ply, path: P) -> Result<(), PlyError> {
                         let (p_prim, p_values) = &ply.data[p_id];
                         match p_values {
                             Values::I8(values) => {
-                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
+                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?;
                             }
                             Values::U8(values) => {
-                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
+                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?;
                             }
                             Values::I16(values) => {
-                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
+                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?;
                             }
                             Values::U16(values) => {
-                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
+                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?;
                             }
                             Values::I32(values) => {
-                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
+                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?;
                             }
                             Values::U32(values) => {
-                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
+                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?;
                             }
                             Values::I64(values) => {
-                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
+                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?;
                             }
                             Values::U64(values) => {
-                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
+                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?;
                             }
                             Values::F32(values) => {
-                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
+                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?;
                             }
                             Values::F64(values) => {
-                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?
+                                write_ascii_values(&mut f, p_prim, p_desc, values, e_idx, is_last_property)?;
                             }
                         }
                     }
