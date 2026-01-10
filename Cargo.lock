@@ -996,6 +996,7 @@ dependencies = [
  "hound",
  "itertools 0.14.0",
  "num-traits",
+ "numenor",
  "proptest",
  "rstest",
  "thiserror 2.0.17",
@@ -2314,6 +2315,10 @@ dependencies = [
  "quote",
  "syn 2.0.111",
 ]
+
+[[package]]
+name = "numenor"
+version = "0.1.0"
 
 [[package]]
 name = "objc"
