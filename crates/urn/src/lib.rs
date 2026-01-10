@@ -28,7 +28,7 @@ impl<T: From<usize>> Urn<T> {
 
 impl<T> Default for Urn<T> {
     fn default() -> Self {
-        Urn {
+        Self {
             max_token: 0,
             free_tokens: Vec::default(),
             _t: std::marker::PhantomData,
