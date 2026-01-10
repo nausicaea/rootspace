@@ -1,30 +1,24 @@
-use std::{
-    io::{BufReader, Read},
-    path::PathBuf,
-};
+use std::io::{BufReader, Cursor, Read, Write};
 
 use clap::Parser;
 use dorothy::{Spec, encode};
 
+/// Read data from stdin and encode it as Kansas City Standard to stdout
 #[derive(Debug, Parser)]
-struct Args {
-    /// A path to an arbitrary regular file.
-    source: PathBuf,
-    /// A path to a new or existing file (will be overwritten).
-    destination: PathBuf,
-}
+struct Args;
 
 fn main() -> anyhow::Result<()> {
-    let Args { source, destination } = Args::parse();
+    let _ = Args::parse();
     let channels = 1;
     let kcs_spec = Spec::with_kcs();
 
     let mut source_data = Vec::new();
-    BufReader::new(std::fs::File::open(source)?).read_to_end(&mut source_data)?;
+    BufReader::new(std::io::stdin()).read_to_end(&mut source_data)?;
     let encoded = encode(&kcs_spec, &source_data).collect::<Vec<_>>();
 
-    let mut wav_writer = hound::WavWriter::create(
-        &destination,
+    let mut output_buffer = Cursor::new(Vec::new());
+    let mut wav_writer = hound::WavWriter::new(
+        &mut output_buffer,
         hound::WavSpec {
             channels,
             sample_rate: kcs_spec.sample_rate as u32,
@@ -38,6 +32,7 @@ fn main() -> anyhow::Result<()> {
     }
     //wav_writer_i16.flush().unwrap();
     wav_writer.finalize()?;
+    std::io::stdout().write_all(&output_buffer.into_inner())?;
 
     Ok(())
 }

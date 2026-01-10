@@ -27,3 +27,5 @@ workspace = true
 [[example]]
 name = "kcs_encode"
 
+[[example]]
+name = "kcs_decode"
