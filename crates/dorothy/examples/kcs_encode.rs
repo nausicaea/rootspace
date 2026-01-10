@@ -4,17 +4,7 @@ use std::{
 };
 
 use clap::Parser;
-use dorothy::{SquareWaveSpec, encode};
-
-const fn spec() -> SquareWaveSpec {
-    SquareWaveSpec {
-        offset: 0,
-        amplitude: i8::MAX,
-        sample_rate: 9600,
-        target_freq: 2400,
-        num_periods: 8,
-    }
-}
+use dorothy::{Spec, encode};
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -27,11 +17,11 @@ struct Args {
 fn main() -> anyhow::Result<()> {
     let Args { source, destination } = Args::parse();
     let channels = 1;
-    let kcs_spec = spec();
+    let kcs_spec = Spec::with_kcs();
 
     let mut source_data = Vec::new();
     BufReader::new(std::fs::File::open(source)?).read_to_end(&mut source_data)?;
-    let encoded = encode(kcs_spec, 5, &source_data).collect::<Vec<_>>();
+    let encoded = encode(&kcs_spec, &source_data).collect::<Vec<_>>();
 
     let mut wav_writer = hound::WavWriter::create(
         &destination,

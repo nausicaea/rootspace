@@ -1,4 +1,5 @@
-use num_traits::{ConstZero, Signed};
+use num_traits::Signed;
+use numenor::ConstZero;
 
 /// These values are used to split a byte into individual bits during encoding / decoding
 pub const BITMASKS: [u8; 8] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
@@ -64,7 +65,7 @@ pub(crate) mod tests {
     }
 
     prop_compose! {
-        pub fn sr_and_tf()(sr in 2_usize..(usize::MAX >> 3))(sr in Just(sr), tf in 1..=(sr >> 1)) -> (usize, usize) {
+        pub fn sr_and_tf()(sr in 2_u32..(u32::MAX >> 3))(sr in Just(sr), tf in 1..=(sr >> 1)) -> (u32, u32) {
             (sr, tf)
         }
     }
@@ -95,7 +96,7 @@ pub(crate) mod tests {
         #[test]
         fn samples_per_bit_f32_and_usize_are_equivalent((sr, tf) in sr_and_tf()) {
             let spb_f32 = (sr as f32 * 8.0 / tf as f32).floor() as usize;
-            let spb_usize = samples_per_bit(sr, tf);
+            let spb_usize = samples_per_bit(sr as usize, tf as usize);
             assert_eq!(spb_f32, spb_usize);
         }
     }

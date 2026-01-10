@@ -1,8 +1,9 @@
 use self::byte_decoder::{ByteDecoder, Error as BitDecoderError};
-use crate::util;
+use crate::{Spec, util};
 use crate::util::{Sign, samples_per_bit};
 use itertools::Itertools;
-use num_traits::{ConstZero, Signed};
+use num_traits::Signed;
+use numenor::ConstZero;
 use std::task::Poll;
 
 mod byte_decoder;
@@ -12,19 +13,23 @@ mod byte_decoder;
 ///
 /// # Assumptions
 ///
-/// 1. The `sample_rate` is at least twice as large as `target_freq` (Nyquist)
-/// 2. Binary one `0b01` is represented by the `target_freq` frequency
+/// 1. The `spec.sample_rate` is at least twice as large as `spec.frequency` (Nyquist)
+/// 2. Binary one `0b01` is represented by the `spec.frequency` frequency
 /// 3. Each audio sample is represented by a signed number (i.e. `i8`, `i16`, `f32`, etc.)
 /// 4. Audio channels are interleaved
 ///
 /// # Errors
 ///
-/// 1. Errors with [`Error::NyquistViolation`] if the `sample_rate` is not at least twice as large as `target_freq`
-pub fn decode<N, I>(channels: u16, sample_rate: u32, target_freq: u32, samples: I) -> Result<Vec<Vec<u8>>, Error>
+/// 1. Errors with [`Error::NyquistViolation`] if the `spec.sample_rate` is not at least twice as large as `spec.target_freq`
+pub fn decode<N, I>(spec: &Spec<N>, samples: I) -> Result<Vec<Vec<u8>>, Error>
 where
     N: Copy + Signed + ConstZero + PartialOrd,
     I: IntoIterator<Item = N>,
 {
+    let channels = spec.channels;
+    let sample_rate = spec.sample_rate;
+    let target_freq = spec.frequency;
+
     if (target_freq << 1) > sample_rate {
         return Err(Error::NyquistViolation(sample_rate, target_freq));
     }
@@ -100,6 +105,3 @@ pub enum Error {
     #[error("Decoding error: {1}\nOutput so far:\n{0:?}")]
     BitDecoder(Vec<Vec<u8>>, #[source] BitDecoderError),
 }
-
-#[cfg(test)]
-mod tests {}

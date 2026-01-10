@@ -1,7 +1,9 @@
 mod decode;
 mod encode;
 mod ring_buffer;
+mod spec;
 mod util;
 
 pub use self::decode::decode;
-pub use self::encode::{SquareWave, SquareWaveSpec, encode};
+pub use self::encode::encode;
+pub use self::spec::Spec;

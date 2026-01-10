@@ -13,21 +13,25 @@ const TEST_DIR: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from(concat!(env!(
 #[rstest]
 #[case("hello-world.wav", "hello-world.txt")]
 fn decode_files_from_py_kcs(#[case] source: &str, #[case] expected: &str) {
+    use dorothy::Spec;
+
     let r = WavReader::open(TEST_DIR.join(source)).unwrap();
 
     // Verify decoder assumptions
-    let spec = r.spec();
+    let wav_spec = r.spec();
     assert_eq!(
-        spec.sample_format,
+        wav_spec.sample_format,
         hound::SampleFormat::Int,
         "Sample data type should be Int"
     );
-    assert!(spec.bits_per_sample <= 16, "Bits per sample should be at most 16");
+    assert!(wav_spec.bits_per_sample <= 16, "Bits per sample should be at most 16");
+
+    let mut spec = Spec::with_kcs();
+    spec.channels = wav_spec.channels;
+    spec.sample_rate = wav_spec.sample_rate;
 
     let output = decode(
-        spec.channels,
-        spec.sample_rate,
-        2400,
+        &spec,
         r.into_samples::<i16>().map(|s| s.unwrap()),
     )
     .unwrap();

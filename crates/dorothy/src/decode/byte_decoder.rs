@@ -115,23 +115,16 @@ impl State {
             *args.output = Poll::Ready(Err(e));
             return Self::Complete;
         }
-        *args.output = Poll::Ready(Ok(byte));
-        Self::Initialize
-        // if args.look_behind.count_changed() >= Self::HIGH {
-        //     *args.output = Poll::Ready(Ok(byte));
-        //     Self::Initialize
-        // } else {
-        //     let (sample_idx, channel_idx, _) =
-        //         args.look_behind
-        //             .front()
-        //             .copied()
-        //             .unwrap_or((0, 0, SignChange::Unchanged));
-        //     *args.output = Poll::Ready(Err(Error::MissingStopBits(
-        //         sample_idx - 2 * args.samples_per_bit,
-        //         channel_idx,
-        //     )));
-        //     Self::Complete
-        // }
+        if args.look_behind.count_changed() >= Self::HIGH {
+            *args.output = Poll::Ready(Ok(byte));
+            Self::Initialize
+        } else {
+            *args.output = Poll::Ready(Err(Error::MissingStopBits(
+                todo!(),
+                todo!(),
+            )));
+            Self::Complete
+        }
     }
 }
 
