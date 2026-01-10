@@ -12,6 +12,7 @@ pub struct Spec<S> {
 }
 
 impl<N: numenor::ConstBounded + numenor::ConstZero> Spec<N> {
+    #[must_use]
     pub const fn with_kcs() -> Self {
         Self {
             amplitude: N::MAX,
