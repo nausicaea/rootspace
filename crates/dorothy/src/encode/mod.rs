@@ -3,6 +3,9 @@ use crate::util::BITMASKS;
 use std::borrow::Borrow;
 use std::iter::FusedIterator;
 
+/// # Developer Notes
+///
+/// TODO: don't hard-code the sample width to i8
 pub fn encode<T, I>(spec: &Spec<i8>, data: I) -> impl Iterator<Item = i8>
 where
     T: Borrow<u8>,

@@ -21,6 +21,10 @@ mod byte_decoder;
 /// # Errors
 ///
 /// 1. Errors with [`Error::NyquistViolation`] if the `spec.sample_rate` is not at least twice as large as `spec.target_freq`
+///
+/// # Developer Notes
+///
+/// TODO: make the output an iterator
 pub fn decode<N, I>(spec: &Spec<N>, samples: I) -> Result<Vec<Vec<u8>>, Error>
 where
     N: Copy + Signed + ConstZero + PartialOrd,
