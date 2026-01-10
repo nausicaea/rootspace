@@ -72,7 +72,7 @@ impl Resources {
     /// Create a new resources container with the specified capacity.
     #[must_use]
     pub fn with_capacity(cap: usize) -> Self {
-        Resources(HashMap::with_capacity(cap))
+        Self(HashMap::with_capacity(cap))
     }
 
     /// In a similar fashion to `Resources::deserialize`, the following method uses the types stored
@@ -95,7 +95,7 @@ impl Resources {
         }
 
         let rr = RR::with_deps(deps)?;
-        let mut res = Resources::with_capacity(RR::LEN);
+        let mut res = Self::with_capacity(RR::LEN);
         recursive_insert(&mut res, rr);
 
         Ok(res)
@@ -217,7 +217,7 @@ impl Resources {
 }
 
 impl PartialEq for Resources {
-    fn eq(&self, rhs: &Resources) -> bool {
+    fn eq(&self, rhs: &Self) -> bool {
         if self.len() != rhs.len() {
             return false;
         }

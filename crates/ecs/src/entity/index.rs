@@ -9,17 +9,17 @@ pub struct Index(u32);
 
 impl Index {
     /// Create a new index.
-    pub fn new(idx: u32) -> Index {
-        Index(idx)
+    pub const fn new(idx: u32) -> Self {
+        Self(idx)
     }
 
     #[must_use]
-    pub fn idx(&self) -> u32 {
+    pub const fn idx(&self) -> u32 {
         self.0
     }
 
     /// Return a copy of the current index and then increments the current index.
-    pub fn post_increment(&mut self) -> Index {
+    pub const fn post_increment(&mut self) -> Self {
         let tmp = *self;
         self.0 += 1;
         tmp
@@ -44,8 +44,8 @@ impl std::fmt::Display for Index {
     }
 }
 
-impl AsRef<Index> for Index {
-    fn as_ref(&self) -> &Index {
+impl AsRef<Self> for Index {
+    fn as_ref(&self) -> &Self {
         self
     }
 }
@@ -61,19 +61,19 @@ impl std::str::FromStr for Index {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let idx: u32 = s.parse()?;
-        Ok(Index(idx))
+        Ok(Self(idx))
     }
 }
 
 impl From<u32> for Index {
     fn from(value: u32) -> Self {
-        Index(value)
+        Self(value)
     }
 }
 
 impl From<&u32> for Index {
     fn from(value: &u32) -> Self {
-        Index(*value)
+        Self(*value)
     }
 }
 
@@ -107,12 +107,12 @@ impl From<&Index> for u32 {
 
 impl From<Index> for usize {
     fn from(value: Index) -> Self {
-        value.0 as usize
+        value.0 as Self
     }
 }
 
 impl From<&Index> for usize {
     fn from(value: &Index) -> Self {
-        value.0 as usize
+        value.0 as Self
     }
 }

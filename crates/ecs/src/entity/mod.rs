@@ -19,15 +19,15 @@ pub struct Entity {
 
 impl Entity {
     /// Create a new entity by specifying index and generation directly.
-    pub fn new<I: Into<Index>, G: Into<Generation>>(idx: I, generation: G) -> Entity {
-        Entity {
+    pub fn new<I: Into<Index>, G: Into<Generation>>(idx: I, generation: G) -> Self {
+        Self {
             index: idx.into(),
             generation: generation.into(),
         }
     }
 
     /// Return the integer index of the entity, which can be used to index into data structures.
-    pub fn idx(&self) -> Index {
+    pub const fn idx(&self) -> Index {
         self.index
     }
 
@@ -56,8 +56,8 @@ impl Ord for Entity {
     }
 }
 
-impl AsRef<Entity> for Entity {
-    fn as_ref(&self) -> &Entity {
+impl AsRef<Self> for Entity {
+    fn as_ref(&self) -> &Self {
         self
     }
 }
@@ -86,7 +86,7 @@ impl std::str::FromStr for Entity {
         let idx = parts[0].parse::<Index>()?;
         let r#gen = parts[1].parse::<Generation>()?;
 
-        Ok(Entity {
+        Ok(Self {
             index: idx,
             generation: r#gen,
         })
@@ -100,8 +100,8 @@ impl From<Entity> for (Index, Generation) {
 }
 
 impl From<(Index, Generation)> for Entity {
-    fn from(value: (Index, Generation)) -> Entity {
-        Entity {
+    fn from(value: (Index, Generation)) -> Self {
+        Self {
             index: value.0,
             generation: value.1,
         }

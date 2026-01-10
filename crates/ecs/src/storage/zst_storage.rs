@@ -42,7 +42,7 @@ where
 {
     #[must_use]
     pub fn with_capacity(_capacity: usize) -> Self {
-        ZstStorage {
+        Self {
             index: BTreeSet::default(),
             data: T::default(),
         }
@@ -115,7 +115,7 @@ where
     T: Default,
 {
     fn default() -> Self {
-        ZstStorage {
+        Self {
             index: BTreeSet::default(),
             data: T::default(),
         }
@@ -125,7 +125,7 @@ where
 impl<D, T: Default> WithDependencies<D> for ZstStorage<T> {
     #[tracing::instrument(skip_all)]
     fn with_deps(_: &D) -> anyhow::Result<Self> {
-        Ok(ZstStorage::default())
+        Ok(Self::default())
     }
 }
 
@@ -147,7 +147,7 @@ impl<'a, T> IntoIterator for &'a mut ZstStorage<T> {
     }
 }
 
-impl<T> PartialEq<ZstStorage<T>> for ZstStorage<T> {
+impl<T> PartialEq<Self> for ZstStorage<T> {
     fn eq(&self, rhs: &Self) -> bool {
         self.index.eq(&rhs.index)
     }
@@ -184,7 +184,7 @@ where
 
         impl<U> Default for ZstStorageVisitor<U> {
             fn default() -> Self {
-                ZstStorageVisitor(PhantomData)
+                Self(PhantomData)
             }
         }
 

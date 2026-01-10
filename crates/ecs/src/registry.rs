@@ -14,8 +14,8 @@ pub struct Element<H, T> {
 
 impl<H, T> Element<H, T> {
     /// Create a new `Element`, given a head and a tail argument.
-    pub fn new(head: H, tail: T) -> Self {
-        Element { head, tail }
+    pub const fn new(head: H, tail: T) -> Self {
+        Self { head, tail }
     }
 }
 

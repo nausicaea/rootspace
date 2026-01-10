@@ -9,7 +9,7 @@ pub struct Systems(Vec<Arc<Mutex<Box<dyn System>>>>);
 impl Systems {
     #[must_use]
     pub fn with_capacity(cap: usize) -> Self {
-        Systems(Vec::with_capacity(cap))
+        Self(Vec::with_capacity(cap))
     }
 
     #[tracing::instrument(skip_all)]
@@ -28,7 +28,7 @@ impl Systems {
         }
 
         let sr = SR::with_res(res)?;
-        let mut sys = Systems::with_capacity(SR::LEN);
+        let mut sys = Self::with_capacity(SR::LEN);
         recursor(&mut sys, sr);
 
         Ok(sys)

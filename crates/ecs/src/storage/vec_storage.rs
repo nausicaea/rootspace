@@ -23,7 +23,7 @@ pub struct VecStorage<T> {
 impl<T> VecStorage<T> {
     #[must_use]
     pub fn with_capacity(_capacity: usize) -> Self {
-        VecStorage {
+        Self {
             index: BTreeSet::default(),
             data: Vec::default(),
         }
@@ -200,7 +200,7 @@ impl<'a, T> IntoIterator for &'a mut VecStorage<T> {
 
 impl<T> Default for VecStorage<T> {
     fn default() -> Self {
-        VecStorage {
+        Self {
             index: BTreeSet::default(),
             data: Vec::default(),
         }
@@ -210,11 +210,11 @@ impl<T> Default for VecStorage<T> {
 impl<D, T> WithDependencies<D> for VecStorage<T> {
     #[tracing::instrument(skip_all)]
     fn with_deps(_: &D) -> anyhow::Result<Self> {
-        Ok(VecStorage::default())
+        Ok(Self::default())
     }
 }
 
-impl<T> PartialEq<VecStorage<T>> for VecStorage<T>
+impl<T> PartialEq<Self> for VecStorage<T>
 where
     T: PartialEq<T>,
 {
@@ -264,7 +264,7 @@ where
 
         impl<T> Default for VecStorageVisitor<T> {
             fn default() -> Self {
-                VecStorageVisitor(PhantomData)
+                Self(PhantomData)
             }
         }
 

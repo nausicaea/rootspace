@@ -33,7 +33,7 @@ impl Generation {
 
     /// Returns `true`, if the current generation is an odd number, `false` if even or zero.
     #[must_use]
-    pub fn is_active(&self) -> bool {
+    pub const fn is_active(&self) -> bool {
         self.0 % 2 == 1
     }
 }
@@ -67,19 +67,19 @@ impl std::str::FromStr for Generation {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let r#gen: u32 = s.parse()?;
-        Ok(Generation(r#gen))
+        Ok(Self(r#gen))
     }
 }
 
 impl From<u32> for Generation {
     fn from(value: u32) -> Self {
-        Generation(value)
+        Self(value)
     }
 }
 
 impl From<&u32> for Generation {
     fn from(value: &u32) -> Self {
-        Generation(*value)
+        Self(*value)
     }
 }
 
@@ -113,12 +113,12 @@ impl From<&Generation> for u32 {
 
 impl From<Generation> for usize {
     fn from(value: Generation) -> Self {
-        value.0 as usize
+        value.0 as Self
     }
 }
 
 impl From<&Generation> for usize {
     fn from(value: &Generation) -> Self {
-        value.0 as usize
+        value.0 as Self
     }
 }

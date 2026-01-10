@@ -14,8 +14,8 @@ pub struct ReceiverState<E> {
 
 impl<E> ReceiverState<E> {
     #[must_use]
-    pub fn new(id: usize) -> Self {
-        ReceiverState {
+    pub const fn new(id: usize) -> Self {
+        Self {
             id,
             read: 0,
             received: 0,
@@ -23,21 +23,21 @@ impl<E> ReceiverState<E> {
         }
     }
 
-    pub fn reset(&mut self) {
+    pub const fn reset(&mut self) {
         self.read = 0;
         self.received = 0;
     }
 }
 
-impl<E> PartialEq<ReceiverState<E>> for ReceiverState<E> {
-    fn eq(&self, other: &ReceiverState<E>) -> bool {
+impl<E> PartialEq<Self> for ReceiverState<E> {
+    fn eq(&self, other: &Self) -> bool {
         self.id == other.id && self.read == other.read && self.received == other.received
     }
 }
 
 impl<E> Clone for ReceiverState<E> {
     fn clone(&self) -> Self {
-        ReceiverState {
+        Self {
             id: self.id,
             read: self.read,
             received: self.received,
@@ -48,7 +48,7 @@ impl<E> Clone for ReceiverState<E> {
 
 impl<E> From<(usize, usize, usize)> for ReceiverState<E> {
     fn from(value: (usize, usize, usize)) -> Self {
-        ReceiverState {
+        Self {
             id: value.0,
             read: value.1,
             received: value.2,

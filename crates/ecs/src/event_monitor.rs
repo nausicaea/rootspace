@@ -22,7 +22,7 @@ where
     fn with_res(res: &Resources) -> anyhow::Result<Self> {
         let receiver = res.write::<EventQueue<E>>().subscribe::<Self>();
 
-        Ok(EventMonitor { receiver })
+        Ok(Self { receiver })
     }
 }
 

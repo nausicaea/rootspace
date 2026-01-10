@@ -69,7 +69,7 @@ impl World {
 
         let receiver = resources.get_mut::<EventQueue<WorldEvent>>().subscribe::<Self>();
 
-        Ok(World {
+        Ok(Self {
             resources: Arc::new(resources),
             fixed_update_systems,
             update_systems,
@@ -116,7 +116,7 @@ impl World {
     /// * `dt` - Interpreted as the time interval between calls to `fixed_update`.
     #[tracing::instrument(skip_all)]
     pub fn fixed_update(&mut self, t: Duration, dt: Duration) {
-        World::run_systems_parallel(&self.fixed_update_systems, &self.resources, t, dt)
+        Self::run_systems_parallel(&self.fixed_update_systems, &self.resources, t, dt)
     }
 
     /// The dynamic update method is supposed to be called from the main loop just before the
@@ -128,7 +128,7 @@ impl World {
     /// * `dt` - Interpreted as the time interval between calls to `update`.
     #[tracing::instrument(skip_all)]
     pub fn update(&mut self, t: Duration, dt: Duration) {
-        World::run_systems_parallel(&self.update_systems, &self.resources, t, dt)
+        Self::run_systems_parallel(&self.update_systems, &self.resources, t, dt)
     }
 
     /// The render method is supposed to be called when a re-draw of the graphical representation
@@ -151,7 +151,7 @@ impl World {
     pub fn maintain(&mut self) -> LoopControl {
         // Run all custom maintenance systems
         let dummy_time = Duration::new(0, 0);
-        World::run_systems_parallel(&self.maintenance_systems, &self.resources, dummy_time, dummy_time);
+        Self::run_systems_parallel(&self.maintenance_systems, &self.resources, dummy_time, dummy_time);
 
         // Receive all pending events
         let events = Arc::get_mut(&mut self.resources)

@@ -11,8 +11,8 @@ pub struct ReceiverId<E> {
     _e: PhantomData<E>,
 }
 
-impl<E> PartialEq<ReceiverId<E>> for ReceiverId<E> {
-    fn eq(&self, other: &ReceiverId<E>) -> bool {
+impl<E> PartialEq<Self> for ReceiverId<E> {
+    fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }
 }
@@ -40,11 +40,11 @@ impl<E> Clone for ReceiverId<E> {
 impl<E> Copy for ReceiverId<E> {}
 
 impl<E> ReceiverId<E> {
-    pub(super) fn new(id: usize) -> Self {
-        ReceiverId { id, _e: PhantomData }
+    pub(super) const fn new(id: usize) -> Self {
+        Self { id, _e: PhantomData }
     }
 
-    pub(super) fn id(self) -> usize {
+    pub(super) const fn id(self) -> usize {
         self.id
     }
 }

@@ -149,7 +149,7 @@ impl<E> Resource for EventQueue<E> where E: fmt::Debug + 'static + Send + Sync {
 impl<D, E> WithDependencies<D> for EventQueue<E> {
     #[tracing::instrument(skip_all)]
     fn with_deps(_: &D) -> anyhow::Result<Self> {
-        Ok(EventQueue::default())
+        Ok(Self::default())
     }
 }
 
@@ -168,7 +168,7 @@ where
 
 impl<E> Default for EventQueue<E> {
     fn default() -> Self {
-        EventQueue {
+        Self {
             events: VecDeque::default(),
             receivers: HashMap::default(),
             max_id: 0,

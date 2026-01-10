@@ -11,7 +11,7 @@ use super::{
 };
 
 /// The `Entities` resource keeps track of all entities.
-#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Entities {
     /// Stores the highest assigned `Entity` index plus one.
     max_idx: Index,
@@ -86,7 +86,7 @@ impl Resource for Entities {}
 impl<D> WithDependencies<D> for Entities {
     #[tracing::instrument(skip_all)]
     fn with_deps(_: &D) -> anyhow::Result<Self> {
-        Ok(Entities::default())
+        Ok(Self::default())
     }
 }
 
