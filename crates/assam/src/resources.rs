@@ -187,7 +187,7 @@ where
             })?;
         }
 
-        Ok(AssetDatabase {
+        Ok(Self {
             game_name: deps.name().to_string(),
             project_dirs,
             assets,
