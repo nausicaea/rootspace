@@ -15,7 +15,7 @@ where
 
 impl<T> Cross<Self> for Unit<T>
 where
-    T: Cross<T, Output = T> + Into<Unit<T>>,
+    T: Cross<T, Output = T> + Into<Self>,
 {
     type Output = Self;
 

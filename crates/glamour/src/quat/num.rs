@@ -1,11 +1,14 @@
-use num_traits::Float;
 
 use super::Quat;
-use crate::{mat::Mat4, num::ToMatrix, unit::Unit};
+use crate::{
+    mat::Mat4,
+    num::{CustomFloat, ToMatrix},
+    unit::Unit,
+};
 
 impl<R> ToMatrix<R> for Unit<Quat<R>>
 where
-    R: Float,
+    R: CustomFloat,
 {
     fn to_matrix(&self) -> Mat4<R> {
         (*self).into()

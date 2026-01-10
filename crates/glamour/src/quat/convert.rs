@@ -1,11 +1,11 @@
 use num_traits::Float;
 
 use super::Quat;
-use crate::{mat::Mat4, unit::Unit, vec::Vec4};
+use crate::{mat::Mat4, num::CustomFloat, unit::Unit, vec::Vec4};
 
 impl<R> From<Mat4<R>> for Unit<Quat<R>>
 where
-    R: Float,
+    R: CustomFloat,
 {
     /// Based on information from [Euclidean Space Blog](https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm)
     fn from(v: Mat4<R>) -> Self {
@@ -51,13 +51,13 @@ where
             )
         };
 
-        Unit::from(q)
+        Self::from(q)
     }
 }
 
 impl<R> From<Unit<Quat<R>>> for Mat4<R>
 where
-    R: Float,
+    R: CustomFloat,
 {
     /// Based on information from the [Euclidean Space Blog](https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm)
     fn from(v: Unit<Quat<R>>) -> Self {
@@ -70,7 +70,7 @@ where
         let o = R::one();
         let t = o + o;
 
-        Mat4::from([
+        Self::from([
             [
                 o - t * j * j - t * k * k,
                 t * i * j - t * k * w,
@@ -94,21 +94,15 @@ where
     }
 }
 
-impl<R> From<Vec4<R>> for Quat<R>
-where
-    R: num_traits::Zero,
-{
+impl<R> From<Vec4<R>> for Quat<R> {
     fn from(value: Vec4<R>) -> Self {
-        Quat::new(value.w, value.x, value.y, value.z)
+        Self::new(value.w, value.x, value.y, value.z)
     }
 }
 
-impl<R> From<Quat<R>> for Vec4<R>
-where
-    R: num_traits::Zero,
-{
+impl<R> From<Quat<R>> for Vec4<R> {
     fn from(value: Quat<R>) -> Self {
-        Vec4::new(value.i, value.j, value.k, value.w)
+        Self::new(value.i, value.j, value.k, value.w)
     }
 }
 

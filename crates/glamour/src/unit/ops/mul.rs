@@ -14,14 +14,14 @@ where
     }
 }
 
-impl<T> Mul<Unit<T>> for Unit<T>
+impl<T> Mul<Self> for Unit<T>
 where
-    T: Into<Unit<T>>,
-    for<'a, 'b> &'a Unit<T>: Mul<&'b Unit<T>, Output = Unit<T>>,
+    T: Into<Self>,
+    for<'a, 'b> &'a Self: Mul<&'b Self, Output = Self>,
 {
-    type Output = Unit<T>;
+    type Output = Self;
 
-    fn mul(self, rhs: Unit<T>) -> Self::Output {
+    fn mul(self, rhs: Self) -> Self::Output {
         Mul::mul(&self, &rhs)
     }
 }
@@ -38,14 +38,14 @@ where
     }
 }
 
-impl<'b, T> Mul<&'b Unit<T>> for Unit<T>
+impl<'b, T> Mul<&'b Self> for Unit<T>
 where
-    T: Into<Unit<T>>,
-    for<'a> &'a Unit<T>: Mul<&'b Unit<T>, Output = Unit<T>>,
+    T: Into<Self>,
+    for<'a> &'a Self: Mul<&'b Self, Output = Self>,
 {
-    type Output = Unit<T>;
+    type Output = Self;
 
-    fn mul(self, rhs: &'b Unit<T>) -> Self::Output {
+    fn mul(self, rhs: &'b Self) -> Self::Output {
         Mul::mul(&self, rhs)
     }
 }

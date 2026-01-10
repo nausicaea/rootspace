@@ -1,11 +1,11 @@
 use forward_ref::forward_ref_binop;
-use num_traits::Float;
+use numenor::ConstZero;
 
-use crate::{affine::Affine, mat::Mat4, ops::dot::Dot};
+use crate::{affine::Affine, mat::Mat4, num::CustomFloat, ops::dot::Dot};
 
 impl<'b, R> Dot<&'b Affine<R>> for &Affine<R>
 where
-    R: Float,
+    R: CustomFloat + ConstZero,
 {
     type Output = Mat4<R>;
 
@@ -14,4 +14,4 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: Float> Dot, dot for Affine<R>, Affine<R>, Mat4<R>);
+forward_ref_binop!(impl<R: CustomFloat> Dot, dot for Affine<R>, Affine<R>, Mat4<R>);

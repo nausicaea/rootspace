@@ -1,5 +1,6 @@
+use numenor::ConstZero;
+
 use super::Mat4;
-use crate::num::Zero;
 
 impl<R> serde::ser::Serialize for Mat4<R>
 where
@@ -23,7 +24,7 @@ where
 
 impl<'de, R> serde::de::Deserialize<'de> for Mat4<R>
 where
-    Self: Zero,
+    Self: ConstZero,
     R: Copy + serde::de::Deserialize<'de>,
 {
     fn deserialize<D>(de: D) -> Result<Self, D::Error>
@@ -34,13 +35,13 @@ where
 
         impl<R> Default for MatVisitor<R> {
             fn default() -> Self {
-                MatVisitor(std::marker::PhantomData)
+                Self(std::marker::PhantomData)
             }
         }
 
         impl<'v, R> serde::de::Visitor<'v> for MatVisitor<R>
         where
-            Mat4<R>: Zero,
+            Mat4<R>: ConstZero,
             R: Copy + serde::de::Deserialize<'v>,
         {
             type Value = Mat4<R>;
@@ -55,7 +56,7 @@ where
             {
                 use serde::de::Error;
 
-                let mut mat: Mat4<R> = Mat4::zero();
+                let mut mat: Mat4<R> = Mat4::ZERO;
 
                 for i in 0..4 {
                     for j in 0..4 {

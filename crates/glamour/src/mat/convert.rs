@@ -1,9 +1,9 @@
+use numenor::ConstZero;
 use thiserror::Error;
 
 use super::Mat4;
-use crate::num::Zero;
 
-#[derive(Debug, Clone, Copy, PartialEq, Error)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Error)]
 pub enum Error {
     #[error("Expected a sequence of length {expected}, got {found} elements instead")]
     LengthMismatch { expected: usize, found: usize },
@@ -17,7 +17,7 @@ impl<R> AsRef<[[R; 4]; 4]> for Mat4<R> {
 
 impl<R> TryFrom<Vec<R>> for Mat4<R>
 where
-    Self: Zero,
+    Self: ConstZero,
     R: Copy,
 {
     type Error = Error;
@@ -30,7 +30,7 @@ where
             });
         }
 
-        let mut mat = Mat4::zero();
+        let mut mat = Self::ZERO;
         for i in 0..4 {
             for j in 0..4 {
                 mat[(i, j)] = v[i * 4 + j];
@@ -43,13 +43,13 @@ where
 
 impl<R> FromIterator<R> for Mat4<R>
 where
-    Self: Zero,
+    Self: ConstZero,
     R: Copy,
 {
     fn from_iter<T: IntoIterator<Item = R>>(iter: T) -> Self {
         let mut iter = iter.into_iter();
 
-        let mut mat: Mat4<R> = Mat4::zero();
+        let mut mat: Self = Self::ZERO;
         for i in 0..4 {
             for j in 0..4 {
                 mat[(i, j)] = iter
@@ -63,7 +63,7 @@ where
 
 impl<R> From<[[R; 4]; 4]> for Mat4<R> {
     fn from(v: [[R; 4]; 4]) -> Self {
-        Mat4(v)
+        Self(v)
     }
 }
 

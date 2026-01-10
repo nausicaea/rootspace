@@ -1,8 +1,8 @@
 use builder::AffineBuilder;
-use num_traits::Float;
+use numenor::{ConstOne, ConstZero};
 use serde::{Deserialize, Serialize};
 
-use crate::{mat::Mat4, num::Zero, ops::cross::Cross, quat::Quat, unit::Unit, vec::Vec4};
+use crate::{mat::Mat4, num::CustomFloat, ops::cross::Cross, quat::Quat, unit::Unit, vec::Vec4};
 
 mod approx;
 pub mod builder;
@@ -23,6 +23,7 @@ pub struct Affine<R> {
 }
 
 impl<R> Affine<R> {
+    #[must_use] 
     pub fn builder() -> AffineBuilder<R> {
         AffineBuilder::default()
     }
@@ -30,20 +31,21 @@ impl<R> Affine<R> {
 
 impl<R> Affine<R>
 where
-    R: Float,
+    R: CustomFloat,
 {
+    #[must_use] 
     pub fn identity() -> Self {
-        Affine {
-            t: Vec4::zero(),
+        Self {
+            t: Vec4::ZERO,
             o: Quat::identity().into(),
-            s: R::one(),
+            s: R::ONE,
         }
     }
 }
 
 impl<R> Affine<R>
 where
-    R: Float + num_traits::ConstOne + num_traits::ConstZero,
+    R: CustomFloat,
 {
     pub fn with_look_at_rh(eye: Vec4<R>, target: Vec4<R>, up: Unit<Vec4<R>>) -> Self {
         let eye = Vec4::new_point(eye.x, eye.y, eye.z);
@@ -55,20 +57,20 @@ where
         let rotated_up: Unit<_> = right.cross(dir);
 
         let mat = Mat4([
-            [right.x, right.y, right.z, R::zero()],
-            [rotated_up.x, rotated_up.y, rotated_up.z, R::zero()],
-            [-dir.x, -dir.y, -dir.z, R::zero()],
-            [R::zero(), R::zero(), R::zero(), R::one()],
+            [right.x, right.y, right.z, R::ZERO],
+            [rotated_up.x, rotated_up.y, rotated_up.z, R::ZERO],
+            [-dir.x, -dir.y, -dir.z, R::ZERO],
+            [R::ZERO, R::ZERO, R::ZERO, R::ONE],
         ]);
 
         let o: Unit<Quat<R>> = mat.into();
 
-        let mut t = Vec4::zero() - eye;
-        t.w = R::zero();
+        let mut t = Vec4::ZERO - eye;
+        t.w = R::ZERO;
         let qt = Quat::from(t);
         let t: Vec4<R> = (o.0 * qt * o.0.c()).into();
 
-        Affine { t, o, s: R::one() }
+        Self { t, o, s: R::ONE }
     }
 }
 
@@ -144,7 +146,7 @@ mod tests {
         #[test]
         #[ignore = "our implementation has significant differences to cgmath for the translational part"]
         fn with_look_at_rh_is_equal_to_cgmath(eye in vec4(bounded_nonzero_f32(-16, 16))) {
-            let cntr = Vec4::zero();
+            let cntr = Vec4::ZERO;
             let up: Unit<Vec4<f32>> = Vec4::y();
 
             let glamour_look_at = Affine::with_look_at_rh(eye, cntr, up);
@@ -213,7 +215,7 @@ mod tests {
     #[test]
     fn affine_provides_identity_constructor() {
         let a: Affine<f32> = Affine::identity();
-        assert_eq!(a.t, Vec4::<f32>::zero());
+        assert_eq!(a.t, Vec4::<f32>::ZERO);
         assert_eq!(a.o, Unit::from(Quat::<f32>::identity()));
         assert_eq!(a.s, 1.0f32);
     }

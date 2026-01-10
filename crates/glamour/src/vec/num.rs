@@ -1,27 +1,12 @@
-use crate::{
-    num::{ConstOne, ConstZero, One, Zero},
-    vec::Vec4,
-};
+use numenor::{ConstOne, ConstZero};
 
-impl<R> Zero for Vec4<R>
-where
-    R: num_traits::Zero,
-{
-    fn zero() -> Self {
-        Vec4 {
-            x: R::zero(),
-            y: R::zero(),
-            z: R::zero(),
-            w: R::zero(),
-        }
-    }
-}
+use crate::vec::Vec4;
 
 impl<R> ConstZero for Vec4<R>
 where
-    R: num_traits::ConstZero,
+    R: ConstZero,
 {
-    const ZERO: Self = Vec4 {
+    const ZERO: Self = Self {
         x: R::ZERO,
         y: R::ZERO,
         z: R::ZERO,
@@ -29,25 +14,11 @@ where
     };
 }
 
-impl<R> One for Vec4<R>
-where
-    R: num_traits::One,
-{
-    fn one() -> Self {
-        Vec4 {
-            x: R::one(),
-            y: R::one(),
-            z: R::one(),
-            w: R::one(),
-        }
-    }
-}
-
 impl<R> ConstOne for Vec4<R>
 where
-    R: num_traits::ConstOne,
+    R: ConstOne,
 {
-    const ONE: Vec4<R> = Vec4 {
+    const ONE: Self = Self {
         x: R::ONE,
         y: R::ONE,
         z: R::ONE,

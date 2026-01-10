@@ -1,10 +1,11 @@
-use num_traits::{NumAssign, float::Float};
+use num_traits::NumAssign;
+use numenor::ConstZero;
 
-use crate::{affine::Affine, mat::Mat4};
+use crate::{affine::Affine, mat::Mat4, num::CustomFloat};
 
 impl<R> From<Affine<R>> for Mat4<R>
 where
-    R: Float,
+    R: CustomFloat + ConstZero,
 {
     fn from(v: Affine<R>) -> Self {
         From::from(&v)
@@ -13,22 +14,22 @@ where
 
 impl<'a, R> From<&'a Affine<R>> for Mat4<R>
 where
-    R: Float,
+    R: CustomFloat + ConstZero,
 {
     fn from(v: &'a Affine<R>) -> Self {
-        let mut m: Mat4<R> = v.o.into();
+        let mut m: Self = v.o.into();
         m = m * v.s;
         m[(0, 3)] = v.t[0];
         m[(1, 3)] = v.t[1];
         m[(2, 3)] = v.t[2];
-        m[(3, 3)] = R::one();
+        m[(3, 3)] = R::ONE;
         m
     }
 }
 
 impl<'a, R> From<&'a Affine<R>> for [[R; 4]; 4]
 where
-    R: Float + NumAssign,
+    R: CustomFloat + NumAssign,
 {
     fn from(value: &'a Affine<R>) -> Self {
         Into::<Mat4<R>>::into(value).0

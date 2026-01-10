@@ -1,6 +1,5 @@
-use num_traits::Float;
 
-use crate::{affine::Affine, num::Zero, quat::Quat, unit::Unit, vec::Vec4};
+use crate::{affine::Affine, num::CustomFloat, quat::Quat, unit::Unit, vec::Vec4};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct AffineBuilder<R> {
@@ -28,20 +27,21 @@ impl<R> AffineBuilder<R> {
 
 impl<R> AffineBuilder<R>
 where
-    R: Float,
+    R: CustomFloat,
 {
     pub fn build(self) -> Affine<R> {
+        use ::numenor::ConstZero;
         Affine {
-            t: self.t.unwrap_or_else(Vec4::zero),
-            o: self.o.unwrap_or_else(|| Unit::from(Quat::identity())),
-            s: self.s.unwrap_or_else(|| R::one()),
+            t: self.t.unwrap_or(Vec4::ZERO),
+            o: self.o.unwrap_or(Unit::from(Quat::identity())),
+            s: self.s.unwrap_or(R::ONE),
         }
     }
 }
 
 impl<R> Default for AffineBuilder<R> {
     fn default() -> Self {
-        AffineBuilder {
+        Self {
             t: None,
             o: None,
             s: None,

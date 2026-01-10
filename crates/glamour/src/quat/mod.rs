@@ -1,3 +1,4 @@
+use crate::num::CustomFloat;
 use num_traits::{Float, One, Zero};
 
 use crate::{unit::Unit, vec::Vec4};
@@ -7,7 +8,7 @@ mod convert;
 mod num;
 mod ops;
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Quat<R> {
     pub w: R,
     pub i: R,
@@ -17,18 +18,18 @@ pub struct Quat<R> {
 
 impl<R> Quat<R> {
     pub const fn new(w: R, i: R, j: R, k: R) -> Self {
-        Quat { w, i, j, k }
+        Self { w, i, j, k }
     }
 }
 
 impl<R> Quat<R>
 where
-    R: Float,
+    R: CustomFloat,
 {
-    pub fn with_axis_angle(axis: Unit<Vec4<R>>, angle: R) -> Unit<Quat<R>> {
+    pub fn with_axis_angle(axis: Unit<Vec4<R>>, angle: R) -> Unit<Self> {
         let half = R::one() / (R::one() + R::one());
         let (sin, cos) = R::sin_cos(angle * half);
-        Unit::from(Quat::new(cos, axis.x * sin, axis.y * sin, axis.z * sin))
+        Unit::from(Self::new(cos, axis.x * sin, axis.y * sin, axis.z * sin))
     }
 }
 
@@ -37,7 +38,7 @@ where
     R: Float,
 {
     pub fn c(&self) -> Self {
-        Quat::new(self.w, -self.i, -self.j, -self.k)
+        Self::new(self.w, -self.i, -self.j, -self.k)
     }
 
     pub fn is_nan(&self) -> bool {
@@ -58,8 +59,9 @@ impl<R> Quat<R>
 where
     R: Zero + One,
 {
+    #[must_use] 
     pub fn identity() -> Self {
-        Quat {
+        Self {
             w: R::one(),
             i: R::zero(),
             j: R::zero(),

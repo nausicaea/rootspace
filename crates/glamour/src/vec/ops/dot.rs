@@ -1,14 +1,12 @@
 use std::ops::Mul;
 
-use num_traits::Float;
-
 use super::super::Vec4;
-use crate::{abop, ops::dot::Dot};
+use crate::{abop, num::CustomFloat, ops::dot::Dot};
 use forward_ref::forward_ref_binop;
 
 impl<'b, R> Dot<&'b Vec4<R>> for &Vec4<R>
 where
-    R: Float,
+    R: CustomFloat,
 {
     type Output = R;
 
@@ -17,7 +15,7 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: Float> Dot, dot for Vec4<R>, Vec4<R>, R);
+forward_ref_binop!(impl<R: CustomFloat> Dot, dot for Vec4<R>, Vec4<R>, R);
 
 impl<'a, 'b, R> Mul<&'b Vec4<R>> for &'a Vec4<R>
 where
@@ -30,4 +28,4 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: Float> Mul, mul for Vec4<R>, Vec4<R>, R);
+forward_ref_binop!(impl<R: CustomFloat> Mul, mul for Vec4<R>, Vec4<R>, R);

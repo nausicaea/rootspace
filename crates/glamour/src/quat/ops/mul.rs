@@ -2,6 +2,7 @@ use std::ops::Mul;
 
 use num_traits::Float;
 
+use crate::num::CustomFloat;
 use crate::quat::Quat;
 use forward_ref::forward_ref_binop;
 
@@ -30,7 +31,7 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: Float> Mul, mul for Quat<R>, Quat<R>, Quat<R>);
+forward_ref_binop!(impl<R: CustomFloat> Mul, mul for Quat<R>, Quat<R>, Quat<R>);
 
 #[cfg(test)]
 mod tests {

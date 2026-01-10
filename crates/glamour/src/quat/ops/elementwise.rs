@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-use num_traits::Float;
+use crate::num::CustomFloat;
 
 use super::super::Quat;
 
@@ -23,7 +23,7 @@ macro_rules! impl_scalar_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl<R: Float> $Op, $op for Quat<R>, R, Quat<R>);
+        forward_ref::forward_ref_binop!(impl<R: CustomFloat> $Op, $op for Quat<R>, R, Quat<R>);
 
         $(
         impl<'a, 'b> $Op<&'b Quat<$tgt>> for &'a $tgt {

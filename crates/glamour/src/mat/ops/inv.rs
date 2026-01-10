@@ -1,9 +1,9 @@
 use approx::ulps_eq;
 use num_traits::{Float, Inv};
 
-use crate::mat::Mat4;
+use crate::{mat::Mat4, num::CustomFloat};
 
-impl<R: Float + approx::UlpsEq> Inv for &Mat4<R> {
+impl<R: CustomFloat + approx::UlpsEq> Inv for &Mat4<R> {
     type Output = Mat4<R>;
 
     fn inv(self) -> Self::Output {
@@ -33,11 +33,11 @@ impl<R: Float + approx::UlpsEq> Inv for &Mat4<R> {
     }
 }
 
-impl<R: Float + approx::UlpsEq> Inv for Mat4<R> {
-    type Output = Mat4<R>;
+impl<R: CustomFloat + approx::UlpsEq> Inv for Mat4<R> {
+    type Output = Self;
 
     fn inv(self) -> Self::Output {
-        (&self).inv()
+        Inv::inv(&self)
     }
 }
 

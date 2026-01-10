@@ -1,5 +1,7 @@
 use num_traits::Float;
 
+use crate::num::CustomFloat;
+
 use super::mat::Mat4;
 
 mod approx;
@@ -7,7 +9,7 @@ mod approx;
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(bound(
     serialize = "R: serde::Serialize",
-    deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
+    deserialize = "R: Copy + numenor::ConstZero + for<'r> serde::Deserialize<'r>"
 ))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Persp<R>(pub(crate) Mat4<R>);
@@ -20,7 +22,7 @@ impl<R> Persp<R> {
 
 impl<R> Persp<R>
 where
-    R: Float,
+    R: CustomFloat,
 {
     pub fn new(aspect: R, fov_y: R, near_z: R, far_z: R) -> Self {
         let zero = R::zero();
@@ -35,7 +37,7 @@ where
         let r2c3 = (two * far_z * near_z) / (near_z - far_z);
         let r3c2 = -one;
 
-        Persp(Mat4::new([
+        Self(Mat4::new([
             [r0c0, zero, zero, zero],
             [zero, r1c1, zero, zero],
             [zero, zero, r2c2, r2c3],

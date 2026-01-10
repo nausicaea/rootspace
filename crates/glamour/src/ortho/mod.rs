@@ -1,4 +1,5 @@
-use num_traits::Float;
+
+use crate::num::CustomFloat;
 
 use super::mat::Mat4;
 
@@ -7,7 +8,7 @@ mod approx;
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(bound(
     serialize = "R: serde::Serialize",
-    deserialize = "R: Copy + num_traits::Zero + for<'r> serde::Deserialize<'r>"
+    deserialize = "R: Copy + numenor::ConstZero + for<'r> serde::Deserialize<'r>"
 ))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ortho<R>(pub(crate) Mat4<R>);
@@ -20,11 +21,11 @@ impl<R> Ortho<R> {
 
 impl<R> Ortho<R>
 where
-    R: Float,
+    R: CustomFloat,
 {
     pub fn new(width: R, height: R, near_z: R, far_z: R) -> Self {
-        let z = R::zero();
-        let o = R::one();
+        let z = R::ZERO;
+        let o = R::ONE;
         let t = o + o;
 
         let r0c0 = t / width;
@@ -32,7 +33,7 @@ where
         let r2c2 = -t / (far_z - near_z);
         let r2c3 = -(far_z + near_z) / (far_z - near_z);
 
-        Ortho(Mat4::new([
+        Self(Mat4::new([
             [r0c0, z, z, z],
             [z, r1c1, z, z],
             [z, z, r2c2, r2c3],

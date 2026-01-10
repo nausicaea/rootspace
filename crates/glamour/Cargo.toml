@@ -12,6 +12,7 @@ forward-ref.workspace = true
 lapack = "^0.20.0"
 lapack-src = { version = "^0.13.0", features = ["accelerate"] }
 num-traits = "^0.2.14"
+numenor.workspace = true
 serde = { version = "^1.0.0", features = ["derive"] }
 thiserror = "^2.0.17"
 tracing = "^0.1.40"

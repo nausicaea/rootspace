@@ -3,7 +3,7 @@ use std::ops::Mul;
 use num_traits::Float;
 
 use super::super::Mat4;
-use crate::{ops::dot::Dot, vec::Vec4};
+use crate::{num::CustomFloat, ops::dot::Dot, vec::Vec4};
 use forward_ref::forward_ref_binop;
 
 impl<'b, R> Dot<&'b Mat4<R>> for &Mat4<R>
@@ -40,7 +40,7 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: Float> Dot, dot for Mat4<R>, Mat4<R>, Mat4<R>);
+forward_ref_binop!(impl<R: CustomFloat> Dot, dot for Mat4<R>, Mat4<R>, Mat4<R>);
 
 impl<'a, 'b, R> Mul<&'b Mat4<R>> for &'a Mat4<R>
 where
@@ -53,7 +53,7 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: Float> Mul, mul for Mat4<R>, Mat4<R>, Mat4<R>);
+forward_ref_binop!(impl<R: CustomFloat> Mul, mul for Mat4<R>, Mat4<R>, Mat4<R>);
 
 impl<'b, R> Dot<&'b Vec4<R>> for &Mat4<R>
 where
@@ -77,7 +77,7 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: Float> Dot, dot for Mat4<R>, Vec4<R>, Vec4<R>);
+forward_ref_binop!(impl<R: CustomFloat> Dot, dot for Mat4<R>, Vec4<R>, Vec4<R>);
 
 impl<'a, 'b, R> Mul<&'b Vec4<R>> for &'a Mat4<R>
 where
@@ -90,18 +90,16 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: Float> Mul, mul for Mat4<R>, Vec4<R>, Vec4<R>);
+forward_ref_binop!(impl<R: CustomFloat> Mul, mul for Mat4<R>, Vec4<R>, Vec4<R>);
 
 #[cfg(test)]
 mod tests {
     use approx::assert_ulps_eq;
+    use numenor::ConstOne;
     use proptest::{prop_assert, proptest};
 
     use super::*;
-    use crate::{
-        num::One,
-        test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, mat4},
-    };
+    use crate::test_helpers::proptest::{bounded_f32, bounded_nonzero_f32, mat4};
 
     #[test]
     fn mat4_supports_dot_product_with_mat4() {
@@ -130,9 +128,9 @@ mod tests {
     #[test]
     fn mat4_x_vec4_works_by_postmultiplication() {
         let m: Mat4<f32> = Mat4::identity();
-        let v: Vec4<f32> = Vec4::one();
+        let v: Vec4<f32> = Vec4::ONE;
 
-        assert_eq!(m * v, Vec4::one());
+        assert_eq!(m * v, Vec4::ONE);
     }
 
     proptest! {

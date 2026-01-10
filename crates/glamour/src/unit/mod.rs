@@ -2,7 +2,7 @@ mod approx;
 mod convert;
 mod ops;
 
-#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
 #[repr(transparent)]
 pub struct Unit<T>(pub(crate) T);

@@ -1,6 +1,5 @@
-use num_traits::Float;
 
-use crate::{ops::cross::Cross, vec::Vec4};
+use crate::{num::CustomFloat, ops::cross::Cross, vec::Vec4};
 
 impl<'b, R> Cross<&'b Vec4<R>> for &Vec4<R>
 where
@@ -18,7 +17,7 @@ where
     }
 }
 
-forward_ref::forward_ref_binop!(impl<R: Float> Cross, cross for Vec4<R>, Vec4<R>, Vec4<R>);
+forward_ref::forward_ref_binop!(impl<R: CustomFloat> Cross, cross for Vec4<R>, Vec4<R>, Vec4<R>);
 
 #[cfg(test)]
 mod tests {

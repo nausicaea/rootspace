@@ -1,15 +1,15 @@
-use num_traits::{Float, Inv};
+use num_traits::Inv;
 
-use crate::affine::Affine;
+use crate::{affine::Affine, num::CustomFloat};
 
 impl<R> Inv for Affine<R>
 where
-    R: Float + Inv<Output = R>,
+    R: CustomFloat + Inv<Output = R>,
 {
     type Output = Self;
 
     fn inv(self) -> Self::Output {
-        Affine {
+        Self {
             t: -self.t,
             o: self.o.c().into(),
             s: self.s.inv(),

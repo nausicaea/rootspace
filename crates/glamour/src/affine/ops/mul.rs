@@ -1,8 +1,7 @@
 use forward_ref::forward_ref_binop;
-use num_traits::Float;
 use std::ops::Mul;
 
-use crate::{affine::Affine, mat::Mat4, ops::dot::Dot};
+use crate::{affine::Affine, mat::Mat4, num::CustomFloat, ops::dot::Dot};
 
 impl<'a, 'b, R> Mul<&'b Affine<R>> for &'a Affine<R>
 where
@@ -15,4 +14,4 @@ where
     }
 }
 
-forward_ref_binop!(impl<R: Float> Mul, mul for Affine<R>, Affine<R>, Mat4<R>);
+forward_ref_binop!(impl<R: CustomFloat> Mul, mul for Affine<R>, Affine<R>, Mat4<R>);

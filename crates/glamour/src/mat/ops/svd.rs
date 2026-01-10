@@ -1,8 +1,8 @@
-use crate::mat::Mat4;
-use num_traits::{Float, NumCast, Zero};
+use crate::{mat::Mat4, num::CustomFloat};
+use num_traits::{NumCast, Zero};
 use std::any::type_name;
 
-impl<R: Float> Mat4<R> {
+impl<R: CustomFloat> Mat4<R> {
     /// Based on
     /// [LAPACK-dgesvd](https://www.netlib.org/lapack/explore-html/d1/d7f/group__gesvd_gac6bd5d4e645049e49bb70691180abf07.html#gac6bd5d4e645049e49bb70691180abf07)
     pub fn svd(&self) -> Result<Svd<R>, Error> {
@@ -16,7 +16,7 @@ impl<R: Float> Mat4<R> {
         unsafe {
             lapack::dgesvd(
                 b'A', b'A', 4, 4, &mut a, 4, &mut s, &mut u, 4, &mut vt, 4, &mut work, 268, &mut info,
-            )
+            );
         };
 
         if info < 0 {
@@ -49,7 +49,7 @@ impl<R: Float> Mat4<R> {
             });
         }
 
-        let mut sigma = Mat4::identity();
+        let mut sigma = Self::identity();
         sigma[(0, 0)] = num_traits::cast(s[0]).ok_or(Error::NumCast(type_name::<R>()))?;
         sigma[(1, 1)] = num_traits::cast(s[1]).ok_or(Error::NumCast(type_name::<R>()))?;
         sigma[(2, 2)] = num_traits::cast(s[2]).ok_or(Error::NumCast(type_name::<R>()))?;

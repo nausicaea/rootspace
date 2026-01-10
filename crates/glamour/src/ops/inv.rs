@@ -1,10 +1,11 @@
-use num_traits::{Float, Inv};
+use crate::num::CustomFloat;
+use num_traits::Inv;
 
 use crate::quat::Quat;
 
 impl<R> Inv for Quat<R>
 where
-    R: Float + Inv<Output = R>,
+    R: CustomFloat + Inv<Output = R>,
 {
     type Output = Self;
 

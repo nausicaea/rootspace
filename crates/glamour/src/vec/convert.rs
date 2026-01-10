@@ -5,7 +5,7 @@ where
     R: Copy,
 {
     fn from(value: [R; 4]) -> Self {
-        Vec4 {
+        Self {
             x: value[0],
             y: value[1],
             z: value[2],
@@ -28,7 +28,7 @@ where
     R: num_traits::Num + Copy,
 {
     fn from(value: R) -> Self {
-        Vec4 {
+        Self {
             x: value,
             y: value,
             z: value,

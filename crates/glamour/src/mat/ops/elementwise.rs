@@ -1,6 +1,8 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use num_traits::{Float, Inv};
+use crate::num::CustomFloat;
+use ::numenor::ConstZero;
+use num_traits::Inv;
 
 use super::super::Mat4;
 use crate::ops::{inv_elem::InvElem, mul_elem::MulElem};
@@ -10,15 +12,15 @@ macro_rules! impl_binops {
         $(
         impl<'a, 'b, R> $Op<&'b Mat4<R>> for &'a Mat4<R>
         where
-            Mat4<R>: $crate::num::Zero,
+            Mat4<R>: ::numenor::ConstZero,
             R: Copy + $Deleg<Output = R>,
         {
             type Output = Mat4<R>;
 
             fn $op(self, rhs: &'b Mat4<R>) -> Self::Output {
-                use $crate::num::Zero;
+                use ::numenor::ConstZero;
 
-                let mut mat = Mat4::<R>::zero();
+                let mut mat = Mat4::<R>::ZERO;
                 for i in 0..4 {
                     for j in 0..4 {
                         mat[(i, j)] = self[(i, j)].$deleg(rhs[(i, j)]);
@@ -28,7 +30,7 @@ macro_rules! impl_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl<R: Float> $Op, $op for Mat4<R>, Mat4<R>, Mat4<R>);
+        forward_ref::forward_ref_binop!(impl<R: CustomFloat> $Op, $op for Mat4<R>, Mat4<R>, Mat4<R>);
         )+
     };
 }
@@ -44,7 +46,7 @@ macro_rules! impl_unops {
         $(
         impl<R> $Op for Mat4<R>
         where
-            Self: $crate::num::Zero,
+            Self: ::numenor::ConstZero,
             R: Copy + $Deleg<Output = R>,
         {
             type Output = Self;
@@ -56,15 +58,15 @@ macro_rules! impl_unops {
 
         impl<'a, R> $Op for &'a Mat4<R>
         where
-            Mat4<R>: $crate::num::Zero,
+            Mat4<R>: ::numenor::ConstZero,
             R: Copy + $Deleg<Output = R>,
         {
             type Output = Mat4<R>;
 
             fn $op(self) -> Self::Output {
-                use $crate::num::Zero;
+                use ::numenor::ConstZero;
 
-                let mut mat = Mat4::<R>::zero();
+                let mut mat = Mat4::<R>::ZERO;
                 for i in 0..4 {
                     for j in 0..4 {
                         mat[(i, j)] = self[(i, j)].$deleg();
@@ -88,15 +90,15 @@ macro_rules! impl_scalar_binops {
         $(
         impl<'a, 'b, R> $Op<&'b R> for &'a Mat4<R>
             where
-                Mat4<R>: $crate::num::Zero,
+                Mat4<R>: ::numenor::ConstZero,
                 R: Copy + $Op<R, Output = R>,
         {
             type Output = Mat4<R>;
 
             fn $op(self, rhs: &'b R) -> Self::Output {
-                use $crate::num::Zero;
+                use ::numenor::ConstZero;
 
-                let mut mat = Mat4::<R>::zero();
+                let mut mat = Mat4::<R>::ZERO;
                 for i in 0..4 {
                     for j in 0..4 {
                         mat[(i, j)] = $Op::$op(self[(i, j)], *rhs);
@@ -106,16 +108,16 @@ macro_rules! impl_scalar_binops {
             }
         }
 
-        forward_ref::forward_ref_binop!(impl<R: Float> $Op, $op for Mat4<R>, R, Mat4<R>);
+        forward_ref::forward_ref_binop!(impl<R: CustomFloat> $Op, $op for Mat4<R>, R, Mat4<R>);
 
         $(
         impl<'a, 'b> $Op<&'b Mat4<$tgt>> for &'a $tgt {
             type Output = Mat4<$tgt>;
 
             fn $op(self, rhs: &'b Mat4<$tgt>) -> Self::Output {
-                use $crate::num::Zero;
+                use ::numenor::ConstZero;
 
-                let mut mat = Mat4::<$tgt>::zero();
+                let mut mat = Mat4::<$tgt>::ZERO;
                 for i in 0..4 {
                     for j in 0..4 {
                         mat[(i, j)] = $Op::$op(self, rhs[(i, j)]);

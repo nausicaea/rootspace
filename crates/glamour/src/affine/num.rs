@@ -1,10 +1,14 @@
-use num_traits::{Float, NumAssign};
+use num_traits::NumAssign;
 
-use crate::{affine::Affine, mat::Mat4, num::ToMatrix};
+use crate::{
+    affine::Affine,
+    mat::Mat4,
+    num::{CustomFloat, ToMatrix},
+};
 
 impl<R> ToMatrix<R> for Affine<R>
 where
-    R: Float + NumAssign,
+    R: CustomFloat + NumAssign,
 {
     fn to_matrix(&self) -> Mat4<R> {
         self.into()

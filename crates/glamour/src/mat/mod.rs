@@ -1,5 +1,6 @@
-use crate::{num::Zero, vec::Vec4};
+use crate::vec::Vec4;
 use num_traits::Float;
+use numenor::{ConstOne, ConstZero};
 
 mod approx;
 mod convert;
@@ -9,33 +10,32 @@ mod ops;
 mod serde;
 
 /// Generalized matrix type, with data stored in row-major format.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Mat4<R>(pub [[R; 4]; 4]);
 
 impl<R> Mat4<R> {
     pub const fn new(v: [[R; 4]; 4]) -> Self {
-        Mat4(v)
+        Self(v)
     }
 }
 
 impl<R: Float> Mat4<R> {
+    #[must_use] 
     pub fn nan() -> Self {
-        Mat4::new([[R::nan(); 4]; 4])
+        Self::new([[R::nan(); 4]; 4])
     }
 }
 
 impl<R> Mat4<R>
 where
-    Vec4<R>: Zero,
+    Vec4<R>: ConstZero,
     R: Copy,
 {
     /// Return a copy of the specified matrix column
     pub fn col(&self, j: usize) -> Vec4<R> {
-        if j >= 4 {
-            panic!("Out of bounds column index (max: {}, actual: {})", 4, j);
-        }
+        assert!(j < 4, "Out of bounds column index (max: {}, actual: {})", 4, j);
 
-        let mut mat = Vec4::zero();
+        let mut mat = Vec4::ZERO;
         for i in 0..4 {
             mat[i] = self[(i, j)];
         }
@@ -44,10 +44,8 @@ where
 
     /// Return a copy of the specified matrix row
     pub fn row(&self, i: usize) -> Vec4<R> {
-        if i >= 4 {
-            panic!("Out of bounds row (max: {}, actual: {})", 4, i);
-        }
-        let mut mat = Vec4::zero();
+        assert!(i < 4, "Out of bounds row (max: {}, actual: {})", 4, i);
+        let mut mat = Vec4::ZERO;
         for j in 0..4 {
             mat[j] = self[(i, j)];
         }
@@ -55,7 +53,7 @@ where
     }
 
     pub fn diag(&self) -> Vec4<R> {
-        let mut mat = Vec4::zero();
+        let mut mat = Vec4::ZERO;
         for i in 0..4 {
             mat[i] = self[(i, i)];
         }
@@ -69,8 +67,8 @@ where
     R: Copy,
 {
     /// Return a transposed copy
-    pub fn t(&self) -> Mat4<R> {
-        Mat4::new([
+    pub fn t(&self) -> Self {
+        Self::new([
             [self[(0, 0)], self[(1, 0)], self[(2, 0)], self[(3, 0)]],
             [self[(0, 1)], self[(1, 1)], self[(2, 1)], self[(3, 1)]],
             [self[(0, 2)], self[(1, 2)], self[(2, 2)], self[(3, 2)]],
@@ -90,13 +88,14 @@ where
 
 impl<R> Mat4<R>
 where
-    Self: Zero,
-    R: num_traits::One,
+    Self: ConstZero,
+    R: ConstOne,
 {
+    #[must_use] 
     pub fn identity() -> Self {
-        let mut mat = Mat4::zero();
+        let mut mat = Self::ZERO;
         for i in 0..4 {
-            mat[(i, i)] = R::one();
+            mat[(i, i)] = R::ONE;
         }
 
         mat
@@ -139,7 +138,7 @@ where
 
 /// Given a one-dimensional array index, return the corresponding two-dimensional indices for
 /// this particular matrix' dimensions
-fn to_2d_idx(idx: usize) -> (usize, usize) {
+const fn to_2d_idx(idx: usize) -> (usize, usize) {
     (idx / 4, idx % 4)
 }
 
@@ -182,7 +181,7 @@ mod tests {
 
         #[test]
         fn mat4_t_returns_the_transpose(a in mat4(NORMAL | POSITIVE | NEGATIVE | ZERO | INFINITE | SUBNORMAL)) {
-            let mut mat = Mat4::zero();
+            let mut mat = Mat4::ZERO;
             for i in 0..4 {
                 for j in 0..4 {
                     mat[(i, j)] = a[(j, i)];
