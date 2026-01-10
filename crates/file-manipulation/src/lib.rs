@@ -201,10 +201,10 @@ impl TryFrom<&Path> for NewOrExFilePathBuf {
                 .file_name()
                 .ok_or_else(|| FileError::NoBaseNameFound(path.clone()))?;
 
-            Ok(NewOrExFilePathBuf(parent.join(file_name)))
+            Ok(Self(parent.join(file_name)))
         } else if path.is_file() {
             let path = path.canonicalize().map_err(|e| FileError::IoError(path.clone(), e))?;
-            Ok(NewOrExFilePathBuf(path))
+            Ok(Self(path))
         } else {
             Err(FileError::NotAFile(path))
         }
@@ -316,7 +316,7 @@ impl TryFrom<&Path> for FilePathBuf {
 
         if path.is_file() {
             let path = path.canonicalize().map_err(|e| FileError::IoError(path.clone(), e))?;
-            Ok(FilePathBuf(path))
+            Ok(Self(path))
         } else {
             Err(FileError::NotAFile(path))
         }
@@ -408,7 +408,7 @@ impl TryFrom<&Path> for DirPathBuf {
 
         if path.is_dir() {
             let path = path.canonicalize().map_err(|e| FileError::IoError(path.clone(), e))?;
-            Ok(DirPathBuf(path))
+            Ok(Self(path))
         } else {
             Err(FileError::NotADirectory(path))
         }
