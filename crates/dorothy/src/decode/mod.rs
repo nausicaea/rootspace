@@ -1,6 +1,6 @@
 use self::byte_decoder::{ByteDecoder, Error as BitDecoderError};
-use crate::{Spec, util};
 use crate::util::{Sign, samples_per_bit};
+use crate::{Spec, util};
 use itertools::Itertools;
 use num_traits::Signed;
 use numenor::ConstZero;
@@ -53,16 +53,13 @@ where
                 samples_per_bit,
             )
         })
-        .try_fold(
-            Vec::new(),
-            |mut state, channel_output| match channel_output {
-                Ok(co) => {
-                    state.push(co);
-                    Ok(state)
-                }
-                Err(e) => Err(Error::BitDecoder(state, e)),
-            },
-        )?;
+        .try_fold(Vec::new(), |mut state, channel_output| match channel_output {
+            Ok(co) => {
+                state.push(co);
+                Ok(state)
+            }
+            Err(e) => Err(Error::BitDecoder(state, e)),
+        })?;
 
     Ok(output)
 }

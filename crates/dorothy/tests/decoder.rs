@@ -30,11 +30,7 @@ fn decode_files_from_py_kcs(#[case] source: &str, #[case] expected: &str) {
     spec.channels = wav_spec.channels;
     spec.sample_rate = wav_spec.sample_rate;
 
-    let output = decode(
-        &spec,
-        r.into_samples::<i16>().map(|s| s.unwrap()),
-    )
-    .unwrap();
+    let output = decode(&spec, r.into_samples::<i16>().map(|s| s.unwrap())).unwrap();
 
     let mut expected_data = Vec::new();
     BufReader::new(File::open(TEST_DIR.join(expected)).unwrap())

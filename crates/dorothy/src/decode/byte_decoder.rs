@@ -119,10 +119,7 @@ impl State {
             *args.output = Poll::Ready(Ok(byte));
             Self::Initialize
         } else {
-            *args.output = Poll::Ready(Err(Error::MissingStopBits(
-                todo!(),
-                todo!(),
-            )));
+            *args.output = Poll::Ready(Err(Error::MissingStopBits(todo!(), todo!())));
             Self::Complete
         }
     }
