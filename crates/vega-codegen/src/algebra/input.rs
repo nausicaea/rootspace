@@ -20,19 +20,19 @@ impl syn::parse::Parse for Algebra {
         let punct = syn::punctuated::Punctuated::<LitInt, syn::token::Comma>::parse_separated_nonempty(input)?;
 
         match punct.len() {
-            1 => Ok(Algebra {
+            1 => Ok(Self {
                 span,
                 positive: punct[0].clone(),
                 negative: parse_quote!(0),
                 zero: parse_quote!(0),
             }),
-            2 => Ok(Algebra {
+            2 => Ok(Self {
                 span,
                 positive: punct[0].clone(),
                 negative: punct[1].clone(),
                 zero: parse_quote!(0),
             }),
-            3 => Ok(Algebra {
+            3 => Ok(Self {
                 span,
                 positive: punct[0].clone(),
                 negative: punct[1].clone(),
