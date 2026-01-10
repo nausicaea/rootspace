@@ -31,7 +31,7 @@ impl<'rt> Encoder<'rt> {
 
         crate::trace_gfx!("Creating surface texture view '{}'", label.unwrap_or("unnamed"));
         let surface_view = output.texture.create_view(&wgpu::TextureViewDescriptor {
-            label: label.map(|lbl| format!("{}:surface-texture-view", lbl)).as_deref(),
+            label: label.map(|lbl| format!("{lbl}:surface-texture-view")).as_deref(),
             ..Default::default()
         });
 
@@ -112,7 +112,7 @@ pub struct RenderPass<'rp> {
     database: &'rp GpuObjectDatabase,
 }
 
-impl<'rp> RenderPass<'rp> {
+impl RenderPass<'_> {
     pub fn set_pipeline(&mut self, pipeline: PipelineId) -> &mut Self {
         self.render_pass
             .set_pipeline(&self.database.render_pipelines[&pipeline]);

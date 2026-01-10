@@ -25,9 +25,9 @@ impl LoadAsset for CpuMesh {
     type Output = Self;
 
     fn with_path(_res: &ecs::Resources, path: &std::path::Path) -> anyhow::Result<Self::Output> {
-        let label = path.file_stem().and_then(|n| n.to_str()).map(|n| n.to_owned());
+        let label = path.file_stem().and_then(|n| n.to_str()).map(std::borrow::ToOwned::to_owned);
 
-        if let Some("ply") = path.extension().and_then(|ext| ext.to_str()) {
+        if path.extension().and_then(|ext| ext.to_str()) == Some("ply") {
             let ply =
                 load_ply(path).with_context(|| format!("Loading a Stanford Ply file from '{}'", path.display()))?;
             let mesh = Self::with_ply(&ply, label)?;
@@ -161,11 +161,11 @@ impl CpuMesh {
 
         tracing::trace!("Loaded {} vertices and {} indices", vertex_data.len(), indices.len());
 
-        let texture_names: Vec<_> = Self::find_texture_names(ply).map(|n| n.to_owned()).collect();
+        let texture_names: Vec<_> = Self::find_texture_names(ply).map(std::borrow::ToOwned::to_owned).collect();
 
         tracing::trace!("Located the following texture names: {}", texture_names.join(", "));
 
-        Ok(CpuMesh {
+        Ok(Self {
             label,
             texture_names,
             vertices,
@@ -182,7 +182,7 @@ impl CpuMesh {
                 ply.descriptor
                     .elements
                     .values()
-                    .flat_map(|e| e.properties.values().flat_map(|p| p.comments())),
+                    .flat_map(|e| e.properties.values().flat_map(plyers::types::PropertyDescriptor::comments)),
             )
             .map(AsRef::<str>::as_ref)
             .filter(|c| c.starts_with("TextureFile"))
@@ -196,7 +196,7 @@ impl CpuMesh {
                         ply.descriptor
                             .elements
                             .values()
-                            .flat_map(|e| e.properties.values().flat_map(|p| p.obj_info())),
+                            .flat_map(|e| e.properties.values().flat_map(plyers::types::PropertyDescriptor::obj_info)),
                     )
                     .map(AsRef::<str>::as_ref)
                     .filter(|c| c.starts_with("texture"))

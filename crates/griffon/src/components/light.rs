@@ -24,7 +24,7 @@ impl Light {
     pub fn new(res: &Resources, source: &LightSource) -> anyhow::Result<Self> {
         {
             let max_lights = res.read::<Graphics>().max_lights() as usize;
-            let lights = res.read_components::<Light>();
+            let lights = res.read_components::<Self>();
             let num_lights = lights.len();
             if num_lights >= max_lights {
                 return Err(anyhow!(

@@ -19,11 +19,13 @@ impl<'rt> BindGroupLayoutBuilder<'rt> {
         }
     }
 
-    pub fn with_label(mut self, label: &'static str) -> Self {
+    #[must_use] 
+    pub const fn with_label(mut self, label: &'static str) -> Self {
         self.label = Some(label);
         self
     }
 
+    #[must_use] 
     pub fn add_bind_group_layout_entry(
         mut self,
         binding: u32,

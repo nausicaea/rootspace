@@ -16,8 +16,8 @@ pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
     label: Option<&'static str>,
 }
 
-impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
-    pub(crate) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
+impl<'rt, 'ep> RenderPipelineBuilder<'rt, 'ep, '_> {
+    pub(crate) const fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
         RenderPipelineBuilder {
             runtime,
             database,
@@ -30,26 +30,31 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
         }
     }
 
-    pub fn with_label(mut self, label: &'static str) -> Self {
+    #[must_use] 
+    pub const fn with_label(mut self, label: &'static str) -> Self {
         self.label = Some(label);
         self
     }
 
-    pub fn with_vertex_shader_module(mut self, module: ShaderModuleId, entry_point: &'ep str) -> Self {
+    #[must_use] 
+    pub const fn with_vertex_shader_module(mut self, module: ShaderModuleId, entry_point: &'ep str) -> Self {
         self.vertex_shader_module = Some((module, entry_point));
         self
     }
 
-    pub fn with_fragment_shader_module(mut self, module: ShaderModuleId, entry_point: &'ep str) -> Self {
+    #[must_use] 
+    pub const fn with_fragment_shader_module(mut self, module: ShaderModuleId, entry_point: &'ep str) -> Self {
         self.fragment_shader_module = Some((module, entry_point));
         self
     }
 
+    #[must_use] 
     pub fn add_bind_group_layout(mut self, bgl: BindGroupLayoutId) -> Self {
         self.bind_group_layouts.push(bgl);
         self
     }
 
+    #[must_use] 
     pub fn add_vertex_buffer_layout<V: VertexAttributeDescriptor>(mut self) -> Self {
         let vbl = wgpu::VertexBufferLayout {
             array_stride: size_of::<V>() as wgpu::BufferAddress,
@@ -74,12 +79,12 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                 self.database
                     .bind_group_layouts
                     .get(&b)
-                    .unwrap_or_else(|| panic!("Unknown {:?}", b))
+                    .unwrap_or_else(|| panic!("Unknown {b:?}"))
             })
             .collect::<Vec<_>>();
 
         // Pipeline layout definition
-        let label_pipeline_layout = self.label.map(|lbl| format!("{}:pipeline-layout", lbl));
+        let label_pipeline_layout = self.label.map(|lbl| format!("{lbl}:pipeline-layout"));
         tracing::trace!(
             "Creating pipeline layout '{}'",
             label_pipeline_layout.as_deref().unwrap_or("unnamed")
@@ -108,7 +113,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                             .database
                             .shader_modules
                             .get(&vsm)
-                            .unwrap_or_else(|| panic!("Unknown {:?}", vsm)),
+                            .unwrap_or_else(|| panic!("Unknown {vsm:?}")),
                         entry_point: Some(vep),
                         buffers: self.vertex_buffer_layouts.as_slice(),
                         compilation_options: Default::default(),
@@ -119,7 +124,7 @@ impl<'rt, 'ep, 'vbl> RenderPipelineBuilder<'rt, 'ep, 'vbl> {
                         .database
                         .shader_modules
                         .get(&fsm)
-                        .unwrap_or_else(|| panic!("Unknown {:?}", fsm)),
+                        .unwrap_or_else(|| panic!("Unknown {fsm:?}")),
                     entry_point: Some(fep),
                     targets: &cts,
                     compilation_options: Default::default(),

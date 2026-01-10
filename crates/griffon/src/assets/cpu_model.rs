@@ -29,8 +29,7 @@ impl LoadAsset for CpuModel {
                 .load_asset::<CpuMaterial, _>(res, MATERIAL_ASSET_GROUP, name)
                 .with_context(|| {
                     format!(
-                        "Loading a CpuMaterial from group {} and name {}",
-                        MATERIAL_ASSET_GROUP, name
+                        "Loading a CpuMaterial from group {MATERIAL_ASSET_GROUP} and name {name}"
                     )
                 })?;
             trace!("Loaded CpuMaterial with size {} bytes", size_of_val(&cpu_mat));
@@ -38,6 +37,6 @@ impl LoadAsset for CpuModel {
             materials.push(cpu_mat);
         }
 
-        Ok(CpuModel { mesh, materials })
+        Ok(Self { mesh, materials })
     }
 }

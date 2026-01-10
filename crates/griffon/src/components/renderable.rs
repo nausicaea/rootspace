@@ -14,7 +14,7 @@ impl Renderable {
     pub fn new(res: &Resources, source: &RenderableSource) -> anyhow::Result<Self> {
         let model = load_instanced_gpu_model(res, &source.group, &source.name)?;
 
-        Ok(Renderable {
+        Ok(Self {
             model,
             group: source.group.clone(),
             name: source.name.clone(),

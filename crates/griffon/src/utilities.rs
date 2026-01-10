@@ -18,7 +18,7 @@ pub fn load_instanced_gpu_model(res: &Resources, group: &str, name: &str) -> any
         let cpu_model = res
             .read::<AssetDatabase>()
             .load_asset::<CpuModel, _>(res, group, name)
-            .with_context(|| format!("Loading CpuModel from group {} and name {}", group, name))?;
+            .with_context(|| format!("Loading CpuModel from group {group} and name {name}"))?;
         Ok(res.write::<Graphics>().create_gpu_model(&cpu_model))
     }
 }

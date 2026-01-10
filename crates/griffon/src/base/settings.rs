@@ -16,7 +16,7 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings {
+        Self {
             backends: wgpu::Backends::all(),
             power_preference: wgpu::PowerPreference::LowPower,
             required_features: wgpu::Features::empty(),

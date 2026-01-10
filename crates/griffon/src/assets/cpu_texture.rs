@@ -10,7 +10,7 @@ impl LoadAsset for CpuTexture {
     type Output = Self;
 
     fn with_path(_res: &ecs::Resources, path: &std::path::Path) -> anyhow::Result<Self::Output> {
-        let label = path.file_stem().and_then(|n| n.to_str()).map(|n| n.to_owned());
+        let label = path.file_stem().and_then(|n| n.to_str()).map(std::borrow::ToOwned::to_owned);
 
         let image_format = path
             .extension()
@@ -22,6 +22,6 @@ impl LoadAsset for CpuTexture {
         let buf = std::io::BufReader::new(f);
         let image = image::load(buf, image_format)?;
 
-        Ok(CpuTexture { label, image })
+        Ok(Self { label, image })
     }
 }

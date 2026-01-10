@@ -9,7 +9,7 @@ pub struct SamplerBuilder<'rt> {
 }
 
 impl<'rt> SamplerBuilder<'rt> {
-    pub(crate) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase) -> Self {
+    pub(crate) const fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase) -> Self {
         Self {
             runtime,
             database,
@@ -17,7 +17,8 @@ impl<'rt> SamplerBuilder<'rt> {
         }
     }
 
-    pub fn with_label(mut self, label: Option<&'rt str>) -> Self {
+    #[must_use] 
+    pub const fn with_label(mut self, label: Option<&'rt str>) -> Self {
         self.label = label;
         self
     }

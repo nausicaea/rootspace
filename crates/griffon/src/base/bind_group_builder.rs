@@ -11,7 +11,7 @@ pub struct BindGroupBuilder<'rt> {
 }
 
 impl<'rt> BindGroupBuilder<'rt> {
-    pub(crate) fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, layout: BindGroupLayoutId) -> Self {
+    pub(crate) const fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, layout: BindGroupLayoutId) -> Self {
         BindGroupBuilder {
             runtime,
             database,
@@ -21,11 +21,13 @@ impl<'rt> BindGroupBuilder<'rt> {
         }
     }
 
-    pub fn with_label(mut self, label: Option<&'rt str>) -> Self {
+    #[must_use] 
+    pub const fn with_label(mut self, label: Option<&'rt str>) -> Self {
         self.label = label;
         self
     }
 
+    #[must_use] 
     pub fn add_entire_buffer(mut self, binding: u32, buffer: BufferId) -> Self {
         self.entries.push((binding, BindingResourceId::EntireBuffer(buffer)));
         self
@@ -43,17 +45,19 @@ impl<'rt> BindGroupBuilder<'rt> {
             BindingResourceId::Buffer {
                 buffer,
                 offset: offset.into(),
-                size: size.map(|s| s.into()),
+                size: size.map(std::convert::Into::into),
             },
         ));
         self
     }
 
+    #[must_use] 
     pub fn add_texture_view(mut self, binding: u32, view: TextureViewId) -> Self {
         self.entries.push((binding, BindingResourceId::TextureView(view)));
         self
     }
 
+    #[must_use] 
     pub fn add_sampler(mut self, binding: u32, sampler: SamplerId) -> Self {
         self.entries.push((binding, BindingResourceId::Sampler(sampler)));
         self

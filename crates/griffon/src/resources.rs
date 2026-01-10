@@ -49,19 +49,19 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub fn max_window_size(&self) -> PhysicalSize<u32> {
+    pub const fn max_window_size(&self) -> PhysicalSize<u32> {
         self.runtime.max_size
     }
 
-    pub fn max_cameras(&self) -> u32 {
+    pub const fn max_cameras(&self) -> u32 {
         self.settings.max_cameras
     }
 
-    pub fn max_lights(&self) -> u32 {
+    pub const fn max_lights(&self) -> u32 {
         self.settings.max_lights
     }
 
-    pub fn max_instances(&self) -> u64 {
+    pub const fn max_instances(&self) -> u64 {
         self.settings.max_instances
     }
 
@@ -106,11 +106,11 @@ impl Graphics {
     }
 
     pub fn request_redraw(&self) {
-        self.runtime.window.request_redraw()
+        self.runtime.window.request_redraw();
     }
 
     pub fn reconfigure(&mut self) {
-        self.resize(self.runtime.size)
+        self.resize(self.runtime.size);
     }
 
     pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
@@ -141,15 +141,15 @@ impl Graphics {
         );
     }
 
-    pub fn camera_bind_group_layout(&self) -> BindGroupLayoutId {
+    pub const fn camera_bind_group_layout(&self) -> BindGroupLayoutId {
         self.internal.camera_bind_group_layout
     }
 
-    pub fn light_bind_group_layout(&self) -> BindGroupLayoutId {
+    pub const fn light_bind_group_layout(&self) -> BindGroupLayoutId {
         self.internal.light_bind_group_layout
     }
 
-    pub fn material_bind_group_layout(&self) -> BindGroupLayoutId {
+    pub const fn material_bind_group_layout(&self) -> BindGroupLayoutId {
         self.internal.material_bind_group_layout
     }
 
@@ -470,7 +470,7 @@ where
         let depth_texture = Self::create_depth_texture_int(&runtime, &mut database, settings, DEPTH_TEXTURE_LABEL);
         let depth_texture_view = Self::create_texture_view_int(&mut database, DEPTH_TEXTURE_VIEW_LABEL, depth_texture);
 
-        Ok(Graphics {
+        Ok(Self {
             settings: settings.clone(),
             runtime,
             database,
