@@ -160,7 +160,7 @@ where
     K: Ord,
 {
     fn default() -> Self {
-        Tree {
+        Self {
             edges: HashMap::default(),
             parents: BTreeMap::default(),
             nodes: HashMap::default(),

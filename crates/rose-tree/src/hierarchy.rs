@@ -96,7 +96,7 @@ where
     K: Ord,
 {
     fn default() -> Self {
-        Hierarchy(Tree::default())
+        Self(Tree::default())
     }
 }
 
@@ -123,7 +123,7 @@ impl<K> ecs::Resource for Hierarchy<K> where K: 'static + Send + Sync {}
 impl<D, K: Ord> ecs::WithDependencies<D> for Hierarchy<K> {
     #[tracing::instrument(skip_all)]
     fn with_deps(_: &D) -> anyhow::Result<Self> {
-        Ok(Hierarchy::default())
+        Ok(Self::default())
     }
 }
 
