@@ -1,4 +1,4 @@
-use std::io::{BufReader, Cursor, Write};
+use std::io::{BufReader, Write};
 
 use clap::Parser;
 use dorothy::{Spec, decode};
@@ -8,11 +8,9 @@ use dorothy::{Spec, decode};
 struct Args;
 
 fn main() -> anyhow::Result<()> {
-    let wav_reader = hound::WavReader::new(
-        BufReader::new(std::io::stdin()),
-    )?;
+    let wav_reader = hound::WavReader::new(BufReader::new(std::io::stdin()))?;
 
-    let mut spec = Spec::with_kcs();
+    let mut spec = Spec::<i16>::with_kcs();
     spec.channels = wav_reader.spec().channels;
     spec.sample_rate = wav_reader.spec().sample_rate;
 

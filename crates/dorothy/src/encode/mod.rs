@@ -3,13 +3,11 @@ use crate::util::BITMASKS;
 use std::borrow::Borrow;
 use std::iter::FusedIterator;
 
-/// # Developer Notes
-///
-/// TODO: don't hard-code the sample width to i8
-pub fn encode<T, I>(spec: &Spec<i8>, data: I) -> impl Iterator<Item = i8>
+pub fn encode<T, I, S>(spec: &Spec<S>, data: I) -> impl Iterator<Item = S>
 where
     T: Borrow<u8>,
     I: IntoIterator<Item = T>,
+    S: Copy,
 {
     padding(spec)
         .chain(
@@ -20,25 +18,25 @@ where
         .chain(padding(spec))
 }
 
-const fn padding(spec: &Spec<i8>) -> SquareWave {
-    SquareWave::with_spec(SquareWaveSpec {
+const fn padding<S: Copy>(spec: &Spec<S>) -> SquareWave<S> {
+    SquareWave::with_spec(&Spec {
         num_periods: spec.padding_factor * spec.frequency as usize,
-        ..spec.to_sqw_spec()
+        ..*spec
     })
 }
 
-fn encode_byte_le(spec: &Spec<i8>, byte: u8) -> impl Iterator<Item = i8> {
+fn encode_byte_le<S: Copy>(spec: &Spec<S>, byte: u8) -> impl Iterator<Item = S> {
     zero_pulse(spec)
         .chain(encode_byte_le_unarmored(spec, byte))
         .chain(one_pulse(spec))
         .chain(one_pulse(spec))
 }
 
-fn encode_byte_le_unarmored(spec: &Spec<i8>, byte: u8) -> impl Iterator<Item = i8> {
+fn encode_byte_le_unarmored<S: Copy>(spec: &Spec<S>, byte: u8) -> impl Iterator<Item = S> {
     BITMASKS.into_iter().flat_map(move |mask| encode_bit(spec, mask, byte))
 }
 
-const fn encode_bit(spec: &Spec<i8>, mask: u8, byte: u8) -> SquareWave {
+const fn encode_bit<S: Copy>(spec: &Spec<S>, mask: u8, byte: u8) -> SquareWave<S> {
     if byte & mask != 0 {
         one_pulse(spec)
     } else {
@@ -46,42 +44,33 @@ const fn encode_bit(spec: &Spec<i8>, mask: u8, byte: u8) -> SquareWave {
     }
 }
 
-const fn one_pulse(spec: &Spec<i8>) -> SquareWave {
-    SquareWave::with_spec(spec.to_sqw_spec())
+const fn one_pulse<S: Copy>(spec: &Spec<S>) -> SquareWave<S> {
+    SquareWave::with_spec(spec)
 }
 
-const fn zero_pulse(spec: &Spec<i8>) -> SquareWave {
-    SquareWave::with_spec(SquareWaveSpec {
-        target_freq: (spec.frequency / 2) as usize,
+const fn zero_pulse<S: Copy>(spec: &Spec<S>) -> SquareWave<S> {
+    SquareWave::with_spec(&Spec {
+        frequency: spec.frequency / 2,
         num_periods: spec.num_periods / 2,
-        ..spec.to_sqw_spec()
+        ..*spec
     })
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct SquareWaveSpec {
-    pub offset: i8,
-    pub amplitude: i8,
-    pub sample_rate: usize,
-    pub target_freq: usize,
-    pub num_periods: usize,
-}
-
 #[derive(Debug, Clone)]
-pub struct SquareWave {
-    low: i8,
-    high: i8,
+pub struct SquareWave<S> {
+    low: S,
+    high: S,
     period_length: usize,
     num_periods: usize,
     index: usize,
 }
 
-impl SquareWave {
+impl<S: Copy> SquareWave<S> {
     #[must_use]
-    pub const fn new(offset: i8, amplitude: i8, period_length: usize, num_periods: usize) -> Self {
+    pub const fn new(low: S, high: S, period_length: usize, num_periods: usize) -> Self {
         Self {
-            low: offset - amplitude,
-            high: offset + amplitude,
+            low,
+            high,
             period_length,
             num_periods,
             index: 0,
@@ -89,12 +78,12 @@ impl SquareWave {
     }
 
     #[must_use]
-    pub const fn with_spec(spec: SquareWaveSpec) -> Self {
-        debug_assert!(spec.target_freq <= (spec.sample_rate >> 1));
+    pub const fn with_spec(spec: &Spec<S>) -> Self {
+        debug_assert!(spec.frequency <= (spec.sample_rate >> 1));
         Self::new(
-            spec.offset,
-            spec.amplitude,
-            spec.sample_rate / spec.target_freq,
+            spec.low,
+            spec.high,
+            (spec.sample_rate / spec.frequency) as usize,
             spec.num_periods,
         )
     }
@@ -102,20 +91,15 @@ impl SquareWave {
     const fn len_internal(&self) -> usize {
         self.period_length * self.num_periods
     }
-
-    /// Return `true` when the square wave amplitude is `1`, and false where it is `0`.
-    const fn is_high(i: usize, period_length: usize) -> bool {
-        !(2 * i / period_length).is_multiple_of(2)
-    }
 }
 
-impl Iterator for SquareWave {
-    type Item = i8;
+impl<S: Copy> Iterator for SquareWave<S> {
+    type Item = S;
 
     fn next(&mut self) -> Option<Self::Item> {
         let output = if self.index >= self.len_internal() {
             None
-        } else if Self::is_high(self.index, self.period_length) {
+        } else if is_high(self.index, self.period_length) {
             Some(self.high)
         } else {
             Some(self.low)
@@ -132,9 +116,14 @@ impl Iterator for SquareWave {
     }
 }
 
-impl ExactSizeIterator for SquareWave {}
+impl<S: Copy> ExactSizeIterator for SquareWave<S> {}
 
-impl FusedIterator for SquareWave {}
+impl<S: Copy> FusedIterator for SquareWave<S> {}
+
+/// Return `true` when the square wave amplitude is `1`, and false where it is `0`.
+const fn is_high(i: usize, period_length: usize) -> bool {
+    !(2 * i / period_length).is_multiple_of(2)
+}
 
 #[cfg(test)]
 mod tests {
@@ -151,8 +140,8 @@ mod tests {
         &Spec {
             channels: 1,
             padding_factor: 1,
-            offset: i8::MAX / 2,
-            amplitude: i8::MAX / 2,
+            low: 0,
+            high: i8::MAX,
             sample_rate: 4,
             frequency: 2,
             num_periods: 2,
@@ -163,17 +152,17 @@ mod tests {
     #[rustfmt::skip]
     #[fixture]
     const fn test_spec_one() -> &'static [i8] {
-        &[0x00, 0x7E, 0x00, 0x7E]
+        &[0x00, 0x7F, 0x00, 0x7F]
     }
 
     /// 0b0 encoded using [`test_spec()`]
     #[rustfmt::skip]
     #[fixture]
     const fn test_spec_zero() -> &'static [i8] {
-        &[0x00, 0x00, 0x7E, 0x7E]
+        &[0x00, 0x00, 0x7F, 0x7F]
     }
 
-    const KCS_SPEC: Spec<i8> = Spec::with_kcs();
+    const KCS_SPEC: Spec<i8> = Spec::<i8>::with_kcs();
 
     /// Returns a tuple with the square wave specification, and static values for 0b01 encoded and
     /// 0b00 encoded in that order.
@@ -219,7 +208,7 @@ mod tests {
     #[case(6, &[false, false, false, true, true, true])]
     #[case(8, &[false, false, false, false, true, true, true, true])]
     fn is_high_period_pattern(#[case] p: usize, #[case] expected: &[bool]) {
-        assert_eq!((0..p).map(|i| SquareWave::is_high(i, p)).collect::<Vec<_>>(), expected);
+        assert_eq!((0..p).map(|i| is_high(i, p)).collect::<Vec<_>>(), expected);
     }
 
     #[rstest]
@@ -230,7 +219,7 @@ mod tests {
     fn is_high_period_pattern_repeats(#[case] max_i: usize, #[case] period: usize, #[case] expected: &[bool]) {
         use itertools::Itertools;
 
-        let output = (0..max_i).map(|i| SquareWave::is_high(i, period)).chunks(period);
+        let output = (0..max_i).map(|i| is_high(i, period)).chunks(period);
         for chunk in &output {
             assert_eq!(chunk.collect::<Vec<_>>(), expected);
         }
@@ -239,33 +228,33 @@ mod tests {
     proptest! {
         #[test]
         fn is_high_2_period_is_true_for_odd_indices(i in 0..(usize::MAX / 2)) {
-            prop_assert_eq!(SquareWave::is_high(i, 2), !i.is_multiple_of(2));
+            prop_assert_eq!(is_high(i, 2), !i.is_multiple_of(2));
         }
 
         #[test]
         fn is_high_4_period_is_true_in_blocks_of_two(i in 0..(usize::MAX / 2)) {
-            prop_assert_eq!(SquareWave::is_high(i, 4), !(i / 2).is_multiple_of(2));
+            prop_assert_eq!(is_high(i, 4), !(i / 2).is_multiple_of(2));
         }
 
     }
 
     #[rstest]
     fn square_wave_with_amplitude_offset(test_spec: &Spec<i8>, test_spec_one: &[i8]) {
-        let sqwave = SquareWave::with_spec(test_spec.to_sqw_spec()).collect::<Vec<_>>();
+        let sqwave = SquareWave::with_spec(test_spec).collect::<Vec<_>>();
         assert_eq!(sqwave.len(), 4);
         assert_eq!(sqwave, test_spec_one);
     }
 
     #[test]
     fn square_wave_new_without_offset() {
-        let sqwave = SquareWave::new(0, i8::MAX, 2, 2).collect::<Vec<_>>();
+        let sqwave = SquareWave::new(-i8::MAX, i8::MAX, 2, 2).collect::<Vec<_>>();
         assert_eq!(sqwave.len(), 4);
         assert_eq!(sqwave, &[-i8::MAX, i8::MAX, -i8::MAX, i8::MAX]);
     }
 
     #[rstest]
     fn square_wave_kcs_spec(kcs_spec: &Spec<i8>, kcs_spec_one: &[i8]) {
-        let sqwave = SquareWave::with_spec(kcs_spec.to_sqw_spec()).collect::<Vec<_>>();
+        let sqwave = SquareWave::with_spec(kcs_spec).collect::<Vec<_>>();
         assert_eq!(sqwave.len(), 32);
         // Exactly eight periods of a 2400 Hz tone at 9600 Hz sampling rate
         assert_eq!(sqwave, kcs_spec_one);

@@ -26,7 +26,7 @@ fn decode_files_from_py_kcs(#[case] source: &str, #[case] expected: &str) {
     );
     assert!(wav_spec.bits_per_sample <= 16, "Bits per sample should be at most 16");
 
-    let mut spec = Spec::with_kcs();
+    let mut spec = Spec::<i16>::with_kcs();
     spec.channels = wav_spec.channels;
     spec.sample_rate = wav_spec.sample_rate;
 

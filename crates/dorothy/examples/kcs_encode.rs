@@ -10,7 +10,7 @@ struct Args;
 fn main() -> anyhow::Result<()> {
     let _ = Args::parse();
     let channels = 1;
-    let kcs_spec = Spec::with_kcs();
+    let kcs_spec = Spec::<i8>::with_kcs();
 
     let mut source_data = Vec::new();
     BufReader::new(std::io::stdin()).read_to_end(&mut source_data)?;
