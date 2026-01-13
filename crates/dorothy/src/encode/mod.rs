@@ -3,6 +3,9 @@ use crate::util::BITMASKS;
 use std::borrow::Borrow;
 use std::iter::FusedIterator;
 
+/// Encode / modulate a binary data stream onto an audio signal using Kansas City Standard coding.
+/// The implementation is loosely based on the `py-kcs` implementation by [David
+/// Beazley](https://web.archive.org/web/20260111172023/https://www.dabeaz.com/py-kcs/).
 pub fn encode<T, I, S>(spec: &Spec<S>, data: I) -> impl Iterator<Item = S>
 where
     T: Borrow<u8>,
