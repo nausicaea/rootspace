@@ -6,6 +6,12 @@ repos:
     rev: v1.37.0
     hooks:
       - id: talisman-commit
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+
   # Trufflehog doesn't support spaces in paths... WHY!?!?
   # - repo: https://github.com/trufflesecurity/trufflehog
   #   rev: v3.91.1
