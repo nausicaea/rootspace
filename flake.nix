@@ -30,6 +30,7 @@
             pkg-config
             git
             trufflehog
+            gitleaks
             pre-commit
             rust-analyzer
             cargo-nextest
