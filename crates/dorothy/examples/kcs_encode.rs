@@ -5,12 +5,16 @@ use dorothy::{Spec, encode};
 
 /// Read data from stdin and encode it as Kansas City Standard to stdout
 #[derive(Debug, Parser)]
-struct Args;
+struct Args {
+    /// Set how much padding is added to the front and back of the data stream
+    #[arg(short, long, default_value_t = 5)]
+    padding_factor: usize,
+}
 
 fn main() -> anyhow::Result<()> {
-    let _ = Args::parse();
-    let channels = 1;
-    let kcs_spec = Spec::<i8>::with_kcs();
+    let args = Args::parse();
+    let mut kcs_spec = Spec::<i16>::with_kcs();
+    kcs_spec.padding_factor = args.padding_factor;
 
     let mut source_data = Vec::new();
     BufReader::new(std::io::stdin()).read_to_end(&mut source_data)?;
@@ -20,9 +24,9 @@ fn main() -> anyhow::Result<()> {
     let mut wav_writer = hound::WavWriter::new(
         &mut output_buffer,
         hound::WavSpec {
-            channels,
+            channels: kcs_spec.channels,
             sample_rate: kcs_spec.sample_rate as u32,
-            bits_per_sample: 8,
+            bits_per_sample: 16,
             sample_format: hound::SampleFormat::Int,
         },
     )?;
