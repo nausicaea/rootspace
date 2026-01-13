@@ -47,6 +47,22 @@ pub const fn samples_per_bit(sample_rate: usize, target_freq: usize) -> usize {
     (sample_rate << 3) / target_freq
 }
 
+/// Convert a bit to a non-return-to-zero (NRZ) value: Bits are represented either as `+1` for `0b1` or `-1` for `0b0`.
+pub const fn to_nrz(bit: bool) -> i8 {
+    bit as i8 * 2 - 1
+}
+
+pub const fn to_le_bits(byte: u8) -> [bool; 8] {
+    const BITMASKS: [u8; 8] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
+    let mut output = [false; 8];
+    let mut i = 0;
+    while i < 8 {
+        output[i] = (byte & BITMASKS[i]) != 0;
+        i += 1;
+    }
+    output
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use std::ops::Range;
@@ -126,4 +142,20 @@ pub(crate) mod tests {
             prop_assert_eq!(p, input);
         }
     }
+
+    #[rstest]
+    #[case::true_is_plus_one(true, 1)]
+    #[case::false_is_minus_one(false, -1)]
+    fn to_nrz_output(#[case] input: bool, #[case] output: i8) {
+        assert_eq!(to_nrz(input), output);
+    }
+
+    #[rstest]
+    #[case::xff_all_ones(0xff, &[true; 8])]
+    #[case::x00_all_zeros(0x00, &[false; 8])]
+    fn to_le_bits_output(#[case] input: u8, #[case] output: &[bool]) {
+        let bits = to_le_bits(input);
+        assert_eq!(bits, output);
+    }
+
 }
