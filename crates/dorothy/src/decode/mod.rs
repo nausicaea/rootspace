@@ -11,6 +11,9 @@ mod byte_decoder;
 /// Given an audio signal with a known sample rate, and number of channels, decode a
 /// frequency-shift-keyed (FSK) signal in the vein of the Kansas City Standard (KCS).
 ///
+/// The implementation is loosely based on the `py-kcs` implementation by [David
+/// Beazley](https://web.archive.org/web/20260111172023/https://www.dabeaz.com/py-kcs/).
+///
 /// # Assumptions
 ///
 /// 1. The `spec.sample_rate` is at least twice as large as `spec.frequency` (Nyquist)
