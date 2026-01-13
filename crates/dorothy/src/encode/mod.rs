@@ -22,17 +22,17 @@ where
 }
 
 const fn padding<S: Copy>(spec: &Spec<S>) -> SquareWave<S> {
-    SquareWave::with_spec(&Spec {
-        num_periods: spec.padding_factor * spec.frequency as usize,
+    SquareWave::with_mark(&Spec {
+        mark_num_periods: spec.padding_factor * spec.mark_frequency as usize,
         ..*spec
     })
 }
 
 fn encode_byte_le<S: Copy>(spec: &Spec<S>, byte: u8) -> impl Iterator<Item = S> {
-    zero_pulse(spec)
+    SquareWave::with_space(spec)
         .chain(encode_byte_le_unarmored(spec, byte))
-        .chain(one_pulse(spec))
-        .chain(one_pulse(spec))
+        .chain(SquareWave::with_mark(spec))
+        .chain(SquareWave::with_mark(spec))
 }
 
 fn encode_byte_le_unarmored<S: Copy>(spec: &Spec<S>, byte: u8) -> impl Iterator<Item = S> {
@@ -41,22 +41,10 @@ fn encode_byte_le_unarmored<S: Copy>(spec: &Spec<S>, byte: u8) -> impl Iterator<
 
 const fn encode_bit<S: Copy>(spec: &Spec<S>, mask: u8, byte: u8) -> SquareWave<S> {
     if byte & mask != 0 {
-        one_pulse(spec)
+        SquareWave::with_mark(spec)
     } else {
-        zero_pulse(spec)
+        SquareWave::with_space(spec)
     }
-}
-
-const fn one_pulse<S: Copy>(spec: &Spec<S>) -> SquareWave<S> {
-    SquareWave::with_spec(spec)
-}
-
-const fn zero_pulse<S: Copy>(spec: &Spec<S>) -> SquareWave<S> {
-    SquareWave::with_spec(&Spec {
-        frequency: spec.frequency / 2,
-        num_periods: spec.num_periods / 2,
-        ..*spec
-    })
 }
 
 #[derive(Debug, Clone)]
@@ -81,13 +69,22 @@ impl<S: Copy> SquareWave<S> {
     }
 
     #[must_use]
-    pub const fn with_spec(spec: &Spec<S>) -> Self {
-        debug_assert!(spec.frequency <= (spec.sample_rate >> 1));
+    pub const fn with_mark(spec: &Spec<S>) -> Self {
         Self::new(
             spec.low,
             spec.high,
-            (spec.sample_rate / spec.frequency) as usize,
-            spec.num_periods,
+            (spec.sample_rate / spec.mark_frequency) as usize,
+            spec.mark_num_periods,
+        )
+    }
+
+    #[must_use]
+    pub const fn with_space(spec: &Spec<S>) -> Self {
+        Self::new(
+            spec.low,
+            spec.high,
+            (spec.sample_rate / spec.space_frequency) as usize,
+            spec.space_num_periods,
         )
     }
 
@@ -146,8 +143,10 @@ mod tests {
             low: 0,
             high: i8::MAX,
             sample_rate: 4,
-            frequency: 2,
-            num_periods: 2,
+            mark_frequency: 2,
+            space_frequency: 1,
+            mark_num_periods: 2,
+            space_num_periods: 1,
         }
     }
 
@@ -243,7 +242,7 @@ mod tests {
 
     #[rstest]
     fn square_wave_with_amplitude_offset(test_spec: &Spec<i8>, test_spec_one: &[i8]) {
-        let sqwave = SquareWave::with_spec(test_spec).collect::<Vec<_>>();
+        let sqwave = SquareWave::with_mark(test_spec).collect::<Vec<_>>();
         assert_eq!(sqwave.len(), 4);
         assert_eq!(sqwave, test_spec_one);
     }
@@ -257,28 +256,28 @@ mod tests {
 
     #[rstest]
     fn square_wave_kcs_spec(kcs_spec: &Spec<i8>, kcs_spec_one: &[i8]) {
-        let sqwave = SquareWave::with_spec(kcs_spec).collect::<Vec<_>>();
+        let sqwave = SquareWave::with_mark(kcs_spec).collect::<Vec<_>>();
         assert_eq!(sqwave.len(), 32);
         // Exactly eight periods of a 2400 Hz tone at 9600 Hz sampling rate
         assert_eq!(sqwave, kcs_spec_one);
     }
 
     #[rstest]
-    fn zero_pulse_and_one_pulse_are_equal_length(test_spec: &Spec<i8>, test_spec_one: &[i8], test_spec_zero: &[i8]) {
-        let one = one_pulse(&test_spec);
+    fn space_and_mark_are_equal_length(test_spec: &Spec<i8>, test_spec_one: &[i8], test_spec_zero: &[i8]) {
+        let one = SquareWave::with_mark(&test_spec);
         assert_eq!(one.len(), 4);
         assert_eq!(one.collect::<Vec<_>>(), test_spec_one);
-        let zero = zero_pulse(&test_spec);
+        let zero = SquareWave::with_space(&test_spec);
         assert_eq!(zero.len(), 4);
         assert_eq!(zero.collect::<Vec<_>>(), test_spec_zero);
     }
 
     #[rstest]
-    fn kcs_zero_pulse_and_one_pulse_are_equal_length(kcs_spec: &Spec<i8>, kcs_spec_one: &[i8], kcs_spec_zero: &[i8]) {
-        let one = one_pulse(&kcs_spec);
+    fn kcs_space_and_mark_are_equal_length(kcs_spec: &Spec<i8>, kcs_spec_one: &[i8], kcs_spec_zero: &[i8]) {
+        let one = SquareWave::with_mark(&kcs_spec);
         assert_eq!(one.len(), 32);
         assert_eq!(one.collect::<Vec<_>>(), kcs_spec_one);
-        let zero = zero_pulse(&kcs_spec);
+        let zero = SquareWave::with_space(&kcs_spec);
         assert_eq!(zero.len(), 32);
         assert_eq!(zero.collect::<Vec<_>>(), kcs_spec_zero);
     }
@@ -393,7 +392,7 @@ mod tests {
     #[rstest]
     fn kcs_padding_len_equivalency(kcs_spec: &Spec<i8>) {
         let sample_rate = kcs_spec.sample_rate;
-        let freq = kcs_spec.frequency;
+        let freq = kcs_spec.mark_frequency;
         let leader = 5;
 
         assert_eq!(
@@ -409,7 +408,7 @@ mod tests {
         fn padding_len_equivalency_properties((sr, tf) in sr_and_tf(), leader in 0..6_usize) {
             let spec = Spec {
                 sample_rate: sr,
-                frequency: tf,
+                mark_frequency: tf,
                 padding_factor: leader,
                 ..*kcs_spec()
             };

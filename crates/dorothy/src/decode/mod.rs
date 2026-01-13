@@ -35,7 +35,7 @@ where
 {
     let channels = spec.channels;
     let sample_rate = spec.sample_rate;
-    let target_freq = spec.frequency;
+    let target_freq = spec.mark_frequency;
 
     if (target_freq << 1) > sample_rate {
         return Err(Error::NyquistViolation(sample_rate, target_freq));
