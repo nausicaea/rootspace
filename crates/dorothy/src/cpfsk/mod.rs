@@ -1,5 +1,5 @@
 use iterator_ext::IteratorExt;
-use std::{borrow::Borrow, f64::consts::PI};
+use std::f64::consts::PI;
 
 use crate::util::{to_le_bits, to_nrz};
 use crate::{Spec, util::samples_per_bit};
@@ -11,11 +11,9 @@ mod iterator_ext;
 /// Modulate a byte-stream onto a carrier wave using Continuous Phase Frequency Shift Keying (CPFSK).
 ///
 /// The implementation was gratefully nabbed from the author of [Not Black Magic](https://web.archive.org/web/20251115022344/https://www.notblackmagic.com/bitsnpieces/afsk/#afsk-modulation).
-pub fn modulate<T, I, J, S>(spec: &Spec<S>, data: I) -> impl Iterator<Item = S>
+pub fn modulate<I, S>(spec: &Spec<S>, data: I) -> impl Iterator<Item = S>
 where
-    T: Borrow<u8>,
-    I: IntoIterator<Item = T, IntoIter = J>,
-    J: Iterator<Item = T>,
+    I: Iterator<Item = u8>,
     S: Copy + Into<f64> + FromF64Unchecked,
 {
     // Amplitude Settings
@@ -32,8 +30,7 @@ where
     // Integration settings
     let steps = samples_per_bit(spec.sample_rate as usize, spec.mark_frequency as usize);
 
-    data.into_iter()
-        .flat_map(|t| to_le_bits(*t.borrow()))
+    data.flat_map(to_le_bits)
         .map(to_nrz)
         .discrete_integral(steps)
         .map(move |(i, m)| {
@@ -64,7 +61,7 @@ mod tests {
         .unwrap();
 
         let data = "Hello, World!".as_bytes();
-        for sample in modulate(&spec, data) {
+        for sample in modulate(&spec, data.into_iter().copied()) {
             wav_writer.write_sample(sample).unwrap();
         }
         wav_writer.flush().unwrap();
