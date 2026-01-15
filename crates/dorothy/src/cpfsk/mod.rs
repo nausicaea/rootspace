@@ -34,7 +34,7 @@ where
 
     data.into_iter()
         .flat_map(|t| to_le_bits(*t.borrow()))
-        .map(|bit| to_nrz(bit))
+        .map(to_nrz)
         .discrete_integral(steps)
         .map(move |(i, m)| {
             let y = modulate_sample(amplitude, carrier_omega, delta_omega, i as f32, m);
