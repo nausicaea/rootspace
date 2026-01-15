@@ -1,7 +1,7 @@
 #![no_std]
 
 /// Defines the additive identity element. This trait is functionally equivalent to
-/// [`num_traits::Zero`](https://docs.rs/num-traits/latest/num_traits/identities/trait.Zero.html) but without the type bound [`core::ops::Add`]`<Self, Output = Self>` to allow use in
+/// [`num_traits::Zero`](https://docs.rs/num-traits/latest/num_traits/identities/trait.Zero.html) but without the type bound [`core::ops::Add<Self, Output = Self>`](core::ops::Add) to allow use in
 /// special edge cases.
 pub trait Zero {
     /// Create a new instance of `Self` that represents the additive identity.
@@ -18,7 +18,7 @@ pub trait ConstZero {
 }
 
 /// Defines the multiplicative identity element. This trait is functionally equivalent to
-/// [`num_traits::One`](https://docs.rs/num-traits/latest/num_traits/identities/trait.One.html) but without the type bound [`core::ops::Mul`]`<Self, Output = Self>` to allow use in
+/// [`num_traits::One`](https://docs.rs/num-traits/latest/num_traits/identities/trait.One.html) but without the type bound [`core::ops::Mul<Self, Output = Self>`](core::ops::Mul) to allow use in
 /// special edge cases.
 pub trait One {
     /// Create a new instance of `Self` that represents the multiplicative identity.
