@@ -157,5 +157,4 @@ pub(crate) mod tests {
         let bits = to_le_bits(input);
         assert_eq!(bits, output);
     }
-
 }
