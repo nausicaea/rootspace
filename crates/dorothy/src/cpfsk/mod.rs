@@ -9,6 +9,7 @@ mod discrete_integral;
 mod iterator_ext;
 
 /// Modulate a byte-stream onto a carrier wave using Continuous Phase Frequency Shift Keying (CPFSK).
+///
 /// The implementation was gratefully nabbed from the author of [Not Black Magic](https://web.archive.org/web/20251115022344/https://www.notblackmagic.com/bitsnpieces/afsk/#afsk-modulation).
 pub fn modulate<T, I, J, S>(spec: &Spec<S>, data: I) -> impl Iterator<Item = S>
 where
