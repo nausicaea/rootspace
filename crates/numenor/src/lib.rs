@@ -1,8 +1,9 @@
 #![no_std]
 
 /// Defines the additive identity element. This trait is functionally equivalent to
-/// [`num_traits::Zero`](https://docs.rs/num-traits/latest/num_traits/identities/trait.Zero.html) but without the type bound [`core::ops::Add<Self, Output = Self>`](core::ops::Add) to allow use in
-/// special edge cases.
+/// [`num_traits::Zero`](https://docs.rs/num-traits/latest/num_traits/identities/trait.Zero.html)
+/// but without the type bound [`core::ops::Add<Self, Output = Self>`](core::ops::Add) to allow use
+/// in special edge cases.
 pub trait Zero {
     /// Create a new instance of `Self` that represents the additive identity.
     fn zero() -> Self;
@@ -10,25 +11,26 @@ pub trait Zero {
 
 /// Defines the compile-time constant additive identity element. As with [`Zero`], this trait is
 /// functionally equivalent to
-/// [`num_traits::ConstZero`](https://docs.rs/num-traits/latest/num_traits/identities/trait.ConstZero.html) but without the type bounds to allow use in
-/// special edge cases.
+/// [`num_traits::ConstZero`](https://docs.rs/num-traits/latest/num_traits/identities/trait.ConstZero.html)
+/// but without the type bounds to allow use in special edge cases.
 pub trait ConstZero {
     /// Provide an instance of `Self` that represents the additive identity.
     const ZERO: Self;
 }
 
 /// Defines the multiplicative identity element. This trait is functionally equivalent to
-/// [`num_traits::One`](https://docs.rs/num-traits/latest/num_traits/identities/trait.One.html) but without the type bound [`core::ops::Mul<Self, Output = Self>`](core::ops::Mul) to allow use in
+/// [`num_traits::One`](https://docs.rs/num-traits/latest/num_traits/identities/trait.One.html) but
+/// without the type bound [`core::ops::Mul<Self, Output = Self>`](core::ops::Mul) to allow use in
 /// special edge cases.
 pub trait One {
     /// Create a new instance of `Self` that represents the multiplicative identity.
     fn one() -> Self;
 }
 
-/// Defines the compile-time constant multiplicative identity element. As with [`One`], this trait is
-/// functionally equivalent to
-/// [`num_traits::ConstOne`](https://docs.rs/num-traits/latest/num_traits/identities/trait.ConstOne.html) but without the type bounds to allow use in
-/// special edge cases.
+/// Defines the compile-time constant multiplicative identity element. As with [`One`], this trait
+/// is functionally equivalent to
+/// [`num_traits::ConstOne`](https://docs.rs/num-traits/latest/num_traits/identities/trait.ConstOne.html)
+/// but without the type bounds to allow use in special edge cases.
 pub trait ConstOne {
     /// Provide an instance of `Self` that represents the multiplicative identity.
     const ONE: Self;
@@ -49,7 +51,8 @@ pub trait ConstBounded {
     const MAX: Self;
 }
 
-/// Performs a coercion of `f64` to the destination type. Functionally equivalent to the `as` operator. It completely glosses over things like:
+/// Performs a coercion of `f64` to the destination type. Functionally equivalent to the `as`
+/// operator. It completely glosses over things like:
 ///
 /// 1. Precision loss
 /// 2. Saturation / Truncation
