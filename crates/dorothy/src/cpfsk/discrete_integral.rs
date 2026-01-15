@@ -5,9 +5,9 @@ pub struct DiscreteIntegral<I> {
     index: usize,
     k_prev: usize,
     k: usize,
-    sample_k_prev: f32,
-    sample_k: f32,
-    m: f32,
+    sample_k_prev: f64,
+    sample_k: f64,
+    m: f64,
 }
 
 impl<I> DiscreteIntegral<I> {
@@ -29,7 +29,7 @@ impl<I> Iterator for DiscreteIntegral<I>
 where
     I: Iterator<Item = i8>,
 {
-    type Item = (usize, f32);
+    type Item = (usize, f64);
 
     fn next(&mut self) -> Option<Self::Item> {
         let k_prev = self.index / self.samples_per_bit;
@@ -39,14 +39,14 @@ where
             // The very first iteration has special handling because it needs to set up the sample
             // cache.
             (false, false) if self.index == 0 => {
-                self.sample_k_prev = f32::from(self.source.next()?);
+                self.sample_k_prev = f64::from(self.source.next()?);
                 self.sample_k = self.sample_k_prev;
             }
             // Because both indices remain unchanged, no updates to the samples are needed.
             (false, false) => (),
             // New data needs to be fetched because k changes, but sample_k_prev remains unchanged.
             (false, true) => {
-                self.sample_k = f32::from(self.source.next()?);
+                self.sample_k = f64::from(self.source.next()?);
             }
             // No new data is fetched, but sample_k_prev is overwritten by sample_k
             (true, false) => {
@@ -56,12 +56,12 @@ where
             // data. I don't expect this case to ever happen.
             (true, true) => {
                 self.sample_k_prev = self.sample_k;
-                self.sample_k = f32::from(self.source.next()?);
+                self.sample_k = f64::from(self.source.next()?);
             }
         }
         self.k_prev = k_prev;
         self.k = k;
-        self.m += f32::midpoint(self.sample_k_prev, self.sample_k);
+        self.m += f64::midpoint(self.sample_k_prev, self.sample_k);
         let output = Some((self.index, self.m));
         self.index += 1;
         output
@@ -77,15 +77,15 @@ mod tests {
     #[case(32, &[1, -1, -1, -1, -1, -1, -1, -1])]
     fn discrete_integral(#[case] samples_per_bit: usize, #[case] data: &[i8]) {
         /// This follows the original implementation on https://notblackmagic.com/bitsnpieces/afsk/
-        fn original_integral(steps: usize, data: &[i8]) -> Vec<f32> {
+        fn original_integral(steps: usize, data: &[i8]) -> Vec<f64> {
             let n = data.len() * steps;
             let mut output = Vec::with_capacity(n);
             let mut m = 0.0;
             for i in 2..=n {
-                let index = (i as f32 / steps as f32).ceil() as usize;
-                let index_prev = ((i - 1) as f32 / steps as f32).ceil() as usize;
+                let index = (i as f64 / steps as f64).ceil() as usize;
+                let index_prev = ((i - 1) as f64 / steps as f64).ceil() as usize;
 
-                m += (data[index_prev - 1] as f32 + data[index - 1] as f32) / 2.0;
+                m += (data[index_prev - 1] as f64 + data[index - 1] as f64) / 2.0;
                 eprintln!(
                     "i={i}, data[{index_prev}]={}, data[{index}]={}, m={m}",
                     data[index_prev - 1],

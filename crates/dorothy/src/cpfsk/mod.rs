@@ -1,9 +1,9 @@
 use iterator_ext::IteratorExt;
-use numenor::{FromF32Unchecked, IntoF32Unchecked};
-use std::{borrow::Borrow, f32::consts::PI};
+use std::{borrow::Borrow, f64::consts::PI};
 
 use crate::util::{to_le_bits, to_nrz};
 use crate::{Spec, util::samples_per_bit};
+use numenor::FromF64Unchecked;
 
 mod discrete_integral;
 mod iterator_ext;
@@ -16,18 +16,18 @@ where
     T: Borrow<u8>,
     I: IntoIterator<Item = T, IntoIter = J>,
     J: Iterator<Item = T>,
-    S: Copy + FromF32Unchecked + IntoF32Unchecked,
+    S: Copy + Into<f64> + FromF64Unchecked,
 {
     // Amplitude Settings
-    let amplitude = (spec.high.into_f32_unchecked() - spec.low.into_f32_unchecked()) / 2.0;
+    let amplitude = (spec.high.into() - spec.low.into()) / 2.0;
 
     // Frequency Settings
     // carrier_freq + delta_freq = 2400 Hz; carrier_freq - delta_freq = 1200 Hz
     let carrier_freq = u32::midpoint(spec.mark_frequency, spec.space_frequency);
     let delta_freq = spec.mark_frequency.abs_diff(spec.space_frequency) / 2;
     let sample_rate = spec.sample_rate;
-    let carrier_omega = 2.0 * PI * (carrier_freq as f32 / sample_rate as f32);
-    let delta_omega = 2.0 * PI * (delta_freq as f32 / sample_rate as f32);
+    let carrier_omega = 2.0 * PI * (carrier_freq as f64 / sample_rate as f64);
+    let delta_omega = 2.0 * PI * (delta_freq as f64 / sample_rate as f64);
 
     // Integration settings
     let steps = samples_per_bit(spec.sample_rate as usize, spec.mark_frequency as usize);
@@ -37,12 +37,12 @@ where
         .map(to_nrz)
         .discrete_integral(steps)
         .map(move |(i, m)| {
-            let y = modulate_sample(amplitude, carrier_omega, delta_omega, i as f32, m);
-            S::from_f32_unchecked(y)
+            let y = modulate_sample(amplitude, carrier_omega, delta_omega, i as f64, m);
+            S::from_f64_unchecked(y)
         })
 }
 
-fn modulate_sample(amplitude: f32, carrier_omega: f32, delta_omega: f32, t: f32, delta_t: f32) -> f32 {
+fn modulate_sample(amplitude: f64, carrier_omega: f64, delta_omega: f64, t: f64, delta_t: f64) -> f64 {
     amplitude * carrier_omega.mul_add(t, -(delta_omega * delta_t)).cos()
 }
 
