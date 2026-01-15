@@ -61,7 +61,7 @@ where
         }
         self.k_prev = k_prev;
         self.k = k;
-        self.m += (self.sample_k_prev + self.sample_k) / 2.0;
+        self.m += f32::midpoint(self.sample_k_prev, self.sample_k);
         let output = Some((self.index, self.m));
         self.index += 1;
         output

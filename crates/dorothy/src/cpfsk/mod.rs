@@ -22,7 +22,7 @@ where
 
     // Frequency Settings
     // carrier_freq + delta_freq = 2400 Hz; carrier_freq - delta_freq = 1200 Hz
-    let carrier_freq = (spec.mark_frequency + spec.space_frequency) / 2;
+    let carrier_freq = u32::midpoint(spec.mark_frequency, spec.space_frequency);
     let delta_freq = spec.mark_frequency.abs_diff(spec.space_frequency) / 2;
     let sample_rate = spec.sample_rate;
     let carrier_omega = 2.0 * PI * (carrier_freq as f32 / sample_rate as f32);
