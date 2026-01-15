@@ -43,7 +43,7 @@ where
 }
 
 fn modulate_sample(amplitude: f32, carrier_omega: f32, delta_omega: f32, t: f32, delta_t: f32) -> f32 {
-    amplitude * (carrier_omega * t - delta_omega * delta_t).cos()
+    amplitude * carrier_omega.mul_add(t, -(delta_omega * delta_t)).cos()
 }
 
 #[cfg(test)]
