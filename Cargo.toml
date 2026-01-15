@@ -49,5 +49,4 @@ panic = "abort"
 
 [workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
-nursery = { level = "warn", priority = -1 }
 unwrap_used = "warn"
