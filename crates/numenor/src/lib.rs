@@ -49,45 +49,34 @@ pub trait ConstBounded {
     const MAX: Self;
 }
 
-/// Performs a coercion of `f32` to the destination type. Functionally equivalent to the `as` operator. It completely glosses over things like:
+/// Performs a coercion of `f64` to the destination type. Functionally equivalent to the `as` operator. It completely glosses over things like:
 ///
 /// 1. Precision loss
-/// 2. Saturation
-/// 3. Meaningless conversions (i.e. `f32::NAN` or `f32::INFINITY` to `i32`)
+/// 2. Saturation / Truncation
+/// 3. Meaningless conversions (i.e. `f64::NAN` or `f64::INFINITY` to `i32`)
 /// 4. Platform-specific behavior
 ///
 /// # Bad Examples
 ///
 /// ```rust
-/// use numenor::FromF32Unchecked;
+/// use numenor::FromF64Unchecked;
 ///
 /// // Decimal values are truncated
-/// assert_eq!(i32::from_f32_unchecked(1.25_f32), 1);
+/// assert_eq!(i32::from_f64_unchecked(1.25_f64), 1);
 ///
 /// // Large values saturate
-/// assert_eq!(i8::from_f32_unchecked(1000_f32), i8::MAX);
-/// assert_eq!(i8::from_f32_unchecked(-1000_f32), i8::MIN);
+/// assert_eq!(i8::from_f64_unchecked(1000_f64), i8::MAX);
+/// assert_eq!(i8::from_f64_unchecked(-1000_f64), i8::MIN);
 ///
 /// // Nonsensical conversions behave like the as operator
-/// assert_eq!(i32::from_f32_unchecked(f32::INFINITY), f32::INFINITY as i32);
-/// assert_eq!(i32::from_f32_unchecked(-f32::INFINITY), -f32::INFINITY as i32);
-/// assert_eq!(i32::from_f32_unchecked(f32::NAN), f32::NAN as i32);
-/// assert_eq!(i32::from_f32_unchecked(f32::EPSILON), f32::EPSILON as i32);
+/// assert_eq!(i32::from_f64_unchecked(f64::INFINITY), f64::INFINITY as i32);
+/// assert_eq!(i32::from_f64_unchecked(-f64::INFINITY), -f64::INFINITY as i32);
+/// assert_eq!(i32::from_f64_unchecked(f64::NAN), f64::NAN as i32);
+/// assert_eq!(i32::from_f64_unchecked(f64::EPSILON), f64::EPSILON as i32);
 /// ```
-pub trait FromF32Unchecked {
-    /// Coerce an `f32` value to the output type. Refer to [`FromF32Unchecked`] for more details.
-    fn from_f32_unchecked(value: f32) -> Self;
-}
-
-/// Performs a coercion of the source type to `f32`. Functionally equivalent to the `as` operator. About as dangerous as [`FromF32Unchecked`].
-///
-/// # Weaknesses
-///
-/// 1. Precision loss
-/// 2. Platform-specific behavior
-pub trait IntoF32Unchecked {
-    /// Coerce a generic value to `f32`. Refer to [`IntoF32Unchecked`] for more details.
-    fn into_f32_unchecked(self) -> f32;
+pub trait FromF64Unchecked {
+    /// Coerce an `f64` value to the output type. Refer to [`FromF64Unchecked`] for more details.
+    fn from_f64_unchecked(value: f64) -> Self;
 }
 
 macro_rules! impl_const_zero {
@@ -131,24 +120,13 @@ macro_rules! impl_const_bounded {
     };
 }
 
-macro_rules! impl_from_f32_unchecked {
+macro_rules! impl_from_f64_unchecked {
     ($($t:ty),+) => {
         $(
-            impl FromF32Unchecked for $t {
-                fn from_f32_unchecked(value: f32) -> Self {
+            #[allow(clippy::cast_possible_truncation)]
+            impl FromF64Unchecked for $t {
+                fn from_f64_unchecked(value: f64) -> Self {
                     value as $t
-                }
-            }
-        )+
-    };
-}
-
-macro_rules! impl_into_f32_unchecked {
-    ($($t:ty),+) => {
-        $(
-            impl IntoF32Unchecked for $t {
-                fn into_f32_unchecked(self) -> f32 {
-                    self as f32
                 }
             }
         )+
@@ -214,5 +192,4 @@ impl_const_minus_one! {
 
 impl_const_bounded! { u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize }
 
-impl_from_f32_unchecked! { u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize }
-impl_into_f32_unchecked! { u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, usize, isize }
+impl_from_f64_unchecked! { i8, i16, i32, i64, i128, isize }
