@@ -26,8 +26,8 @@ where
     let carrier_freq = u32::midpoint(spec.mark_frequency, spec.space_frequency);
     let delta_freq = spec.mark_frequency.abs_diff(spec.space_frequency) / 2;
     let sample_rate = spec.sample_rate;
-    let carrier_omega = 2.0 * PI * (carrier_freq as f64 / sample_rate as f64);
-    let delta_omega = 2.0 * PI * (delta_freq as f64 / sample_rate as f64);
+    let carrier_omega = 2.0 * PI * (f64::from(carrier_freq) / f64::from(sample_rate));
+    let delta_omega = 2.0 * PI * (f64::from(delta_freq) / f64::from(sample_rate));
 
     // Integration settings
     let steps = samples_per_bit(spec.sample_rate as usize, spec.mark_frequency as usize);
