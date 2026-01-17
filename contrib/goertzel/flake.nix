@@ -17,6 +17,7 @@
                 python-pkgs.jupyter
                 python-pkgs.numpy
                 python-pkgs.matplotlib
+                python-pkgs.hypothesis
             ]))
           ];
         };
