@@ -14,8 +14,11 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             (pkgs.python3.withPackages (python-pkgs: [
-                python-pkgs.jupyter
+                python-pkgs.tkinter
+                python-pkgs.notebook
                 python-pkgs.numpy
+                python-pkgs.scipy
+                python-pkgs.soundfile
                 python-pkgs.matplotlib
                 python-pkgs.hypothesis
             ]))
