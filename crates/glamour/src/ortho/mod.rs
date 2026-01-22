@@ -1,4 +1,3 @@
-
 use crate::num::CustomFloat;
 
 use super::mat::Mat4;

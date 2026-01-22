@@ -77,11 +77,7 @@ pub enum FormatType {
 
 impl clap::ValueEnum for FormatType {
     fn value_variants<'a>() -> &'a [Self] {
-        &[
-            Self::Ascii,
-            Self::BinaryLittleEndian,
-            Self::BinaryBigEndian,
-        ]
+        &[Self::Ascii, Self::BinaryLittleEndian, Self::BinaryBigEndian]
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
@@ -263,7 +259,7 @@ pub enum Primitive {
 
 impl From<usize> for Primitive {
     fn from(value: usize) -> Self {
-        use self::Primitive::{Single, Lines, Triangles, Quads, Mixed};
+        use self::Primitive::{Lines, Mixed, Quads, Single, Triangles};
         match value {
             1 => Single,
             2 => Lines,
@@ -286,7 +282,7 @@ impl TryFrom<Primitive> for usize {
     type Error = AmbiguousMixedPrimitive;
 
     fn try_from(value: Primitive) -> Result<Self, Self::Error> {
-        use self::Primitive::{Single, Lines, Triangles, Quads, Mixed};
+        use self::Primitive::{Lines, Mixed, Quads, Single, Triangles};
         match value {
             Single => Ok(1),
             Lines => Ok(2),
@@ -358,7 +354,7 @@ pub enum Values {
 }
 
 impl Values {
-    #[must_use] 
+    #[must_use]
     pub const fn with_data_type(dt: DataType) -> Self {
         match dt {
             DataType::U8 => Self::U8(Vec::new()),
@@ -450,7 +446,7 @@ pub struct Ply {
 }
 
 impl Ply {
-    #[must_use] 
+    #[must_use]
     pub fn property_id(&self, element_name: &str, property_name: &str) -> Option<(ElementId, PropertyId)> {
         self.descriptor
             .elements
@@ -465,7 +461,7 @@ impl Ply {
             .next()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn primitive(&self) -> Option<Primitive> {
         let p_id = self
             .property_id(FACE_ELEMENT, VERTEX_INDICES_LIST_PROPERTY)

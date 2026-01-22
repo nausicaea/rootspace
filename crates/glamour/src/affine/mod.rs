@@ -23,7 +23,7 @@ pub struct Affine<R> {
 }
 
 impl<R> Affine<R> {
-    #[must_use] 
+    #[must_use]
     pub fn builder() -> AffineBuilder<R> {
         AffineBuilder::default()
     }
@@ -33,7 +33,7 @@ impl<R> Affine<R>
 where
     R: CustomFloat,
 {
-    #[must_use] 
+    #[must_use]
     pub fn identity() -> Self {
         Self {
             t: Vec4::ZERO,

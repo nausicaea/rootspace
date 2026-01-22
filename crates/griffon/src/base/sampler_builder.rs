@@ -17,7 +17,7 @@ impl<'rt> SamplerBuilder<'rt> {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_label(mut self, label: Option<&'rt str>) -> Self {
         self.label = label;
         self

@@ -59,7 +59,7 @@ impl<R> Quat<R>
 where
     R: Zero + One,
 {
-    #[must_use] 
+    #[must_use]
     pub fn identity() -> Self {
         Self {
             w: R::one(),

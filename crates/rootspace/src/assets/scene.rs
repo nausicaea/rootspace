@@ -22,7 +22,7 @@ pub struct Scene {
 }
 
 impl Scene {
-    #[must_use] 
+    #[must_use]
     pub fn with_resources(res: &Resources) -> Self {
         Self {
             entities: res.read::<Entities>().clone(),
@@ -256,43 +256,43 @@ impl<'a> EntityBuilder<'a> {
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn with_info(mut self, info: Info) -> Self {
         self.info = Some(info);
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_debug_animate(mut self) -> Self {
         self.debug_animate = true;
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_camera(mut self, cam: Camera) -> Self {
         self.camera = Some(cam);
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_transform(mut self, trf: Transform) -> Self {
         self.transform = Some(trf);
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn with_renderable(mut self, rdb: RenderableSource) -> Self {
         self.renderable = Some(rdb);
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn with_light(mut self, lght: LightSource) -> Self {
         self.light = Some(lght);
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn submit(self) -> Entity {
         let e = self.scene.entities.create();
         let i = e.idx();

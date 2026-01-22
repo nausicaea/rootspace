@@ -17,7 +17,11 @@ pub struct RenderPipelineBuilder<'rt, 'ep, 'vbl> {
 }
 
 impl<'rt, 'ep> RenderPipelineBuilder<'rt, 'ep, '_> {
-    pub(crate) const fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
+    pub(crate) const fn new(
+        runtime: &'rt Runtime,
+        database: &'rt mut GpuObjectDatabase,
+        settings: &'rt Settings,
+    ) -> Self {
         RenderPipelineBuilder {
             runtime,
             database,
@@ -30,31 +34,31 @@ impl<'rt, 'ep> RenderPipelineBuilder<'rt, 'ep, '_> {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_label(mut self, label: &'static str) -> Self {
         self.label = Some(label);
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_vertex_shader_module(mut self, module: ShaderModuleId, entry_point: &'ep str) -> Self {
         self.vertex_shader_module = Some((module, entry_point));
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_fragment_shader_module(mut self, module: ShaderModuleId, entry_point: &'ep str) -> Self {
         self.fragment_shader_module = Some((module, entry_point));
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn add_bind_group_layout(mut self, bgl: BindGroupLayoutId) -> Self {
         self.bind_group_layouts.push(bgl);
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn add_vertex_buffer_layout<V: VertexAttributeDescriptor>(mut self) -> Self {
         let vbl = wgpu::VertexBufferLayout {
             array_stride: size_of::<V>() as wgpu::BufferAddress,

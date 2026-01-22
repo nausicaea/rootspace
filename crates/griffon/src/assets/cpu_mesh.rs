@@ -25,7 +25,10 @@ impl LoadAsset for CpuMesh {
     type Output = Self;
 
     fn with_path(_res: &ecs::Resources, path: &std::path::Path) -> anyhow::Result<Self::Output> {
-        let label = path.file_stem().and_then(|n| n.to_str()).map(std::borrow::ToOwned::to_owned);
+        let label = path
+            .file_stem()
+            .and_then(|n| n.to_str())
+            .map(std::borrow::ToOwned::to_owned);
 
         if path.extension().and_then(|ext| ext.to_str()) == Some("ply") {
             let ply =
@@ -161,7 +164,9 @@ impl CpuMesh {
 
         tracing::trace!("Loaded {} vertices and {} indices", vertex_data.len(), indices.len());
 
-        let texture_names: Vec<_> = Self::find_texture_names(ply).map(std::borrow::ToOwned::to_owned).collect();
+        let texture_names: Vec<_> = Self::find_texture_names(ply)
+            .map(std::borrow::ToOwned::to_owned)
+            .collect();
 
         tracing::trace!("Located the following texture names: {}", texture_names.join(", "));
 
@@ -178,12 +183,11 @@ impl CpuMesh {
             .comments
             .iter()
             .chain(ply.descriptor.elements.values().flat_map(|e| e.comments.iter()))
-            .chain(
-                ply.descriptor
-                    .elements
+            .chain(ply.descriptor.elements.values().flat_map(|e| {
+                e.properties
                     .values()
-                    .flat_map(|e| e.properties.values().flat_map(plyers::types::PropertyDescriptor::comments)),
-            )
+                    .flat_map(plyers::types::PropertyDescriptor::comments)
+            }))
             .map(AsRef::<str>::as_ref)
             .filter(|c| c.starts_with("TextureFile"))
             .map(|c| c.trim_start_matches("TextureFile "))
@@ -192,12 +196,11 @@ impl CpuMesh {
                     .obj_info
                     .iter()
                     .chain(ply.descriptor.elements.values().flat_map(|e| e.obj_info.iter()))
-                    .chain(
-                        ply.descriptor
-                            .elements
+                    .chain(ply.descriptor.elements.values().flat_map(|e| {
+                        e.properties
                             .values()
-                            .flat_map(|e| e.properties.values().flat_map(plyers::types::PropertyDescriptor::obj_info)),
-                    )
+                            .flat_map(plyers::types::PropertyDescriptor::obj_info)
+                    }))
                     .map(AsRef::<str>::as_ref)
                     .filter(|c| c.starts_with("texture"))
                     .map(|c| c.trim_start_matches("texture ")),

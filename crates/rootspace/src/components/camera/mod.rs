@@ -10,7 +10,7 @@ pub struct Camera {
 }
 
 impl Camera {
-    #[must_use] 
+    #[must_use]
     pub fn new(width: u32, height: u32, fov_y: f32, frustum_z: (f32, f32)) -> Self {
         Self {
             persp: Persp::new(height as f32 / width as f32, fov_y, frustum_z.0, frustum_z.1),
@@ -18,12 +18,12 @@ impl Camera {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn as_persp_matrix(&self) -> &Mat4<f32> {
         self.persp.as_matrix()
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn as_ortho_matrix(&self) -> &Mat4<f32> {
         self.ortho.as_matrix()
     }

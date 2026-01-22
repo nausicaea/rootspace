@@ -1,4 +1,3 @@
-
 use crate::{affine::Affine, num::CustomFloat, quat::Quat, unit::Unit, vec::Vec4};
 
 #[derive(Debug, PartialEq, Clone)]

@@ -82,11 +82,17 @@ impl Renderer {
         // Validate the number of cameras and light sources
         let max_cameras = gfx.max_cameras() as usize;
         let num_cameras = res.read_components::<Camera>().len();
-        assert!(num_cameras <= max_cameras, "Too many cameras: have {num_cameras}, expected only {max_cameras}.");
+        assert!(
+            num_cameras <= max_cameras,
+            "Too many cameras: have {num_cameras}, expected only {max_cameras}."
+        );
 
         let max_lights = gfx.max_lights() as usize;
         let num_lights = res.read_components::<Light>().len();
-        assert!(num_lights <= max_lights, "Too many light sources: have {num_lights}, expected only {max_lights}.");
+        assert!(
+            num_lights <= max_lights,
+            "Too many light sources: have {num_lights}, expected only {max_lights}."
+        );
 
         // Calculate all camera transforms and the respective buffer offset
         let (camera_uniform, camera_view) = res

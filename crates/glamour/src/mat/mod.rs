@@ -20,7 +20,7 @@ impl<R> Mat4<R> {
 }
 
 impl<R: Float> Mat4<R> {
-    #[must_use] 
+    #[must_use]
     pub fn nan() -> Self {
         Self::new([[R::nan(); 4]; 4])
     }
@@ -91,7 +91,7 @@ where
     Self: ConstZero,
     R: ConstOne,
 {
-    #[must_use] 
+    #[must_use]
     pub fn identity() -> Self {
         let mut mat = Self::ZERO;
         for i in 0..4 {

@@ -30,7 +30,7 @@ impl<R: ConstOne + ConstZero> Vec4<R> {
         Self { x, y, z, w: R::ZERO }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn x() -> Unit<Self> {
         Unit(Self {
             x: R::ONE,
@@ -40,7 +40,7 @@ impl<R: ConstOne + ConstZero> Vec4<R> {
         })
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn y() -> Unit<Self> {
         Unit(Self {
             x: R::ZERO,
@@ -50,7 +50,7 @@ impl<R: ConstOne + ConstZero> Vec4<R> {
         })
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn z() -> Unit<Self> {
         Unit(Self {
             x: R::ZERO,

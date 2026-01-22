@@ -18,7 +18,10 @@ impl LoadAsset for CpuMaterial {
 
     #[tracing::instrument(skip(res))]
     fn with_path(res: &ecs::Resources, path: &std::path::Path) -> anyhow::Result<Self::Output> {
-        let label = path.file_stem().and_then(|n| n.to_str()).map(std::borrow::ToOwned::to_owned);
+        let label = path
+            .file_stem()
+            .and_then(|n| n.to_str())
+            .map(std::borrow::ToOwned::to_owned);
         let texture = CpuTexture::with_path(res, path)
             .with_context(|| format!("Loading CpuTexture at path {}", path.display()))?;
 

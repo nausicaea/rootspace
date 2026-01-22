@@ -27,11 +27,7 @@ impl LoadAsset for CpuModel {
             let cpu_mat = res
                 .read::<AssetDatabase>()
                 .load_asset::<CpuMaterial, _>(res, MATERIAL_ASSET_GROUP, name)
-                .with_context(|| {
-                    format!(
-                        "Loading a CpuMaterial from group {MATERIAL_ASSET_GROUP} and name {name}"
-                    )
-                })?;
+                .with_context(|| format!("Loading a CpuMaterial from group {MATERIAL_ASSET_GROUP} and name {name}"))?;
             trace!("Loaded CpuMaterial with size {} bytes", size_of_val(&cpu_mat));
 
             materials.push(cpu_mat);

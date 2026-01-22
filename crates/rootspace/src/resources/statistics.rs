@@ -23,12 +23,12 @@ pub struct Statistics {
 }
 
 impl Statistics {
-    #[must_use] 
+    #[must_use]
     pub fn mean_draw_calls(&self) -> f32 {
         self.draw_calls.iter().sum::<usize>() as f32 / WINDOW_SIZE as f32
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn mean_render_duration(&self) -> Duration {
         self.render_durations
             .iter()
@@ -36,7 +36,7 @@ impl Statistics {
             .div_f32(WINDOW_SIZE as f32)
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn mean_render_prepare_duration(&self) -> Duration {
         self.render_prepare_durations
             .iter()
@@ -44,7 +44,7 @@ impl Statistics {
             .div_f32(WINDOW_SIZE as f32)
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn mean_render_draw_duration(&self) -> Duration {
         self.render_draw_durations
             .iter()
@@ -52,7 +52,7 @@ impl Statistics {
             .div_f32(WINDOW_SIZE as f32)
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn mean_render_submit_duration(&self) -> Duration {
         self.render_submit_durations
             .iter()
@@ -60,7 +60,7 @@ impl Statistics {
             .div_f32(WINDOW_SIZE as f32)
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn mean_redraw_interval(&self) -> Duration {
         self.redraw_intervals
             .iter()
@@ -68,7 +68,7 @@ impl Statistics {
             .div_f32(WINDOW_SIZE as f32)
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn mean_maintenance_interval(&self) -> Duration {
         self.maintenance_intervals
             .iter()

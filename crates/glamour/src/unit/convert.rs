@@ -1,4 +1,3 @@
-
 use super::Unit;
 use crate::{mat::Mat4, num::CustomFloat, ops::norm::Norm, quat::Quat, vec::Vec4};
 

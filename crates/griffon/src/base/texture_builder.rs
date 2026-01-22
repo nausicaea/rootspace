@@ -14,7 +14,11 @@ pub struct TextureBuilder<'rt> {
 }
 
 impl<'rt> TextureBuilder<'rt> {
-    pub(crate) const fn new(runtime: &'rt Runtime, database: &'rt mut GpuObjectDatabase, settings: &'rt Settings) -> Self {
+    pub(crate) const fn new(
+        runtime: &'rt Runtime,
+        database: &'rt mut GpuObjectDatabase,
+        settings: &'rt Settings,
+    ) -> Self {
         Self {
             runtime,
             database,
@@ -25,19 +29,19 @@ impl<'rt> TextureBuilder<'rt> {
         }
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_label(mut self, label: Option<&'rt str>) -> Self {
         self.label = label;
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_image(mut self, image: &'rt image::DynamicImage) -> Self {
         self.image = Some(image);
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_depth_texture(mut self) -> Self {
         self.depth_texture = true;
         self

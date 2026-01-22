@@ -1,6 +1,5 @@
 use std::iter::Product;
 
-
 use crate::{mat::Mat4, num::CustomFloat};
 
 impl<'a, R: CustomFloat> Product<&'a Self> for Mat4<R> {

@@ -17,7 +17,7 @@ pub struct Transform {
 }
 
 impl Transform {
-    #[must_use] 
+    #[must_use]
     pub fn builder() -> TransformBuilder {
         TransformBuilder::default()
     }
@@ -106,19 +106,19 @@ impl TransformBuilder {
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn with_scale(mut self, s: f32) -> Self {
         self.affine_builder = self.affine_builder.with_scale(s);
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub const fn with_ui(mut self, ui: bool) -> Self {
         self.ui = ui;
         self
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn build(self) -> Transform {
         Transform {
             affine: self.affine_builder.build(),

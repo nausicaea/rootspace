@@ -1,4 +1,3 @@
-
 use crate::{num::CustomFloat, ops::cross::Cross, vec::Vec4};
 
 impl<'b, R> Cross<&'b Vec4<R>> for &Vec4<R>

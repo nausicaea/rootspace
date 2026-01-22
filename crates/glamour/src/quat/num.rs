@@ -1,4 +1,3 @@
-
 use super::Quat;
 use crate::{
     mat::Mat4,
