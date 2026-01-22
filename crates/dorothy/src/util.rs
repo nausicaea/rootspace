@@ -43,8 +43,8 @@ pub enum SignChange {
     clippy::cast_precision_loss,
     clippy::cast_possible_truncation
 )]
-pub const fn samples_per_bit(sample_rate: usize, target_freq: usize) -> usize {
-    (sample_rate << 3) / target_freq
+pub const fn samples_per_bit(sample_rate: usize, target_freq: usize, num_periods: usize) -> usize {
+    (num_periods * sample_rate) / target_freq
 }
 
 /// Convert a bit to a non-return-to-zero (NRZ) value: Bits are represented either as `+1` for `0b1` or `-1` for `0b0`.
@@ -61,6 +61,42 @@ pub const fn to_le_bits(byte: u8) -> [bool; 8] {
         i += 1;
     }
     output
+}
+
+/// Calculate the power ratio on a logarithmic scale (as decibel units)
+pub fn to_decibel(p: f64, p_0: f64) -> f64 {
+    10.0 * ((p + 1e-10) / (p_0 + 1e-10)).log10()
+}
+
+/// Calculate the signal to noise ratio
+pub fn snr(s: &[f64], n: &[f64]) -> f64 {
+    let p_s = s.iter().map(|v| v.powi(2)).sum::<f64>() / s.len() as f64;
+    let p_n = n.iter().map(|v| v.powi(2)).sum::<f64>() / s.len() as f64;
+    to_decibel(p_s, p_n)
+}
+
+/// Create a Hamming windowing function. The Hamming window is a taper formed by using a weighted
+/// cosine. See
+/// [`numpy.hamming()`](https://web.archive.org/web/20260120140608/https://numpy.org/doc/stable/reference/generated/numpy.hamming.html)
+/// for more information.
+pub fn hamming(window_size: usize) -> impl Iterator<Item = f64> {
+    let alpha = 25.0 / 46.0;
+    let beta = 1.0 - alpha;
+    (0..window_size)
+        .map(move |t| alpha - beta * (std::f64::consts::TAU * (t as f64) / (window_size as f64 - 1.0)).cos())
+}
+
+pub fn center(signal: &[f64]) -> impl Iterator<Item = f64> {
+    let dc_offset = signal.iter().sum::<f64>() / signal.len() as f64;
+    signal.iter().map(move |sample| sample - dc_offset)
+}
+
+pub fn normalize(signal: &[f64]) -> impl Iterator<Item = f64> {
+    let max_amplitude = signal.iter().fold(f64::NEG_INFINITY, |state, sample| {
+        let sample = sample.abs();
+        if sample > state { sample } else { state }
+    });
+    signal.iter().map(move |sample| sample / max_amplitude)
 }
 
 #[cfg(test)]
@@ -112,7 +148,7 @@ pub(crate) mod tests {
         #[test]
         fn samples_per_bit_f32_and_usize_are_equivalent((sr, tf) in sr_and_tf()) {
             let spb_f32 = (sr as f32 * 8.0 / tf as f32).floor() as usize;
-            let spb_usize = samples_per_bit(sr as usize, tf as usize);
+            let spb_usize = samples_per_bit(sr as usize, tf as usize, 8);
             assert_eq!(spb_f32, spb_usize);
         }
     }

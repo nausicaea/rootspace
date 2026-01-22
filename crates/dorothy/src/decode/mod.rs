@@ -42,7 +42,7 @@ where
     }
 
     // This tells us how much we need to skip forward when decoding each byte
-    let samples_per_bit: usize = samples_per_bit(sample_rate as usize, target_freq as usize);
+    let samples_per_bit: usize = samples_per_bit(sample_rate as usize, target_freq as usize, spec.mark_num_periods);
 
     // Create an iterator over all audio samples, grouped by channel, indexed by time and channel
     let per_channel_iter = samples.into_iter()

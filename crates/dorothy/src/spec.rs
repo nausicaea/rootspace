@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+use crate::util::samples_per_bit;
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Spec<S> {
     pub low: S,
     pub high: S,
@@ -9,6 +11,18 @@ pub struct Spec<S> {
     pub mark_num_periods: usize,
     pub space_num_periods: usize,
     pub padding_factor: usize,
+    pub mark_power_threshold_db: f64,
+    pub space_power_threshold_db: f64,
+}
+
+impl<S> Spec<S> {
+    pub fn bit_width(&self) -> usize {
+        samples_per_bit(
+            self.sample_rate as usize,
+            self.mark_frequency as usize,
+            self.mark_num_periods,
+        )
+    }
 }
 
 macro_rules! impl_with_kcs {
@@ -27,6 +41,8 @@ macro_rules! impl_with_kcs {
                         mark_num_periods: 8,
                         space_num_periods: 4,
                         padding_factor: 5,
+                        mark_power_threshold_db: 44.0,
+                        space_power_threshold_db: -44.0,
                     }
                 }
             }

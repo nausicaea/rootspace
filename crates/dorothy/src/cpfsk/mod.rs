@@ -1,19 +1,24 @@
 use iterator_ext::IteratorExt;
-use std::f64::consts::PI;
+use std::f64::consts::TAU;
 
-use crate::util::{to_le_bits, to_nrz};
-use crate::{Spec, util::samples_per_bit};
+use crate::Spec;
+use crate::cpfsk::goertzel::goertzel_with_spec;
+use crate::util::{center, normalize, to_nrz};
 use numenor::FromF64Unchecked;
+use windowed::Windowed;
 
-mod discrete_integral;
-mod iterator_ext;
+mod goertzel;
+pub mod integrate;
+pub mod interpolate;
+pub mod iterator_ext;
+pub mod windowed;
 
-/// Modulate a byte-stream onto a carrier wave using Continuous Phase Frequency Shift Keying (CPFSK).
+/// Modulate a bitstream onto a carrier wave using Continuous Phase Frequency Shift Keying (CPFSK).
 ///
 /// The implementation was gratefully nabbed from the author of [Not Black Magic](https://web.archive.org/web/20251115022344/https://www.notblackmagic.com/bitsnpieces/afsk/#afsk-modulation).
 pub fn modulate<I, S>(spec: &Spec<S>, data: I) -> impl Iterator<Item = S>
 where
-    I: Iterator<Item = u8>,
+    I: Iterator<Item = bool>,
     S: Copy + Into<f64> + FromF64Unchecked,
 {
     // Amplitude Settings
@@ -24,47 +29,85 @@ where
     let carrier_freq = u32::midpoint(spec.mark_frequency, spec.space_frequency);
     let delta_freq = spec.mark_frequency.abs_diff(spec.space_frequency) / 2;
     let sample_rate = spec.sample_rate;
-    let carrier_omega = 2.0 * PI * (f64::from(carrier_freq) / f64::from(sample_rate));
-    let delta_omega = 2.0 * PI * (f64::from(delta_freq) / f64::from(sample_rate));
+    let carrier_omega = TAU * (f64::from(carrier_freq) / f64::from(sample_rate));
+    let delta_omega = TAU * (f64::from(delta_freq) / f64::from(sample_rate));
 
     // Integration settings
-    let steps = samples_per_bit(spec.sample_rate as usize, spec.mark_frequency as usize);
+    let steps = spec.bit_width();
 
-    data.flat_map(to_le_bits)
-        .map(to_nrz)
-        .discrete_integral(steps)
+    data.map(to_nrz)
+        .map(f64::from)
+        .interpolate(steps)
+        .integrate()
+        .enumerate()
         .map(move |(i, m)| {
             let y = modulate_sample(amplitude, carrier_omega, delta_omega, i as f64, m);
             S::from_f64_unchecked(y)
         })
 }
 
+/// Demodulate a bitstream from a FSK-encoded waveform using the Goertzel Algorithm
+pub fn demodulate<I, S>(spec: &Spec<S>, data: I) -> impl Iterator<Item = bool>
+where
+    I: Iterator<Item = S>,
+    S: Copy + Into<f64>,
+{
+    let window_size = spec.bit_width();
+
+    Windowed::new(window_size, data.map(Into::into))
+        .map(move |signal| {
+            // Preprocess the signal
+            let signal: Vec<f64> = center(&signal).collect();
+            let mut signal: Vec<f64> = normalize(&signal).collect();
+
+            // Fill underlength windows
+            while signal.len() < window_size {
+                signal.push(0.0);
+            }
+
+            // Apply the Goertzel algorithm on the window
+            goertzel_with_spec(spec, &signal).rel_power()
+        })
+        .filter_map(move |power_db| classify_dumb(spec, power_db))
+}
+
 fn modulate_sample(amplitude: f64, carrier_omega: f64, delta_omega: f64, t: f64, delta_t: f64) -> f64 {
     amplitude * carrier_omega.mul_add(t, -(delta_omega * delta_t)).cos()
 }
 
+fn classify_dumb<S>(spec: &Spec<S>, power_db: f64) -> Option<bool> {
+    if power_db > spec.mark_power_threshold_db {
+        Some(true)
+    } else if power_db < spec.space_power_threshold_db {
+        Some(false)
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*;
-    #[test]
-    fn hound_test() {
-        let spec = Spec::<i8>::with_kcs();
-        let mut wav_writer = hound::WavWriter::create(
-            "/Users/kitsune/Downloads/cpfsk.i8.wav",
-            hound::WavSpec {
-                channels: spec.channels,
-                sample_rate: spec.sample_rate,
-                bits_per_sample: 8,
-                sample_format: hound::SampleFormat::Int,
-            },
-        )
-        .unwrap();
 
-        let data = "Hello, World!".as_bytes();
-        for sample in modulate(&spec, data.into_iter().copied()) {
-            wav_writer.write_sample(sample).unwrap();
-        }
-        wav_writer.flush().unwrap();
-        wav_writer.finalize().unwrap();
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    fn modulate_kcs_single_bit_output_expectations(#[values(false, true)] bit: bool) {
+        let spec = Spec::<i16>::with_kcs();
+        let waveform: Vec<_> = modulate(&spec, [bit].into_iter()).collect();
+        assert_eq!(waveform.len(), spec.bit_width());
+    }
+
+    #[test]
+    fn roundtrip_modulation() {
+        let input = [false];
+        let spec = Spec::<i16>::with_kcs();
+        let window_size = spec.bit_width();
+        let waveform: Vec<_> = modulate(&spec, input.into_iter()).collect();
+        dbg!(&waveform);
+        assert_eq!(waveform.len(), input.len() * window_size);
+
+        let output: Vec<_> = demodulate(&spec, waveform.iter().copied()).collect();
+        assert_eq!(output, &input, "expected {input:?}, got {output:?}");
     }
 }

@@ -148,6 +148,8 @@ mod tests {
             space_frequency: 1,
             mark_num_periods: 2,
             space_num_periods: 1,
+            mark_power_threshold_db: 45.0,
+            space_power_threshold_db: -45.0,
         }
     }
 
