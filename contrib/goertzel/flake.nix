@@ -16,6 +16,7 @@
             (pkgs.python3.withPackages (python-pkgs: [
                 python-pkgs.tkinter
                 python-pkgs.notebook
+                python-pkgs.ipympl
                 python-pkgs.numpy
                 python-pkgs.scipy
                 python-pkgs.soundfile
