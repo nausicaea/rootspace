@@ -2,3 +2,5 @@ version: "1.0"
 fileignoreconfig:
 - filename: contrib/goertzel/goertzel-noise-nausicaea-2025.ipynb
   checksum: 9f6764761e7acfbfe37e6aa0bb3e84ddd503455c6c9f6b3ec9141169f0450654
+- filename: contrib/goertzel/modulate-nausicaea-2025.ipynb
+  checksum: 8ef1f5a4efb917d4db31aecb550b7d0743fe378afa8ad18a8a7bb79caf7b69f9
