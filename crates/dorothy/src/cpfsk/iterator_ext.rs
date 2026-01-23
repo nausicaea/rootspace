@@ -39,14 +39,13 @@ pub trait IteratorExt: Iterator {
         integrate(self)
     }
 
-    fn center(self) -> impl Iterator<Item = f64> 
+    fn center(self) -> impl Iterator<Item = f64>
     where
         Self: Sized + Iterator<Item = f64>,
     {
         let signal = self.collect::<Vec<_>>();
         let dc_offset = signal.iter().sum::<f64>() / signal.len() as f64;
-        signal.into_iter()
-            .map(move |sample| sample - dc_offset)
+        signal.into_iter().map(move |sample| sample - dc_offset)
     }
 
     fn normalize(self) -> impl Iterator<Item = f64>
@@ -63,7 +62,7 @@ pub trait IteratorExt: Iterator {
 
     /// Partition the iterator into equally-sized non-overlapping windows. The last window will be
     /// shorter.
-    fn window(self, size: usize) -> Windowed<Self> 
+    fn window(self, size: usize) -> Windowed<Self>
     where
         Self: Sized + Iterator,
     {
