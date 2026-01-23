@@ -39,14 +39,14 @@ where
             // The very first iteration has special handling because it needs to set up the sample
             // cache.
             (false, false) if self.i == 1 => {
-                self.sample_k_prev = (self.source.next()?);
+                self.sample_k_prev = self.source.next()?;
                 self.sample_k = self.sample_k_prev;
             }
             // Because both indices remain unchanged, no updates to the samples are needed.
             (false, false) => (),
             // New data needs to be fetched because k changes, but sample_k_prev remains unchanged.
             (false, true) => {
-                self.sample_k = (self.source.next()?);
+                self.sample_k = self.source.next()?;
             }
             // No new data is fetched, but sample_k_prev is overwritten by sample_k
             (true, false) => {
@@ -56,7 +56,7 @@ where
             // data. I don't expect this case to ever happen.
             (true, true) => {
                 self.sample_k_prev = self.sample_k;
-                self.sample_k = (self.source.next()?);
+                self.sample_k = self.source.next()?;
             }
         }
         self.k_prev = k_prev;
