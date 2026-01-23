@@ -72,7 +72,7 @@ where
 }
 
 fn modulate_sample(amplitude: f64, carrier_omega: f64, delta_omega: f64, t: f64, delta_t: f64) -> f64 {
-    amplitude * carrier_omega.mul_add(t, -(delta_omega * delta_t)).cos()
+    amplitude * carrier_omega.mul_add(t, delta_omega * delta_t).cos()
 }
 
 fn classify_dumb<S>(spec: &Spec<S>, power_db: f64) -> Option<bool> {
