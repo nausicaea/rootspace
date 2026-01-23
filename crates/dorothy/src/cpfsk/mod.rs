@@ -3,9 +3,8 @@ use std::f64::consts::TAU;
 
 use crate::Spec;
 use crate::cpfsk::goertzel::goertzel_with_spec;
-use crate::util::{center, normalize, to_nrz};
+use crate::util::to_nrz;
 use numenor::FromF64Unchecked;
-use windowed::Windowed;
 
 mod goertzel;
 pub mod integrate;
@@ -15,7 +14,8 @@ pub mod windowed;
 
 /// Modulate a bitstream onto a carrier wave using Continuous Phase Frequency Shift Keying (CPFSK).
 ///
-/// The implementation was gratefully nabbed from the author of [Not Black Magic](https://web.archive.org/web/20251115022344/https://www.notblackmagic.com/bitsnpieces/afsk/#afsk-modulation).
+/// The implementation was gratefully nabbed from the author of [Not Black
+/// Magic](https://web.archive.org/web/20251115022344/https://www.notblackmagic.com/bitsnpieces/afsk/#afsk-modulation).
 pub fn modulate<I, S>(spec: &Spec<S>, data: I) -> impl Iterator<Item = S>
 where
     I: Iterator<Item = bool>,
@@ -54,12 +54,12 @@ where
 {
     let window_size = spec.bit_width();
 
-    Windowed::new(window_size, data.map(Into::into))
-        .map(move |signal| {
-            // Preprocess the signal
-            let signal: Vec<f64> = center(&signal).collect();
-            let mut signal: Vec<f64> = normalize(&signal).collect();
-
+    data.map(Into::into)
+        // Preprocess the signal
+        .center()
+        .normalize()
+        .window(window_size)
+        .map(move |mut signal| {
             // Fill underlength windows
             while signal.len() < window_size {
                 signal.push(0.0);
@@ -68,14 +68,15 @@ where
             // Apply the Goertzel algorithm on the window
             goertzel_with_spec(spec, &signal).rel_power()
         })
-        .filter_map(move |power_db| classify_dumb(spec, power_db))
+        //.filter_map(move |power_db| classify_dumb(spec, power_db))
+        .scan(false, move |state, power_db| Some(classify_with_hysteresis(state, spec, power_db)))
 }
 
 fn modulate_sample(amplitude: f64, carrier_omega: f64, delta_omega: f64, t: f64, delta_t: f64) -> f64 {
     amplitude * carrier_omega.mul_add(t, delta_omega * delta_t).cos()
 }
 
-fn classify_dumb<S>(spec: &Spec<S>, power_db: f64) -> Option<bool> {
+const fn classify_dumb<S>(spec: &Spec<S>, power_db: f64) -> Option<bool> {
     if power_db > spec.mark_power_threshold_db {
         Some(true)
     } else if power_db < spec.space_power_threshold_db {
@@ -83,6 +84,16 @@ fn classify_dumb<S>(spec: &Spec<S>, power_db: f64) -> Option<bool> {
     } else {
         None
     }
+}
+
+const fn classify_with_hysteresis<S>(state: &mut bool, spec: &Spec<S>, power_db: f64) -> bool {
+    if *state && power_db < spec.space_power_threshold_db {
+        *state = false;
+    } else if !*state && power_db > spec.mark_power_threshold_db {
+        *state = true;
+    }
+
+    *state
 }
 
 #[cfg(test)]

@@ -86,19 +86,6 @@ pub fn hamming(window_size: usize) -> impl Iterator<Item = f64> {
         .map(move |t| alpha - beta * (std::f64::consts::TAU * (t as f64) / (window_size as f64 - 1.0)).cos())
 }
 
-pub fn center(signal: &[f64]) -> impl Iterator<Item = f64> {
-    let dc_offset = signal.iter().sum::<f64>() / signal.len() as f64;
-    signal.iter().map(move |sample| sample - dc_offset)
-}
-
-pub fn normalize(signal: &[f64]) -> impl Iterator<Item = f64> {
-    let max_amplitude = signal.iter().fold(f64::NEG_INFINITY, |state, sample| {
-        let sample = sample.abs();
-        if sample > state { sample } else { state }
-    });
-    signal.iter().map(move |sample| sample / max_amplitude)
-}
-
 #[cfg(test)]
 pub(crate) mod tests {
     use std::ops::Range;

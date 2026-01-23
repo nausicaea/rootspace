@@ -1,5 +1,6 @@
 use crate::cpfsk::integrate::{Integrate, integrate};
 use crate::cpfsk::interpolate::Interpolate;
+use crate::cpfsk::windowed::Windowed;
 
 pub trait IteratorExt: Iterator {
     /// Smoothly interpolate values to a timescale `factor` times larger than the source. The first element of the interpolation is always `0.0`.
@@ -36,6 +37,37 @@ pub trait IteratorExt: Iterator {
         Self: Sized + Iterator<Item = f64>,
     {
         integrate(self)
+    }
+
+    fn center(self) -> impl Iterator<Item = f64> 
+    where
+        Self: Sized + Iterator<Item = f64>,
+    {
+        let signal = self.collect::<Vec<_>>();
+        let dc_offset = signal.iter().sum::<f64>() / signal.len() as f64;
+        signal.into_iter()
+            .map(move |sample| sample - dc_offset)
+    }
+
+    fn normalize(self) -> impl Iterator<Item = f64>
+    where
+        Self: Sized + Iterator<Item = f64>,
+    {
+        let signal = self.collect::<Vec<_>>();
+        let max_amplitude = signal.iter().fold(f64::NEG_INFINITY, |state, sample| {
+            let sample = sample.abs();
+            if sample > state { sample } else { state }
+        });
+        signal.into_iter().map(move |sample| sample / max_amplitude)
+    }
+
+    /// Partition the iterator into equally-sized non-overlapping windows. The last window will be
+    /// shorter.
+    fn window(self, size: usize) -> Windowed<Self> 
+    where
+        Self: Sized + Iterator,
+    {
+        Windowed::new(size, self)
     }
 }
 
