@@ -22,11 +22,11 @@ impl<T> RingBuffer<T> {
     }
 }
 
-impl RingBuffer<(usize, usize, SignChange)> {
+impl RingBuffer<SignChange> {
     pub fn count_changed(&self) -> usize {
         self.0
             .iter()
-            .filter(|(_, _, item)| matches!(item, SignChange::Changed))
+            .filter(|item| matches!(item, SignChange::Changed))
             .count()
     }
 }

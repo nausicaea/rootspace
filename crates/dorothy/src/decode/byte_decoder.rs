@@ -2,20 +2,19 @@ use crate::ring_buffer::RingBuffer;
 use crate::util::{BITMASKS, SignChange};
 use std::task::Poll;
 
-type IndexedSignChange = (usize, usize, SignChange);
 type Output = Poll<Result<u8, Error>>;
 
 #[derive(Debug)]
 pub struct ByteDecoder<I> {
     state: State,
-    look_behind: RingBuffer<IndexedSignChange>,
+    look_behind: RingBuffer<SignChange>,
     iter: I,
     samples_per_bit: usize,
 }
 
 impl<I> ByteDecoder<I>
 where
-    I: Iterator<Item = IndexedSignChange>,
+    I: Iterator<Item = SignChange>,
 {
     pub fn new(iter: I, samples_per_bit: usize) -> Self {
         Self {
@@ -60,7 +59,7 @@ impl State {
     const LOW: usize = 9;
     const HIGH: usize = 12;
 
-    fn next<I: Iterator<Item = IndexedSignChange>>(self, args: StateArgs<I>) -> Self {
+    fn next<I: Iterator<Item = SignChange>>(self, args: StateArgs<I>) -> Self {
         match self {
             Self::Initialize => Self::initialize(args),
             Self::DetectStartBit => Self::detect_start_bit(args),
@@ -70,7 +69,7 @@ impl State {
         }
     }
 
-    fn initialize<I: Iterator<Item = IndexedSignChange>>(args: StateArgs<I>) -> Self {
+    fn initialize<I: Iterator<Item = SignChange>>(args: StateArgs<I>) -> Self {
         if let Err(e) = try_extend_n(args.iter, args.look_behind, args.samples_per_bit - 1) {
             *args.output = Poll::Ready(Err(e));
             Self::Complete
@@ -79,7 +78,7 @@ impl State {
         }
     }
 
-    fn detect_start_bit<I: Iterator<Item = IndexedSignChange>>(args: StateArgs<I>) -> Self {
+    fn detect_start_bit<I: Iterator<Item = SignChange>>(args: StateArgs<I>) -> Self {
         let Some(current) = args.iter.next() else {
             *args.output = Poll::Ready(Err(Error::EndOfIterator));
             return Self::Complete;
@@ -92,7 +91,7 @@ impl State {
         }
     }
 
-    fn decode_byte<I: Iterator<Item = IndexedSignChange>>(args: StateArgs<I>, mask_idx: usize, mut byte: u8) -> Self {
+    fn decode_byte<I: Iterator<Item = SignChange>>(args: StateArgs<I>, mask_idx: usize, mut byte: u8) -> Self {
         if mask_idx < BITMASKS.len() {
             if let Err(e) = try_extend_n(args.iter, args.look_behind, args.samples_per_bit) {
                 *args.output = Poll::Ready(Err(e));
@@ -110,7 +109,7 @@ impl State {
         }
     }
 
-    fn detect_stop_bits<I: Iterator<Item = IndexedSignChange>>(args: StateArgs<I>, byte: u8) -> Self {
+    fn detect_stop_bits<I: Iterator<Item = SignChange>>(args: StateArgs<I>, byte: u8) -> Self {
         if let Err(e) = try_extend_n(args.iter, args.look_behind, 2 * args.samples_per_bit) {
             *args.output = Poll::Ready(Err(e));
             return Self::Complete;
@@ -119,7 +118,7 @@ impl State {
             *args.output = Poll::Ready(Ok(byte));
             Self::Initialize
         } else {
-            *args.output = Poll::Ready(Err(Error::MissingStopBits(todo!(), todo!())));
+            *args.output = Poll::Ready(Err(Error::MissingStopBits));
             Self::Complete
         }
     }
@@ -128,14 +127,14 @@ impl State {
 #[derive(Debug)]
 struct StateArgs<'lt, I> {
     iter: &'lt mut I,
-    look_behind: &'lt mut RingBuffer<IndexedSignChange>,
+    look_behind: &'lt mut RingBuffer<SignChange>,
     samples_per_bit: usize,
     output: &'lt mut Output,
 }
 
 fn try_extend_n(
-    i: &mut impl Iterator<Item = IndexedSignChange>,
-    look_behind: &mut RingBuffer<IndexedSignChange>,
+    i: &mut impl Iterator<Item = SignChange>,
+    look_behind: &mut RingBuffer<SignChange>,
     n: usize,
 ) -> Result<(), Error> {
     let buf = i.take(n).collect::<Vec<_>>();
@@ -143,8 +142,7 @@ fn try_extend_n(
         look_behind.extend(buf);
         Ok(())
     } else {
-        let (sample_idx, channel_idx, _) = buf.last().copied().unwrap_or((0, 0, SignChange::Unchanged));
-        Err(Error::UnexpectedEndOfIterator(sample_idx, channel_idx))
+        Err(Error::UnexpectedEndOfIterator)
     }
 }
 
@@ -152,8 +150,8 @@ fn try_extend_n(
 pub enum Error {
     #[error("Not an error: The sample iterator is complete")]
     EndOfIterator,
-    #[error("Expected additional elements in the iterator after sample {0} on channel {1}")]
-    UnexpectedEndOfIterator(usize, usize),
-    #[error("Expected two stop bits at and after sample {0} on channel {1}")]
-    MissingStopBits(usize, usize),
+    #[error("Expected additional elements in the iterator")]
+    UnexpectedEndOfIterator,
+    #[error("Expected two stop bits")]
+    MissingStopBits,
 }

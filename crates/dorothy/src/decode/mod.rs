@@ -54,9 +54,9 @@ where
     // Decode each channel separately
     let output = per_channel_iter
         .into_iter()
-        .map(|(channel_idx, channel_samples)| {
+        .map(|(_, channel_samples)| {
             decode_channel(
-                channel_samples.map(|(sample_idx, sample)| (sample_idx, channel_idx, sample)),
+                channel_samples.map(|(_, sample)| sample),
                 samples_per_bit,
             )
         })
@@ -72,7 +72,7 @@ where
 }
 
 fn decode_channel<S>(
-    samples: impl Iterator<Item = (usize, usize, S)>,
+    samples: impl Iterator<Item = S>,
     samples_per_bit: usize,
 ) -> Result<Vec<u8>, BitDecoderError>
 where
@@ -83,8 +83,8 @@ where
 
     // Perform edge detection on the audio signal, replacing each sample with `SignChange::Changed` if the sign
     // has changed wrt. to the previous sample, or `SignChange::Unchanged` if it stayed the same.
-    let sign_change_iter = samples.scan(Sign::NonNegative, |p, (sample_idx, channel_idx, sample)| {
-        Some((sample_idx, channel_idx, util::to_sign_change(util::to_sign(sample), p)))
+    let sign_change_iter = samples.scan(Sign::NonNegative, |p, sample| {
+        Some(util::to_sign_change(util::to_sign(sample), p))
     });
 
     let mut fsm = ByteDecoder::new(sign_change_iter, samples_per_bit);

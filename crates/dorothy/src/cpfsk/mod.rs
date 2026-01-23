@@ -68,22 +68,11 @@ where
             // Apply the Goertzel algorithm on the window
             goertzel_with_spec(spec, &signal).rel_power()
         })
-        //.filter_map(move |power_db| classify_dumb(spec, power_db))
         .scan(false, move |state, power_db| Some(classify_with_hysteresis(state, spec, power_db)))
 }
 
 fn modulate_sample(amplitude: f64, carrier_omega: f64, delta_omega: f64, t: f64, delta_t: f64) -> f64 {
     amplitude * carrier_omega.mul_add(t, delta_omega * delta_t).cos()
-}
-
-const fn classify_dumb<S>(spec: &Spec<S>, power_db: f64) -> Option<bool> {
-    if power_db > spec.mark_power_threshold_db {
-        Some(true)
-    } else if power_db < spec.space_power_threshold_db {
-        Some(false)
-    } else {
-        None
-    }
 }
 
 const fn classify_with_hysteresis<S>(state: &mut bool, spec: &Spec<S>, power_db: f64) -> bool {
