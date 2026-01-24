@@ -47,11 +47,12 @@ pub const fn samples_per_bit(sample_rate: usize, target_freq: usize, num_periods
     (num_periods * sample_rate) / target_freq
 }
 
-/// Convert a bit to a non-return-to-zero (NRZ) value: Bits are represented either as `+1` for `0b1` or `-1` for `0b0`.
-pub const fn to_nrz(bit: bool) -> i8 {
-    bit as i8 * 2 - 1
+/// Convert a bit to a non-return-to-zero (NRZ) value: Bits are represented either as `+1.0` for `0b1` or `-1.0` for `0b0`.
+pub const fn to_nrz(bit: bool) -> f64 {
+    (bit as i8 * 2 - 1) as f64
 }
 
+#[allow(dead_code)]
 pub const fn to_le_bits(byte: u8) -> [bool; 8] {
     const BITMASKS: [u8; 8] = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80];
     let mut output = [false; 8];
@@ -66,24 +67,6 @@ pub const fn to_le_bits(byte: u8) -> [bool; 8] {
 /// Calculate the power ratio on a logarithmic scale (as decibel units)
 pub fn to_decibel(p: f64, p_0: f64) -> f64 {
     10.0 * ((p + 1e-10) / (p_0 + 1e-10)).log10()
-}
-
-/// Calculate the signal to noise ratio
-pub fn snr(s: &[f64], n: &[f64]) -> f64 {
-    let p_s = s.iter().map(|v| v.powi(2)).sum::<f64>() / s.len() as f64;
-    let p_n = n.iter().map(|v| v.powi(2)).sum::<f64>() / s.len() as f64;
-    to_decibel(p_s, p_n)
-}
-
-/// Create a Hamming windowing function. The Hamming window is a taper formed by using a weighted
-/// cosine. See
-/// [`numpy.hamming()`](https://web.archive.org/web/20260120140608/https://numpy.org/doc/stable/reference/generated/numpy.hamming.html)
-/// for more information.
-pub fn hamming(window_size: usize) -> impl Iterator<Item = f64> {
-    let alpha = 25.0 / 46.0;
-    let beta = 1.0 - alpha;
-    (0..window_size)
-        .map(move |t| alpha - beta * (std::f64::consts::TAU * (t as f64) / (window_size as f64 - 1.0)).cos())
 }
 
 #[cfg(test)]
@@ -167,9 +150,9 @@ pub(crate) mod tests {
     }
 
     #[rstest]
-    #[case::true_is_plus_one(true, 1)]
-    #[case::false_is_minus_one(false, -1)]
-    fn to_nrz_output(#[case] input: bool, #[case] output: i8) {
+    #[case::true_is_plus_one(true, 1.0)]
+    #[case::false_is_minus_one(false, -1.0)]
+    fn to_nrz_output(#[case] input: bool, #[case] output: f64) {
         assert_eq!(to_nrz(input), output);
     }
 

@@ -36,7 +36,6 @@ where
     let steps = spec.bit_width();
 
     data.map(to_nrz)
-        .map(f64::from)
         .interpolate(steps)
         .integrate()
         .enumerate()
