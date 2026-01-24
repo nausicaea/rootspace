@@ -20,7 +20,7 @@ pub fn goertzel_with_spec<S>(spec: &Spec<S>, data: &[f64]) -> Output {
 pub fn goertzel(sample_rate: usize, frequency: usize, data: &[f64]) -> DftTerm {
     let window_size = data.len();
     let k = k_term(sample_rate, frequency, window_size);
-    let omega = TAU * (k as f64) / (window_size as f64);
+    let omega = TAU * k / (window_size as f64);
     let omega_real = 2.0 * omega.cos();
     let omega_imag = omega.sin();
 
@@ -39,8 +39,8 @@ pub fn goertzel(sample_rate: usize, frequency: usize, data: &[f64]) -> DftTerm {
 /// Calculate the
 /// [`KTerm`](https://web.archive.org/web/20260120133929/https://en.wikipedia.org/wiki/Goertzel_algorithm#DFT_computations),
 /// or frequency bin, for the Goertzel algorithm.
-fn k_term(sample_rate: usize, frequency: usize, window_size: usize) -> usize {
-    ((window_size as f64 * frequency as f64) / (sample_rate as f64)).round() as usize
+fn k_term(sample_rate: usize, frequency: usize, window_size: usize) -> f64 {
+    ((window_size as f64 * frequency as f64) / (sample_rate as f64)).round()
 }
 
 /// Calculate a single filter pass for the Goertzel algorithm
@@ -95,9 +95,9 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case::kcs_space_frequency(1200, 9600, 32, 4)]
-    #[case::kcs_mark_frequency(2400, 9600, 32, 8)]
-    fn k_term_kcs(#[case] f: usize, #[case] s: usize, #[case] w: usize, #[case] expected: usize) {
+    #[case::kcs_space_frequency(1200, 9600, 32, 4.0)]
+    #[case::kcs_mark_frequency(2400, 9600, 32, 8.0)]
+    fn k_term_kcs(#[case] f: usize, #[case] s: usize, #[case] w: usize, #[case] expected: f64) {
         assert_eq!(k_term(s, f, w), expected)
     }
 
@@ -126,7 +126,7 @@ mod tests {
             let c = 8;
             let w = samples_per_bit(s, f, c);
             let k = k_term(s, f, w);
-            prop_assert_eq!(k, (0.5 + ((w as f64 * f as f64) / s as f64)).floor() as usize);
+            prop_assert_eq!(k, (0.5 + ((w as f64 * f as f64) / s as f64)).floor());
         }
 
         #[test]
