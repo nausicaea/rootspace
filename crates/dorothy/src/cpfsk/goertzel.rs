@@ -29,7 +29,6 @@ pub fn goertzel(sample_rate: usize, frequency: usize, data: &[f64]) -> DftTerm {
         .fold((0.0, 0.0), move |state, &sample| filter_pass(state, sample, omega_real));
 
     DftTerm {
-        frequency,
         omega_real,
         omega_imag,
         d1,
@@ -65,7 +64,6 @@ impl Output {
 
 #[derive(Debug)]
 pub struct DftTerm {
-    pub frequency: usize,
     pub omega_real: f64,
     pub omega_imag: f64,
     pub d1: f64,
