@@ -44,6 +44,7 @@ pub trait IteratorExt: Iterator {
         Self: Sized + Iterator<Item = f64>,
     {
         let signal = self.collect::<Vec<_>>();
+        #[allow(clippy::cast_precision_loss)]
         let dc_offset = signal.iter().sum::<f64>() / signal.len() as f64;
         signal.into_iter().map(move |sample| sample - dc_offset)
     }

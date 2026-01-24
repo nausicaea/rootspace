@@ -40,6 +40,7 @@ where
         .integrate()
         .enumerate()
         .map(move |(i, m)| {
+            #[allow(clippy::cast_precision_loss)]
             let y = modulate_sample(amplitude, carrier_omega, delta_omega, i as f64, m);
             S::from_f64_unchecked(y)
         })
