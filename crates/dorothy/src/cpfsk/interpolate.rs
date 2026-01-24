@@ -1,5 +1,5 @@
 pub struct Interpolate<I> {
-    factor: f64,
+    factor: usize,
     source: I,
     i: usize,
     k_prev: usize,
@@ -11,7 +11,7 @@ pub struct Interpolate<I> {
 impl<I> Interpolate<I> {
     pub fn new(factor: usize, source: I) -> Self {
         Self {
-            factor: factor as f64,
+            factor,
             source,
             i: 0,
             k_prev: 0,
@@ -33,8 +33,8 @@ where
             self.i += 1;
             return Some(0.0);
         }
-        let k_prev = (self.i as f64 / self.factor).ceil() as usize - 1;
-        let k = ((self.i + 1) as f64 / self.factor).ceil() as usize - 1;
+        let k_prev = usize::div_ceil(self.i, self.factor) - 1;
+        let k = usize::div_ceil(self.i + 1, self.factor) - 1;
         match ((k_prev - self.k_prev) > 0, (k - self.k) > 0) {
             // The very first iteration has special handling because it needs to set up the sample
             // cache.
