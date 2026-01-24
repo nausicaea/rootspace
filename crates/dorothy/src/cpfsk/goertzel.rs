@@ -5,8 +5,8 @@ use crate::{Spec, util::to_decibel};
 /// Apply the Goertzel algorithm (see [`goertzel()`]) for a two-frequency FSK encoding.
 pub fn goertzel_with_spec<S>(spec: &Spec<S>, data: &[f64]) -> Output {
     Output {
-        mark: goertzel(spec.sample_rate as usize, spec.mark_frequency as usize, data),
-        space: goertzel(spec.sample_rate as usize, spec.space_frequency as usize, data),
+        mark: goertzel(spec.sample_rate, spec.mark_frequency, data),
+        space: goertzel(spec.sample_rate, spec.space_frequency, data),
     }
 }
 
@@ -17,10 +17,8 @@ pub fn goertzel_with_spec<S>(spec: &Spec<S>, data: &[f64]) -> Output {
 /// Piquemal](https://web.archive.org/web/20260115090228/https://gist.githubusercontent.com/sebpiq/4128537/raw/40dcb08387f7c942f6934c2624644d7cb6645633/gistfile1.py)
 /// and [Nale
 /// Raphael](https://web.archive.org/web/20260120142159/https://github.com/NaleRaphael/goertzel-fft/blob/master/gofft/alg/src/dsp.c).
-pub fn goertzel(sample_rate: usize, frequency: usize, data: &[f64]) -> DftTerm {
-    let window_size = data.len();
-    let k = k_term(sample_rate, frequency, window_size);
-    let omega = TAU * k / (window_size as f64);
+pub fn goertzel(sample_rate: u32, frequency: u32, data: &[f64]) -> DftTerm {
+    let omega = TAU * f64::from(frequency) / f64::from(sample_rate);
     let omega_real = 2.0 * omega.cos();
     let omega_imag = omega.sin();
 
@@ -34,13 +32,6 @@ pub fn goertzel(sample_rate: usize, frequency: usize, data: &[f64]) -> DftTerm {
         d1,
         d2,
     }
-}
-
-/// Calculate the
-/// [`KTerm`](https://web.archive.org/web/20260120133929/https://en.wikipedia.org/wiki/Goertzel_algorithm#DFT_computations),
-/// or frequency bin, for the Goertzel algorithm.
-fn k_term(sample_rate: usize, frequency: usize, window_size: usize) -> f64 {
-    ((window_size as f64 * frequency as f64) / (sample_rate as f64)).round()
 }
 
 /// Calculate a single filter pass for the Goertzel algorithm
@@ -91,15 +82,7 @@ mod tests {
     use crate::util::{samples_per_bit, to_decibel};
 
     use super::*;
-    use proptest::{prop_assert, prop_assert_eq, proptest};
-    use rstest::rstest;
-
-    #[rstest]
-    #[case::kcs_space_frequency(1200, 9600, 32, 4.0)]
-    #[case::kcs_mark_frequency(2400, 9600, 32, 8.0)]
-    fn k_term_kcs(#[case] f: usize, #[case] s: usize, #[case] w: usize, #[case] expected: f64) {
-        assert_eq!(k_term(s, f, w), expected)
-    }
+    use proptest::{prop_assert, proptest};
 
     fn goertzel_power<S>(spec: &Spec<S>, freq: usize) -> f64 {
         let window_size = samples_per_bit(
@@ -119,16 +102,6 @@ mod tests {
     }
 
     proptest! {
-        /// Test for integer division errors
-        #[test]
-        fn k_term_integer_division(s in 4800_usize..=44100) {
-            let f = 2400;
-            let c = 8;
-            let w = samples_per_bit(s, f, c);
-            let k = k_term(s, f, w);
-            prop_assert_eq!(k, (0.5 + ((w as f64 * f as f64) / s as f64)).floor());
-        }
-
         #[test]
         fn goertzel_power_space_frequencies(f in 1195_usize..=1205) {
             let spec = Spec::<i8>::with_kcs();
