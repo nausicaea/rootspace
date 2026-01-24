@@ -74,6 +74,16 @@ impl DftTerm {
     pub fn power(&self) -> f64 {
         self.d2.powi(2) + self.d1.powi(2) - self.omega_real * self.d1 * self.d2
     }
+
+    #[allow(dead_code)]
+    pub fn real(&self) -> f64 {
+        0.5 * self.omega_real * self.d1 - self.d2
+    }
+
+    #[allow(dead_code)]
+    pub fn imag(&self) -> f64 {
+        self.omega_imag * self.d1
+    }
 }
 
 #[cfg(test)]
