@@ -22,6 +22,8 @@
                 python-pkgs.soundfile
                 python-pkgs.matplotlib
                 python-pkgs.hypothesis
+                python-pkgs.jedi-language-server
+                python-pkgs.pytest
             ]))
           ];
         };
