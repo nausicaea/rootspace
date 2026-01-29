@@ -24,6 +24,7 @@
                 python-pkgs.hypothesis
                 python-pkgs.jedi-language-server
                 python-pkgs.pytest
+                python-pkgs.mypy
             ]))
           ];
         };
