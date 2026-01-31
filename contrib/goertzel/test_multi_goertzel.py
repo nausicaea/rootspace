@@ -13,6 +13,10 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
 
+def to_decibel(p: np.ndarray, p_0: np.ndarray) -> np.ndarray:
+    return 10.0 * np.log10((p + 1e-10) / (p_0 + 1e-10))
+
+
 @dataclass(slots=True, frozen=True)
 class State:
     d1: float
@@ -146,6 +150,7 @@ class Framed:
         self._track('buffer', lambda: list(self.buffer))
         self._track('preamble_matched', lambda: self.preamble_matched)
         self._track('power', lambda: list(sample.power()))
+        self._track('total_power', lambda: sample.total_power())
 
         # Early return if the preamble has been found
         if self.preamble_matched:
@@ -180,7 +185,7 @@ class Framed:
         self.buffer = deque(list(repeat(False, len(self.preamble))), maxlen=len(self.preamble))
         self.nco = NumericallyControlledOscillator(w)
 
-    def __iter__(self) -> 'Framed':
+    def __iter__(self) -> 'WithPreamble':
         return self
 
     def __next__(self) -> Snapshot:
@@ -271,6 +276,14 @@ def normalize(signal: ndarray) -> ndarray:
     return signal / max_amplitude
 
 
+def difference(a: ndarray, total: ndarray) -> ndarray:
+    return (2 * a.T - total).T
+
+
+def ratio(a: ndarray, total: ndarray) -> ndarray:
+    return to_decibel(a, total - a.T).T
+
+
 @fixture
 def f_spec() -> Spec:
     return Spec.with_kcs()
@@ -353,10 +366,10 @@ def test_modulate(f_spec: Spec) -> None:
 
 def plot(filename: str, signal: ndarray, output: Iterable[Snapshot], tracker: Tracker) -> None:
     fig = plt.figure(figsize=(10,12), layout='constrained')
-    axs = fig.subplot_mosaic([['signal'], ['output'], ['nco'], ['buffer'], ['preamble_matched'], ['power'], ['total_power'], ['power_delta'], ['bit_candidate']])
+    axs = fig.subplot_mosaic([['signal'], ['output'], ['nco'], ['buffer'], ['preamble_matched'], ['power'], ['total_power'], ['power_delta'], ['power_ratio'], ['bit_candidate']])
     axs['signal'].set_title('Original Signal (normalized)')
     axs['signal'].plot(signal)
-    axs['output'].set_title('Framed Output Power')
+    axs['output'].set_title('WithPreamble Output Power')
     axs['output'].plot(array([tuple(o.power()) for o in output]))
     axs['nco'].set_title('NCO Clock State')
     axs['nco'].plot(tracker.get('nco'))
@@ -369,21 +382,23 @@ def plot(filename: str, signal: ndarray, output: Iterable[Snapshot], tracker: Tr
     axs['total_power'].set_title('Total Power')
     axs['total_power'].plot(tracker.get('total_power'))
     axs['power_delta'].set_title('Power Delta')
-    axs['power_delta'].plot(tracker.get('power_delta'))
+    axs['power_delta'].plot(difference(tracker.get('power'), tracker.get('total_power')))
+    axs['power_ratio'].set_title('Power Ratio')
+    axs['power_ratio'].plot(ratio(tracker.get('power'), tracker.get('total_power')))
     axs['bit_candidate'].set_title('Bit Candidate')
     axs['bit_candidate'].plot(tracker.get('bit_candidate'))
     plt.savefig(filename)
 
 
 @mark.parametrize('n', [128, 256])
-def test_bracketed_only_noise(f_rng: NpGenerator, n: int) -> None:
+def test_with_preamble_ly_noise(f_rng: NpGenerator, n: int) -> None:
     """
     The preamble shall not be detected in a noise-only signal.
     """
     tracker = Tracker()
     signal = f_rng.standard_normal(n)
-    output = list(Framed(MultiGoertzel(signal, 9600, [2400, 1200]), 32, tracker=tracker))
-    filename = f'framed-only-noise-{n}len.webp'
+    output = list(WithPreamble(MultiGoertzel(signal, 9600, [2400, 1200]), 32, tracker=tracker))
+    filename = f'with-preamble-only-noise-{n}len.png'
     plot(filename, signal, output, tracker)
 
     assert (tracker.get('preamble_matched') == False).all()
@@ -393,12 +408,12 @@ def test_bracketed_only_noise(f_rng: NpGenerator, n: int) -> None:
 @mark.parametrize('p,w', [
     (0, 0.0), 
     (20, 0.0), 
-    #(40, 0.0),
-    #(0, 0.1), 
-    #(20, 0.1), 
+    (40, 0.0),
+    (0, 0.1), 
+    (20, 0.1), 
     #(40, 0.1),
 ])
-def test_bracketed_only_preamble(f_spec: Spec, f_rng: NpGenerator, f_preamble: ndarray, p: int, w: float) -> None:
+def test_with_preamble_only_preamble(f_spec: Spec, f_rng: NpGenerator, f_preamble: ndarray, p: int, w: float) -> None:
     """
     The preamble must be detected if it is present.
     """
@@ -408,15 +423,15 @@ def test_bracketed_only_preamble(f_spec: Spec, f_rng: NpGenerator, f_preamble: n
     s = concat([zeros((p,)), modulated, zeros((p,))])
     n = f_rng.standard_normal(len(s))
     signal = normalize(center(s + w * n))
-    output = list(Framed(
+    output = list(WithPreamble(
         MultiGoertzel(signal, f_spec.sample_rate, [f_spec.mark_frequency, f_spec.space_frequency]),
         f_spec.bit_width(),
         preamble=[bool(v) for v in f_preamble],
         tracker=tracker,
     ))
 
-    pmble = "".join("T" if v else "F" for v in f_preamble)
-    filename = f'framed-only-preamble-{pmble}preamble-{p}padding-{w}noise.webp'
+    pmble = "".join("1" if v else "0" for v in f_preamble)
+    filename = f'with-preamble-only-preamble-{pmble}preamble-{p}padding-{w}noise.png'
 
     plot(filename, signal, output, tracker)
 
