@@ -114,3 +114,4 @@ xcuserdata/
 .hypothesis
 __pycache__
 .pytest_cache
+contrib/goertzel/*.png
