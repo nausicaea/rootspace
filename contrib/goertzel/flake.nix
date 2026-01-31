@@ -25,6 +25,7 @@
                 python-pkgs.jedi-language-server
                 python-pkgs.pytest
                 python-pkgs.mypy
+                python-pkgs.black
             ]))
           ];
         };

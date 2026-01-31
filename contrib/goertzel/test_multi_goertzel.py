@@ -7,8 +7,10 @@ from numpy import ndarray, array, concat, zeros
 from numpy.random import default_rng
 from numpy.random import Generator as NpGenerator
 from pytest import fixture, FixtureRequest, approx, mark
-from itertools import islice
-from typing import NamedTuple
+from itertools import islice, repeat
+from typing import NamedTuple, Any, Callable
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 
 @dataclass(slots=True, frozen=True)
@@ -109,11 +111,25 @@ class NumericallyControlledOscillator:
 
 
 @dataclass
-class Bracketed:
+class Tracker:
+    _attrs: dict[str, list[Any]] = field(default_factory=dict)
+
+    def insert(self, key: str, value: Any) -> None:
+        if key not in self._attrs:
+            self._attrs[key] = list()
+        self._attrs[key].append(value)
+
+    def get(self, key: str) -> ndarray:
+        return array(self._attrs[key])
+
+
+@dataclass
+class Framed:
     signal: MultiGoertzel
     bit_width: InitVar[int]
     preamble: list[bool] = field(default_factory=lambda: [True, False, True, False])
-    power_threshold: float = field(default=50)
+    power_threshold: float = field(default=25)
+    tracker: Tracker | None = field(default=None)
     buffer: deque[bool] = field(init=False)
     nco: NumericallyControlledOscillator = field(init=False)
     preamble_matched: bool = field(init=False, default=False)
@@ -121,42 +137,50 @@ class Bracketed:
     def reset(self) -> None:
         self.signal.reset()
 
+    def _track(self, key: str, value_fn: Callable[[], Any]) -> None:
+        if self.tracker is not None:
+            self.tracker.insert(key, value_fn())
+
     def _is_after_preamble(self, sample: Snapshot) -> bool:
+        self._track('nco', lambda: self.nco.counter)
+        self._track('buffer', lambda: list(self.buffer))
+        self._track('preamble_matched', lambda: self.preamble_matched)
+        self._track('power', lambda: list(sample.power()))
+
         # Early return if the preamble has been found
         if self.preamble_matched:
             return True
 
-        # Proceed only if the signal power is large enough
+        # At the middle of the clock period, classify the signal as a bit, and
+        # search for the preamble. Proceed only if the signal power is large enough.
         total_power = sample.total_power()
-        if total_power > self.power_threshold:
-            # At the end of the clock period, classify the signal as a bit, and
-            # search for the preamble
-            if self.nco.is_at_end():
-                mark_power, space_power = tuple(islice(sample.power(), 2))
-                power_delta = mark_power - space_power
-                bit_candidate = power_delta > 0
-                self.buffer.append(bit_candidate)
+        self._track('total_power', lambda: total_power)
+        if self.nco.is_at_half() and total_power > self.power_threshold:
+            mark_power, space_power = tuple(islice(sample.power(), 2))
+            power_delta = mark_power - space_power
+            self._track('power_delta', lambda: power_delta)
+            bit_candidate = power_delta > 0
+            self._track('bit_candidate', lambda: bit_candidate)
+            self.buffer.append(bit_candidate)
 
-                # If the preamble was found in its entirety
-                if all(l == r for l, r in zip(self.buffer, self.preamble)):
-                    print(f'[{sample.index}] [{total_power=}, {power_delta=}, {bit_candidate=}] Preamble matched! Data starts next.')
-                    self.preamble_matched = True
+            # If the preamble was found in its entirety
+            if all(l == r for l, r in zip(self.buffer, self.preamble)):
+                self.preamble_matched = True
 
-                # In any case, reset the filter state
-                print(f'[{sample.index}] [{total_power=}, {power_delta=}, {bit_candidate=}, buffer={self.buffer}] Resetting the filter state')
-                self.signal.reset()
+        if self.nco.is_at_end():
+            # In any case, reset the filter state
+            self.signal.reset()
 
-            # Increment the counter only if the signal power is large enough
-            next(self.nco)
-            return self.preamble_matched
+        # Increment the counter always
+        next(self.nco)
 
-        return False
+        return self.preamble_matched
 
     def __post_init__(self, w: int) -> None:
-        self.buffer = deque([], maxlen=len(self.preamble))
+        self.buffer = deque(list(repeat(False, len(self.preamble))), maxlen=len(self.preamble))
         self.nco = NumericallyControlledOscillator(w)
 
-    def __iter__(self) -> 'Bracketed':
+    def __iter__(self) -> 'Framed':
         return self
 
     def __next__(self) -> Snapshot:
@@ -327,13 +351,75 @@ def test_modulate(f_spec: Spec) -> None:
     assert len(list(modulate(f_spec, [True, False]))) % f_spec.bit_width() == 0
 
 
-@mark.parametrize('w,n', [
-    (0.1, 128),
-    (0.2, 256),
-    (1.0, 256),
+def plot(filename: str, signal: ndarray, output: Iterable[Snapshot], tracker: Tracker) -> None:
+    fig = plt.figure(figsize=(10,12), layout='constrained')
+    axs = fig.subplot_mosaic([['signal'], ['output'], ['nco'], ['buffer'], ['preamble_matched'], ['power'], ['total_power'], ['power_delta'], ['bit_candidate']])
+    axs['signal'].set_title('Original Signal (normalized)')
+    axs['signal'].plot(signal)
+    axs['output'].set_title('Framed Output Power')
+    axs['output'].plot(array([tuple(o.power()) for o in output]))
+    axs['nco'].set_title('NCO Clock State')
+    axs['nco'].plot(tracker.get('nco'))
+    axs['buffer'].set_title('Preamble Buffer')
+    axs['buffer'].imshow(tracker.get('buffer').T, cmap=ListedColormap(['red', 'green']), origin='lower', aspect='auto', interpolation='nearest')
+    axs['preamble_matched'].set_title('Preamble Matched')
+    axs['preamble_matched'].plot(tracker.get('preamble_matched'))
+    axs['power'].set_title('Post-Goertzel Signal Power')
+    axs['power'].plot(tracker.get('power'))
+    axs['total_power'].set_title('Total Power')
+    axs['total_power'].plot(tracker.get('total_power'))
+    axs['power_delta'].set_title('Power Delta')
+    axs['power_delta'].plot(tracker.get('power_delta'))
+    axs['bit_candidate'].set_title('Bit Candidate')
+    axs['bit_candidate'].plot(tracker.get('bit_candidate'))
+    plt.savefig(filename)
+
+
+@mark.parametrize('n', [128, 256])
+def test_bracketed_only_noise(f_rng: NpGenerator, n: int) -> None:
+    """
+    The preamble shall not be detected in a noise-only signal.
+    """
+    tracker = Tracker()
+    signal = f_rng.standard_normal(n)
+    output = list(Framed(MultiGoertzel(signal, 9600, [2400, 1200]), 32, tracker=tracker))
+    filename = f'framed-only-noise-{n}len.webp'
+    plot(filename, signal, output, tracker)
+
+    assert (tracker.get('preamble_matched') == False).all()
+    assert (tracker.get('buffer') != f_preamble).all()
+
+
+@mark.parametrize('p,w', [
+    (0, 0.0), 
+    (20, 0.0), 
+    #(40, 0.0),
+    #(0, 0.1), 
+    #(20, 0.1), 
+    #(40, 0.1),
 ])
-def test_bracketed_only_noise(f_rng: NpGenerator, w: float, n: int) -> None:
-    noise = w * f_rng.standard_normal(n)
-    signal = list(Bracketed(MultiGoertzel(noise, 9600, [2400, 1200]), 32))
-    assert len(signal) == 0
+def test_bracketed_only_preamble(f_spec: Spec, f_rng: NpGenerator, f_preamble: ndarray, p: int, w: float) -> None:
+    """
+    The preamble must be detected if it is present.
+    """
+
+    tracker = Tracker()
+    modulated = np.array(list(modulate(f_spec, f_preamble)))
+    s = concat([zeros((p,)), modulated, zeros((p,))])
+    n = f_rng.standard_normal(len(s))
+    signal = normalize(center(s + w * n))
+    output = list(Framed(
+        MultiGoertzel(signal, f_spec.sample_rate, [f_spec.mark_frequency, f_spec.space_frequency]),
+        f_spec.bit_width(),
+        preamble=[bool(v) for v in f_preamble],
+        tracker=tracker,
+    ))
+
+    pmble = "".join("T" if v else "F" for v in f_preamble)
+    filename = f'framed-only-preamble-{pmble}preamble-{p}padding-{w}noise.webp'
+
+    plot(filename, signal, output, tracker)
+
+    assert tracker.get('preamble_matched')[-1] == True
+    assert (tracker.get('buffer')[-1,:] == f_preamble).all()
 
