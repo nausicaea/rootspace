@@ -127,12 +127,27 @@ class Tracker:
         return array(self._attrs[key])
 
 
+def classify(power_delta: float, threshold: float) -> bool:
+    return power_delta > threshold
+
+
+def classify_with_hysteresis(prev_bit: bool, power_delta: float, threshold: float, hysteresis: float) -> bool:
+    if not prev_bit and power_delta > (threshold + hysteresis):
+        return True
+    elif prev_bit and power_delta < (threshold - hysteresis):
+        return False
+    else:
+        return prev_bit
+
+
 @dataclass
-class Framed:
+class WithPreamble:
     signal: MultiGoertzel
     bit_width: InitVar[int]
     preamble: list[bool] = field(default_factory=lambda: [True, False, True, False])
-    power_threshold: float = field(default=25)
+    total_power_threshold: float = field(default=25)
+    delta_power_threshold: float = field(default=0)
+    delta_power_hysteresis: float = field(default=5)
     tracker: Tracker | None = field(default=None)
     buffer: deque[bool] = field(init=False)
     nco: NumericallyControlledOscillator = field(init=False)
@@ -159,12 +174,10 @@ class Framed:
         # At the middle of the clock period, classify the signal as a bit, and
         # search for the preamble. Proceed only if the signal power is large enough.
         total_power = sample.total_power()
-        self._track('total_power', lambda: total_power)
-        if self.nco.is_at_half() and total_power > self.power_threshold:
+        if self.nco.is_at_half() and total_power > self.total_power_threshold:
             mark_power, space_power = tuple(islice(sample.power(), 2))
             power_delta = mark_power - space_power
-            self._track('power_delta', lambda: power_delta)
-            bit_candidate = power_delta > 0
+            bit_candidate = classify_with_hysteresis(self.buffer[-1], power_delta, self.delta_power_threshold, self.delta_power_hysteresis)
             self._track('bit_candidate', lambda: bit_candidate)
             self.buffer.append(bit_candidate)
 
@@ -281,7 +294,7 @@ def difference(a: ndarray, total: ndarray) -> ndarray:
 
 
 def ratio(a: ndarray, total: ndarray) -> ndarray:
-    return to_decibel(a, total - a.T).T
+    return to_decibel(a.T, total - a.T).T
 
 
 @fixture
