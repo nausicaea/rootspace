@@ -105,8 +105,18 @@ class Oscillator:
         return self.counter
 
 
+@dataclass(slots=True, frozen=True)
+class TwoFskState:
+    mark: State
+    space: State
+    power_delta: float
+    total_power: float
+    clock: int
+    bit: bool | None
+
+
 @dataclass
-class TwoToneGoertzel:
+class TwoFskDemodulate:
     """
     Given a 2-FSK encoded source signal, apply to it two separate Goertzel filters, and return their states at specific time points.
     Early-late clock synchronization is used.
@@ -156,7 +166,7 @@ class TwoToneGoertzel:
         self.mark_late = Goertzel(sample_rate, mark_frequency)
         self.space_late = Goertzel(sample_rate, space_frequency)
 
-    def __iter__(self) -> 'TwoToneGoertzel':
+    def __iter__(self) -> 'TwoFskDemodulate':
         return self
 
     def __next__(self) -> tuple[State, State, bool | None]:
@@ -169,7 +179,10 @@ class TwoToneGoertzel:
         # Process the sample in main filters
         mark_state = self.mark.add_sample(sample)
         space_state = self.space.add_sample(sample)
-        power_delta = mark_state.power() - space_state.power()
+        mark_power = mark_state.power()
+        space_power = space_state.power()
+        power_delta = mark_power - space_power
+        total_power = mark_power + space_power
 
         # Early-late gate processing for clock sync
         # Early gate: samples from bit_width//4 to 3*bit_width//4
@@ -198,8 +211,8 @@ class TwoToneGoertzel:
             else:
                 bit = bit_decision
                 print(f'[idx={idx}] Bit decision: {bit}, '
-                      f'power_delta={power_delta:.1f}, '
-                      f'mark={mark_state.power():.1f}, space={space_state.power():.1f}')
+                      f'power_delta={power_delta:.1f}, total_power={total_power:.1f}'
+                      f'mark={mark_power:.1f}, space={space_power:.1f}')
 
         # Clear the adjustment flag before incrementing
         self.clock_just_adjusted = False
@@ -237,7 +250,7 @@ class TwoToneGoertzel:
                 self.mark_late.reset()
                 self.space_late.reset()
 
-        return (mark_state, space_state, bit)
+        return TwoFskState(mark_state, space_state, power_delta, total_power, clock, bit)
 
 def samples_per_bit(sr: int, f: int, n: int) -> int:
     return (n * sr) // f
@@ -280,17 +293,11 @@ def interpolate(steps, data: Sequence[int]) -> Generator[float, None, None]:
         yield (data[index_prev] + data[index]) / 2
 
 
-assert list(interpolate(2, list(range(0, 4)))) == [0, 0, 0.5, 1, 1.5, 2, 2.5, 3]
-
-
 def integrate(data: Iterable[float]) -> Generator[float, None, None]:
     m = 0.0
     for d in data:
         m += d
         yield m
-
-
-assert list(integrate([0, 3, 2])) == [0, 3, 5]
 
 
 def modulate(spec: Spec, data: Iterable[bool]) -> Generator[int, None, None]:
@@ -312,9 +319,6 @@ def modulate(spec: Spec, data: Iterable[bool]) -> Generator[int, None, None]:
     for i, m in enumerate(integrated_data):
         y = modulate_sample(amplitude, carrier_omega, delta_omega, float(i), m)
         yield int(y)
-
-
-assert len(list(modulate(Spec.with_kcs(), [True, False]))) % Spec.with_kcs().bit_width() == 0
 
 
 def center(signal: np.ndarray) -> np.ndarray:
@@ -352,37 +356,54 @@ def gen_data(spec: Spec, rng: np.random.Generator, n: int, preamble: np.ndarray,
 
 
 @pytest.fixture
-def spec() -> Spec:
+def f_spec() -> Spec:
     return Spec.with_kcs()
 
 
 @pytest.fixture
-def preamble() -> np.ndarray:
+def f_preamble() -> np.ndarray:
     return np.array([True, False, True, False, True, False])
 
 
 @pytest.fixture
-def rng() -> np.random.Generator:
+def f_rng() -> np.random.Generator:
     return np.random.default_rng(0)
+
+
+def test_interpolate() -> None:
+    assert list(interpolate(2, list(range(0, 4)))) == [0, 0, 0.5, 1, 1.5, 2, 2.5, 3]
+
+
+def test_integrate() -> None:
+    assert list(integrate([0, 3, 2])) == [0, 3, 5]
+
+
+def test_modulate(f_spec: Spec) -> None:
+    assert len(list(modulate(f_spec, [True, False]))) % f_spec.bit_width() == 0
 
 
 @pytest.mark.parametrize('n,p,w', [
     (6, 0, 0.0),
     (6, 0, 0.1),
+    (6, 0, 0.2),
     (6, 20, 0.1),
+    (6, 40, 0.1),
+    (6, 80, 0.1),
+    (6, 80, 0.2),
     (128, 20, 0.1),
+    (128, 20, 0.2),
 ])
-def test_two_fsk(spec: Spec, preamble: np.ndarray, rng: np.random.Generator, n: int, p: int, w: float) -> None:
-    bits, modulated = gen_data(spec, rng, n, preamble, p, w)
-    goertzel = TwoToneGoertzel(
+def test_two_fsk_demodulate(f_spec: Spec, f_preamble: np.ndarray, f_rng: np.random.Generator, n: int, p: int, w: float) -> None:
+    bits, modulated = gen_data(f_spec, f_rng, n, f_preamble, p, w)
+    goertzel = TwoFskDemodulate(
         modulated, 
-        spec.sample_rate, 
-        spec.mark_frequency, 
-        spec.space_frequency, 
-        spec.bit_width(), 
-        preamble=[bool(v) for v in preamble], 
+        f_spec.sample_rate, 
+        f_spec.mark_frequency, 
+        f_spec.space_frequency, 
+        f_spec.bit_width(), 
+        preamble=[bool(v) for v in f_preamble], 
         enable_clock_sync=True,
     )
-    output = np.array([bit for _, _, bit in goertzel if bit is not None])
+    output = np.array([state.bit for state in goertzel if state.bit is not None])
     assert (output == bits).all()
 
