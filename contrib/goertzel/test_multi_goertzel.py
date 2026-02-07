@@ -181,9 +181,9 @@ def demodulate(spec: Spec, signal: Iterable[float], preamble: list[bool], tracke
             if snapshot.total_power() >= total_power_threshold:
                 nco.reset()
                 signal_synchronized = True
-            else:
-                next(nco)
-                continue
+
+            next(nco)
+            continue
 
         if not preamble_matched:
             if nco.is_at_half():
@@ -194,9 +194,9 @@ def demodulate(spec: Spec, signal: Iterable[float], preamble: list[bool], tracke
 
                 if all(l == r for l, r in zip(buffer, preamble)):
                     preamble_matched = True
-            else:
-                next(nco)
-                continue
+
+            next(nco)
+            continue
 
         next(nco)
         yield snapshot
