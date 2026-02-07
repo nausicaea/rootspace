@@ -212,7 +212,7 @@ def plot(filename: str, signal: ndarray, output: Iterable[Snapshot], tracker: Tr
     axs = fig.subplot_mosaic([['signal'], ['output'], ['nco'], ['buffer'], ['preamble_matched'], ['power'], ['total_power'], ['power_delta'], ['power_ratio'], ['bit_candidate']])
     axs['signal'].set_title('Original Signal (normalized)')
     axs['signal'].plot(signal)
-    axs['output'].set_title('WithPreamble Output Power')
+    axs['output'].set_title('Demodulation Output')
     axs['output'].plot(array([tuple(o.power()) for o in output]))
     axs['nco'].set_title('NCO Clock State')
     tracker.get_and('initial_sync_nco', lambda d: axs['nco'].plot(d))
