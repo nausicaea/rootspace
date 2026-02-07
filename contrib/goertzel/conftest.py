@@ -49,7 +49,9 @@ def f_padded(f_modulated: FModulated, request: FixtureRequest) -> FModulated:
 
 
 @fixture(params=[0.0, 0.1, 0.2])
-def f_noisy(f_rng: NpGenerator, f_padded: FModulated, request: FixtureRequest) -> FModulated:
+def f_noisy(
+    f_rng: NpGenerator, f_padded: FModulated, request: FixtureRequest
+) -> FModulated:
     bits, preamble, s = f_padded
     noise_weight: float = request.param
     n = noise_weight * f_rng.standard_normal(len(s))
@@ -59,6 +61,4 @@ def f_noisy(f_rng: NpGenerator, f_padded: FModulated, request: FixtureRequest) -
 @fixture
 def f_cleaned(f_noisy: FModulated) -> FModulated:
     bits, preamble, s = f_noisy
-    return FModulated(bits, preamble, normalize(center(s))) 
-
-
+    return FModulated(bits, preamble, normalize(center(s)))

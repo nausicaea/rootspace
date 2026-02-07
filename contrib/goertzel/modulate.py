@@ -26,11 +26,13 @@ class Spec:
     high: int
 
     @classmethod
-    def with_kcs(cls) -> 'Spec':
+    def with_kcs(cls) -> "Spec":
         return Spec(9600, 2400, 8, 44, 1200, 4, -44, -127, 127)
 
     def bit_width(self) -> int:
-        return samples_per_bit(self.sample_rate, self.mark_frequency, self.mark_num_periods)
+        return samples_per_bit(
+            self.sample_rate, self.mark_frequency, self.mark_num_periods
+        )
 
 
 def to_nrz(bit: bool) -> float:
@@ -106,4 +108,3 @@ def test_integrate() -> None:
 
 def test_modulate(f_spec: Spec) -> None:
     assert len(list(modulate(f_spec, [True, False]))) % f_spec.bit_width() == 0
-
