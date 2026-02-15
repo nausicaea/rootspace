@@ -40,17 +40,16 @@
             cargo-sweep
             bacon
             rusty-man
-            jetbrains.rust-rover
+            #jetbrains.rust-rover
           ];
 
+          RUST_SRC_PATH = "$HOME/.rust-rover/toolchain/lib/rustlib/src/rust/library";
+          RUST_LOG = "warn,rootspace=trace,griffon=info,glamour=trace";
           shellHook = ''
             mkdir -p ~/.rust-rover/toolchain
 
             ln -sfn ${rustEnv}/lib ~/.rust-rover/toolchain
             ln -sfn ${rustEnv}/bin ~/.rust-rover/toolchain
-
-            export RUST_SRC_PATH="$HOME/.rust-rover/toolchain/lib/rustlib/src/rust/library"
-            export RUST_LOG="warn,rootspace=trace,griffon=info,glamour=trace"
           '';
         };
       }

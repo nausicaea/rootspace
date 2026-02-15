@@ -139,7 +139,7 @@ def demodulate(
     signal: Iterable[float],
     preamble: list[bool],
     tracker: Tracker | None = None,
-) -> Generator[Snapshot, None, None]:
+) -> Generator[bool, None, None]:
     def track(k: str, v: Any) -> None:
         if tracker is not None:
             tracker.insert(k, v)
@@ -148,10 +148,10 @@ def demodulate(
         tracker.register("initial_sync_nco")
         tracker.register("initial_sync_complete")
         tracker.register("initial_sync_total_power")
-        tracker.register("with_preamble_bit_candidate")
-        tracker.register("with_preamble_buffer")
-        tracker.register("with_preamble_preamble_matched")
-        tracker.register("with_preamble_power")
+        tracker.register("classify_bit_candidate")
+        tracker.register("preamble_buffer")
+        tracker.register("preamble_matched")
+        tracker.register("preamble_power")
 
     frequencies = [spec.mark_frequency, spec.space_frequency]
 
@@ -168,6 +168,8 @@ def demodulate(
     # Preamble detection variables
     preamble_matched = False
     buffer = deque(repeat(False, len(preamble)), maxlen=len(preamble))
+
+    # Bit classification variables
     delta_power_threshold = 0
     delta_power_hysteresis = 5
     bit_candidate = False
@@ -182,10 +184,10 @@ def demodulate(
         track("initial_sync_nco", nco.counter)
         track("initial_sync_complete", signal_synchronized)
         track("initial_sync_total_power", snapshot.total_power())
-        track("with_preamble_bit_candidate", bit_candidate)
-        track("with_preamble_buffer", list(buffer))
-        track("with_preamble_preamble_matched", preamble_matched)
-        track("with_preamble_power", list(snapshot.power()))
+        track("classify_bit_candidate", bit_candidate)
+        track("preamble_buffer", list(buffer))
+        track("preamble_matched", preamble_matched)
+        track("preamble_power", list(snapshot.power()))
 
         if nco.is_at_end():
             state = [ZERO for _ in range(len(frequencies))]
@@ -216,8 +218,19 @@ def demodulate(
             next(nco)
             continue
 
+
+        if nco.is_at_half():
+            mark_power, space_power = tuple(islice(snapshot.power(), 2))
+            power_delta = mark_power - space_power
+            bit_candidate = classify_with_hysteresis(
+                bit_candidate,
+                power_delta,
+                delta_power_threshold,
+                delta_power_hysteresis,
+            )
+            yield bit_candidate
+
         next(nco)
-        yield snapshot
 
 
 def test_state_constructor() -> None:
@@ -246,12 +259,12 @@ def plot(
     axs["signal"].set_title("Original Signal (normalized)")
     axs["signal"].plot(signal)
     axs["output"].set_title("Demodulation Output")
-    axs["output"].plot(array([tuple(o.power()) for o in output]))
+    axs["output"].plot(array([o for o in output]), '.')
     axs["nco"].set_title("NCO Clock State")
     tracker.get_and("initial_sync_nco", lambda d: axs["nco"].plot(d))
     axs["buffer"].set_title("Preamble Buffer")
     tracker.get_and(
-        "with_preamble_buffer",
+        "preamble_buffer",
         lambda d: axs["buffer"].imshow(
             d.T,
             cmap=ListedColormap(["red", "green"]),
@@ -262,32 +275,32 @@ def plot(
     )
     axs["preamble_matched"].set_title("Preamble Matched")
     tracker.get_and(
-        "with_preamble_preamble_matched", lambda d: axs["preamble_matched"].plot(d)
+        "preamble_matched", lambda d: axs["preamble_matched"].plot(d)
     )
     axs["power"].set_title("Post-Goertzel Signal Power")
-    tracker.get_and("with_preamble_power", lambda d: axs["power"].plot(d))
+    tracker.get_and("preamble_power", lambda d: axs["power"].plot(d))
     axs["total_power"].set_title("Total Power")
     tracker.get_and("initial_sync_total_power", lambda d: axs["total_power"].plot(d))
     axs["power_delta"].set_title("Power Delta")
     tracker.get_and2(
-        ("with_preamble_power", "initial_sync_total_power"),
+        ("preamble_power", "initial_sync_total_power"),
         lambda a, b: axs["power_delta"].plot(difference(a, b)),
     )
     axs["power_ratio"].set_title("Power Ratio")
     tracker.get_and2(
-        ("with_preamble_power", "initial_sync_total_power"),
+        ("preamble_power", "initial_sync_total_power"),
         lambda a, b: axs["power_ratio"].plot(ratio(a, b)),
     )
     axs["bit_candidate"].set_title("Bit Candidate")
     tracker.get_and(
-        "with_preamble_bit_candidate", lambda d: axs["bit_candidate"].plot(d)
+        "classify_bit_candidate", lambda d: axs["bit_candidate"].plot(d)
     )
     plt.savefig(filename)
+    plt.close()
 
 
-# @mark.skip
 @mark.parametrize("n", [128, 256])
-def test_with_preamble_only_noise(f_spec: Spec, f_rng: NpGenerator, n: int) -> None:
+def test_demodulate_only_noise(f_spec: Spec, f_rng: NpGenerator, n: int) -> None:
     """
     The preamble shall not be detected in a noise-only signal.
     """
@@ -298,14 +311,14 @@ def test_with_preamble_only_noise(f_spec: Spec, f_rng: NpGenerator, n: int) -> N
             f_spec, signal, [True, False, True, False, True, False], tracker=tracker
         )
     )
-    filename = f"with-preamble-only-noise-{n}len.png"
+    filename = f"demodulate-only-noise-{n}len.png"
     plot(filename, signal, output, tracker)
 
-    assert (tracker.get("with_preamble_preamble_matched") == False).all()
+    assert (tracker.get("preamble_matched") == False).all()
 
 
 @mark.parametrize("p", [0, 20, 40, 80, 100, 120])
-def test_with_preamble_only_preamble_with_padding_no_noise(
+def test_demodulate_only_preamble_with_padding_no_noise(
     f_spec: Spec, f_rng: NpGenerator, f_preamble: ndarray, p: int
 ) -> None:
     """
@@ -321,16 +334,16 @@ def test_with_preamble_only_preamble_with_padding_no_noise(
     )
 
     pmble = "".join("1" if v else "0" for v in f_preamble)
-    filename = f"with-preamble-only-preamble-{pmble}preamble-{p}padding.png"
+    filename = f"demodulate-only-preamble-{pmble}preamble-{p}padding.png"
 
     plot(filename, signal, output, tracker)
 
-    assert tracker.get("with_preamble_preamble_matched")[-1] == True
-    assert (tracker.get("with_preamble_buffer")[-1, :] == f_preamble).all()
+    assert tracker.get("preamble_matched")[-1] == True
+    assert (tracker.get("preamble_buffer")[-1, :] == f_preamble).all()
 
 
 @mark.parametrize("w", [0.0, 0.1, 0.2, 0.3, 0.8])
-def test_with_preamble_only_preamble_no_padding_with_noise(
+def test_demodulate_only_preamble_no_padding_with_noise(
     f_spec: Spec, f_rng: NpGenerator, f_preamble: ndarray, w: float
 ) -> None:
     """
@@ -347,9 +360,48 @@ def test_with_preamble_only_preamble_no_padding_with_noise(
     )
 
     pmble = "".join("1" if v else "0" for v in f_preamble)
-    filename = f"with-preamble-only-preamble-{pmble}preamble-{w}noise.png"
+    filename = f"demodulate-only-preamble-{pmble}preamble-{w}noise.png"
 
     plot(filename, signal, output, tracker)
 
-    assert tracker.get("with_preamble_preamble_matched")[-1] == True
-    assert (tracker.get("with_preamble_buffer")[-1, :] == f_preamble).all()
+    assert tracker.get("preamble_matched")[-1] == True
+    assert (tracker.get("preamble_buffer")[-1, :] == f_preamble).all()
+
+
+def test_demodulate_no_padding_no_noise(
+        f_spec: Spec, f_rng: NpGenerator, f_preamble: ndarray, f_bits: ndarray
+) -> None:
+    """
+    Output data must match
+    """
+
+    tracker = Tracker()
+    data = np.concat([f_preamble, f_bits])
+    modulated = np.array(list(modulate(f_spec, data)))
+    signal = normalize(center(modulated))
+    output = array(list(
+        demodulate(f_spec, signal, [bool(v) for v in f_preamble], tracker=tracker)
+    ))
+
+    pmble = "".join("1" if v else "0" for v in f_preamble)
+    filename = f"demodulate-{len(f_bits)}bits-{pmble}preamble.png"
+
+    plot(filename, signal, output, tracker)
+
+    assert (output == f_bits).all()
+
+
+def test_demodulate_full(f_cleaned) -> None:
+    """
+    Output data must match
+    """
+    tracker = Tracker()
+    spec, bits, preamble, signal = f_cleaned
+    output = array(list(
+        demodulate(spec, signal, [bool(v) for v in preamble], tracker=tracker)
+    ))
+    assert (output == bits).all()
+
+    pmble = "".join("1" if v else "0" for v in preamble)
+    filename = f"demodulate-{len(bits)}bits-{pmble}preamble.png"
+    plot(filename, signal, output, tracker)

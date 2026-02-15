@@ -29,6 +29,7 @@ def f_bits(f_rng: NpGenerator, request: FixtureRequest) -> ndarray:
 
 
 class FModulated(NamedTuple):
+    spec: Spec
     bits: ndarray
     preamble: ndarray
     modulated: ndarray
@@ -37,28 +38,28 @@ class FModulated(NamedTuple):
 @fixture
 def f_modulated(f_spec: Spec, f_preamble: ndarray, f_bits: ndarray) -> FModulated:
     modulated = array(list(modulate(f_spec, np.concat([f_preamble, f_bits]))))
-    return FModulated(f_bits, f_preamble, modulated)
+    return FModulated(f_spec, f_bits, f_preamble, modulated)
 
 
 @fixture(params=[0, 20, 40])
 def f_padded(f_modulated: FModulated, request: FixtureRequest) -> FModulated:
-    bits, preamble, modulated = f_modulated
+    spec, bits, preamble, modulated = f_modulated
     padding: int = request.param
     s = concat([zeros((padding,)), modulated, zeros((padding,))])
-    return FModulated(bits, preamble, s)
+    return FModulated(spec, bits, preamble, s)
 
 
 @fixture(params=[0.0, 0.1, 0.2])
 def f_noisy(
     f_rng: NpGenerator, f_padded: FModulated, request: FixtureRequest
 ) -> FModulated:
-    bits, preamble, s = f_padded
+    spec, bits, preamble, s = f_padded
     noise_weight: float = request.param
     n = noise_weight * f_rng.standard_normal(len(s))
-    return FModulated(bits, preamble, s + n)
+    return FModulated(spec, bits, preamble, s + n)
 
 
 @fixture
 def f_cleaned(f_noisy: FModulated) -> FModulated:
-    bits, preamble, s = f_noisy
-    return FModulated(bits, preamble, normalize(center(s)))
+    spec, bits, preamble, s = f_noisy
+    return FModulated(spec, bits, preamble, normalize(center(s)))
